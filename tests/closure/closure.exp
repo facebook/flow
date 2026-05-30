@@ -250,8 +250,8 @@ Cannot call `withDefaults` because `Omit` [1] is not a polymorphic type. [incomp
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3187:43
-   3187| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3195:43
+   3195| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
                                                    ^^^^^^^^^^^^^^ [1]
 
 

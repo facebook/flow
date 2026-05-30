@@ -964,6 +964,7 @@ pub struct DeclareClassSig<Loc, T> {
     pub computed_static_props: Vec<(T, InterfaceProp<Loc, T>)>,
     pub static_calls: Vec<T>,
     pub calls: Vec<T>,
+    pub constructs: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
     pub static_dict: Option<ObjAnnotDict<T>>,
 }
@@ -1008,6 +1009,9 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
             f_t(cx, t);
         }
         for t in &self.calls {
+            f_t(cx, t);
+        }
+        for t in &self.constructs {
             f_t(cx, t);
         }
         if let Some(d) = &self.dict {
@@ -1067,6 +1071,7 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
                 .collect(),
             static_calls: self.static_calls.iter().map(|t| f_t(cx, t)).collect(),
             calls: self.calls.iter().map(|t| f_t(cx, t)).collect(),
+            constructs: self.constructs.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
             static_dict: self.static_dict.as_ref().map(|d| d.map(cx, &f_t)),
         }
@@ -1079,6 +1084,7 @@ pub struct InterfaceSig<Loc, T> {
     pub props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
     pub computed_props: Vec<(T, InterfaceProp<Loc, T>)>,
     pub calls: Vec<T>,
+    pub constructs: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
 }
 
@@ -1100,6 +1106,9 @@ impl<Loc, T> InterfaceSig<Loc, T> {
             prop.iter(cx, f_loc, f_t);
         }
         for t in &self.calls {
+            f_t(cx, t);
+        }
+        for t in &self.constructs {
             f_t(cx, t);
         }
         if let Some(d) = &self.dict {
@@ -1127,6 +1136,7 @@ impl<Loc, T> InterfaceSig<Loc, T> {
                 .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                 .collect(),
             calls: self.calls.iter().map(|t| f_t(cx, t)).collect(),
+            constructs: self.constructs.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
         }
     }

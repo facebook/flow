@@ -57,6 +57,7 @@ fn default_sig_options() -> TypeSigOptions {
         locs_to_dirtify: vec![],
         is_ts_file: false,
         tslib_syntax: false,
+        abstract_classes: false,
     }
 }
 
@@ -7536,6 +7537,7 @@ Module {
                     props: {},
                     computed_props: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                 },
             },
@@ -7587,6 +7589,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -9216,6 +9219,7 @@ Module {
                                 props: {},
                                 computed_props: [],
                                 calls: [],
+                                constructs: [],
                                 dict: None,
                             },
                         ),
@@ -9263,6 +9267,7 @@ Module {
                                 },
                                 computed_props: [],
                                 calls: [],
+                                constructs: [],
                                 dict: None,
                             },
                         ),
@@ -9416,6 +9421,7 @@ Module {
                     },
                     computed_props: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                 },
             },
@@ -9494,6 +9500,7 @@ Module {
                     },
                     computed_props: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                 },
             },
@@ -9549,6 +9556,7 @@ Module {
                     props: {},
                     computed_props: [],
                     calls: [],
+                    constructs: [],
                     dict: Some(
                         ObjAnnotDict {
                             name: Some(
@@ -11015,6 +11023,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -11146,6 +11155,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -11190,6 +11200,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -11378,6 +11389,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -13130,6 +13142,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -14268,6 +14281,7 @@ Module {
                     computed_static_props: [],
                     static_calls: [],
                     calls: [],
+                    constructs: [],
                     dict: None,
                     static_dict: None,
                 },
@@ -18345,6 +18359,7 @@ Local defs:
             computed_static_props: [],
             static_calls: [],
             calls: [],
+            constructs: [],
             dict: None,
             static_dict: None,
         },
@@ -19099,6 +19114,7 @@ Local defs:
             computed_static_props: [],
             static_calls: [],
             calls: [],
+            constructs: [],
             dict: None,
             static_dict: None,
         },
@@ -19577,6 +19593,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -19692,6 +19709,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -19790,6 +19808,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -19818,6 +19837,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -19880,6 +19900,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -20019,6 +20040,7 @@ Local defs:
                     ),
                 ),
             ],
+            constructs: [],
             dict: None,
         },
     },
@@ -20138,6 +20160,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -20224,6 +20247,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -20330,6 +20354,7 @@ Local defs:
             },
             computed_props: [],
             calls: [],
+            constructs: [],
             dict: None,
         },
     },
@@ -20510,6 +20535,7 @@ Local defs:
             computed_static_props: [],
             static_calls: [],
             calls: [],
+            constructs: [],
             dict: None,
             static_dict: None,
         },
@@ -20550,6 +20576,122 @@ Local defs:
 
 Builtin global value C
 
+Builtin global value globalThis
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_declare_class_interface_merging_new() {
+    let input = r#"
+        declare class C {}
+        interface C { new(s: string): C; }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:14-15]
+1. [2:14-31]
+2. [2:21-27]
+3. [2:30-31]
+4. [0:0]
+Local defs:
+0. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 0,
+        nominal_id_loc: 0,
+        name: "C",
+        def: DeclareClassSig {
+            tparams: Mono,
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {},
+            proto_props: {},
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            constructs: [
+                Annot(
+                    FunAnnot(
+                        (
+                            1,
+                            FunSig {
+                                tparams: Mono,
+                                params: [
+                                    FunParam {
+                                        name: Some(
+                                            "s",
+                                        ),
+                                        t: Annot(
+                                            String(
+                                                2,
+                                            ),
+                                        ),
+                                    },
+                                ],
+                                rest_param: None,
+                                this_param: None,
+                                return_: TyRef(
+                                    Unqualified(
+                                        LocalRef(
+                                            PackedRefLocal {
+                                                ref_loc: 3,
+                                                index: 0,
+                                            },
+                                        ),
+                                    ),
+                                ),
+                                type_guard: None,
+                                effect_: ArbitraryEffect,
+                            },
+                        ),
+                    ),
+                ),
+            ],
+            dict: None,
+            static_dict: None,
+        },
+        namespace_types: {},
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 4,
+        name: "globalThis",
+        values: {
+            "C": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                4,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value C
 Builtin global value globalThis
 "#;
     assert_eq!(
@@ -20620,6 +20762,7 @@ Local defs:
             computed_static_props: [],
             static_calls: [],
             calls: [],
+            constructs: [],
             dict: None,
             static_dict: None,
         },

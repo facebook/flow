@@ -125,22 +125,6 @@ let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
 
-let find_resolved_opt cx ~default ~f id =
-  let constraints = Context.find_graph cx id in
-  match constraints with
-  | Resolved t -> f t
-  | FullyResolved s -> f (Context.force_fully_resolved_tvar cx s)
-  | Unresolved _ -> default
-
-let rec drop_resolved cx t =
-  match t with
-  | GenericT { reason; name; id = g_id; bound = OpenT (_, id); no_infer } ->
-    find_resolved_opt cx id ~default:t ~f:(fun t ->
-        GenericT { reason; name; id = g_id; bound = drop_resolved cx t; no_infer }
-    )
-  | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
-  | _ -> t
-
 (********************** start of slab **********************************)
 module M__flow
     (FlowJs : Flow_common.S)
@@ -2969,47 +2953,37 @@ struct
             (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.why src reason_op)))
             args;
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.why src reason_op, t)
-        (* Interfaces with construct signatures (method named "new") can be constructed.
-           We speculatively check for "new" through the constraint system. If the property
-           exists, dispatch the real method call. If not, produce a clear error. *)
-        | ( DefT (reason, InstanceT _),
+        (* Interfaces with a construct signature can be constructed. The
+           sig is the [inst_construct_t] slot plus anything inherited via
+           [extends]; [collect_construct_ts] collects both in
+           derived-first order. *)
+        | ( (DefT (reason_l, InstanceT _) as l),
             ConstructorT
               { use_op; reason = reason_op; targs; args; tout = t; return_hint; specialized_ctor }
           ) ->
-          let reason_o = replace_desc_reason RConstructorVoidReturn reason in
-          let propref = mk_named_prop ~reason:reason_o (OrdinaryName "new") in
-          (* Speculatively probe for "new" without calling it *)
-          let probe_u =
-            MethodT (use_op, reason_op, reason_o, propref, NoMethodAction (Tvar.mk cx reason_op))
-          in
-          (match SpeculationKit.try_singleton_throw_on_failure cx trace l probe_u with
-          | () ->
-            (* "new" exists; dispatch the real method call *)
+          (match combine_construct_ts (collect_construct_ts cx l) with
+          | Some construct_t ->
             let ret =
               Tvar.mk_no_wrap_where cx reason_op (fun tout ->
-                  let funtype = mk_methodcalltype targs args tout in
+                  let calltype = mk_functioncalltype reason_op targs args tout in
+                  let calltype = { calltype with call_specialized_callee = specialized_ctor } in
                   rec_flow
                     cx
                     trace
-                    ( l,
-                      MethodT
-                        ( use_op,
-                          reason_op,
-                          reason_o,
-                          propref,
-                          CallM
-                            {
-                              methodcalltype = funtype;
-                              return_hint;
-                              specialized_callee = specialized_ctor;
-                            }
-                        )
+                    ( construct_t,
+                      CallT
+                        {
+                          use_op;
+                          reason = reason_op;
+                          call_action = Funcalltype calltype;
+                          return_hint;
+                        }
                     )
               )
             in
             rec_flow_t cx trace ~use_op (ret, t)
-          | exception Flow_js_utils.SpeculationSingletonError ->
-            add_output cx Error_message.(EInvalidConstructor (reason_of_t l));
+          | None ->
+            add_output cx Error_message.(EInvalidConstructor reason_l);
             rec_flow_t cx trace ~use_op (AnyT.error reason_op, t))
         (* Only classes (and `any`) can be constructed. *)
         | ( _,
@@ -4181,6 +4155,7 @@ struct
                         own_props;
                         proto_props;
                         inst_call_t;
+                        inst_construct_t;
                         inst_kind = InterfaceKind _;
                         inst_dict;
                         _;
@@ -4196,7 +4171,7 @@ struct
             ~use_op
             t
             reason_inst
-            (own_props, proto_props, inst_call_t, inst_dict);
+            (own_props, proto_props, inst_call_t, inst_construct_t, inst_dict);
           rec_flow
             cx
             trace
@@ -4223,7 +4198,7 @@ struct
             ~use_op
             implementor
             reason_obj
-            (props_tmap, proto_props, call_t, None)
+            (props_tmap, proto_props, call_t, None, None)
         | (_, ImplementsT _) -> add_output cx (Error_message.EUnsupportedImplements (reason_of_t l))
         (*********************************************************************)
         (* class A is a base class of class B iff                            *)
@@ -4992,7 +4967,16 @@ struct
                     InstanceT
                       {
                         super;
-                        inst = { own_props; proto_props; inst_call_t; inst_kind; inst_dict; _ };
+                        inst =
+                          {
+                            own_props;
+                            proto_props;
+                            inst_call_t;
+                            inst_construct_t;
+                            inst_kind;
+                            inst_dict;
+                            _;
+                          };
                         _;
                       }
                   )
@@ -5035,7 +5019,7 @@ struct
             ~use_op
             l
             reason_inst
-            (own_props, proto_props, inst_call_t, inst_dict);
+            (own_props, proto_props, inst_call_t, inst_construct_t, inst_dict);
           rec_flow cx trace (l, UseT (use_op, super))
         (* Unwrap deep readonly *)
         | (_, (DeepReadOnlyT (tout, _) | HooklikeT tout)) ->
@@ -5782,6 +5766,7 @@ struct
         own_props;
         proto_props;
         inst_call_t;
+        inst_construct_t;
         initialized_fields = _;
         initialized_static_fields = _;
         inst_kind;
@@ -5802,7 +5787,8 @@ struct
       in
       property_prop (Context.find_props cx own_props);
       property_prop (Context.find_props cx proto_props);
-      any_prop_call_prop cx ~use_op ~covariant_flow inst_call_t
+      any_prop_call_prop cx ~use_op ~covariant_flow inst_call_t;
+      any_prop_call_prop cx ~use_op ~covariant_flow inst_construct_t
     | _ -> ()
 
   (* types trapped for any propagation. Returns true if this function handles the any case, either
@@ -6066,7 +6052,12 @@ struct
   (* TODO: own_props/proto_props is misleading, since they come from interfaces,
      which don't have an own/proto distinction. *)
   and structural_subtype
-      cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id, inst_dict) =
+      cx
+      trace
+      ~use_op
+      lower
+      reason_struct
+      (own_props_id, proto_props_id, call_id, construct_id, inst_dict) =
     match lower with
     (* Object <: Interface subtyping creates an object out of the interface to dispatch to the
        existing object <: object logic *)
@@ -6080,7 +6071,8 @@ struct
               call_t = lcall;
               reachable_targs = lreachable_targs;
             }
-        ) ->
+        )
+      when Base.Option.is_none construct_id ->
       let o =
         inst_type_to_obj_type cx reason_struct (own_props_id, proto_props_id, call_id, inst_dict)
       in
@@ -6105,10 +6097,15 @@ struct
         ~use_op
         lower
         reason_struct
-        (own_props_id, proto_props_id, call_id, inst_dict)
+        (own_props_id, proto_props_id, call_id, construct_id, inst_dict)
 
   and inst_structural_subtype
-      cx trace ~use_op lower reason_struct (own_props_id, proto_props_id, call_id, inst_dict) =
+      cx
+      trace
+      ~use_op
+      lower
+      reason_struct
+      (own_props_id, proto_props_id, call_id, construct_id, inst_dict) =
     let lreason = reason_of_t lower in
     let lit = is_literal_object_reason lreason in
     let own_props = Context.find_props cx own_props_id in
@@ -6290,6 +6287,61 @@ struct
                  }
              in
              add_output cx error_message
+       );
+    let construct_t = Base.Option.map construct_id ~f:(read_construct_t cx) in
+    construct_t
+    |> Base.Option.iter ~f:(fun ut ->
+           (* Lower has no construct sig where the upper interface expects
+              one. Dedicated error variant rather than [EInvalidConstructor]
+              (which reads as "the user tried to use [new] on a non-class"
+              — confusing when the failure is actually structural subtyping)
+              and rather than reusing [EPropNotFoundInSubtyping] with a
+              synthetic prop name (which can't be made collision-proof). *)
+           let not_a_constructor () =
+             let error_message =
+               Error_message.EConstructSignatureMissingInSubtyping
+                 { reason_lower = lreason; reason_upper = reason_struct; use_op }
+             in
+             add_output cx error_message
+           in
+           (* Diamond inheritance (e.g. [B extends X], [C extends X],
+              [D extends B, C]) intentionally collects [X]'s sig multiple
+              times via [collect_construct_ts] — overload resolution picks
+              the first match either way, so duplicates are harmless at
+              type-check time, just verbose in [ty_normalizer] output.
+              Deduping would need structural equality on funtypes and isn't
+              worth the extra machinery here. *)
+           let rec dispatch_lower lower =
+             match drop_resolved cx lower with
+             (* Unwrap wrapping types and re-dispatch so the InstanceT /
+                ClassT arms below see what's underneath. Without this, an
+                [AnnotT]-wrapped (e.g. cross-module-imported) interface,
+                a [GenericT] whose bound carries the construct sig, or a
+                [ThisInstanceT] / [ThisTypeAppT] would slip through to the
+                silent-skip catch-all and the construct comparison would
+                be quietly dropped. *)
+             | AnnotT (r, t, use_desc) -> dispatch_lower (reposition_reason cx r ~use_desc t)
+             | GenericT { bound; _ } -> dispatch_lower bound
+             | ThisInstanceT (r, inst, _, _) -> dispatch_lower (DefT (r, InstanceT inst))
+             | ThisTypeAppT (_, c, _, _) -> dispatch_lower c
+             | DefT (_, InstanceT _) as t ->
+               (* Interface: own + inherited via [super], in derived-first
+                  order. *)
+               (match combine_construct_ts (collect_construct_ts cx t) with
+               | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
+               | None -> not_a_constructor ())
+             | DefT (_, ClassT this) ->
+               (match extract_class_ctor_t cx this with
+               | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
+               | None -> not_a_constructor ())
+             | DefT (_, (ObjT _ | FunT _)) -> not_a_constructor ()
+             | _ ->
+               (* Other lowers (AnyT, NullT, ObjProtoT, FunProtoT, etc.) —
+                  silently skip; other rules will produce errors as
+                  needed. *)
+               ()
+           in
+           dispatch_lower lower
        )
 
   and check_super cx trace ~use_op lreason ureason t x p =

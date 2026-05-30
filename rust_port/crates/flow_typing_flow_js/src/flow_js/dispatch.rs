@@ -5140,20 +5140,13 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow_t(cx, trace, unknown_use(), (&any_op, &ctor_data.tout))?;
         }
-        // Interfaces with construct signatures (method named "new") can be constructed.
-        // We speculatively check for "new" through the constraint system. If the property
-        // exists, dispatch the real method call. If not, produce a clear error.
-        (TypeInner::DefT(reason, def_t), UseTInner::ConstructorT(box ctor_data))
+        // (* Interfaces with a construct signature can be constructed. The
+        //    sig is the [inst_construct_t] slot plus anything inherited via
+        //    [extends]; [collect_construct_ts] collects both in
+        //    derived-first order. *)
+        (TypeInner::DefT(reason_l, def_t), UseTInner::ConstructorT(box ctor_data))
             if let DefTInner::InstanceT(_instance_t) = def_t.deref() =>
         {
-            let reason_o = reason
-                .dupe()
-                .replace_desc(VirtualReasonDesc::RConstructorVoidReturn);
-            let propref = mk_named_prop(
-                reason_o.dupe(),
-                false,
-                Name::new(FlowSmolStr::new_inline("new")),
-            );
             let use_op = &ctor_data.use_op;
             let reason_op = &ctor_data.reason;
             let targs = &ctor_data.targs;
@@ -5161,49 +5154,36 @@ fn __flow_impl<'cx>(
             let t = &ctor_data.tout;
             let return_hint = &ctor_data.return_hint;
             let specialized_ctor = &ctor_data.specialized_ctor;
-            // Speculatively probe for "new" without calling it
-            let probe_u = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                use_op: use_op.dupe(),
-                reason: reason_op.dupe(),
-                prop_reason: reason_o.dupe(),
-                propref: Box::new(propref.clone()),
-                method_action: Box::new(MethodAction::NoMethodAction(flow_typing_tvar::mk(
-                    cx,
-                    reason_op.dupe(),
-                ))),
-            })));
-            match speculation_kit::try_singleton_throw_on_failure(cx, trace, l.dupe(), probe_u) {
-                Ok(()) => {
-                    // "new" exists; dispatch the real method call
+            match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(cx, l)) {
+                Some(construct_t) => {
                     let ret = flow_typing_tvar::mk_no_wrap_where(
                         cx,
                         reason_op.dupe(),
                         |cx, tvar_reason, tvar_id| {
                             let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                            let funtype = MethodCallType {
-                                meth_generic_this: None,
-                                meth_targs: targs.clone(),
-                                meth_args_tlist: args.dupe(),
-                                meth_tout: tout,
-                                meth_strict_arity: true,
+                            let calltype = flow_typing_type::type_::mk_functioncalltype(
+                                reason_op.dupe(),
+                                targs.clone(),
+                                args.dupe(),
+                                true,
+                                tout,
+                            );
+                            let calltype = flow_typing_type::type_::FuncallType {
+                                call_specialized_callee: specialized_ctor.clone(),
+                                ..calltype
                             };
                             rec_flow(
                                 cx,
                                 trace,
                                 (
-                                    l,
-                                    &UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                                    &construct_t,
+                                    &UseT::new(UseTInner::CallT(Box::new(CallTData {
                                         use_op: use_op.dupe(),
                                         reason: reason_op.dupe(),
-                                        prop_reason: reason_o.dupe(),
-                                        propref: Box::new(propref.clone()),
-                                        method_action: Box::new(MethodAction::CallM(Box::new(
-                                            CallMData {
-                                                methodcalltype: funtype,
-                                                return_hint: return_hint.clone(),
-                                                specialized_callee: specialized_ctor.clone(),
-                                            },
+                                        call_action: Box::new(CallAction::Funcalltype(Box::new(
+                                            calltype,
                                         ))),
+                                        return_hint: return_hint.clone(),
                                     }))),
                                 ),
                             )?;
@@ -5212,15 +5192,14 @@ fn __flow_impl<'cx>(
                     )?;
                     rec_flow_t(cx, trace, use_op.dupe(), (&ret, t))?;
                 }
-                Err(FlowJsException::SpeculationSingletonError) => {
+                None => {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EInvalidConstructor(reason_of_t(l).dupe()),
+                        ErrorMessage::EInvalidConstructor(reason_l.dupe()),
                     )?;
                     let any_err = any_t::error(reason_op.dupe());
                     rec_flow_t(cx, trace, use_op.dupe(), (&any_err, t))?;
                 }
-                Err(e) => return Err(e),
             }
         }
         // Only classes (and `any`) can be constructed.
@@ -7419,6 +7398,7 @@ fn __flow_impl<'cx>(
                     inst.own_props.dupe(),
                     inst.proto_props.dupe(),
                     inst.inst_call_t,
+                    inst.inst_construct_t,
                     &inst.inst_dict,
                 ),
             )?;
@@ -7461,7 +7441,7 @@ fn __flow_impl<'cx>(
                 use_op.dupe(),
                 implementor,
                 reason_obj,
-                (props_tmap.dupe(), proto_props, *call_t, &None),
+                (props_tmap.dupe(), proto_props, *call_t, None, &None),
             )?;
         }
         (_, UseTInner::ImplementsT(_, _)) => {
@@ -9252,6 +9232,7 @@ fn __flow_impl<'cx>(
                 }
             };
             let inst_call_t = inst_t.inst.inst_call_t;
+            let inst_construct_t = inst_t.inst.inst_construct_t;
             let inst_dict = &inst_t.inst.inst_dict;
             structural_subtype(
                 cx,
@@ -9259,7 +9240,13 @@ fn __flow_impl<'cx>(
                 use_op.dupe(),
                 ext_l,
                 reason_inst,
-                (own_props, proto_props, inst_call_t, inst_dict),
+                (
+                    own_props,
+                    proto_props,
+                    inst_call_t,
+                    inst_construct_t,
+                    inst_dict,
+                ),
             )?;
             rec_flow(
                 cx,

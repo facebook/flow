@@ -304,6 +304,7 @@ pub mod class {
         pub getters: BTreeMap<FlowSmolStr, FuncInfo<C>>,
         pub setters: BTreeMap<FlowSmolStr, FuncInfo<C>>,
         pub calls: Vec<Type>,
+        pub constructs: Vec<Type>,
         pub dict: ObjectDict,
     }
 
@@ -319,6 +320,7 @@ pub mod class {
                 getters: self.getters.clone(),
                 setters: self.setters.clone(),
                 calls: self.calls.clone(),
+                constructs: self.constructs.clone(),
                 dict: self.dict.clone(),
             }
         }

@@ -473,6 +473,7 @@ class virtual ['a] t =
         own_props;
         proto_props;
         inst_call_t;
+        inst_construct_t;
         initialized_fields;
         initialized_static_fields;
         inst_kind;
@@ -499,6 +500,7 @@ class virtual ['a] t =
       let own_props' = self#props cx map_cx own_props in
       let proto_props' = self#props cx map_cx proto_props in
       let inst_call_t' = OptionUtils.ident_map (self#call_prop cx map_cx) inst_call_t in
+      let inst_construct_t' = OptionUtils.ident_map (self#call_prop cx map_cx) inst_construct_t in
       let inst_dict' = OptionUtils.ident_map (self#dict_type cx map_cx) inst_dict in
       let class_private_fields' = self#props cx map_cx class_private_fields in
       let class_private_static_fields' = self#props cx map_cx class_private_static_fields in
@@ -509,6 +511,7 @@ class virtual ['a] t =
         && own_props == own_props'
         && proto_props == proto_props'
         && inst_call_t == inst_call_t'
+        && inst_construct_t == inst_construct_t'
         && inst_dict == inst_dict'
         && class_private_fields == class_private_fields'
         && class_private_static_fields == class_private_static_fields'
@@ -524,6 +527,7 @@ class virtual ['a] t =
           own_props = own_props';
           proto_props = proto_props';
           inst_call_t = inst_call_t';
+          inst_construct_t = inst_construct_t';
           initialized_fields;
           initialized_static_fields;
           inst_kind;

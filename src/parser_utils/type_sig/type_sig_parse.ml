@@ -1409,7 +1409,7 @@ module Scope = struct
         }
 
     and rename_tparams_in_interface_sig
-        rename_map (InterfaceSig { extends; props; computed_props; calls; dict }) =
+        rename_map (InterfaceSig { extends; props; computed_props; calls; constructs; dict }) =
       InterfaceSig
         {
           extends = List.map (rename_tparams_in_parsed rename_map) extends;
@@ -1422,6 +1422,7 @@ module Scope = struct
                 ))
               computed_props;
           calls = List.map (rename_tparams_in_parsed rename_map) calls;
+          constructs = List.map (rename_tparams_in_parsed rename_map) constructs;
           dict = Option.map ~f:(rename_tparams_in_obj_annot_dict rename_map) dict;
         }
 
@@ -1458,6 +1459,7 @@ module Scope = struct
     in
     let computed_proto_props = dc.computed_proto_props @ iface.computed_props in
     let calls = dc.calls @ iface.calls in
+    let constructs = dc.constructs @ iface.constructs in
     let implements = dc.implements @ iface.extends in
     let dict =
       match (dc.dict, iface.dict) with
@@ -1474,7 +1476,8 @@ module Scope = struct
       | (Some _, None) -> dc.dict
       | (None, _) -> iface.dict
     in
-    DeclareClassSig { dc with proto_props; computed_proto_props; calls; implements; dict }
+    DeclareClassSig
+      { dc with proto_props; computed_proto_props; calls; constructs; implements; dict }
 
   let merge_interface_sigs
       ~existing_id_loc ~current_id_loc ~old_tparams ~new_tparams tbls old_sig new_sig =
@@ -1503,6 +1506,7 @@ module Scope = struct
             new_s.props;
         computed_props = old_s.computed_props @ new_s.computed_props;
         calls = old_s.calls @ new_s.calls;
+        constructs = old_s.constructs @ new_s.constructs;
         dict =
           (match (old_s.dict, new_s.dict) with
           | (Some existing_dict, Some _) ->
@@ -2849,6 +2853,7 @@ module DeclareClassAcc = struct
     computed_static: ('loc parsed * 'loc prop) list;
     scalls: 'loc calls;
     calls: 'loc calls;
+    constructs: 'loc calls;
     dict: 'loc parsed obj_annot_dict option;
     static_dict: 'loc parsed obj_annot_dict option;
   }
@@ -2863,6 +2868,7 @@ module DeclareClassAcc = struct
       computed_static = [];
       scalls = [];
       calls = [];
+      constructs = [];
       dict = None;
       static_dict = None;
     }
@@ -2953,6 +2959,7 @@ module DeclareClassAcc = struct
         computed_static_props = List.rev acc.computed_static;
         static_calls = acc.scalls;
         calls = acc.calls;
+        constructs = acc.constructs;
         dict = acc.dict;
         static_dict = acc.static_dict;
       }
@@ -2965,10 +2972,11 @@ module InterfaceAcc = struct
     props: 'loc prop SMap.t;
     computed_props: ('loc parsed * 'loc prop) list;
     calls: 'loc parsed list;
+    constructs: 'loc parsed list;
     dict: 'loc parsed obj_annot_dict option;
   }
 
-  let empty = { props = SMap.empty; computed_props = []; calls = []; dict = None }
+  let empty = { props = SMap.empty; computed_props = []; calls = []; constructs = []; dict = None }
 
   let map_props f acc = { acc with props = f acc.props }
 
@@ -3013,8 +3021,13 @@ module InterfaceAcc = struct
     let f = List.cons t in
     { acc with calls = f acc.calls }
 
-  let interface_def extends { props; computed_props; calls; dict } =
-    InterfaceSig { extends; props; computed_props = List.rev computed_props; calls; dict }
+  let append_construct t acc =
+    let f = List.cons t in
+    { acc with constructs = f acc.constructs }
+
+  let interface_def extends { props; computed_props; calls; constructs; dict } =
+    InterfaceSig
+      { extends; props; computed_props = List.rev computed_props; calls; constructs; dict }
 end
 
 module ObjectLiteralAcc = struct
@@ -3161,12 +3174,25 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Null _ -> Annot (Null loc)
     | T.Symbol _ -> Annot (Symbol loc)
     | T.UniqueSymbol _ -> Annot (UniqueSymbol loc)
-    | T.ConstructorType { T.ConstructorType.abstract_ = _; func } ->
-      let def = function_type opts scope tbls xs func in
-      let acc = InterfaceAcc.empty in
-      let acc = InterfaceAcc.append_method "new" loc loc def acc in
-      let def = InterfaceAcc.interface_def [] acc in
-      Annot (InlineInterface (loc, def))
+    | T.ConstructorType { T.ConstructorType.abstract_; func } when opts.tslib_syntax ->
+      (* Mirror [type_annotation.ml]'s `abstract_classes` gate so the two
+         pipelines agree on which `abstract new (...) => T` annotations are
+         accepted. The user-visible error is emitted by type_annotation when
+         editing the file; here we just refuse to populate the construct
+         slot so dependency consumers don't observe phantom abstract sigs. *)
+      if abstract_ && not opts.abstract_classes then
+        Annot (Any loc)
+      else
+        let fsig = function_type opts scope tbls xs func in
+        let acc = InterfaceAcc.empty in
+        let acc = InterfaceAcc.append_construct (Annot (FunAnnot (loc, fsig))) acc in
+        let def = InterfaceAcc.interface_def [] acc in
+        Annot (InlineInterface (loc, def))
+    | T.ConstructorType { T.ConstructorType.func; _ } ->
+      (* tslib_syntax off: degrade to Any, matching the TemplateLiteral
+         pattern above. type_annotation surfaces the user-facing error. *)
+      ignore (function_type opts scope tbls xs func);
+      Annot (Any loc)
     | T.Number _ -> Annot (Number loc)
     | T.BigInt _ -> Annot (BigInt loc)
     | T.String _ -> Annot (String loc)
@@ -3854,8 +3880,26 @@ and interface_props =
         else
           let fn_loc = push_loc tbls fn_loc in
           let id_loc = push_loc tbls id_loc in
-          let def = function_type ~is_method:true opts scope tbls xs fn in
-          Acc.append_method name id_loc fn_loc def acc
+          (* Construct signature only on an unquoted `new()` identifier key.
+             A quoted `"new"()` or `new?()` is a regular property whose name
+             happens to be `"new"`. The optional `new?()` case is already
+             routed to [optional_method_as_field] above. Mirror predicate in
+             [type_annotation.ml] [add_interface_properties.prop]. The
+             type-annotation predicate is longer because that function also
+             handles declare-class bodies and static members; those are
+             excluded by the surrounding control flow here, not by an extra
+             clause on this guard. *)
+          let key_is_identifier =
+            match key with
+            | Ast.Expression.Object.Property.Identifier _ -> true
+            | _ -> false
+          in
+          if name = "new" && key_is_identifier then
+            let def = function_type ~is_method:false opts scope tbls xs fn in
+            Acc.append_construct (Annot (FunAnnot (fn_loc, def))) acc
+          else
+            let def = function_type ~is_method:true opts scope tbls xs fn in
+            Acc.append_method name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init (Some t)) ->
         let id_loc = push_loc tbls id_loc in

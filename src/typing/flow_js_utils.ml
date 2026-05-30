@@ -42,6 +42,149 @@ let possible_types_of_type cx = function
 
 let possible_uses cx id = uses_of cx (Context.find_graph cx id)
 
+let find_resolved_opt cx ~default ~f id =
+  let constraints = Context.find_graph cx id in
+  match constraints with
+  | Resolved t -> f t
+  | FullyResolved s -> f (Context.force_fully_resolved_tvar cx s)
+  | Unresolved _ -> default
+
+let rec drop_resolved cx t =
+  match t with
+  | GenericT { reason; name; id = g_id; bound = OpenT (_, id); no_infer } ->
+    find_resolved_opt cx id ~default:t ~f:(fun t ->
+        GenericT { reason; name; id = g_id; bound = drop_resolved cx t; no_infer }
+    )
+  | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
+  | _ -> t
+
+(* Both writer pipelines ([type_annotation.ml] and [type_sig_merge.ml]) store
+   the raw funtype produced by their respective signature lowering. Subtyping
+   requires the construct-sig form (unbound [this_t], optional [return_t]
+   override), so consumers normalize on read. Centralizing the normalize here
+   keeps the "always normalize on read" invariant in one place rather than
+   open-coded at each call site.
+   (Lives here rather than [typeUtil.ml] because [Context] sits above
+   [TypeUtil] in the build graph.) *)
+let read_construct_t cx id = Context.find_call cx id |> TypeUtil.normalize_construct_sig
+
+(* Walk a type, collecting all [inst_construct_t]s reachable through interface
+   inheritance ([super]) and the standard set of wrappers. Returns sigs in
+   source order: own sigs first, then sigs inherited via [extends]
+   (derived-first). Order is preserved so callers can rely on a stable shape
+   when overload resolution is order-sensitive (e.g. [infer]'s overload pick).
+   Only [InterfaceKind] walks [super]; class [inst_kind]s use the
+   [proto_props.constructor] mechanism handled by [extract_class_ctor_t]. *)
+let collect_construct_ts cx t =
+  let rec go acc t =
+    match drop_resolved cx t with
+    | AnnotT (_, t, _) -> go acc t
+    | ThisTypeAppT (_, c, _, _) -> go acc c
+    | DefT (_, ClassT inner) -> go acc inner
+    | DefT (_, InstanceT { inst = { inst_kind; inst_construct_t; _ }; super; _ })
+    | ThisInstanceT (_, { inst = { inst_kind; inst_construct_t; _ }; super; _ }, _, _) ->
+      let acc =
+        match inst_construct_t with
+        | Some id -> read_construct_t cx id :: acc
+        | None -> acc
+      in
+      (match inst_kind with
+      | InterfaceKind _ -> go acc super
+      | _ -> acc)
+    | GenericT { bound; _ } -> go acc bound
+    | IntersectionT (_, rep) -> Base.List.fold (InterRep.members rep) ~init:acc ~f:go
+    | _ -> acc
+  in
+  List.rev (go [] t)
+
+(* Combine a list of construct sigs into the canonical overload form: a single
+   funtype if there's only one, an [IntersectionT] of funtypes for two or more.
+   This is the same shape [class_sig.ml] and [type_sig_merge.ml] produce for
+   direct overloads, so [CallT] dispatch and structural subtyping get standard
+   overload resolution for free.
+
+   Members that are themselves [IntersectionT] are flattened: an interface's
+   own slot already stores its overloads as an [IntersectionT], and an
+   inherited slot does the same, so without flattening a child + inherited
+   pair becomes [IntersectionT(IntersectionT(o0, o1), inh)] — a nesting
+   [ty_normalizer]'s one-level [InterRep.members] unwrap doesn't handle. *)
+let combine_construct_ts ts =
+  let flat =
+    Base.List.concat_map ts ~f:(function
+        | IntersectionT (_, rep) -> InterRep.members rep
+        | t -> [t]
+        )
+  in
+  match flat with
+  | [] -> None
+  | [t] -> Some t
+  | t0 :: t1 :: ts -> Some (IntersectionT (TypeUtil.reason_of_t t0, InterRep.make t0 t1 ts))
+
+(* Extract a construct sig from a class [this] (the instance type wrapped by
+   [ClassT]). Walks the class's super chain looking for "constructor" in
+   [proto_props], then normalizes: unbinds `this` (a construct sig has no
+   meaningful receiver — `new` produces a fresh instance) and sets [return_t]
+   to the instance. We walk manually rather than dispatching [MethodT] because
+   [MethodT NoMethodAction] returns an unresolved [OpenT] that
+   [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
+   has already seen the raw method-bound funtype. *)
+let extract_class_ctor_t cx this =
+  let lookup_ctor proto_props super recur =
+    let props = Context.find_props cx proto_props in
+    match NameUtils.Map.find_opt (OrdinaryName "constructor") props with
+    | Some p ->
+      (* A setter-only "constructor" is reachable: the parser emits
+         [ConstructorCannotBeAccessor] but still produces a [Method.Set] AST
+         node which lands in [s.setters] under "constructor", and the
+         default-ctor synthesizer's [Method] then loses to the setter in
+         [Class_sig.elements]'s left-biased [SMap.union]. Bail with [None]
+         rather than walking [super]: the user explicitly wrote
+         [set constructor], so silently inheriting a parent ctor would mask
+         the parse error and produce a misleading construct sig at
+         [new C(...)] sites. *)
+      Property.read_t p
+    | None -> recur super
+  in
+  let rec find_ctor t =
+    match drop_resolved cx t with
+    | DefT (_, InstanceT { inst = { proto_props; _ }; super; _ })
+    | ThisInstanceT (_, { inst = { proto_props; _ }; super; _ }, _, _) ->
+      lookup_ctor proto_props super find_ctor
+    | ThisTypeAppT (_, c, _, _) -> find_ctor c
+    | DefT (_, ClassT inner) -> find_ctor inner
+    | DefT (r, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
+      (* Preserve [PolyT] so generic classes carry their tparams through to
+         call sites. Without this, downstream sees unsubstituted [BoundT]
+         in argument/return positions. Fresh [Poly.generate_id ()] — the
+         wrapped polytype is a different value from the class's [PolyT],
+         so memoization on the original id would be wrong. *)
+      Base.Option.map (find_ctor t_out) ~f:(fun ctor ->
+          DefT (r, PolyT { tparams_loc; tparams; t_out = ctor; id = Type.Poly.generate_id () })
+      )
+    | GenericT { bound; _ } -> find_ctor bound
+    | _ -> None
+  in
+  Base.Option.map (find_ctor this) ~f:(TypeUtil.normalize_construct_sig ~override_return_t:this)
+
+(* Try to extract a construct sig from a lower type, handling all forms that
+   might carry one: interface own/inherited [inst_construct_t], class
+   [proto_props.constructor], and the standard wrapping types ([AnnotT],
+   [GenericT], [ThisTypeAppT]). Returns [None] if the lower has no construct
+   sig. Used by [ConstructorT] dispatch, [inst_structural_subtype]'s
+   construct comparison, and [type_hint.ml]'s [Decomp_CallNew]. *)
+let extract_lower_construct_t cx lower =
+  let rec peek t =
+    match drop_resolved cx t with
+    | AnnotT (_, t, _)
+    | GenericT { bound = t; _ }
+    | ThisTypeAppT (_, t, _, _) ->
+      peek t
+    | t -> t
+  in
+  match peek lower with
+  | DefT (_, ClassT this) -> extract_class_ctor_t cx this
+  | _ -> combine_construct_ts (collect_construct_ts cx lower)
+
 let rec collect_lowers ~filter_empty cx seen acc = function
   | [] -> Base.List.rev acc
   | t :: ts ->

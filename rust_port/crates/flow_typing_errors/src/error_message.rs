@@ -1097,6 +1097,27 @@ pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq 
     pub use_op: VirtualUseOp<L>,
 }
 
+// Construct signature ([new(): T] on an interface) is missing from the lower
+// where the upper interface expects one. Distinct from [EPropNotFoundInSubtyping]
+// because construct sigs live in their own [inst_construct_t] slot, not in
+// [own_props] — there is no [name] to thread through.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EConstructSignatureMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -2389,6 +2410,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EPropNotFoundInSubtyping(Box<EPropNotFoundInSubtypingData<L>>),
 
+    EConstructSignatureMissingInSubtyping(Box<EConstructSignatureMissingInSubtypingData<L>>),
+
     EPropsNotFoundInSubtyping(Box<EPropsNotFoundInSubtypingData<L>>),
 
     EPropsNotFoundInInvariantSubtyping(Box<EPropsNotFoundInInvariantSubtypingData<L>>),
@@ -2920,6 +2943,7 @@ pub enum InternalError {
     CheckTimeout(String),
     CheckJobException(FlowSmolStr),
     UnexpectedAnnotationInference(FlowSmolStr),
+    UnexpectedInlineInterfaceType,
     MissingSwitchExhaustiveCheck,
     MissingEnvRead(ALoc),
     MissingEnvWrite(ALoc),
@@ -3584,6 +3608,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: map_use_op(use_op),
                 suggestion,
             })),
+
+            EConstructSignatureMissingInSubtyping(
+                box EConstructSignatureMissingInSubtypingData {
+                    reason_lower,
+                    reason_upper,
+                    use_op,
+                },
+            ) => EConstructSignatureMissingInSubtyping(Box::new(
+                EConstructSignatureMissingInSubtypingData {
+                    reason_lower: map_reason(reason_lower),
+                    reason_upper: map_reason(reason_upper),
+                    use_op: map_use_op(use_op),
+                },
+            )),
 
             EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
@@ -5496,6 +5534,9 @@ where
         ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
             use_op, ..
         }) => util(use_op),
+        ErrorMessage::EConstructSignatureMissingInSubtyping(
+            box EConstructSignatureMissingInSubtypingData { use_op, .. },
+        ) => util(use_op),
         ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
             use_op,
             ..
@@ -6038,6 +6079,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EPropNotWritable(box EPropNotWritableData { .. })
             | Self::EPropNotFoundInLookup(box EPropNotFoundInLookupData { .. })
             | Self::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData { .. })
+            | Self::EConstructSignatureMissingInSubtyping(
+                box EConstructSignatureMissingInSubtypingData { .. },
+            )
             | Self::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData { .. })
             | Self::EPropsNotFoundInInvariantSubtyping(..)
             | Self::EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
@@ -6229,6 +6273,9 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
         InternalError::CheckJobException(exc) => format!("uncaught exception: {}", exc).into(),
         InternalError::UnexpectedAnnotationInference(s) => {
             format!("unexpected {} in annotation inference", s).into()
+        }
+        InternalError::UnexpectedInlineInterfaceType => {
+            "expected freshly-built inline interface to be InstanceT or ThisInstanceT".into()
         }
         InternalError::MissingSwitchExhaustiveCheck => "missing exhaustive check entry".into(),
         InternalError::MissingEnvRead(l) => format!("missing env entry for read at {:?}", l).into(),
@@ -6453,6 +6500,23 @@ pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + E
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ConstructSignatureMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason_lower: VirtualReason<L>,
+    pub reason_upper: VirtualReason<L>,
+    pub use_op: VirtualUseOp<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
     pub reason_lower: VirtualReason<L>,
@@ -6535,6 +6599,7 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     IncompatibleEnum(Box<IncompatibleEnumData<L>>),
     PropMissingInLookup(Box<PropMissingInLookupData<L>>),
     PropMissingInSubtyping(Box<PropMissingInSubtypingData<L>>),
+    ConstructSignatureMissingInSubtyping(Box<ConstructSignatureMissingInSubtypingData<L>>),
     PropsMissingInSubtyping(Box<PropsMissingInSubtypingData<L>>),
     PropsMissingInInvariantSubtyping(Box<PropsMissingInInvariantSubtypingData<L>>),
     PropsExtraAgainstExactObject(Box<PropsExtraAgainstExactObjectData<L>>),
@@ -6723,6 +6788,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_indexer: None,
                 use_op,
             })),
+
+            ErrorMessage::EConstructSignatureMissingInSubtyping(
+                box EConstructSignatureMissingInSubtypingData {
+                    reason_lower,
+                    reason_upper,
+                    use_op,
+                },
+            ) => ConstructSignatureMissingInSubtyping(Box::new(
+                ConstructSignatureMissingInSubtypingData {
+                    reason_lower,
+                    reason_upper,
+                    use_op,
+                },
+            )),
 
             ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
@@ -9409,6 +9488,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 ..
             })
+            | ErrorMessage::EConstructSignatureMissingInSubtyping(
+                box EConstructSignatureMissingInSubtypingData { use_op, .. },
+            )
             | ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 use_op,
                 ..

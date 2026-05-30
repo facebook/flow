@@ -74,48 +74,6 @@ pub(super) fn inherited_method(name: &Name) -> bool {
     name.as_str() != "constructor"
 }
 
-pub(super) fn find_resolved_opt<'cx, T, F>(cx: &Context<'cx>, default: T, f: F, id: i32) -> T
-where
-    F: FnOnce(&Type) -> T,
-{
-    let constraints = cx.find_graph(id);
-    match constraints {
-        constraint::Constraints::Resolved(t) => f(&t),
-        constraint::Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
-        constraint::Constraints::Unresolved(_) => default,
-    }
-}
-
-pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
-    match t.deref() {
-        TypeInner::GenericT(box GenericTData {
-            reason,
-            name,
-            id: g_id,
-            bound,
-            no_infer,
-        }) if let TypeInner::OpenT(tvar) = bound.deref() => find_resolved_opt(
-            cx,
-            t.dupe(),
-            |resolved_t| {
-                Type::new(TypeInner::GenericT(Box::new(GenericTData {
-                    reason: reason.dupe(),
-                    name: name.dupe(),
-                    id: g_id.clone(),
-                    bound: drop_resolved(cx, resolved_t),
-                    no_infer: *no_infer,
-                })))
-            },
-            tvar.id() as i32,
-        ),
-        TypeInner::OpenT(tvar) => {
-            let id = tvar.id() as i32;
-            find_resolved_opt(cx, t.dupe(), |resolved_t| drop_resolved(cx, resolved_t), id)
-        }
-        _ => t.dupe(),
-    }
-}
-
 pub(super) fn speculative_subtyping_succeeds<'cx>(
     cx: &Context<'cx>,
     l: &Type,

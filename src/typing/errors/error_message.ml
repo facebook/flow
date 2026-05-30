@@ -290,6 +290,15 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
       suggestion: string option;
     }
+  (* Construct signature ([new(): T] on an interface) is missing from the lower
+     where the upper interface expects one. Distinct from [EPropNotFoundInSubtyping]
+     because construct sigs live in their own [inst_construct_t] slot, not in
+     [own_props] — there is no [name] to thread through. *)
+  | EConstructSignatureMissingInSubtyping of {
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      use_op: 'loc virtual_use_op;
+    }
   | EPropsNotFoundInSubtyping of {
       prop_names: name Nel.t;
       reason_lower: 'loc virtual_reason;
@@ -903,6 +912,7 @@ and internal_error =
   | CheckTimeout of float
   | CheckJobException of Exception.t
   | UnexpectedAnnotationInference of string
+  | UnexpectedInlineInterfaceType
   | MissingSwitchExhaustiveCheck
   | MissingEnvRead of ALoc.t
   | MissingEnvWrite of ALoc.t
@@ -1254,6 +1264,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         use_op = map_use_op use_op;
         suggestion;
+      }
+  | EConstructSignatureMissingInSubtyping { reason_lower; reason_upper; use_op } ->
+    EConstructSignatureMissingInSubtyping
+      {
+        reason_lower = map_reason reason_lower;
+        reason_upper = map_reason reason_upper;
+        use_op = map_use_op use_op;
       }
   | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
     EPropsNotFoundInSubtyping
@@ -2189,6 +2206,7 @@ let util_use_op_of_msg nope util = function
   | EExpectedBigIntLit { use_op; _ } -> util use_op
   | EPropNotFoundInLookup { use_op; _ } -> util use_op
   | EPropNotFoundInSubtyping { use_op; _ } -> util use_op
+  | EConstructSignatureMissingInSubtyping { use_op; _ } -> util use_op
   | EPropsNotFoundInSubtyping { use_op; _ } -> util use_op
   | EPropsNotFoundInInvariantSubtyping { use_op; _ } -> util use_op
   | EPropsExtraAgainstExactObject { use_op; _ } -> util use_op
@@ -2684,6 +2702,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropNotWritable _
   | EPropNotFoundInLookup _
   | EPropNotFoundInSubtyping _
+  | EConstructSignatureMissingInSubtyping _
   | EPropsNotFoundInSubtyping _
   | EPropsNotFoundInInvariantSubtyping _
   | EPropsExtraAgainstExactObject _
@@ -2803,6 +2822,8 @@ let string_of_internal_error = function
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
+  | UnexpectedInlineInterfaceType ->
+    "expected freshly-built inline interface to be InstanceT or ThisInstanceT"
   | MissingSwitchExhaustiveCheck -> "missing exhaustive check entry"
   | MissingEnvRead l -> "missing env entry for read at " ^ ALoc.debug_to_string l
   | MissingEnvWrite loc -> "expected env entry for write location" ^ ALoc.debug_to_string loc
@@ -2890,6 +2911,11 @@ type 'loc friendly_message_recipe =
       reason_lower: 'loc Reason.virtual_reason;
       reason_upper: 'loc Reason.virtual_reason;
       reason_indexer: 'loc Reason.virtual_reason option;
+      use_op: 'loc Type.virtual_use_op;
+    }
+  | ConstructSignatureMissingInSubtyping of {
+      reason_lower: 'loc Reason.virtual_reason;
+      reason_upper: 'loc Reason.virtual_reason;
       use_op: 'loc Type.virtual_use_op;
     }
   | PropsMissingInSubtyping of {
@@ -3045,6 +3071,8 @@ let friendly_message_of_msg = function
         reason_indexer = None;
         use_op;
       }
+  | EConstructSignatureMissingInSubtyping { reason_lower; reason_upper; use_op } ->
+    ConstructSignatureMissingInSubtyping { reason_lower; reason_upper; use_op }
   | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
     PropsMissingInSubtyping
       { props = Nel.map display_string_of_name prop_names; reason_lower; reason_upper; use_op }
@@ -4175,6 +4203,7 @@ let error_code_of_message err : error_code option =
     in
     react_rule_of_use_op use_op ~default
   | EPropNotFoundInSubtyping { use_op; _ }
+  | EConstructSignatureMissingInSubtyping { use_op; _ }
   | EPropsNotFoundInSubtyping { use_op; _ }
   | EPropsNotFoundInInvariantSubtyping { use_op; _ }
   | EPropsExtraAgainstExactObject { use_op; _ } ->

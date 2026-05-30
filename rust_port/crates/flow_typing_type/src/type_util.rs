@@ -2802,3 +2802,79 @@ pub fn mk_possibly_generic_render_type(
         None
     }
 }
+
+// Construct signatures don't have a meaningful `this`, and the class
+// `constructor` we sometimes use as a synthetic construct signature has the
+// class-instance type as its return. This helper walks the funtype leaves of
+// [t] (plain [FunT], [PolyT { t_out = FunT }], or [IntersectionT] of either)
+// and rewrites each leaf's [this_t] to an unbound, unconstrained any with
+// [This_Method { unbound = true }], optionally also overriding [return_t].
+//
+// The [This_Method { unbound = true }] is deliberate: it ensures funtype
+// subtyping at [subtyping_kit.rs] does NOT fire [EMethodUnbinding] when a
+// class's method-bound `constructor` flows to a normalized construct sig
+// (both sides land on the [This_Method _, This_Method _] arm). Used by the
+// construct-signature plumbing in [type_annotation.rs] and [flow_js/].
+pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type {
+    use crate::type_::AnySource;
+    use crate::type_::DefT;
+    use crate::type_::DefTInner;
+    use crate::type_::PolyTData;
+    use crate::type_::ThisStatus;
+    use crate::type_::any_t;
+
+    fn rewrite_fun(
+        ft: &crate::type_::FunType,
+        override_return_t: &Option<Type>,
+    ) -> crate::type_::FunType {
+        let (this_t, _): &(Type, ThisStatus) = &ft.this_t;
+        let any_this_t = any_t::make(AnySource::AnyError(None), reason_of_t(this_t).dupe());
+        let return_t = override_return_t
+            .as_ref()
+            .map(|t| t.dupe())
+            .unwrap_or_else(|| ft.return_t.dupe());
+        crate::type_::FunType {
+            this_t: (any_this_t, ThisStatus::ThisMethod { unbound: true }),
+            return_t,
+            ..ft.clone()
+        }
+    }
+    fn go(t: Type, override_return_t: &Option<Type>) -> Type {
+        match &*t {
+            TypeInner::DefT(r, def_t) => match &**def_t {
+                DefTInner::FunT(statics, ft) => Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    DefT::new(DefTInner::FunT(
+                        statics.dupe(),
+                        Rc::new(rewrite_fun(ft, override_return_t)),
+                    )),
+                )),
+                // Reuse the original Poly id. Every consumer normalizes on read, so the
+                // instantiation cache only ever holds entries computed from the
+                // normalized body; reusing the id lets repeated reads share those
+                // entries. Regenerating it would be correct but defeat the cache.
+                DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    id,
+                }) => Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                        tparams_loc: tparams_loc.dupe(),
+                        tparams: tparams.dupe(),
+                        t_out: go(t_out.dupe(), override_return_t),
+                        id: id.dupe(),
+                    }))),
+                )),
+                _ => t.dupe(),
+            },
+            TypeInner::IntersectionT(r, rep) => Type::new(TypeInner::IntersectionT(
+                r.dupe(),
+                rep.map(|t| go(t.dupe(), override_return_t)),
+            )),
+            _ => t.dupe(),
+        }
+    }
+    go(t, &override_return_t)
+}

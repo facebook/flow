@@ -1872,7 +1872,7 @@ and merge_interface_extends ~bind_this env file packed =
     | t -> (merge env file t, false, None)
 
 and merge_interface ~inline env file reason class_name id def =
-  let (InterfaceSig { extends; props; computed_props; calls; dict }) = def in
+  let (InterfaceSig { extends; props; computed_props; calls; constructs; dict }) = def in
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
     (* TODO: interfaces don't have a name field, or even statics *)
@@ -1954,6 +1954,16 @@ and merge_interface ~inline env file reason class_name id def =
         let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
         Some (Context.make_call_prop file.cx t)
     in
+    let inst_construct_t =
+      let ts = List.rev_map (merge env file) constructs in
+      match ts with
+      | [] -> None
+      | [t] -> Some (Context.make_call_prop file.cx t)
+      | t0 :: t1 :: ts ->
+        let reason = TypeUtil.reason_of_t t0 in
+        let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
+        Some (Context.make_call_prop file.cx t)
+    in
     let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
     let open Type in
     ( {
@@ -1964,6 +1974,7 @@ and merge_interface ~inline env file reason class_name id def =
         own_props = Context.generate_property_map file.cx own_props;
         proto_props = Context.generate_property_map file.cx proto_props;
         inst_call_t;
+        inst_construct_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind = InterfaceKind { inline };
@@ -2124,6 +2135,7 @@ and merge_this_class_t file reason class_name id def this_reason inst_kind =
         own_props;
         proto_props;
         inst_call_t = None;
+        inst_construct_t = None;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind;
@@ -2450,6 +2462,7 @@ let merge_declare_class file reason class_name id def =
           computed_static_props;
           static_calls;
           calls;
+          constructs;
           dict;
           static_dict = _ (* We don't actually support static indexers yet. *);
         }
@@ -2547,6 +2560,15 @@ let merge_declare_class file reason class_name id def =
         let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
         Some (Context.make_call_prop file.cx t)
     in
+    let inst_construct_t =
+      match List.rev_map (merge env file) constructs with
+      | [] -> None
+      | [t] -> Some (Context.make_call_prop file.cx t)
+      | t0 :: t1 :: ts ->
+        let reason = TypeUtil.reason_of_t t0 in
+        let t = Type.(IntersectionT (reason, InterRep.make t0 t1 ts)) in
+        Some (Context.make_call_prop file.cx t)
+    in
     let inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
     let inst =
       {
@@ -2557,6 +2579,7 @@ let merge_declare_class file reason class_name id def =
         own_props;
         proto_props;
         inst_call_t;
+        inst_construct_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind = Type.ClassKind;

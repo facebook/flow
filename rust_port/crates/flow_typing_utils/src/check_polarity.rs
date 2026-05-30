@@ -292,6 +292,7 @@ fn check_polarity_impl<'cx>(
                     own_props,
                     proto_props,
                     inst_call_t: call_t,
+                    inst_construct_t: construct_t,
                     initialized_fields: _,
                     initialized_static_fields: _,
                     inst_kind: _,
@@ -344,6 +345,9 @@ fn check_polarity_impl<'cx>(
                 )?;
                 if let Some(call_t) = call_t {
                     check_polarity_call(cx, trace, seen, tparams, polarity, *call_t)?;
+                }
+                if let Some(construct_t) = construct_t {
+                    check_polarity_call(cx, trace, seen, tparams, polarity, *construct_t)?;
                 }
                 if let Some(inst_dict) = inst_dict {
                     check_polarity_dict(cx, trace, seen, tparams, polarity, inst_dict)?;

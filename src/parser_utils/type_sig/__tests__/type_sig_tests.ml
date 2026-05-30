@@ -222,6 +222,7 @@ let sig_options
     ?(for_builtins = false)
     ?(locs_to_dirtify = [])
     ?(tslib_syntax = false)
+    ?(abstract_classes = false)
     () =
   {
     Type_sig_options.munge;
@@ -241,6 +242,7 @@ let sig_options
     locs_to_dirtify;
     is_ts_file = false;
     tslib_syntax;
+    abstract_classes;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =
@@ -2994,7 +2996,10 @@ let%expect_test "interface_coverage" =
               is_const = false},
             []));
          def =
-         InterfaceSig {extends = []; props = {}; computed_props = []; calls = []; dict = None}}
+         InterfaceSig {extends = [];
+           props = {}; computed_props = [];
+           calls = []; constructs = [];
+           dict = None}}
     1. DeclareClassBinding {id_loc = [2:21-22];
          nominal_id_loc = [2:21-22];
          name = "C";
@@ -3014,7 +3019,8 @@ let%expect_test "interface_coverage" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
   |}]
 
@@ -3575,7 +3581,10 @@ let%expect_test "inline_interface" =
          body =
          (Annot
             (InlineInterface ([1:9-21],
-               InterfaceSig {extends = []; props = {}; computed_props = []; calls = []; dict = None}
+               InterfaceSig {extends = [];
+                 props = {}; computed_props = [];
+                 calls = []; constructs = [];
+                 dict = None}
                )))}
     1. TypeAlias {id_loc = [2:12-13];
          custom_error_loc_opt = None;
@@ -3590,7 +3599,8 @@ let%expect_test "inline_interface" =
                    (InterfaceField ((Some [2:38-39]), (
                       Annot (String [2:41-47])), Polarity.Neutral)) };
                  computed_props = [];
-                 calls = []; dict = None}
+                 calls = []; constructs = [];
+                 dict = None}
                )))}
   |}]
 
@@ -3642,7 +3652,7 @@ let%expect_test "interface_optional" =
              (InterfaceField ((Some [1:21-22]), (
                 Annot (Optional (Annot (String [1:25-31])))), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}} |}]
+           constructs = []; dict = None}} |}]
 
 let%expect_test "interface_method" =
   print_sig {|
@@ -3673,7 +3683,7 @@ let%expect_test "interface_method" =
                     effect_ = ArbitraryEffect}),
                  [])) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
   |}]
 
 let%expect_test "interface_indexer" =
@@ -3694,7 +3704,7 @@ let%expect_test "interface_indexer" =
          def =
          InterfaceSig {extends = [];
            props = {}; computed_props = [];
-           calls = [];
+           calls = []; constructs = [];
            dict =
            (Some ObjDict {name = (Some "key");
                    polarity = Polarity.Neutral;
@@ -3807,7 +3817,7 @@ let%expect_test "interface_optional_method" =
                             ))))),
                 Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}} |}]
+           constructs = []; dict = None}} |}]
 
 let%expect_test "declare_class_optional_method" =
   print_sig {|
@@ -3851,7 +3861,8 @@ let%expect_test "declare_class_optional_method" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "object_annot_call_poly" =
@@ -4334,7 +4345,8 @@ let%expect_test "class_extends" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
     1. Variable {id_loc = [2:6-7]; name = "M";
          def =
@@ -4381,7 +4393,8 @@ let%expect_test "class_extends" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
     5. DeclareClassBinding {id_loc = [6:21-23];
          nominal_id_loc = [6:21-23];
@@ -4397,7 +4410,8 @@ let%expect_test "class_extends" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "class_this" =
@@ -4477,7 +4491,8 @@ let%expect_test "declare_class_this" =
            computed_own_props = []; computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "existential" =
@@ -5039,7 +5054,8 @@ let%expect_test "declared_export_default_class_binding" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "module_ref_prefix" =
@@ -5350,7 +5366,8 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
     3. TypeAlias {id_loc = [4:5-14];
          custom_error_loc_opt = None;
@@ -5605,7 +5622,8 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
     5. ComponentBinding {id_loc = [9:20-23];
          name = "foo"; fn_loc = [9:2-25];
@@ -5762,7 +5780,7 @@ let%expect_test "builtin_interface_merge_props" =
            { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral));
              "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5805,7 +5823,7 @@ let%expect_test "builtin_interface_merge_methods_overload" =
                      effect_ = ArbitraryEffect})
                    ])) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5835,7 +5853,7 @@ let%expect_test "builtin_interface_merge_extends" =
            { "x" ->
              (InterfaceField ((Some [1:18-19]), (Annot (String [1:21-27])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. Interface {id_loc = [2:10-15];
          name = "Base2"; tparams = Mono;
          def =
@@ -5844,7 +5862,7 @@ let%expect_test "builtin_interface_merge_extends" =
            { "y" ->
              (InterfaceField ((Some [2:18-19]), (Annot (Number [2:21-27])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     2. Interface {id_loc = [3:10-13];
          name = "Foo"; tparams = Mono;
          def =
@@ -5856,7 +5874,7 @@ let%expect_test "builtin_interface_merge_extends" =
            { "a" -> (InterfaceField ((Some [4:2-3]), (Annot (String [4:5-11])), Polarity.Neutral));
              "b" -> (InterfaceField ((Some [7:2-3]), (Annot (Number [7:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     3. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 3})) };
@@ -5906,7 +5924,7 @@ let%expect_test "builtin_interface_merge_calls" =
                      effect_ = ArbitraryEffect}
                    )))
              ];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5938,7 +5956,7 @@ let%expect_test "builtin_interface_merge_three_way" =
              "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral));
              "c" -> (InterfaceField ((Some [8:2-3]), (Annot (Boolean [8:5-12])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5965,7 +5983,7 @@ let%expect_test "builtin_interface_merge_prop_conflict" =
            props =
            { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -6001,7 +6019,7 @@ let%expect_test "builtin_interface_merge_tparam_mismatch" =
              (InterfaceField ((Some [2:2-3]), (
                 Annot Bound {ref_loc = [2:5-6]; name = "T"}), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           dict = None}}
+           constructs = []; dict = None}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -6504,7 +6522,8 @@ let%expect_test "this_param_4" =
            computed_own_props = []; computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "this_param_5" =
@@ -8160,7 +8179,8 @@ let%expect_test "d_ts_computed_property_in_interface" =
            computed_props =
            [((Ref LocalRef {ref_loc = [3:3-12]; index = 0}),
              (InterfaceField ((Some [3:3-12]), (Annot (Boolean [3:15-22])), Polarity.Neutral)))];
-           calls = []; dict = None}} |}]
+           calls = []; constructs = [];
+           dict = None}} |}]
 
 let%expect_test "d_ts_computed_property_in_declare_class" =
   print_d_ts_sig {|
@@ -8196,7 +8216,8 @@ let%expect_test "d_ts_computed_property_in_declare_class" =
            computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}} |}]
 
 let%expect_test "d_ts_computed_property_bigint_key" =
@@ -8335,6 +8356,50 @@ let%expect_test "declare_class_interface_merging_basic" =
            computed_own_props = []; computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
+           constructs = []; dict = None;
+           static_dict = None};
+         namespace_types = {}}
+    1. NamespaceBinding {id_loc = [0:0];
+         name = "globalThis";
+         values =
+         { "C" -> ([1:14-15], (Ref LocalRef {ref_loc = [1:14-15]; index = 0}));
+           "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
+         types = {}}
+
+    Builtin global value C
+    Builtin global value globalThis |}]
+
+let%expect_test "declare_class_interface_merging_new" =
+  print_builtins [{|
+    declare class C {}
+    interface C { new(s: string): C; }
+  |}];
+  [%expect{|
+    Local defs:
+    0. DeclareClassBinding {id_loc = [1:14-15];
+         nominal_id_loc = [1:14-15];
+         name = "C";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {}; own_props = {};
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           constructs =
+           [(Annot
+               (FunAnnot ([2:14-31],
+                  FunSig {tparams = Mono;
+                    params = [FunParam {name = (Some "s"); t = (Annot (String [2:21-27]))}];
+                    rest_param = None;
+                    this_param = None;
+                    return = (TyRef (Unqualified LocalRef {ref_loc = [2:30-31]; index = 0}));
+                    type_guard = None;
+                    effect_ = ArbitraryEffect}
+                  )))
+             ];
            dict = None; static_dict = None};
          namespace_types = {}}
     1. NamespaceBinding {id_loc = [0:0];
@@ -8371,7 +8436,8 @@ let%expect_test "declare_class_interface_merging_reverse" =
            computed_own_props = []; computed_proto_props = [];
            computed_static_props = [];
            static_calls = []; calls = [];
-           dict = None; static_dict = None};
+           constructs = []; dict = None;
+           static_dict = None};
          namespace_types = {}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";

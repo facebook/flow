@@ -274,6 +274,7 @@ pub(super) fn any_prop_inst<'cx>(
         ref own_props,
         ref proto_props,
         ref inst_call_t,
+        ref inst_construct_t,
         initialized_fields: _,
         initialized_static_fields: _,
         ref inst_kind,
@@ -318,7 +319,8 @@ pub(super) fn any_prop_inst<'cx>(
                 any,
                 &cx.find_props(proto_props.dupe()),
             )?;
-            any_prop_call_prop(cx, use_op, covariant_flow, inst_call_t)
+            any_prop_call_prop(cx, use_op, covariant_flow, inst_call_t)?;
+            any_prop_call_prop(cx, use_op, covariant_flow, inst_construct_t)
         }
         _ => Ok(()),
     }

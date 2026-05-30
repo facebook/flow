@@ -1056,6 +1056,7 @@ let dump_error_message =
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
     | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
+    | UnexpectedInlineInterfaceType -> "UnexpectedInlineInterfaceType"
     | MissingSwitchExhaustiveCheck -> "MissingSwitchExhaustiveCheck"
     | MissingEnvRead _ -> "MissingEnvRead"
     | MissingEnvWrite _ -> "MissingEnvWrite"
@@ -1208,6 +1209,12 @@ let dump_error_message =
         (match suggestion with
         | Some prop -> spf "Some %s" prop
         | None -> "None")
+    | EConstructSignatureMissingInSubtyping { reason_lower; reason_upper; use_op } ->
+      spf
+        "EConstructSignatureMissingInSubtyping (%s, %s, %s)"
+        (dump_reason cx reason_lower)
+        (dump_reason cx reason_upper)
+        (string_of_use_op use_op)
     | EPropsNotFoundInSubtyping { prop_names; reason_lower; reason_upper; use_op } ->
       spf
         "EPropsNotFoundInSubtyping ([%s], %s, %s, %s)"

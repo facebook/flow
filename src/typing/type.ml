@@ -1456,6 +1456,7 @@ module rec TypeTerm : sig
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
+    inst_construct_t: int option;
     initialized_fields: SSet.t;
     initialized_static_fields: SSet.t;
     inst_kind: instance_kind;

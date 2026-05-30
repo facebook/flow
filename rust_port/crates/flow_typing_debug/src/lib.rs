@@ -36,6 +36,7 @@ use flow_typing_errors::error_message::EClassToObjectData;
 use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EComponentThisReferenceData;
 use flow_typing_errors::error_message::EConstantConditionData;
+use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EDevOnlyInvalidatedRefinementInfoData;
 use flow_typing_errors::error_message::EDevOnlyRefinedLocInfoData;
 use flow_typing_errors::error_message::EDuplicateClassMemberData;
@@ -1841,6 +1842,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             InternalError::CheckTimeout(_) => "CheckTimeout",
             InternalError::CheckJobException(_) => "CheckJobException",
             InternalError::UnexpectedAnnotationInference(_) => "UnexpectedAnnotationInference",
+            InternalError::UnexpectedInlineInterfaceType => "UnexpectedInlineInterfaceType",
             InternalError::MissingSwitchExhaustiveCheck => "MissingSwitchExhaustiveCheck",
             InternalError::MissingEnvRead(_) => "MissingEnvRead",
             InternalError::MissingEnvWrite(_) => "MissingEnvWrite",
@@ -2121,6 +2123,18 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 suggestion_str
             )
         }
+        ErrorMessage::EConstructSignatureMissingInSubtyping(
+            box EConstructSignatureMissingInSubtypingData {
+                reason_lower,
+                reason_upper,
+                use_op,
+            },
+        ) => format!(
+            "EConstructSignatureMissingInSubtyping ({}, {}, {})",
+            dump_reason(cx, reason_lower),
+            dump_reason(cx, reason_upper),
+            string_of_use_op(use_op)
+        ),
         ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
             prop_names,
             reason_lower,

@@ -27,5 +27,346 @@ References:
                          ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- utilities.js:10:28
 
-Found 2 errors
+Cannot assign array literal to `fp2` because in index `1`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   utilities.js:10:28
+   10| const fp2: FooParams = [1, 2]; // ERROR: number incompatible with string
+                                  ^ [1]
+
+References:
+   utilities.js:5:31
+    5|     constructor(x: number, y: string) { this.x = x; }
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:21:27
+
+Cannot assign array literal to `cp2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:21:27
+   21| const cp2: CWTA_Params = ["bad", true]; // ERROR: string incompatible with number
+                                 ^^^^^ [1]
+
+References:
+   utilities.js:18:32
+   18| type CtorWithTwoArgs = new (a: number, b: boolean) => {v: string};
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:28:35
+
+Cannot instantiate `ConstructorParameters` because in type argument `T`: string [1], a primitive, cannot be used as a
+subtype of interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as
+a subtype of an interface. [incompatible-type]
+
+   utilities.js:28:35
+     28| type Bad1 = ConstructorParameters<string>; // ERROR: string is not a constructor
+                                           ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:3161:38
+   3161| type ConstructorParameters<T extends new (...args: ReadonlyArray<empty>) => unknown> =
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:29:26
+
+Cannot instantiate `InstanceType` because in type argument `T`: a construct signature declaring the expected parameter /
+return type is missing in statics of function type [1] but exists in interface type [2]. [incompatible-type]
+
+   utilities.js:29:26
+     29| type Bad2 = InstanceType<() => void>; // ERROR: function is not a constructor
+                                  ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:3165:29
+   3165| type InstanceType<T extends new (...args: ReadonlyArray<empty>) => unknown> =
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ utilities.js:48:5
+
+Cannot call `Overloaded` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   utilities.js:48:5
+   48| new Overloaded(true); // ERROR: neither overload accepts boolean
+           ^^^^^^^^^^
+
+References:
+   utilities.js:48:16
+   48| new Overloaded(true); // ERROR: neither overload accepts boolean
+                      ^^^^ [1]
+   utilities.js:43:20
+   43|     constructor(x: number): void;
+                          ^^^^^^ [2]
+   utilities.js:44:20
+   44|     constructor(x: string): void;
+                          ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:51:32
+
+Cannot assign array literal to `op2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:51:32
+   51| const op2: OverloadedParams = ["s"]; // ERROR in Flow (first overload); TS would accept
+                                      ^^^ [1]
+
+References:
+   utilities.js:43:20
+   43|     constructor(x: number): void;
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ utilities.js:72:5
+
+Cannot use `new` on `QuotedNew` [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
+
+   utilities.js:72:5
+   72| new q(); // ERROR: not a constructor
+           ^
+
+References:
+   utilities.js:70:18
+   70| declare const q: QuotedNew;
+                        ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ utilities.js:79:5
+
+Cannot use `new` on `OptionalNew` [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
+
+   utilities.js:79:5
+   79| new o(); // ERROR: not a constructor (no inst_construct_t slot)
+           ^
+
+References:
+   utilities.js:78:18
+   78| declare const o: OptionalNew;
+                        ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:85:28
+
+Cannot assign array literal to `bp_bad` because array literal [1] has 1 element but tuple type [2] has 0 elements.
+[invalid-tuple-arity]
+
+   utilities.js:85:28
+   85| const bp_bad: BareParams = [1]; // ERROR: default ctor takes no args
+                                  ^^^ [1]
+
+References:
+   utilities.js:85:15
+   85| const bp_bad: BareParams = [1]; // ERROR: default ctor takes no args
+                     ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:98:32
+
+Cannot assign array literal to `dp_bad` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:98:32
+   98| const dp_bad: DerivedParams = ["s"]; // ERROR: inherited ctor wants number
+                                      ^^^ [1]
+
+References:
+   utilities.js:93:20
+   93|     constructor(x: number) { this.x = x; }
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:112:29
+
+Cannot assign array literal to `mcp2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:112:29
+   112| const mcp2: MyCtorParams = ["bad"]; // ERROR: string incompatible with number
+                                    ^^^^^ [1]
+
+References:
+   utilities.js:108:12
+   108|     new(x: number): {v: string};
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:127:32
+
+Cannot assign array literal to `ccp2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:127:32
+   127| const ccp2: ChildCtorParams = ["bad"]; // ERROR: string incompatible with number
+                                       ^^^^^ [1]
+
+References:
+   utilities.js:119:12
+   119|     new(x: number): {tag: "parent"};
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:145:5
+
+Cannot call `cb2` because: [incompatible-type]
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
+
+   utilities.js:145:5
+   145| new cb2(true); // ERROR: neither overload accepts boolean
+            ^^^
+
+References:
+   utilities.js:145:9
+   145| new cb2(true); // ERROR: neither overload accepts boolean
+                ^^^^ [1]
+   utilities.js:138:12
+   138|     new(x: string): {kind: "child"};
+                   ^^^^^^ [2]
+   utilities.js:135:12
+   135|     new(x: number): {kind: "parent"};
+                   ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:151:32
+
+Cannot assign array literal to `cbb2` because in index `0`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   utilities.js:151:32
+   151| const cbb2: ChildBothParams = [1];    // ERROR in Flow (first = Child wants string); TS would accept
+                                       ^ [1]
+
+References:
+   utilities.js:138:12
+   138|     new(x: string): {kind: "child"};
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:170:5
+
+Cannot call `cto` because: [incompatible-type]
+ - Either object literal [1] is incompatible with string [2].
+ - Or object literal [1] is incompatible with boolean [3].
+ - Or object literal [1] is incompatible with number [4].
+
+   utilities.js:170:5
+   170| new cto({}); // ERROR: no overload matches object
+            ^^^
+
+References:
+   utilities.js:170:9
+   170| new cto({}); // ERROR: no overload matches object
+                ^^ [1]
+   utilities.js:160:12
+   160|     new(x: string): {kind: "child-s"};
+                   ^^^^^^ [2]
+   utilities.js:161:12
+   161|     new(x: boolean): {kind: "child-b"};
+                   ^^^^^^^ [3]
+   utilities.js:135:12
+   135|     new(x: number): {kind: "parent"};
+                   ^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:186:31
+
+Cannot assign array literal to `cbp2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:186:31
+   186| const cbp2: CtorBothParams = ["s"]; // ERROR in Flow (first overload); TS would accept
+                                      ^^^ [1]
+
+References:
+   utilities.js:176:28
+   176| interface CtorNum { new(x: number): {a: number} }
+                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:204:2
+
+Cannot cast object literal to interface type because a construct signature declaring the expected parameter / return
+type is missing in object literal [1] but exists in interface type [2]. [incompatible-type]
+
+   utilities.js:204:2
+   204| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
+         ^^^^^^^^ [1]
+
+References:
+   utilities.js:204:15
+   204| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:219:5
+
+Cannot call `cfn` with `"bad"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   utilities.js:219:5
+   219| cfn("bad"); // ERROR: call sig wants number
+            ^^^^^ [1]
+
+References:
+   utilities.js:211:9
+   211|     (x: number): {called: number};
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:220:9
+
+Cannot call `cfn` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   utilities.js:220:9
+   220| new cfn(1); // ERROR: construct sig wants string
+                ^ [1]
+
+References:
+   utilities.js:212:12
+   212|     new(x: string): {constructed: string};
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:232:18
+
+Cannot call `HasStaticNew` because no arguments are expected by default constructor [1]. [extra-arg]
+
+   utilities.js:232:18
+   232| new HasStaticNew(1); // ERROR: default ctor takes no args (proves `static new` isn't the construct sig)
+                         ^
+
+References:
+   utilities.js:226:15
+   226| declare class HasStaticNew {
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:245:68
+
+Cannot assign `SubjAA` to `SubjAA_via_iface_bad` because in the first parameter: number [1] is incompatible with
+string [2]. [incompatible-type]
+
+   utilities.js:245:68
+   245| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
+                                                                           ^^^^^^
+
+References:
+   utilities.js:241:20
+   241|     constructor(x: number) { this.x = x; }
+                           ^^^^^^ [1]
+   utilities.js:245:48
+   245| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
+                                                       ^^^^^^ [2]
+
+
+
+Found 23 errors

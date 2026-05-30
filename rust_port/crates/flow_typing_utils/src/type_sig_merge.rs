@@ -3638,6 +3638,7 @@ fn merge_interface<'cx>(
         props,
         computed_props,
         calls,
+        constructs,
         dict,
     } = def;
     let static_ = {
@@ -3768,6 +3769,28 @@ fn merge_interface<'cx>(
                 }
             }
         };
+        let inst_construct_t = {
+            let ts: Vec<Type> = constructs
+                .iter()
+                .map(|t| merge_impl(env, cx, file, t, false, false))
+                .collect();
+            match ts.len() {
+                0 => None,
+                1 => Some(cx.make_call_prop(ts.into_iter().next().unwrap())),
+                _ => {
+                    let mut iter = ts.into_iter();
+                    let t0 = iter.next().unwrap();
+                    let t1 = iter.next().unwrap();
+                    let rest: Vec<Type> = iter.collect();
+                    let call_reason = type_util::reason_of_t(&t0).dupe();
+                    let t = Type::new(type_::TypeInner::IntersectionT(
+                        call_reason,
+                        type_::inter_rep::make(t0, t1, rest.into()),
+                    ));
+                    Some(cx.make_call_prop(t))
+                }
+            }
+        };
         let inst_dict = dict.as_ref().map(|d| merge_dict(env, cx, file, d, false));
         let inst = type_::InstType::new(type_::InstTypeInner {
             class_id: id,
@@ -3777,6 +3800,7 @@ fn merge_interface<'cx>(
             own_props: cx.generate_property_map(own_props),
             proto_props: cx.generate_property_map(proto_props),
             inst_call_t,
+            inst_construct_t,
             initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             inst_kind: type_::InstanceKind::InterfaceKind { inline },
@@ -4078,6 +4102,7 @@ fn merge_this_class_t<'cx>(
             own_props,
             proto_props,
             inst_call_t: None,
+            inst_construct_t: None,
             initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             inst_kind,
@@ -4643,7 +4668,9 @@ fn merge_declare_class<'cx>(
         computed_static_props,
         static_calls,
         calls,
+        constructs,
         dict,
+        // We don't actually support static indexers yet.
         static_dict: _,
     } = def;
     let this_reason = reason.dupe().replace_desc(RThisType);
@@ -4804,6 +4831,28 @@ fn merge_declare_class<'cx>(
                 }
             }
         };
+        let inst_construct_t = {
+            let ts: Vec<Type> = constructs
+                .iter()
+                .map(|t| merge_impl(&env, cx, file, t, false, false))
+                .collect();
+            match ts.len() {
+                0 => None,
+                1 => Some(cx.make_call_prop(ts.into_iter().next().unwrap())),
+                _ => {
+                    let mut iter = ts.into_iter();
+                    let t0 = iter.next().unwrap();
+                    let t1 = iter.next().unwrap();
+                    let rest: Vec<Type> = iter.collect();
+                    let r = type_util::reason_of_t(&t0).dupe();
+                    let t = Type::new(type_::TypeInner::IntersectionT(
+                        r,
+                        type_::inter_rep::make(t0, t1, rest.into()),
+                    ));
+                    Some(cx.make_call_prop(t))
+                }
+            }
+        };
         let inst_dict = dict.as_ref().map(|d| merge_dict(&env, cx, file, d, false));
         let inst = type_::InstType::new(type_::InstTypeInner {
             class_id: id_owned.dupe(),
@@ -4813,6 +4862,7 @@ fn merge_declare_class<'cx>(
             own_props,
             proto_props,
             inst_call_t,
+            inst_construct_t,
             initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             inst_kind: type_::InstanceKind::ClassKind,

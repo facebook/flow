@@ -1099,19 +1099,22 @@ fn type_of_hint_decomposition<'cx>(
                 )?)
             }
             ConcrHintDecompositionInner::DecompCallNew => {
-                // For interfaces with construct signatures (method named "new"), look up
-                // the "new" method directly. If "new" does not exist, the lookup will
-                // produce an actionable error.
+                // For interfaces with a construct signature (own or inherited via
+                // [extends]), extract it via the same helper subtyping uses, so the
+                // hint matches what would actually flow.
                 match get_t(cx, t.dupe()).deref() {
                     TypeInner::DefT(_, def_t)
                         if let DefTInner::InstanceT(_inst_t) = def_t.deref() =>
                     {
-                        Ok(speculation_flow::get_method_type_unsafe(
-                            cx,
-                            &t,
-                            reason.dupe(),
-                            type_util::mk_named_prop(reason.dupe(), false, Name::new("new")),
-                        )?)
+                        // Interface without a construct signature — `new` on it is an
+                        // error, but we don't have a sensible hint to give. Return an
+                        // error-any so downstream hint consumers treat it as "no hint"
+                        // rather than misrouting into the class-unwrap branch below
+                        // (which would silently produce nothing).
+                        match flow_js_utils::extract_lower_construct_t(cx, &t) {
+                            Some(lt) => Ok(lt),
+                            None => Ok(flow_typing_type::type_::any_t::error(reason.dupe())),
+                        }
                     }
                     _ => {
                         // For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap

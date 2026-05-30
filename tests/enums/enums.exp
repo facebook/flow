@@ -48,20 +48,20 @@ Cannot instantiate `EnumValue` because in type argument `TRepresentationType`: [
                           ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3224:32
-   3224| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/core.js:3232:32
+   3232| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                         ^^^^^^ [2]
-   <BUILTINS>/core.js:3224:41
-   3224| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/core.js:3232:41
+   3232| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                  ^^^^^^ [3]
-   <BUILTINS>/core.js:3224:50
-   3224| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/core.js:3232:50
+   3232| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                           ^^^^^^ [4]
-   <BUILTINS>/core.js:3224:59
-   3224| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/core.js:3232:59
+   3232| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                                    ^^^^^^^ [5]
-   <BUILTINS>/core.js:3224:69
-   3224| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/core.js:3232:69
+   3232| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                                              ^^^^^^ [6]
 
 
@@ -143,8 +143,8 @@ Cannot cast `x` to `EnumValue` because in the enum's representation type: number
            ^
 
 References:
-   <BUILTINS>/core.js:3238:16
-   3238| > = $EnumValue<TRepresentationType>;
+   <BUILTINS>/core.js:3246:16
+   3246| > = $EnumValue<TRepresentationType>;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    abstract-enum-value.js:35:18
      35|   x as EnumValue<boolean>; // ERROR
@@ -161,8 +161,8 @@ Cannot cast `x` to `EnumValue` because in the enum's representation type: string
            ^
 
 References:
-   <BUILTINS>/core.js:3238:16
-   3238| > = $EnumValue<TRepresentationType>;
+   <BUILTINS>/core.js:3246:16
+   3246| > = $EnumValue<TRepresentationType>;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    abstract-enum-value.js:35:18
      35|   x as EnumValue<boolean>; // ERROR
@@ -234,8 +234,8 @@ Cannot instantiate `Enum` because in type argument `TEnumValue`: boolean [1] is 
                        ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3255:31
-   3255| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/core.js:3263:31
+   3263| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                                        ^^^^^^^^^^^ [2]
 
 
@@ -266,11 +266,11 @@ string [3] is incompatible with boolean [4]. [incompatible-type]
            ^
 
 References:
-   <BUILTINS>/core.js:3255:12
-   3255| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/core.js:3263:12
+   3263| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                     ^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:3237:4
-   3237|   +TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
+   <BUILTINS>/core.js:3245:4
+   3245|   +TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
             ^^^^^^^^^^^^^^^^^^^ [2]
    abstract-enum.js:15:35
      15|   declare const x: Enum<EnumValue<string>>;
@@ -290,8 +290,8 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: `EnumValue`
            ^
 
 References:
-   <BUILTINS>/core.js:3255:12
-   3255| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/core.js:3263:12
+   3263| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                     ^^^^^^^^^^ [1]
    abstract-enum.js:15:25
      15|   declare const x: Enum<EnumValue<string>>;
@@ -340,8 +340,8 @@ Cannot call `f` because in type argument `TEnumValue`: boolean [1] is incompatib
            ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3255:31
-   3255| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/core.js:3263:31
+   3263| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                                        ^^^^^^^^^^^ [2]
 
 

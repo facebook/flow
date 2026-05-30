@@ -5475,6 +5475,7 @@ pub struct InstTypeInner {
     pub own_props: properties::Id,
     pub proto_props: properties::Id,
     pub inst_call_t: Option<i32>,
+    pub inst_construct_t: Option<i32>,
     pub initialized_fields: FlowOrdSet<FlowSmolStr>,
     pub initialized_static_fields: FlowOrdSet<FlowSmolStr>,
     pub inst_kind: InstanceKind,

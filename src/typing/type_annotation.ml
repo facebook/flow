@@ -1762,7 +1762,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           );
         Tast_utils.error_mapper#type_ t
       ) else
-        (* Desugar `new (params) => T` to an inline interface: `interface { new(params): T }` *)
+        (* Flow has no notion of abstract classes; flag `abstract new (...) => T`
+           the same way an interface body's `abstract m(): T` is flagged in
+           [add_interface_properties]. *)
+        let () =
+          if abstract_ && not (Context.abstract_classes env.cx) then
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc })
+        in
+        (* Desugar `new (params) => T` to an inline interface whose [inst_construct_t]
+           carries the constructor signature. *)
         let reason = mk_annot_reason RInterfaceType loc in
         let id = Context.make_aloc_id env.cx loc in
         let super =
@@ -1780,19 +1790,45 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let (fsig, func_ast) =
           mk_method_func_sig ~meth_kind:(MethodKind { static = false }) env loc func
         in
-        let iface_sig =
-          Class_type_sig.append_method
-            ~static:false
-            "new"
-            ~id_loc:loc
-            ~this_write_loc:None
-            ~func_sig:fsig
-            iface_sig
-        in
         Class_type_sig.check_signature_compatibility env.cx reason iface_sig;
-        ( (loc, Class_type_sig.thistype env.cx iface_sig),
-          ConstructorType { ConstructorType.abstract_; func = func_ast }
-        )
+        (* Store the raw method-bound funtype produced by
+           [Func_type_sig.methodtype]; consumers in [flow_js.ml] normalize on
+           read via [read_construct_t] (parallel to how [type_sig_merge.ml]
+           also stores raw and lets the reader normalize). *)
+        let ctor_t = Func_type_sig.methodtype env.cx None (Type.dummy_this loc) fsig in
+        let construct_id = Context.make_call_prop env.cx ctor_t in
+        let iface_t = Class_type_sig.thistype env.cx iface_sig in
+        let with_construct =
+          let open Type in
+          match iface_t with
+          | DefT (r, InstanceT instance) ->
+            DefT
+              ( r,
+                InstanceT
+                  {
+                    instance with
+                    inst = { instance.inst with inst_construct_t = Some construct_id };
+                  }
+              )
+          | ThisInstanceT (r, instance, is_this, this_name) ->
+            ThisInstanceT
+              ( r,
+                { instance with inst = { instance.inst with inst_construct_t = Some construct_id } },
+                is_this,
+                this_name
+              )
+          | _ ->
+            (* Unreachable; defensive. [Class_type_sig.thistype] on a
+               freshly-built inline interface always returns one of the two
+               shapes above. Fire an internal error and recover with an any
+               rather than crashing the typechecker if the invariant is ever
+               violated. *)
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.EInternal (loc, Error_message.UnexpectedInlineInterfaceType));
+            AnyT.at (AnyError None) loc
+        in
+        ((loc, with_construct), ConstructorType { ConstructorType.abstract_; func = func_ast })
     | (loc, (Exists _ as t_ast)) ->
       Flow_js_utils.add_output
         env.cx
@@ -3664,6 +3700,37 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       (match resolve_named_key ~check_variance:false key with
                       | None -> (x, Tast_utils.error_mapper#object_property_type (loc, prop))
                       | Some (name, key_loc, rebuild_key) ->
+                        (* A construct signature uses the keyword `new` as a
+                           syntactic marker — it's not a property whose name
+                           happens to be "new". Restrict to:
+                           - obj_kind = Interface (declare-class methods named
+                             `new` are ordinary methods);
+                           - non-static (construct sigs live on the instance
+                             side only);
+                           - unquoted Identifier key (`"new"()` is an ordinary
+                             method);
+                           - not optional (`new?()` makes no sense for a
+                             construct signature).
+                           Mirror predicate in [type_sig_parse.ml]
+                           [interface_props.prop]. The type-sig predicate is
+                           shorter because the surrounding context already
+                           narrows the cases: [interface_props] only runs for
+                           interface bodies (so [obj_kind = Interface] is
+                           implicit), only fires for non-static members, and
+                           [optional_method_as_field] has already routed
+                           `new?()` to the field path. *)
+                        let key_is_identifier =
+                          match key with
+                          | Ast.Expression.Object.Property.Identifier _ -> true
+                          | _ -> false
+                        in
+                        let is_construct_sig =
+                          name = "new"
+                          && obj_kind = `Interface
+                          && (not static)
+                          && key_is_identifier
+                          && not optional
+                        in
                         let meth_kind =
                           match name with
                           | "constructor" -> ConstructorKind
@@ -3672,19 +3739,28 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
                         let this_write_loc = None in
                         let ft = Func_type_sig.methodtype env.cx this_write_loc this fsig in
-                        let append_method =
-                          match (static, meth_kind) with
-                          | (false, ConstructorKind) ->
-                            Class_type_sig.append_constructor ~id_loc:(Some key_loc)
-                          | _ ->
-                            Class_type_sig.append_method
-                              ~static
-                              name
-                              ~id_loc:key_loc
-                              ~this_write_loc
+                        let x =
+                          if is_construct_sig then
+                            (* Construct sigs are stored on the instance side
+                               of an interface only. Stored raw; [read_construct_t]
+                               normalizes on read. *)
+                            Class_type_sig.append_construct ft x
+                          else
+                            let append_method =
+                              match (static, meth_kind) with
+                              | (false, ConstructorKind) ->
+                                Class_type_sig.append_constructor ~id_loc:(Some key_loc)
+                              | _ ->
+                                Class_type_sig.append_method
+                                  ~static
+                                  name
+                                  ~id_loc:key_loc
+                                  ~this_write_loc
+                            in
+                            append_method ~func_sig:fsig x
                         in
                         let open Ast.Type in
-                        ( append_method ~func_sig:fsig x,
+                        ( x,
                           ( loc,
                             {
                               prop with

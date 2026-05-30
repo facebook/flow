@@ -883,6 +883,14 @@ and tag_of_inst inst =
   let {
     inst_react_dro = _;
     inst_call_t;
+    (* Only call signatures justify [FunTag] for tag-based narrowing. A
+       construct signature alone makes [typeof x === 'function'] true at
+       runtime, but Flow's [InstanceT <: FunT] cast and [BindT] / [CallT]
+       rules only honor [inst_call_t] — adding [FunTag] for construct-only
+       interfaces would let [typeof] narrow into a branch where the value
+       can't actually be used as a function, surfacing as confusing "missing
+       method bind" errors. *)
+    inst_construct_t = _;
     inst_kind;
     class_id = _;
     class_name = _;

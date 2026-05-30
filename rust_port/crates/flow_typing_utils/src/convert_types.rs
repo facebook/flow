@@ -574,6 +574,16 @@ fn json_of_insttype<'cx>(cx: &Context<'cx>, depth: i32, inst: &InstType) -> Json
             })
         }
     };
+    let construct_t_json = match inst.inst_construct_t {
+        None => Json::Null,
+        Some(id) => {
+            let construct = cx.find_call(id);
+            json!({
+                "id": id,
+                "construct": type_to_json(cx, depth - 1, &construct),
+            })
+        }
+    };
     json!({
         "class_name": class_name_json,
         "class_id": LocSig::debug_to_string(&inst.class_id.0, true),
@@ -581,6 +591,7 @@ fn json_of_insttype<'cx>(cx: &Context<'cx>, depth: i32, inst: &InstType) -> Json
         "own_props": json_of_property_map(cx, depth, &inst.own_props),
         "proto_props": json_of_property_map(cx, depth, &inst.proto_props),
         "call_t": call_t_json,
+        "construct_t": construct_t_json,
     })
 }
 

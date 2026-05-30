@@ -135,3 +135,5 @@ val map_property : f:(Type.t -> Type.t) -> Type.property_type -> Type.property_t
 
 val mk_possibly_generic_render_type :
   variant:Flow_ast.Type.Renders.variant -> reason -> Type.t -> Type.t option
+
+val normalize_construct_sig : ?override_return_t:Type.t -> Type.t -> Type.t

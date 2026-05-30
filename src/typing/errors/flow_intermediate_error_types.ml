@@ -1105,6 +1105,10 @@ type 'loc message =
       suggestion: string option;
       reason_indexer: 'loc virtual_reason option;
     }
+  | MessageConstructSignatureMissing of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
   | MessagePropsMissing of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;

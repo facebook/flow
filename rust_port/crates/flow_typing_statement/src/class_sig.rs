@@ -60,6 +60,7 @@ pub fn empty<C: ConfigTypes>(
             getters: BTreeMap::new(),
             setters: BTreeMap::new(),
             calls: Vec::new(),
+            constructs: Vec::new(),
             dict: None,
         }
     };
@@ -421,6 +422,19 @@ pub fn append_call<C: ConfigTypes>(static_: bool, t: Type, x: &mut class_types::
     );
 }
 
+// Construct signatures only exist on the instance side of an interface.
+// A static `new(): T` on a declared class is an ordinary static method and
+// goes through [append_method ~static:true] instead.
+pub fn append_construct<C: ConfigTypes>(t: Type, x: &mut class_types::Class<C>) {
+    map_sig(
+        false,
+        |s| {
+            s.constructs.push(t);
+        },
+        x,
+    );
+}
+
 pub fn add_getter<C: ConfigTypes>(
     static_: bool,
     name: FlowSmolStr,
@@ -626,6 +640,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     BTreeMap<FlowSmolStr, Property>,
     BTreeMap<FlowSmolStr, Property>,
     Option<Type>,
+    Option<Type>,
 ) {
     // To determine the default `this` parameter for a method without `this` annotation, we
     // default to the instance/static `this` type
@@ -809,6 +824,22 @@ fn elements<'a, C: crate::func_params_intf::Config>(
             None
         }
     };
+    let construct = {
+        let mut iter = s.constructs.iter().duped();
+        if let Some(t0) = iter.next() {
+            if let Some(t1) = iter.next() {
+                let ts: Vec<Type> = iter.collect();
+                Some(Type::new(TypeInner::IntersectionT(
+                    type_util::reason_of_t(&t0).dupe(),
+                    inter_rep::make(t0, t1, ts.into()),
+                )))
+            } else {
+                Some(t0)
+            }
+        } else {
+            None
+        }
+    };
     // Only un-initialized fields require annotations, so determine now
     // (syntactically) which fields have initializers
     let mut initialized_fields = FlowOrdSet::new();
@@ -820,7 +851,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
             }
         }
     }
-    (initialized_fields, fields, methods_props, call)
+    (initialized_fields, fields, methods_props, call, construct)
 }
 
 fn specialize<'a>(cx: &Context<'a>, use_op: UseOp, targs: Option<Vec<Type>>, c: Type) -> Type {
@@ -836,7 +867,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
     let this = type_util::class_type(this_or_mixed(loc, x), false, None);
-    let (inited_fields, fields, methods, call) = elements(cx, this, None, s, &x.super_);
+    let (inited_fields, fields, methods, call, _construct) = elements(cx, this, None, s, &x.super_);
     let props: properties::PropertiesMap = {
         let mut seen = std::collections::BTreeSet::new();
         fields
@@ -929,7 +960,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             .collect(),
     };
     let loc = s.instance.reason.loc().dupe();
-    let (initialized_fields, fields, methods, call) = elements(
+    let (initialized_fields, fields, methods, call, construct) = elements(
         cx,
         this_or_mixed(loc, s),
         constructor,
@@ -958,6 +989,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
         own_props: cx.generate_property_map(own_pmap),
         proto_props: cx.generate_property_map(proto_pmap),
         inst_call_t: call.map(|t| cx.make_call_prop(t)),
+        inst_construct_t: construct.map(|t| cx.make_call_prop(t)),
         initialized_fields,
         initialized_static_fields,
         inst_kind: inst_kind.unwrap_or_else(|| get_inst_kind(s)),
@@ -1438,7 +1470,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     // dynamic dispatch enforces that the method is called on the right subclass
     // at runtime even if the static type is a supertype.
     let inst_loc = reason.loc().dupe();
-    let (_, own, proto, _call) = elements(
+    let (_, own, proto, _call, _construct) = elements(
         cx,
         this_or_mixed(inst_loc.dupe(), x),
         None,
@@ -1448,7 +1480,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     let static_ = {
         let this = type_util::class_type(this_or_mixed(inst_loc, x), false, None);
         // NOTE: The own, proto maps are disjoint by construction.
-        let (_, own, proto, _call) = elements(cx, this, None, &x.static_, &x.super_);
+        let (_, own, proto, _call, _construct) = elements(cx, this, None, &x.static_, &x.super_);
         let mut merged = own;
         for (k, v) in proto {
             merged.insert(k, v);

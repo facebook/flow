@@ -440,15 +440,19 @@ and type_of_hint_decomposition cx opts op reason t =
               (Flow_js.get_builtin_typeapp cx reason "Promise" [t], tout)
         )
       | Decomp_CallNew ->
-        (* For interfaces with construct signatures (method named "new"), look up the "new" method
-           directly. If "new" does not exist, the lookup will produce an actionable error. *)
+        (* For interfaces with a construct signature (own or inherited via
+           [extends]), extract it via the same helper subtyping uses, so the
+           hint matches what would actually flow. *)
         (match get_t cx t with
-        | DefT (_, InstanceT _) ->
-          SpeculationFlow.get_method_type_unsafe
-            cx
-            t
-            reason
-            (mk_named_prop ~reason (OrdinaryName "new"))
+        | DefT (_, InstanceT _) as t ->
+          (match Flow_js_utils.extract_lower_construct_t cx t with
+          | Some lt -> lt
+          (* Interface without a construct signature — `new` on it is an
+             error, but we don't have a sensible hint to give. Return an
+             error-any so downstream hint consumers treat it as "no hint"
+             rather than misrouting into the class-unwrap branch below
+             (which would silently produce nothing). *)
+          | None -> AnyT.error reason)
         | _ ->
           (* For `new A(...)`, The initial base type we have is `Class<A>`. We need to first unwrap
              it, so that we can access the `constructor` method (which is considered an instance

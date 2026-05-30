@@ -175,6 +175,255 @@ pub fn possible_uses<'cx>(cx: &Context<'cx>, id: i32) -> Vec<UseT<Context<'cx>>>
     uses_of(cx, &cx.find_graph(id))
 }
 
+pub fn find_resolved_opt<'cx, T, F>(cx: &Context<'cx>, default: T, f: F, id: i32) -> T
+where
+    F: FnOnce(&Type) -> T,
+{
+    let constraints = cx.find_graph(id);
+    match constraints {
+        Constraints::Resolved(t) => f(&t),
+        Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
+        Constraints::Unresolved(_) => default,
+    }
+}
+
+pub fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+    match t.deref() {
+        TypeInner::GenericT(box GenericTData {
+            reason,
+            name,
+            id: g_id,
+            bound,
+            no_infer,
+        }) if let TypeInner::OpenT(tvar) = bound.deref() => find_resolved_opt(
+            cx,
+            t.dupe(),
+            |resolved_t| {
+                Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                    reason: reason.dupe(),
+                    name: name.dupe(),
+                    id: g_id.clone(),
+                    bound: drop_resolved(cx, resolved_t),
+                    no_infer: *no_infer,
+                })))
+            },
+            tvar.id() as i32,
+        ),
+        TypeInner::OpenT(tvar) => {
+            let id = tvar.id() as i32;
+            find_resolved_opt(cx, t.dupe(), |resolved_t| drop_resolved(cx, resolved_t), id)
+        }
+        _ => t.dupe(),
+    }
+}
+
+// Both writer pipelines ([type_annotation.rs] and [type_sig_merge.rs]) store
+// the raw funtype produced by their respective signature lowering. Subtyping
+// requires the construct-sig form (unbound [this_t], optional [return_t]
+// override), so consumers normalize on read. Centralizing the normalize here
+// keeps the "always normalize on read" invariant in one place rather than
+// open-coded at each call site.
+// (Lives here rather than [type_util.rs] because [Context] sits above
+// [TypeUtil] in the build graph.)
+pub fn read_construct_t<'cx>(cx: &Context<'cx>, id: i32) -> Type {
+    flow_typing_type::type_util::normalize_construct_sig(None, cx.find_call(id))
+}
+
+// Walk a type, collecting all [inst_construct_t]s reachable through interface
+// inheritance ([super]) and the standard set of wrappers. Returns sigs in
+// source order: own sigs first, then sigs inherited via [extends]
+// (derived-first). Order is preserved so callers can rely on a stable shape
+// when overload resolution is order-sensitive (e.g. [infer]'s overload pick).
+// Only [InterfaceKind] walks [super]; class [inst_kind]s use the
+// [proto_props.constructor] mechanism handled by [extract_class_ctor_t].
+pub fn collect_construct_ts<'cx>(cx: &Context<'cx>, t: &Type) -> Vec<Type> {
+    use flow_typing_type::type_::ThisTypeAppTData;
+    fn go<'cx>(cx: &Context<'cx>, mut acc: Vec<Type>, t: &Type) -> Vec<Type> {
+        let dropped = drop_resolved(cx, t);
+        match dropped.deref() {
+            TypeInner::AnnotT(_, t, _) => go(cx, acc, t),
+            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => go(cx, acc, c),
+            TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+                go(cx, acc, inner)
+            }
+            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                if let Some(id) = inst_t.inst.inst_construct_t {
+                    acc.push(read_construct_t(cx, id));
+                }
+                match &inst_t.inst.inst_kind {
+                    InstanceKind::InterfaceKind { .. } => go(cx, acc, &inst_t.super_),
+                    _ => acc,
+                }
+            }
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                if let Some(id) = instance.inst.inst_construct_t {
+                    acc.push(read_construct_t(cx, id));
+                }
+                match &instance.inst.inst_kind {
+                    InstanceKind::InterfaceKind { .. } => go(cx, acc, &instance.super_),
+                    _ => acc,
+                }
+            }
+            TypeInner::GenericT(box GenericTData { bound, .. }) => go(cx, acc, bound),
+            TypeInner::IntersectionT(_, rep) => rep
+                .members_iter()
+                .fold(acc, |acc, member| go(cx, acc, member)),
+            _ => acc,
+        }
+    }
+    go(cx, Vec::new(), t)
+}
+
+// Combine a list of construct sigs into the canonical overload form: a single
+// funtype if there's only one, an [IntersectionT] of funtypes for two or more.
+// This is the same shape [class_sig.rs] and [type_sig_merge.rs] produce for
+// direct overloads, so [CallT] dispatch and structural subtyping get standard
+// overload resolution for free.
+//
+// Members that are themselves [IntersectionT] are flattened: an interface's
+// own slot already stores its overloads as an [IntersectionT], and an
+// inherited slot does the same, so without flattening a child + inherited
+// pair becomes [IntersectionT(IntersectionT(o0, o1), inh)] — a nesting
+// [ty_normalizer]'s one-level [InterRep.members] unwrap doesn't handle.
+pub fn combine_construct_ts(ts: Vec<Type>) -> Option<Type> {
+    let flat: Vec<Type> = ts
+        .into_iter()
+        .flat_map(|t| match t.deref() {
+            TypeInner::IntersectionT(_, rep) => rep.members_iter().duped().collect::<Vec<_>>(),
+            _ => vec![t.dupe()],
+        })
+        .collect();
+    let mut iter = flat.into_iter();
+    let t0 = iter.next()?;
+    match iter.next() {
+        None => Some(t0),
+        Some(t1) => {
+            let rest: Vec<Type> = iter.collect();
+            let reason = flow_typing_type::type_util::reason_of_t(&t0).dupe();
+            Some(Type::new(TypeInner::IntersectionT(
+                reason,
+                inter_rep::make(t0, t1, rest.into()),
+            )))
+        }
+    }
+}
+
+// Extract a construct sig from a class [this] (the instance type wrapped by
+// [ClassT]). Walks the class's super chain looking for "constructor" in
+// [proto_props], then normalizes: unbinds `this` (a construct sig has no
+// meaningful receiver — `new` produces a fresh instance) and sets [return_t]
+// to the instance. We walk manually rather than dispatching [MethodT] because
+// [MethodT NoMethodAction] returns an unresolved [OpenT] that
+// [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
+// has already seen the raw method-bound funtype.
+pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type> {
+    use flow_typing_type::type_::DefT;
+    use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
+    use flow_typing_type::type_::ThisTypeAppTData;
+    use flow_typing_type::type_::poly;
+    use flow_typing_type::type_::properties;
+    fn lookup_ctor<'cx>(
+        cx: &Context<'cx>,
+        proto_props: properties::Id,
+        super_: &Type,
+        recur: impl Fn(&Context<'cx>, &Type) -> Option<Type>,
+    ) -> Option<Type> {
+        let props = cx.find_props(proto_props);
+        match props.get(&Name::new(FlowSmolStr::new_inline("constructor"))) {
+            // A setter-only "constructor" is reachable: the parser emits
+            // [ConstructorCannotBeAccessor] but still produces a [Method.Set] AST
+            // node which lands in [s.setters] under "constructor", and the
+            // default-ctor synthesizer's [Method] then loses to the setter in
+            // [Class_sig.elements]'s left-biased [SMap.union]. Bail with [None]
+            // rather than walking [super]: the user explicitly wrote
+            // [set constructor], so silently inheriting a parent ctor would mask
+            // the parse error and produce a misleading construct sig at
+            // [new C(...)] sites.
+            Some(p) => flow_typing_type::type_::property::read_t(p),
+            None => recur(cx, super_),
+        }
+    }
+    fn find_ctor<'cx>(cx: &Context<'cx>, t: &Type) -> Option<Type> {
+        let dropped = drop_resolved(cx, t);
+        match dropped.deref() {
+            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                lookup_ctor(
+                    cx,
+                    inst_t.inst.proto_props.dupe(),
+                    &inst_t.super_,
+                    find_ctor,
+                )
+            }
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => lookup_ctor(
+                cx,
+                instance.inst.proto_props.dupe(),
+                &instance.super_,
+                find_ctor,
+            ),
+            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => find_ctor(cx, c),
+            TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+                find_ctor(cx, inner)
+            }
+            // Preserve [PolyT] so generic classes carry their tparams through to
+            // call sites. Without this, downstream sees unsubstituted [BoundT]
+            // in argument/return positions. Fresh [Poly.generate_id ()] — the
+            // wrapped polytype is a different value from the class's [PolyT],
+            // so memoization on the original id would be wrong.
+            TypeInner::DefT(r, def_t)
+                if let DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    id: _,
+                }) = def_t.deref() =>
+            {
+                find_ctor(cx, t_out).map(|ctor| {
+                    Type::new(TypeInner::DefT(
+                        r.dupe(),
+                        DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                            tparams_loc: tparams_loc.dupe(),
+                            tparams: tparams.dupe(),
+                            t_out: ctor,
+                            id: poly::Id::generate_id(),
+                        }))),
+                    ))
+                })
+            }
+            TypeInner::GenericT(box GenericTData { bound, .. }) => find_ctor(cx, bound),
+            _ => None,
+        }
+    }
+    find_ctor(cx, this)
+        .map(|ctor| flow_typing_type::type_util::normalize_construct_sig(Some(this.dupe()), ctor))
+}
+
+// Try to extract a construct sig from a lower type, handling all forms that
+// might carry one: interface own/inherited [inst_construct_t], class
+// [proto_props.constructor], and the standard wrapping types ([AnnotT],
+// [GenericT], [ThisTypeAppT]). Returns [None] if the lower has no construct
+// sig. Used by [ConstructorT] dispatch, [inst_structural_subtype]'s
+// construct comparison, and [type_hint.rs]'s [Decomp_CallNew].
+pub fn extract_lower_construct_t<'cx>(cx: &Context<'cx>, lower: &Type) -> Option<Type> {
+    use flow_typing_type::type_::ThisTypeAppTData;
+    fn peek<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+        let dropped = drop_resolved(cx, t);
+        match dropped.deref() {
+            TypeInner::AnnotT(_, t, _) => peek(cx, t),
+            TypeInner::GenericT(box GenericTData { bound: t, .. })
+            | TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: t, .. }) => peek(cx, t),
+            _ => dropped.dupe(),
+        }
+    }
+    let peeked = peek(cx, lower);
+    match peeked.deref() {
+        TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
+            extract_class_ctor_t(cx, this)
+        }
+        _ => combine_construct_ts(collect_construct_ts(cx, lower)),
+    }
+}
+
 pub fn collect_lowers<'cx>(
     filter_empty: bool,
     cx: &Context<'cx>,

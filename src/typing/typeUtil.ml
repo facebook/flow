@@ -984,3 +984,36 @@ let mk_possibly_generic_render_type ~variant reason t =
     | None -> None
   else
     None
+
+(* Construct signatures don't have a meaningful `this`, and the class
+   `constructor` we sometimes use as a synthetic construct signature has the
+   class-instance type as its return. This helper walks the funtype leaves of
+   [t] (plain [FunT], [PolyT { t_out = FunT }], or [IntersectionT] of either)
+   and rewrites each leaf's [this_t] to an unbound, unconstrained any with
+   [This_Method { unbound = true }], optionally also overriding [return_t].
+
+   The [This_Method { unbound = true }] is deliberate: it ensures funtype
+   subtyping at [subtyping_kit.ml] does NOT fire [EMethodUnbinding] when a
+   class's method-bound `constructor` flows to a normalized construct sig
+   (both sides land on the [This_Method _, This_Method _] arm). Used by the
+   construct-signature plumbing in [type_annotation.ml] and [flow_js.ml]. *)
+let normalize_construct_sig ?override_return_t t =
+  let rewrite_fun ft =
+    let (this_t, _) : t * Type.this_status = ft.this_t in
+    let any_this_t = AnyT (reason_of_t this_t, AnyError None) in
+    let return_t = Base.Option.value override_return_t ~default:ft.return_t in
+    { ft with this_t = (any_this_t, This_Method { unbound = true }); return_t }
+  in
+  let rec go t =
+    match t with
+    | DefT (r, FunT (statics, ft)) -> DefT (r, FunT (statics, rewrite_fun ft))
+    | DefT (r, PolyT { tparams_loc; tparams; t_out; id }) ->
+      (* Reuse the original Poly id. Every consumer normalizes on read, so the
+         instantiation cache only ever holds entries computed from the
+         normalized body; reusing the id lets repeated reads share those
+         entries. Regenerating it would be correct but defeat the cache. *)
+      DefT (r, PolyT { tparams_loc; tparams; t_out = go t_out; id })
+    | IntersectionT (r, rep) -> IntersectionT (r, InterRep.map go rep)
+    | _ -> t
+  in
+  go t

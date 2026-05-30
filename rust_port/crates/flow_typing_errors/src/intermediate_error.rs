@@ -91,6 +91,7 @@ use super::intermediate_error_types::MessageCannotUseEnumMemberUsedAsTypeData;
 use super::intermediate_error_types::MessageCannotUseTypeForAnnotationInferenceData;
 use super::intermediate_error_types::MessageCannotUseTypeGuardWithFunctionParamHavocedData;
 use super::intermediate_error_types::MessageCannotUseTypeInValuePositionData;
+use super::intermediate_error_types::MessageConstructSignatureMissingData;
 use super::intermediate_error_types::MessageDefinitionInvalidRecursiveData;
 use super::intermediate_error_types::MessageDuplicateModuleProviderData;
 use super::intermediate_error_types::MessageEnumDuplicateMemberNameData;
@@ -128,6 +129,7 @@ use super::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
+use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
 use crate::error_message::EExpectedBooleanLitData;
 use crate::error_message::EExpectedNumberLitData;
@@ -2912,6 +2914,22 @@ where
         )
     };
 
+    let mk_construct_signature_missing_in_subtyping_error = |lower: VirtualReason<L>,
+                                                             upper: VirtualReason<L>,
+                                                             use_op: VirtualUseOp<L>|
+     -> IntermediateError<L> {
+        let loc = loc_of_aloc(&lower.loc);
+        let lower = mod_lower_reason_according_to_use_ops(lower.dupe(), &use_op);
+        mk_use_op_error(
+            loc,
+            use_op,
+            None,
+            Message::MessageConstructSignatureMissing(Box::new(
+                MessageConstructSignatureMissingData { lower, upper },
+            )),
+        )
+    };
+
     let mk_props_missing_in_subtyping_error = |props: Vec1<FlowSmolStr>,
                                                lower: VirtualReason<L>,
                                                upper: VirtualReason<L>,
@@ -3514,6 +3532,17 @@ where
             reason_indexer,
             use_op,
         ),
+
+        (
+            None,
+            FriendlyMessageRecipe::ConstructSignatureMissingInSubtyping(
+                box ConstructSignatureMissingInSubtypingData {
+                    reason_lower,
+                    reason_upper,
+                    use_op,
+                },
+            ),
+        ) => mk_construct_signature_missing_in_subtyping_error(reason_lower, reason_upper, use_op),
 
         (
             None,
@@ -7783,6 +7812,17 @@ where
                     }
                 }
             }
+            MessageConstructSignatureMissing(box MessageConstructSignatureMissingData {
+                lower,
+                upper,
+            }) => friendly::Message(vec![
+                text(
+                    "a construct signature declaring the expected parameter / return type is missing in ",
+                ),
+                ref_(lower),
+                text(" but exists in "),
+                ref_(upper),
+            ]),
             MessagePropsMissing(box MessagePropsMissingData {
                 lower,
                 upper,

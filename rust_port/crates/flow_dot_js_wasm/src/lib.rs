@@ -229,6 +229,7 @@ fn builtin_sig_options() -> TypeSigOptions {
         locs_to_dirtify: Vec::new(),
         is_ts_file: false,
         tslib_syntax: true,
+        abstract_classes: true,
     }
 }
 

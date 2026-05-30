@@ -1395,6 +1395,11 @@ let rec make_intermediate_error :
       use_op
       (MessagePropMissing { lower; upper = Some upper; prop; suggestion; reason_indexer })
   in
+  let mk_construct_signature_missing_in_subtyping_error lower upper use_op =
+    let loc = loc_of_reason lower in
+    let lower = mod_lower_reason_according_to_use_ops lower use_op in
+    mk_use_op_error loc use_op (MessageConstructSignatureMissing { lower; upper })
+  in
   let mk_props_missing_in_subtyping_error props lower upper use_op =
     let loc = loc_of_reason lower in
     let lower = mod_lower_reason_according_to_use_ops lower use_op in
@@ -1531,6 +1536,8 @@ let rec make_intermediate_error :
         reason_upper
         reason_indexer
         use_op
+    | (None, ConstructSignatureMissingInSubtyping { reason_lower; reason_upper; use_op }) ->
+      mk_construct_signature_missing_in_subtyping_error reason_lower reason_upper use_op
     | (None, PropsMissingInSubtyping { props; reason_lower; reason_upper; use_op }) ->
       mk_props_missing_in_subtyping_error props reason_lower reason_upper use_op
     | ( None,
@@ -4625,6 +4632,13 @@ let to_printable_error :
         (match prop with
         | None when is_nullish_reason lower -> [ref lower; text " does not have properties"]
         | _ -> prop_message @ suggestion @ [text " is missing in "; ref lower]))
+    | MessageConstructSignatureMissing { lower; upper } ->
+      [
+        text "a construct signature declaring the expected parameter / return type is missing in ";
+        ref lower;
+        text " but exists in ";
+        ref upper;
+      ]
     | MessagePropsMissing { lower; upper; props } ->
       (match props with
       | (prop, []) ->

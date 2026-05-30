@@ -1456,6 +1456,12 @@ pub struct MessagePropMissingData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageConstructSignatureMissingData<L: Dupe> {
+    pub lower: VirtualReason<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropsMissingData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
@@ -2144,6 +2150,8 @@ pub enum Message<L: Dupe> {
     MessagePropExtraAgainstExactObject(Box<MessagePropExtraAgainstExactObjectData<L>>),
 
     MessagePropMissing(Box<MessagePropMissingData<L>>),
+
+    MessageConstructSignatureMissing(Box<MessageConstructSignatureMissingData<L>>),
 
     MessagePropsMissing(Box<MessagePropsMissingData<L>>),
 

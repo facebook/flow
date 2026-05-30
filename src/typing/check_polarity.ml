@@ -80,6 +80,7 @@ end = struct
         own_props;
         proto_props;
         inst_call_t = call_t;
+        inst_construct_t = construct_t;
         initialized_fields = _;
         initialized_static_fields = _;
         inst_kind = _;
@@ -99,6 +100,7 @@ end = struct
       check_polarity_propmap cx ?trace seen tparams polarity class_private_fields;
       check_polarity_propmap cx ?trace seen tparams polarity class_private_methods;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace seen tparams polarity);
+      Base.Option.iter construct_t ~f:(check_polarity_call cx ?trace seen tparams polarity);
       Base.Option.iter inst_dict ~f:(check_polarity_dict cx ?trace seen tparams polarity)
     (* We can ignore the statics of function annotations, since
      * they will always be "uninteresting," never containing a GenericT. *)

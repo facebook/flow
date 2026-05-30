@@ -256,6 +256,7 @@ type ('loc, 'a) declare_class_sig =
       computed_static_props: ('a * ('loc, 'a) interface_prop) list;
       static_calls: 'a list;
       calls: 'a list;
+      constructs: 'a list;
       dict: 'a obj_annot_dict option;
       static_dict: 'a obj_annot_dict option;
     }
@@ -267,6 +268,7 @@ type ('loc, 'a) interface_sig =
       props: ('loc, 'a) interface_prop smap;
       computed_props: ('a * ('loc, 'a) interface_prop) list;
       calls: 'a list;
+      constructs: 'a list;
       dict: 'a obj_annot_dict option;
     }
 [@@deriving iter, map, show { with_path = false }]

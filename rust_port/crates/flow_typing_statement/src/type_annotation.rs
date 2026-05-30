@@ -3377,7 +3377,23 @@ fn convert_inner<'a>(
                 let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
                 v
             } else {
-                // Desugar `new (params) => T` to an inline interface: `interface { new(params): T }`
+                // Flow has no notion of abstract classes; flag `abstract new (...) => T`
+                // the same way an interface body's `abstract m(): T` is flagged in
+                // [add_interface_properties].
+                if *abstract_ && !cx.metadata().frozen.abstract_classes {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::ETSSyntax(Box::new(
+                            flow_typing_errors::error_message::ETSSyntaxData {
+                                kind:
+                                    flow_typing_errors::error_message::TSSyntaxKind::AbstractMethod,
+                                loc: loc.dupe(),
+                            },
+                        )),
+                    );
+                }
+                // Desugar `new (params) => T` to an inline interface whose [inst_construct_t]
+                // carries the constructor signature.
                 let reason =
                     reason::mk_annot_reason(reason::VirtualReasonDesc::RInterfaceType, loc.dupe());
                 let id = cx.make_aloc_id(loc);
@@ -3391,18 +3407,19 @@ fn convert_inner<'a>(
                         this_t: None,
                     },
                 );
-                let mut iface_sig = class_sig::empty(
-                    id,
-                    None,
-                    loc.dupe(),
-                    reason.dupe(),
-                    None,
-                    env.tparams_map
-                        .iter()
-                        .map(|(k, v)| (k.dupe(), v.dupe()))
-                        .collect(),
-                    super_,
-                );
+                let iface_sig: func_class_sig_types::class::Class<FuncTypeParamsConfig> =
+                    class_sig::empty(
+                        id,
+                        None,
+                        loc.dupe(),
+                        reason.dupe(),
+                        None,
+                        env.tparams_map
+                            .iter()
+                            .map(|(k, v)| (k.dupe(), v.dupe()))
+                            .collect(),
+                        super_,
+                    );
                 let (fsig, func_ast) = mk_method_func_sig(
                     cx,
                     env,
@@ -3410,20 +3427,82 @@ fn convert_inner<'a>(
                     loc.dupe(),
                     func,
                 )?;
-                class_sig::append_method(
-                    false,
-                    "new".into(),
-                    loc.dupe(),
-                    None,
-                    fsig,
-                    None,
-                    None,
-                    &mut iface_sig,
-                );
                 class_sig::check_signature_compatibility(cx, reason.dupe(), &iface_sig);
+                // Store the raw method-bound funtype produced by
+                // [Func_type_sig.methodtype]; consumers in [flow_js/] normalize on
+                // read via [read_construct_t] (parallel to how [type_sig_merge.rs]
+                // also stores raw and lets the reader normalize).
+                let ctor_t = crate::func_sig::methodtype(
+                    cx,
+                    None,
+                    flow_typing_type::type_::dummy_this(loc.dupe()),
+                    &fsig,
+                );
+                let construct_id = cx.make_call_prop(ctor_t);
                 let iface_t = class_sig::thistype(cx, &iface_sig);
+                let with_construct = {
+                    use std::rc::Rc;
+
+                    use flow_typing_type::type_::DefT;
+                    use flow_typing_type::type_::DefTInner;
+                    use flow_typing_type::type_::InstType;
+                    use flow_typing_type::type_::InstTypeInner;
+                    use flow_typing_type::type_::InstanceT;
+                    use flow_typing_type::type_::InstanceTInner;
+                    use flow_typing_type::type_::ThisInstanceTData;
+                    use flow_typing_type::type_::TypeInner as T;
+                    match &*iface_t {
+                        T::DefT(r, def_t) if let DefTInner::InstanceT(instance) = &**def_t => {
+                            let inner: &InstanceTInner = instance;
+                            let new_inst = InstType::new(InstTypeInner {
+                                inst_construct_t: Some(construct_id),
+                                ..(*inner.inst).clone()
+                            });
+                            let new_instance = InstanceT::new(InstanceTInner {
+                                inst: new_inst,
+                                ..inner.clone()
+                            });
+                            Type::new(T::DefT(
+                                r.dupe(),
+                                DefT::new(DefTInner::InstanceT(Rc::new(new_instance))),
+                            ))
+                        }
+                        T::ThisInstanceT(data) => {
+                            let inner: &InstanceTInner = &data.instance;
+                            let new_inst = InstType::new(InstTypeInner {
+                                inst_construct_t: Some(construct_id),
+                                ..(*inner.inst).clone()
+                            });
+                            let new_instance = InstanceT::new(InstanceTInner {
+                                inst: new_inst,
+                                ..inner.clone()
+                            });
+                            Type::new(T::ThisInstanceT(Box::new(ThisInstanceTData {
+                                reason: data.reason.dupe(),
+                                instance: new_instance,
+                                is_this: data.is_this,
+                                subst_name: data.subst_name.dupe(),
+                            })))
+                        }
+                        _ => {
+                            // Unreachable; defensive. [Class_type_sig.thistype] on a
+                            // freshly-built inline interface always returns one of the two
+                            // shapes above. Fire an internal error and recover with an any
+                            // rather than crashing the typechecker if the invariant is ever
+                            // violated.
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EInternal(Box::new((
+                                    loc.dupe(),
+                                    flow_typing_errors::error_message::InternalError::UnexpectedInlineInterfaceType,
+                                ))),
+                            );
+                            any_t::at(AnySource::AnyError(None), loc.dupe())
+                        }
+                    }
+                };
                 ast::types::Type::new(TypeInner::ConstructorType {
-                    loc: (loc.dupe(), iface_t),
+                    loc: (loc.dupe(), with_construct),
                     abstract_: *abstract_,
                     inner: func_ast.into(),
                 })
@@ -6997,6 +7076,29 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(error_prop));
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
+                                        // A construct signature uses the keyword `new` as a
+                                        // syntactic marker — it's not a property whose name
+                                        // happens to be "new". Restrict to:
+                                        // - obj_kind = Interface (declare-class methods named
+                                        //   `new` are ordinary methods);
+                                        // - non-static (construct sigs live on the instance
+                                        //   side only);
+                                        // - unquoted Identifier key (`"new"()` is an ordinary
+                                        //   method);
+                                        // - not optional (`new?()` makes no sense for a
+                                        //   construct signature).
+                                        // Mirror predicate in [type_sig_parse.rs]
+                                        // [interface_props.prop].
+                                        let key_is_identifier = matches!(
+                                            &np.key,
+                                            ast::expression::object::Key::Identifier(_)
+                                        );
+                                        let is_construct_sig = name.as_str() == "new"
+                                            && obj_kind
+                                                == intermediate_error_types::ObjKind::Interface
+                                            && !np.static_
+                                            && key_is_identifier
+                                            && !np.optional;
                                         let meth_kind = match name.as_str() {
                                             "constructor" => MethodKind::ConstructorKind,
                                             _ => MethodKind::MethodKind {
@@ -7017,27 +7119,34 @@ fn add_interface_properties<'a>(
                                             this.dupe(),
                                             &fsig,
                                         );
-                                        match (np.static_, &meth_kind) {
-                                            (false, MethodKind::ConstructorKind) => {
-                                                class_sig::append_constructor(
-                                                    Some(key_loc.dupe()),
-                                                    fsig,
-                                                    None,
-                                                    None,
-                                                    &mut s,
-                                                );
-                                            }
-                                            _ => {
-                                                class_sig::append_method(
-                                                    np.static_,
-                                                    name.dupe(),
-                                                    key_loc.dupe(),
-                                                    None,
-                                                    fsig,
-                                                    None,
-                                                    None,
-                                                    &mut s,
-                                                );
+                                        if is_construct_sig {
+                                            // Construct sigs are stored on the instance side
+                                            // of an interface only. Stored raw; [read_construct_t]
+                                            // normalizes on read.
+                                            class_sig::append_construct(ft.dupe(), &mut s);
+                                        } else {
+                                            match (np.static_, &meth_kind) {
+                                                (false, MethodKind::ConstructorKind) => {
+                                                    class_sig::append_constructor(
+                                                        Some(key_loc.dupe()),
+                                                        fsig,
+                                                        None,
+                                                        None,
+                                                        &mut s,
+                                                    );
+                                                }
+                                                _ => {
+                                                    class_sig::append_method(
+                                                        np.static_,
+                                                        name.dupe(),
+                                                        key_loc.dupe(),
+                                                        None,
+                                                        fsig,
+                                                        None,
+                                                        None,
+                                                        &mut s,
+                                                    );
+                                                }
                                             }
                                         }
                                         prop_asts.push(Property::NormalProperty(

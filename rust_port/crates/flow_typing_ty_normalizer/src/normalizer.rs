@@ -2013,6 +2013,7 @@ mod type_converter {
                 super_,
                 inst.own_props.dupe(),
                 inst.inst_call_t,
+                inst.inst_construct_t,
                 &inst.inst_dict,
             ),
             InstanceKind::InterfaceKind { inline: false } => {
@@ -2033,6 +2034,7 @@ mod type_converter {
         super_: &Type,
         own_props: flow_typing_type::type_::properties::Id,
         inst_call_t: Option<i32>,
+        inst_construct_t: Option<i32>,
         inst_dict: &flow_typing_type::type_::object::Dict,
     ) -> Result<ALocTy, Error> {
         fn extends(ty: &ALocTy) -> Result<Vec<ty::GenericT<ALoc>>, Error> {
@@ -2055,10 +2057,44 @@ mod type_converter {
                 _ => Err(terr(ErrorKind::BadInlineInterfaceExtends, None, None)),
             }
         }
+        fn construct_props<'cx, I: NormalizerInput>(
+            env: &mut Env<'_, 'cx>,
+            state: &mut State,
+            inst_construct_t: Option<i32>,
+        ) -> Result<Vec<ty::Prop<ALoc>>, Error> {
+            match inst_construct_t {
+                None => Ok(Vec::new()),
+                Some(construct_id) => {
+                    let ts: Vec<Type> = {
+                        let ft = env.genv.cx.find_call(construct_id);
+                        match ft.deref() {
+                            TypeInner::IntersectionT(_, rep) => {
+                                rep.members_iter().map(|t| t.dupe()).collect()
+                            }
+                            _ => vec![ft.dupe()],
+                        }
+                    };
+                    let mut fts: Vec<ty::FunT<ALoc>> = Vec::new();
+                    for t in &ts {
+                        fts.extend(method_ty::<I>(env, state, t)?);
+                    }
+                    Ok(fts
+                        .into_iter()
+                        .map(|ft| ty::Prop::NamedProp {
+                            name: Name::new(FlowSmolStr::new_inline("new")),
+                            prop: ty::NamedProp::Method(ft),
+                            inherited: false,
+                            source: ty::PropSource::Interface,
+                            def_locs: Vec::new().into(),
+                        })
+                        .collect())
+                }
+            }
+        }
 
         let super_ty = type__::<I>(env, state, None, super_)?;
         let if_extends = extends(&super_ty)?;
-        let if_props = obj_props_t::<I>(
+        let call_and_named = obj_props_t::<I>(
             env,
             state,
             own_props,
@@ -2067,6 +2103,13 @@ mod type_converter {
             ty::PropSource::Other,
             None,
         )?;
+        let construct = construct_props::<I>(env, state, inst_construct_t)?;
+        // Print order: construct signatures first, then call signature +
+        // regular properties. Multiple overloads at the [inst_construct_t]
+        // slot expand into multiple [Ty.NamedProp] entries (see
+        // [construct_props]), all of which print before the rest.
+        let mut if_props = construct;
+        if_props.extend(call_and_named);
         let if_dict = match inst_dict {
             Some(dict_type) => {
                 let dict_polarity = type_polarity(dict_type.dict_polarity);
@@ -3248,11 +3291,20 @@ mod type_converter {
         super_: &Type,
         own_props: flow_typing_type::type_::properties::Id,
         inst_call_t: Option<i32>,
+        inst_construct_t: Option<i32>,
         inst_dict: &flow_typing_type::type_::object::Dict,
     ) -> Result<ALocTy, Error> {
         let old_tvar_ids = std::mem::replace(&mut env.seen_tvar_ids, Env::empty_tvar_ids());
         let old_eval_ids = std::mem::replace(&mut env.seen_eval_ids, Env::empty_eval_ids());
-        let result = inline_interface::<I>(env, state, super_, own_props, inst_call_t, inst_dict);
+        let result = inline_interface::<I>(
+            env,
+            state,
+            super_,
+            own_props,
+            inst_call_t,
+            inst_construct_t,
+            inst_dict,
+        );
         env.seen_tvar_ids = old_tvar_ids;
         env.seen_eval_ids = old_eval_ids;
         result
@@ -3550,6 +3602,7 @@ pub mod element_converter {
             let inst_kind = &inst.inst_kind;
             let own_props = inst.own_props.dupe();
             let inst_call_t = inst.inst_call_t;
+            let inst_construct_t = inst.inst_construct_t;
             let inst_dict = &inst.inst_dict;
 
             match inst_kind {
@@ -3567,6 +3620,7 @@ pub mod element_converter {
                         super_,
                         own_props,
                         inst_call_t,
+                        inst_construct_t,
                         inst_dict,
                     )?;
                     Ok(ty::Elt::Type(ty))

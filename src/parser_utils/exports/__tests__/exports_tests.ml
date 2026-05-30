@@ -66,6 +66,7 @@ let sig_opts =
     locs_to_dirtify = [];
     is_ts_file = false;
     tslib_syntax = false;
+    abstract_classes = false;
   }
 
 let print_index exports =

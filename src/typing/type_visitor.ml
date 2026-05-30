@@ -399,6 +399,7 @@ class ['a] t =
         own_props;
         proto_props;
         inst_call_t;
+        inst_construct_t;
         initialized_fields = _;
         initialized_static_fields = _;
         inst_kind = _;
@@ -420,6 +421,7 @@ class ['a] t =
       let acc = self#props cx pole acc own_props in
       let acc = self#props cx pole acc proto_props in
       let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
+      let acc = self#opt (self#call_prop cx pole) acc inst_construct_t in
       let acc = self#opt (self#dict_type cx pole_TODO) acc inst_dict in
       let acc = self#props cx pole_TODO acc class_private_fields in
       let acc = self#props cx pole_TODO acc class_private_static_fields in

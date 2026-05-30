@@ -676,7 +676,13 @@ module Make (I : INPUT) : S = struct
       env:Env.t -> T.typeparam Nel.t -> (Env.t * Ty.type_param list option, error) t
 
     val convert_inline_interface :
-      env:Env.t -> Type.super -> T.Properties.id -> int option -> T.Object.dict -> (Ty.t, error) t
+      env:Env.t ->
+      Type.super ->
+      T.Properties.id ->
+      int option ->
+      int option ->
+      T.Object.dict ->
+      (Ty.t, error) t
 
     val convert_obj_props_t :
       env:Env.t ->
@@ -1166,11 +1172,11 @@ module Make (I : INPUT) : S = struct
       Ty.Generic (symbol, kind, targs)
 
     and instance_t ~env r super inst =
-      let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
+      let { T.inst_kind; own_props; inst_call_t; inst_construct_t; inst_dict; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc) with
       | (T.InterfaceKind { inline = true }, _) ->
-        inline_interface ~env super own_props inst_call_t inst_dict
+        inline_interface ~env super own_props inst_call_t inst_construct_t inst_dict
       | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
       | (T.ClassKind, _) -> to_generic ~env Ty.ClassKind r inst
       | (T.RecordKind _, _) -> to_generic ~env Ty.RecordKind r inst
@@ -1187,10 +1193,38 @@ module Make (I : INPUT) : S = struct
           (* Top-level syntax only allows generics in extends *)
           terr ~kind:BadInlineInterfaceExtends None
       in
-      fun ~env super own_props inst_call_t inst_dict ->
+      let construct_props ~env = function
+        | None -> return []
+        | Some construct_id ->
+          let cx = Env.get_cx env in
+          let ft = Context.find_call cx construct_id in
+          let ts =
+            match ft with
+            | T.IntersectionT (_, rep) -> T.InterRep.members rep
+            | t -> [t]
+          in
+          let%map fts = concat_fold_m (method_ty ~env) ts in
+          Base.List.map fts ~f:(fun ft ->
+              Ty.NamedProp
+                {
+                  name = Reason.OrdinaryName "new";
+                  prop = Ty.Method ft;
+                  inherited = false;
+                  source = Ty.Interface;
+                  def_locs = [];
+                }
+          )
+      in
+      fun ~env super own_props inst_call_t inst_construct_t inst_dict ->
         let%bind super = type__ ~env super in
         let%bind if_extends = extends super in
-        let%bind if_props = obj_props_t ~env own_props inst_call_t in
+        let%bind call_and_named = obj_props_t ~env own_props inst_call_t in
+        let%bind construct = construct_props ~env inst_construct_t in
+        (* Print order: construct signatures first, then call signature +
+           regular properties. Multiple overloads at the [inst_construct_t]
+           slot expand into multiple [Ty.NamedProp] entries (see
+           [construct_props]), all of which print before the rest. *)
+        let if_props = construct @ call_and_named in
         let%map if_dict =
           match inst_dict with
           | Some { T.dict_polarity; dict_name; key; value } ->
@@ -1875,7 +1909,7 @@ module Make (I : INPUT) : S = struct
             ps
           | None -> return None
         in
-        let { T.inst_kind; own_props; inst_call_t; inst_dict; _ } = inst in
+        let { T.inst_kind; own_props; inst_call_t; inst_construct_t; inst_dict; _ } = inst in
         let desc = desc_of_reason ~unwrap:false r in
         match (inst_kind, desc) with
         | (T.InterfaceKind { inline = false }, _) ->
@@ -1883,7 +1917,13 @@ module Make (I : INPUT) : S = struct
           Ty.Decl (Ty.InterfaceDecl (symbol, ps))
         | (T.InterfaceKind { inline = true }, _) ->
           let%map ty =
-            TypeConverter.convert_inline_interface ~env super own_props inst_call_t inst_dict
+            TypeConverter.convert_inline_interface
+              ~env
+              super
+              own_props
+              inst_call_t
+              inst_construct_t
+              inst_dict
           in
           Ty.Type ty
         | (T.ClassKind, _) ->

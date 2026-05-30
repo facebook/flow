@@ -973,6 +973,11 @@ pub fn inst_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     } else {
         acc
     };
+    let acc = if let Some(construct_t) = inst.inst_construct_t {
+        visitor.call_prop(cx, pole, acc, construct_t)
+    } else {
+        acc
+    };
     let acc = if let Some(ref dict) = inst.inst_dict {
         visitor.dict_type(cx, pole_todo(), acc, dict)
     } else {

@@ -197,6 +197,7 @@ end = struct
         locs_to_dirtify = [];
         is_ts_file = false;
         tslib_syntax = true;
+        abstract_classes = true;
       }
     in
     let (_, master_cx) =
@@ -345,6 +346,7 @@ let mk_private_method_eval_hint_test
                 own_props = Context.generate_property_map cx NameUtils.Map.empty;
                 proto_props = Context.generate_property_map cx NameUtils.Map.empty;
                 inst_call_t = None;
+                inst_construct_t = None;
                 initialized_fields = SSet.empty;
                 initialized_static_fields = SSet.empty;
                 inst_kind = ClassKind;

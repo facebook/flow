@@ -2484,6 +2484,12 @@ pub(super) mod scope {
                     .iter()
                     .map(|t| rename_tparams_in_parsed(rename_map, t))
                     .collect(),
+                // constructs = List.map (rename_tparams_in_parsed rename_map) constructs;
+                constructs: sig
+                    .constructs
+                    .iter()
+                    .map(|t| rename_tparams_in_parsed(rename_map, t))
+                    .collect(),
                 dict: sig
                     .dict
                     .as_ref()
@@ -2556,6 +2562,8 @@ pub(super) mod scope {
         computed_proto_props.extend(iface_sig.computed_props.iter().cloned());
         let mut calls = dc_sig.calls.clone();
         calls.extend(iface_sig.calls.iter().cloned());
+        let mut constructs = dc_sig.constructs.clone();
+        constructs.extend(iface_sig.constructs.iter().cloned());
         let mut implements = dc_sig.implements.clone();
         implements.extend(iface_sig.extends.iter().cloned());
         let dict = match (&dc_sig.dict, &iface_sig.dict) {
@@ -2585,6 +2593,7 @@ pub(super) mod scope {
             computed_static_props: dc_sig.computed_static_props.clone(),
             static_calls: dc_sig.static_calls.clone(),
             calls,
+            constructs,
             dict,
             static_dict: dc_sig.static_dict.clone(),
         }
@@ -2641,6 +2650,10 @@ pub(super) mod scope {
         let mut calls = old_sig.calls.clone();
         calls.extend(new_sig.calls.iter().cloned());
 
+        // constructs = old_s.constructs @ new_s.constructs;
+        let mut constructs = old_sig.constructs.clone();
+        constructs.extend(new_sig.constructs.iter().cloned());
+
         // dict: first wins if both exist, error
         let dict = match (&old_sig.dict, &new_sig.dict) {
             (Some(_), Some(_)) => {
@@ -2662,6 +2675,7 @@ pub(super) mod scope {
             props,
             computed_props,
             calls,
+            constructs,
             dict,
         }
     }
@@ -5479,6 +5493,7 @@ mod declare_class_acc {
         )>,
         pub(super) scalls: Vec<Parsed<'arena, 'ast>>,
         pub(super) calls: Vec<Parsed<'arena, 'ast>>,
+        pub(super) constructs: Vec<Parsed<'arena, 'ast>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
         pub(super) static_dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
     }
@@ -5494,6 +5509,7 @@ mod declare_class_acc {
                 computed_static: Vec::new(),
                 scalls: Vec::new(),
                 calls: Vec::new(),
+                constructs: Vec::new(),
                 dict: None,
                 static_dict: None,
             }
@@ -5672,6 +5688,7 @@ mod declare_class_acc {
                 computed_static_props: computed_static,
                 static_calls: self.scalls,
                 calls: self.calls,
+                constructs: self.constructs,
                 dict: self.dict,
                 static_dict: self.static_dict,
             }
@@ -5696,6 +5713,7 @@ mod interface_acc {
             InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
         )>,
         pub(super) calls: Vec<Parsed<'arena, 'ast>>,
+        pub(super) constructs: Vec<Parsed<'arena, 'ast>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
     }
 
@@ -5705,6 +5723,7 @@ mod interface_acc {
                 props: BTreeMap::new(),
                 computed_props: Vec::new(),
                 calls: Vec::new(),
+                constructs: Vec::new(),
                 dict: None,
             }
         }
@@ -5795,6 +5814,10 @@ mod interface_acc {
             self.calls.push(t);
         }
 
+        pub(super) fn append_construct(&mut self, t: Parsed<'arena, 'ast>) {
+            self.constructs.push(t);
+        }
+
         pub(super) fn interface_def(
             self,
             extends: Vec<Parsed<'arena, 'ast>>,
@@ -5806,6 +5829,7 @@ mod interface_acc {
                 props: self.props,
                 computed_props,
                 calls: self.calls,
+                constructs: self.constructs,
                 dict: self.dict,
             }
         }
@@ -6304,13 +6328,35 @@ fn annot_with_loc<'arena, 'ast>(
             }
             Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
-        TypeInner::ConstructorType { inner: func, .. } => {
+        TypeInner::ConstructorType {
+            inner: func,
+            abstract_,
+            ..
+        } if opts.tslib_syntax => {
             use interface_acc::InterfaceAcc;
-            let def = function_type(false, opts, scope, scopes, tbls, xs, func);
-            let mut acc = InterfaceAcc::empty();
-            acc.append_method("new".into(), loc.dupe(), loc.dupe(), def);
-            let def = acc.interface_def(vec![]);
-            Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
+            // Mirror [type_annotation.rs]'s `abstract_classes` gate so the two
+            // pipelines agree on which `abstract new (...) => T` annotations are
+            // accepted. The user-visible error is emitted by type_annotation when
+            // editing the file; here we just refuse to populate the construct
+            // slot so dependency consumers don't observe phantom abstract sigs.
+            if *abstract_ && !opts.abstract_classes {
+                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
+            } else {
+                let fsig = function_type(false, opts, scope, scopes, tbls, xs, func);
+                let mut acc = InterfaceAcc::empty();
+                acc.append_construct(Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                    loc.dupe(),
+                    fsig,
+                ))))));
+                let def = acc.interface_def(vec![]);
+                Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
+            }
+        }
+        TypeInner::ConstructorType { inner: func, .. } => {
+            // tslib_syntax off: degrade to Any, matching the TemplateLiteral
+            // pattern above. type_annotation surfaces the user-facing error.
+            function_type(false, opts, scope, scopes, tbls, xs, func);
+            Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
         }
         TypeInner::Exists { .. } => Parsed::Annot(Box::new(ParsedAnnot::Exists(Box::new(loc)))),
     };
@@ -7261,6 +7307,7 @@ fn interface_props<'arena, 'ast>(
             p: &ast::types::object::NormalProperty<Loc, Loc>,
             name: FlowSmolStr,
             id_loc: Loc,
+            key_is_identifier: bool,
         ) {
             match (p.method, &p.value) {
                 (true, O::PropertyValue::Init(Some(ty))) => {
@@ -7285,9 +7332,40 @@ fn interface_props<'arena, 'ast>(
                         } else {
                             let fn_loc = tbls.push_loc(p.loc.dupe());
                             let id_loc = tbls.push_loc(id_loc);
-                            let def =
-                                function_type(true, opts, scope, scopes, tbls, xs, inner.as_ref());
-                            acc.append_method(name, id_loc, fn_loc, def);
+                            // Construct signature only on an unquoted `new()` identifier key.
+                            // A quoted `"new"()` or `new?()` is a regular property whose name
+                            // happens to be `"new"`. The optional `new?()` case is already
+                            // routed to [optional_method_as_field] above. Mirror predicate in
+                            // [type_annotation.rs] [add_interface_properties.prop]. The
+                            // type-annotation predicate is longer because that function also
+                            // handles declare-class bodies and static members; those are
+                            // excluded by the surrounding control flow here, not by an extra
+                            // clause on this guard.
+                            if name.as_str() == "new" && key_is_identifier {
+                                let def = function_type(
+                                    false,
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    xs,
+                                    inner.as_ref(),
+                                );
+                                acc.append_construct(Parsed::Annot(Box::new(
+                                    ParsedAnnot::FunAnnot(Box::new((fn_loc, def))),
+                                )));
+                            } else {
+                                let def = function_type(
+                                    true,
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    xs,
+                                    inner.as_ref(),
+                                );
+                                acc.append_method(name, id_loc, fn_loc, def);
+                            }
                         }
                     }
                     // unexpected non-function method otherwise
@@ -7368,9 +7446,21 @@ fn interface_props<'arena, 'ast>(
             }
         }
 
+        let key_is_identifier = matches!(&p.key, ast::expression::object::Key::Identifier(_));
         match resolve_prop_key(&p.key) {
             ResolvedPropKey::Named(name, id_loc) => {
-                add_named_prop(opts, scope, scopes, tbls, xs, acc, p, name, id_loc);
+                add_named_prop(
+                    opts,
+                    scope,
+                    scopes,
+                    tbls,
+                    xs,
+                    acc,
+                    p,
+                    name,
+                    id_loc,
+                    key_is_identifier,
+                );
             }
             ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
                 add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {

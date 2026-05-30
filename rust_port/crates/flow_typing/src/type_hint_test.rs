@@ -286,6 +286,7 @@ mod tests {
                 locs_to_dirtify: vec![],
                 is_ts_file: false,
                 tslib_syntax: true,
+                abstract_classes: true,
             };
             let (_, master_cx) = merge::merge_lib_files(
                 &flow_common::flow_projects::ProjectsOptions::default(),
@@ -514,6 +515,7 @@ mod tests {
                         own_props: empty_props.dupe(),
                         proto_props: empty_props.dupe(),
                         inst_call_t: None,
+                        inst_construct_t: None,
                         initialized_fields: FlowOrdSet::new(),
                         initialized_static_fields: FlowOrdSet::new(),
                         inst_kind: InstanceKind::ClassKind,

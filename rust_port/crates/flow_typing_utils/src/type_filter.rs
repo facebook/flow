@@ -1988,6 +1988,14 @@ fn tag_of_def_t<'cx>(cx: &Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
 fn tag_of_inst(inst: &InstType) -> Option<TypeTagSet> {
     use type_tag::TypeTag;
     use type_tag::TypeTagInner;
+    // Only call signatures justify [FunTag] for tag-based narrowing. A
+    // construct signature alone makes [typeof x === 'function'] true at
+    // runtime, but Flow's [InstanceT <: FunT] cast and [BindT] / [CallT]
+    // rules only honor [inst_call_t] — adding [FunTag] for construct-only
+    // interfaces would let [typeof] narrow into a branch where the value
+    // can't actually be used as a function, surfacing as confusing "missing
+    // method bind" errors.
+    let _ = inst.inst_construct_t;
     let mut tags = if inst.inst_call_t.is_some() {
         BTreeSet::from([TypeTag(TypeTagInner::FunTag)])
     } else {

@@ -8,7 +8,10 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_flow_common::flow_js_utils;
+use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -117,9 +120,10 @@ pub(super) fn structural_subtype<'cx>(
     use_op: UseOp,
     lower: &Type,
     reason_struct: &Reason,
-    (own_props_id, proto_props_id, call_id, inst_dict): (
+    (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
         properties::Id,
         properties::Id,
+        Option<i32>,
         Option<i32>,
         &Option<DictType>,
     ),
@@ -127,7 +131,10 @@ pub(super) fn structural_subtype<'cx>(
     match lower.deref() {
         // Object <: Interface subtyping creates an object out of the interface to dispatch to the
         // existing object <: object logic
-        TypeInner::DefT(lreason, def_t) if let DefTInner::ObjT(l_obj) = def_t.deref() => {
+        TypeInner::DefT(lreason, def_t)
+            if let DefTInner::ObjT(l_obj) = def_t.deref()
+                && construct_id.is_none() =>
+        {
             let lkind = &l_obj.flags.obj_kind;
             let lprops = l_obj.props_tmap.dupe();
             let lproto = &l_obj.proto_t;
@@ -163,7 +170,13 @@ pub(super) fn structural_subtype<'cx>(
                 use_op,
                 lower,
                 reason_struct,
-                (own_props_id, proto_props_id, call_id, inst_dict),
+                (
+                    own_props_id,
+                    proto_props_id,
+                    call_id,
+                    construct_id,
+                    inst_dict,
+                ),
             )?;
         }
     }
@@ -176,9 +189,10 @@ pub(super) fn inst_structural_subtype<'cx>(
     use_op: UseOp,
     lower: &Type,
     reason_struct: &Reason,
-    (own_props_id, proto_props_id, call_id, inst_dict): (
+    (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
         properties::Id,
         properties::Id,
+        Option<i32>,
         Option<i32>,
         &Option<DictType>,
     ),
@@ -414,6 +428,109 @@ pub(super) fn inst_structural_subtype<'cx>(
                 add_output(cx, error_message)?;
             }
         }
+    }
+    if let Some(construct_id) = construct_id {
+        let ut = flow_js_utils::read_construct_t(cx, construct_id);
+        // Lower has no construct sig where the upper interface expects
+        // one. Dedicated error variant rather than [EInvalidConstructor]
+        // (which reads as "the user tried to use [new] on a non-class"
+        // — confusing when the failure is actually structural subtyping)
+        // and rather than reusing [EPropNotFoundInSubtyping] with a
+        // synthetic prop name (which can't be made collision-proof).
+        let not_a_constructor = |cx: &Context<'cx>| -> Result<(), FlowJsException> {
+            let error_message = ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
+                EConstructSignatureMissingInSubtypingData {
+                    reason_lower: lreason.dupe(),
+                    reason_upper: reason_struct.dupe(),
+                    use_op: use_op.dupe(),
+                },
+            ));
+            add_output(cx, error_message)
+        };
+        // Diamond inheritance (e.g. [B extends X], [C extends X],
+        // [D extends B, C]) intentionally collects [X]'s sig multiple
+        // times via [collect_construct_ts] — overload resolution picks
+        // the first match either way, so duplicates are harmless at
+        // type-check time, just verbose in [ty_normalizer] output.
+        // Deduping would need structural equality on funtypes and isn't
+        // worth the extra machinery here.
+        fn dispatch_lower<'cx>(
+            cx: &Context<'cx>,
+            trace: DepthTrace,
+            use_op: &UseOp,
+            ut: &Type,
+            lower: &Type,
+            not_a_constructor: &dyn Fn(&Context<'cx>) -> Result<(), FlowJsException>,
+        ) -> Result<(), FlowJsException> {
+            use flow_typing_type::type_::ThisInstanceTData;
+            use flow_typing_type::type_::ThisTypeAppTData;
+            let dropped = flow_js_utils::drop_resolved(cx, lower);
+            match dropped.deref() {
+                // Unwrap wrapping types and re-dispatch so the InstanceT /
+                // ClassT arms below see what's underneath. Without this, an
+                // [AnnotT]-wrapped (e.g. cross-module-imported) interface,
+                // a [GenericT] whose bound carries the construct sig, or a
+                // [ThisInstanceT] / [ThisTypeAppT] would slip through to the
+                // silent-skip catch-all and the construct comparison would
+                // be quietly dropped.
+                TypeInner::AnnotT(r, t, use_desc) => {
+                    let repositioned =
+                        super::helpers::reposition_reason(cx, Some(trace), r, *use_desc, t)?;
+                    dispatch_lower(cx, trace, use_op, ut, &repositioned, not_a_constructor)
+                }
+                TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                    dispatch_lower(cx, trace, use_op, ut, bound, not_a_constructor)
+                }
+                TypeInner::ThisInstanceT(box ThisInstanceTData {
+                    reason: r,
+                    instance,
+                    ..
+                }) => {
+                    let t = Type::new(TypeInner::DefT(
+                        r.dupe(),
+                        DefT::new(DefTInner::InstanceT(Rc::new(instance.dupe()))),
+                    ));
+                    dispatch_lower(cx, trace, use_op, ut, &t, not_a_constructor)
+                }
+                TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => {
+                    dispatch_lower(cx, trace, use_op, ut, c, not_a_constructor)
+                }
+                // Interface: own + inherited via [super], in derived-first
+                // order.
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(_) = def_t.deref() => {
+                    match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
+                        cx, &dropped,
+                    )) {
+                        Some(lt) => rec_flow(
+                            cx,
+                            trace,
+                            (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
+                        ),
+                        None => not_a_constructor(cx),
+                    }
+                }
+                TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
+                    match flow_js_utils::extract_class_ctor_t(cx, this) {
+                        Some(lt) => rec_flow(
+                            cx,
+                            trace,
+                            (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
+                        ),
+                        None => not_a_constructor(cx),
+                    }
+                }
+                TypeInner::DefT(_, def_t)
+                    if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::FunT(_, _)) =>
+                {
+                    not_a_constructor(cx)
+                }
+                // Other lowers (AnyT, NullT, ObjProtoT, FunProtoT, etc.) —
+                // silently skip; other rules will produce errors as
+                // needed.
+                _ => Ok(()),
+            }
+        }
+        dispatch_lower(cx, trace, &use_op, &ut, lower, &not_a_constructor)?;
     }
     Ok(())
 }

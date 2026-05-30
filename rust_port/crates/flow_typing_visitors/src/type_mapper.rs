@@ -1183,6 +1183,11 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         |a, b| a == b,
         i.inst_call_t,
     );
+    let inst_construct_t_prime = option_utils::ident_map(
+        |id| mapper.call_prop(cx, map_cx, *id),
+        |a, b| a == b,
+        i.inst_construct_t,
+    );
     let inst_dict_prime = option_utils::ident_map(
         |d| mapper.dict_type(cx, map_cx, d.clone()),
         |a, b| a == b,
@@ -1199,6 +1204,7 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         && own_props_prime == i.own_props
         && proto_props_prime == i.proto_props
         && i.inst_call_t == inst_call_t_prime
+        && i.inst_construct_t == inst_construct_t_prime
         && i.inst_dict == inst_dict_prime
         && class_private_fields_prime == i.class_private_fields
         && class_private_static_fields_prime == i.class_private_static_fields
@@ -1214,6 +1220,7 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             own_props: own_props_prime,
             proto_props: proto_props_prime,
             inst_call_t: inst_call_t_prime,
+            inst_construct_t: inst_construct_t_prime,
             initialized_fields: i.initialized_fields.clone(),
             initialized_static_fields: i.initialized_static_fields.clone(),
             inst_kind: i.inst_kind.clone(),

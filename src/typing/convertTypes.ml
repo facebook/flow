@@ -387,6 +387,17 @@ and json_of_insttype cx depth (inst : insttype) =
           JSON_Object
             [("id", JSON_Number (string_of_int id)); ("call", type_to_json cx (depth - 1) call)]
       );
+      ( "construct_t",
+        match inst.inst_construct_t with
+        | None -> JSON_Null
+        | Some id ->
+          let construct = Context.find_call cx id in
+          JSON_Object
+            [
+              ("id", JSON_Number (string_of_int id));
+              ("construct", type_to_json cx (depth - 1) construct);
+            ]
+      );
     ]
 
 (* Convert def_t to JSON *)

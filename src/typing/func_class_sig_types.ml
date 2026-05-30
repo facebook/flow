@@ -236,6 +236,7 @@ module Class = struct
       getters: func_info SMap.t;
       setters: func_info SMap.t;
       calls: Type.t list;
+      constructs: Type.t list;
       dict: Type.Object.dict;
     }
 
@@ -330,6 +331,7 @@ module Class = struct
       getters: func_info SMap.t;
       setters: func_info SMap.t;
       calls: Type.t list;
+      constructs: Type.t list;
       dict: Type.Object.dict;
     }
 

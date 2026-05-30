@@ -23,6 +23,7 @@ type t = {
   locs_to_dirtify: Loc.t list;
   is_ts_file: bool;
   tslib_syntax: bool;
+  abstract_classes: bool;
 }
 
 let of_options options docblock locs_to_dirtify file =
@@ -64,6 +65,7 @@ let of_options options docblock locs_to_dirtify file =
     for_builtins = false;
     is_ts_file = Files.has_ts_ext file;
     tslib_syntax = Options.tslib_syntax options;
+    abstract_classes = Options.abstract_classes options;
   }
 
 let builtin_options options =
@@ -89,4 +91,5 @@ let builtin_options options =
     locs_to_dirtify = [];
     is_ts_file = false;
     tslib_syntax = true;
+    abstract_classes = true;
   }

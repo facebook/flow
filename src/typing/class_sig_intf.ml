@@ -139,6 +139,8 @@ module type S = sig
 
   val append_call : static:bool -> Type.t -> t -> t
 
+  val append_construct : Type.t -> t -> t
+
   (** Add getter to signature. *)
   val add_getter :
     static:bool ->

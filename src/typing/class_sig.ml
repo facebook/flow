@@ -45,6 +45,7 @@ module Make
         getters = SMap.empty;
         setters = SMap.empty;
         calls = [];
+        constructs = [];
         dict = None;
       }
     in
@@ -241,6 +242,11 @@ module Make
       x
 
   let append_call ~static t = map_sig ~static (fun s -> { s with calls = t :: s.calls })
+
+  (* Construct signatures only exist on the instance side of an interface.
+     A static `new(): T` on a declared class is an ordinary static method and
+     goes through [append_method ~static:true] instead. *)
+  let append_construct t = map_sig ~static:false (fun s -> { s with constructs = t :: s.constructs })
 
   let add_getter
       ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
@@ -442,6 +448,16 @@ module Make
         let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
         Some t
     in
+    let construct =
+      match List.rev s.constructs with
+      | [] -> None
+      | [t] -> Some t
+      | t0 :: t1 :: ts ->
+        let open Type in
+        let open TypeUtil in
+        let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
+        Some t
+    in
     (* Only un-initialized fields require annotations, so determine now
      * (syntactically) which fields have initializers *)
     let initialized_fields =
@@ -453,7 +469,7 @@ module Make
         s.fields
         SSet.empty
     in
-    (initialized_fields, fields, methods, call)
+    (initialized_fields, fields, methods, call, construct)
 
   let specialize cx use_op targs c =
     let reason = TypeUtil.reason_of_t c in
@@ -461,7 +477,7 @@ module Make
 
   let statictype cx static_proto x =
     let s = x.static in
-    let (inited_fields, fields, methods, call) =
+    let (inited_fields, fields, methods, call, _construct) =
       let loc = loc_of_reason x.static.reason in
       elements cx ~this:(this_or_mixed loc x |> TypeUtil.class_type) s x.super
     in
@@ -514,7 +530,7 @@ module Make
           (name, reason, t, polarity))
         (Type.TypeParams.to_list s.tparams)
     in
-    let (initialized_fields, fields, methods, call) =
+    let (initialized_fields, fields, methods, call, construct) =
       let loc = loc_of_reason s.instance.reason in
       elements cx ~this:(this_or_mixed loc s) ?constructor s.instance s.super
     in
@@ -529,6 +545,7 @@ module Make
       own_props = Context.generate_property_map cx (NameUtils.namemap_of_smap fields);
       proto_props = Context.generate_property_map cx (NameUtils.namemap_of_smap methods);
       inst_call_t = Base.Option.map call ~f:(Context.make_call_prop cx);
+      inst_construct_t = Base.Option.map construct ~f:(Context.make_call_prop cx);
       initialized_fields;
       initialized_static_fields;
       inst_kind = Base.Option.value inst_kind ~default:(get_inst_kind s);
@@ -840,12 +857,12 @@ module Make
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
     let inst_loc = loc_of_reason reason in
-    let (_, own, proto, _call) =
+    let (_, own, proto, _call, _construct) =
       elements cx ~this:(this_or_mixed inst_loc x) ?constructor:None x.instance x.super
     in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
-      let (_, own, proto, _call) =
+      let (_, own, proto, _call, _construct) =
         elements cx ~this:(this_or_mixed inst_loc x |> class_type) x.static x.super
       in
       SMap.union own proto
