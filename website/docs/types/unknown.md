@@ -122,6 +122,49 @@ only be a `string` inside of the `if` statement. This is known as a
 - Everything is a `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
 
+## Refining `unknown` {#toc-refining-unknown}
+
+`typeof` is the most common way to narrow an `unknown` value (see [refinements](../lang/refinements.md) for the full list of forms), but several other idioms come up regularly when working with `unknown`.
+
+### `Array.isArray`
+
+Narrows `unknown` to `ReadonlyArray<unknown>`. Elements are still `unknown` and must be refined before use.
+
+```js flow-check
+declare const value: unknown;
+if (Array.isArray(value)) {
+  value as ReadonlyArray<unknown>; // OK
+}
+```
+
+### `'key' in value`
+
+The `in` operator requires its right-hand side to already be a non-null object, so `'key' in value` on a bare `unknown` is a type error. Narrow to an object first; `in` then refines the value to an object with that property (the property type is `unknown` and needs further refinement before use):
+
+```js flow-check
+declare const value: unknown;
+if (typeof value === 'object' && value !== null && 'foo' in value) {
+  value as {readonly foo: unknown, ...}; // OK
+}
+```
+
+The `value !== null` step is required because `typeof null === 'object'`.
+
+### `instanceof`
+
+`value instanceof SomeClass` narrows `unknown` to that class:
+
+```js flow-check
+class User {
+  name: string = '';
+}
+
+declare const value: unknown;
+if (value instanceof User) {
+  value.name as string; // OK
+}
+```
+
 ## See Also {#toc-see-also}
 
 - [Refinements](../lang/refinements.md) — how to narrow `unknown` values to specific types before use

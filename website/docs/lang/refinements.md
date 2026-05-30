@@ -410,5 +410,6 @@ function updateLayout(
 - [Type Guards](../types/type-guards.md) — custom functions that act as user-defined refinements
 - [Unions](../types/unions.md) — refinements are most commonly used to narrow union types
 - [Maybe Types](../types/maybe.md) — refining nullable values with `!= null` checks
+- [Refining `unknown`](../types/unknown.md#toc-refining-unknown) — idioms specific to narrowing `unknown` values
 - [Variables](./variables.md) — how variable declarations interact with refinement
 - [Match Expressions](../match/index.md) — pattern matching with its own narrowing and exhaustiveness checking
