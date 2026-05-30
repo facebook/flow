@@ -3909,6 +3909,30 @@ No errors!
 === types/aliases.md block 4 ===
 No errors!
 
+=== types/aliases.md block 5 ===
+No errors!
+
+=== types/aliases.md block 6 ===
+No errors!
+
+=== types/aliases.md block 7 ===
+Error ----------------------------------------------------------------------------------------------------------- -:5:11
+
+Cannot use type `Status` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   -:5:11
+   5| const v = Status;       // Error
+                ^^^^^^
+
+References:
+   -:2:6
+   2| type Status = "ok" | "error";
+           ^^^^^^ [1]
+
+
+
+Found 1 error
+
 === types/any.md block 1 ===
 No errors!
 
@@ -5862,6 +5886,90 @@ References:
    -:2:25
     2| function getColor(name: "success" | "warning" | "danger") {
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== types/literals.md block 3 ===
+Error ------------------------------------------------------------------------------------------------------------ -:6:1
+
+Cannot cast `l` to string literal `success` because string [1] is incompatible with string literal `success` [2].
+[incompatible-type]
+
+   -:6:1
+   6| l as "success"; // Error — l has been widened to string
+      ^
+
+References:
+   -:5:9
+   5| let l = "success";
+              ^^^^^^^^^ [1]
+   -:6:6
+   6| l as "success"; // Error — l has been widened to string
+           ^^^^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== types/literals.md block 4 ===
+Error ------------------------------------------------------------------------------------------------------------ -:6:1
+
+Cannot cast `o.x` to number literal `1` because number [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   -:6:1
+   6| o.x as 1;      // Error — o.x is number
+      ^^^
+
+References:
+   -:2:20
+   2| const o      = {x: 1};                 // type is {x: number}
+                         ^ [1]
+   -:6:8
+   6| o.x as 1;      // Error — o.x is number
+             ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:12:1
+
+Cannot cast `arr[0]` to string literal `a` because string [1] is incompatible with string literal `a` [2].
+[incompatible-type]
+
+   -:12:1
+   12| arr[0] as "a";                     // Error — arr[0] is string
+       ^^^^^^
+
+References:
+   -:8:16
+    8| const arr   = ["a", "b"];               // type is Array<string>
+                      ^^^ [1]
+   -:12:11
+   12| arr[0] as "a";                     // Error — arr[0] is string
+                 ^^^ [2]
+
+
+
+Found 2 errors
+
+=== types/literals.md block 5 ===
+Error ------------------------------------------------------------------------------------------------------------ -:5:9
+
+Cannot call `setKind` with `e` bound to `o` because property `kind` is read-only in const object literal [1] but
+writable in object type [2]. [incompatible-variance]
+
+   -:5:9
+   5| setKind(e); // Error — `kind` is read-only on `e` but writable on the parameter
+              ^
+
+References:
+   -:2:11
+   2| const e = {kind: "click"} as const;
+                ^^^^^^^^^^^^^^^ [1]
+   -:4:21
+   4| function setKind(o: {kind: "click"}) {}
+                          ^^^^^^^^^^^^^^^ [2]
 
 
 
