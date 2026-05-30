@@ -1,0 +1,310 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error --------------------------------------------------------------------------- -:5:11
+
+Cannot call `acceptTwo` with `1` bound to `x` because number literal `1` [1] is incompatible with number literal
+`2` [2]. [incompatible-type]
+
+   -:5:11
+   5| acceptTwo(1); // Error!
+                ^ [1]
+
+References:
+   -:2:23
+   2| function acceptTwo(x: 2) { /* ... */ }
+                            ^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error --------------------------------------------------------------------------- -:7:16
+
+Cannot call `acceptsBoolean` with `"foo"` bound to `value` because string [1] is incompatible with boolean [2].
+[incompatible-type]
+
+   -:7:16
+   7| acceptsBoolean("foo"); // Error!
+                     ^^^^^ [1]
+
+References:
+   -:2:32
+   2| function acceptsBoolean(value: boolean) { /* ... */ }
+                                     ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 8 ===
+Error --------------------------------------------------------------------------- -:4:16
+
+Cannot call `acceptsBoolean` with `0` bound to `value` because number [1] is incompatible with boolean [2].
+[incompatible-type]
+
+   -:4:16
+   4| acceptsBoolean(0);          // Error!
+                     ^ [1]
+
+References:
+   -:2:32
+   2| function acceptsBoolean(value: boolean) { /* ... */ }
+                                     ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+Error --------------------------------------------------------------------------- -:9:15
+
+Cannot call `acceptsNumber` with `"foo"` bound to `value` because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   -:9:15
+   9| acceptsNumber("foo");    // Error!
+                    ^^^^^ [1]
+
+References:
+   -:2:31
+   2| function acceptsNumber(value: number) { /* ... */ }
+                                    ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------- -:10:15
+
+Cannot call `acceptsNumber` with `123n` bound to `value` because bigint literal `123n` [1] is incompatible with
+number [2]. [incompatible-type]
+
+   -:10:15
+   10| acceptsNumber(123n);     // Error!
+                     ^^^^ [1]
+
+References:
+   -:2:31
+    2| function acceptsNumber(value: number) { /* ... */ }
+                                     ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+Error --------------------------------------------------------------------------- -:7:15
+
+Cannot call `acceptsString` with `false` bound to `value` because boolean [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:7:15
+   7| acceptsString(false); // Error!
+                    ^^^^^ [1]
+
+References:
+   -:2:31
+   2| function acceptsString(value: string) { /* ... */ }
+                                    ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 13 ===
+Error ---------------------------------------------------------------------------- -:6:1
+
+Cannot use operator `+` with operands string [1] and object literal [2] [unsafe-addition]
+
+   -:6:1
+   6| "foo" + {};    // Error!
+      ^^^^^^^^^^
+
+References:
+   -:6:1
+   6| "foo" + {};    // Error!
+      ^^^^^ [1]
+   -:6:9
+   6| "foo" + {};    // Error!
+              ^^ [2]
+
+Error ---------------------------------------------------------------------------- -:7:1
+
+Cannot use operator `+` with operands string [1] and empty array literal [2] [unsafe-addition]
+
+   -:7:1
+   7| "foo" + [];    // Error!
+      ^^^^^^^^^^
+
+References:
+   -:7:1
+   7| "foo" + [];    // Error!
+      ^^^^^ [1]
+   -:7:9
+   7| "foo" + [];    // Error!
+              ^^ [2]
+
+Error ---------------------------------------------------------------------------- -:8:8
+
+Cannot coerce array literal to string because empty array literal [1] should not be coerced. [incompatible-type]
+
+   8| `foo ${[]}`;   // Error!
+             ^^ [1]
+
+
+Found 3 errors
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+Error --------------------------------------------------------------------------- -:5:13
+
+Cannot call `acceptsNull` with `undefined` bound to `value` because undefined [1] is incompatible with null [2].
+[incompatible-type]
+
+   -:5:13
+   5| acceptsNull(undefined); // Error!
+                  ^^^^^^^^^ [1]
+
+References:
+   -:2:29
+   2| function acceptsNull(value: null) { /* ... */ }
+                                  ^^^^ [2]
+
+Error -------------------------------------------------------------------------- -:10:18
+
+Cannot call `acceptsUndefined` with `null` bound to `value` because null [1] is incompatible with undefined [2].
+[incompatible-type]
+
+   -:10:18
+   10| acceptsUndefined(null);      // Error!
+                        ^^^^ [1]
+
+References:
+   -:7:34
+    7| function acceptsUndefined(value: void) { /* ... */ }
+                                        ^^^^ [2]
+
+
+Found 2 errors
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+Error --------------------------------------------------------------------------- -:8:21
+
+Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: null [1] is incompatible
+with string [2]. [incompatible-type]
+
+   -:8:21
+   8| acceptsObject({foo: null});      // Error!
+                          ^^^^ [1]
+
+References:
+   -:2:38
+   2| function acceptsObject(value: {foo?: string}) { /* ... */ }
+                                           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 21 ===
+Error --------------------------------------------------------------------------- -:8:23
+
+Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:8:23
+   8| acceptsOptionalString(null);      // Error!
+                            ^^^^ [1]
+
+References:
+   -:2:40
+   2| function acceptsOptionalString(value?: string) { /* ... */ }
+                                             ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+Error --------------------------------------------------------------------------- -:8:23
+
+Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:8:23
+   8| acceptsOptionalString(null);      // Error!
+                            ^^^^ [1]
+
+References:
+   -:2:39
+   2| function acceptsOptionalString(value: string = "foo") { /* ... */ }
+                                            ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 23 ===
+Error --------------------------------------------------------------------------- -:7:15
+
+Cannot call `acceptsSymbol` with `false` bound to `value` because boolean [1] is incompatible with symbol [2].
+[incompatible-type]
+
+   -:7:15
+   7| acceptsSymbol(false); // Error!
+                    ^^^^^ [1]
+
+References:
+   -:2:31
+   2| function acceptsSymbol(value: symbol) { /* ... */ }
+                                    ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+No errors!
+
+=== block 25 ===
+Error --------------------------------------------------------------------------- -:5:15
+
+Cannot call `acceptsBigInt` with `42` bound to `value` because number [1] is incompatible with bigint [2].
+[incompatible-type]
+
+   -:5:15
+   5| acceptsBigInt(42); // Error!
+                    ^^ [1]
+
+References:
+   -:2:31
+   2| function acceptsBigInt(value: bigint) { /* ... */ }
+                                    ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 26 ===
+No errors!

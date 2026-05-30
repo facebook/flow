@@ -1,0 +1,65 @@
+=== block 1 ===
+Error --------------------------------------------------------------------------------- -:4:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'details'` to match
+string literal `details` [1]. [match-not-exhaustive]
+
+   -:4:1
+   4| match (tab) { // ERROR [match-not-exhaustive]
+      ^^^^^
+
+References:
+   -:2:29
+   2| declare const tab: 'home' | 'details' | 'settings';
+                                  ^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 2 ===
+Error --------------------------------------------------------------------------------- -:4:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'ok', value: _}`
+to match object type [1]. [match-not-exhaustive]
+
+   -:4:1
+   4| match (result) { // ERROR
+      ^^^^^
+
+References:
+   -:2:23
+   2| declare const result: {type: 'ok', value: number} | {type: 'error'};
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 3 ===
+Error -------------------------------------------------------------------------------- -:6:10
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['end', 'below']` to
+match const array literal [1]. [match-not-exhaustive]
+
+   -:6:10
+   6|   return match ([align, position]) { // ERROR
+               ^^^^^
+
+References:
+   -:6:17
+   6|   return match ([align, position]) { // ERROR
+                      ^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 4 ===
+Error --------------------------------------------------------------------------------- -:8:3
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   8|   'invalid' => {} // ERROR
+        ^^^^^^^^^ [1]
+
+
+Found 1 error

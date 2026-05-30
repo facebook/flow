@@ -1,0 +1,35 @@
+=== block 1 ===
+Error ---------------------------------------------------------------------------- -:14:33
+
+Cannot call `method` with object literal bound to `value` because in property `baz`: array literal [1] is incompatible
+with string [2]. [incompatible-type]
+
+   -:14:33
+   14| method({foo: 1, bar: true, baz: ["oops"]}); // Error
+                                       ^^^^^^^^ [1]
+
+References:
+   -:6:8
+    6|   baz: string,
+              ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!

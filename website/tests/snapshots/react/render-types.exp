@@ -1,0 +1,119 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ------------------------------------------------------------------------ -:16:17
+
+Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:16:17
+   16| <Layout header={<Footer />} />; // ERROR Footer does not render Header
+                       ^^^^^^^^^^ [1]
+
+References:
+   -:12:26
+   12| component Layout(header: renders Header) {
+                                ^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error ------------------------------------------------------------------------- -:16:1
+
+Cannot cast `rendersMaybeHeader` to renders `Header` because a value that renders nothing [1] does not render
+`Header` [2]. [incompatible-type]
+
+   -:16:1
+   16| rendersMaybeHeader as renders Header; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   -:9:35
+    9| declare const rendersMaybeHeader: renders? Header;
+                                         ^^^^^^^^^^^^^^^ [1]
+   -:16:23
+   16| rendersMaybeHeader as renders Header; // ERROR
+                             ^^^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------- -:17:1
+
+Cannot cast `rendersHeaderList` to renders `Header` because `$ReadOnlyArray` [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:17:1
+    17| rendersHeaderList as renders Header; // ERROR
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:726:15
+   726| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [1]
+   -:17:22
+    17| rendersHeaderList as renders Header; // ERROR
+                             ^^^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------- -:17:1
+
+Cannot cast `rendersHeaderList` to renders `Header` because a value that renders nothing [1] does not render
+`Header` [2]. [incompatible-type]
+
+   -:17:1
+   17| rendersHeaderList as renders Header; // ERROR
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   -:10:34
+   10| declare const rendersHeaderList: renders* Header;
+                                        ^^^^^^^^^^^^^^^ [1]
+   -:17:22
+   17| rendersHeaderList as renders Header; // ERROR
+                            ^^^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------- -:18:1
+
+Cannot cast `rendersHeaderList` to renders? `Header` because `$ReadOnlyArray` [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:18:1
+    18| rendersHeaderList as renders? Header; // ERROR
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:726:15
+   726| declare class $ReadOnlyArray<+T> {
+                      ^^^^^^^^^^^^^^ [1]
+   -:18:22
+    18| rendersHeaderList as renders? Header; // ERROR
+                             ^^^^^^^^^^^^^^^ [2]
+
+
+Found 4 errors
+
+=== block 12 ===
+No errors!

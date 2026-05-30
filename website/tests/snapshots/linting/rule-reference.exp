@@ -1,0 +1,290 @@
+=== block 1 ===
+Error --------------------------------------------------------------------- -:4:10
+
+Please write this object type as explicitly exact (use `{|` and `|}` instead of `{` and `}`) or as explicitly inexact
+(add `...` to the end of the list of properties). [ambiguous-object-type]
+
+   4| type A = {x: number}; // Error
+               ^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 2 ===
+Error --------------------------------------------------------------------- -:4:16
+
+Deprecated type. Use `boolean` instead. [deprecated-type]
+
+   4| type A = Array<bool>; // Error
+                     ^^^^
+
+
+Found 1 error
+
+=== block 3 ===
+Error ---------------------------------------------------------------------- -:5:3
+
+Components may not be nested directly within other components or hooks. [nested-component]
+
+   5|   component Inner() { // Error
+        ^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 4 ===
+Error ---------------------------------------------------------------------- -:5:3
+
+Components may not be nested directly within other components or hooks. [nested-component]
+
+   5|   component ItemView() { // Error
+        ^^^^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ---------------------------------------------------------------------- -:6:3
+
+Hooks may not be nested directly within other components or hooks. [nested-hook]
+
+   6|   hook useNested() { // Error
+        ^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 7 ===
+Error ---------------------------------------------------------------------- -:5:3
+
+Hooks may not be nested directly within other components or hooks. [nested-hook]
+
+   5|   hook useNested() { // Error
+        ^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error --------------------------------------------------------------------- -:2:10
+
+`$Omit` is an internal Flow type. Use `Omit` instead. [internal-type]
+
+   2| type A = $Omit<{x: number, y: number}, 'x'>; // Error
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 10 ===
+Error --------------------------------------------------------------------- -:4:10
+
+`React$Node` is an internal Flow type. Use `React.Node` instead. [internal-type]
+
+   4| type A = React$Node; // Error
+               ^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 11 ===
+Error --------------------------------------------------------------------- -:5:18
+
+The name of intrinsic element `div` [1] overlaps with a local definition [2] which has a type [1] that can be
+instantiated as an element. To avoid confusion between this definition and the intrinsic, rename the definition
+[react-intrinsic-overlap]
+
+   -:5:18
+   5| declare function div(): React.Node; // ERROR
+                       ^^^ [2]
+
+References:
+   -:6:2
+   6| <div />;
+       ^^^ [1]
+
+
+Found 1 error
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+Error ---------------------------------------------------------------------- -:5:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   -:5:5
+   5| if (x) {} // Error: sketchy because x could be either null or 0.
+          ^
+
+References:
+   -:4:11
+   4| const x: ?number = 5;
+                ^^^^^^ [1]
+   -:4:10
+   4| const x: ?number = 5;
+               ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 15 ===
+Error ---------------------------------------------------------------------- -:4:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   -:4:5
+   4| if (x) {} // Error
+          ^
+
+References:
+   -:3:12
+   3| const x: ?(number | boolean) = 0;
+                 ^^^^^^ [1]
+   -:3:10
+   3| const x: ?(number | boolean) = 0;
+               ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 16 ===
+Error --------------------------------------------------------------------- -:4:18
+
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+
+   4| declare const a: any; // Error
+                       ^^^
+
+Error --------------------------------------------------------------------- -:5:18
+
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+
+   5| declare const c: Object; // Error
+                       ^^^^^^
+
+Error --------------------------------------------------------------------- -:6:18
+
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+
+   6| declare const d: Function; // Error
+                       ^^^^^^^^
+
+
+Found 3 errors
+
+=== block 17 ===
+Error ---------------------------------------------------------------------- -:6:1
+
+This use of `invariant` is unnecessary because array type [1] is always truthy. [unnecessary-invariant]
+
+   -:6:1
+   6| invariant(x); // Error
+      ^^^^^^^^^^^^
+
+References:
+   -:5:18
+   5| declare const x: Array<string>; // Array is truthy
+                       ^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 18 ===
+Error ---------------------------------------------------------------------- -:8:1
+
+This use of optional chaining (`?.`) is unnecessary because `foo` [1] cannot be nullish or because an earlier `?.` will
+short-circuit the nullish case. [unnecessary-optional-chain]
+
+   -:8:1
+   8| foo?.bar; // Error
+      ^^^^^^^^
+
+References:
+   -:8:1
+   8| foo?.bar; // Error
+      ^^^ [1]
+
+
+Found 1 error
+
+=== block 19 ===
+Error --------------------------------------------------------------------- -:10:1
+
+This use of optional chaining (`?.`) is unnecessary because `foo?.bar` [1] cannot be nullish or because an earlier `?.`
+will short-circuit the nullish case. [unnecessary-optional-chain]
+
+   -:10:1
+   10| foo?.bar?.baz; // Error
+       ^^^^^^^^^^^^^
+
+References:
+   -:10:1
+   10| foo?.bar?.baz; // Error
+       ^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 20 ===
+Error ---------------------------------------------------------------------- -:5:3
+
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
+
+   5|   get a() { return a; }, // Error: unsafe-getters-setters
+        ^^^^^^^^^^^^^^^^^^^^^
+
+Error ---------------------------------------------------------------------- -:6:3
+
+Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
+
+   6|   set b(x: number) { a = x; }, // Error: unsafe-getters-setters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Found 2 errors
+
+=== block 21 ===
+Error --------------------------------------------------------------------- -:5:16
+
+Flow's support for `Object.assign` is unsafe. Use spreads instead. [unsafe-object-assign]
+
+   5| const config = Object.assign(defaults, overrides); // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 22 ===
+No errors!
+
+=== block 23 ===
+Error ---------------------------------------------------------------------- -:7:3
+
+`Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]
+
+   7|   foo(); // error, we forgot to await!
+        ^^^^^^
+
+Error --------------------------------------------------------------------- -:12:3
+
+`Promise` in sync scope is unused. Promises must be handled by calling .then with a rejection handler, .catch, or
+.finally. [unused-promise]
+
+   12|   foo(); // error
+         ^^^^^^
+
+
+Found 2 errors

@@ -1,0 +1,133 @@
+=== block 1 ===
+Error ----------------------------------------------------------------------------- -:7:8
+
+Cannot call `concat` with `true` bound to `a` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:8
+   7| concat(true, false);  // Error!
+             ^^^^ [1]
+
+References:
+   -:2:20
+   2| function concat(a: string, b: string): string {
+                         ^^^^^^ [2]
+
+Error ---------------------------------------------------------------------------- -:7:14
+
+Cannot call `concat` with `false` bound to `b` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:14
+   7| concat(true, false);  // Error!
+                   ^^^^^ [1]
+
+References:
+   -:2:31
+   2| function concat(a: string, b: string): string {
+                                    ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error ---------------------------------------------------------------------------- -:10:6
+
+Cannot call `func` with `null` bound to `optionalValue` because null [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:10:6
+   10| func(null);      // Error!
+            ^^^^ [1]
+
+References:
+   -:2:31
+    2| function func(optionalValue?: string) {
+                                     ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+Error ---------------------------------------------------------------------------- -:7:21
+
+Cannot assign `func.call(...)` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:21
+   7| const str: string = func.call({x : 42}); // Error!
+                          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:7:36
+   7| const str: string = func.call({x : 42}); // Error!
+                                         ^^ [1]
+   -:7:12
+   7| const str: string = func.call({x : 42}); // Error!
+                 ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+Error ---------------------------------------------------------------------------- -:2:18
+
+Cannot expect boolean as the return type of function because boolean [1] is incompatible with implicitly-returned
+undefined. [incompatible-type]
+
+   2| function func(): boolean { // Error
+                       ^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
+No errors!
+
+=== block 22 ===
+No errors!

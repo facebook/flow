@@ -1,0 +1,46 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ------------------------------------------------------------------------------ -:3:10
+
+Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
+
+   -:3:10
+   3|   return "" + value; // Error!
+               ^^^^^^^^^^
+
+References:
+   -:3:10
+   3|   return "" + value; // Error!
+               ^^ [1]
+   -:2:27
+   2| function stringify(value: unknown) {
+                                ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!

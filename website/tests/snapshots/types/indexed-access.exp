@@ -1,0 +1,81 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ----------------------------------------------------------------------- -:6:19
+
+Cannot access number literal `2` on `Pair` because `Pair` [1] only has 2 elements, so index 2 is out of bounds.
+[invalid-tuple-index]
+
+   -:6:19
+   6| const wrong: Pair[2] = true; // Error - `Pair` only has two elements
+                        ^
+
+References:
+   -:6:14
+   6| const wrong: Pair[2] = true; // Error - `Pair` only has two elements
+                   ^^^^ [1]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ----------------------------------------------------------------------- -:7:19
+
+Cannot assign `getProp(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:19
+   7| const y: string = getProp({a: 42}, 'a'); // Error - `number` is not a `string`
+                        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:7:31
+   7| const y: string = getProp({a: 42}, 'a'); // Error - `number` is not a `string`
+                                    ^^ [1]
+   -:7:10
+   7| const y: string = getProp({a: 42}, 'a'); // Error - `number` is not a `string`
+               ^^^^^^ [2]
+
+Error ----------------------------------------------------------------------- -:8:18
+
+Cannot call `getProp` because property `b` is missing in object literal [1]. [prop-missing]
+
+   -:8:18
+   8| getProp({a: 42}, 'b'); // Error - `b` does not exist in object type
+                       ^^^
+
+References:
+   -:8:9
+   8| getProp({a: 42}, 'b'); // Error - `b` does not exist in object type
+              ^^^^^^^ [1]
+
+Error ----------------------------------------------------------------------- -:8:18
+
+Cannot call `getProp` because in type argument `K`: property `b` is missing in object literal [1]. [prop-missing]
+
+   -:8:18
+   8| getProp({a: 42}, 'b'); // Error - `b` does not exist in object type
+                       ^^^
+
+References:
+   -:8:9
+   8| getProp({a: 42}, 'b'); // Error - `b` does not exist in object type
+              ^^^^^^^ [1]
+
+
+Found 3 errors
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!

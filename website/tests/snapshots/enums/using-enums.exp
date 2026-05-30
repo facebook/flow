@@ -1,0 +1,239 @@
+=== block 1 ===
+Error --------------------------------------------------------------------------- -:8:8
+
+Cannot access `x` on enum `Status` [1] because computed access is not allowed on enums. [invalid-enum-access]
+
+   -:8:8
+   8| Status[x]; // Error: computed access on enums is not allowed
+             ^
+
+References:
+   -:2:6
+   2| enum Status {
+           ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 2 ===
+Error -------------------------------------------------------------------------- -:4:19
+
+Cannot assign `Status.Active` to `s` because `Status` [1] is incompatible with string [2]. [incompatible-type]
+
+You can explicitly cast your enum value to a string using `<expr> as string`.
+
+   -:4:19
+   4| const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
+                        ^^^^^^^^^^^^^
+
+References:
+   -:2:6
+   2| enum Status {Active, Paused, Off}
+           ^^^^^^ [1]
+   -:4:10
+   4| const s: string = Status.Active; // Error: 'Status' is not compatible with 'string'
+               ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error --------------------------------------------------------------------------- -:9:9
+
+Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
+[invalid-exhaustive-check]
+
+   -:9:9
+   9| switch (status) { // Error: you haven't checked 'Status.Off' in the switch
+              ^^^^^^
+
+References:
+   -:7:15
+   7| const status: Status = Status.Active;
+                    ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 6 ===
+Error -------------------------------------------------------------------------- -:16:8
+
+Invalid exhaustive check: case checks for enum member `Paused` of `Status` [1], but member `Paused` was already checked
+at case [2]. [invalid-exhaustive-check]
+
+   -:16:8
+   16|   case Status.Paused: // Error: you already checked for 'Status.Paused'
+              ^^^^^^^^^^^^^
+
+References:
+   -:7:15
+    7| const status: Status = Status.Active;
+                     ^^^^^^ [1]
+   -:12:8
+   12|   case Status.Paused:
+              ^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
+Error -------------------------------------------------------------------------- -:16:3
+
+Invalid exhaustive check: default case checks for additional enum members of `Status` [1], but all of its members have
+already been checked. [invalid-exhaustive-check]
+
+   -:16:3
+         v------------------------------------------------------------------------------
+   16|   default: // Error: you've already checked all cases, the 'default' is redundant
+   17|     break;
+           -----^
+
+References:
+   -:7:15
+    7| const status: Status = Status.Active;
+                     ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 8 ===
+Error --------------------------------------------------------------------------- -:9:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Status.Off` to match
+member Off of enum `Status` [1]. [match-not-exhaustive]
+
+   -:9:1
+   9| match (status) { // Error: you haven't checked 'Status.Off' in the match
+      ^^^^^
+
+References:
+   -:5:3
+   5|   Off = 3,
+        ^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 9 ===
+Error -------------------------------------------------------------------------- -:11:9
+
+Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`. The
+default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
+enabled. [require-explicit-enum-switch-cases]
+
+   -:11:9
+   11| switch (status) { // Error
+               ^^^^^^
+
+References:
+   -:8:15
+    8| const status: Status = Status.Active;
+                     ^^^^^^ [1]
+   -:16:3
+         v-------
+   16|   default:
+   17|     break;
+           -----^ [2]
+
+Error -------------------------------------------------------------------------- -:21:1
+
+The match wildcard [1] does not check for missing enum member `Status.Off`, because the `require-explicit-enum-checks`
+lint has been enabled. To fix, add cases covering those enum members. [require-explicit-enum-checks]
+
+   -:21:1
+   21| match (status) { // Error
+       ^^^^^
+
+References:
+   -:24:3
+   24|   _ => {}
+         ^ [1]
+
+
+Found 2 errors
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error --------------------------------------------------------------------------- -:6:1
+
+Cannot cast `Status.Active` to `EnumValue` because in the enum's representation type: string [1] is incompatible with
+number [2]. [incompatible-type]
+
+   -:6:1
+   6| Status.Active as EnumValue<number>; // ERROR - not a number enum
+      ^^^^^^^^^^^^^
+
+References:
+   -:2:6
+   2| enum Status {Active, Paused, Off}
+           ^^^^^^ [1]
+   -:6:28
+   6| Status.Active as EnumValue<number>; // ERROR - not a number enum
+                                 ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
+No errors!
+
+=== block 22 ===
+No errors!
+
+=== block 23 ===
+Error ------------------------------------------------------------------------- -:13:20
+
+Cannot assign `o[LegacyStatus.Active]` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:13:20
+   13| const z: boolean = o[LegacyStatus.Active]; // Error - as expected
+                          ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:8:26
+    8|   [LegacyStatus.Active]: "hi",
+                                ^^^^ [1]
+   -:13:10
+   13| const z: boolean = o[LegacyStatus.Active]; // Error - as expected
+                ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+No errors!

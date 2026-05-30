@@ -1,0 +1,65 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+Error -------------------------------------------------------------------- -:4:17
+
+Cannot assign `new Bar()` to `test` because `Bar` [1] is incompatible with `Foo` [2]. [incompatible-type]
+
+   -:4:17
+   4| let test: Foo = new Bar(); // Error!
+                      ^^^^^^^^^ [1]
+
+References:
+   -:4:11
+   4| let test: Foo = new Bar(); // Error!
+                ^^^ [2]
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error -------------------------------------------------------------------- -:7:25
+
+Cannot assign `"hi"` to `y` because string [1] is incompatible with `MyOpaqueType` [2]. [incompatible-type]
+
+   -:7:25
+   7| const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
+                              ^^^^ [1]
+
+References:
+   -:7:10
+   7| const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`
+               ^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
+Error -------------------------------------------------------------------- -:9:14
+
+Cannot assign `B.X` to `a` because `B` [1] is incompatible with `A` [2]. [incompatible-type]
+
+   -:9:14
+   9| const a: A = B.X; // Error!
+                   ^^^
+
+References:
+   -:5:6
+   5| enum B {
+           ^ [1]
+   -:9:10
+   9| const a: A = B.X; // Error!
+               ^ [2]
+
+
+Found 1 error

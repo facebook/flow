@@ -1,0 +1,202 @@
+=== block 1 ===
+Error -------------------------------------------------------------------------------- -:8:6
+
+Cannot call `size` with `true` bound to `value` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   -:8:6
+   8| size(true);    // Error!
+           ^^^^ [1]
+
+References:
+   -:2:22
+   2| function size(value: number | string): number {
+                           ^^^^^^ [2]
+   -:2:31
+   2| function size(value: number | string): number {
+                                    ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ------------------------------------------------------------------------------- -:6:10
+
+Cannot return `value` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   -:6:10
+   6|   return value; // Error!
+               ^^^^^
+
+References:
+   -:2:45
+   2| function toStringPrimitives(value: number | boolean | string): string {
+                                                  ^^^^^^^ [1]
+   -:2:64
+   2| function toStringPrimitives(value: number | boolean | string): string {
+                                                                     ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 8 ===
+Error ------------------------------------------------------------------------------ -:10:27
+
+Cannot assign `response.value` to `value` because undefined [1] is incompatible with number [2]. [incompatible-type]
+
+   -:10:27
+   10|     const value: number = response.value; // Error!
+                                 ^^^^^^^^^^^^^^
+
+References:
+   -:4:11
+    4|   value?: number,
+                 ^^^^^^ [1]
+   -:10:18
+   10|     const value: number = response.value; // Error!
+                        ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------ -:12:27
+
+Cannot assign `response.error` to `error` because undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:27
+   12|     const error: string = response.error; // Error!
+                                 ^^^^^^^^^^^^^^
+
+References:
+   -:5:11
+    5|   error?: string
+                 ^^^^^^ [1]
+   -:12:18
+   12|     const error: string = response.error; // Error!
+                        ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+Error ------------------------------------------------------------------------------- -:12:5
+
+Cannot cast `payload` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:5
+   12|     payload as string; // Error! payload is still PayloadMap[T]
+           ^^^^^^^
+
+References:
+   -:4:9
+    4|   PONG: number,
+               ^^^^^^ [1]
+   -:12:16
+   12|     payload as string; // Error! payload is still PayloadMap[T]
+                      ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+Error ------------------------------------------------------------------------------- -:7:37
+
+Cannot get `response.value` because property `value` is missing in `Failed` [1]. [prop-missing]
+
+   -:7:37
+   7|     const value: boolean = response.value; // Error!
+                                          ^^^^^
+
+References:
+   -:5:46
+   5| function handleResponse(response:  Success | Failed) {
+                                                   ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+Error ------------------------------------------------------------------------------- -:17:1
+
+Cannot call `prettyPrint` because: [incompatible-type]
+ - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
+ - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   -:17:1
+   17| prettyPrint("currency", 1); // ERROR - missing arg
+       ^^^^^^^^^^^
+
+References:
+   -:17:13
+   17| prettyPrint("currency", 1); // ERROR - missing arg
+                   ^^^^^^^^^^ [1]
+   -:4:13
+    4|          | ['choice', boolean]
+                   ^^^^^^^^ [2]
+   -:17:1
+   17| prettyPrint("currency", 1); // ERROR - missing arg
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   -:3:12
+    3|   ...args: ['currency', dollars: number, cents: number]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+Error ------------------------------------------------------------------------------- -:18:1
+
+Cannot call `prettyPrint` because: [incompatible-type]
+ - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
+ - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   -:18:1
+   18| prettyPrint("currency", true); // ERROR - wrong type arg
+       ^^^^^^^^^^^
+
+References:
+   -:18:13
+   18| prettyPrint("currency", true); // ERROR - wrong type arg
+                   ^^^^^^^^^^ [1]
+   -:4:13
+    4|          | ['choice', boolean]
+                   ^^^^^^^^ [2]
+   -:18:1
+   18| prettyPrint("currency", true); // ERROR - wrong type arg
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   -:3:12
+    3|   ...args: ['currency', dollars: number, cents: number]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 2 errors

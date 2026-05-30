@@ -1,0 +1,44 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+Error -------------------------------------------------------------------------- -:6:17
+
+Cannot instantiate `ReturnType` because in type argument `T`: string [1] is incompatible with function type [2].
+[incompatible-type]
+
+   -:6:17
+   6| 1 as ReturnType<string>; // Error
+                      ^^^^^^ [1]
+
+References:
+   -:2:27
+   2| type ReturnType<T extends (...args: ReadonlyArray<empty>) => unknown> =
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!

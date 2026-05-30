@@ -1,0 +1,680 @@
+=== block 1 ===
+Error --------------------------------------------------------------------------- -:11:23
+
+Cannot assign `'nope'` to `nope` because property `nope` is missing in object literal [1]. [prop-missing]
+
+   -:11:23
+   11| const nope: Country = 'nope'; // Error!
+                             ^^^^^^
+
+References:
+   -:11:13
+   11| const nope: Country = 'nope'; // Error!
+                   ^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 2 ===
+Error --------------------------------------------------------------------------- -:13:25
+
+Cannot assign `true` to `fn` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   -:13:25
+   13| const fn: PropValues2 = true; // Error!
+                               ^^^^ [1]
+
+References:
+   -:4:8
+    4|   age: number,
+              ^^^^^^ [2]
+   -:3:9
+    3|   name: string,
+               ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error --------------------------------------------------------------------------- -:10:15
+
+Cannot call `acceptsValues` with `3` bound to `x` because number [1] is incompatible with `Values` [2].
+[incompatible-type]
+
+   -:10:15
+   10| acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
+                     ^ [1]
+
+References:
+   -:7:27
+    7| function acceptsValues(x: Values<typeof obj>) { /* ... */ }
+                                 ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+Error ---------------------------------------------------------------------------- -:11:9
+
+Cannot assign `42` to `props.age` because property `age` is not writable. [cannot-write]
+
+   11|   props.age = 42;             // Error!
+               ^^^
+
+
+Found 1 error
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+Error ---------------------------------------------------------------------------- -:13:1
+
+Cannot cast `c` to `Person` because properties `age` and `name` of `{age?: number, name?: string}` [1] are not exactly
+the same as those of `Person` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because properties `age` and `name` are invariantly typed. To fix the
+error,
+- Either make `{age?: number, name?: string}` [3] and `Person` [3] exactly the same
+- Or make properties `age` and `name` in `Person` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:13:1
+   13| c as Person; // ERROR: `PartialPerson` is not a `Person`
+       ^ [1]
+
+References:
+   -:13:6
+   13| c as Person; // ERROR: `PartialPerson` is not a `Person`
+            ^^^^^^ [2]
+   -:2:15
+                     v
+    2| type Person = {
+    3|   name: string,
+    4|   age: number,
+    5| };
+       ^ [3]
+
+
+Found 1 error
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+Error --------------------------------------------------------------------------- -:13:10
+
+Cannot call `noPerson` with `person` bound to `o` because properties `age` and `name` of `Person` [1] are not exactly
+the same as those of `{age?: number, name?: string}` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because properties `age` and `name` are invariantly typed. To fix the
+error,
+- Either make `Person` [3] and `{age?: number, name?: string}` [3] exactly the same
+- Or make properties `age` and `name` in `Person` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:13:10
+   13| noPerson(person); // Error!
+                ^^^^^^ [1]
+
+References:
+   -:9:30
+    9| function noPerson(o: Partial<Person>) {
+                                    ^^^^^^ [2]
+   -:2:15
+                     v
+    2| type Person = {
+    3|   name: string,
+    4|   age: number,
+    5| };
+       ^ [3]
+
+
+Found 1 error
+
+=== block 13 ===
+Error --------------------------------------------------------------------------- -:10:19
+
+Cannot assign object literal to `b` because property `name` is missing in object literal [1] but exists in
+`PartialPerson` [2]. [incompatible-type]
+
+   -:10:19
+   10| const b: Person = {age: 123}; // ERROR: missing `name` property
+                         ^^^^^^^^^^ [1]
+
+References:
+   -:10:10
+   10| const b: Person = {age: 123}; // ERROR: missing `name` property
+                ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 14 ===
+Error ----------------------------------------------------------------------------- -:3:1
+
+Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
+`AllOptional` [2] has 2 elements. [invalid-tuple-arity]
+
+   -:3:1
+   3| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
+      ^^ [1]
+
+References:
+   -:3:16
+   3| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
+                     ^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 15 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `1` to `Bool` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:5:1
+   5| 1 as Bool; // Error: number is not boolean
+      ^ [1]
+
+References:
+   -:5:6
+   5| 1 as Bool; // Error: number is not boolean
+           ^^^^ [2]
+
+
+Found 1 error
+
+=== block 16 ===
+Error ---------------------------------------------------------------------------- -:6:16
+
+Cannot access number literal `2` on `Tuple` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+[invalid-tuple-index]
+
+   -:6:16
+   6| false as Tuple[2]; // Error: tuple type only has two elements
+                     ^
+
+References:
+   -:6:10
+   6| false as Tuple[2]; // Error: tuple type only has two elements
+               ^^^^^ [1]
+
+
+Found 1 error
+
+=== block 17 ===
+Error ----------------------------------------------------------------------------- -:3:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
+
+   -:3:1
+   3| 1 as T; // error
+      ^ [1]
+
+References:
+   -:3:6
+   3| 1 as T; // error
+           ^ [2]
+
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `3` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
+
+   -:5:1
+   5| 3 as T; // error
+      ^ [1]
+
+References:
+   -:5:6
+   5| 3 as T; // error
+           ^ [2]
+
+
+Found 2 errors
+
+=== block 18 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot cast `new Car()` to `T` because: [incompatible-type]
+ - Either `Car` [1] is incompatible with `Dog` [2].
+ - Or `Car` [1] is incompatible with `Cat` [3].
+
+   -:7:1
+   7| new Car() as T; // error
+      ^^^^^^^^^ [1]
+
+References:
+   -:6:24
+   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
+                             ^^^ [2]
+   -:6:30
+   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
+                                   ^^^ [3]
+
+
+Found 1 error
+
+=== block 19 ===
+Error ----------------------------------------------------------------------------- -:3:1
+
+Cannot cast `'1'` to `T` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:3:1
+   3| '1' as T; // error
+      ^^^ [1]
+
+References:
+   -:3:8
+   3| '1' as T; // error
+             ^ [2]
+
+
+Found 1 error
+
+=== block 20 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot call `hasThisParam` because global object [1] is incompatible with number [2]. [incompatible-type]
+
+   -:7:1
+   7| hasThisParam(''); // error: global object is not number
+      ^^^^^^^^^^^^
+
+References:
+   -:7:1
+   7| hasThisParam(''); // error: global object is not number
+      ^^^^^^^^^^^^^^^^ [1]
+   -:2:31
+   2| type HasThisParamFun = (this: number, bar: string) => void;
+                                    ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 21 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `42` to `Response` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:4:1
+   4| 42 as Response; // Error: number is not string
+      ^^ [1]
+
+References:
+   -:4:7
+   4| 42 as Response; // Error: number is not string
+            ^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot cast `'hello'` to `A` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:7:1
+   7| 'hello' as A; // Error: string is not number
+      ^^^^^^^ [1]
+
+References:
+   -:7:12
+   7| 'hello' as A; // Error: string is not number
+                 ^ [2]
+
+Error ----------------------------------------------------------------------------- -:8:1
+
+Cannot cast `42` to `B` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:8:1
+   8| 42 as B; // Error: number is not string
+      ^^ [1]
+
+References:
+   -:8:7
+   8| 42 as B; // Error: number is not string
+            ^ [2]
+
+
+Found 2 errors
+
+=== block 23 ===
+Error ---------------------------------------------------------------------------- -:9:19
+
+Cannot assign `'not a user'` to `bad` because string [1] is incompatible with object type [2]. [incompatible-type]
+
+   -:9:19
+   9| const bad: User = 'not a user'; // Error
+                        ^^^^^^^^^^^^ [1]
+
+References:
+   -:9:12
+   9| const bad: User = 'not a user'; // Error
+                 ^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+Error ---------------------------------------------------------------------------- -:6:11
+
+Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in `Pick` [1]. [prop-missing]
+
+   -:6:11
+   6| fooAndBar.baz; // error: baz is missing
+                ^^^
+
+References:
+   -:5:26
+   5| declare const fooAndBar: FooAndBar;
+                               ^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 25 ===
+Error ----------------------------------------------------------------------------- -:7:9
+
+Cannot get `justBaz.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+
+   -:7:9
+   7| justBaz.foo; // error: missing foo
+              ^^^
+
+References:
+   -:5:24
+   5| declare const justBaz: JustBaz;
+                             ^^^^^^^ [1]
+
+Error ----------------------------------------------------------------------------- -:8:9
+
+Cannot get `justBaz.bar` because property `bar` (did you mean `baz`?) is missing in `Omit` [1]. [prop-missing]
+
+   -:8:9
+   8| justBaz.bar; // error: missing bar
+              ^^^
+
+References:
+   -:5:24
+   5| declare const justBaz: JustBaz;
+                             ^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 26 ===
+Error ---------------------------------------------------------------------------- -:6:14
+
+Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in `Record` [1]. [prop-missing]
+
+   -:6:14
+   6| numberRecord.baz; // error
+                   ^^^
+
+References:
+   -:3:29
+   3| declare const numberRecord: NumberRecord;
+                                  ^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 27 ===
+Error ---------------------------------------------------------------------------- -:6:27
+
+Cannot assign object literal to `rec` because properties `bar` and `foo` are missing in object literal [1] but exist in
+`Record` [2]. [incompatible-type]
+
+   -:6:27
+   6| const rec: NumberRecord = {}; // error
+                                ^^ [1]
+
+References:
+   -:6:12
+   6| const rec: NumberRecord = {}; // error
+                 ^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 28 ===
+Error ----------------------------------------------------------------------------- -:8:1
+
+Cannot cast `null` to `Name` because null [1] is incompatible with string [2]. [incompatible-type]
+
+   -:8:1
+   8| null as Name; // Error! `null` can't be annotated as Name because Name is not a maybe type
+      ^^^^ [1]
+
+References:
+   -:8:9
+   8| null as Name; // Error! `null` can't be annotated as Name because Name is not a maybe type
+              ^^^^ [2]
+
+
+Found 1 error
+
+=== block 29 ===
+No errors!
+
+=== block 30 ===
+Error ---------------------------------------------------------------------------- -:5:22
+
+Cannot call `assertEqual` with `42` bound to `expected` because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:5:22
+   5| assertEqual('hello', 42); // Error!
+                           ^^ [1]
+
+References:
+   -:5:13
+   5| assertEqual('hello', 42); // Error!
+                  ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 31 ===
+Error ---------------------------------------------------------------------------- -:8:23
+
+Cannot call `createSignal` with `42` bound to `defaultValue` because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:8:23
+   8| createSignal('hello', 42); // Error!
+                            ^^ [1]
+
+References:
+   -:8:14
+   8| createSignal('hello', 42); // Error!
+                   ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 32 ===
+No errors!
+
+=== block 33 ===
+Error ---------------------------------------------------------------------------- -:13:1
+
+Cannot cast `newObj.b` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
+[incompatible-type]
+
+   -:13:1
+   13| newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
+       ^^^^^^^^
+
+References:
+   -:7:46
+    7| declare function run<O extends {...}>(o: O): $KeyMirror<O>;
+                                                    ^^^^^^^^^^^^^ [1]
+   -:13:13
+   13| newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
+                   ^^^ [2]
+
+
+Found 1 error
+
+=== block 34 ===
+Error ---------------------------------------------------------------------------- -:12:1
+
+Cannot cast `makeStore(...)` to `Model` because `Store` [1] is incompatible with `Model` [2]. [incompatible-type]
+
+   -:12:1
+   12| makeStore(Model) as Model; // Error!
+       ^^^^^^^^^^^^^^^^
+
+References:
+   -:7:10
+    7|   return new storeClass();
+                ^^^^^^^^^^^^^^^^ [1]
+   -:12:21
+   12| makeStore(Model) as Model; // Error!
+                           ^^^^^ [2]
+
+Error --------------------------------------------------------------------------- -:12:11
+
+Cannot call `makeStore` with `Model` bound to `storeClass` because `Model` [1] is incompatible with `Store` [2].
+[incompatible-type]
+
+   -:12:11
+   12| makeStore(Model) as Model; // Error!
+                 ^^^^^
+
+References:
+   -:4:7
+    4| class Model {}
+             ^^^^^ [1]
+   -:6:38
+    6| function makeStore(storeClass: Class<Store>) {
+                                            ^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 35 ===
+Error --------------------------------------------------------------------------- -:10:28
+
+Cannot call `makeParamStore` with `1` bound to `data` because number [1] is incompatible with boolean [2].
+[incompatible-type]
+
+   -:10:28
+   10| makeParamStore(ParamStore, 1) as ParamStore<boolean>; // Error!
+                                  ^ [1]
+
+References:
+   -:10:45
+   10| makeParamStore(ParamStore, 1) as ParamStore<boolean>; // Error!
+                                                   ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 36 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'random string'` to `DataProp` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
+
+   -:5:1
+   5| 'random string' as DataProp; // ERROR
+      ^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:5:20
+   5| 'random string' as DataProp; // ERROR
+                         ^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 37 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'random string'` to `Exclaim` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
+
+   -:5:1
+   5| 'random string' as Exclaim; // ERROR
+      ^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:5:20
+   5| 'random string' as Exclaim; // ERROR
+                         ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 38 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
+
+   -:4:1
+   4| 'random string' as CSSVar; // ERROR
+      ^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:2:15
+   2| type CSSVar = StringPrefix<'var(--'> & StringSuffix<')'>;
+                    ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
+literal type [2]. [incompatible-type]
+
+   -:4:1
+   4| 'random string' as CSSVar; // ERROR
+      ^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:2:40
+   2| type CSSVar = StringPrefix<'var(--'> & StringSuffix<')'>;
+                                             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 39 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'$999'` to `Price` because string literal `$999` [1] is incompatible with template literal type [2].
+[incompatible-type]
+
+   -:5:1
+   5| '$999' as Price; // ERROR
+      ^^^^^^ [1]
+
+References:
+   -:5:11
+   5| '$999' as Price; // ERROR
+                ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 40 ===
+No errors!
+
+=== block 41 ===
+No errors!

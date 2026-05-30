@@ -1,0 +1,437 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------------- -:3:5
+
+Cannot get `obj.bar` because property `bar` is missing in object literal [1]. [prop-missing]
+
+   -:3:5
+   3| obj.bar; // Error!
+          ^^^
+
+References:
+   -:2:13
+   2| const obj = {foo: "bar"};
+                  ^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 3 ===
+Error ------------------------------------------------------------------------------ -:5:11
+
+Cannot assign `'hello'` to `obj.foo` because string [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:5:11
+   5| obj.foo = 'hello'; // Error!
+                ^^^^^^^ [1]
+
+References:
+   -:2:19
+   2| const obj: {foo?: boolean} = {};
+                        ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 4 ===
+Error ------------------------------------------------------------------------------ -:8:21
+
+Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: null [1] is incompatible
+with string [2]. [incompatible-type]
+
+   -:8:21
+   8| acceptsObject({foo: null});      // Error!
+                          ^^^^ [1]
+
+References:
+   -:2:38
+   2| function acceptsObject(value: {foo?: string}) { /* ... */ }
+                                           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ------------------------------------------------------------------------------- -:8:5
+
+Cannot assign `'hi'` to `o.foo` because property `foo` is not writable. [cannot-write]
+
+   8|   o.foo = 'hi'; // Error!
+          ^^^
+
+
+Found 1 error
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ------------------------------------------------------------------------------ -:7:23
+
+Cannot get `o.foo` because property `foo` is not readable. [cannot-read]
+
+   7|   const x: string = o.foo; // Error!
+                            ^^^
+
+
+Found 1 error
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error ------------------------------------------------------------------------------- -:5:3
+
+Cannot assign function to `b.foo` because property `foo` is not writable. [cannot-write]
+
+   5| b.foo = () => { return 2; } // Error!
+        ^^^
+
+
+Found 1 error
+
+=== block 12 ===
+Error ------------------------------------------------------------------------------ -:4:18
+
+Cannot reference `this` from within method `foo` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   -:4:18
+   4|   foo() { return this.x; } // Error!
+                       ^^^^
+
+References:
+   -:4:3
+   4|   foo() { return this.x; } // Error!
+        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 13 ===
+Error ------------------------------------------------------------------------------ -:10:5
+
+Cannot get `obj.UNKNOWN` because property `UNKNOWN` is missing in object literal [1]. [prop-missing]
+
+   -:10:5
+   10| obj.UNKNOWN; // Error - prop `UNKNOWN` is not in the object value
+           ^^^^^^^
+
+References:
+   -:2:13
+                   v
+    2| const obj = {
+    3|   foo: 1,
+    4|   bar: true,
+    5| };
+       ^ [1]
+
+Error ----------------------------------------------------------------------------- -:11:11
+
+Cannot assign `true` to `obj.foo` because boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   -:11:11
+   11| obj.foo = true; // Error - `foo` is of type `number`
+                 ^^^^ [1]
+
+References:
+   -:3:8
+    3|   foo: 1,
+              ^ [2]
+
+
+Found 2 errors
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+Error ------------------------------------------------------------------------------- -:2:7
+
+Cannot compute a type for `Utils` because its definition includes references to itself [1]. Please add an annotation to
+these definitions [2] [3] [recursive-definition]
+
+   -:2:7
+   2| const Utils = { // Error
+            ^^^^^
+
+References:
+   -:4:12
+   4|     return Utils.bar();
+                 ^^^^^ [1]
+   -:3:8
+   3|   foo() {
+              [2]
+   -:6:8
+   6|   bar() {
+              [3]
+
+
+Found 1 error
+
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+Error ------------------------------------------------------------------------------- -:4:8
+
+Cannot call `method` with object literal bound to `obj` because property `bar` is extra in object literal [1] but
+missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   -:4:8
+   4| method({foo: "test", bar: 42}); // Error!
+             ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:2:22
+   2| function method(obj: {foo: string}) { /* ... */ }
+                           ^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 20 ===
+Error ------------------------------------------------------------------------------ -:9:33
+
+Cannot assign object literal to `fooBarFail` because property `bar` is extra in object literal [1] but missing in
+`FooT` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   -:9:33
+   9| const fooBarFail: FooBarFailT = {foo: '123', bar: 12}; // Error!
+                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:8:20
+   8| type FooBarFailT = FooT & BarT;
+                         ^^^^ [2]
+
+Error ------------------------------------------------------------------------------ -:9:33
+
+Cannot assign object literal to `fooBarFail` because property `foo` is extra in object literal [1] but missing in
+`BarT` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   -:9:33
+   9| const fooBarFail: FooBarFailT = {foo: '123', bar: 12}; // Error!
+                                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:8:27
+   8| type FooBarFailT = FooT & BarT;
+                                ^^^^ [2]
+
+
+Found 2 errors
+
+=== block 21 ===
+No errors!
+
+=== block 22 ===
+Error ------------------------------------------------------------------------------ -:8:13
+
+Flow cannot determine a type for object type [1]. `Inexact` [2] is inexact, so it may contain `c` with a type that
+conflicts with `c`'s definition in object type [1]. Try making `Inexact` [2] exact. [cannot-spread-inexact]
+
+   -:8:13
+                   v----------
+    8| type ObjB = { // Error!
+    9|   c: boolean,
+   10|   ...Inexact, // Error
+   11| };
+       ^ [1]
+
+References:
+   -:10:6
+   10|   ...Inexact, // Error
+            ^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------ -:10:6
+
+Inexact `Inexact` [1] is incompatible with exact object type [2]. [incompatible-exact]
+
+   -:10:6
+   10|   ...Inexact, // Error
+            ^^^^^^^ [1]
+
+References:
+   -:8:13
+                   v----------
+    8| type ObjB = { // Error!
+    9|   c: boolean,
+   10|   ...Inexact, // Error
+   11| };
+       ^ [2]
+
+
+Found 2 errors
+
+=== block 23 ===
+Error ------------------------------------------------------------------------------ -:6:13
+
+Flow cannot determine a type for object type [1]. `Dict` [2] cannot be spread because the indexer string [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Try spreading `Dict` [2] first or remove the
+indexer. [cannot-spread-indexer]
+
+   -:6:13
+                  v----------
+   6| type ObjB = { // Error!
+   7|   c: boolean,
+   8|   ...Dict,
+   9| };
+      ^ [1]
+
+References:
+   -:8:6
+   8|   ...Dict,
+           ^^^^ [2]
+   -:3:4
+   3|   [string]: number,
+         ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 24 ===
+Error ------------------------------------------------------------------------------ -:7:13
+
+Flow cannot determine a type for object type [1]. `Iface` [2] cannot be spread because interfaces do not track the
+own-ness of their properties. Try using an object type instead. [cannot-spread-interface]
+
+   -:7:13
+                   v----------
+    7| type ObjB = { // Error!
+    8|   c: boolean,
+    9|   ...Iface,
+   10| };
+       ^ [1]
+
+References:
+   -:9:6
+    9|   ...Iface,
+            ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 25 ===
+No errors!
+
+=== block 26 ===
+No errors!
+
+=== block 27 ===
+No errors!
+
+=== block 28 ===
+No errors!
+
+=== block 29 ===
+No errors!
+
+=== block 30 ===
+Error ----------------------------------------------------------------------------- -:13:13
+
+Cannot call `acceptsKeys` with `'hi'` bound to `k` because property `hi` is missing in `Obj` [1]. [prop-missing]
+
+   -:13:13
+   13| acceptsKeys('hi'); // Error!
+                   ^^^^
+
+References:
+   -:9:25
+    9| function acceptsKeys(k: T) { /* ... */ }
+                               ^ [1]
+
+
+Found 1 error
+
+=== block 31 ===
+Error ----------------------------------------------------------------------------- -:13:15
+
+Cannot call `acceptsValues` with `true` bound to `v` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   -:13:15
+   13| acceptsValues(true); // Error!
+                     ^^^^ [1]
+
+References:
+   -:4:8
+    4|   bar: number,
+              ^^^^^^ [2]
+   -:3:8
+    3|   foo: string,
+              ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 32 ===
+Error ----------------------------------------------------------------------------- -:12:12
+
+Cannot call `acceptsStr` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:12
+   12| acceptsStr(1); // Error!
+                  ^ [1]
+
+References:
+   -:9:24
+    9| function acceptsStr(x: T) { /* ... */ }
+                              ^ [2]
+
+
+Found 1 error
+
+=== block 33 ===
+No errors!
+
+=== block 34 ===
+No errors!
+
+=== block 35 ===
+No errors!
+
+=== block 36 ===
+Error ------------------------------------------------------------------------------- -:5:5
+
+Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
+
+   -:5:5
+   5| obj[key]; // Error! Can't use string to index into an object with known keys.
+          ^^^
+
+References:
+   -:2:13
+   2| const obj = {a: 1, b: 2};
+                  ^^^^^^^^^^^^ [1]
+   -:4:12
+   4| const key: string = "a";
+                 ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 37 ===
+No errors!
+
+=== block 38 ===
+No errors!
+
+=== block 39 ===
+No errors!

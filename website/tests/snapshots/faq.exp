@@ -1,0 +1,223 @@
+=== block 1 ===
+Error ---------------------------------------------------------------------------------------- -:8:12
+
+Cannot return `foo.bar` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   -:8:12
+   8|     return foo.bar; // Error: if you remove the console.log, it works
+                 ^^^^^^^
+
+References:
+   -:3:8
+   3|   bar: ?string,
+             ^^^^^^^ [1]
+   -:5:30
+   5| function myFunc(foo: Param): string {
+                                   ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+Error ---------------------------------------------------------------------------------------- -:12:3
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:3
+   12|   x as string; // Error
+         ^
+
+References:
+   -:4:8
+    4| let x: T = 'hi';
+              ^ [1]
+   -:12:8
+   12|   x as string; // Error
+              ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ---------------------------------------------------------------------------------------- -:6:67
+
+Cannot coerce `oldPerson.age` to string because null or undefined [1] should not be coerced. [incompatible-type]
+
+   -:6:67
+   6|     console.log(`The person is ${person.age} and the old one is ${oldPerson.age}`); // Error
+                                                                        ^^^^^^^^^^^^^
+
+References:
+   -:3:24
+   3| const oldPerson: {age: ?number} = {age: 70};
+                             ^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ----------------------------------------------------------------------------------------- -:6:7
+
+Cannot call `add` with `val` bound to `first` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:6:7
+   6|   add(val, 2); // Error
+            ^^^
+
+References:
+   -:3:12
+   3| const val: string | number = 1;
+                 ^^^^^^ [1]
+   -:2:21
+   2| const add = (first: number, second: number) => first + second;
+                          ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ----------------------------------------------------------------------------------------- -:9:4
+
+Cannot call `fn` with `arr` bound to `arr` because in array element: `string` [1] is not exactly the same as
+`string | number` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<string>` [3] and `Array<string | number>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   -:9:4
+   9| fn(arr); // Error!
+         ^^^
+
+References:
+   -:7:18
+   7| const arr: Array<string> = ['abc'];
+                       ^^^^^^ [1]
+   -:2:24
+   2| const fn = (arr: Array<string | number>) => {
+                             ^^^^^^^^^^^^^^^ [2]
+   -:7:12
+   7| const arr: Array<string> = ['abc'];
+                 ^^^^^^^^^^^^^ [3]
+   -:2:18
+   2| const fn = (arr: Array<string | number>) => {
+                       ^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error ----------------------------------------------------------------------------------------- -:9:4
+
+Cannot call `fn` with `object` bound to `obj` because in property `a`: `string` [1] is not exactly the same as
+`string | number` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
+- Either make `{a: string}` [3] and `{a: string | number}` [4] exactly the same
+- Or make property `a` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:9:4
+   9| fn(object); // Error!
+         ^^^^^^
+
+References:
+   -:7:19
+   7| const object: {a: string} = {a: 'str' };
+                        ^^^^^^ [1]
+   -:2:22
+   2| const fn = (obj: {a: string | number}) => {
+                           ^^^^^^^^^^^^^^^ [2]
+   -:7:15
+   7| const object: {a: string} = {a: 'str' };
+                    ^^^^^^^^^^^ [3]
+   -:2:18
+   2| const fn = (obj: {a: string | number}) => {
+                       ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+Error ---------------------------------------------------------------------------------------- -:9:30
+
+Cannot get `payload.length` because property `length` is missing in `Number` [1]. [prop-missing]
+
+   -:9:30
+   9|     case 'A': return payload.length; // Error!
+                                   ^^^^^^
+
+References:
+   -:4:26
+   4|   | {type: 'B', payload: number};
+                               ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+Error ---------------------------------------------------------------------------------------- -:2:20
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at identifier: [signature-verification-failure]
+
+   2| export const add = a => a + 1; // Error
+                         ^
+
+Error ---------------------------------------------------------------------------------------- -:2:20
+
+Missing an annotation on `a`. [missing-local-annot]
+
+   2| export const add = a => a + 1; // Error
+                         ^
+
+Error ---------------------------------------------------------------------------------------- -:2:21
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   2| export const add = a => a + 1; // Error
+
+
+Found 3 errors
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+Error ---------------------------------------------------------------------------------------- -:3:29
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   3| export const genericArray = array.map(a => a) // Error
+                                  ^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 18 ===
+No errors!

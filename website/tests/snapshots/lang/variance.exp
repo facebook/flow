@@ -1,0 +1,112 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ------------------------------------------------------------------------------ -:5:20
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:5:20
+   5|   takesSelf(other: this): void {} // ERROR: input position
+                         ^^^^
+
+References:
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+Error ------------------------------------------------------------------------------ -:6:11
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:6:11
+   6|   parent: this | null = null; // ERROR: invariant field
+                ^^^^
+
+References:
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ----------------------------------------------------------------------------- -:11:48
+
+Cannot assign `nonCovariantCity` to `nonCovariantNoun` because in type argument `X` [1]: `Noun` [2] is incompatible with
+`City` [3]. [incompatible-type]
+
+   -:11:48
+   11| const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
+                                                      ^^^^^^^^^^^^^^^^
+
+References:
+   -:5:21
+    5| type NonCovariantOf<X> = {
+                           ^ [1]
+   -:11:40
+   11| const nonCovariantNoun: NonCovariantOf<Noun> = nonCovariantCity; // Error!
+                                              ^^^^ [2]
+   -:10:48
+   10| declare const nonCovariantCity: NonCovariantOf<City>;
+                                                      ^^^^ [3]
+
+
+Found 1 error
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ------------------------------------------------------------------------------ -:8:15
+
+Cannot call `takesCallback` with `acceptsExact` bound to `cb` because in the first parameter: inexact `Inexact` [1] is
+incompatible with exact `Exact` [2]. [incompatible-exact]
+
+   -:8:15
+   8| takesCallback(acceptsExact); // Error!
+                    ^^^^^^^^^^^^
+
+References:
+   -:6:43
+   6| declare function takesCallback(cb: (item: Inexact) => void): void;
+                                                ^^^^^^^ [1]
+   -:5:37
+   5| declare function acceptsExact(item: Exact): void;
+                                          ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 10 ===
+Error ------------------------------------------------------------------------------ -:4:12
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:4:12
+   4|   set(val: T): void; // Error [incompatible-variance]: T is in an input position but is expected only in output positions
+                 ^
+
+References:
+   -:2:14
+   2| type Box<out T> = {
+                   ^ [1]
+
+
+Found 1 error

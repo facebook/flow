@@ -1,0 +1,125 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------------- -:4:25
+
+Cannot assign `'world'` to `num3` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:4:25
+   4| let num3: typeof num1 = 'world';  // Error!
+                              ^^^^^^^ [1]
+
+References:
+   -:4:11
+   4| let num3: typeof num1 = 'world';  // Error!
+                ^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:8:27
+
+Cannot assign `42` to `bool3` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:8:27
+   8| let bool3: typeof bool1 = 42;     // Error!
+                                ^^ [1]
+
+References:
+   -:8:12
+   8| let bool3: typeof bool1 = 42;     // Error!
+                 ^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------ -:12:25
+
+Cannot assign `false` to `str3` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:25
+   12| let str3: typeof str1 = false;   // Error!
+                               ^^^^^ [1]
+
+References:
+   -:12:11
+   12| let str3: typeof str1 = false;   // Error!
+                 ^^^^^^^^^^^ [2]
+
+
+Found 3 errors
+
+=== block 3 ===
+Error ------------------------------------------------------------------------------- -:9:17
+
+`typeof` can only be used to get the type of variables. [ParseError]
+
+   9| type T = typeof {a: 1}; // Error
+                      ^
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ------------------------------------------------------------------------------- -:3:25
+
+Cannot assign `3.14` to `num2` because number literal `3.14` [1] is incompatible with number literal `42` [2].
+[incompatible-type]
+
+   -:3:25
+   3| let num2: typeof num1 = 3.14;    // Error!
+                              ^^^^ [1]
+
+References:
+   -:3:11
+   3| let num2: typeof num1 = 3.14;    // Error!
+                ^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:6:27
+
+Cannot assign `false` to `bool2` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
+[incompatible-type]
+
+   -:6:27
+   6| let bool2: typeof bool1 = false; // Error!
+                                ^^^^^ [1]
+
+References:
+   -:6:12
+   6| let bool2: typeof bool1 = false; // Error!
+                 ^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:9:25
+
+Cannot assign `'world'` to `str2` because string literal `world` [1] is incompatible with string literal `hello` [2].
+[incompatible-type]
+
+   -:9:25
+   9| let str2: typeof str1 = 'world'; // Error!
+                              ^^^^^^^ [1]
+
+References:
+   -:9:11
+   9| let str2: typeof str1 = 'world'; // Error!
+                ^^^^^^^^^^^ [2]
+
+
+Found 3 errors
+
+=== block 6 ===
+Error ------------------------------------------------------------------------------ -:10:29
+
+Cannot assign `YourClass` to `test1` because `YourClass` [1] is incompatible with `MyClass` [2]. [incompatible-type]
+
+   -:10:29
+   10| let test1: typeof MyClass = YourClass; // Error!
+                                   ^^^^^^^^^
+
+References:
+   -:6:7
+    6| class YourClass {
+             ^^^^^^^^^ [1]
+   -:2:7
+    2| class MyClass {
+             ^^^^^^^ [2]
+
+
+Found 1 error

@@ -1,0 +1,87 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error -------------------------------------------------------------------------- -:5:1
+
+Cannot cast `0` to `NumberAlias` because number [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
+
+   -:5:1
+   5| 0 as NumberAlias; // Error: 0 is not a NumberAlias!
+      ^ [1]
+
+References:
+   -:5:6
+   5| 0 as NumberAlias; // Error: 0 is not a NumberAlias!
+           ^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------- -:8:10
+
+Cannot return `x` because `NumberAlias` [1] is incompatible with number [2]. [incompatible-type]
+
+   -:8:10
+   8|   return x; // Error: x is not a number!
+               ^
+
+References:
+   -:7:21
+   7| function convert(x: NumberAlias): number {
+                          ^^^^^^^^^^^ [1]
+   -:7:35
+   7| function convert(x: NumberAlias): number {
+                                        ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ------------------------------------------------------------------------ -:10:12
+
+Cannot return `x` because string [1] is incompatible with `ID` [2]. [incompatible-type]
+
+   -:10:12
+   10|     return x; // Error: strings are not IDs.
+                  ^
+
+References:
+   -:9:18
+    9| function toID(x: string): ID {
+                        ^^^^^^ [1]
+   -:9:27
+    9| function toID(x: string): ID {
+                                 ^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
+Error ------------------------------------------------------------------------- -:2:27
+
+number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:2:27
+   2| opaque type Bad: string = number; // Error: number is not a subtype of string
+                                ^^^^^^ [1]
+
+References:
+   -:2:18
+   2| opaque type Bad: string = number; // Error: number is not a subtype of string
+                       ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!

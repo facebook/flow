@@ -1,0 +1,109 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ------------------------------------------------------------------------------ -:10:3
+
+Cannot call `f` with `fiveOrSix` bound to `param` because union type [1] is incompatible with union type [2].
+[incompatible-type]
+
+Type union type [1] includes members `6` that are not included in type union type [2].
+
+   -:10:3
+   10| f(fiveOrSix); // Error!
+         ^^^^^^^^^
+
+References:
+   -:7:26
+    7| declare const fiveOrSix: 5 | 6; // Not a subset of the input parameters type.
+                                ^^^^^ [1]
+   -:2:19
+    2| function f(param: 1 | 2 | 3 | 4 | 5) {
+                         ^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ------------------------------------------------------------------------------ -:6:24
+
+Cannot assign `objectB` to `objectA` because in property `foo`: `number` [1] is not exactly the same as `string` [2].
+[incompatible-type]
+
+The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
+- Either make `ObjectB` [3] and `ObjectA` [4] exactly the same
+- Or make property `foo` in `ObjectA` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:6:24
+   6| let objectA: ObjectA = objectB; // Error!
+                             ^^^^^^^
+
+References:
+   -:3:22
+   3| type ObjectB = {foo: number, bar: number};
+                           ^^^^^^ [1]
+   -:2:22
+   2| type ObjectA = {foo: string, ...};
+                           ^^^^^^ [2]
+   -:3:16
+   3| type ObjectB = {foo: number, bar: number};
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   -:2:16
+   2| type ObjectA = {foo: string, ...};
+                     ^^^^^^^^^^^^^^^^^^ [4]
+   -:6:14
+   6| let objectA: ObjectA = objectB; // Error!
+                   ^^^^^^^ [5]
+
+
+Found 1 error
+
+=== block 7 ===
+Error ------------------------------------------------------------------------------- -:8:1
+
+Cannot cast `f1` to `FuncType` because in the return value: union type [1] is incompatible with union type [2].
+[incompatible-type]
+
+Type union type [1] includes members `C` that are not included in type union type [2].
+
+   -:8:1
+   8| f1 as FuncType; // Error
+      ^^
+
+References:
+   -:4:29
+   4| declare function f1(1 | 2): "A" | "B" | "C";
+                                  ^^^^^^^^^^^^^^^ [1]
+   -:2:28
+   2| type FuncType = (1 | 2) => "A" | "B";
+                                 ^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:9:1
+
+Cannot cast `f2` to `FuncType` because in the first parameter: union type [1] is incompatible with number literal
+`2` [2]. [incompatible-type]
+
+   -:9:1
+   9| f2 as FuncType; // Error
+      ^^
+
+References:
+   -:5:21
+   5| declare function f2(1 | null): "A" | "B";
+                          ^^^^^^^^ [1]
+   -:2:22
+   2| type FuncType = (1 | 2) => "A" | "B";
+                           ^ [2]
+
+
+Found 2 errors

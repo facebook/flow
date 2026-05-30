@@ -1,0 +1,81 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+Error ----------------------------------------------------------------------- -:6:31
+
+Cannot assign `employee` to `person` because in property `who`: `Employee` [1] is not exactly the same as `Person` [2].
+[incompatible-type]
+
+The above-mentioned two types must be the same because property `who` is invariantly typed. To fix the error,
+- Either make `{who: Employee}` [3] and `{who: Person}` [4] exactly the same
+- Or make property `who` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:6:31
+   6| const person: {who: Person} = employee; // Error
+                                    ^^^^^^^^
+
+References:
+   -:5:23
+   5| const employee: {who: Employee} = {who: new Employee()};
+                            ^^^^^^^^ [1]
+   -:6:21
+   6| const person: {who: Person} = employee; // Error
+                          ^^^^^^ [2]
+   -:5:17
+   5| const employee: {who: Employee} = {who: new Employee()};
+                      ^^^^^^^^^^^^^^^ [3]
+   -:6:15
+   6| const person: {who: Person} = employee; // Error
+                    ^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ------------------------------------------------------------------------ -:7:8
+
+Cannot assign `new Person()` to `person.who` because property `who` is not writable. [cannot-write]
+
+   7| person.who = new Person(); // Error!
+             ^^^
+
+
+Found 1 error
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+Error ------------------------------------------------------------------------ -:4:5
+
+Cannot cast `obj.foo` to string because property `foo` of unknown type [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:4:5
+   4|     obj.foo as string; // Error!
+          ^^^^^^^
+
+References:
+   -:3:7
+   3|   if (obj.foo) {
+            ^^^^^^^ [1]
+   -:4:16
+   4|     obj.foo as string; // Error!
+                     ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 9 ===
+No errors!

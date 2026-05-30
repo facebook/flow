@@ -1,0 +1,45 @@
+=== block 1 ===
+Error -------------------------------------------------------- -:10:9
+
+Cannot get `props.doesNotExist` because property `doesNotExist` is missing in `Props` [1]. [prop-missing]
+
+   -:10:9
+   10|   props.doesNotExist; // Error! You did not define a `doesNotExist` prop.
+               ^^^^^^^^^^^^
+
+References:
+   -:9:29
+    9| function MyComponent(props: Props) {
+                                   ^^^^^ [1]
+
+
+Found 1 error
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+Error ------------------------------------------------------- -:11:16
+
+Cannot get `this.props.doesNotExist` because property `doesNotExist` is missing in `Props` [1]. [prop-missing]
+
+   -:11:16
+   11|     this.props.doesNotExist; // Error! You did not define a `doesNotExist` prop.
+                      ^^^^^^^^^^^^
+
+References:
+   -:9:43
+    9| class MyComponent extends React.Component<Props> {
+                                                 ^^^^^ [1]
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!

@@ -1,0 +1,100 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error --------------------------------------------------------------------- -:5:10
+
+Cannot return `new Object()` because: [incompatible-type]
+ - Either `Object` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or `Object` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in `Object` [1] but exists in `$Iterable` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   -:5:10
+    5|   return new Object(); // ERROR: Value does not match `React.Node` type
+                ^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:21:5
+   21|   | ExactReactElement_DEPRECATED<any>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:22:5
+   22|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:23:5
+   23|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+Error ---------------------------------------------------------------------- -:8:1
+
+Cannot declare component because component ImplicitReturn [1] is not guaranteed to reach a return statement. An explicit
+return statement must be included for all possible branches. [component-missing-return]
+
+   8| component ImplicitReturn(someCond: boolean) { // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+Error --------------------------------------------------------------------- -:16:3
+
+Cannot reference `this` from within component declaration [1] [component-this-reference]
+
+   -:16:3
+   16|   this.foo = 3; // ERROR: Accessing `this`
+         ^^^^
+
+References:
+   -:15:1
+   15| component UsesThis() {
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+Error --------------------------------------------------------------------- -:16:8
+
+Cannot assign `3` to `this.foo` because property `foo` is missing in global object [1]. [prop-missing]
+
+   -:16:8
+   16|   this.foo = 3; // ERROR: Accessing `this`
+              ^^^
+
+References:
+   -:16:3
+   16|   this.foo = 3; // ERROR: Accessing `this`
+         ^^^^ [1]
+
+Error -------------------------------------------------------------------- -:23:14
+
+Cannot call component Greeting [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
+
+   -:23:14
+   23| const elem = Greeting({}); // ERROR [react-rule-call-component]: use <Greeting /> instead
+                    ^^^^^^^^
+
+References:
+   -:20:1
+   20| component Greeting() {
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 5 errors

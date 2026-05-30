@@ -1,0 +1,160 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ---------------------------------------------------------------------------- -:6:5
+
+Cannot cast `value` to union type because string [1] is incompatible with union type [2]. [incompatible-type]
+
+   -:6:5
+   6|     value as null | void; // Error! Could still be the empty string ""
+          ^^^^^
+
+References:
+   -:2:23
+   2| function func(value: ?string) {
+                            ^^^^^^ [1]
+   -:6:14
+   6|     value as null | void; // Error! Could still be the empty string ""
+                   ^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 10 ===
+Error ---------------------------------------------------------------------------- -:4:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? [sketchy-null-string]
+
+   -:4:7
+   4|   if (value) { // Error!
+            ^^^^^
+
+References:
+   -:3:23
+   3| function func(value: ?string) {
+                            ^^^^^^ [1]
+   -:3:22
+   3| function func(value: ?string) {
+                           ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+Error -------------------------------------------------------------------------- -:17:11
+
+Cannot call `value.build` because property `build` is missing in `A` [1]. [prop-missing]
+
+   -:17:11
+   17|     value.build(); // Error
+                 ^^^^^
+
+References:
+   -:15:24
+   15|   if (value instanceof A) {
+                              ^ [1]
+
+
+Found 1 error
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+Error -------------------------------------------------------------------------- -:13:16
+
+Cannot call `value.prop.charAt` because property `charAt` is missing in undefined [1]. [incompatible-use]
+
+   -:13:16
+   13|     value.prop.charAt(0); // Error!
+                      ^^^^^^
+
+References:
+   -:10:30
+   10| function func(value: {prop?: string}) {
+                                    ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error --------------------------------------------------------------------------- -:9:21
+
+Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:9:21
+   9|   const s: string = value; // Error: `value` keeps its full `string | number` type
+                          ^^^^^
+
+References:
+   -:4:29
+   4|   | {kind: 'number', value: number};
+                                  ^^^^^^ [1]
+   -:9:12
+   9|   const s: string = value; // Error: `value` keeps its full `string | number` type
+                 ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
+Error -------------------------------------------------------------------------- -:12:15
+
+Cannot call `setLayout` with object literal bound to `value` because object literal [1] is incompatible with `T` [2].
+[incompatible-type]
+
+   -:12:15
+   12|     setLayout({kind: 'row', cols: 3}); // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:8:22
+    8|   setLayout: (value: T) => void,
+                            ^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+No errors!

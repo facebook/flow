@@ -1,0 +1,157 @@
+=== block 1 ===
+Error ------------------------------------------------------------------------ -:3:3
+
+Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `active`, consider using `Active`, in
+enum `Status` [1]. [invalid-enum-member-name]
+
+   -:3:3
+   3|   active, // Error: names can't start with lowercase 'a' through 'z'
+        ^^^^^^
+
+References:
+   -:2:6
+   2| enum Status {
+           ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 2 ===
+Error ------------------------------------------------------------------------ -:4:3
+
+Enum member names need to be unique, but the name `Active` has already been used for a previous member [1] of enum
+`Status` [2]. [invalid-enum]
+
+   -:4:3
+   4|   Active, // Error: the name 'Active` was already used above
+        ^^^^^^
+
+References:
+   -:3:3
+   3|   Active,
+        ^^^^^^ [1]
+   -:2:6
+   2| enum Status {
+           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 3 ===
+Error ----------------------------------------------------------------------- -:3:12
+
+The enum member initializer for `Active` needs to be a literal (either a boolean, number, bigint, or string) in enum
+`Status`. [ParseError]
+
+   3|   Active = 1 + 2, // Error: the value must be a literal
+                 ^
+
+
+Found 1 error
+
+=== block 4 ===
+Error ----------------------------------------------------------------------- -:4:12
+
+Invalid enum member initializer. Initializers need to be unique, but this one has already been used for a previous
+member [1] of enum `Status` [2]. [duplicate-enum-init]
+
+   -:4:12
+   4|   Paused = 1, // Error: the value has already been used above
+                 ^
+
+References:
+   -:3:3
+   3|   Active = 1,
+        ^^^^^^^^^^ [1]
+   -:2:6
+   2| enum Status {
+           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ------------------------------------------------------------------------ -:5:3
+
+String enum `Status` [1] has been specified with inconsistent member initializers. Either all members need a string
+literal initializer, or none. [invalid-enum]
+
+   -:5:3
+   5|   Off, // Error: you must specify a value for all members (or none of the members)
+        ^^^
+
+References:
+   -:2:6
+   2| enum Status {
+           ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error ----------------------------------------------------------------------- -:10:9
+
+Missing `default` case in the check of `status`. `Status` [1] has unknown members (specified using `...`) so checking it
+requires the use of a `default` case to cover those members. [invalid-exhaustive-check]
+
+   -:10:9
+   10| switch (status) { // Error
+               ^^^^^^
+
+References:
+   -:8:15
+    8| const status: Status = Status.Active;
+                     ^^^^^^ [1]
+
+Error ----------------------------------------------------------------------- -:16:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match the unknown
+members of enum `Status` (specified using `...`) [1]. [match-not-exhaustive]
+
+   -:16:1
+   16| match (status) { // Error
+       ^^^^^
+
+References:
+   -:8:15
+    8| const status: Status = Status.Active;
+                     ^^^^^^ [1]
+
+
+Found 2 errors

@@ -1,0 +1,310 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+Error ----------------------------------------------------------------------------- -:3:10
+
+Cannot return `"foo"` because string [1] is incompatible with `T` [2]. [incompatible-type]
+
+   -:3:10
+   3|   return "foo"; // Error!
+               ^^^^^ [1]
+
+References:
+   -:2:33
+   2| function identity<T>(value: T): T {
+                                      ^ [2]
+
+
+Found 1 error
+
+=== block 14 ===
+Error ----------------------------------------------------------------------------- -:3:11
+
+Cannot assign `"foo"` to `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
+
+   -:3:11
+   3|   value = "foo"; // Error!
+                ^^^^^ [1]
+
+References:
+   -:2:29
+   2| function identity<T>(value: T): T {
+                                  ^ [2]
+
+Error ----------------------------------------------------------------------------- -:4:10
+
+Cannot return `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
+
+   -:4:10
+   4|   return value;  // Error!
+               ^^^^^
+
+References:
+   -:3:11
+   3|   value = "foo"; // Error!
+                ^^^^^ [1]
+   -:2:33
+   2| function identity<T>(value: T): T {
+                                      ^ [2]
+
+
+Found 2 errors
+
+=== block 15 ===
+Error ----------------------------------------------------------------------------- -:8:16
+
+Cannot assign `identity(...)` to `three` because number literal `42` [1] is incompatible with number literal `3` [2].
+[incompatible-type]
+
+   -:8:16
+   8| let three: 3 = identity(42); // Error
+                     ^^^^^^^^^^^^
+
+References:
+   -:8:25
+   8| let three: 3 = identity(42); // Error
+                              ^^ [1]
+   -:8:12
+   8| let three: 3 = identity(42); // Error
+                 ^ [2]
+
+
+Found 1 error
+
+=== block 16 ===
+Error ----------------------------------------------------------------------------- -:3:19
+
+Cannot get `obj.foo` because property `foo` is missing in `unknown` [1]. [incompatible-use]
+
+   -:3:19
+   3|   console.log(obj.foo); // Error!
+                        ^^^
+
+References:
+   -:2:25
+   2| function logFoo<T>(obj: T): T {
+                              ^ [1]
+
+
+Found 1 error
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error ------------------------------------------------------------------------------ -:8:8
+
+Cannot call `logFoo` because in type argument `T`: property `foo` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
+
+   -:8:8
+   8| logFoo({ bar: 'bar' }); // Error!
+             ^^^^^^^^^^^^^^ [1]
+
+References:
+   -:2:27
+   2| function logFoo<T extends {foo: string, ...}>(obj: T): T {
+                                ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 19 ===
+Error ----------------------------------------------------------------------------- -:8:31
+
+Cannot call `identity` because in type argument `T`: string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:8:31
+   8| let three: "three" = identity("three"); // Error!
+                                    ^^^^^^^ [1]
+
+References:
+   -:2:29
+   2| function identity<T extends number>(value: T): T {
+                                  ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
+Error ----------------------------------------------------------------------------- -:7:18
+
+Cannot assign `identity(...)` to `bar` because string [1] is incompatible with string literal `bar` [2].
+[incompatible-type]
+
+   -:7:18
+   7| let bar: 'bar' = identity('bar'); // Error!
+                       ^^^^^^^^^^^^^^^
+
+References:
+   -:2:33
+   2| function identity(val: string): string {
+                                      ^^^^^^ [1]
+   -:7:10
+   7| let bar: 'bar' = identity('bar'); // Error!
+               ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+No errors!
+
+=== block 23 ===
+Error ----------------------------------------------------------------------------- -:4:21
+
+Cannot assign `val` to `bar` because string [1] is incompatible with string literal `bar` [2]. [incompatible-type]
+
+   -:4:21
+   4|   let bar: 'bar'  = val; // Error!
+                          ^^^
+
+References:
+   -:2:42
+   2| function identity<T extends string>(val: T): T {
+                                               ^ [1]
+   -:4:12
+   4|   let bar: 'bar'  = val; // Error!
+                 ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+No errors!
+
+=== block 25 ===
+Error ---------------------------------------------------------------------------- -:10:12
+
+Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
+
+   -:10:12
+   10| let item2: Item = new Item(42); // Error!
+                  ^^^^
+
+References:
+   -:2:11
+    2| class Item<T> {
+                 ^^^ [1]
+
+
+Found 1 error
+
+=== block 26 ===
+Error ----------------------------------------------------------------------------- -:7:12
+
+Cannot use `Item` [1] without 1 type argument. [missing-type-arg]
+
+   -:7:12
+   7| let item2: Item = { prop: 42 }; // Error!
+                 ^^^^
+
+References:
+   -:2:10
+   2| type Item<T> = {
+               ^^^ [1]
+
+
+Found 1 error
+
+=== block 27 ===
+Error ---------------------------------------------------------------------------- -:11:19
+
+Cannot use `HasProp` [1] without 1 type argument. [missing-type-arg]
+
+   -:11:19
+   11| Item.prototype as HasProp; // Error!
+                         ^^^^^^^
+
+References:
+   -:2:18
+    2| interface HasProp<T> {
+                        ^^^ [1]
+
+
+Found 1 error
+
+=== block 28 ===
+No errors!
+
+=== block 29 ===
+No errors!
+
+=== block 30 ===
+Error ------------------------------------------------------------------------------ -:5:1
+
+Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: string [2] is incompatible with number [3].
+[incompatible-type]
+
+   -:5:1
+   5| x as GenericBoxError<number| string>; // Error: number | string is not compatible with number.
+      ^
+
+References:
+   -:2:22
+   2| type GenericBoxError<T> = T;
+                           ^ [1]
+   -:5:30
+   5| x as GenericBoxError<number| string>; // Error: number | string is not compatible with number.
+                                   ^^^^^^ [2]
+   -:4:26
+   4| const x: GenericBoxError<number> = 3;
+                               ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 31 ===
+Error ----------------------------------------------------------------------------- -:2:37
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:2:37
+   2| type NotActuallyCovariant<out T> = (T) => void; // Error
+                                          ^
+
+References:
+   -:2:31
+   2| type NotActuallyCovariant<out T> = (T) => void; // Error
+                                    ^ [1]
+
+
+Found 1 error

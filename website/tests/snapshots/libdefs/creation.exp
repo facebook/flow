@@ -1,0 +1,52 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ---------------------------------------------------------------------------- -:7:1
+
+Cannot cast `Foo.bar` to `Baz` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:7:1
+   7| Foo.bar as Foo.Baz; // error
+      ^^^^^^^
+
+References:
+   -:3:22
+   3|   declare const bar: string;
+                           ^^^^^^ [1]
+   -:7:12
+   7| Foo.bar as Foo.Baz; // error
+                 ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ---------------------------------------------------------------------------- -:6:1
+
+Cannot use type-only namespace `TypeOnlyFoo` [1] as a value. Type-only namespaces are erased and don't exist at runtime.
+[type-as-value]
+
+   -:6:1
+   6| TypeOnlyFoo; // error
+      ^^^^^^^^^^^
+
+References:
+   -:2:19
+   2| declare namespace TypeOnlyFoo {
+                        ^^^^^^^^^^^ [1]
+
+
+Found 1 error

@@ -1,0 +1,140 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error --------------------------------------------------------------------------- -:9:9
+
+Cannot assign `42` to `state.val` because property `val` is not writable. [react-rule-hook-mutation]
+
+The return value of a React hook [1] cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
+.
+
+   -:9:9
+      9|   state.val = 42; // Error: cannot mutate return value of hook
+                 ^^^
+
+References:
+   <BUILTINS>/react.js:1158:26
+                                  v---
+   1158|     declare hook useState<S>(
+   1159|       initialState: (() => S) | S,
+   1160|     ): [S, ReactSetStateFunction<S>];
+             -------------------------------^ [1]
+
+Error -------------------------------------------------------------------------- -:13:8
+
+Cannot read `current` from `ref` [1] because `ref` values may not be read during render.
+(https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
+
+   13|       {ref.current /* Error: cannot read ref during rendering */}
+              ^^^ [1]
+
+
+Found 2 errors
+
+=== block 5 ===
+Error --------------------------------------------------------------------------- -:3:3
+
+Cannot assign `42` to `values[0]` because read-only arrays cannot be written to. [react-rule-unsafe-mutation]
+
+React hook arguments [1] and their nested elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)
+.
+
+   -:3:3
+   3|   values[0] = 42; // Error: mutating argument to hook
+        ^^^^^^^^^
+
+References:
+   -:2:25
+   2| hook useIllegalMutation(values: Array<number>) {
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 6 ===
+Error -------------------------------------------------------------------------- -:8:26
+
+Cannot call hook [1] because React hooks cannot be called in conditional contexts.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-conditional]
+
+   -:8:26
+   8|     const onlineStatus = useOnlineStatus(); // Error
+                               ^^^^^^^^^^^^^^^^^
+
+References:
+   -:8:26
+   8|     const onlineStatus = useOnlineStatus(); // Error
+                               ^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 7 ===
+Error ------------------------------------------------------------------------- -:11:29
+
+Cannot call `args.map` because in the first argument: function [1] is a React hook but function type [2] is not a hook.
+[react-rule-hook-incompatible]
+
+React component properties [3] and their nested props and elements cannot be written to.
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+
+   -:11:29
+    11|   const multArgs = args.map(useMultiplier); // Error [react-rule-hook-incompatible]
+                                    ^^^^^^^^^^^^^
+
+References:
+   -:4:1
+     4| hook useMultiplier(x: number): number {
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:885:30
+   885|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => U, thisArg: This): Array<U>;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   -:10:18
+    10| component Mapper(args: Array<number>) {
+                         ^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 8 ===
+Error -------------------------------------------------------------------------- -:5:13
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
+
+   -:5:13
+   5|   const x = useHook(); // Error: cannot call a hook outside of a component or hook
+                  ^^^^^^^^^
+
+References:
+   -:5:13
+   5|   const x = useHook(); // Error: cannot call a hook outside of a component or hook
+                  ^^^^^^^ [1]
+
+Error -------------------------------------------------------------------------- -:10:3
+
+Cannot call hook because callee [1]'s name does not conform to React hook rules. Hook names must begin with `use`
+followed by a capitalized letter. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-naming-convention]
+
+   -:10:3
+   10|   renamedHook(); // Error: cannot call a hook whose name does not begin with `use`
+         ^^^^^^^^^^^^^
+
+References:
+   -:10:3
+   10|   renamedHook(); // Error: cannot call a hook whose name does not begin with `use`
+         ^^^^^^^^^^^ [1]
+
+
+Found 2 errors

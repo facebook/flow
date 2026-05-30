@@ -1,0 +1,34 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ------------------------------------------------------------------------------ -:5:11
+
+Cannot use type `Status` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   -:5:11
+   5| const v = Status;       // Error
+                ^^^^^^
+
+References:
+   -:2:6
+   2| type Status = "ok" | "error";
+           ^^^^^^ [1]
+
+
+Found 1 error

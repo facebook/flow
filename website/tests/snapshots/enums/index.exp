@@ -1,0 +1,35 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error --------------------------------------------------------------------------------- -:9:9
+
+Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
+[invalid-exhaustive-check]
+
+   -:9:9
+   9| switch (status) { // Error: incomplete exhaustive check
+              ^^^^^^
+
+References:
+   -:7:15
+   7| const status: Status = Status.Active;
+                    ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!

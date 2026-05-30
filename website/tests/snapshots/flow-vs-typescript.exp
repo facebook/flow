@@ -1,0 +1,887 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------- -:5:28
+
+Cannot assign `raw` to `settings` because property `theme` is extra in object literal [1] but missing in `Settings` [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   -:5:28
+   5| const settings: Settings = raw; // ERROR
+                                 ^^^
+
+References:
+   -:4:13
+   4| const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   -:5:17
+   5| const settings: Settings = raw; // ERROR
+                      ^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ------------------------------------------------------------------------ -:16:12
+
+Cannot call `acceptsObj` with `new Foo()` bound to `x` because `Foo` [1] is not a subtype of `Obj` [2]. Class instances
+are not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
+
+   -:16:12
+   16| acceptsObj(new Foo());       // ERROR
+                  ^^^^^^^^^ [1]
+
+References:
+   -:10:32
+   10| declare function acceptsObj(x: Obj): void;
+                                      ^^^ [2]
+
+Error ------------------------------------------------------------------------ -:17:12
+
+Cannot call `acceptsObj` with `someI` bound to `x` because `I` [1] is not a subtype of `Obj` [2]. Class instances are
+not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
+
+   -:17:12
+   17| acceptsObj(someI);           // ERROR: same [class-object-subtyping] code
+                  ^^^^^
+
+References:
+   -:11:22
+   11| declare const someI: I;
+                            ^ [1]
+   -:10:32
+   10| declare function acceptsObj(x: Obj): void;
+                                      ^^^ [2]
+
+
+Found 2 errors
+
+=== block 5 ===
+Error ------------------------------------------------------------------------- -:4:20
+
+Cannot implement `ObjType` because it is not an interface. [cannot-implement]
+
+   4| class C implements ObjType { // ERROR: [cannot-implement]
+                         ^^^^^^^
+
+Error ------------------------------------------------------------------------- -:8:11
+
+Cannot extend `ObjType` [1] with `I` because `ObjType` [1] is not inheritable. [incompatible-use]
+
+   -:8:11
+   8| interface I extends ObjType { // ERROR: [incompatible-use]
+                ^
+
+References:
+   -:8:21
+   8| interface I extends ObjType { // ERROR: [incompatible-use]
+                          ^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 6 ===
+Error -------------------------------------------------------------------------- -:7:8
+
+Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
+subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
+
+   -:7:8
+   7| logAll(msgs); // ERROR: `string` is not a subtype of `Iterable<string>`
+             ^^^^
+
+References:
+   -:6:14
+   6| const msgs = "foo";
+                   ^^^^^ [1]
+   -:3:24
+   3| function logAll(items: Iterable<string>) {
+                             ^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 7 ===
+Error ------------------------------------------------------------------------- -:9:33
+
+Cannot assign `e` to `baseExact` because property `timestamp` is extra in `LogEntry` [1] but missing in object type [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   -:9:33
+   9| const baseExact: {id: string} = e; // ERROR
+                                      ^
+
+References:
+   -:6:18
+   6| declare const e: LogEntry;
+                       ^^^^^^^^ [1]
+   -:9:18
+   9| const baseExact: {id: string} = e; // ERROR
+                       ^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:13:31
+
+Cannot assign `baseInexact` to `widened` because inexact object type [1] is incompatible with exact `WithUnixTime` [2].
+[incompatible-exact]
+
+   -:13:31
+   13| const widened: WithUnixTime = baseInexact;    // ERROR
+                                     ^^^^^^^^^^^
+
+References:
+   -:12:20
+   12| const baseInexact: {id: string, ...} = e;     // OK
+                          ^^^^^^^^^^^^^^^^^ [1]
+   -:13:16
+   13| const widened: WithUnixTime = baseInexact;    // ERROR
+                      ^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:13:31
+
+Cannot assign `baseInexact` to `widened` because property `timestamp` is missing in object type [1] but exists in
+`WithUnixTime` [2]. [incompatible-type]
+
+This optional property of `WithUnixTime` [2] is invariantly typed. To fix,
+- Either make `{id: string, ...}` [1] and `WithUnixTime` [3] exactly the same
+- Or make `WithUnixTime` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:13:31
+   13| const widened: WithUnixTime = baseInexact;    // ERROR
+                                     ^^^^^^^^^^^
+
+References:
+   -:12:20
+   12| const baseInexact: {id: string, ...} = e;     // OK
+                          ^^^^^^^^^^^^^^^^^ [1]
+   -:13:16
+   13| const widened: WithUnixTime = baseInexact;    // ERROR
+                      ^^^^^^^^^^^^ [2]
+   -:4:21
+    4| type WithUnixTime = {id: string, timestamp?: number};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Found 3 errors
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ------------------------------------------------------------------------- -:5:11
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `Counter` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   -:5:11
+   5| const o = {...c}; // ERROR: [cannot-spread-interface]
+                ^^^^^^ [1]
+
+References:
+   -:4:18
+   4| declare const c: Counter;
+                       ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 10 ===
+Error ------------------------------------------------------------------------- -:4:51
+
+Cannot assign array literal to `fullName` because array literal [1] has an unknown number of elements, so is
+incompatible with tuple type [2]. [invalid-tuple-arity]
+
+   -:4:51
+   4| const fullName: [string, string | void, string] = ["Ada", ...middle, "Lovelace"]; // ERROR
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:4:17
+   4| const fullName: [string, string | void, string] = ["Ada", ...middle, "Lovelace"]; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+Error ------------------------------------------------------------------------- -:8:36
+
+Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   -:8:36
+   8| const tick: () => number = counter.increment; // ERROR: [method-unbinding]
+                                         ^^^^^^^^^ [1]
+
+References:
+   -:5:3
+   5|   increment(): number { return ++this.count; }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 12 ===
+Error ------------------------------------------------------------------------- -:3:15
+
+The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
+types. [unsupported-syntax]
+
+   3| function f(): undefined { // ERROR: [unsupported-syntax]
+                    ^^^^^^^^^
+
+
+Found 1 error
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+Error ------------------------------------------------------------------------- -:4:10
+
+Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:4:10
+   4|   set(t: T): void; // ERROR: [incompatible-variance]
+               ^
+
+References:
+   -:3:14
+   3| type Box<out T> = {
+                   ^ [1]
+
+
+Found 1 error
+
+=== block 16 ===
+Error ------------------------------------------------------------------------- -:7:10
+
+Cannot call `markFree` with `item` bound to `p` because in property `price`: `number` [1] is not exactly the same as
+`number | string` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because property `price` is invariantly typed. To fix the error,
+- Either make `{price: number}` [3] and `{price: number | string}` [4] exactly the same
+- Or make property `price` in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:7:10
+   7| markFree(item); // ERROR: property `price` is invariantly typed
+               ^^^^
+
+References:
+   -:6:21
+   6| const item: {price: number} = {price: 9.99};
+                          ^^^^^^ [1]
+   -:3:30
+   3| function markFree(p: {price: number | string}) {
+                                   ^^^^^^^^^^^^^^^ [2]
+   -:6:13
+   6| const item: {price: number} = {price: 9.99};
+                  ^^^^^^^^^^^^^^^ [3]
+   -:3:22
+   3| function markFree(p: {price: number | string}) {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error -------------------------------------------------------------------------- -:7:3
+
+Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
+type [2]. [incompatible-variance]
+
+   -:7:3
+   7| f(o); // ERROR: [incompatible-variance]
+        ^
+
+References:
+   -:6:10
+   6| const o: {readonly value: number} = {value: 1};
+               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   -:3:17
+   3| function f(obj: {value: number}) {
+                      ^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+Error ------------------------------------------------------------------------- -:7:13
+
+Cannot call `appendError` with `errors` bound to `es` because in array element: `string` [1] is not exactly the same as
+`string | Error` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<string>` [3] and `Array<string | Error>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   -:7:13
+   7| appendError(errors); // ERROR: `Array<string>` is invariantly typed
+                  ^^^^^^
+
+References:
+   -:6:21
+   6| const errors: Array<string> = [];
+                          ^^^^^^ [1]
+   -:3:32
+   3| function appendError(es: Array<string | Error>) {
+                                     ^^^^^^^^^^^^^^ [2]
+   -:6:15
+   6| const errors: Array<string> = [];
+                    ^^^^^^^^^^^^^ [3]
+   -:3:26
+   3| function appendError(es: Array<string | Error>) {
+                               ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 21 ===
+No errors!
+
+=== block 22 ===
+Error -------------------------------------------------------------------------- -:9:7
+
+Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: string [2] is incompatible with
+number [3]. [incompatible-type]
+
+   -:9:7
+   9| widen(box); // ERROR
+            ^^^
+
+References:
+   -:3:11
+   3| class Box<T> {
+                ^ [1]
+   -:7:32
+   7| function widen(b: Box<number | string>) {}
+                                     ^^^^^^ [2]
+   -:8:16
+   8| const box: Box<number> = new Box(1);
+                     ^^^^^^ [3]
+
+
+Found 1 error
+
+=== block 23 ===
+Error ------------------------------------------------------------------------ -:10:13
+
+Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
+ - `StringComparator` [1] is incompatible with `Comparator` [2]
+    - in property `compare` > the first parameter: string [3] is incompatible with number [4]
+
+   -:10:13
+   10| callCompare(stringComparator); // ERROR
+                   ^^^^^^^^^^^^^^^^
+
+References:
+   -:7:25
+    7| const stringComparator: StringComparator = {
+                               ^^^^^^^^^^^^^^^^ [1]
+   -:6:25
+    6| function callCompare(c: Comparator) {}
+                               ^^^^^^^^^^ [2]
+   -:3:37
+    3| type StringComparator = {compare(a: string, b: string): number};
+                                           ^^^^^^ [3]
+   -:4:40
+    4| type Comparator = {compare(a: string | number, b: string | number): number};
+                                              ^^^^^^ [4]
+
+Error ------------------------------------------------------------------------ -:10:13
+
+Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
+ - `StringComparator` [1] is incompatible with `Comparator` [2]
+    - in property `compare` > the second parameter: string [3] is incompatible with number [4]
+
+   -:10:13
+   10| callCompare(stringComparator); // ERROR
+                   ^^^^^^^^^^^^^^^^
+
+References:
+   -:7:25
+    7| const stringComparator: StringComparator = {
+                               ^^^^^^^^^^^^^^^^ [1]
+   -:6:25
+    6| function callCompare(c: Comparator) {}
+                               ^^^^^^^^^^ [2]
+   -:3:48
+    3| type StringComparator = {compare(a: string, b: string): number};
+                                                      ^^^^^^ [3]
+   -:4:60
+    4| type Comparator = {compare(a: string | number, b: string | number): number};
+                                                                  ^^^^^^ [4]
+
+
+Found 2 errors
+
+=== block 24 ===
+Error ------------------------------------------------------------------------- -:6:20
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:6:20
+   6|   takesSelf(other: this): void {} // ERROR: input position
+                         ^^^^
+
+References:
+   -:3:7
+   3| class Builder {
+            ^^^^^^^ [1]
+
+Error ------------------------------------------------------------------------- -:7:11
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:7:11
+   7|   parent: this | null = null; // ERROR: invariant field
+                ^^^^
+
+References:
+   -:3:7
+   3| class Builder {
+            ^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 25 ===
+Error ------------------------------------------------------------------------- -:5:10
+
+Cannot return `((typeof x) === "object") && (x !== null)` because indexed object [1] is incompatible with exact
+`User` [2]. [incompatible-indexer]
+
+The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
+the guard type `User` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:5:10
+   5|   return typeof x === "object" && x !== null; // ERROR: refined type isn't a subtype of `User`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:4:20
+   4| function isUser(x: unknown): x is User {
+                         ^^^^^^^ [1]
+   -:4:35
+   4| function isUser(x: unknown): x is User {
+                                        ^^^^ [2]
+   -:4:17
+   4| function isUser(x: unknown): x is User {
+                      ^ [3]
+
+Error ------------------------------------------------------------------------- -:5:10
+
+Cannot return `((typeof x) === "object") && (x !== null)` because property `id` is read-only in object [1] but writable
+in `User` [2] and property `name` is read-only in object [1] but writable in `User` [2]. [incompatible-variance]
+
+The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
+the guard type `User` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:5:10
+   5|   return typeof x === "object" && x !== null; // ERROR: refined type isn't a subtype of `User`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:4:20
+   4| function isUser(x: unknown): x is User {
+                         ^^^^^^^ [1]
+   -:4:35
+   4| function isUser(x: unknown): x is User {
+                                        ^^^^ [2]
+   -:4:17
+   4| function isUser(x: unknown): x is User {
+                      ^ [3]
+
+Error ------------------------------------------------------------------------- -:5:10
+
+Cannot return `((typeof x) === "object") && (x !== null)` because in property `id`: `unknown` [1] is incompatible with
+string [2]. [incompatible-type-guard]
+
+The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
+the guard type `User` [5]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:5:10
+   5|   return typeof x === "object" && x !== null; // ERROR: refined type isn't a subtype of `User`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:4:20
+   4| function isUser(x: unknown): x is User {
+                         ^^^^^^^ [1]
+   -:3:18
+   3| type User = {id: string, name: string};
+                       ^^^^^^ [2]
+   -:4:17
+   4| function isUser(x: unknown): x is User {
+                      ^ [3]
+   -:4:35
+   4| function isUser(x: unknown): x is User {
+                                        ^^^^ [5]
+
+Error ------------------------------------------------------------------------- -:5:10
+
+Cannot return `((typeof x) === "object") && (x !== null)` because in property `name`: `unknown` [1] is incompatible with
+string [2]. [incompatible-type-guard]
+
+The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
+the guard type `User` [5]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:5:10
+   5|   return typeof x === "object" && x !== null; // ERROR: refined type isn't a subtype of `User`
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:4:20
+   4| function isUser(x: unknown): x is User {
+                         ^^^^^^^ [1]
+   -:3:32
+   3| type User = {id: string, name: string};
+                                     ^^^^^^ [2]
+   -:4:17
+   4| function isUser(x: unknown): x is User {
+                      ^ [3]
+   -:4:35
+   4| function isUser(x: unknown): x is User {
+                                        ^^^^ [5]
+
+
+Found 4 errors
+
+=== block 26 ===
+Error ------------------------------------------------------------------------- -:6:10
+
+Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
+refine away the guard type `A` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   -:6:10
+   6|   return x instanceof B; // ERROR: negation does not refine `A` away
+               ^^^^^^^^^^^^^^
+
+References:
+   -:5:32
+   5| function isA(x: unknown): x is A {
+                                     ^ [1]
+
+
+Found 1 error
+
+=== block 27 ===
+Error ------------------------------------------------------------------------- -:5:10
+
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
+
+   -:5:10
+   5|   return typeof x === "number"; // ERROR
+               ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:3:32
+   3| function isNumber(x: unknown): x is number {
+                                     ^ [1]
+   -:4:3
+   4|   x = 1;
+        ^ [2]
+
+
+Found 1 error
+
+=== block 28 ===
+Error ------------------------------------------------------------------------- -:3:32
+
+Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
+
+   -:3:32
+   3| function isNumber(x: unknown): x is number { // ERROR: `x` is reassigned via the `reset()` call below
+                                     ^
+
+References:
+   -:3:19
+   3| function isNumber(x: unknown): x is number { // ERROR: `x` is reassigned via the `reset()` call below
+                        ^ [1]
+   -:5:3
+   5|   reset();
+        ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 29 ===
+No errors!
+
+=== block 30 ===
+Error ------------------------------------------------------------------------ -:15:23
+
+Cannot assign `obj.x` to `a` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+
+   -:15:23
+   15|     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
+                             ^^^^^
+
+References:
+   -:12:32
+   12| function propertyCase(obj: {x: ?number}) {
+                                      ^^^^^^^ [1]
+   -:15:14
+   15|     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
+                    ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:22:23
+
+Cannot assign `x` to `a` because null [1] is incompatible with number [2]. [incompatible-type]
+
+   -:22:23
+   22|     const a: number = x; // ERROR: direct write invalidates the refinement
+                             ^
+
+References:
+   -:21:9
+   21|     x = null;
+               ^^^^ [1]
+   -:22:14
+   22|     const a: number = x; // ERROR: direct write invalidates the refinement
+                    ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 31 ===
+No errors!
+
+=== block 32 ===
+Error ------------------------------------------------------------------------- -:3:11
+
+Cannot cast object literal to object type because property `name` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
+
+   -:3:11
+   3| const u = {id: 1} as {id: number, name: string}; // ERROR
+                ^^^^^^^ [1]
+
+References:
+   -:3:22
+   3| const u = {id: 1} as {id: number, name: string}; // ERROR
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 33 ===
+No errors!
+
+=== block 34 ===
+Error ------------------------------------------------------------------------- -:4:10
+
+Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
+
+   -:4:10
+   4| type A = Foo;   // ERROR: [missing-type-arg]
+               ^^^
+
+References:
+   -:3:9
+   3| type Foo<T = string> = {x: T};
+              ^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 35 ===
+No errors!
+
+=== block 36 ===
+Error -------------------------------------------------------------------------- -:6:3
+
+Components may not be nested directly within other components or hooks. [nested-component]
+
+   6|   component Inner() { // ERROR: components may not be nested within other components or hooks
+        ^^^^^^^^^^^^^^^^^
+
+Error ------------------------------------------------------------------------ -:12:11
+
+Cannot call component Outer [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
+
+   -:12:11
+   12| const x = Outer({}); // ERROR: components cannot be called; use JSX (<Outer />) instead
+                 ^^^^^
+
+References:
+   -:5:1
+    5| component Outer() {
+       ^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 37 ===
+Error ------------------------------------------------------------------------- -:14:8
+
+Cannot call `callIt` with `useToggle` bound to `fn` because function [1] is a React hook but function type [2] is not a
+hook. [react-rule-hook-incompatible]
+
+React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
+
+   -:14:8
+   14| callIt(useToggle); // ERROR: `useToggle` is a hook; `fn` is not
+              ^^^^^^^^^
+
+References:
+   -:5:1
+    5| hook useToggle(initial: boolean): [boolean, () => void] {
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   -:10:21
+   10| function callIt(fn: (boolean) => [boolean, () => void]): [boolean, () => void] {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 38 ===
+Error ------------------------------------------------------------------------ -:20:29
+
+Cannot create `Layout` element because in property `header`: React element [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:20:29
+   20| const bad = <Layout header={<footer />} />; // ERROR
+                                   ^^^^^^^^^^ [1]
+
+References:
+   -:12:26
+   12| component Layout(header: renders Header) {
+                                ^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 39 ===
+No errors!
+
+=== block 40 ===
+Error ------------------------------------------------------------------------ -:11:29
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
+`{type: 'filter', mode: 'done'}` to match object type [1]. [match-not-exhaustive]
+
+   -:11:29
+   11| const description: string = match (action) { // ERROR: missing `{type: 'filter', mode: 'done'}`
+                                   ^^^^^
+
+References:
+   -:9:23
+    9| declare const action: Action;
+                             ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 41 ===
+No errors!
+
+=== block 42 ===
+Error ------------------------------------------------------------------------- -:9:24
+
+Cannot assign `42` to `forged` because number [1] is incompatible with `UserId` [2]. [incompatible-type]
+
+   -:9:24
+   9| const forged: UserId = 42;    // ERROR: number is not a UserId
+                             ^^ [1]
+
+References:
+   -:9:15
+   9| const forged: UserId = 42;    // ERROR: number is not a UserId
+                    ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:10:19
+
+Cannot assign `id` to `n` because `UserId` [1] is incompatible with number [2]. [incompatible-type]
+
+   -:10:19
+   10| const n: number = id;         // ERROR: UserId is not a number
+                         ^^
+
+References:
+   -:7:11
+    7| const id: UserId = makeUserId(42);
+                 ^^^^^^ [1]
+   -:10:10
+   10| const n: number = id;         // ERROR: UserId is not a number
+                ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 43 ===
+Error ------------------------------------------------------------------------- -:12:9
+
+Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `st`.
+[invalid-exhaustive-check]
+
+   -:12:9
+   12| switch (st) { // ERROR: member `Off` has not been considered
+               ^^
+
+References:
+   -:9:19
+    9| declare const st: Status;
+                         ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 44 ===
+No errors!
+
+=== block 45 ===
+No errors!
+
+=== block 46 ===
+No errors!
+
+=== block 47 ===
+Error ------------------------------------------------------------------------ -:10:21
+
+Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:10:21
+   10|   const s: string = value; // ERROR: `value` keeps its full `string | number` type
+                           ^^^^^
+
+References:
+   -:5:29
+    5|   | {kind: 'number', value: number};
+                                   ^^^^^^ [1]
+   -:10:12
+   10|   const s: string = value; // ERROR: `value` keeps its full `string | number` type
+                  ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 48 ===
+No errors!

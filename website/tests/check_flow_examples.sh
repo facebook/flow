@@ -6,8 +6,9 @@
 
 # Snapshot test for website flow-check code blocks.
 #
-# Extracts every ```flow-check block from website/docs/, runs each through
-# Flow's check-contents, and compares the combined output against a snapshot.
+# Extracts every ```flow-check block from website/docs/, writes each as a
+# separate file into a temp Flow root, runs a single `flow check`, and
+# compares the per-doc snapshots under website/tests/snapshots/.
 #
 # Usage:
 #   ./website/tests/check_flow_examples.sh FLOW_BINARY          # run test
@@ -44,7 +45,7 @@ else
 fi
 
 DOCS_DIR="$WEBSITE_DIR/docs"
-EXP_FILE="$SCRIPT_DIR/docs_flow_check.exp"
+SNAPSHOT_DIR="$SCRIPT_DIR/snapshots"
 
 # Resolve FLOW to absolute path. If it doesn't contain a slash, look it up via
 # buck build (for convenience names like "facebook/flowd").
@@ -78,143 +79,160 @@ sed '/<PROJECT_ROOT>\/\.\*/d' "$WEBSITE_DIR/.flowconfig.snippets" > "$WORK_DIR/.
 # Copy flow-typed stubs
 cp -r "$WEBSITE_DIR/flow-typed" "$WORK_DIR/flow-typed"
 
-# --- Extract and check ---
-OUT_FILE="$WORK_DIR/output.out"
+# Snapshots produced by this run go here; we compare against $SNAPSHOT_DIR.
+GENERATED_DIR="$WORK_DIR/generated_snapshots"
+mkdir -p "$GENERATED_DIR"
 
-python3 - "$FLOW" "$DOCS_DIR" "$WORK_DIR" "$OUT_FILE" << 'PYTHON_SCRIPT'
-import re, subprocess, sys, os
+# --- Extract blocks, run flow once, render per-doc snapshots ---
+python3 - "$FLOW" "$DOCS_DIR" "$WORK_DIR" "$GENERATED_DIR" << 'PYTHON_SCRIPT'
+import os, re, subprocess, sys
 
 FLOW_BIN = sys.argv[1]
 DOCS_DIR = sys.argv[2]
 WORK_DIR = sys.argv[3]
-OUT_FILE = sys.argv[4]
+GENERATED_DIR = sys.argv[4]
 
-# Start the Flow server once
-subprocess.run(
-    [FLOW_BIN, 'start', WORK_DIR, '--wait'],
-    capture_output=True, timeout=120
-)
+SNIPPETS_DIR = os.path.join(WORK_DIR, 'snippets')
+os.makedirs(SNIPPETS_DIR, exist_ok=True)
 
-# Collect all doc files with flow-check blocks, sorted for determinism
+# 1. Collect doc files containing flow-check blocks (sorted for determinism).
 doc_files = []
 for root, dirs, files in os.walk(DOCS_DIR):
     dirs.sort()
     for f in sorted(files):
-        if f.endswith('.md'):
-            path = os.path.join(root, f)
-            with open(path) as fh:
-                if 'flow-check' in fh.read():
-                    doc_files.append(path)
-
+        if not f.endswith('.md'):
+            continue
+        path = os.path.join(root, f)
+        with open(path) as fh:
+            if 'flow-check' in fh.read():
+                doc_files.append(path)
 doc_files.sort()
 
-output_lines = []
-validation_failures = []
-block_count = 0
-
+# 2. Extract blocks and write each as its own file in WORK_DIR/snippets/.
+#    Map: rel_doc_path -> [(block_idx, snippet_filename, code)]
+BLOCK_RE = re.compile(r'```(?:js|jsx)\s+flow-check\s*\n(.*?)```', re.DOTALL)
+blocks_by_doc = {}
 for filepath in doc_files:
     with open(filepath) as f:
         content = f.read()
-
     rel_path = os.path.relpath(filepath, DOCS_DIR)
-    pattern = r'```(?:js|jsx)\s+flow-check\s*\n(.*?)```'
-    matches = list(re.finditer(pattern, content, re.DOTALL))
-
-    for i, match in enumerate(matches):
-        block_count += 1
-        code = match.group(1)
-
-        # Write to temp file with @flow header
-        example_file = os.path.join(WORK_DIR, 'example.js')
-        with open(example_file, 'w') as f:
+    matches = list(BLOCK_RE.finditer(content))
+    if not matches:
+        continue
+    safe = re.sub(r'[^a-zA-Z0-9]', '_', rel_path[:-3])  # strip .md
+    blocks_by_doc[rel_path] = []
+    for i, m in enumerate(matches):
+        idx = i + 1
+        code = m.group(1)
+        snippet_name = f'{safe}__{idx:03d}.js'
+        with open(os.path.join(SNIPPETS_DIR, snippet_name), 'w') as f:
             f.write('// @flow\n')
             f.write(code)
+        blocks_by_doc[rel_path].append((idx, snippet_name, code))
 
-        try:
-            with open(example_file) as sf:
-                proc = subprocess.run(
-                    [FLOW_BIN, 'check-contents', '--root', WORK_DIR, '--strip-root'],
-                    stdin=sf,
-                    capture_output=True,
-                    text=True,
-                    timeout=60
-                )
-        except subprocess.TimeoutExpired:
-            output_lines.append(f"=== {rel_path} block {i+1} ===")
-            output_lines.append("TIMEOUT")
-            output_lines.append("")
-            continue
+# 3. Start server (with snippets already on disk so the initial check covers
+#    everything) and pull all errors in one shot.
+subprocess.run(
+    [FLOW_BIN, 'start', WORK_DIR, '--wait'],
+    capture_output=True, timeout=300,
+)
+proc = subprocess.run(
+    [FLOW_BIN, 'status', '--strip-root', '--show-all-errors',
+     '--message-width', '120', WORK_DIR],
+    capture_output=True, text=True, timeout=300,
+)
+subprocess.run([FLOW_BIN, 'stop', WORK_DIR], capture_output=True)
 
-        result = (proc.stdout + proc.stderr).strip()
+raw_output = proc.stdout
 
-        # Filter out server startup noise
-        filtered = []
-        for line in result.split('\n'):
-            s = line.strip()
-            if s.startswith('Spawned') or s.startswith('Logs will') or \
-               s.startswith('Monitor logs') or s.startswith('Started a new') or \
-               s.startswith('Launching Flow') or s.startswith('Please wait') or \
-               s.startswith('Trying to connect'):
-                continue
-            filtered.append(line)
-        result = '\n'.join(filtered).strip()
+# 4. Split output into per-error chunks and bucket by snippet file.
+#    Each chunk starts at "Error -+ snippets/<name>:<line>:<col>" and runs
+#    until the next "Error " line or the "Found N errors" trailer.
+ERROR_CHUNK_RE = re.compile(
+    r'^(Error\s+-+\s+snippets/([^:]+):\d+:\d+.*?)'
+    r'(?=^Error\s+-+\s+snippets/|^Found\s+\d+\s+error|\Z)',
+    re.MULTILINE | re.DOTALL,
+)
+errors_by_snippet = {}
+for m in ERROR_CHUNK_RE.finditer(raw_output):
+    chunk = m.group(1).rstrip()
+    snippet_name = m.group(2)
+    errors_by_snippet.setdefault(snippet_name, []).append(chunk)
 
-        if not result:
-            result = "No errors!"
+# 5. Render per-doc snapshots into GENERATED_DIR; validate // error markers.
+HAS_ERROR_ANNOTATION = re.compile(r'(?://|/\*).*\berror\b', re.IGNORECASE)
+IS_EXCLUDED = re.compile(r'(?:\bno\b.*\berror\b|flowlint)', re.IGNORECASE)
+SNIPPET_PATH_RE = re.compile(r'snippets/[A-Za-z0-9_]+\.js')
+ERROR_LINE_RE = re.compile(r'^Error\s+-+\s+-:(\d+):\d+', re.MULTILINE)
 
-        output_lines.append(f"=== {rel_path} block {i+1} ===")
-        output_lines.append(result)
-        output_lines.append("")
+validation_failures = []
+block_count = 0
 
-        # Validate error annotations match actual errors
+for rel_path in sorted(blocks_by_doc):
+    out_lines = []
+    for idx, snippet_name, code in blocks_by_doc[rel_path]:
+        block_count += 1
+        chunks = errors_by_snippet.get(snippet_name, [])
+        # Normalize: rewrite snippet paths to "-" so the snapshot is stable
+        # regardless of the chosen on-disk filename.
+        normalized = [SNIPPET_PATH_RE.sub('-', c) for c in chunks]
+
+        out_lines.append(f'=== block {idx} ===')
+        if not normalized:
+            out_lines.append('No errors!')
+        else:
+            out_lines.append('\n\n'.join(normalized))
+            out_lines.append('')
+            out_lines.append('')
+            n = len(normalized)
+            out_lines.append(f"Found {n} error{'s' if n != 1 else ''}")
+        out_lines.append('')
+
+        # Validation: each Error location should have a // error annotation,
+        # and each // error annotation should have a corresponding error.
         source_lines = ('// @flow\n' + code).splitlines()
-        error_lines = set()
-        for err_match in re.finditer(
-            r'^Error\s+-+\s+-:(\d+):\d+', result, re.MULTILINE
-        ):
-            error_lines.add(int(err_match.group(1)))
+        error_line_nos = set()
+        for chunk in normalized:
+            for em in ERROR_LINE_RE.finditer(chunk):
+                error_line_nos.add(int(em.group(1)))
 
-        HAS_ERROR_ANNOTATION = r'(?://|/\*).*\berror\b'
-        IS_EXCLUDED = r'(?:\bno\b.*\berror\b|flowlint)'
-
-        # Check 1: each error location should have a // error annotation
-        for line_no in error_lines:
+        for line_no in error_line_nos:
             if 0 < line_no <= len(source_lines):
                 src_line = source_lines[line_no - 1]
-                if not re.search(HAS_ERROR_ANNOTATION, src_line, re.IGNORECASE):
+                if not HAS_ERROR_ANNOTATION.search(src_line):
                     validation_failures.append(
-                        f"{rel_path} block {i+1} line {line_no}: "
+                        f"{rel_path} block {idx} line {line_no}: "
                         f"missing // error: {src_line.strip()}"
                     )
 
-        # Check 2: each // error annotation should have a corresponding error
         for line_no, src_line in enumerate(source_lines, 1):
-            if not re.search(HAS_ERROR_ANNOTATION, src_line, re.IGNORECASE):
+            if not HAS_ERROR_ANNOTATION.search(src_line):
                 continue
-            if re.search(IS_EXCLUDED, src_line, re.IGNORECASE):
+            if IS_EXCLUDED.search(src_line):
                 continue
             if src_line.lstrip().startswith(('//', '/*')):
                 continue
-            if line_no not in error_lines:
+            if line_no not in error_line_nos:
                 validation_failures.append(
-                    f"{rel_path} block {i+1} line {line_no}: "
+                    f"{rel_path} block {idx} line {line_no}: "
                     f"has // error but no error reported: {src_line.strip()}"
                 )
 
-# Stop the Flow server
-subprocess.run([FLOW_BIN, 'stop', WORK_DIR], capture_output=True)
+    # Write per-doc snapshot (path mirrors the doc path, .md -> .exp).
+    snap_rel = rel_path[:-3] + '.exp'
+    snap_path = os.path.join(GENERATED_DIR, snap_rel)
+    os.makedirs(os.path.dirname(snap_path), exist_ok=True)
+    with open(snap_path, 'w') as f:
+        f.write('\n'.join(out_lines).rstrip() + '\n')
 
-# Write output
-with open(OUT_FILE, 'w') as f:
-    f.write('\n'.join(output_lines) + '\n')
+with open(os.path.join(WORK_DIR, 'validation_failures.txt'), 'w') as f:
+    for fail in validation_failures:
+        f.write(fail + '\n')
 
-# Write validation failures
-validation_file = os.path.join(WORK_DIR, 'validation_failures.txt')
-with open(validation_file, 'w') as f:
-    for failure in validation_failures:
-        f.write(failure + '\n')
-
-print(f"Checked {block_count} flow-check blocks from {len(doc_files)} files", file=sys.stderr)
+print(
+    f"Checked {block_count} flow-check blocks from {len(blocks_by_doc)} files",
+    file=sys.stderr,
+)
 PYTHON_SCRIPT
 
 # --- Validate error annotations ---
@@ -230,27 +248,30 @@ fi
 
 # --- Compare or record ---
 if [[ "$record" -eq 1 ]]; then
-  cp "$OUT_FILE" "$EXP_FILE"
-  echo "Recorded snapshot to $(basename "$EXP_FILE")"
+  # Wipe the snapshot dir first so deleted docs don't leave stale snapshots
+  # behind.
+  rm -rf "$SNAPSHOT_DIR"
+  mkdir -p "$SNAPSHOT_DIR"
+  cp -r "$GENERATED_DIR/." "$SNAPSHOT_DIR/"
+  echo "Recorded snapshots to $(basename "$SNAPSHOT_DIR")/"
   exit 0
 fi
 
-if [[ ! -f "$EXP_FILE" ]]; then
-  echo "No snapshot file found. Run with -r to create one:" >&2
+if [[ ! -d "$SNAPSHOT_DIR" ]]; then
+  echo "No snapshot directory found. Run with -r to create one:" >&2
   echo "  $0 -r FLOW_BINARY" >&2
-  cp "$OUT_FILE" "$(dirname "$EXP_FILE")/docs_flow_check.out"
-  echo "Output saved to website/tests/docs_flow_check.out for inspection." >&2
   exit 1
 fi
 
-if diff -u --strip-trailing-cr \
-    --label "expected" --label "actual" \
-    "$EXP_FILE" "$OUT_FILE"; then
-  echo "All flow-check examples match snapshot."
+# `diff -r` reports both content differences AND files present on only one
+# side, so a deleted doc (stale snapshot) or a new doc (missing snapshot)
+# both fail the test.
+if diff -r --strip-trailing-cr "$SNAPSHOT_DIR" "$GENERATED_DIR"; then
+  echo "All flow-check examples match snapshots."
   exit 0
 else
   echo ""
-  echo "Flow-check examples differ from snapshot."
+  echo "Flow-check examples differ from snapshots."
   echo "If the changes are intentional, re-record with:"
   echo "  $0 -r FLOW_BINARY"
   exit 1

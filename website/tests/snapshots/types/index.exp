@@ -1,0 +1,50 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error -------------------------------------------------------------------------------- -:2:17
+
+Missing an annotation on `a`. [missing-local-annot]
+
+   2| function concat(a, b) { // Error
+                      ^
+
+Error -------------------------------------------------------------------------------- -:2:20
+
+Missing an annotation on `b`. [missing-local-annot]
+
+   2| function concat(a, b) { // Error
+                         ^
+
+
+Found 2 errors
+
+=== block 3 ===
+Error --------------------------------------------------------------------------------- -:7:8
+
+Cannot call `concat` with `1` bound to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:8
+   7| concat(1, 2); // Error!
+             ^ [1]
+
+References:
+   -:2:20
+   2| function concat(a: string, b: string) {
+                         ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------------- -:7:11
+
+Cannot call `concat` with `2` bound to `b` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:7:11
+   7| concat(1, 2); // Error!
+                ^ [1]
+
+References:
+   -:2:31
+   2| function concat(a: string, b: string) {
+                                    ^^^^^^ [2]
+
+
+Found 2 errors

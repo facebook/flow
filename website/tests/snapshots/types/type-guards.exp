@@ -1,0 +1,520 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------- -:19:22
+
+Cannot assign `x` to `error` because properties `data` and `type` of `A` [1] are not exactly the same as those of
+`B` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because properties `data` and `type` are invariantly typed. To fix the
+error,
+- Either make `A` [3] and `B` [4] exactly the same
+- Or make properties `data` and `type` in `B` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:19:22
+   19|     const error: B = x; // Error
+                            ^ [1]
+
+References:
+   -:19:18
+   19|     const error: B = x; // Error
+                        ^ [2]
+   -:2:10
+    2| type A = { type: "A"; data: string };
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   -:3:10
+    3| type B = { type: "B"; data: number };
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error -------------------------------------------------------------------------- -:3:10
+
+Cannot return `(n != null) && (n > 0)` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   -:3:10
+   3|   return n != null && n > 0; // Error
+               ^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:46
+   2| function isPositiveUnsound(n: ?number): n is number {
+                                                   ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+Error ------------------------------------------------------------------------- -:19:10
+
+Cannot return `result` because in array element: `Success` [1] is not exactly the same as `Error` [2].
+[incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<Success>` [3] and `Array<Error>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   -:19:10
+     19|   return result; // Error
+                  ^^^^^^
+
+References:
+   -:17:29
+     17|     (response): response is Success => response.type === 'success'
+                                     ^^^^^^^ [1]
+   -:15:57
+     15| function filterError1(response: Array<Response>): Array<Error> {
+                                                                 ^^^^^ [2]
+   <BUILTINS>/core.js:1071:145
+   1071|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                                                         ^^^^^^^^ [3]
+   -:15:51
+     15| function filterError1(response: Array<Response>): Array<Error> {
+                                                           ^^^^^^^^^^^^ [4]
+
+Error ------------------------------------------------------------------------- -:24:38
+
+Cannot return `response.type === 'success'` because property `error` is missing in object type [1] but exists in object
+type [2]. [incompatible-type]
+
+The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
+guard type `Error` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:22:39
+   22| function filterError2(response: Array<Response>): Array<Error> {
+                                             ^^^^^^^^ [1]
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
+                                   ^^^^^ [2]
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
+            ^^^^^^^^ [3]
+
+Error ------------------------------------------------------------------------- -:24:38
+
+Cannot return `response.type === 'success'` because property `value` is extra in object type [1] but missing in object
+type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
+guard type `Error` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:22:39
+   22| function filterError2(response: Array<Response>): Array<Error> {
+                                             ^^^^^^^^ [1]
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
+                                   ^^^^^ [2]
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
+            ^^^^^^^^ [3]
+
+Error ------------------------------------------------------------------------- -:24:38
+
+Cannot return `response.type === 'success'` because in property `type`: string literal `success` [1] is incompatible
+with string literal `error` [2]. [incompatible-type-guard]
+
+The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
+guard type `Error` [5]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:2:32
+    2| type Success = Readonly<{type: 'success', value: 23}>;
+                                      ^^^^^^^^^ [1]
+   -:3:30
+    3| type Error = Readonly<{type: 'error', error: string}>;
+                                    ^^^^^^^ [2]
+   -:24:6
+   24|     (response): response is Error => response.type === 'success' // Error
+            ^^^^^^^^ [3]
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
+                                   ^^^^^ [5]
+
+Error ------------------------------------------------------------------------- -:24:38
+
+Cannot return `response.type === 'success'` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type `Error` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   -:24:38
+   24|     (response): response is Error => response.type === 'success' // Error
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:24:29
+   24|     (response): response is Error => response.type === 'success' // Error
+                                   ^^^^^ [1]
+
+
+Found 5 errors
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error -------------------------------------------------------------------------- -:2:35
+
+Cannot find type guard parameter `prop` [1] in the parameters of this function (type). [function-predicate]
+
+   2| function missing(param: unknown): prop is number { // Error
+                                        ^^^^ [1]
+
+
+Found 1 error
+
+=== block 12 ===
+Error -------------------------------------------------------------------------- -:2:50
+
+A type guard parameter `prop` [1] cannot reference pattern parameter `prop` [2]. [function-predicate]
+
+   -:2:50
+   2| function destructuring({prop}: {prop: unknown}): prop is number { // Error
+                                                       ^^^^ [1]
+
+References:
+   -:2:25
+   2| function destructuring({prop}: {prop: unknown}): prop is number { // Error
+                              ^^^^ [2]
+
+
+Found 1 error
+
+=== block 13 ===
+Error -------------------------------------------------------------------------- -:2:42
+
+A type guard parameter `value` [1] cannot reference rest parameter `value` [2]. [function-predicate]
+
+   -:2:42
+   2| function rest(...value: Array<unknown>): value is Array<unknown> { // Error
+                                               ^^^^^ [1]
+
+References:
+   -:2:18
+   2| function rest(...value: Array<unknown>): value is Array<unknown> { // Error
+                       ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 14 ===
+Error -------------------------------------------------------------------------- -:2:36
+
+The type predicate number [1] needs to be compatible with parameter `x`'s type: number [1] is incompatible with
+string [2]. [incompatible-type-guard]
+
+   -:2:36
+   2| function isNumber(x: string): x is number { // Error
+                                         ^^^^^^ [1]
+
+References:
+   -:2:22
+   2| function isNumber(x: string): x is number { // Error
+                           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 15 ===
+Error -------------------------------------------------------------------------- -:2:39
+
+Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
+[incompatible-type]
+
+   -:2:39
+   2| function isNumberNoReturn(x: string): x is string {} // Error
+                                            ^^^^^^^^^^^ [1]
+
+References:
+   -:2:1
+   2| function isNumberNoReturn(x: string): x is string {} // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 16 ===
+Error -------------------------------------------------------------------------- -:3:10
+
+Cannot return `x` because null or undefined [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:3:10
+   3|   return x; // Error
+               ^
+
+References:
+   -:2:39
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                            ^^ [1]
+   -:2:44
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                                 ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------- -:3:10
+
+Cannot return `x` because object type [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:3:10
+   3|   return x; // Error
+               ^
+
+References:
+   -:2:40
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                             ^ [1]
+   -:2:44
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                                 ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+Error -------------------------------------------------------------------------- -:3:36
+
+Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because: [incompatible-type-guard]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+The type of `x` [4] at the return expression `((typeof x) === "number") || ((typeof x) === "boolean")` [5] needs to be
+compatible with the guard type union type [6]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:3:36
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
+                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   -:2:42
+   2| function numOrStrError(x: unknown): x is number | string {
+                                               ^^^^^^ [2]
+   -:2:51
+   2| function numOrStrError(x: unknown): x is number | string {
+                                                        ^^^^^^ [3]
+   -:2:24
+   2| function numOrStrError(x: unknown): x is number | string {
+                             ^ [4]
+   -:3:11
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   -:2:42
+   2| function numOrStrError(x: unknown): x is number | string {
+                                               ^^^^^^^^^^^^^^^ [6]
+
+Error -------------------------------------------------------------------------- -:3:11
+
+Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because the negation of the predicate encoded in
+this expression needs to completely refine away the guard type union type [1]. Consider using a one-sided type-guard
+(`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   -:3:11
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:42
+   2| function numOrStrError(x: unknown): x is number | string {
+                                               ^^^^^^^^^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
+Error -------------------------------------------------------------------------- -:3:12
+
+Cannot return `((typeof x) === 'number') && (x > 0)` because the negation of the predicate encoded in this expression
+needs to completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See
+2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-type-guard]
+
+   -:3:12
+   3|     return typeof x === 'number' && x > 0; // Error [incompatible-type-guard]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:37
+   2| function isPosNum(x: unknown): x is number {
+                                          ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 22 ===
+Error -------------------------------------------------------------------------- -:4:10
+
+Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
+
+   -:4:10
+   4|   return typeof x === "number"; // Error [function-predicate]
+               ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:2:38
+   2| function isNumberError1(x: unknown): x is number {
+                                           ^ [1]
+   -:3:3
+   3|   x = 1;
+        ^ [2]
+
+
+Found 1 error
+
+=== block 23 ===
+Error -------------------------------------------------------------------------- -:2:38
+
+Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
+
+   -:2:38
+   2| function isNumberError2(x: unknown): x is number { // Error [function-predicate]
+                                           ^
+
+References:
+   -:2:25
+   2| function isNumberError2(x: unknown): x is number { // Error [function-predicate]
+                              ^ [1]
+   -:6:3
+   6|   foo();
+        ^^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+No errors!
+
+=== block 25 ===
+Error -------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because property `data` is extra in `Dynamic` [1] but missing in `Known` [2]. Exact
+objects do not accept extra props. [incompatible-type]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:6:24
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                             ^^^^^^^ [1]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+
+Error -------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because property `value` is missing in `Dynamic` [1] but exists in `Known` [2].
+[incompatible-type]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:6:24
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                             ^^^^^^^ [1]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+
+Error -------------------------------------------------------------------------- -:7:10
+
+Cannot return `x.tag === 'known'` because in property `tag`: `T` [1] is not exactly the same as `"known"` [2].
+[incompatible-type-guard]
+
+The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
+`Known` [5]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+The above-mentioned two types must be the same because property `tag` is invariantly typed. To fix the error,
+- Either make `{data: number, tag: T}` [6] and `Known` [7] exactly the same
+- Or make property `tag` in `Known` [5] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:7:10
+   7|   return x.tag === 'known'; // ERROR
+               ^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   -:3:25
+   3| type Dynamic<T> = {tag: T, data: number};
+                              ^ [1]
+   -:2:20
+   2| type Known = {tag: 'known', value: string};
+                         ^^^^^^^ [2]
+   -:6:21
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                          ^ [3]
+   -:6:39
+   6| function isKnown<T>(x: Item<T>): x is Known {
+                                            ^^^^^ [5]
+   -:3:19
+   3| type Dynamic<T> = {tag: T, data: number};
+                        ^^^^^^^^^^^^^^^^^^^^^^ [6]
+   -:2:14
+   2| type Known = {tag: 'known', value: string};
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+
+
+Found 3 errors
+
+=== block 26 ===
+No errors!

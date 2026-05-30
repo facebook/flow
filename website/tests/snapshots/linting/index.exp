@@ -1,0 +1,20 @@
+=== block 1 ===
+Error ------------------------------------------------------------------------------- -:5:5
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
+[sketchy-null-number]
+
+   -:5:5
+   5| if (x) {} // Error
+          ^
+
+References:
+   -:3:11
+   3| const x: ?number = 0;
+                ^^^^^^ [1]
+   -:3:10
+   3| const x: ?number = 0;
+               ^^^^^^^ [2]
+
+
+Found 1 error

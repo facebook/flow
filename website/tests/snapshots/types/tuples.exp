@@ -1,0 +1,360 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+Error ------------------------------------------------------------------------------- -:4:14
+
+Cannot get `tuple[3]` because tuple type [1] only has 3 elements, so index 3 is out of bounds. [invalid-tuple-index]
+
+   -:4:14
+   4| const none = tuple[3]; // Error!
+                   ^^^^^^^^
+
+References:
+   -:2:14
+   2| const tuple: [number, boolean, string] = [1, true, "three"];
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+Error ------------------------------------------------------------------------------- -:8:12
+
+Cannot assign `"bar"` to `tuple[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:8:12
+   8| tuple[0] = "bar"; // Error!
+                 ^^^^^ [1]
+
+References:
+   -:2:15
+   2| const tuple: [number, boolean, string] = [1, true, "three"];
+                    ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:9:12
+
+Cannot assign `42` to `tuple[1]` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:9:12
+   9| tuple[1] = 42;    // Error!
+                 ^^ [1]
+
+References:
+   -:2:23
+   2| const tuple: [number, boolean, string] = [1, true, "three"];
+                            ^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------ -:10:12
+
+Cannot assign `false` to `tuple[2]` because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   -:10:12
+   10| tuple[2] = false; // Error!
+                  ^^^^^ [1]
+
+References:
+   -:2:32
+    2| const tuple: [number, boolean, string] = [1, true, "three"];
+                                      ^^^^^^ [2]
+
+
+Found 3 errors
+
+=== block 8 ===
+Error ------------------------------------------------------------------------------- -:4:41
+
+Cannot assign `tuple1` to `tuple2` because tuple type [1] has 2 elements but tuple type [2] has 3 elements.
+[invalid-tuple-arity]
+
+   -:4:41
+   4| const tuple2: [number, boolean, void] = tuple1; // Error!
+                                              ^^^^^^
+
+References:
+   -:2:15
+   2| const tuple1: [number, boolean] = [1, true];
+                    ^^^^^^^^^^^^^^^^^ [1]
+   -:4:15
+   4| const tuple2: [number, boolean, void] = tuple1; // Error!
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 9 ===
+Error ------------------------------------------------------------------------------- -:4:35
+
+Cannot assign `tuple1` to `tuple2` because tuple type [1] has 3 elements but tuple type [2] has 2 elements.
+[invalid-tuple-arity]
+
+   -:4:35
+   4| const tuple2: [number, boolean] = tuple1; // Error!
+                                        ^^^^^^
+
+References:
+   -:2:15
+   2| const tuple1: [number, boolean, void] = [1, true, undefined];
+                    ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   -:4:15
+   4| const tuple2: [number, boolean] = tuple1; // Error!
+                    ^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 10 ===
+Error ------------------------------------------------------------------------------- -:4:33
+
+Cannot assign `array` to `tuple` because array type [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   -:4:33
+   4| const tuple: [number, number] = array; // Error!
+                                      ^^^^^
+
+References:
+   -:2:14
+   2| const array: Array<number> = [1, 2];
+                   ^^^^^^^^^^^^^ [1]
+   -:4:14
+   4| const tuple: [number, number] = array; // Error!
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+Error ------------------------------------------------------------------------------- -:4:30
+
+Cannot assign `tuple` to `array` because tuple type [1] is incompatible with array type [2]. [incompatible-type]
+
+   -:4:30
+   4| const array: Array<number> = tuple; // Error!
+                                   ^^^^^
+
+References:
+   -:2:14
+   2| const tuple: [number, number] = [1, 2];
+                   ^^^^^^^^^^^^^^^^ [1]
+   -:4:14
+   4| const array: Array<number> = tuple; // Error!
+                   ^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+Error -------------------------------------------------------------------------------- -:5:7
+
+Cannot call `tuple.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   -:5:7
+   5| tuple.push(3); // Error!
+            ^^^^
+
+References:
+   -:2:14
+   2| const tuple: [number, number] = [1, 2];
+                   ^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+Error -------------------------------------------------------------------------------- -:4:3
+
+Cannot assign `1` to `readOnlyTuple[1]` because tuple element at index `1` [1] labeled `bar` is not writable.
+[cannot-write]
+
+   4|   readOnlyTuple[1] = 1; // ERROR! Cannot write
+        ^^^^^^^^^^^^^^^^ [1]
+
+Error ------------------------------------------------------------------------------- -:4:22
+
+Cannot assign `1` to `readOnlyTuple[1]` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:4:22
+   4|   readOnlyTuple[1] = 1; // ERROR! Cannot write
+                           ^ [1]
+
+References:
+   -:2:64
+   2| function f(readOnlyTuple: [readonly foo: number, readonly bar: string]) {
+                                                                     ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+Error -------------------------------------------------------------------------------- -:4:8
+
+Cannot assign `undefined` to `x[0]` because you cannot assign undefined [1] to optional tuple element [2] (to do so, add
+`| void` to the tuple element type). [incompatible-type]
+
+   -:4:8
+   4| x[0] = undefined; // ERROR
+             ^^^^^^^^^ [1]
+
+References:
+   -:2:17
+   2| type T = [foo?: number, bar?: number | void];
+                      ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------------- -:5:2
+
+Cannot cast array literal to `T` because in index `0`: you cannot assign undefined [1] to optional tuple element [2] (to
+do so, add `| void` to the tuple element type). [incompatible-type]
+
+   -:5:2
+   5| [undefined] as T; // ERROR
+       ^^^^^^^^^ [1]
+
+References:
+   -:2:17
+   2| type T = [foo?: number, bar?: number | void];
+                      ^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 21 ===
+Error -------------------------------------------------------------------------------- -:6:1
+
+Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
+`AllOptional` [2] has 2 elements. [invalid-tuple-arity]
+
+   -:6:1
+   6| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
+      ^^ [1]
+
+References:
+   -:6:16
+   6| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
+                     ^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+No errors!
+
+=== block 23 ===
+Error -------------------------------------------------------------------------------- -:4:1
+
+Cannot cast `b` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   -:4:1
+   4| b as [0, 1 | void, 2]; // ERROR
+      ^
+
+References:
+   -:3:11
+   3| const b = [0, ...a, 2]; // At runtime this is `[0, 2]`
+                ^^^^^^^^^^^^ [1]
+   -:4:6
+   4| b as [0, 1 | void, 2]; // ERROR
+           ^^^^^^^^^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:10:1
+
+Cannot cast `e` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
+
+   -:10:1
+   10| e as [0, foo?: 1, bar?: 2]; // ERROR
+       ^
+
+References:
+   -:9:11
+    9| const e = [...c, ...d]; // At runtime this is `[0, 2]`
+                 ^^^^^^^^^^^^ [1]
+   -:10:6
+   10| e as [0, foo?: 1, bar?: 2]; // ERROR
+            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 24 ===
+No errors!
+
+=== block 25 ===
+Error -------------------------------------------------------------------------------- -:4:1
+
+Cannot cast `y` to tuple type because array literal [1] has 2 or more elements (inexact tuple) but tuple type [2] has 2
+elements. [invalid-tuple-arity]
+
+   -:4:1
+   4| y as [number, number]; // ERROR: it's inexact
+      ^
+
+References:
+   -:3:11
+   3| const y = [0, ...x];
+                ^^^^^^^^^ [1]
+   -:4:6
+   4| y as [number, number]; // ERROR: it's inexact
+           ^^^^^^^^^^^^^^^^ [2]
+
+Error -------------------------------------------------------------------------------- -:7:8
+
+Cannot have element after spread of inexact tuple. [element-after-inexact-tuple-spread]
+
+   7| [...x, 2]; // ERROR: can't have element after inexact spread
+             ^
+
+
+Found 2 errors
+
+=== block 26 ===
+Error ------------------------------------------------------------------------------- -:14:1
+
+Cannot call `mapTupleArray` because in type argument `T`: array type [1] has an unknown number of elements, so is
+incompatible with tuple type [2]. [invalid-tuple-arity]
+
+   -:14:1
+   14| mapTupleArray(arrays, (x: number, y: number) => x + y); // ERROR: array is not a tuple
+       ^^^^^^^^^^^^^
+
+References:
+   -:13:29
+   13| declare const arrays: Array<Array<number>>;
+                                   ^^^^^^^^^^^^^ [1]
+   -:2:34
+    2| function mapTupleArray<T extends [...], R>(
+                                        ^^^^^ [2]
+
+
+Found 1 error

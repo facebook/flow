@@ -1,0 +1,331 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ---------------------------------------------------------------- -:2:20
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   2| function getLength(x) { // Error
+                         ^
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+Error ---------------------------------------------------------------- -:4:25
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   4|   setStringNoAnnotation(x) { // Error
+                              ^
+
+
+Found 1 error
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ---------------------------------------------------------------- -:2:22
+
+An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   2| const fn2: unknown = x => x + 1; // Error
+                           ^
+
+
+Found 1 error
+
+=== block 7 ===
+Error ---------------------------------------------------------------- -:2:48
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:2:48
+   2| const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error
+                                                     ^
+
+References:
+   -:2:17
+   2| const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error
+                      ^^^^^^ [1]
+   -:2:53
+   2| const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error
+                                                          ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 8 ===
+Error ---------------------------------------------------------------- -:4:23
+
+Missing an annotation on return. [missing-local-annot]
+
+   4|   getString(x: string) { // Error
+
+
+Found 1 error
+
+=== block 9 ===
+Error ----------------------------------------------------------------- -:2:1
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - function [1] depends on other definition [2]
+ - function [3] depends on other definition [4]
+Please add type annotations to these definitions [5] [6] [definition-cycle]
+
+   -:2:1
+   2| function foo() { // Error
+      ^^^^^^^^^^^^^^ [1]
+
+References:
+   -:3:10
+   3|   return bar();
+               ^^^ [2]
+   -:6:1
+   6| function bar() {
+      ^^^^^^^^^^^^^^ [3]
+   -:7:10
+   7|   return foo();
+               ^^^ [4]
+   -:2:15
+   2| function foo() { // Error
+                     [5]
+   -:6:15
+   6| function bar() {
+                     [6]
+
+
+Found 1 error
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+Error ---------------------------------------------------------------- -:2:17
+
+Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either add explicit type arguments or cast the
+expression to your expected type. [underconstrained-implicit-instantiation]
+
+   -:2:17
+      2| const set = new Set(); // Error
+                         ^^^
+
+References:
+   <BUILTINS>/core.js:2239:19
+   2239| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [1]
+   -:2:13
+      2| const set = new Set(); // Error
+                     ^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 12 ===
+Error ---------------------------------------------------------------- -:3:10
+
+Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
+
+   -:3:10
+   3| map(x => x + 1, [{}]); // Error
+               ^^^^^
+
+References:
+   -:3:18
+   3| map(x => x + 1, [{}]); // Error
+                       ^^ [1]
+   -:3:14
+   3| map(x => x + 1, [{}]); // Error
+                   ^ [2]
+
+
+Found 1 error
+
+=== block 13 ===
+Error ---------------------------------------------------------------- -:7:10
+
+Cannot call `setStr` with `maybeString` bound to the first parameter because: [incompatible-type]
+ - Either null or undefined [1] is incompatible with function type [2].
+ - Or null or undefined [1] is incompatible with string [3].
+
+   -:7:10
+      7|   setStr(maybeString); // Error
+                  ^^^^^^^^^^^
+
+References:
+   -:6:30
+      6|   declare const maybeString: ?string;
+                                      ^^^^^^^ [1]
+   <BUILTINS>/react.js:1370:39
+   1370|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+                                               ^^^^^^ [2]
+   -:4:34
+      4|   const [str, setStr] = useState("");
+                                          ^^ [3]
+
+
+Found 1 error
+
+=== block 14 ===
+Error ---------------------------------------------------------------- -:7:28
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at identifier: [signature-verification-failure]
+
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
+                                 ^
+
+Error ---------------------------------------------------------------- -:7:28
+
+Missing an annotation on `x`. [missing-local-annot]
+
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
+                                 ^
+
+Error ---------------------------------------------------------------- -:7:30
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at function return: [signature-verification-failure]
+
+   7| export function getLength2(x) { // Error: Flow cannot determine the parameter or return type
+
+
+Found 3 errors
+
+=== block 15 ===
+Error ---------------------------------------------------------------- -:3:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   3|   export const obj = {[key]: 1}; // Error: Expected simple key in object
+                           ^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 16 ===
+Error ---------------------------------------------------------------- -:3:21
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+spread in array: [signature-verification-failure]
+
+   3|   export const ys = [...xs, 3]; // Error: Unexpected spread in array
+                          ^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 17 ===
+Error ---------------------------------------------------------------- -:2:22
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
+array hole: [signature-verification-failure]
+
+   2|   export const arr = [1, , 3]; // Error: Unexpected array hole
+                           ^^^^^^^^
+
+
+Found 1 error
+
+=== block 18 ===
+Error ---------------------------------------------------------------- -:2:16
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   2|   export const items = []; // Error
+                     ^^^^^
+
+Error ---------------------------------------------------------------- -:2:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the element type of an empty array. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   2|   export const items = []; // Error
+                             ^^
+
+
+Found 2 errors
+
+=== block 19 ===
+Error ---------------------------------------------------------------- -:3:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this conditional expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   3|   export const value = condition ? 1 : "a"; // Error
+                             ^^^^^^^^^^^^^^^^^^^
+
+
+Found 1 error
+
+=== block 20 ===
+Error ----------------------------------------------------------------- -:2:5
+
+Variable `lastSeen` [1] should be annotated, because it is only initialized in a generic context [2]
+[invalid-declaration]
+
+   -:2:5
+   2| let lastSeen; // Error: only initialized in a generic context
+          ^^^^^^^^ [1]
+
+References:
+   -:4:3
+   4|   lastSeen = value;
+        ^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 21 ===
+No errors!
+
+=== block 22 ===
+Error ----------------------------------------------------------------- -:2:5
+
+Variable `cached` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2]
+[invalid-declaration]
+
+   -:2:5
+   2| let cached = null; // Error: only assigned by null and in generic context
+          ^^^^^^ [1]
+
+References:
+   -:4:3
+   4|   cached = value; // Error: T is incompatible with null
+        ^^^^^^ [2]
+
+Error ---------------------------------------------------------------- -:4:12
+
+Cannot assign `value` to `cached` because `unknown` [1] is incompatible with null [2]. [incompatible-type]
+
+All writes to `cached` must be compatible with the type of its initializer [3]. Add an annotation to `cached` [3] if a
+different type is desired.
+
+   -:4:12
+   4|   cached = value; // Error: T is incompatible with null
+                 ^^^^^
+
+References:
+   -:3:26
+   3| function cache<T>(value: T): T {
+                               ^ [1]
+   -:2:14
+   2| let cached = null; // Error: only assigned by null and in generic context
+                   ^^^^ [2]
+   -:2:5
+   2| let cached = null; // Error: only assigned by null and in generic context
+          ^^^^^^ [3]
+
+
+Found 2 errors
+
+=== block 23 ===
+No errors!

@@ -1,0 +1,147 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error --------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]:
+component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+Error --------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]: string
+literal `div` [2] is incompatible with string [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [2]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                          ^^^^^^^^^^^^^^^^^ [3]
+
+Error --------------------------------------------------------------------- -:9:20
+
+Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `P` [1]: `unknown` [2] is
+incompatible with props of string literal `div` [3]. [incompatible-type]
+
+   -:9:20
+    9| onlyAllowsExactDiv(divGeneral); // Error
+                          ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
+   <BUILTINS>/react.js:97:71
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                                             ^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+Error -------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `ElementType` [1]:
+component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+Error -------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `ElementType` [1]: string
+literal `div` [2] is incompatible with string [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [2]
+   <BUILTINS>/react.js:97:52
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                          ^^^^^^^^^^^^^^^^^ [3]
+
+Error -------------------------------------------------------------------- -:10:22
+
+Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `P` [1]: `unknown` [2] is
+incompatible with props of string literal `div` [3]. [incompatible-type]
+
+   -:10:22
+   10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
+                            ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
+   <BUILTINS>/react.js:97:71
+   97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
+                                                                             ^^^^^^^ [2]
+   -:4:46
+    4| type ExactDiv = ExactReactElement_DEPRECATED<'div'>;
+                                                    ^^^^^ [3]
+
+
+Found 6 errors
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
