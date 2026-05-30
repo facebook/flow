@@ -1879,21 +1879,27 @@ mod type_converter {
     ) -> Result<Vec<ty::Prop<ALoc>>, Error> {
         let cx = env.genv.cx;
         let prop_map = cx.find_props(props_id);
-        let mut obj_props = Vec::new();
-        if let Some(call_id) = call_id_opt {
-            let call_t = cx.find_call(call_id);
-            let call_props = call_prop_from_t::<I>(env, state, &call_t)?;
-            obj_props = call_props;
-        }
-        for (name, prop) in prop_map.iter() {
-            if let Some(allowed) = allowed_prop_names {
-                if !allowed.iter().any(|n| n == name) {
-                    continue;
-                }
+        let props: Vec<_> = match allowed_prop_names {
+            Some(names) => names
+                .iter()
+                .filter_map(|name| prop_map.get(name).map(|prop| (name, prop)))
+                .collect(),
+            None => prop_map.iter().collect(),
+        };
+        let call_props = match call_id_opt {
+            Some(call_id) => {
+                let call_t = cx.find_call(call_id);
+                call_prop_from_t::<I>(env, state, &call_t)?
             }
+            None => Vec::new(),
+        };
+        let mut converted_props = Vec::new();
+        for (name, prop) in props {
             let props = obj_prop_t::<I>(env, state, name, prop, inherited, source.clone())?;
-            obj_props.extend(props);
+            converted_props.extend(props);
         }
+        let mut obj_props = call_props;
+        obj_props.extend(converted_props);
         Ok(obj_props)
     }
 

@@ -13,7 +13,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -543,64 +542,22 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
             Type::new(TypeInner::MaybeT(reason, merged))
         }
         (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
-            let mut all: Vec<Type> = rep1.members_iter().duped().collect();
-            all.reverse();
-            all.extend(rep2.members_iter().duped());
-            if all.len() >= 2 {
-                let t0 = all.remove(0);
-                let t1_inner = all.remove(0);
-                create_union(union_rep::make(
-                    None,
-                    union_rep::UnionKind::UnknownKind,
-                    t0,
-                    t1_inner,
-                    all.into(),
-                ))
-            } else {
-                // Shouldn't happen, unions have at least 2 members
-                create_union(union_rep::make(
-                    None,
-                    union_rep::UnionKind::UnknownKind,
-                    t1,
-                    t2,
-                    Rc::from([]),
-                ))
-            }
+            let mut members: Vec<_> = rep1.members_iter().map(|t| t.dupe()).collect();
+            members.reverse();
+            members.extend(rep2.members_iter().map(|t| t.dupe()));
+            let mut members = members.into_iter();
+            let t0 = members.next().expect("UnionRep has at least two members");
+            let t1 = members.next().expect("UnionRep has at least two members");
+            create_union(union_rep::make(
+                None,
+                union_rep::UnionKind::UnknownKind,
+                t0,
+                t1,
+                members.collect(),
+            ))
         }
-        (TypeInner::UnionT(_, rep), _) => {
-            let mut members: Vec<Type> = rep.members_iter().duped().collect();
-            members.insert(0, t2);
-            if members.len() >= 2 {
-                let m0 = members.remove(0);
-                let m1 = members.remove(0);
-                create_union(union_rep::make(
-                    None,
-                    union_rep::UnionKind::UnknownKind,
-                    m0,
-                    m1,
-                    members.into(),
-                ))
-            } else {
-                unreachable!()
-            }
-        }
-        (_, TypeInner::UnionT(_, rep)) => {
-            let mut members: Vec<Type> = rep.members_iter().duped().collect();
-            members.insert(0, t1);
-            if members.len() >= 2 {
-                let m0 = members.remove(0);
-                let m1 = members.remove(0);
-                create_union(union_rep::make(
-                    None,
-                    union_rep::UnionKind::UnknownKind,
-                    m0,
-                    m1,
-                    members.into(),
-                ))
-            } else {
-                unreachable!()
-            }
-        }
+        (TypeInner::UnionT(_, rep), _) => create_union(union_rep::cons(t2, rep)),
+        (_, TypeInner::UnionT(_, rep)) => create_union(union_rep::cons(t1, rep)),
         // TODO: do we need to do anything special for merging Null with Void,
         // Optional with other types, etc.?
         _ => create_union(union_rep::make(
@@ -706,7 +663,7 @@ pub fn intersect_members<'cx>(
     }
     map.into_iter()
         .map(|(key, items)| {
-            let (loc, acc) = items.into_iter().fold(
+            let (loc, acc) = items.into_iter().rev().fold(
                 (None, flow_typing_type::type_::locationless::empty_t::t()),
                 |(_, acc), (loc, t)| {
                     // Arbitrarily use the last location encountered

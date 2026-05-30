@@ -7613,6 +7613,15 @@ pub mod union_rep {
         }))
     }
 
+    pub fn cons(t0: Type, rep: &UnionRep) -> UnionRep {
+        let t1 = rep.0.t0.dupe();
+        let t2 = rep.0.t1.dupe();
+        let ts: Vec<_> = std::iter::once(t2)
+            .chain(rep.0.ts.iter().map(|t| t.dupe()))
+            .collect();
+        make(None, UnionKind::UnknownKind, t0, t1, ts.into())
+    }
+
     /********** Optimizations **********/
 
     fn has_unflattened_types(ts: &[Type]) -> Option<Type> {
