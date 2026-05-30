@@ -198,7 +198,7 @@ The first call of any of those methods will create this cached map.
 
 
 ### Exhaustively checking enums with a `switch` {#toc-exhaustively-checking-enums-with-a-switch}
-When checking an enum value in a `switch` statement, we enforce that you check against all possible enum members, and don’t include redundant cases.
+When checking an enum value in a `switch` statement, we enforce that you check against all possible enum members, and don’t include redundant cases. A missing case is reported as `[invalid-exhaustive-check]` and the error names the specific member you forgot.
 This helps ensure you consider all possibilities when writing code that uses enums. It especially helps with refactoring when adding or removing members,
 by pointing out the different places you need to update. If you have [match](../match/index.md) enabled, use `match` expressions and statements instead of `switch` statements.
 

@@ -14,7 +14,7 @@ type B = IsString<number>; // 'no'
 ```
 
 :::info TypeScript comparison
-Conditional types match TypeScript in shape and most behaviors: distributivity over unions, `infer` on the right-hand side of `extends`, and the `[T] extends [...]` non-distributive opt-out all work the same way. The one remaining gap is `infer T extends Bound` — Flow's `infer` doesn't support a constraint clause yet. See [infer extends](../flow-vs-typescript.md#toc-infer-extends) for the full comparison.
+Conditional types match TypeScript in shape and most behaviors: distributivity over unions, `infer` on the right-hand side of `extends` (including the `infer T extends Bound` constraint form), and the `[T] extends [...]` non-distributive opt-out all work the same way.
 :::
 
 ## When to use this {#toc-when-to-use}

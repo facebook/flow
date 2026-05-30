@@ -30,7 +30,7 @@ func({length: 3}); // Error! Doesn't implement both interfaces
 ```
 
 :::info TypeScript comparison
-TypeScript routinely merges object types with intersection (`A & {b: T}`), while the Flow idiom is type-level spread (`{...A, b: T}`) instead. Flow object types are exact by default, and intersecting exact objects produces an [impossible type](#toc-impossible-intersection-types). Intersection on inexact objects (`{a: number, ...}`) is supported. Function-overload intersections used to express multiple call signatures match TypeScript directly. See [Object type spread is type-level in Flow](../flow-vs-typescript.md#toc-type-spread) for the full comparison.
+TypeScript routinely merges object types with intersection (`A & {b: T}`), while the Flow idiom is type-level spread (`{...A, b: T}`) instead. Flow object types are exact by default, and intersecting exact objects produces an [impossible type](#toc-impossible-intersection-types). Intersection on inexact objects (`{a: number, ...}`) is supported. Function-overload intersections used to express multiple call signatures match TypeScript directly. See [Object spread typing](../flow-vs-typescript.md#toc-type-spread) for the full comparison.
 :::
 
 ## When to use this {#toc-when-to-use}

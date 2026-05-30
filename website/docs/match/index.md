@@ -101,12 +101,12 @@ match (<arg>) {
 
 ## Exhaustive Checking
 
-`match` requires that you have considered all cases of the input. If you don't, Flow will error and tell you what patterns you could add to make the match exhaustive:
+`match` requires that you have considered all cases of the input. If you don't, Flow errors with `[match-not-exhaustive]` and names the specific patterns you would need to add to make the match exhaustive. This is especially valuable as the input type evolves: adding a new variant to a union surfaces every match site that hasn't handled it, turning what would be a silent runtime fall-through into a localized type error.
 
 ```js flow-check
 declare const tab: 'home' | 'details' | 'settings';
 
-match (tab) { // ERROR
+match (tab) { // ERROR [match-not-exhaustive]
   'home' => {}
   'settings' => {}
 }

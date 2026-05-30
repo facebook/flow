@@ -30,7 +30,7 @@ const foo: B = new A(); // Error!
 const bar: A = new B(); // Error!
 ```
 
-You also cannot use an [object type](./objects.md) to describe an instance of a class:
+You also cannot use an [object type](./objects.md) to describe an instance of a class — Flow reports this as `[class-object-subtyping]` ("Class instances are not subtypes of object types; consider rewriting object type as an interface"):
 
 ```js flow-check
 class MyClass {
@@ -39,7 +39,7 @@ class MyClass {
 const foo: {x: number, ...} = new MyClass(); // Error!
 ```
 
-You can use [interfaces](./interfaces.md) to accomplish this instead:
+You can use [interfaces](./interfaces.md) to accomplish this instead — interfaces accept both plain objects and class instances:
 
 ```js flow-check
 class A {
@@ -95,37 +95,7 @@ class MyClass {
 }
 ```
 
-Unlike class properties, however, class methods cannot be unbound or rebound from
-the class on which you defined them. Flow tracks the `this`-binding of class
-methods: a method defined on a class has its `this` type tied to the class
-instance. Extracting a method reference — by accessing `obj.method` without
-calling it, destructuring it, or rebinding it with `.bind()` — would produce a
-function that has lost its `this` type. Calling such an unbound function could
-lead to runtime errors because `this` would no longer refer to the expected
-instance.
-
-So all of the following are errors in Flow:
-
-```js flow-check
-class MyClass { method() {} }
-const a = new MyClass();
-a.method; // Error!
-const {method} = a; // Error!
-a.method.bind({}); // Error!
-```
-
-If you need to pass a method as a callback, wrap it in an arrow function so
-that `this` remains bound:
-
-```js flow-check
-class MyClass {
-  value: number = 1;
-  method(): number { return this.value; }
-}
-
-const a = new MyClass();
-const callback = () => a.method(); // Works!
-```
+The `this` type can also appear in a method signature — typically as a return type (`add(x: T): this`) for fluent APIs that preserve the subclass type through chained calls. Flow allows `this` only in covariant positions (return types and `readonly` fields); see [The `this` type is restricted to covariant positions](../lang/variance.md#toc-this-covariant) for the input/mutable-field rules and rewrites.
 
 Methods are considered [read-only](../lang/variance.md):
 
@@ -326,6 +296,8 @@ class MyClass implements WithXNum { // Error!
 }
 ```
 
+The right-hand side of `implements` and `extends` is constrained — see [Common Issues](#toc-cannot-implement) below.
+
 ### Class Constructors {#toc-class-fields-constructors}
 
 You can initialize your class properties in class constructors:
@@ -419,6 +391,42 @@ const a: MyClass = MyClass; // Error!
 
 See [here](./utilities.md#toc-class) for details on `Class<T>`, which allows you
 to refer to the type of the class in an annotation.
+
+## Common Issues {#toc-common-issues}
+
+### Method unbinding {#toc-method-unbinding}
+
+Flow tracks the `this` binding on methods: extracting `obj.method` without calling it would produce a function that has lost its `this`, and calling that function would invoke the method body with `this` undefined, so any `this.field` access would crash at runtime. Flow rejects the extraction with `[method-unbinding]` ("Cannot get `a.method` because property `method` cannot be unbound from the context where it was defined"):
+
+```js flow-check
+class Counter {
+  count: number = 0;
+  increment(): number { return ++this.count; }
+}
+const counter = new Counter();
+const tick: () => number = counter.increment; // ERROR: [method-unbinding]
+```
+
+Destructuring is blocked for the same reason:
+
+```js flow-check
+class MyClass { method() {} }
+const a = new MyClass();
+const {method} = a; // Error!
+```
+
+The fixes are either to keep the call bound (`counter.increment()` directly) or to wrap with an arrow that captures `this` (`const tick = () => counter.increment()`).
+
+This is a class-instance rule: method-shorthand on a plain [object type](./objects.md#toc-object-methods) doesn't carry a `this` context to lose (usage of `this` in object literals is banned), so extracting an object method is allowed.
+
+### `implements` and `extends` RHS must be an interface or class {#toc-cannot-implement}
+
+The right-hand side of `implements` (on a class) or `extends` (on an interface) must name an interface or class — passing an object-type alias errors:
+
+- `class C implements ObjType` errors with `[cannot-implement]` ("…is not an interface").
+- `interface I extends ObjType` errors with `[incompatible-use]` ("…is not inheritable").
+
+Mapped or utility types applied to interfaces produce object types, which also won't be accepted in either clause. The fix is to introduce a named interface (or inline the members directly) instead.
 
 ## See Also {#toc-see-also}
 

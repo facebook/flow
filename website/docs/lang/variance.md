@@ -73,6 +73,23 @@ to an array. This allows more flexible subtyping rules: Flow only needs to prove
 `S` is a subtype of `T` to determine that `ReadonlyArray<S>` is also a subtype
 of `ReadonlyArray<T>`.
 
+### The `this` type is restricted to covariant positions {#toc-this-covariant}
+
+The `this` type follows the same rule. It's allowed in covariant positions — method return types and `readonly` fields — but rejected in method parameters and mutable fields, with `[incompatible-variance]`:
+
+```js flow-check
+class Builder {
+  add(x: number): this { return this; } // OK: return type is covariant
+  readonly origin: this | null = null; // OK: readonly field is covariant
+  takesSelf(other: this): void {} // ERROR: input position
+  parent: this | null = null; // ERROR: invariant field
+}
+```
+
+This falls out of the same model that makes [mutable object properties](#toc-invariance) invariant: if `parent: this | null` were allowed on a base `Builder`, a subclass instance could be passed as a `Builder`, a bare `Builder` written into its `parent`, and a later `sb.parent.subclassMethod()` would type-check but crash at runtime — so Flow rejects the field outright.
+
+The rewrite when you hit this is to name the class explicitly in the input or field position (`other: Builder`, `parent: Builder | null`) and accept the loss of the subclass type at that slot — or mark the field `readonly` so the position becomes covariant.
+
 
 ## Invariance {#toc-invariance}
 
@@ -186,12 +203,12 @@ concepts described above:
 When you see an error like "Cannot use `T` in an input position because `T` is
 expected to occur only in output positions," it means you have a type parameter
 marked as covariant (`out T`) but you are using it somewhere that writes a value
-in, such as a function parameter:
+in, such as a function parameter. Flow reports this as `[incompatible-variance]`:
 
 ```js flow-check
 type Box<out T> = {
   get(): T;
-  set(val: T): void; // Error: T is in an input position but is expected only in output positions
+  set(val: T): void; // Error [incompatible-variance]: T is in an input position but is expected only in output positions
 };
 ```
 

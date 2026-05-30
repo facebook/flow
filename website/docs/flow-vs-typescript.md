@@ -43,7 +43,6 @@ The features below are close enough in syntax and semantics that you can reuse y
 For example, the function below type-checks identically in both languages:
 
 ```js flow-check
-// Flow:
 type User = {
   readonly name: string,
   readonly age: number,
@@ -593,9 +592,9 @@ Adding `readonly compare` restores that safe direction (a `Comparator`-typed val
 
 See the [variance docs](./lang/variance.md) and the [subtyping docs](./lang/depth-subtyping.md) for the full mechanics.
 
-#### `this` type is restricted to output positions {#toc-this-variance}
+#### `this` type is restricted to covariant positions {#toc-this-variance}
 
-The `this` type is used for fluent APIs and polymorphic method receivers. In output positions (return types), both languages accept it: a method declared `m(): this` preserves the subclass type through fluent chains, so `new SubBuilder().add(1).extra()` keeps its `SubBuilder` type. The divergence is in input and invariant (mutable field) positions. TypeScript accepts `this` there too, but a writable slot typed `this` lets a caller stash a parent-class instance into a subclass-typed field; later access that calls a subclass-only method crashes:
+The `this` type is used for fluent APIs and polymorphic method receivers. In covariant positions (return types, and `readonly` fields in Flow), both languages accept it: a method declared `m(): this` preserves the subclass type through fluent chains, so `new SubBuilder().add(1).extra()` keeps its `SubBuilder` type. The divergence is in input and invariant (mutable field) positions. TypeScript accepts `this` there too, but a writable slot typed `this` lets a caller stash a parent-class instance into a subclass-typed field; later access that calls a subclass-only method crashes:
 
 ```ts
 // TypeScript:
@@ -622,9 +621,10 @@ Flow rejects `this` in input and invariant positions with `[incompatible-varianc
 ```js flow-check
 // Flow:
 class Builder {
-  add(x: number): this { return this; } // OK: output position
-  takesSelf(other: this): void {}       // ERROR: input position
-  parent: this | null = null;           // ERROR: invariant field
+  add(x: number): this { return this; } // OK: return type is covariant
+  readonly origin: this | null = null; // OK: readonly field is covariant
+  takesSelf(other: this): void {} // ERROR: input position
+  parent: this | null = null; // ERROR: invariant field
 }
 ```
 
@@ -1311,7 +1311,7 @@ TypeScript has several class-syntax extensions Flow has deliberately not adopted
 
 **Parameter properties** (`constructor(public x: number)`) - a TS-only shorthand that emits runtime code: it auto-declares the field and assigns it from the constructor argument. Flow's diagnostic: "Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in the constructor."
 
-**`public` / `protected` / `private` access modifiers** - TS-checked access control. These are type-checker-only in TypeScript (the field is still publicly accessible at runtime), so dropping them is safe. Flow rejects all three; drop them (`public` / `protected` carry no runtime effect) or migrate `private foo` to `#foo`. The `#private` rewrite lands at a different runtime shape from the TS form: ECMAScript `#private` fields are nominally private at runtime, while TS `private` is erased. Flow tracks `#private` nominally as part of the class identity.
+**`public` / `protected` / `private` access modifiers** - TS-checked access control. These are type-checker-only in TypeScript (the field is still publicly accessible at runtime), so dropping them is safe. Flow rejects all three; drop them (`public` / `protected` carry no runtime effect) or migrate `private foo` to `#foo`. The `#private` rewrite lands at a different runtime shape from the TS form: ECMAScript `#private` fields are nominally private at runtime, while TS `private` is erased.
 
 **`accessor` auto-accessors** (`class C { accessor x: T = init }`) - a TC39 proposal that desugars to a paired getter/setter backed by a private field. Flow does not parse the form. Write the getter and setter explicitly with a `#private` backing field, or use a plain field if no accessor wrapping is needed.
 
@@ -1464,17 +1464,20 @@ See [User-side module augmentation](#toc-module-augmentation) for the declaratio
 
 ### Declaration merging is partially supported {#toc-declaration-merging}
 
-Underpinning the merging cases below: Flow uses TypeScript's split-namespace model. Each name independently inhabits a *value* namespace and a *type* namespace, so a single identifier can be both a value and a type without colliding: `const A = 1; interface A {}` is accepted, value-side uses of `A` resolve to the const, type-side uses resolve to the interface. Constructs usable in both namespaces (classes, enums) register once in the value namespace and the type side falls back to it.
+Flow uses the same split-namespace model as TypeScript and supports a subset of [declaration merging](./lang/declaration-merging.md). Each name independently inhabits a *value* namespace and a *type* namespace, so a single identifier can be both a value and a type without colliding: `const A = 1; interface A {}` is accepted, value-side uses of `A` resolve to the const, type-side uses resolve to the interface. Constructs usable in both namespaces (classes, enums) register once in the value namespace and the type side falls back to it.
 
-On top of that namespace model, Flow supports the merging cases that matter most. Specifically, Flow merges:
+What Flow merges:
 
-- `interface` + `interface` - members union (first-wins on conflicts), `extends` lists concatenate, call signatures overload as intersections, type-param arities must match. Supported in both type-sig and local checking.
-- `declare module` + `declare module` - exports union (first-wins on name collisions), incompatible export styles (CJS vs. ES) error, star re-exports concatenate.
+- `interface` + `interface` - members union (compatible duplicates allowed; conflicting members error). In library definition files, `extends` lists also concatenate, call signatures overload as intersections, and type-param arity mismatches error. In regular source files, the merge is limited to members — `extends` lists and call signatures don't combine across declarations, and same-named interfaces can't both be exported from a file.
 - `declare class` + `interface` - interface members fold into the class (either order).
-- `function` / `declare function` + `declare namespace` - namespace's type members fold into the function (either order).
-- `class` / `declare class` + `declare namespace` - namespace's type members fold into the class (either order).
+- `function` / `declare function` + `declare namespace` - the namespace's type members fold into the function (either order), accessible as `fn.T`.
+- `class` / `declare class` + `declare namespace` - the namespace's type members fold into the class (either order), accessible as `Cls.T`.
 
-What Flow does *not* do is the *runtime-merging* cases - for example, arbitrary `function` + `namespace` value-side merging where the namespace contributes runtime members, and the [user-side `declare module 'name' { ... }` source-level augmentation pattern](#toc-module-augmentation).
+What Flow does *not* do:
+
+- *Runtime-merging*. Only the *type* members of a `declare namespace` reliably propagate to a sibling function or class — value members are not treated as runtime properties on the host. TS-style `function` + `namespace` value-side merging where the namespace contributes runtime members is not supported.
+- *Multi-block `declare module` merging.* Multiple `declare module 'name' { ... }` blocks for the same module do not union — the second is treated as an override of the first. A libdef for a given module should live in one place.
+- *User-side `declare module 'name' { ... }` source-level augmentation* (see [User-side module augmentation](#toc-module-augmentation)).
 
 ### Generating declaration files {#toc-generating-declarations}
 

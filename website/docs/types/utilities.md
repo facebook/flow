@@ -92,6 +92,10 @@ acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
 
 If you want to create an enum type, [Flow Enums](../enums/index.md) might be a better fit for your use-case.
 
+:::info TypeScript comparison
+TypeScript has no `Values<T>` utility; the equivalent is the indexed access `T[keyof T]`.
+:::
+
 ## `Readonly<T>` {#toc-readonly}
 
 `Readonly<T>` is a type that represents the read-only version of a given [object type](./objects.md)
@@ -514,6 +518,10 @@ makeParamStore(ParamStore, 1) as ParamStore<number>;
 makeParamStore(ParamStore, 1) as ParamStore<boolean>; // Error!
 ```
 
+:::info TypeScript comparison
+TypeScript has no native equivalent of `Class<T>`; the usual encodings are `new (...args: any[]) => T`, or `typeof C` for a specific class.
+:::
+
 ## `$Exports<T>` {#toc-exports}
 
 The following are functionally equivalent
@@ -538,6 +546,7 @@ export type MyModuleType = T;
 ```
 
 ## `StringPrefix` and `StringSuffix`
+
 The `StringPrefix` and `StringSuffix` types represent strings with the specified prefix or suffix, respectively.
 Their first type argument must be a string literal type, representing the prefix or suffix.
 

@@ -88,6 +88,7 @@ module.exports = {
             'lang/variance',
             'lang/nominal-structural',
             'lang/depth-subtyping',
+            'lang/declaration-merging',
           ],
         },
         {

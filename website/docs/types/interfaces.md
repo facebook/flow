@@ -57,6 +57,18 @@ acceptsObj(o); // Works!
 acceptsObj(foo); // Error!
 ```
 
+The underlying reason is [method unbinding](./classes.md#toc-method-unbinding): Flow tracks `this` on class methods, and letting a class instance flow into an object type would be a backdoor around that rule — extract `obj.method` through the object-type alias and call it without a receiver. Interfaces have the same hazard, so an interface-typed value also can't flow into an object type. Plain object literals carry no `this` binding to lose, which is why they flow into object types freely.
+
+So three kinds of values relate to the two structural type shapes asymmetrically:
+
+| value                  | assignable to object type | assignable to interface |
+| ---------------------- | :-----------------------: | :---------------------: |
+| object literal         | ✓                         | ✓                       |
+| class instance         |                           | ✓                       |
+| interface-typed value  |                           | ✓                       |
+
+The error code depends on the object type's exactness: against an exact object type (the default) it's `[incompatible-exact]`; against an inexact object type (`{a: number, ...}`) it's `[class-object-subtyping]` with the suggestion to rewrite the object type as an interface. The fix in both cases is to switch the parameter type to an interface — interfaces accept all three kinds.
+
 Unlike objects, interfaces cannot be [exact](./objects.md#exact-and-inexact-object-types), as they can always have other, unknown properties.
 
 ## Implementing interfaces {#toc-implementing-interfaces}
@@ -202,6 +214,39 @@ const val: MyInterface<number, boolean, string> = {
   baz: 'three',
 };
 ```
+
+## Primitives are not subtypes of interfaces {#toc-primitives-not-subtypes}
+
+Flow rejects primitives (`string`, `number`, `boolean`) flowing into an interface or object type, even when their boxed prototype would satisfy the contract. The hazard is silent shape ambiguity: a bare `string` structurally satisfies `Iterable<string>` (via `String.prototype[Symbol.iterator]`), but iterating it yields code points instead of items — almost always a logic bug rather than the intent.
+
+```js flow-check
+function logAll(items: Iterable<string>) {
+  for (const x of items) console.log(x);
+}
+
+const msgs = "foo";
+logAll(msgs); // Error: `string` is not a subtype of `Iterable<string>`
+```
+
+If a one-element iterable was intended, wrap the value with `[s]` at the call site; otherwise the call was passing the wrong shape.
+
+## Extending interfaces {#toc-extending-interfaces}
+
+An interface can extend other interfaces or classes to inherit their members:
+
+```js flow-check
+interface Animal {
+  name: string;
+}
+interface Dog extends Animal {
+  breed: string;
+}
+
+const d: Dog = {name: "Rex", breed: "Lab"};
+const a: Animal = d; // Works!
+```
+
+The right-hand side of `extends` must name an interface or class — passing an object-type alias errors with `[incompatible-use]` ("not inheritable"). The same constraint applies to the `implements` clause on a class (`[cannot-implement]`). Mapped or utility types applied to interfaces produce object types, so they also won't work in either position. The rewrite is to introduce a named interface (or inline the members directly) instead.
 
 ## Interface property variance (read-only and write-only) {#toc-interface-property-variance-read-only-and-write-only}
 

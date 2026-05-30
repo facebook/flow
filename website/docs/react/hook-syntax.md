@@ -127,6 +127,8 @@ Because of the different properties that hooks and functions must obey, it’s F
 to pass a value defined as a hook into a position that expects a function type, and
 an error to pass a regular JavaScript function into a position that expects a hook.
 
+Tracking hook-ness as part of the function type lets Flow catch violations that an AST-based linter (such as `eslint-plugin-react-hooks`) cannot reach: at the call site, there's no syntactic clue that the callee will invoke `fn` as a hook, so a syntactic check has nothing to flag. The whole-program type information Flow tracks is what makes the diagnostic possible.
+
 ```js flow-check
 import {useState, useEffect} from 'react';
 
@@ -137,7 +139,7 @@ hook useMultiplier(x: number): number {
 }
 
 component Mapper(args: Array<number>) {
-  const multArgs = args.map(useMultiplier); // Error
+  const multArgs = args.map(useMultiplier); // Error [react-rule-hook-incompatible]
   
   return multArgs;
 }

@@ -54,6 +54,20 @@ const x: MyNumber = 1; // Works: like using `number`
 Just like other type imports, this code can be stripped away by a compiler so
 that it does not add a runtime dependency on the other module.
 
+When the imported value is generic — for example, a function or React hook with type parameters — the imported type stays parameterizable. You can write `useState<number>` against an `import typeof {useState} from 'react'`-imported type to obtain the `number`-specialization:
+
+```js
+import typeof {useState} from 'react';
+
+hook useCounter(useStateNum: useState<number>): number {
+  const [count, setCount] = useStateNum(0);
+  setCount(c => c + 1);
+  return count;
+}
+```
+
+For the component-specific gotcha when `import typeof` is applied to a generic component's default export, see [`import typeof` with generic components](../react/component-syntax.md#toc-import-typeof-generics).
+
 ## See Also {#toc-see-also}
 
 - [Declaration Files](../declarations/index.md) — `.flow` files that declare types for untyped modules

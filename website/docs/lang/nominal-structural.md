@@ -107,6 +107,8 @@ let test1: Interface = new Foo(); // Works
 let test2: Interface = new Bar(); // Works
 ```
 
+A structural object type like `{method: (value: string) => void}` wouldn't work in place of the interface here — object types describe object literals, not class instances. See [Interfaces for instances and objects](../types/interfaces.md#toc-interfaces-for-instances-and-objects) for why and the fix.
+
 ### Opaque types
 You can use [opaque types](../types/opaque-types.md) to turn a previously structurally typed alias into a nominal one (outside of the file that it is defined).
 

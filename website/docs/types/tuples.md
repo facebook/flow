@@ -260,6 +260,8 @@ e as [0, foo?: 1, bar?: 2]; // ERROR
 e as ReadonlyArray<number | void>; // OK
 ```
 
+Flow reports this as `[invalid-tuple-arity]` ("array literal has an unknown number of elements"). The underlying reason is soundness: when the optional element is absent at runtime, the trailing positions shift left, so the static tuple shape no longer matches the runtime layout.
+
 ## Inexact tuples
 Inexact tuple types work like [inexact objects](./objects.md#exact-and-inexact-object-types): they allow for unknown members at the end of the tuple.
 

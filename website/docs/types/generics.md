@@ -383,7 +383,7 @@ let bar: Item<2> = { prop: 2 };
 ```
 
 You must always include the brackets `<>` when using the type (just like
-parentheses for a function call).
+parentheses for a function call). Writing the bare name `Foo` (without `<>`) errors with `[missing-type-arg]` even when every parameter has a default. The bare name is reserved for the unapplied type constructor — applying it always requires explicit type arguments or an empty `<>` to fall back on defaults.
 
 ### Variance Keywords {#toc-variance-sigils}
 

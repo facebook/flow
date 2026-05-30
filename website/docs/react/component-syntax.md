@@ -4,14 +4,16 @@ slug: /react/component-syntax
 description: "How to use Flow's component syntax to declare React components with built-in type system support for props, refs, and render types."
 ---
 
-[Components](https://react.dev/learn/your-first-component) are the foundation for building UIs in React. While components are typically expressed using JavaScript functions, Component Syntax provides component primitive values that provide several advantages over function components, like:
+[Components](https://react.dev/learn/your-first-component) are the foundation for building UIs in React. While components are typically expressed using JavaScript functions, Component Syntax provides component primitive values that provide several advantages over function components:
 
-1. More elegant syntax with significantly less verbosity and boilerplate than functions
-2. Type system support tailored specifically for writing React
-3. Better support for [React refs](https://react.dev/learn/manipulating-the-dom-with-refs)
+- **Individual named params instead of a props object.** Removes the destructuring-and-typing duplication of `({name}: {name: string})` and the need to wrap props in `Readonly<{...}>` — component params are read-only by default.
+- **No return type annotation.** Flow infers and enforces `React.Node`, and rejects components that implicitly return on any branch.
+- **Optional [`renders`](./render-types.md) clause** that constrains what JSX shape the component is allowed to produce, enabling composition contracts across wrapper components and HOCs.
+- **Structural rules enforced at parse/type-check time:** no `this`, no nested component definitions, and components can only be rendered as JSX — they cannot be called as plain functions. See [Rules for Components](#rules-for-components) below.
+- **Better support for [React refs](https://react.dev/learn/manipulating-the-dom-with-refs)** via the dedicated ref parameter position.
 
 :::info TypeScript comparison
-`component` syntax is Flow-only. TypeScript models the equivalent shape with function types and `forwardRef`. Flow's compiler enforces rules that TS's function-type component model does not encode as syntax — return type fixed to `React.Node`, no `this`, no nested components, ref parameters in their dedicated position. See [Flow's component syntax](../flow-vs-typescript.md#toc-component-syntax) for the full comparison.
+`component` syntax is Flow-only. TypeScript models components as plain functions plus a props type. Flow's type-checker enforces rules that TypeScript's plain-function model leaves to convention or ESLint rules. See [Flow's component syntax](../flow-vs-typescript.md#toc-component-syntax) for the full comparison.
 :::
 
 ## Basic Usage
@@ -175,6 +177,8 @@ Component Syntax enforces a few restrictions in components to help ensure correc
 
 4. You cannot define a component inside another component or a hook. This triggers the [`nested-component`](../linting/rule-reference.md#toc-nested-component) lint, because a nested component gets a new identity on every render, causing React to unmount and remount it each time. Use a regular function instead if the inner "component" doesn't use hooks, or move the component to the top level.
 
+5. Components cannot be called as plain functions — they can only be rendered as JSX. Calling `Foo(props)` directly errors with `[react-rule-call-component]`. Use `<Foo {...props} />` instead.
+
 So these components are invalid:
 
 ```js flow-check
@@ -195,6 +199,11 @@ component UsesThis() {
   this.foo = 3; // ERROR: Accessing `this`
   return null;
 }
+
+component Greeting() {
+  return <h1>Hello</h1>;
+}
+const elem = Greeting({}); // ERROR [react-rule-call-component]: use <Greeting /> instead
 ```
 
 ## `import typeof` with Generic Components {#toc-import-typeof-generics}

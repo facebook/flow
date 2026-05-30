@@ -10,7 +10,7 @@ Flow tries to avoid requiring type annotation for parts of programs where types 
 be inferred from the immediate context of an expression, variable, parameter, etc.
 
 :::info TypeScript comparison
-TypeScript infers types across module boundaries, while Flow requires annotations at the boundary (function parameters, exports) to enable parallel checks. See [Annotations are required at module boundaries](../flow-vs-typescript.md#toc-annotations-boundaries) for the full comparison.
+TypeScript infers types across module boundaries by default, while Flow requires annotations at the boundary (function parameters, exports) to enable parallel checks. TypeScript offers an opt-in equivalent (`--isolatedDeclarations`, TS 5.5+), but it's not part of `strict` and is off by default. See [Annotations are required at module boundaries](../flow-vs-typescript.md#toc-annotations-boundaries) for the full comparison.
 :::
 
 ## Variable declarations

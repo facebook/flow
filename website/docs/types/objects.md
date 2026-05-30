@@ -241,7 +241,7 @@ const FixedUtils = { // Works!
 
 ## Exact and inexact object types
 
-Exact object types are the default, unless you have set [`exact_by_default=false`](../config/options.md#toc-exact-by-default) in your `.flowconfig`.
+Exact object types are the default.
 
 Inexact objects (denoted with the `...`) allow extra properties to be passed in:
 
@@ -261,13 +261,7 @@ function method(obj: {foo: string}) { /* ... */ }
 method({foo: "test", bar: 42}); // Error!
 ```
 
-If you have set `exact_by_default=false`, you can denote exact object types by adding a pair of "vertical bars" or "pipes" to the inside of the curly braces:
-
-```js flow-check
-const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
-```
-
-[Intersections](./intersections.md) of exact object types may not work as you expect. If you need to combine exact object types, use [object type spread](#object-type-spread):
+[Intersections](./intersections.md) of exact object types are usually impossible types: a value would have to be exactly `A` *and* exactly `B` simultaneously, which is [uninhabitable](./intersections.md#toc-impossible-intersection-types) as soon as `A` and `B` differ at all. The operation that combines exact object types is [object type spread](#object-type-spread), which mirrors the runtime semantics of value-level spread directly — own properties only, later keys overwrite earlier ones, and exactness propagates:
 
 ```js flow-check
 type FooT = {foo: string};

@@ -1,17 +1,17 @@
 ---
 title: Type Casting Expressions
 slug: /types/casting
-description: "How to use type cast expressions in Flow to assert types using the as keyword."
+description: "How to use type cast expressions in Flow to widen or assert types using the as keyword."
 ---
 
-Type cast expressions let you assert a value's type inline using the `as` keyword.
+Type cast expressions let you widen or assert a value's type inline using the `as` keyword.
 
 ```js flow-check
 const x = 42 as number;
 ```
 
 :::info TypeScript comparison
-Flow's `as` only widens or asserts, while TypeScript's `as` permits unsafe downcasts that invent properties. The cast `{foo: 1} as {foo: number, bar: string}` type-checks in TypeScript (asserting a non-existent `bar`) but errors in Flow. See [as casts are stricter in Flow](../flow-vs-typescript.md#toc-as-casts) for the full comparison.
+Flow's `as` only widens or asserts, while TypeScript's `as` permits unsafe downcasts that invent properties. The cast `{foo: 1} as {foo: number, bar: string}` type-checks in TypeScript (asserting a non-existent `bar`) but errors in Flow. See [as casts are safer in Flow](../flow-vs-typescript.md#toc-as-casts) for the full comparison.
 :::
 
 ## When to use this {#toc-when-to-use}
@@ -145,6 +145,10 @@ This is unsafe and not recommended. But it's sometimes useful when you are
 doing something with a value which is very difficult or impossible to type and
 want to make sure that the result has the desired type.
 
+:::info TypeScript comparison
+The TypeScript idiom `value as unknown as T` does not translate directly: Flow's [`unknown`](./unknown.md) is a true top type that cannot be downcast, so the two-step escape hatch must go through [`any`](./any.md) instead — `value as any as T`.
+:::
+
 For example, the following function for cloning an object.
 
 ```js flow-check
@@ -165,7 +169,7 @@ based on another object.
 If we cast through any, we can return a type which is more useful.
 
 ```js flow-check
-function cloneObject<T extends {+[key: string]: unknown }>(obj: T): T {
+function cloneObject<T extends {readonly [key: string]: unknown }>(obj: T): T {
   const clone: {[string]: unknown} = {};
 
   Object.keys(obj).forEach(key => {

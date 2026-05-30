@@ -284,7 +284,7 @@ function nonMaybe<V extends {...}>(x: ?V): x is V {
 
 ### Predicate type is consistent with refined type {#toc-consistency-checks-of-type-guard-functions}
 
-In addition to the above checks, Flow also ensures that the declared type guard is consistent with the check happening in the body of the function. To establish this it needs to guarantee two things:
+In addition to the above checks, Flow also ensures that the declared type guard is consistent with the check happening in the body of the function. To establish soundness, Flow needs to guarantee two things:
 
 1. The type of the refined parameter at the return location *after* the predicate of the return expression has been applied is a subtype of the guard type. For example, the following definitions are correct:
 ```js flow-check
@@ -307,7 +307,7 @@ function numOrStrWithException(x: unknown): x is number | string {
 But in the following Flow will raise errors:
 ```js flow-check
 function numOrStrError(x: unknown): x is number | string {
-  return (typeof x === "number" || typeof x === "boolean"); // Error
+  return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
 }
 ```
 
@@ -327,7 +327,7 @@ if (isNumber(value)) {
 Therefore, the inverse form of the first requirement also needs to hold. Specifically, if we negate the predicate encoded in the function, and use it to refine the input, then the result must not overlap with the type guard at all. This condition is equivalent to checking that the type guard refined with the negation of the function predicate is a subtype of `empty`. For example the following raises an error:
 ```js flow-check
 function isPosNum(x: unknown): x is number {
-    return typeof x === 'number' && x > 0; // Error
+    return typeof x === 'number' && x > 0; // Error [incompatible-type-guard]
 }
 ```
 This is because the negation of the predicate of `isPosNum` is "`x` is not a number or `x<=0`". This predicate is equivalent to the empty predicate and does not refine the input type it is applied to.
@@ -338,15 +338,24 @@ If you're seeing errors related to this check, consider using a one-sided type g
 ```js flow-check
 function isNumberError1(x: unknown): x is number {
   x = 1;
-  return typeof x === "number"; // Error
+  return typeof x === "number"; // Error [function-predicate]
 }
 ```
 ```js flow-check
-function isNumberError2(x: unknown): x is number { // Error
+function isNumberError2(x: unknown): x is number { // Error [function-predicate]
   function foo() {
     x = 1;
   }
   foo();
+  return typeof x === "number";
+}
+```
+
+A closure that captures the parameter only invalidates the guard if the closure is actually *called* between the original parameter and the `return`. Defining the closure without invoking it is fine:
+
+```js flow-check
+function isNumber(x: unknown): x is number {
+  const reset = () => { x = 1; }; // OK - never invoked
   return typeof x === "number";
 }
 ```

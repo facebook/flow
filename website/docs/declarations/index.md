@@ -88,6 +88,10 @@ function fooList(ns: List<number>): List<string> {
 
 Just don't forget to replace the declarations with proper implementations.
 
+## Generating declaration files {#toc-generating-declaration-files}
+
+The `flow` binary itself does not emit declaration files. The separate [`flow-api-translator`](https://www.npmjs.com/package/flow-api-translator) npm package fills this gap: given a Flow source file, it produces a `.js.flow` declaration file or a TypeScript `.d.ts` file. This is the closest equivalent to TypeScript's `tsc --declaration` and `--emitDeclarationOnly` modes.
+
 ## See Also {#toc-see-also}
 
 - [Library Definitions](../libdefs/index.md) — declaring types for third-party npm packages

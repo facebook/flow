@@ -260,21 +260,26 @@ function func(value: ?string) {
 
 ### Refinement Invalidations {#toc-refinement-invalidations}
 
-It is possible to invalidate refinements, for example:
+Flow drops a refinement when intervening code could have changed the underlying value at the refined storage location. Concretely, a refinement is invalidated when:
+
+- The refined binding or property is written to (`x = ...`, `obj.k = ...`).
+- A refinement on an *object property* is in scope, and the property is reachable through aliasing or could be mutated by a callee (a bare call between the check and the use drops the refinement).
+- A refinement on a binding *captured by a closure* is in scope, and an intervening call could invoke that closure.
+
+A bare call to a function that does not visibly touch the refined location does **not**, on its own, drop a refinement on a *local* binding. This is the most common over-correction: users assume any function call invalidates refinements when actually only property and closure-captured refinements are conservative across calls.
 
 ```js flow-check
-function otherFunc() { /* ... */ }
+declare function sideEffect(): void;
 
-function func(value: {prop?: string}) {
-  if (value.prop) {
-    otherFunc();
-    value.prop.charAt(0); // Error!
+function localCase(x: ?number) {
+  if (x != null) {
+    sideEffect(); // bare call does NOT drop the refinement on a local
+    const a: number = x; // OK
   }
 }
 ```
 
-The reason for this is that we don't know that `otherFunc()` hasn't done
-something to our value. Imagine the following scenario:
+The reason a property refinement is dropped across a call is that we don't know that the callee hasn't mutated the property through an alias. Imagine the following scenario:
 
 ```js flow-check
 const obj: {prop?: string} = {prop: "test"};
@@ -298,6 +303,8 @@ func(obj);
 Inside of `otherFunc()` we sometimes remove `prop`. Flow doesn't know if the
 `if (value.prop)` check is still true, so it invalidates the refinement.
 
+Marking the parameter type readonly (`Readonly<{prop?: string}>` or `{readonly prop?: string}`) doesn't help — readonly only constrains what *this* code can do through *this* view, and the callee may hold a non-readonly reference to the same object.
+
 There's a straightforward way to get around this. Store the value before
 calling another function and use the stored value instead. This way you can
 prevent the refinement from invalidating.
@@ -310,6 +317,53 @@ function func(value: {prop?: string}) {
     const prop = value.prop;
     otherFunc();
     prop.charAt(0);
+  }
+}
+```
+
+### Destructured bindings can't be used to refine {#toc-destructured-bindings}
+
+When you destructure a value out of a discriminated union, the resulting bindings each carry the full union type independent of one another. Refining the destructured sentinel binding does *not* narrow its sibling bindings:
+
+```js flow-check
+type FormField =
+  | {kind: 'text', value: string}
+  | {kind: 'number', value: number};
+
+declare const field: FormField;
+const {kind, value} = field;
+if (kind === 'text') {
+  const s: string = value; // Error: `value` keeps its full `string | number` type
+}
+```
+
+The fix is to refine through the original value instead of destructuring up front:
+
+```js flow-check
+type FormField =
+  | {kind: 'text', value: string}
+  | {kind: 'number', value: number};
+
+declare const field: FormField;
+if (field.kind === 'text') {
+  const s: string = field.value; // OK
+}
+```
+
+Alternatively, a [`match` expression or statement](../match/index.md) handles matching and destructuring in one form — each arm matches the sentinel and binds `value` at its per-arm type:
+
+```js flow-check
+type FormField =
+  | {kind: 'text', value: string}
+  | {kind: 'number', value: number};
+
+declare const field: FormField;
+match (field) {
+  {kind: 'text', const value} => {
+    const s: string = value;
+  }
+  {kind: 'number', const value} => {
+    const n: number = value;
   }
 }
 ```

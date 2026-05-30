@@ -1214,13 +1214,13 @@ References:
 Found 2 errors
 
 === flow-vs-typescript.md block 24 ===
-Error ----------------------------------------------------------------------------------------------------------- -:5:20
+Error ----------------------------------------------------------------------------------------------------------- -:6:20
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   -:5:20
-   5|   takesSelf(other: this): void {}       // ERROR: input position
+   -:6:20
+   6|   takesSelf(other: this): void {} // ERROR: input position
                          ^^^^
 
 References:
@@ -1229,13 +1229,13 @@ References:
             ^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------------- -:6:11
+Error ----------------------------------------------------------------------------------------------------------- -:7:11
 
 Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   -:6:11
-   6|   parent: this | null = null;           // ERROR: invariant field
+   -:7:11
+   7|   parent: this | null = null; // ERROR: invariant field
                 ^^^^
 
 References:
@@ -2082,6 +2082,9 @@ Found 2 errors
 === lang/annotation-requirement.md block 23 ===
 No errors!
 
+=== lang/declaration-merging.md block 1 ===
+No errors!
+
 === lang/depth-subtyping.md block 1 ===
 No errors!
 
@@ -2331,22 +2334,7 @@ No errors!
 No errors!
 
 === lang/refinements.md block 15 ===
-Error ----------------------------------------------------------------------------------------------------------- -:7:16
-
-Cannot call `value.prop.charAt` because property `charAt` is missing in undefined [1]. [incompatible-use]
-
-   -:7:16
-   7|     value.prop.charAt(0); // Error!
-                     ^^^^^^
-
-References:
-   -:4:30
-   4| function func(value: {prop?: string}) {
-                                   ^^^^^^ [1]
-
-
-
-Found 1 error
+No errors!
 
 === lang/refinements.md block 16 ===
 Error ---------------------------------------------------------------------------------------------------------- -:13:16
@@ -2370,6 +2358,33 @@ Found 1 error
 No errors!
 
 === lang/refinements.md block 18 ===
+Error ----------------------------------------------------------------------------------------------------------- -:9:21
+
+Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:9:21
+   9|   const s: string = value; // Error: `value` keeps its full `string | number` type
+                          ^^^^^
+
+References:
+   -:4:29
+   4|   | {kind: 'number', value: number};
+                                  ^^^^^^ [1]
+   -:9:12
+   9|   const s: string = value; // Error: `value` keeps its full `string | number` type
+                 ^^^^^^ [2]
+
+
+
+Found 1 error
+
+=== lang/refinements.md block 19 ===
+No errors!
+
+=== lang/refinements.md block 20 ===
+No errors!
+
+=== lang/refinements.md block 21 ===
 Error ---------------------------------------------------------------------------------------------------------- -:12:15
 
 Cannot call `setLayout` with object literal bound to `value` because object literal [1] is incompatible with `T` [2].
@@ -2388,7 +2403,7 @@ References:
 
 Found 1 error
 
-=== lang/refinements.md block 19 ===
+=== lang/refinements.md block 22 ===
 No errors!
 
 === lang/subtypes.md block 1 ===
@@ -2747,9 +2762,43 @@ No errors!
 No errors!
 
 === lang/variance.md block 4 ===
-No errors!
+Error ----------------------------------------------------------------------------------------------------------- -:5:20
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:5:20
+   5|   takesSelf(other: this): void {} // ERROR: input position
+                         ^^^^
+
+References:
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------------- -:6:11
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   -:6:11
+   6|   parent: this | null = null; // ERROR: invariant field
+                ^^^^
+
+References:
+   -:2:7
+   2| class Builder {
+            ^^^^^^^ [1]
+
+
+
+Found 2 errors
 
 === lang/variance.md block 5 ===
+No errors!
+
+=== lang/variance.md block 6 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:48
 
 Cannot assign `nonCovariantCity` to `nonCovariantNoun` because in type argument `X` [1]: `Noun` [2] is incompatible with
@@ -2774,13 +2823,13 @@ References:
 
 Found 1 error
 
-=== lang/variance.md block 6 ===
-No errors!
-
 === lang/variance.md block 7 ===
 No errors!
 
 === lang/variance.md block 8 ===
+No errors!
+
+=== lang/variance.md block 9 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:15
 
 Cannot call `takesCallback` with `acceptsExact` bound to `cb` because in the first parameter: inexact `Inexact` [1] is
@@ -2802,14 +2851,14 @@ References:
 
 Found 1 error
 
-=== lang/variance.md block 9 ===
+=== lang/variance.md block 10 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:12
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
    -:4:12
-   4|   set(val: T): void; // Error: T is in an input position but is expected only in output positions
+   4|   set(val: T): void; // Error [incompatible-variance]: T is in an input position but is expected only in output positions
                  ^
 
 References:
@@ -3218,7 +3267,7 @@ Error --------------------------------------------------------------------------
 string literal `details` [1]. [match-not-exhaustive]
 
    -:4:1
-   4| match (tab) { // ERROR
+   4| match (tab) { // ERROR [match-not-exhaustive]
       ^^^^^
 
 References:
@@ -3390,8 +3439,23 @@ References:
          ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------------- -:23:14
 
-Found 4 errors
+Cannot call component Greeting [1] because React components cannot be called. Use JSX instead.
+(https://react.dev/reference/rules/react-calls-components-and-hooks) [react-rule-call-component]
+
+   -:23:14
+   23| const elem = Greeting({}); // ERROR [react-rule-call-component]: use <Greeting /> instead
+                    ^^^^^^^^
+
+References:
+   -:20:1
+   20| component Greeting() {
+       ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 5 errors
 
 === react/component-types.md block 1 ===
 No errors!
@@ -3602,7 +3666,7 @@ React component properties [3] and their nested props and elements cannot be wri
 React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 
    -:11:29
-    11|   const multArgs = args.map(useMultiplier); // Error
+    11|   const multArgs = args.map(useMultiplier); // Error [react-rule-hook-incompatible]
                                     ^^^^^^^^^^^^^
 
 References:
@@ -4257,57 +4321,6 @@ References:
 Found 1 error
 
 === types/classes.md block 7 ===
-Error ------------------------------------------------------------------------------------------------------------ -:4:3
-
-Cannot get `a.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   -:4:3
-   4| a.method; // Error!
-        ^^^^^^ [1]
-
-References:
-   -:2:17
-   2| class MyClass { method() {} }
-                      ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------------ -:5:8
-
-property `method` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   -:5:8
-   5| const {method} = a; // Error!
-             ^^^^^^ [1]
-
-References:
-   -:2:17
-   2| class MyClass { method() {} }
-                      ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------------ -:6:3
-
-Cannot get `a.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   -:6:3
-   6| a.method.bind({}); // Error!
-        ^^^^^^ [1]
-
-References:
-   -:2:17
-   2| class MyClass { method() {} }
-                      ^^^^^^^^^^^ [2]
-
-
-
-Found 3 errors
-
-=== types/classes.md block 8 ===
-No errors!
-
-=== types/classes.md block 9 ===
 Error ------------------------------------------------------------------------------------------------------------ -:7:3
 
 Cannot assign function to `a.method` because property `method` is not writable. [cannot-write]
@@ -4319,7 +4332,7 @@ Cannot assign function to `a.method` because property `method` is not writable. 
 
 Found 1 error
 
-=== types/classes.md block 10 ===
+=== types/classes.md block 8 ===
 Error ----------------------------------------------------------------------------------------------------------- -:12:3
 
 Private fields can only be referenced from within a class. [ParseError]
@@ -4331,7 +4344,7 @@ Private fields can only be referenced from within a class. [ParseError]
 
 Found 1 error
 
-=== types/classes.md block 11 ===
+=== types/classes.md block 9 ===
 Error ------------------------------------------------------------------------------------------------------------ -:3:8
 
 Missing an annotation on return. [missing-local-annot]
@@ -4351,10 +4364,10 @@ Missing an annotation on return. [missing-local-annot]
 
 Found 2 errors
 
-=== types/classes.md block 12 ===
+=== types/classes.md block 10 ===
 No errors!
 
-=== types/classes.md block 13 ===
+=== types/classes.md block 11 ===
 Error ----------------------------------------------------------------------------------------------------------- -:4:10
 
 Cannot assign `42` to `this.prop` because property `prop` is missing in `MyClass` [1]. [prop-missing]
@@ -4372,6 +4385,12 @@ References:
 
 Found 1 error
 
+=== types/classes.md block 12 ===
+No errors!
+
+=== types/classes.md block 13 ===
+No errors!
+
 === types/classes.md block 14 ===
 No errors!
 
@@ -4379,12 +4398,6 @@ No errors!
 No errors!
 
 === types/classes.md block 16 ===
-No errors!
-
-=== types/classes.md block 17 ===
-No errors!
-
-=== types/classes.md block 18 ===
 Error ---------------------------------------------------------------------------------------------------------- -:10:10
 
 Cannot assign `1` to `this.prop` because property `prop` is not writable. [cannot-write]
@@ -4404,7 +4417,7 @@ Cannot assign `1` to `a.prop` because property `prop` is not writable. [cannot-w
 
 Found 2 errors
 
-=== types/classes.md block 19 ===
+=== types/classes.md block 17 ===
 Error ---------------------------------------------------------------------------------------------------------- -:15:21
 
 Private fields can only be referenced from within a class. [ParseError]
@@ -4416,13 +4429,13 @@ Private fields can only be referenced from within a class. [ParseError]
 
 Found 1 error
 
+=== types/classes.md block 18 ===
+No errors!
+
+=== types/classes.md block 19 ===
+No errors!
+
 === types/classes.md block 20 ===
-No errors!
-
-=== types/classes.md block 21 ===
-No errors!
-
-=== types/classes.md block 22 ===
 Error ------------------------------------------------------------------------------------------------------------ -:6:7
 
 Cannot implement `WithXNum` [1] with `MyClass` because property `x` is missing in `MyClass` [2] but exists in
@@ -4441,10 +4454,10 @@ References:
 
 Found 1 error
 
-=== types/classes.md block 23 ===
+=== types/classes.md block 21 ===
 No errors!
 
-=== types/classes.md block 24 ===
+=== types/classes.md block 22 ===
 Error ----------------------------------------------------------------------------------------------------------- -:10:5
 
 Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
@@ -4490,14 +4503,51 @@ References:
 
 Found 3 errors
 
+=== types/classes.md block 23 ===
+No errors!
+
+=== types/classes.md block 24 ===
+No errors!
+
 === types/classes.md block 25 ===
 No errors!
 
 === types/classes.md block 26 ===
-No errors!
+Error ----------------------------------------------------------------------------------------------------------- -:7:36
+
+Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   -:7:36
+   7| const tick: () => number = counter.increment; // ERROR: [method-unbinding]
+                                         ^^^^^^^^^ [1]
+
+References:
+   -:4:3
+   4|   increment(): number { return ++this.count; }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
 
 === types/classes.md block 27 ===
-No errors!
+Error ------------------------------------------------------------------------------------------------------------ -:4:8
+
+property `method` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   -:4:8
+   4| const {method} = a; // Error!
+             ^^^^^^ [1]
+
+References:
+   -:2:17
+   2| class MyClass { method() {} }
+                      ^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
 
 === types/comments.md block 1 ===
 Error ---------------------------------------------------------------------------------------------------------- -:14:33
@@ -5458,12 +5508,38 @@ No errors!
 No errors!
 
 === types/interfaces.md block 13 ===
-No errors!
+Error ------------------------------------------------------------------------------------------------------------ -:7:8
+
+Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
+subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
+
+   -:7:8
+   7| logAll(msgs); // Error: `string` is not a subtype of `Iterable<string>`
+             ^^^^
+
+References:
+   -:6:14
+   6| const msgs = "foo";
+                   ^^^^^ [1]
+   -:2:24
+   2| function logAll(items: Iterable<string>) {
+                             ^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 1 error
 
 === types/interfaces.md block 14 ===
 No errors!
 
 === types/interfaces.md block 15 ===
+No errors!
+
+=== types/interfaces.md block 16 ===
+No errors!
+
+=== types/interfaces.md block 17 ===
 Error ---------------------------------------------------------------------------------------------------------- -:12:27
 
 Cannot assign `x` to `value1` because in property `property`: `number` [1] is not exactly the same as
@@ -5499,7 +5575,7 @@ References:
 
 Found 1 error
 
-=== types/interfaces.md block 16 ===
+=== types/interfaces.md block 18 ===
 Error ----------------------------------------------------------------------------------------------------------- -:16:9
 
 Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writable. [cannot-write]
@@ -5511,10 +5587,10 @@ Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writ
 
 Found 1 error
 
-=== types/interfaces.md block 17 ===
+=== types/interfaces.md block 19 ===
 No errors!
 
-=== types/interfaces.md block 18 ===
+=== types/interfaces.md block 20 ===
 Error ---------------------------------------------------------------------------------------------------------- -:11:42
 
 Cannot assign object literal to `value1` because in property `property`: string [1] is incompatible with number [2].
@@ -5536,7 +5612,7 @@ References:
 
 Found 1 error
 
-=== types/interfaces.md block 19 ===
+=== types/interfaces.md block 21 ===
 Error ----------------------------------------------------------------------------------------------------------- -:15:9
 
 Cannot get `value.writeOnly` because property `writeOnly` is not readable. [cannot-read]
@@ -6204,25 +6280,6 @@ References:
 Found 1 error
 
 === types/objects.md block 20 ===
-Error ----------------------------------------------------------------------------------------------------------- -:2:28
-
-Cannot assign object literal to `x` because property `bar` is extra in object literal [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
-
-   -:2:28
-   2| const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
-                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   -:2:10
-   2| const x: {|foo: string|} = {foo: "Hello", bar: "World!"}; // Error!
-               ^^^^^^^^^^^^^^^ [2]
-
-
-
-Found 1 error
-
-=== types/objects.md block 21 ===
 Error ----------------------------------------------------------------------------------------------------------- -:9:33
 
 Cannot assign object literal to `fooBarFail` because property `bar` is extra in object literal [1] but missing in
@@ -6256,10 +6313,10 @@ References:
 
 Found 2 errors
 
-=== types/objects.md block 22 ===
+=== types/objects.md block 21 ===
 No errors!
 
-=== types/objects.md block 23 ===
+=== types/objects.md block 22 ===
 Error ----------------------------------------------------------------------------------------------------------- -:8:13
 
 Flow cannot determine a type for object type [1]. `Inexact` [2] is inexact, so it may contain `c` with a type that
@@ -6300,7 +6357,7 @@ References:
 
 Found 2 errors
 
-=== types/objects.md block 24 ===
+=== types/objects.md block 23 ===
 Error ----------------------------------------------------------------------------------------------------------- -:6:13
 
 Flow cannot determine a type for object type [1]. `Dict` [2] cannot be spread because the indexer string [3] may
@@ -6327,7 +6384,7 @@ References:
 
 Found 1 error
 
-=== types/objects.md block 25 ===
+=== types/objects.md block 24 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:13
 
 Flow cannot determine a type for object type [1]. `Iface` [2] cannot be spread because interfaces do not track the
@@ -6350,6 +6407,9 @@ References:
 
 Found 1 error
 
+=== types/objects.md block 25 ===
+No errors!
+
 === types/objects.md block 26 ===
 No errors!
 
@@ -6363,9 +6423,6 @@ No errors!
 No errors!
 
 === types/objects.md block 30 ===
-No errors!
-
-=== types/objects.md block 31 ===
 Error ---------------------------------------------------------------------------------------------------------- -:13:13
 
 Cannot call `acceptsKeys` with `'hi'` bound to `k` because property `hi` is missing in `Obj` [1]. [prop-missing]
@@ -6383,7 +6440,7 @@ References:
 
 Found 1 error
 
-=== types/objects.md block 32 ===
+=== types/objects.md block 31 ===
 Error ---------------------------------------------------------------------------------------------------------- -:13:15
 
 Cannot call `acceptsValues` with `true` bound to `v` because: [incompatible-type]
@@ -6406,7 +6463,7 @@ References:
 
 Found 1 error
 
-=== types/objects.md block 33 ===
+=== types/objects.md block 32 ===
 Error ---------------------------------------------------------------------------------------------------------- -:12:12
 
 Cannot call `acceptsStr` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -6424,6 +6481,9 @@ References:
 
 Found 1 error
 
+=== types/objects.md block 33 ===
+No errors!
+
 === types/objects.md block 34 ===
 No errors!
 
@@ -6431,9 +6491,6 @@ No errors!
 No errors!
 
 === types/objects.md block 36 ===
-No errors!
-
-=== types/objects.md block 37 ===
 Error ------------------------------------------------------------------------------------------------------------ -:5:5
 
 Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
@@ -6454,13 +6511,13 @@ References:
 
 Found 1 error
 
+=== types/objects.md block 37 ===
+No errors!
+
 === types/objects.md block 38 ===
 No errors!
 
 === types/objects.md block 39 ===
-No errors!
-
-=== types/objects.md block 40 ===
 No errors!
 
 === types/opaque-types.md block 1 ===
@@ -7603,7 +7660,7 @@ compatible with the guard type union type [6]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    -:3:36
-   3|   return (typeof x === "number" || typeof x === "boolean"); // Error
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
                                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -7617,7 +7674,7 @@ References:
    2| function numOrStrError(x: unknown): x is number | string {
                              ^ [4]
    -:3:11
-   3|   return (typeof x === "number" || typeof x === "boolean"); // Error
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    -:2:42
    2| function numOrStrError(x: unknown): x is number | string {
@@ -7632,7 +7689,7 @@ this expression needs to completely refine away the guard type union type [1]. C
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    -:3:11
-   3|   return (typeof x === "number" || typeof x === "boolean"); // Error
+   3|   return (typeof x === "number" || typeof x === "boolean"); // Error [incompatible-type-guard]
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -7656,7 +7713,7 @@ needs to completely refine away the guard type number [1]. Consider using a one-
 [incompatible-type-guard]
 
    -:3:12
-   3|     return typeof x === 'number' && x > 0; // Error
+   3|     return typeof x === 'number' && x > 0; // Error [incompatible-type-guard]
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -7674,7 +7731,7 @@ Error --------------------------------------------------------------------------
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
 
    -:4:10
-   4|   return typeof x === "number"; // Error
+   4|   return typeof x === "number"; // Error [function-predicate]
                ^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -7695,12 +7752,12 @@ Error --------------------------------------------------------------------------
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
 
    -:2:38
-   2| function isNumberError2(x: unknown): x is number { // Error
+   2| function isNumberError2(x: unknown): x is number { // Error [function-predicate]
                                            ^
 
 References:
    -:2:25
-   2| function isNumberError2(x: unknown): x is number { // Error
+   2| function isNumberError2(x: unknown): x is number { // Error [function-predicate]
                               ^ [1]
    -:6:3
    6|   foo();
@@ -7711,6 +7768,9 @@ References:
 Found 1 error
 
 === types/type-guards.md block 24 ===
+No errors!
+
+=== types/type-guards.md block 25 ===
 Error ----------------------------------------------------------------------------------------------------------- -:7:10
 
 Cannot return `x.tag === 'known'` because property `data` is extra in `Dynamic` [1] but missing in `Known` [2]. Exact
@@ -7799,7 +7859,7 @@ References:
 
 Found 3 errors
 
-=== types/type-guards.md block 25 ===
+=== types/type-guards.md block 26 ===
 No errors!
 
 === types/typeof.md block 1 ===
