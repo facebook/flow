@@ -1428,8 +1428,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         (* Mapped types are implemented with the following limitations:
            * 1. Mapped types cannot be declared with additional properties
            * 2. Mapped types do not support explicit exact or inexact modifiers
-           * 3. Mapped types do not yet support optional property removal via -?
-           * 4. Mapped types must use an inline keyof
+           * 3. Mapped types must use an inline keyof
            * All of these conditions are checked in this case, and the extra properties
            * case is additionally checked in the normal object type case. If any of these
            * conditions are violated then the result is Any *)
@@ -1440,10 +1439,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
         Tast_utils.error_mapper#type_ ot
       ) else if
-          (Option.is_some variance_op
-          || optional = Ast.Type.Object.MappedType.MinusOptional
-          || Option.is_some name_type
-          )
+          (Option.is_some variance_op || Option.is_some name_type)
           && not (Context.tslib_syntax env.cx)
         then (
         if Option.is_some variance_op then
@@ -1453,12 +1449,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                ( mapped_type_loc,
                  Flow_intermediate_error_types.(TSLibSyntax ReadonlyMappedTypeVarianceOp)
                )
-            );
-        if optional = Ast.Type.Object.MappedType.MinusOptional then
-          Flow_js_utils.add_output
-            env.cx
-            (Error_message.EUnsupportedSyntax
-               (mapped_type_loc, Flow_intermediate_error_types.(TSLibSyntax MinusOptionalMappedType))
             );
         if Option.is_some name_type then
           Flow_js_utils.add_output

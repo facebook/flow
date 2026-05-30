@@ -22,7 +22,6 @@ type DifferingModifiers = {foo?: number, -bar: string, +baz: string, ...};
 // We can't use O[key] on write-only properties, so using number here.
 type MappedObj8 = {[key in keyof DifferingModifiers]: number};
 //   ^
-// -? Doesn't work yet for type checking so we print any here
 type MappedObj9 = {[key in keyof O]-?: number};
 //   ^
 

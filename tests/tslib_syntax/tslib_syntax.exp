@@ -1034,120 +1034,12 @@ Key remapping (`as`) on tuple/array sources is not yet supported in mapped types
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------- mapped_type_minus_optional.js:7:2
-
-Cannot cast object literal to `Required1` because property `bar` is missing in object literal [1] but exists in mapped
-type [2]. [incompatible-type]
-
-   mapped_type_minus_optional.js:7:2
-   7| ({foo: 1}) as Required1; // ERROR - bar is required
-       ^^^^^^^^ [1]
-
-References:
-   mapped_type_minus_optional.js:7:15
-   7| ({foo: 1}) as Required1; // ERROR - bar is required
-                    ^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:26:3
+Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:14:3
 
 Cannot assign `'x'` to `f.bar` because property `bar` is not writable. [cannot-write]
 
-   26| f.bar = 'x'; // ERROR - readonly
+   14| f.bar = 'x'; // ERROR - readonly
          ^^^
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:33:2
-
-Cannot cast object literal to `X` because property `b` is missing in object literal [1] but exists in `MyRequired` [2].
-[incompatible-type]
-
-   mapped_type_minus_optional.js:33:2
-   33| ({a: 1, c: true}) as X; // ERROR - b is required
-        ^^^^^^^^^^^^^^^ [1]
-
-References:
-   mapped_type_minus_optional.js:33:22
-   33| ({a: 1, c: true}) as X; // ERROR - b is required
-                            ^ [2]
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:40:2
-
-Cannot cast array literal to `U` because array literal [1] has 1 element but array type [2] has 3 elements.
-[invalid-tuple-arity]
-
-   mapped_type_minus_optional.js:40:2
-   40| (['']) as U; // ERROR - elements 1 and 2 are required
-        ^^^^ [1]
-
-References:
-   mapped_type_minus_optional.js:40:11
-   40| (['']) as U; // ERROR - elements 1 and 2 are required
-                 ^ [2]
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:54:1
-
-Cannot cast `rwv.a` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
-
-   mapped_type_minus_optional.js:54:1
-   54| rwv.a as string; // ERROR - void survives because source prop was not optional
-       ^^^^^
-
-References:
-   mapped_type_minus_optional.js:29:41
-   29| type MyRequired<T> = {[K in keyof T]-?: T[K]};
-                                               ^^^^ [1]
-   mapped_type_minus_optional.js:54:10
-   54| rwv.a as string; // ERROR - void survives because source prop was not optional
-                ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:61:1
-
-Cannot cast `rtv[0]` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
-
-   mapped_type_minus_optional.js:61:1
-   61| rtv[0] as string; // ERROR - void survives
-       ^^^^^^
-
-References:
-   mapped_type_minus_optional.js:58:60
-   58| type ReqTupleWithVoidR = {[K in keyof ReqTupleWithVoid]-?: ReqTupleWithVoid[K]};
-                                                                  ^^^^^^^^^^^^^^^^^^^ [1]
-   mapped_type_minus_optional.js:61:11
-   61| rtv[0] as string; // ERROR - void survives
-                 ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- mapped_type_minus_optional.js:70:1
-
-Cannot cast `a1` to `ArrWithVoidR` because in array element: `string | void` [1] is not exactly the same as
-`string` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<string | void>` [3] and `Array<string>` [2] exactly the same
-- Or make array type [4] a `ReadonlyArray`.
-See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-
-   mapped_type_minus_optional.js:70:1
-   70| a1 as ArrWithVoidR; // ERROR - void no longer accepted
-       ^^
-
-References:
-   mapped_type_minus_optional.js:69:25
-   69| declare const a1: Array<string | void>;
-                               ^^^^^^^^^^^^^ [1]
-   mapped_type_minus_optional.js:66:21
-   66| type ArrWithVoidR = {[K in keyof ArrWithVoid]-?: ArrWithVoid[K]};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   mapped_type_minus_optional.js:69:19
-   69| declare const a1: Array<string | void>;
-                         ^^^^^^^^^^^^^^^^^^^^ [3]
-   mapped_type_minus_optional.js:70:7
-   70| a1 as ArrWithVoidR; // ERROR - void no longer accepted
-             ^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------- mapped_type_variance_op.js:7:5
@@ -1862,4 +1754,4 @@ References:
 
 
 
-Found 127 errors
+Found 121 errors

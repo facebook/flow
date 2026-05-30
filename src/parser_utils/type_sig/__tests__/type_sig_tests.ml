@@ -7042,31 +7042,8 @@ let%expect_test "mapped_types_invalid" =
          body = (Annot (Any [2:16-55]))}
   |}]
 
-let%expect_test "mapped_types_minus_optional_gate_off" =
-  (* Without `experimental.tslib_syntax`, `-?` is gated off in type_annotation.ml and
-     resolves to `any`. type_sig must mirror that, so an imported `-?` mapped type does
-     not silently produce a different result than a locally defined one. *)
-  print_sig {|
-    type O = {foo: number, bar: string};
-    export type T = {[key in keyof O]-?: O[key]};
-  |};
-  [%expect{|
-    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
-      exports = None;
-      info =
-      CJSModuleInfo {type_export_keys = [|"T"|];
-        type_stars = []; strict = true;
-        platform_availability_set = None}}
-
-    Local defs:
-    0. TypeAlias {id_loc = [2:12-13];
-         custom_error_loc_opt = None;
-         name = "T"; tparams = Mono;
-         body = (Annot (Any [2:17-43]))}
-  |}]
-
 let%expect_test "mapped_types_minus_optional" =
-  print_sig ~tslib_syntax:true {|
+  print_sig {|
     type O = {foo: number, bar: string};
     export type T = {[key in keyof O]-?: O[key]};
   |};

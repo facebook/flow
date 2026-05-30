@@ -23,12 +23,7 @@ type O = {foo: number, bar?: string};
 }
 
 
-// -? is only available under experimental.tslib_syntax
+// -readonly is gated on experimental.tslib_syntax
 {
-  type Removed = {[key in keyof O]-?: O[key]}; // ERROR - tslib_syntax not enabled
-}
-
-// -readonly + -? together both report under one pass
-{
-  type Both = {-readonly [key in keyof O]-?: O[key]}; // ERROR x2 - tslib_syntax not enabled
+  type Both = {-readonly [key in keyof O]-?: O[key]}; // ERROR - -readonly gated
 }

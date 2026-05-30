@@ -867,179 +867,181 @@ type MappedObj8 = {[key in keyof DifferingModifiers]: number}
 
 mapped-type.js:23:6,23:15
 
-mapped-type.js:26:6
+mapped-type.js:25:6
 Flags:
-type MappedObj9 = any (implicit)
+type MappedObj9 = {[key in keyof O]-?: number}
+= {bar: number, foo: number}
 
-'MappedObj9' defined at mapped-type.js:26:5
+'MappedObj9' defined at mapped-type.js:25:5
+'O' defined at mapped-type.js:3:5
 
-mapped-type.js:26:6,26:15
+mapped-type.js:25:6,25:15
 
-mapped-type.js:30:6
+mapped-type.js:29:6
 Flags:
 type Unevaluated1<T: {...}> = {[key in keyof T]: T[key]}
 
-'Unevaluated1' defined at mapped-type.js:30:5
+'Unevaluated1' defined at mapped-type.js:29:5
 
-mapped-type.js:30:6,30:17
+mapped-type.js:29:6,29:17
 
-mapped-type.js:32:6
+mapped-type.js:31:6
 Flags:
 type Unevaluated2<T: {...}> = {+[key in keyof T]: T[key]}
 
-'Unevaluated2' defined at mapped-type.js:32:5
+'Unevaluated2' defined at mapped-type.js:31:5
 
-mapped-type.js:32:6,32:17
+mapped-type.js:31:6,31:17
 
-mapped-type.js:34:6
+mapped-type.js:33:6
 Flags:
 type Unevaluated3<T: {...}> = {-[key in keyof T]: T[key]}
 
-'Unevaluated3' defined at mapped-type.js:34:5
+'Unevaluated3' defined at mapped-type.js:33:5
 
-mapped-type.js:34:6,34:17
+mapped-type.js:33:6,33:17
 
-mapped-type.js:36:6
+mapped-type.js:35:6
 Flags:
 type Unevaluated4<T: {...}> = {[key in keyof T]?: T[key]}
 
-'Unevaluated4' defined at mapped-type.js:36:5
+'Unevaluated4' defined at mapped-type.js:35:5
 
-mapped-type.js:36:6,36:17
+mapped-type.js:35:6,35:17
 
-mapped-type.js:38:6
+mapped-type.js:37:6
 Flags:
 type Unevaluated5<T: {...}> = {+[key in keyof T]?: T[key]}
 
-'Unevaluated5' defined at mapped-type.js:38:5
+'Unevaluated5' defined at mapped-type.js:37:5
 
-mapped-type.js:38:6,38:17
+mapped-type.js:37:6,37:17
 
-mapped-type.js:40:6
+mapped-type.js:39:6
 Flags:
 type Unevaluated6<T: {...}> = {-[key in keyof T]?: T[key]}
 
-'Unevaluated6' defined at mapped-type.js:40:5
+'Unevaluated6' defined at mapped-type.js:39:5
 
-mapped-type.js:40:6,40:17
+mapped-type.js:39:6,39:17
 
-mapped-type.js:44:4
+mapped-type.js:43:4
 Flags:
 {bar: string, foo: number}
-mapped-type.js:44:4,44:4
+mapped-type.js:43:4,43:4
 
-mapped-type.js:51:6
+mapped-type.js:50:6
 Flags:
 type MappedObjNonHomomorphic1 = {[key in Keys]: number}
 = {bar: number, foo: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic1' defined at mapped-type.js:51:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic1' defined at mapped-type.js:50:5
 
-mapped-type.js:51:6,51:29
+mapped-type.js:50:6,50:29
 
-mapped-type.js:53:6
+mapped-type.js:52:6
 Flags:
 type MappedObjNonHomomorphic2 = {[key in Keys]: O[key]}
 = {bar: string, foo: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic2' defined at mapped-type.js:53:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic2' defined at mapped-type.js:52:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:53:6,53:29
+mapped-type.js:52:6,52:29
 
-mapped-type.js:55:6
+mapped-type.js:54:6
 Flags:
 type MappedObjNonHomomorphic3 = {-[key in Keys]: O[key]}
 = {-bar: string, -foo: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic3' defined at mapped-type.js:55:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic3' defined at mapped-type.js:54:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:55:6,55:29
+mapped-type.js:54:6,54:29
 
-mapped-type.js:57:6
+mapped-type.js:56:6
 Flags:
 type MappedObjNonHomomorphic4 = {+[key in Keys]: O[key]}
 = {+bar: string, +foo: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic4' defined at mapped-type.js:57:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic4' defined at mapped-type.js:56:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:57:6,57:29
+mapped-type.js:56:6,56:29
 
-mapped-type.js:59:6
+mapped-type.js:58:6
 Flags:
 type MappedObjNonHomomorphic5 = {[key in Keys]?: O[key]}
 = {bar?: string, foo?: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic5' defined at mapped-type.js:59:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic5' defined at mapped-type.js:58:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:59:6,59:29
+mapped-type.js:58:6,58:29
 
-mapped-type.js:61:6
+mapped-type.js:60:6
 Flags:
 type MappedObjNonHomomorphic6 = {+[key in Keys]?: O[key]}
 = {+bar?: string, +foo?: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic6' defined at mapped-type.js:61:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic6' defined at mapped-type.js:60:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:61:6,61:29
+mapped-type.js:60:6,60:29
 
-mapped-type.js:63:6
+mapped-type.js:62:6
 Flags:
 type MappedObjNonHomomorphic7 = {-[key in Keys]?: O[key]}
 = {-bar?: string, -foo?: number}
 
-'Keys' defined at mapped-type.js:47:5
-'MappedObjNonHomomorphic7' defined at mapped-type.js:63:5
+'Keys' defined at mapped-type.js:46:5
+'MappedObjNonHomomorphic7' defined at mapped-type.js:62:5
 'O' defined at mapped-type.js:3:5
 
-mapped-type.js:63:6,63:29
+mapped-type.js:62:6,62:29
 
-mapped-type.js:67:6
+mapped-type.js:66:6
 Flags:
 type UnevaluatedNonHomomorphic<T: {...}> = {[key in T]: T}
 
-'UnevaluatedNonHomomorphic' defined at mapped-type.js:67:5
+'UnevaluatedNonHomomorphic' defined at mapped-type.js:66:5
 
-mapped-type.js:67:6,67:30
+mapped-type.js:66:6,66:30
 
-mapped-type.js:71:4
+mapped-type.js:70:4
 Flags:
 {bar: string, foo: number}
-mapped-type.js:71:4,71:4
+mapped-type.js:70:4,70:4
 
-mapped-type.js:76:6
+mapped-type.js:75:6
 Flags:
 type SemiHomomorphic<O: {...}, Keys: keyof O> = {[key in O]: O[key]}
 
-'SemiHomomorphic' defined at mapped-type.js:76:5
+'SemiHomomorphic' defined at mapped-type.js:75:5
 
-mapped-type.js:76:6,76:20
+mapped-type.js:75:6,75:20
 
-mapped-type.js:79:4
+mapped-type.js:78:4
 Flags:
 SemiHomomorphic<{foo: number, ...}, "foo">
 
-'SemiHomomorphic' defined at mapped-type.js:76:5
+'SemiHomomorphic' defined at mapped-type.js:75:5
 
-mapped-type.js:79:4,79:4
+mapped-type.js:78:4,78:4
 
-mapped-type.js:100:12
+mapped-type.js:99:12
 Flags:
 Id<string>
 
-'Id' defined at mapped-type.js:82:20
+'Id' defined at mapped-type.js:81:20
 
-mapped-type.js:100:11,100:15
+mapped-type.js:99:11,99:15
 
 evaluated-size-limit.js:6:6
 Flags:

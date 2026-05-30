@@ -3710,10 +3710,9 @@ and object_type =
       p
     in
     let loc = push_loc tbls loc in
-    if (optional = O.MappedType.MinusOptional || Option.is_some name_type) && not opts.tslib_syntax
-    then
-      (* `-?` and the `as` key-remapping clause are gated on `experimental.tslib_syntax`.
-         type_annotation.ml errors and falls back to Any in these cases; mirror that here
+    if Option.is_some name_type && not opts.tslib_syntax then
+      (* The `as` key-remapping clause is gated on `experimental.tslib_syntax`.
+         type_annotation.ml errors and falls back to Any in this case; mirror that here
          so a gated mapped type defined in an imported file does not silently produce a
          different result than one defined locally. *)
       Annot (Any loc)

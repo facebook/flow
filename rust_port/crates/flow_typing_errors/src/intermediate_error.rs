@@ -8960,7 +8960,6 @@ where
                             ReadonlyMappedTypeVarianceOp => {
                                 "`+readonly`/`-readonly` mapped type modifier"
                             }
-                            MinusOptionalMappedType => "`-?` mapped type modifier",
                             OptionalUnlabeledTupleElement => "Optional unlabeled tuple element",
                             OptionalIndexer => "Optional indexer (`?:`)",
                             NamespaceExportDeclaration => "`export as namespace`",

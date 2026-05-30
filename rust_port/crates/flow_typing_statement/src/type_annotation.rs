@@ -2884,8 +2884,7 @@ fn convert_inner<'a>(
                 // Mapped types are implemented with the following limitations:
                 // 1. Mapped types cannot be declared with additional properties
                 // 2. Mapped types do not support explicit exact or inexact modifiers
-                // 3. Mapped types do not yet support optional property removal via -?
-                // 4. Mapped types must use an inline keyof
+                // 3. Mapped types must use an inline keyof
                 // All of these conditions are checked in this case, and the extra properties
                 // case is additionally checked in the normal object type case. If any of these
                 // conditions are violated then the result is Any
@@ -2900,12 +2899,7 @@ fn convert_inner<'a>(
                     let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
                     v
                 }
-            } else if (variance_op.is_some()
-                || optional
-                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional
-                || name_type.is_some())
-                && !cx.tslib_syntax()
-            {
+            } else if (variance_op.is_some() || name_type.is_some()) && !cx.tslib_syntax() {
                 if variance_op.is_some() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
@@ -2913,19 +2907,6 @@ fn convert_inner<'a>(
                             mapped_type_loc.dupe(),
                             flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
                                 flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::ReadonlyMappedTypeVarianceOp,
-                            ),
-                        ))),
-                    );
-                }
-                if optional
-                    == flow_parser::ast::types::object::MappedTypeOptionalFlag::MinusOptional
-                {
-                    flow_js_utils::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                            mapped_type_loc.dupe(),
-                            flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                                flow_typing_errors::intermediate_error_types::TsLibSyntaxKind::MinusOptionalMappedType,
                             ),
                         ))),
                     );

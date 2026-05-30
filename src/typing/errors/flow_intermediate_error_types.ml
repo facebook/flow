@@ -147,7 +147,6 @@ and ts_lib_syntax_kind =
   | MappedTypeKeyRemapping
   | MappedTypeKeyRemappingOnArraySource
   | ReadonlyMappedTypeVarianceOp
-  | MinusOptionalMappedType
   | OptionalUnlabeledTupleElement
   | OptionalIndexer
   | NamespaceExportDeclaration

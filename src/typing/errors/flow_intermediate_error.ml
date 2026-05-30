@@ -5393,7 +5393,6 @@ let to_printable_error :
         | MappedTypeKeyRemapping -> "Key remapping (`as`) in mapped types"
         | MappedTypeKeyRemappingOnArraySource -> assert false
         | ReadonlyMappedTypeVarianceOp -> "`+readonly`/`-readonly` mapped type modifier"
-        | MinusOptionalMappedType -> "`-?` mapped type modifier"
         | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"
         | OptionalIndexer -> "Optional indexer (`?:`)"
         | NamespaceExportDeclaration -> "`export as namespace`"

@@ -317,7 +317,6 @@ pub enum TsLibSyntaxKind {
     MappedTypeKeyRemapping,
     MappedTypeKeyRemappingOnArraySource,
     ReadonlyMappedTypeVarianceOp,
-    MinusOptionalMappedType,
     OptionalUnlabeledTupleElement,
     OptionalIndexer,
     NamespaceExportDeclaration,

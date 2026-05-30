@@ -7126,18 +7126,15 @@ fn object_type<'arena, 'ast>(
             prop_type,
             variance,
             variance_op,
-            optional,
+            optional: _,
             name_type,
             comments: _,
         } = p;
         let loc = tbls.push_loc(loc.dupe());
 
-        if (*optional == ast::types::object::MappedTypeOptionalFlag::MinusOptional
-            || name_type.is_some())
-            && !opts.tslib_syntax
-        {
-            // `-?` and the `as` key-remapping clause are gated on `experimental.tslib_syntax`.
-            // type_annotation errors and falls back to Any in these cases; mirror that here so
+        if name_type.is_some() && !opts.tslib_syntax {
+            // The `as` key-remapping clause is gated on `experimental.tslib_syntax`.
+            // type_annotation errors and falls back to Any in this case; mirror that here so
             // a gated mapped type defined in an imported file does not silently produce a
             // different result than one defined locally.
             return Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))));

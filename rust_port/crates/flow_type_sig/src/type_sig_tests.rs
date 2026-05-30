@@ -15742,63 +15742,6 @@ Module {
 }
 
 #[test]
-fn mapped_types_minus_optional_gate_off() {
-    // Without `experimental.tslib_syntax`, `-?` is gated off in type_annotation and resolves to
-    // `any`. type_sig must mirror that, so an imported `-?` mapped type does not silently
-    // produce a different result than a locally defined one.
-    let input = r#"
-            type O = {foo: number, bar: string};
-    export type T = {[key in keyof O]-?: O[key]};
-        "#;
-    let expected_output = r#"
-Locs:
-0. [2:12-13]
-1. [2:17-43]
-Type Sig:
-Module {
-    module_kind: CJSModule {
-        type_exports: [
-            ExportTypeBinding(
-                0,
-            ),
-        ],
-        exports: None,
-        info: CJSModuleInfo {
-            type_export_keys: [
-                "T",
-            ],
-            type_stars: [],
-            strict: true,
-            platform_availability_set: None,
-        },
-    },
-    module_refs: [],
-    local_defs: [
-        TypeAlias(
-            DefTypeAlias {
-                id_loc: 0,
-                custom_error_loc_opt: None,
-                name: "T",
-                tparams: Mono,
-                body: Annot(
-                    Any(
-                        1,
-                    ),
-                ),
-            },
-        ),
-    ],
-    dirty_local_defs: [],
-    remote_refs: [],
-    pattern_defs: [],
-    dirty_pattern_defs: [],
-    patterns: [],
-}
-"#;
-    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
-}
-
-#[test]
 fn mapped_types_as_gate_off() {
     // Without `experimental.tslib_syntax`, the `as` key-remapping clause is gated off in
     // type_annotation and resolves to `any`. type_sig must mirror that, so an `as` mapped type
@@ -15862,7 +15805,7 @@ fn mapped_types_minus_optional() {
             type O = {foo: number, bar: string};
     export type T = {[key in keyof O]-?: O[key]};
         "#;
-    let expected_output_tslib_on = r#"
+    let expected_output = r#"
 Locs:
 0. [1:13-14]
 1. [1:17-43]
@@ -16010,15 +15953,7 @@ Module {
     patterns: [],
 }
 "#;
-    assert_eq!(
-        dedent_trim(expected_output_tslib_on),
-        dedent_trim(&print_sig_with_options(
-            input,
-            Some(|opts: &mut TypeSigOptions| {
-                opts.tslib_syntax = true;
-            })
-        ))
-    )
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
 #[test]
