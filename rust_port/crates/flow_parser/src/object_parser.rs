@@ -642,6 +642,19 @@ pub(super) fn initializer(
     fn property(
         env: &mut ParserEnv,
     ) -> Result<(expression::object::Property<Loc, Loc>, PatternCoverErrors), Rollback> {
+        fn identifier_key_from_consumed_token(
+            loc: Loc,
+            name: FlowSmolStr,
+            leading: Vec<Comment<Loc>>,
+            trailing: Vec<Comment<Loc>>,
+        ) -> expression::object::Key<Loc, Loc> {
+            expression::object::Key::Identifier(Identifier::new(IdentifierInner {
+                loc,
+                name,
+                comments: ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into())),
+            }))
+        }
+
         if peek::token(env) == &TokenKind::TEllipsis {
             // Spread prop
             let leading = peek::comments(env);
@@ -662,24 +675,44 @@ pub(super) fn initializer(
 
         let start_loc = peek::loc(env).dupe();
 
-        let (async_, leading_async) = match peek::ith_token(env, 1) {
-            // { async = true } (destructuring)
-            TokenKind::TAssign => (false, Vec::new()),
-            // { async: true }
-            TokenKind::TColon => (false, Vec::new()),
-            // { async<T>() {} }
-            TokenKind::TLessThan => (false, Vec::new()),
-            // { async() {} }
-            TokenKind::TLparen => (false, Vec::new()),
-            // { async, other, shorthand }
-            TokenKind::TComma => (false, Vec::new()),
-            // { async }
-            TokenKind::TRcurly => (false, Vec::new()),
-            _ => declaration_parser::parse_async(env)?,
+        let (async_, leading_async, async_key) = if peek::token(env) == &TokenKind::TAsync {
+            let async_loc = peek::loc(env).dupe();
+            let leading = peek::comments(env);
+            eat::token(env)?;
+            let async_continuation = peek::token(env).clone();
+            let async_is_key = matches!(
+                async_continuation,
+                TokenKind::TAssign
+                    | TokenKind::TColon
+                    | TokenKind::TLessThan
+                    | TokenKind::TLparen
+                    | TokenKind::TComma
+                    | TokenKind::TRcurly
+            ) || peek::is_line_terminator(env);
+            if async_is_key {
+                let trailing = eat::trailing_comments(env);
+                (
+                    false,
+                    Vec::new(),
+                    Some(identifier_key_from_consumed_token(
+                        async_loc,
+                        FlowSmolStr::new_inline("async"),
+                        leading,
+                        trailing,
+                    )),
+                )
+            } else {
+                (true, leading, None)
+            }
+        } else {
+            (false, Vec::new(), None)
         };
         let (generator, leading_generator) = declaration_parser::parse_generator(env)?;
 
         match (async_, generator, peek::token(env)) {
+            (false, false, _) if async_key.is_some() => {
+                init(env, start_loc, async_key.unwrap(), false, false, Vec::new())
+            }
             (false, false, TokenKind::TIdentifier { raw, .. }) if raw == "get" => {
                 let leading = peek::comments(env);
                 let (_, mut obj_key) = key(env, false)?;
@@ -1579,10 +1612,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
 
     fn is_optional_method_in_ambient(env: &mut ParserEnv) -> bool {
         env.in_ambient_context()
-            && matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TLparen | TokenKind::TLessThan
-            )
+            && peek::class_optional_method_continuation_is_call_or_type_args(env)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1919,8 +1949,12 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         })
     }
 
-    fn ith_implies_identifier(env: &mut ParserEnv, i: usize) -> bool {
-        match peek::ith_token(env, i) {
+    fn token_after_current_implies_identifier(env: &mut ParserEnv) -> bool {
+        peek::token_after_current_implies_identifier(env)
+    }
+
+    fn implies_identifier(env: &mut ParserEnv) -> bool {
+        match peek::token(env) {
             TokenKind::TLessThan
             | TokenKind::TColon
             | TokenKind::TAssign
@@ -1932,29 +1966,26 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         }
     }
 
-    fn implies_identifier(env: &mut ParserEnv) -> bool {
-        ith_implies_identifier(env, 0)
-    }
-
     let start_loc = peek::loc(env).dupe();
     let decorators = parse_decorator_list(env)?;
 
-    let (declare, leading_declare) =
-        if peek::token(env) == &TokenKind::TDeclare && !ith_implies_identifier(env, 1) {
-            let declare_loc = peek::loc(env).dupe();
-            let leading = peek::comments(env);
-            eat::token(env)?;
-            (Some(declare_loc), leading)
-        } else {
-            (None, Vec::new())
-        };
+    let (declare, leading_declare) = if peek::token(env) == &TokenKind::TDeclare
+        && !token_after_current_implies_identifier(env)
+    {
+        let declare_loc = peek::loc(env).dupe();
+        let leading = peek::comments(env);
+        eat::token(env)?;
+        (Some(declare_loc), leading)
+    } else {
+        (None, Vec::new())
+    };
 
-    let is_public =
-        matches!(peek::token(env), TokenKind::TPublic) && peek::ith_is_object_key(env, 1, true);
-    let is_private =
-        matches!(peek::token(env), TokenKind::TPrivate) && peek::ith_is_object_key(env, 1, true);
-    let is_protected =
-        matches!(peek::token(env), TokenKind::TProtected) && peek::ith_is_object_key(env, 1, true);
+    let is_public = matches!(peek::token(env), TokenKind::TPublic)
+        && peek::current_token_is_followed_by_object_key(env, true);
+    let is_private = matches!(peek::token(env), TokenKind::TPrivate)
+        && peek::current_token_is_followed_by_object_key(env, true);
+    let is_protected = matches!(peek::token(env), TokenKind::TProtected)
+        && peek::current_token_is_followed_by_object_key(env, true);
     let (ts_accessibility, leading_accessibility) = if is_public {
         let loc = peek::loc(env).dupe();
         let leading = peek::comments(env);
@@ -2008,25 +2039,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
 
     let static_ = peek::token(env) == &TokenKind::TStatic
-        && match peek::ith_token(env, 1) {
-            // static = 123
-            TokenKind::TAssign => false,
-            // static: T
-            TokenKind::TColon => false,
-            // incomplete property
-            TokenKind::TEof => false,
-            // static<T>() {}
-            TokenKind::TLessThan => false,
-            // static() {}
-            TokenKind::TLparen => false,
-            // static?: T
-            TokenKind::TPling => false,
-            // end of class
-            TokenKind::TRcurly => false,
-            // explicit semicolon
-            TokenKind::TSemicolon => false,
-            _ => true,
-        };
+        && peek::class_static_continuation_allows_modifier(env);
     let leading_static = if static_ {
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -2039,7 +2052,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let override_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "override"
-    ) && peek::ith_is_object_key(env, 1, true);
+    ) && peek::current_token_is_followed_by_object_key(env, true);
     let leading_override = if override_ {
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -2052,7 +2065,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let abstract_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "abstract"
-    ) && peek::ith_is_object_key(env, 1, true);
+    ) && peek::current_token_is_followed_by_object_key(env, true);
     let leading_abstract = if abstract_ {
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -2093,7 +2106,8 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     }
 
     let async_ = if let TokenKind::TAsync = peek::token(env) {
-        !ith_implies_identifier(env, 1) && !peek::ith_is_line_terminator(env, 1)
+        !token_after_current_implies_identifier(env)
+            && !peek::has_line_terminator_after_current(env)
     } else {
         false
     };
@@ -2116,7 +2130,11 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
     let (mut generator, mut leading_generator) = declaration_parser::parse_generator(env)?;
 
-    let parse_property_variance_keyword = peek::ith_is_object_key(env, 1, true);
+    let parse_property_variance_keyword =
+        matches!(
+            peek::token(env),
+            TokenKind::TIdentifier { raw, .. } if raw == "readonly" || raw == "writeonly"
+        ) && peek::current_token_is_followed_by_object_key(env, true);
     let variance = declaration_parser::parse_variance(
         env,
         parse_property_variance_keyword,
@@ -2238,7 +2256,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             // Computed property: [expr] — anything else.
             let leading_lbracket = peek::comments(env);
             expect::token(env, TokenKind::TLbracket)?;
-            if peek::ith_token(env, 1) == &TokenKind::TColon {
+            if peek::ambient_computed_property_is_indexer(env) {
                 // Index signature: [key: type]: type
                 // Reject modifiers that are not valid on index signatures.
                 error_unsupported_declare(env, &declare)?;
@@ -2607,15 +2625,7 @@ fn record_body(
                         token: TokenKind,
                     ) -> Result<(bool, Vec<Comment<Loc>>), Rollback> {
                         let cond = peek::token(env) == &token
-                            && match peek::ith_token(env, 1) {
-                                TokenKind::TColon // token: T
-                                | TokenKind::TLessThan // token<T>() {}
-                                | TokenKind::TLparen // token() {}
-                                | TokenKind::TEof // incomplete property
-                                | TokenKind::TRcurly // end of record
-                                => false,
-                                _ => true,
-                            };
+                            && peek::record_modifier_allows_modifier(env);
                         let comments = if cond {
                             let leading = peek::comments(env);
                             eat::token(env)?;
@@ -2634,7 +2644,11 @@ fn record_body(
                     let (mut generator, mut leading_generator) =
                         declaration_parser::parse_generator(env)?;
 
-                    let parse_property_variance_keyword = peek::ith_is_object_key(env, 1, false);
+                    let parse_property_variance_keyword = matches!(
+                        peek::token(env),
+                        TokenKind::TIdentifier { raw, .. } if raw == "readonly" || raw == "writeonly"
+                    )
+                        && peek::current_token_is_followed_by_object_key(env, false);
                     let variance = declaration_parser::parse_variance(
                         env,
                         parse_property_variance_keyword,

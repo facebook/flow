@@ -7,6 +7,7 @@
 
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -35,9 +36,22 @@ pub(crate) mod wrapped_lex_env {
 
     use crate::file_key::FileKey;
     use crate::lex_env;
+    use crate::lex_env::LexEnvState;
     use crate::logos_tokens::MainToken;
 
-    #[derive(Clone)]
+    #[derive(Clone, Copy)]
+    pub(crate) struct WrappedLexCursor {
+        span_start: usize,
+        span_end: usize,
+        lex_env_state: LexEnvState,
+    }
+
+    impl WrappedLexCursor {
+        pub(super) fn span_end(&self) -> usize {
+            self.span_end
+        }
+    }
+
     pub(crate) struct WrappedLexEnv<'a> {
         source: &'a str,
         lex_env: lex_env::LexEnv,
@@ -61,6 +75,26 @@ pub(crate) mod wrapped_lex_env {
             self.lex_env.source()
         }
 
+        pub(crate) fn source_text(&self) -> &'a str {
+            self.source
+        }
+
+        pub(crate) fn cursor(&self) -> WrappedLexCursor {
+            let span = self.lexer.span();
+            WrappedLexCursor {
+                span_start: span.start,
+                span_end: span.end,
+                lex_env_state: self.lex_env.state(),
+            }
+        }
+
+        pub(crate) fn seek(&mut self, cursor: WrappedLexCursor) {
+            let mut lexer: logos::Lexer<'a, MainToken> = logos::Lexer::new(self.source);
+            lexer.bump(cursor.span_end);
+            self.lexer = lexer;
+            self.lex_env.restore_state(cursor.lex_env_state);
+        }
+
         pub(crate) fn lex(&mut self, lex_mode: super::LexMode) -> crate::flow_lexer::LexResult {
             match lex_mode {
                 super::LexMode::Normal => {
@@ -81,10 +115,13 @@ pub(crate) mod wrapped_lex_env {
             }
         }
 
-        pub(crate) fn lex_template_tail_start(&mut self) -> crate::flow_lexer::LexResult {
-            let span = self.lexer.span();
+        pub(crate) fn lex_template_tail_start(
+            &mut self,
+            cursor: WrappedLexCursor,
+        ) -> crate::flow_lexer::LexResult {
             let mut lexer: logos::Lexer<'a, MainToken> = logos::Lexer::new(self.source);
-            lexer.bump(span.start);
+            lexer.bump(cursor.span_start);
+            self.lex_env.restore_state(cursor.lex_env_state);
             let prev_last_loc = self.lex_env.last_loc.dupe();
             let lex_result = crate::flow_lexer::template_tail_start(&mut lexer, &mut self.lex_env);
             self.lexer = lexer;
@@ -96,100 +133,124 @@ pub(crate) mod wrapped_lex_env {
 
 /// READ THIS BEFORE YOU MODIFY:
 ///
-/// The current implementation for lookahead beyond a single token is inefficient.
-/// If you believe you need to increase this constant, do one of the following:
-///
-/// - Find another way
-/// - Benchmark your change and provide convincing evidence that it doesn't
-///   actually have a significant perf impact.
-/// - Refactor this to memoize all requested lookahead, so we aren't lexing the
-///   same token multiple times.
+/// This cache intentionally stores only the current parser token. Code that
+/// needs to inspect the following token must do an uncached lexer scan from the
+/// current-token cursor and restore immediately.
 pub(crate) mod lookahead {
     use super::*;
 
+    struct CachedLexResult {
+        cursor: wrapped_lex_env::WrappedLexCursor,
+        result: LexResult,
+    }
+
     pub(crate) struct Lookahead<'a> {
-        results_0: Option<(wrapped_lex_env::WrappedLexEnv<'a>, LexResult)>,
-        results_1: Option<(wrapped_lex_env::WrappedLexEnv<'a>, LexResult)>,
+        results_0: Option<CachedLexResult>,
         lex_mode: LexMode,
         lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
+        committed_cursor: wrapped_lex_env::WrappedLexCursor,
     }
 
     impl<'a> Lookahead<'a> {
-        pub(super) fn new(lex_mode: LexMode, lex_env: &wrapped_lex_env::WrappedLexEnv<'a>) -> Self {
+        pub(super) fn new(lex_mode: LexMode, lex_env: wrapped_lex_env::WrappedLexEnv<'a>) -> Self {
+            let committed_cursor = lex_env.cursor();
             Self {
                 results_0: None,
-                results_1: None,
                 lex_mode,
-                lex_env: lex_env.clone(),
+                lex_env,
+                committed_cursor,
             }
         }
 
-        /// precondition: there is enough room in t.la_results for the result
         fn lex(&mut self) {
             let lex_result = self.lex_env.lex(self.lex_mode);
-            let cloned_env = self.lex_env.clone();
-            match &self.results_0 {
-                None => {
-                    self.results_0 = Some((cloned_env, lex_result));
-                }
-                Some(_) => {
-                    self.results_1 = Some((cloned_env, lex_result));
-                }
-            }
+            let cursor = self.lex_env.cursor();
+            self.results_0 = Some(CachedLexResult {
+                cursor,
+                result: lex_result,
+            });
         }
 
         pub(crate) fn peek_0(&mut self) -> &LexResult {
             if self.results_0.is_none() {
                 self.lex();
             }
-            &self.results_0.as_ref().unwrap().1
+            &self.results_0.as_ref().unwrap().result
         }
 
-        pub(crate) fn peek_1(&mut self) -> &LexResult {
+        pub(super) fn cursor_0(&mut self) -> wrapped_lex_env::WrappedLexCursor {
             if self.results_0.is_none() {
                 self.lex();
             }
-            if self.results_1.is_none() {
-                self.lex();
-            }
-            &self.results_1.as_ref().unwrap().1
+            self.results_0.as_ref().unwrap().cursor
         }
 
-        pub(super) fn lex_env_0(&mut self) -> &wrapped_lex_env::WrappedLexEnv<'a> {
+        pub(super) fn committed_cursor(&self) -> wrapped_lex_env::WrappedLexCursor {
+            self.committed_cursor
+        }
+
+        pub(super) fn source(&self) -> Option<FileKey> {
+            self.lex_env.source()
+        }
+
+        pub(super) fn source_text(&self) -> &str {
+            self.lex_env.source_text()
+        }
+
+        pub(super) fn current_end_offset(&mut self) -> usize {
+            self.cursor_0().span_end()
+        }
+
+        pub(super) fn with_lookahead_1<T>(&mut self, f: impl FnOnce(&LexResult) -> T) -> T {
             if self.results_0.is_none() {
                 self.lex();
             }
-            &self.results_0.as_ref().unwrap().0
+            let cursor_0 = self.results_0.as_ref().unwrap().cursor;
+            let lex_result = self.lex_env.lex(self.lex_mode);
+            let result = f(&lex_result);
+            self.lex_env.seek(cursor_0);
+            result
         }
 
-        /// Throws away the first peeked-at token, shifting any subsequent tokens up
-        pub(crate) fn junk(&mut self) {
-            if self.results_1.is_none() {
-                self.peek_0();
-                self.results_0 = None;
-            } else {
-                let mut tmp = None;
-                std::mem::swap(&mut tmp, &mut self.results_1);
-                std::mem::swap(&mut tmp, &mut self.results_0);
-            }
+        pub(super) fn reset_to(
+            &mut self,
+            lex_mode: LexMode,
+            cursor: wrapped_lex_env::WrappedLexCursor,
+        ) {
+            self.results_0 = None;
+            self.lex_mode = lex_mode;
+            self.committed_cursor = cursor;
+            self.lex_env.seek(cursor);
+        }
+
+        pub(super) fn reset(&mut self, lex_mode: LexMode) {
+            self.reset_to(lex_mode, self.committed_cursor);
+        }
+
+        pub(crate) fn take_0(&mut self) -> LexResult {
+            self.peek_0();
+            let result = self.results_0.take().unwrap();
+            self.committed_cursor = result.cursor;
+            result.result
         }
 
         pub(super) fn rescan_template_part_from(
             &mut self,
-            prev_lex_env: &wrapped_lex_env::WrappedLexEnv<'a>,
+            prev_cursor: wrapped_lex_env::WrappedLexCursor,
         ) {
             let existing_comments = self
                 .results_0
                 .as_ref()
-                .map(|(_, result)| result.comments.clone())
+                .map(|cached| cached.result.comments.clone())
                 .unwrap_or_default();
-            self.lex_env = prev_lex_env.clone();
             self.results_0 = None;
-            self.results_1 = None;
-            let mut lex_result = self.lex_env.lex_template_tail_start();
+            let mut lex_result = self.lex_env.lex_template_tail_start(prev_cursor);
             lex_result.comments = existing_comments;
-            let cloned_env = self.lex_env.clone();
-            self.results_0 = Some((cloned_env, lex_result));
+            let cursor = self.lex_env.cursor();
+            self.results_0 = Some(CachedLexResult {
+                cursor,
+                result: lex_result,
+            });
         }
     }
 }
@@ -305,9 +366,7 @@ pub struct ParserEnv<'a> {
     flags: ParserEnvFlags,
     error_callback: Option<fn(ParseError) -> Result<(), Rollback>>,
     lex_mode_stack: Vec<LexMode>,
-    /// lex_env is the lex_env after the single lookahead has been lexed
-    lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
-    /// This needs to be cleared whenever we advance.
+    /// This needs to be reset whenever we change lexing context.
     lookahead: lookahead::Lookahead<'a>,
     token_sink: Option<TokenSink<'a>>,
     parse_options: ParseOptions,
@@ -363,7 +422,7 @@ pub fn init_env<'a, E>(
     let parse_options = parse_options.unwrap_or(PERMISSIVE_PARSE_OPTIONS);
     let enable_types_in_comments = parse_options.types && parse_options.enable_types_in_comments;
     let lex_env = wrapped_lex_env::WrappedLexEnv::new(source, content, enable_types_in_comments);
-    let lookahead = lookahead::Lookahead::new(LexMode::Normal, &lex_env);
+    let lookahead = lookahead::Lookahead::new(LexMode::Normal, lex_env);
 
     ParserEnv {
         errors,
@@ -396,7 +455,6 @@ pub fn init_env<'a, E>(
         },
         error_callback: None,
         lex_mode_stack: vec![LexMode::Normal],
-        lex_env,
         lookahead,
         token_sink: token_sink.map(TokenSink::Direct),
         parse_options,
@@ -424,8 +482,8 @@ impl<'a> ParserEnv<'a> {
         self.flags.in_export_default
     }
 
-    pub(crate) fn comments(&self) -> &Vec<Comment<Loc>> {
-        &self.comments
+    pub(crate) fn take_comments(&mut self) -> Vec<Comment<Loc>> {
+        std::mem::take(&mut self.comments)
     }
 
     pub(crate) fn in_labels(&self, label: &str) -> bool {
@@ -536,7 +594,7 @@ impl<'a> ParserEnv<'a> {
     }
 
     pub(crate) fn source(&self) -> Option<FileKey> {
-        self.lex_env.source()
+        self.lookahead.source()
     }
 
     // mutators
@@ -621,18 +679,6 @@ impl<'a> ParserEnv<'a> {
 
     pub(crate) fn lookahead_0(&mut self) -> &LexResult {
         self.lookahead.peek_0()
-    }
-
-    pub(crate) fn lookahead_1(&mut self) -> &LexResult {
-        self.lookahead.peek_1()
-    }
-
-    pub(crate) fn lookahead_i(&mut self, i: usize) -> &LexResult {
-        match i {
-            0 => self.lookahead_0(),
-            1 => self.lookahead_1(),
-            _ => panic!("Invalid lookahead index"),
-        }
     }
 
     // functional operations
@@ -1124,37 +1170,14 @@ pub(crate) fn token_is_variance(token: &TokenKind) -> bool {
 /// Answer questions about what comes next
 pub(crate) mod peek {
     use super::*;
-    use crate::lex_env::LexErrors;
     use crate::token::TokenKind;
 
-    pub(crate) fn ith_token<'a>(env: &'a mut ParserEnv, i: usize) -> &'a TokenKind {
-        &env.lookahead_i(i).token_kind
-    }
-
-    pub(crate) fn ith_loc<'a>(env: &'a mut ParserEnv, i: usize) -> &'a Loc {
-        &env.lookahead_i(i).loc
-    }
-
-    pub(crate) fn ith_errors<'a>(env: &'a mut ParserEnv, i: usize) -> &'a LexErrors {
-        &env.lookahead_i(i).errors
-    }
-
-    pub(crate) fn ith_comments(env: &mut ParserEnv, i: usize) -> Vec<Comment<Loc>> {
-        let consumed_comments_pos = env.consumed_comments_pos;
-        let comments = &env.lookahead_i(i).comments;
-        comments
-            .iter()
-            .filter(|comment| comment.loc.start >= consumed_comments_pos)
-            .cloned()
-            .collect()
-    }
-
     pub(crate) fn token<'a>(env: &'a mut ParserEnv) -> &'a TokenKind {
-        ith_token(env, 0)
+        &env.lookahead_0().token_kind
     }
 
     pub(crate) fn loc<'a>(env: &'a mut ParserEnv) -> &'a Loc {
-        ith_loc(env, 0)
+        &env.lookahead_0().loc
     }
 
     /// loc_skip_lookahead is used to give a loc hint to optional tokens such as type annotations
@@ -1169,11 +1192,30 @@ pub(crate) mod peek {
     }
 
     pub(crate) fn errors(env: &mut ParserEnv) -> Vec<(Loc, ParseError)> {
-        ith_errors(env, 0).as_errors().to_vec()
+        let errors = env.lookahead_0().errors.as_errors();
+        if errors.is_empty() {
+            Vec::new()
+        } else {
+            errors.to_vec()
+        }
     }
 
     pub(crate) fn comments(env: &mut ParserEnv) -> Vec<Comment<Loc>> {
-        ith_comments(env, 0)
+        let consumed_comments_pos = env.consumed_comments_pos;
+        let comments = &env.lookahead_0().comments;
+        if comments.is_empty() {
+            Vec::new()
+        } else if comments[0].loc.start >= consumed_comments_pos {
+            comments.to_vec()
+        } else {
+            match comments
+                .iter()
+                .position(|comment| comment.loc.start >= consumed_comments_pos)
+            {
+                Some(index) => comments[index..].to_vec(),
+                None => Vec::new(),
+            }
+        }
     }
 
     pub(crate) fn has_eaten_comments(env: &mut ParserEnv) -> bool {
@@ -1184,40 +1226,699 @@ pub(crate) mod peek {
             .any(|comment| comment.loc.start < consumed_comments_pos)
     }
 
-    pub(crate) fn lex_env<'a>(env: &mut ParserEnv<'a>) -> wrapped_lex_env::WrappedLexEnv<'a> {
-        env.lookahead.lex_env_0().clone()
+    pub(crate) fn lex_cursor(env: &mut ParserEnv) -> wrapped_lex_env::WrappedLexCursor {
+        env.lookahead.cursor_0()
     }
 
-    /// True if there is a line terminator before the next token
-    pub(crate) fn ith_is_line_terminator(env: &mut ParserEnv, i: usize) -> bool {
-        let loc = if i > 0 {
-            Some(ith_loc(env, i - 1))
-        } else {
-            env.last_loc()
-        };
-        match loc {
+    /// True if there is a line terminator before the current token.
+    pub(crate) fn is_line_terminator(env: &mut ParserEnv) -> bool {
+        match env.last_loc() {
             None => false,
             Some(loc_prev) => {
                 let loc_prev_start_line = loc_prev.start.line;
-                ith_loc(env, i).start.line > loc_prev_start_line
+                loc(env).start.line > loc_prev_start_line
             }
         }
     }
 
-    pub(crate) fn is_line_terminator(env: &mut ParserEnv) -> bool {
-        ith_is_line_terminator(env, 0)
-    }
-
-    pub(crate) fn ith_is_implicit_semicolon(env: &mut ParserEnv, i: usize) -> bool {
-        match ith_token(env, i) {
+    pub(crate) fn is_implicit_semicolon(env: &mut ParserEnv) -> bool {
+        match token(env) {
             TokenKind::TEof | TokenKind::TRcurly => true,
             TokenKind::TSemicolon => false,
-            _ => ith_is_line_terminator(env, i),
+            _ => is_line_terminator(env),
         }
     }
 
-    pub(crate) fn is_implicit_semicolon(env: &mut ParserEnv) -> bool {
-        ith_is_implicit_semicolon(env, 0)
+    fn with_lexer_lookahead1<T>(env: &mut ParserEnv, f: impl FnOnce(&LexResult) -> T) -> T {
+        env.lookahead.with_lookahead_1(f)
+    }
+
+    fn lexer_lookahead1_token_kind(env: &mut ParserEnv) -> TokenKind {
+        with_lexer_lookahead1(env, |next| next.token_kind.clone())
+    }
+
+    fn unicode_line_terminator_len(bytes: &[u8], offset: usize) -> Option<usize> {
+        if bytes.get(offset) == Some(&0xe2)
+            && bytes.get(offset + 1) == Some(&0x80)
+            && matches!(bytes.get(offset + 2), Some(0xa8 | 0xa9))
+        {
+            Some(3)
+        } else {
+            None
+        }
+    }
+
+    fn non_line_whitespace_len(bytes: &[u8], offset: usize) -> Option<usize> {
+        match bytes.get(offset) {
+            Some(0xc2) if bytes.get(offset + 1) == Some(&0xa0) => Some(2),
+            Some(0xe1)
+                if bytes.get(offset + 1) == Some(&0x9a) && bytes.get(offset + 2) == Some(&0x80) =>
+            {
+                Some(3)
+            }
+            Some(0xe2)
+                if bytes.get(offset + 1) == Some(&0x80)
+                    && matches!(bytes.get(offset + 2), Some(0x80..=0x8a | 0xaf)) =>
+            {
+                Some(3)
+            }
+            Some(0xe2)
+                if bytes.get(offset + 1) == Some(&0x81) && bytes.get(offset + 2) == Some(&0x9f) =>
+            {
+                Some(3)
+            }
+            Some(0xe3)
+                if bytes.get(offset + 1) == Some(&0x80) && bytes.get(offset + 2) == Some(&0x80) =>
+            {
+                Some(3)
+            }
+            Some(0xef)
+                if bytes.get(offset + 1) == Some(&0xbb) && bytes.get(offset + 2) == Some(&0xbf) =>
+            {
+                Some(3)
+            }
+            _ => None,
+        }
+    }
+
+    fn flow_comment_marker_after_whitespace(source: &str, mut offset: usize) -> bool {
+        while offset < source.len() {
+            let ch = source[offset..].chars().next().unwrap();
+            if !ch.is_whitespace() {
+                break;
+            }
+            offset += ch.len_utf8();
+        }
+        let rest = &source[offset..];
+        rest.starts_with("::") || rest.starts_with(':') || rest.starts_with("flow-include")
+    }
+
+    fn offset_after_current_trivia(env: &mut ParserEnv) -> Result<(Option<usize>, bool), ()> {
+        let mut offset = env.lookahead.current_end_offset();
+        let source = env.lookahead.source_text();
+        let bytes = source.as_bytes();
+        let mut has_line_terminator = false;
+
+        while offset < source.len() {
+            match bytes[offset] {
+                b' ' | b'\t' | 0x0B | 0x0C => {
+                    offset += 1;
+                    while offset < source.len()
+                        && matches!(bytes[offset], b' ' | b'\t' | 0x0B | 0x0C)
+                    {
+                        offset += 1;
+                    }
+                }
+                b'\r' => {
+                    offset += if bytes.get(offset + 1) == Some(&b'\n') {
+                        2
+                    } else {
+                        1
+                    };
+                    has_line_terminator = true;
+                }
+                b'\n' => {
+                    offset += 1;
+                    has_line_terminator = true;
+                }
+                b'/' if bytes.get(offset + 1) == Some(&b'/') => {
+                    offset += 2;
+                    while offset < source.len() {
+                        if matches!(bytes[offset], b'\r' | b'\n')
+                            || unicode_line_terminator_len(bytes, offset).is_some()
+                        {
+                            break;
+                        }
+                        offset += if bytes[offset].is_ascii() {
+                            1
+                        } else {
+                            source[offset..].chars().next().unwrap().len_utf8()
+                        };
+                    }
+                }
+                b'/' if bytes.get(offset + 1) == Some(&b'*') => {
+                    if flow_comment_marker_after_whitespace(source, offset + 2) {
+                        return Err(());
+                    }
+
+                    offset += 2;
+                    loop {
+                        if offset >= source.len() {
+                            return Err(());
+                        }
+                        match bytes[offset] {
+                            b'*' if bytes.get(offset + 1) == Some(&b'/') => {
+                                offset += 2;
+                                break;
+                            }
+                            b'*' if bytes.get(offset + 1) == Some(&b'-')
+                                && bytes.get(offset + 2) == Some(&b'/') =>
+                            {
+                                return Err(());
+                            }
+                            b'\r' => {
+                                offset += if bytes.get(offset + 1) == Some(&b'\n') {
+                                    2
+                                } else {
+                                    1
+                                };
+                                has_line_terminator = true;
+                            }
+                            b'\n' => {
+                                offset += 1;
+                                has_line_terminator = true;
+                            }
+                            _ => {
+                                if let Some(len) = unicode_line_terminator_len(bytes, offset) {
+                                    offset += len;
+                                    has_line_terminator = true;
+                                } else {
+                                    offset += if bytes[offset].is_ascii() {
+                                        1
+                                    } else {
+                                        source[offset..].chars().next().unwrap().len_utf8()
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if let Some(len) = unicode_line_terminator_len(bytes, offset) {
+                        offset += len;
+                        has_line_terminator = true;
+                    } else if let Some(len) = non_line_whitespace_len(bytes, offset) {
+                        offset += len;
+                    } else {
+                        return Ok((Some(offset), has_line_terminator));
+                    }
+                }
+            }
+        }
+
+        Ok((None, has_line_terminator))
+    }
+
+    fn ascii_identifier_continue(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || matches!(byte, b'$' | b'_')
+    }
+
+    fn ascii_identifier_start(byte: u8) -> bool {
+        byte.is_ascii_alphabetic() || matches!(byte, b'$' | b'_')
+    }
+
+    fn rest_starts_less_than_token(lex_mode: LexMode, rest: &str) -> bool {
+        if !rest.starts_with('<') {
+            false
+        } else if lex_mode == LexMode::Type {
+            true
+        } else {
+            !rest.starts_with("<=") && !rest.starts_with("<<")
+        }
+    }
+
+    fn rest_starts_period_token(rest: &str) -> bool {
+        rest.starts_with('.') && !rest.starts_with("...")
+    }
+
+    fn rest_starts_assign_token(rest: &str) -> bool {
+        rest.starts_with('=') && !rest.starts_with("=>") && !rest.starts_with("==")
+    }
+
+    fn rest_starts_pling_token(rest: &str) -> Result<bool, ()> {
+        if !rest.starts_with('?') {
+            Ok(false)
+        } else if rest.starts_with("?.") {
+            Err(())
+        } else {
+            Ok(true)
+        }
+    }
+
+    fn rest_starts_in_token(rest: &str) -> Result<bool, ()> {
+        if !rest.starts_with('i') {
+            return Ok(false);
+        }
+        if !rest.starts_with("in") {
+            return Ok(false);
+        }
+        match rest.as_bytes().get(2) {
+            None => Ok(true),
+            Some(b'\\') => Err(()),
+            Some(byte) if byte.is_ascii() => Ok(!ascii_identifier_continue(*byte)),
+            Some(_) => Err(()),
+        }
+    }
+
+    fn rest_starts_word_token(source: &str, offset: usize, word: &str) -> Result<bool, ()> {
+        let bytes = source.as_bytes();
+        match bytes.get(offset) {
+            Some(b'\\') => return Err(()),
+            Some(byte) if !byte.is_ascii() => return Err(()),
+            _ => {}
+        }
+        if !bytes[offset..].starts_with(word.as_bytes()) {
+            return Ok(false);
+        }
+        match bytes.get(offset + word.len()) {
+            None => Ok(true),
+            Some(b'\\') => Err(()),
+            Some(byte) if byte.is_ascii() => Ok(!ascii_identifier_continue(*byte)),
+            Some(_) => Err(()),
+        }
+    }
+
+    fn current_token_is_followed_by_word(
+        env: &mut ParserEnv,
+        word: &str,
+        f: impl FnOnce(&TokenKind) -> bool,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                match rest_starts_word_token(env.lookahead.source_text(), offset, word) {
+                    Ok(result) => result,
+                    Err(()) => lexer_lookahead1_matches(env, f),
+                }
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, f),
+        }
+    }
+
+    fn current_token_is_followed_by_word_on_current_end_line(
+        env: &mut ParserEnv,
+        word: &str,
+        f: impl FnOnce(&TokenKind) -> bool,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), false)) => {
+                match rest_starts_word_token(env.lookahead.source_text(), offset, word) {
+                    Ok(result) => result,
+                    Err(()) => lexer_lookahead1_matches_on_current_end_line(env, f),
+                }
+            }
+            Ok((None, false)) => lexer_lookahead1_matches_on_current_end_line(env, f),
+            Ok(_) => false,
+            Err(()) => lexer_lookahead1_matches_on_current_end_line(env, f),
+        }
+    }
+
+    fn current_token_is_followed_by_char(
+        env: &mut ParserEnv,
+        ch: char,
+        f: impl FnOnce(&TokenKind) -> bool,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => env.lookahead.source_text()[offset..].starts_with(ch),
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, f),
+        }
+    }
+
+    fn current_token_is_followed_by_less_than(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                rest_starts_less_than_token(env.lex_mode(), rest)
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| token == &TokenKind::TLessThan),
+        }
+    }
+
+    fn current_token_is_followed_by_arrow(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => env.lookahead.source_text()[offset..].starts_with("=>"),
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| token == &TokenKind::TArrow),
+        }
+    }
+
+    fn current_token_is_followed_by_char_on_current_end_line(
+        env: &mut ParserEnv,
+        ch: char,
+        f: impl FnOnce(&TokenKind) -> bool,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), false)) => env.lookahead.source_text()[offset..].starts_with(ch),
+            Ok(_) => false,
+            Err(()) => lexer_lookahead1_matches_on_current_end_line(env, f),
+        }
+    }
+
+    fn lexer_lookahead1_matches(env: &mut ParserEnv, f: impl FnOnce(&TokenKind) -> bool) -> bool {
+        with_lexer_lookahead1(env, |next| f(&next.token_kind))
+    }
+
+    fn lexer_lookahead1_matches_on_current_end_line(
+        env: &mut ParserEnv,
+        f: impl FnOnce(&TokenKind) -> bool,
+    ) -> bool {
+        let current_end_line = loc(env).end.line;
+        with_lexer_lookahead1(env, |next| {
+            next.loc.start.line == current_end_line && f(&next.token_kind)
+        })
+    }
+
+    fn lexer_lookahead1_token_kind_on_current_start_line(env: &mut ParserEnv) -> Option<TokenKind> {
+        let current_start_line = loc(env).start.line;
+        with_lexer_lookahead1(env, |next| {
+            if next.loc.start.line == current_start_line {
+                Some(next.token_kind.clone())
+            } else {
+                None
+            }
+        })
+    }
+
+    fn lexer_lookahead1_token_kind_on_current_end_line(env: &mut ParserEnv) -> Option<TokenKind> {
+        let current_end_line = loc(env).end.line;
+        with_lexer_lookahead1(env, |next| {
+            if next.loc.start.line == current_end_line {
+                Some(next.token_kind.clone())
+            } else {
+                None
+            }
+        })
+    }
+
+    pub(crate) fn loc_after_current_if_lbracket(env: &mut ParserEnv) -> Option<Loc> {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) if !env.lookahead.source_text()[offset..].starts_with('[') => {
+                return None;
+            }
+            Ok((None, _)) => return None,
+            _ => {}
+        }
+        with_lexer_lookahead1(env, |next| {
+            if next.token_kind == TokenKind::TLbracket {
+                Some(next.loc.dupe())
+            } else {
+                None
+            }
+        })
+    }
+
+    pub(crate) fn token_after_current_is_lcurly(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| token == &TokenKind::TLcurly)
+    }
+
+    pub(crate) fn let_token_is_followed_by_in(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                match rest_starts_in_token(&env.lookahead.source_text()[offset..]) {
+                    Ok(result) => result,
+                    Err(()) => lexer_lookahead1_matches(env, |token| token == &TokenKind::TIn),
+                }
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| token == &TokenKind::TIn),
+        }
+    }
+
+    pub(crate) fn opaque_token_is_followed_by_type(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "type", |token| token == &TokenKind::TType)
+    }
+
+    pub(crate) fn declare_token_is_followed_by_export(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "export", |token| token == &TokenKind::TExport)
+    }
+
+    pub(crate) fn declaration_after_declare(env: &mut ParserEnv) -> TokenKind {
+        lexer_lookahead1_token_kind(env)
+    }
+
+    pub(crate) fn token_after_current_is_identifier_token(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| matches!(token, TokenKind::TIdentifier { .. }))
+    }
+
+    pub(crate) fn import_equals_module_reference_starts_require_call(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| token == &TokenKind::TLparen)
+    }
+
+    pub(crate) fn identifier_token_is_followed_by_namespace(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(
+            env,
+            "namespace",
+            |token| matches!(token, TokenKind::TIdentifier { raw, .. } if raw == "namespace"),
+        )
+    }
+
+    pub(crate) fn identifier_token_is_followed_by_symbol_type(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "symbol", |token| token == &TokenKind::TSymbolType)
+    }
+
+    pub(crate) fn token_after_current_is_new(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "new", |token| token == &TokenKind::TNew)
+    }
+
+    pub(crate) fn token_after_current_is_static(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "static", |token| token == &TokenKind::TStatic)
+    }
+
+    pub(crate) fn token_after_current_starts_type_call(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                rest.starts_with('(') || rest_starts_less_than_token(env.lex_mode(), rest)
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                matches!(token, TokenKind::TLessThan | TokenKind::TLparen)
+            }),
+        }
+    }
+
+    pub(crate) fn token_after_current_is_pling_or_colon(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let bytes = env.lookahead.source_text().as_bytes();
+                match bytes.get(offset) {
+                    Some(b':') => true,
+                    Some(b'?') if bytes.get(offset + 1) != Some(&b'.') => true,
+                    Some(b'?') => {
+                        lexer_lookahead1_matches(env, |token| token == &TokenKind::TPling)
+                    }
+                    _ => false,
+                }
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                matches!(token, TokenKind::TPling | TokenKind::TColon)
+            }),
+        }
+    }
+
+    pub(crate) fn token_after_current_is_colon(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                env.lookahead.source_text().as_bytes().get(offset) == Some(&b':')
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| token == &TokenKind::TColon),
+        }
+    }
+
+    pub(crate) fn type_guard_second_token_kind(env: &mut ParserEnv) -> TokenKind {
+        lexer_lookahead1_token_kind(env)
+    }
+
+    pub(crate) fn computed_type_property_continuation(env: &mut ParserEnv) -> TokenKind {
+        lexer_lookahead1_token_kind(env)
+    }
+
+    fn comma_trailing_comments_after_current_if_line_terminator_slow(
+        env: &mut ParserEnv,
+    ) -> Option<Vec<Comment<Loc>>> {
+        let current_start_line = loc(env).start.line;
+        let consumed_comments_pos = env.consumed_comments_pos;
+        with_lexer_lookahead1(env, |next| {
+            if next.loc.start.line == current_start_line {
+                None
+            } else if next.comments.is_empty() {
+                Some(Vec::new())
+            } else if next.comments[0].loc.start >= consumed_comments_pos {
+                Some(next.comments.to_vec())
+            } else {
+                match next
+                    .comments
+                    .iter()
+                    .position(|comment| comment.loc.start >= consumed_comments_pos)
+                {
+                    Some(index) => Some(next.comments[index..].to_vec()),
+                    None => Some(Vec::new()),
+                }
+            }
+        })
+    }
+
+    pub(crate) fn comma_trailing_comments_after_current_if_line_terminator(
+        env: &mut ParserEnv,
+    ) -> Option<Vec<Comment<Loc>>> {
+        let current_loc = loc(env).dupe();
+        let consumed_comments_pos = env.consumed_comments_pos;
+        let mut offset = env.lookahead.current_end_offset();
+        let source = env.lookahead.source_text();
+        let mut line = current_loc.end.line;
+        let mut column = current_loc.end.column;
+        let mut has_line_terminator = false;
+        let mut comments = Vec::new();
+
+        while offset < source.len() {
+            let rest = &source[offset..];
+            if matches!(rest.as_bytes()[0], b' ' | b'\t' | 0x0B | 0x0C) {
+                offset += 1;
+                column += 1;
+            } else if rest.starts_with("\r\n") {
+                offset += 2;
+                line += 1;
+                column = 0;
+                has_line_terminator = true;
+            } else if rest.starts_with('\n') || rest.starts_with('\r') {
+                offset += 1;
+                line += 1;
+                column = 0;
+                has_line_terminator = true;
+            } else if rest.starts_with('\u{2028}') || rest.starts_with('\u{2029}') {
+                let ch = rest.chars().next().unwrap();
+                offset += ch.len_utf8();
+                line += 1;
+                column = 0;
+                has_line_terminator = true;
+            } else if rest.starts_with("//") {
+                let start = Position { line, column };
+                offset += 2;
+                column += 2;
+                let text_start = offset;
+                while offset < source.len() {
+                    let rest = &source[offset..];
+                    if rest.starts_with("\r\n")
+                        || rest.starts_with('\n')
+                        || rest.starts_with('\r')
+                        || rest.starts_with('\u{2028}')
+                        || rest.starts_with('\u{2029}')
+                    {
+                        break;
+                    }
+                    let ch = rest.chars().next().unwrap();
+                    offset += ch.len_utf8();
+                    column += ch.len_utf8() as i32;
+                }
+                let end = Position { line, column };
+                let loc = Loc {
+                    source: current_loc.source.dupe(),
+                    start,
+                    end,
+                };
+                if loc.start >= consumed_comments_pos {
+                    comments.push(Comment {
+                        loc,
+                        kind: CommentKind::Line,
+                        text: Arc::from(&source[text_start..offset]),
+                        on_newline: current_loc.end.line < start.line,
+                    });
+                }
+            } else if let Some(after_open) = rest.strip_prefix("/*") {
+                let after_whitespace = after_open.trim_start_matches(char::is_whitespace);
+                if after_whitespace.starts_with("::")
+                    || after_whitespace.starts_with(':')
+                    || after_whitespace.starts_with("flow-include")
+                {
+                    return comma_trailing_comments_after_current_if_line_terminator_slow(env);
+                }
+
+                let start = Position { line, column };
+                offset += 2;
+                column += 2;
+                let text_start = offset;
+                loop {
+                    if offset >= source.len() {
+                        return comma_trailing_comments_after_current_if_line_terminator_slow(env);
+                    }
+                    let rest = &source[offset..];
+                    if rest.starts_with("*/") {
+                        let text_end = offset;
+                        offset += 2;
+                        column += 2;
+                        let end = Position { line, column };
+                        let loc = Loc {
+                            source: current_loc.source.dupe(),
+                            start,
+                            end,
+                        };
+                        if loc.start >= consumed_comments_pos {
+                            comments.push(Comment {
+                                loc,
+                                kind: CommentKind::Block,
+                                text: Arc::from(&source[text_start..text_end]),
+                                on_newline: current_loc.end.line < start.line,
+                            });
+                        }
+                        break;
+                    } else if rest.starts_with("*-/") {
+                        return comma_trailing_comments_after_current_if_line_terminator_slow(env);
+                    } else if rest.starts_with("\r\n") {
+                        offset += 2;
+                        line += 1;
+                        column = 0;
+                        has_line_terminator = true;
+                    } else if rest.starts_with('\n') || rest.starts_with('\r') {
+                        offset += 1;
+                        line += 1;
+                        column = 0;
+                        has_line_terminator = true;
+                    } else if rest.starts_with('\u{2028}') || rest.starts_with('\u{2029}') {
+                        let ch = rest.chars().next().unwrap();
+                        offset += ch.len_utf8();
+                        line += 1;
+                        column = 0;
+                        has_line_terminator = true;
+                    } else {
+                        let ch = rest.chars().next().unwrap();
+                        offset += ch.len_utf8();
+                        column += ch.len_utf8() as i32;
+                    }
+                }
+            } else if let Some(
+                ch @ ('\u{00a0}'
+                | '\u{1680}'
+                | '\u{2000}'..='\u{200a}'
+                | '\u{202f}'
+                | '\u{205f}'
+                | '\u{3000}'
+                | '\u{feff}'),
+            ) = rest.chars().next()
+            {
+                offset += ch.len_utf8();
+                column += ch.len_utf8() as i32;
+            } else {
+                return if has_line_terminator {
+                    Some(comments)
+                } else {
+                    None
+                };
+            }
+        }
+
+        Some(comments)
+    }
+
+    pub(crate) fn has_line_terminator_after_current(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((_, has_line_terminator)) => has_line_terminator,
+            Err(()) => lexer_lookahead1_token_kind_on_current_end_line(env).is_none(),
+        }
+    }
+
+    pub(crate) fn current_token_is_followed_by_implicit_semicolon(env: &mut ParserEnv) -> bool {
+        match lexer_lookahead1_token_kind_on_current_start_line(env) {
+            None => true,
+            Some(next) => match next {
+                TokenKind::TEof | TokenKind::TRcurly => true,
+                TokenKind::TSemicolon => false,
+                _ => false,
+            },
+        }
     }
 
     pub(crate) fn token_kind_is_identifier(t: &TokenKind) -> bool {
@@ -1241,63 +1942,368 @@ pub(crate) mod peek {
         }
     }
 
-    pub(crate) fn ith_is_identifier(env: &mut ParserEnv, i: usize) -> bool {
-        let t = ith_token(env, i);
-        token_kind_is_identifier(t)
+    pub(crate) fn is_identifier(env: &mut ParserEnv) -> bool {
+        token_kind_is_identifier(token(env))
     }
 
-    pub(crate) fn ith_is_type_identifier(env: &mut ParserEnv, i: usize) -> bool {
+    pub(crate) fn is_type_identifier(env: &mut ParserEnv) -> bool {
         let lev_mode = env.lex_mode();
-        token_is_type_identifier_under_lex_mode(lev_mode, ith_token(env, i))
+        token_is_type_identifier_under_lex_mode(lev_mode, token(env))
     }
 
-    pub(crate) fn ith_is_identifier_name(env: &mut ParserEnv, i: usize) -> bool {
-        ith_is_identifier(env, i) || ith_is_type_identifier(env, i)
+    pub(crate) fn is_identifier_name(env: &mut ParserEnv) -> bool {
+        is_identifier(env) || is_type_identifier(env)
     }
 
-    // let ith_is_object_key ~i ~is_class env =
-    //   match ith_token ~i env with
-    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET -> true
-    //   | T_POUND when is_class -> true
-    //   | _ -> ith_is_identifier_name ~i env
-    pub(crate) fn ith_is_object_key(env: &mut ParserEnv, i: usize, is_class: bool) -> bool {
-        match ith_token(env, i) {
+    fn lookahead1_kind_is_identifier_name(lex_mode: LexMode, token_kind: &TokenKind) -> bool {
+        token_kind_is_identifier(token_kind)
+            || token_is_type_identifier_under_lex_mode(lex_mode, token_kind)
+    }
+
+    fn lookahead1_kind_is_object_key(
+        lex_mode: LexMode,
+        token_kind: &TokenKind,
+        is_class: bool,
+    ) -> bool {
+        match token_kind {
             TokenKind::TString { .. }
             | TokenKind::TNumber { .. }
             | TokenKind::TBigint { .. }
             | TokenKind::TLbracket
             | TokenKind::TFunction => true,
             TokenKind::TPound if is_class => true,
-            _ => ith_is_identifier_name(env, i),
+            t => lookahead1_kind_is_identifier_name(lex_mode, t),
         }
     }
 
-    /// This returns true if the next token is identifier-ish (even if it is an error)
-    pub(crate) fn is_identifier(env: &mut ParserEnv) -> bool {
-        ith_is_identifier(env, 0)
+    pub(crate) fn current_token_is_followed_by_identifier(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, token_kind_is_identifier)
+    }
+
+    pub(crate) fn current_token_is_followed_by_type_identifier(env: &mut ParserEnv) -> bool {
+        let lex_mode = env.lex_mode();
+        lexer_lookahead1_matches(env, |token| {
+            token_is_type_identifier_under_lex_mode(lex_mode, token)
+        })
+    }
+
+    pub(crate) fn current_token_is_followed_by_identifier_name(env: &mut ParserEnv) -> bool {
+        let lex_mode = env.lex_mode();
+        lexer_lookahead1_matches(env, |token| {
+            lookahead1_kind_is_identifier_name(lex_mode, token)
+        })
+    }
+
+    // let is_object_key ~is_class env =
+    //   match token env with
+    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET | T_FUNCTION -> true
+    //   | T_POUND when is_class -> true
+    //   | _ -> is_identifier_name env
+    #[expect(dead_code)]
+    pub(crate) fn is_object_key(env: &mut ParserEnv, is_class: bool) -> bool {
+        match token(env) {
+            TokenKind::TString { .. }
+            | TokenKind::TNumber { .. }
+            | TokenKind::TBigint { .. }
+            | TokenKind::TLbracket
+            | TokenKind::TFunction => true,
+            TokenKind::TPound if is_class => true,
+            _ => is_identifier_name(env),
+        }
+    }
+
+    pub(crate) fn current_token_is_followed_by_object_key(
+        env: &mut ParserEnv,
+        is_class: bool,
+    ) -> bool {
+        let lex_mode = env.lex_mode();
+        lexer_lookahead1_matches(env, |token| {
+            lookahead1_kind_is_object_key(lex_mode, token, is_class)
+        })
+    }
+
+    pub(crate) fn async_token_continues_on_same_line(env: &mut ParserEnv) -> bool {
+        token(env) == &TokenKind::TAsync
+            && match offset_after_current_trivia(env) {
+                Ok((Some(_), false)) => true,
+                Ok((None, false)) => lexer_lookahead1_matches_on_current_end_line(env, |_| true),
+                Ok(_) => false,
+                Err(()) => lexer_lookahead1_matches_on_current_end_line(env, |_| true),
+            }
+    }
+
+    pub(crate) fn async_token_can_start_arrow_function(env: &mut ParserEnv) -> bool {
+        token(env) == &TokenKind::TAsync
+            && match offset_after_current_trivia(env) {
+                Ok((Some(offset), false)) => {
+                    let rest = &env.lookahead.source_text()[offset..];
+                    match rest.as_bytes().first() {
+                        Some(b'=') => rest.starts_with("=>"),
+                        Some(b'(') => true,
+                        Some(b'<') => rest_starts_less_than_token(env.lex_mode(), rest),
+                        Some(byte) if ascii_identifier_start(*byte) => true,
+                        Some(b'\\') | Some(0x80..=0xff) => {
+                            lexer_lookahead1_matches_on_current_end_line(env, |token| {
+                                token_kind_is_identifier(token)
+                                    || matches!(
+                                        token,
+                                        TokenKind::TLparen
+                                            | TokenKind::TLessThan
+                                            | TokenKind::TArrow
+                                    )
+                            })
+                        }
+                        _ => false,
+                    }
+                }
+                Ok((None, false)) => false,
+                Ok(_) => false,
+                Err(()) => lexer_lookahead1_matches_on_current_end_line(env, |token| {
+                    token_kind_is_identifier(token)
+                        || matches!(
+                            token,
+                            TokenKind::TLparen | TokenKind::TLessThan | TokenKind::TArrow
+                        )
+                }),
+            }
+    }
+
+    pub(crate) fn async_token_is_followed_by_function(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word_on_current_end_line(env, "function", |token| {
+            token == &TokenKind::TFunction
+        })
+    }
+
+    pub(crate) fn async_token_is_followed_by_component(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word_on_current_end_line(
+            env,
+            "component",
+            |token| matches!(token, TokenKind::TIdentifier { raw, .. } if raw == "component"),
+        )
+    }
+
+    pub(crate) fn async_token_is_followed_by_hook(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word_on_current_end_line(
+            env,
+            "hook",
+            |token| matches!(token, TokenKind::TIdentifier { raw, .. } if raw == "hook"),
+        )
+    }
+
+    pub(crate) fn hook_token_is_followed_by_identifier(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches_on_current_end_line(env, token_kind_is_identifier)
+    }
+
+    pub(crate) fn record_token_is_followed_by_identifier(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches_on_current_end_line(env, token_kind_is_identifier)
+    }
+
+    pub(crate) fn abstract_token_is_followed_by_class(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "class", |token| token == &TokenKind::TClass)
+    }
+
+    pub(crate) fn match_token_is_followed_by_lparen_on_same_line(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_char_on_current_end_line(env, '(', |token| {
+            token == &TokenKind::TLparen
+        })
+    }
+
+    pub(crate) fn current_token_is_followed_by_lbracket(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_char(env, '[', |token| token == &TokenKind::TLbracket)
+    }
+
+    pub(crate) fn current_token_is_followed_by_lparen(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_char(env, '(', |token| token == &TokenKind::TLparen)
+    }
+
+    pub(crate) fn current_token_is_followed_by_tless_than(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_less_than(env)
+    }
+
+    pub(crate) fn current_token_is_followed_by_enum(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_word(env, "enum", |token| token == &TokenKind::TEnum)
+    }
+
+    pub(crate) fn current_token_is_followed_by_import_expression_continuation(
+        env: &mut ParserEnv,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                rest.starts_with('(') || rest_starts_period_token(rest)
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                matches!(token, TokenKind::TLparen | TokenKind::TPeriod)
+            }),
+        }
+    }
+
+    pub(crate) fn jsx_type_args_can_follow_current_less_than(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| token != &TokenKind::TDiv)
+    }
+
+    pub(crate) fn unary_minus_is_followed_by_number(env: &mut ParserEnv) -> Option<TokenKind> {
+        match lexer_lookahead1_token_kind(env) {
+            t @ TokenKind::TNumber { .. } => Some(t),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn optional_chain_bang_continuation(env: &mut ParserEnv) -> TokenKind {
+        lexer_lookahead1_token_kind(env)
+    }
+
+    pub(crate) fn assert_operator_bang_continuation(env: &mut ParserEnv) -> TokenKind {
+        lexer_lookahead1_token_kind(env)
+    }
+
+    pub(crate) fn array_rest_continuation_is_rbracket(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| token == &TokenKind::TRbracket)
+    }
+
+    pub(crate) fn async_arrow_parameter_continuation_is_arrow(env: &mut ParserEnv) -> bool {
+        current_token_is_followed_by_arrow(env)
+    }
+
+    pub(crate) fn class_optional_method_continuation_is_call_or_type_args(
+        env: &mut ParserEnv,
+    ) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                rest.starts_with('(') || rest_starts_less_than_token(env.lex_mode(), rest)
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                matches!(token, TokenKind::TLparen | TokenKind::TLessThan)
+            }),
+        }
+    }
+
+    pub(crate) fn token_after_current_implies_identifier(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                if rest_starts_less_than_token(env.lex_mode(), rest)
+                    || rest.starts_with(':')
+                    || rest_starts_assign_token(rest)
+                    || rest.starts_with(';')
+                    || rest.starts_with('(')
+                    || rest.starts_with('}')
+                {
+                    true
+                } else {
+                    match rest_starts_pling_token(rest) {
+                        Ok(result) => result,
+                        Err(()) => lexer_lookahead1_matches(env, |token| {
+                            matches!(
+                                token,
+                                TokenKind::TLessThan
+                                    | TokenKind::TColon
+                                    | TokenKind::TAssign
+                                    | TokenKind::TSemicolon
+                                    | TokenKind::TLparen
+                                    | TokenKind::TPling
+                                    | TokenKind::TRcurly
+                            )
+                        }),
+                    }
+                }
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                matches!(
+                    token,
+                    TokenKind::TLessThan
+                        | TokenKind::TColon
+                        | TokenKind::TAssign
+                        | TokenKind::TSemicolon
+                        | TokenKind::TLparen
+                        | TokenKind::TPling
+                        | TokenKind::TRcurly
+                )
+            }),
+        }
+    }
+
+    pub(crate) fn class_static_continuation_allows_modifier(env: &mut ParserEnv) -> bool {
+        match offset_after_current_trivia(env) {
+            Ok((Some(offset), _)) => {
+                let rest = &env.lookahead.source_text()[offset..];
+                if rest_starts_assign_token(rest)
+                    || rest.starts_with(':')
+                    || rest_starts_less_than_token(env.lex_mode(), rest)
+                    || rest.starts_with('(')
+                    || rest.starts_with('}')
+                    || rest.starts_with(';')
+                {
+                    false
+                } else {
+                    match rest_starts_pling_token(rest) {
+                        Ok(result) => !result,
+                        Err(()) => lexer_lookahead1_matches(env, |token| {
+                            !matches!(
+                                token,
+                                TokenKind::TAssign
+                                    | TokenKind::TColon
+                                    | TokenKind::TEof
+                                    | TokenKind::TLessThan
+                                    | TokenKind::TLparen
+                                    | TokenKind::TPling
+                                    | TokenKind::TRcurly
+                                    | TokenKind::TSemicolon
+                            )
+                        }),
+                    }
+                }
+            }
+            Ok((None, _)) => false,
+            Err(()) => lexer_lookahead1_matches(env, |token| {
+                !matches!(
+                    token,
+                    TokenKind::TAssign
+                        | TokenKind::TColon
+                        | TokenKind::TEof
+                        | TokenKind::TLessThan
+                        | TokenKind::TLparen
+                        | TokenKind::TPling
+                        | TokenKind::TRcurly
+                        | TokenKind::TSemicolon
+                )
+            }),
+        }
+    }
+
+    pub(crate) fn ambient_computed_property_is_indexer(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| token == &TokenKind::TColon)
+    }
+
+    pub(crate) fn record_modifier_allows_modifier(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| {
+            !matches!(
+                token,
+                TokenKind::TColon
+                    | TokenKind::TLessThan
+                    | TokenKind::TLparen
+                    | TokenKind::TEof
+                    | TokenKind::TRcurly
+            )
+        })
     }
 
     pub(crate) fn is_function(env: &mut ParserEnv) -> bool {
         token(env) == &TokenKind::TFunction
-            || (token(env) == &TokenKind::TAsync
-                && ith_token(env, 1) == &TokenKind::TFunction
-                && loc(env).end.line == ith_loc(env, 1).start.line)
+            || (token(env) == &TokenKind::TAsync && async_token_is_followed_by_function(env))
     }
 
     pub(crate) fn is_hook(env: &mut ParserEnv) -> bool {
         match token(env) {
             TokenKind::TIdentifier { raw, .. } if raw == "hook" => {
-                env.parse_options().components
-                    && ith_is_identifier(env, 1)
-                    && loc(env).end.line == ith_loc(env, 1).start.line
+                env.parse_options().components && hook_token_is_followed_by_identifier(env)
             }
             TokenKind::TAsync => {
-                env.parse_options().components
-                    && loc(env).end.line == ith_loc(env, 1).start.line
-                    && matches!(
-                        ith_token(env, 1),
-                        TokenKind::TIdentifier { raw, .. } if raw == "hook"
-                    )
+                env.parse_options().components && async_token_is_followed_by_hook(env)
             }
             _ => false,
         }
@@ -1307,7 +2313,7 @@ pub(crate) mod peek {
         match token(env) {
             TokenKind::TClass | TokenKind::TAt => true,
             TokenKind::TIdentifier { raw, .. } if raw == "abstract" => {
-                ith_token(env, 1) == &TokenKind::TClass
+                abstract_token_is_followed_by_class(env)
             }
             _ => false,
         }
@@ -1318,23 +2324,18 @@ pub(crate) mod peek {
             return false;
         }
         match token(env) {
-            TokenKind::TIdentifier { raw, .. } if raw == "component" => ith_is_identifier(env, 1),
-            TokenKind::TAsync => {
-                !ith_is_line_terminator(env, 1)
-                    && matches!(
-                        ith_token(env, 1),
-                        TokenKind::TIdentifier { raw, .. } if raw == "component"
-                    )
+            TokenKind::TIdentifier { raw, .. } if raw == "component" => {
+                current_token_is_followed_by_identifier(env)
             }
+            TokenKind::TAsync => async_token_is_followed_by_component(env),
             _ => false,
         }
     }
 
     pub(crate) fn is_record(env: &mut ParserEnv) -> bool {
-        env.parse_options().records
-            && token(env) == &TokenKind::TRecord
-            && !ith_is_line_terminator(env, 1)
-            && ith_is_identifier(env, 1)
+        env.parse_options().records && token(env) == &TokenKind::TRecord && {
+            record_token_is_followed_by_identifier(env)
+        }
     }
 
     pub(crate) fn is_renders_ident(env: &mut ParserEnv) -> bool {
@@ -1476,19 +2477,17 @@ pub mod eat {
             }
         }
 
-        env.lex_env = peek::lex_env(env);
-
-        for (loc, e) in peek::errors(env) {
-            env.error_at(loc, e)?;
+        if !env.lookahead_0().errors.is_empty() {
+            for (loc, e) in peek::errors(env) {
+                env.error_at(loc, e)?;
+            }
         }
-        let new_comments = env.lookahead_0().comments.clone();
-        env.comments.extend(new_comments);
-        env.last_lex_result = {
-            let result = env.lookahead_0();
-            Some((result.loc.dupe(), result.token_kind.clone()))
-        };
 
-        env.lookahead.junk();
+        let result = env.lookahead.take_0();
+        if !result.comments.is_empty() {
+            env.comments.extend(result.comments);
+        }
+        env.last_lex_result = Some((result.loc, result.token_kind));
         Ok(())
     }
 
@@ -1504,7 +2503,7 @@ pub mod eat {
     pub(crate) fn push_lex_mode(env: &mut ParserEnv, mode: LexMode) {
         env.lex_mode_stack.push(mode);
         let new_lex_mode = env.lex_mode();
-        env.lookahead = lookahead::Lookahead::new(new_lex_mode, &env.lex_env);
+        env.lookahead.reset(new_lex_mode);
     }
 
     pub(crate) fn pop_lex_mode(env: &mut ParserEnv) {
@@ -1512,7 +2511,7 @@ pub mod eat {
             .pop()
             .expect("Popping lex mode from empty stack");
         let new_lex_mode = env.lex_mode();
-        env.lookahead = lookahead::Lookahead::new(new_lex_mode, &env.lex_env);
+        env.lookahead.reset(new_lex_mode);
     }
 
     pub(crate) fn double_pop_lex_mode(env: &mut ParserEnv) {
@@ -1523,37 +2522,43 @@ pub mod eat {
             .pop()
             .expect("Popping lex mode from empty stack");
         let new_lex_mode = env.lex_mode();
-        env.lookahead = lookahead::Lookahead::new(new_lex_mode, &env.lex_env);
+        env.lookahead.reset(new_lex_mode);
     }
 
     pub(crate) fn rescan_as_template_from<'a>(
         env: &mut ParserEnv<'a>,
-        prev_lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
+        prev_cursor: wrapped_lex_env::WrappedLexCursor,
     ) {
-        env.lookahead.rescan_template_part_from(&prev_lex_env);
+        env.lookahead.rescan_template_part_from(prev_cursor);
     }
 
     pub(crate) fn trailing_comments(env: &mut ParserEnv) -> Vec<Comment<Loc>> {
-        let loc = peek::loc(env).dupe();
-        if peek::token(env) == &TokenKind::TComma && peek::ith_is_line_terminator(env, 1) {
+        let (loc_end, is_comma) = {
+            let lookahead = env.lookahead_0();
+            (
+                lookahead.loc.end,
+                matches!(lookahead.token_kind, TokenKind::TComma),
+            )
+        };
+        if is_comma
+            && let Some(trailing_after_comma) =
+                peek::comma_trailing_comments_after_current_if_line_terminator(env)
+        {
             let trailing_before_comma = peek::comments(env);
-            let trailing_after_comma: Vec<Comment<Loc>> = env
-                .lookahead_i(1)
-                .comments
-                .clone()
+            let trailing_after_comma: Vec<Comment<Loc>> = trailing_after_comma
                 .into_iter()
-                .filter(|comment| comment.loc.start.line <= loc.end.line)
+                .filter(|comment| comment.loc.start.line <= loc_end.line)
                 .collect();
             let mut trailing = trailing_before_comma;
             trailing.extend(trailing_after_comma);
             env.consume_comments_until(Position {
-                line: loc.end.line + 1,
+                line: loc_end.line + 1,
                 column: 0,
             });
             trailing
         } else {
             let trailing = peek::comments(env);
-            env.consume_comments_until(loc.end);
+            env.consume_comments_until(loc_end);
             trailing
         }
     }
@@ -1670,17 +2675,17 @@ pub mod try_parse {
 
     pub struct Rollback;
 
-    struct SavedState<'a> {
+    struct SavedState {
         saved_errors_len: usize,
         saved_comments_len: usize,
         saved_last_lex_result: Option<(Loc, TokenKind)>,
         saved_lex_mode_stack: Vec<LexMode>,
-        saved_lex_env: wrapped_lex_env::WrappedLexEnv<'a>,
+        saved_lex_cursor: wrapped_lex_env::WrappedLexCursor,
         saved_consumed_comments_pos: Position,
         token_buffer: bool,
     }
 
-    fn save_state<'a>(env: &mut ParserEnv<'a>) -> SavedState<'a> {
+    fn save_state<'a>(env: &mut ParserEnv<'a>) -> SavedState {
         let token_buffer = match env.token_sink.take() {
             None => false,
             Some(orig_token_sink) => {
@@ -1697,7 +2702,7 @@ pub mod try_parse {
             saved_comments_len: env.comments.len(),
             saved_last_lex_result: env.last_lex_result.clone(),
             saved_lex_mode_stack: env.lex_mode_stack.clone(),
-            saved_lex_env: env.lex_env.clone(),
+            saved_lex_cursor: env.lookahead.committed_cursor(),
             saved_consumed_comments_pos: env.consumed_comments_pos,
             token_buffer,
         }
@@ -1721,26 +2726,23 @@ pub mod try_parse {
         }
     }
 
-    fn rollback_state<'a, T>(
-        env: &mut ParserEnv<'a>,
-        saved_state: SavedState<'a>,
-    ) -> ParseResult<T> {
+    fn rollback_state<'a, T>(env: &mut ParserEnv<'a>, saved_state: SavedState) -> ParseResult<T> {
         reset_token_sink(env, saved_state.token_buffer, false);
         env.errors.truncate(saved_state.saved_errors_len);
         env.comments.truncate(saved_state.saved_comments_len);
         env.last_lex_result = saved_state.saved_last_lex_result;
         env.lex_mode_stack = saved_state.saved_lex_mode_stack;
-        env.lex_env = saved_state.saved_lex_env;
         env.consumed_comments_pos = saved_state.saved_consumed_comments_pos;
         let new_lex_mode = env.lex_mode();
-        env.lookahead = lookahead::Lookahead::new(new_lex_mode, &env.lex_env);
+        env.lookahead
+            .reset_to(new_lex_mode, saved_state.saved_lex_cursor);
 
         ParseResult::FailedToParse
     }
 
     fn success<'a, T>(
         env: &mut ParserEnv<'a>,
-        saved_state: SavedState<'a>,
+        saved_state: SavedState,
         result: T,
     ) -> ParseResult<T> {
         reset_token_sink(env, saved_state.token_buffer, true);

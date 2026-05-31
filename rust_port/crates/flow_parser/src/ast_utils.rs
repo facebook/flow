@@ -864,6 +864,17 @@ pub fn mk_comments_opt<M: Dupe>(
     }
 }
 
+pub fn mk_comments_opt_from_vecs<M: Dupe>(
+    leading: Vec<Comment<M>>,
+    trailing: Vec<Comment<M>>,
+) -> Option<Syntax<M, ()>> {
+    if leading.is_empty() && trailing.is_empty() {
+        None
+    } else {
+        mk_comments_opt(Some(leading.into()), Some(trailing.into()))
+    }
+}
+
 pub fn mk_comments_with_internal_opt<M: Dupe>(
     leading: Option<Arc<[Comment<M>]>>,
     trailing: Option<Arc<[Comment<M>]>>,

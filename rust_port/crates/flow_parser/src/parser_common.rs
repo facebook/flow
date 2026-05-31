@@ -110,7 +110,6 @@ fn identifier_name_raw<'a>(env: &mut ParserEnv<'a>) -> Result<FlowSmolStr, Rollb
             FlowSmolStr::new_inline("")
         }
     };
-    let name = name.dupe();
     eat::token(env)?;
     Ok(name)
 }
@@ -123,7 +122,7 @@ pub(super) fn identifier_name<'a>(
     let leading = peek::comments(env);
     let name = identifier_name_raw(env)?;
     let trailing = eat::trailing_comments(env);
-    let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
+    let comments = ast_utils::mk_comments_opt_from_vecs(leading, trailing);
     Ok(Identifier::new(IdentifierInner {
         loc,
         name,
@@ -146,7 +145,7 @@ pub(super) fn private_identifier<'a>(
     let name_loc = peek::loc(env).dupe();
     let name = identifier_name_raw(env)?;
     let trailing = eat::trailing_comments(env);
-    let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
+    let comments = ast_utils::mk_comments_opt_from_vecs(leading, trailing);
     let loc = Loc::between(&start_loc, &name_loc);
     if start_loc.end != name_loc.start {
         env.error_at(loc.dupe(), ParseError::WhitespaceInPrivateName)?;
@@ -294,13 +293,13 @@ pub(super) fn is_start_of_type_guard(env: &mut ParserEnv) -> bool {
     /* Parse the identifier part as normal code, since this can be any name that
      * a parameter can be. */
     eat::push_lex_mode(env, LexMode::Normal);
-    let token_1_is_identifier_name = peek::ith_is_identifier_name(env, 0);
+    let token_1_is_identifier_name = peek::is_identifier_name(env);
     let token_1 = peek::token(env).clone();
     eat::pop_lex_mode(env);
     if !token_1_is_identifier_name {
         return false;
     }
-    let token_2 = peek::ith_token(env, 1).clone();
+    let token_2 = peek::type_guard_second_token_kind(env);
     match (token_1, token_2) {
         (TokenKind::TIdentifier { raw, .. }, TokenKind::TIdentifier { .. } | TokenKind::TThis)
             if raw == "asserts" =>

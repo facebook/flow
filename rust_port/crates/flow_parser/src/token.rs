@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::borrow::Cow;
+
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::loc::Loc;
@@ -33,7 +35,11 @@ pub enum NumberType {
 /// Parse a hex string (without 0x/0X prefix, may contain underscores) to f64.
 /// Handles large values that overflow i64/u64 by accumulating as f64.
 pub fn parse_hex_to_f64(hex_digits: &str) -> f64 {
-    let without_underscore: String = hex_digits.replace('_', "");
+    let without_underscore = if hex_digits.as_bytes().contains(&b'_') {
+        Cow::Owned(hex_digits.replace('_', ""))
+    } else {
+        Cow::Borrowed(hex_digits)
+    };
     // Try u64 first for better precision on values that fit
     if let Ok(v) = u64::from_str_radix(&without_underscore, 16) {
         return v as f64;
@@ -51,7 +57,11 @@ pub fn parse_hex_to_f64(hex_digits: &str) -> f64 {
 /// Parse a binary string (without 0b/0B prefix, may contain underscores) to f64.
 /// Handles large values that overflow i64/u64 by accumulating as f64.
 pub fn parse_binary_to_f64(binary_digits: &str) -> f64 {
-    let without_underscore: String = binary_digits.replace('_', "");
+    let without_underscore = if binary_digits.as_bytes().contains(&b'_') {
+        Cow::Owned(binary_digits.replace('_', ""))
+    } else {
+        Cow::Borrowed(binary_digits)
+    };
     // Try u64 first for better precision on values that fit
     if let Ok(v) = u64::from_str_radix(&without_underscore, 2) {
         return v as f64;
@@ -69,7 +79,11 @@ pub fn parse_binary_to_f64(binary_digits: &str) -> f64 {
 /// Parse an octal string (without 0o/0O prefix, may contain underscores) to f64.
 /// Handles large values that overflow i64/u64 by accumulating as f64.
 pub fn parse_octal_to_f64(octal_digits: &str) -> f64 {
-    let without_underscore: String = octal_digits.replace('_', "");
+    let without_underscore = if octal_digits.as_bytes().contains(&b'_') {
+        Cow::Owned(octal_digits.replace('_', ""))
+    } else {
+        Cow::Borrowed(octal_digits)
+    };
     // Try u64 first for better precision on values that fit
     if let Ok(v) = u64::from_str_radix(&without_underscore, 8) {
         return v as f64;

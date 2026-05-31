@@ -44,6 +44,14 @@ impl LexErrors {
     pub fn as_errors(&self) -> &[(Loc, ParseError)] {
         &self.errors
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.errors.is_empty()
+    }
+
+    pub fn into_vec(self) -> Vec<(Loc, ParseError)> {
+        self.errors.into_owned()
+    }
 }
 
 /// Lexer environment containing all state for lexing
@@ -54,6 +62,15 @@ pub struct LexEnv {
     comment_syntax_enabled: bool,
     pub(super) in_comment_syntax: bool,
     pub(super) last_loc: Loc,
+}
+
+#[derive(Debug, Clone, Copy, Dupe)]
+pub(super) struct LexEnvState {
+    lex_bol: Bol,
+    in_comment_syntax: bool,
+    last_loc_has_source: bool,
+    last_loc_start: Position,
+    last_loc_end: Position,
 }
 
 /// The last_loc should initially be set to the beginning of the first line, so that
@@ -113,5 +130,29 @@ impl LexEnv {
 
     pub(super) fn loc_of_span(&self, span: &Range<usize>) -> Loc {
         self.loc_of_offsets(span.start, span.end)
+    }
+
+    pub(super) fn state(&self) -> LexEnvState {
+        LexEnvState {
+            lex_bol: self.lex_bol,
+            in_comment_syntax: self.in_comment_syntax,
+            last_loc_has_source: self.last_loc.source.is_some(),
+            last_loc_start: self.last_loc.start,
+            last_loc_end: self.last_loc.end,
+        }
+    }
+
+    pub(super) fn restore_state(&mut self, state: LexEnvState) {
+        self.lex_bol = state.lex_bol;
+        self.in_comment_syntax = state.in_comment_syntax;
+        self.last_loc = Loc {
+            source: if state.last_loc_has_source {
+                self.source.dupe()
+            } else {
+                None
+            },
+            start: state.last_loc_start,
+            end: state.last_loc_end,
+        };
     }
 }

@@ -225,6 +225,9 @@ pub(super) fn parse_function_block_body(
 // a list of errors and returns the list in forward order with dupes
 // removed. This differs from a set because the original order is preserved.
 fn filter_duplicate_errors(errors: Vec<(Loc, ParseError)>) -> Vec<(Loc, ParseError)> {
+    if errors.len() <= 1 {
+        return errors;
+    }
     let mut seen = HashSet::new();
     let to_retain: Vec<bool> = errors.iter().map(|e| seen.insert(e)).collect();
     let mut new_errors = Vec::new();
@@ -482,7 +485,7 @@ fn parse_program_inner(env: &mut ParserEnv) -> Result<ast::Program<Loc, Loc>, Ro
             }
         };
 
-        let all_comments = env.comments();
+        let all_comments = env.take_comments();
 
         Ok(ast::Program {
             loc,
@@ -496,7 +499,7 @@ fn parse_program_inner(env: &mut ParserEnv) -> Result<ast::Program<Loc, Loc>, Ro
                 },
                 None,
             ),
-            all_comments: all_comments.to_vec().into(),
+            all_comments: all_comments.into(),
         })
     })
 }
@@ -618,9 +621,9 @@ pub fn parse_json_file<'a>(
             | TokenKind::TTrue
             | TokenKind::TFalse
             | TokenKind::TNull => parse_expression(env),
-            TokenKind::TMinus => match peek::ith_token(env, 1) {
-                TokenKind::TNumber { .. } => parse_expression(env),
-                _ => {
+            TokenKind::TMinus => match peek::unary_minus_is_followed_by_number(env) {
+                Some(_) => parse_expression(env),
+                None => {
                     env.error_unexpected(Some("a number".to_owned()))?;
                     null_fallback(env)
                 }

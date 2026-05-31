@@ -215,53 +215,76 @@ pub(super) fn assignment_cover(env: &mut ParserEnv) -> Result<PatternCover, Roll
         })
     }
 
+    fn try_assignment_or_arrow_function(
+        env: &mut ParserEnv,
+        try_arrow_function_first: bool,
+    ) -> Result<PatternCover, Rollback> {
+        match if try_arrow_function_first {
+            try_parse::to_parse(env, try_arrow_function)
+        } else {
+            try_parse::to_parse(env, try_assignment_but_not_arrow_function)
+        } {
+            try_parse::ParseResult::ParsedSuccessfully(expr) => Ok(expr),
+            try_parse::ParseResult::FailedToParse => {
+                match if try_arrow_function_first {
+                    try_parse::to_parse(env, try_assignment_but_not_arrow_function)
+                } else {
+                    try_parse::to_parse(env, try_arrow_function)
+                } {
+                    try_parse::ParseResult::ParsedSuccessfully(expr) => Ok(expr),
+                    try_parse::ParseResult::FailedToParse => {
+                        // Well shoot. It doesn't parse cleanly as a normal
+                        // expression or as an arrow_function. Let's treat it as a
+                        // normal assignment expression gone wrong *)
+                        assignment_but_not_arrow_function_cover(env)
+                    }
+                }
+            }
+        }
+    }
+
     let is_identifier = peek::is_identifier(env)
         && match peek::token(env) {
             TokenKind::TAwait => !env.allow_await(),
             TokenKind::TYield => !env.allow_yield(),
             _ => true,
         };
-    match (peek::token(env), is_identifier) {
-        (TokenKind::TYield, _) => {
-            if env.allow_yield() {
-                Ok(PatternCover::CoverExpr(yield_expr(env)?))
-            } else {
-                assignment_but_not_arrow_function_cover(env)
-            }
+    if peek::token(env) == &TokenKind::TYield {
+        if env.allow_yield() {
+            Ok(PatternCover::CoverExpr(yield_expr(env)?))
+        } else {
+            assignment_but_not_arrow_function_cover(env)
         }
-        (t @ (TokenKind::TLparen | TokenKind::TLessThan | TokenKind::TThis), _) | (t, true) => {
-            // Ok, we don't know if this is going to be an arrow function or a
-            // regular assignment expression. Let's first try to parse it as an
-            // assignment expression. If that fails we'll try an arrow function.
+    } else if peek::token(env) == &TokenKind::TThis {
+        if peek::async_arrow_parameter_continuation_is_arrow(env) {
+            try_assignment_or_arrow_function(env, false)
+        } else {
+            assignment_but_not_arrow_function_cover(env)
+        }
+    } else if matches!(peek::token(env), TokenKind::TLparen | TokenKind::TLessThan) {
+        // Ok, we don't know if this is going to be an arrow function or a
+        // regular assignment expression. Let's first try to parse it as an
+        // assignment expression. If that fails we'll try an arrow function.
+        try_assignment_or_arrow_function(env, false)
+    } else if is_identifier {
+        let is_async = peek::token(env) == &TokenKind::TAsync;
+        let arrow_function_possible = if is_async {
+            peek::async_token_can_start_arrow_function(env)
+        } else {
+            peek::async_arrow_parameter_continuation_is_arrow(env)
+        };
+        if !arrow_function_possible {
+            assignment_but_not_arrow_function_cover(env)
+        } else {
             // Unless it begins with `async <` in which case we first try parsing
             // it as an arrow function, and then an assignment expression.
-            let try_arrow_function_first = t == &TokenKind::TAsync
+            let try_arrow_function_first = is_async
                 && env.should_parse_types()
-                && peek::ith_token(env, 1) == &TokenKind::TLessThan;
-            match if try_arrow_function_first {
-                try_parse::to_parse(env, try_arrow_function)
-            } else {
-                try_parse::to_parse(env, try_assignment_but_not_arrow_function)
-            } {
-                try_parse::ParseResult::ParsedSuccessfully(expr) => Ok(expr),
-                try_parse::ParseResult::FailedToParse => {
-                    match if try_arrow_function_first {
-                        try_parse::to_parse(env, try_assignment_but_not_arrow_function)
-                    } else {
-                        try_parse::to_parse(env, try_arrow_function)
-                    } {
-                        try_parse::ParseResult::ParsedSuccessfully(expr) => Ok(expr),
-                        try_parse::ParseResult::FailedToParse => {
-                            // Well shoot. It doesn't parse cleanly as a normal
-                            // expression or as an arrow_function. Let's treat it as a
-                            // normal assignment expression gone wrong *)
-                            assignment_but_not_arrow_function_cover(env)
-                        }
-                    }
-                }
-            }
+                && peek::current_token_is_followed_by_tless_than(env);
+            try_assignment_or_arrow_function(env, try_arrow_function_first)
         }
-        _ => assignment_but_not_arrow_function_cover(env),
+    } else {
+        assignment_but_not_arrow_function_cover(env)
     }
 }
 
@@ -1144,7 +1167,7 @@ pub(super) fn call_cover(
         if !env.parse_options().records {
             return false;
         }
-        if peek::ith_is_line_terminator(env, 0) {
+        if peek::is_line_terminator(env) {
             return false;
         }
         if env.no_record() {
@@ -1766,7 +1789,7 @@ fn member_cover(
         }
         TokenKind::TNot if in_optional_chain => {
             if env.parse_options().assert_operator {
-                match peek::ith_token(env, 1) {
+                match peek::optional_chain_bang_continuation(env) {
                     TokenKind::TTemplatePart(_) => {
                         env.error(ParseError::OptionalChainTemplate)?;
                         eat::token(env)?;
@@ -1829,20 +1852,20 @@ fn assert_operator_cover(
     start_loc: Loc,
     left: PatternCover,
 ) -> Result<PatternCover, Rollback> {
-    let token = peek::token(env).clone(); // clone needed: TokenKind doesn't implement Dupe
-    let next_token = peek::ith_token(env, 1).clone(); // clone needed: TokenKind doesn't implement Dupe
+    if peek::token(env) != &TokenKind::TNot {
+        return Ok(left);
+    }
 
-    match (&token, &next_token) {
-        (TokenKind::TNot, TokenKind::TPeriod)
-        | (TokenKind::TNot, TokenKind::TLbracket)
-        | (TokenKind::TNot, TokenKind::TLessThan)
-        | (TokenKind::TNot, TokenKind::TLparen)
+    let next_token = peek::assert_operator_bang_continuation(env); // clone needed: TokenKind doesn't implement Dupe
+
+    match &next_token {
+        TokenKind::TPeriod | TokenKind::TLbracket | TokenKind::TLessThan | TokenKind::TLparen
             if in_optional_chain
                 && (next_token != TokenKind::TLparen || env.should_parse_types()) =>
         {
             Ok(left)
         }
-        (TokenKind::TNot, _) if env.parse_options().assert_operator => {
+        _ if env.parse_options().assert_operator => {
             let argument = as_expression(env, left)?;
             let end_loc = peek::loc(env).dupe();
             eat::token(env)?;
@@ -2255,7 +2278,7 @@ fn primary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
             env,
         )?)),
         TokenKind::TIdentifier { raw, .. }
-            if raw == "abstract" && peek::ith_token(env, 1) == &TokenKind::TClass =>
+            if raw == "abstract" && peek::abstract_token_is_followed_by_class(env) =>
         {
             Ok(PatternCover::CoverExpr(object_parser::class_expression(
                 env,
@@ -2264,8 +2287,7 @@ fn primary_cover(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
         // `match (`
         TokenKind::TMatch
             if env.parse_options().pattern_matching
-                && !peek::ith_is_line_terminator(env, 1)
-                && peek::ith_token(env, 1) == &TokenKind::TLparen =>
+                && peek::match_token_is_followed_by_lparen_on_same_line(env) =>
         {
             let leading = peek::comments(env);
             let match_keyword_loc = peek::loc(env).dupe();
@@ -2465,10 +2487,10 @@ fn template_literal(
             let expr = main_parser::parse_expression(env)?;
             let expr_loc = expr.loc().dupe();
             expressions.push(expr);
-            let prev_lex_env = peek::lex_env(env);
+            let prev_lex_cursor = peek::lex_cursor(env);
             match peek::token(env) {
                 TokenKind::TRcurly => {
-                    eat::rescan_as_template_from(env, prev_lex_env);
+                    eat::rescan_as_template_from(env, prev_lex_cursor);
                     let (loc, part, is_tail) = match peek::token(env) {
                         TokenKind::TTemplatePart(template_part) => {
                             let template_part = template_part.clone();
@@ -3006,7 +3028,7 @@ fn array_initializer(
                     // which must be the last element. We can easily error about additional elements since
                     // they will be in the element list, but a trailing elision, like `[...x,]`, is not part
                     // of the AST. so, keep track of the error so we can raise it if this is a pattern.
-                    if !is_last && peek::ith_token(env, 1) == &TokenKind::TRbracket {
+                    if !is_last && peek::array_rest_continuation_is_rbracket(env) {
                         new_errs
                             .if_patt
                             .push((loc, ParseError::ElementAfterRestElement));
@@ -3146,7 +3168,7 @@ fn try_arrow_function(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {
 
         // a T_ASYNC could either be a parameter name or it could be indicating
         // that it's an async function
-        let (async_flag, leading) = if peek::ith_token(env, 1) != &TokenKind::TArrow {
+        let (async_flag, leading) = if !peek::async_arrow_parameter_continuation_is_arrow(env) {
             declaration_parser::parse_async(env)?
         } else {
             (false, Vec::new())

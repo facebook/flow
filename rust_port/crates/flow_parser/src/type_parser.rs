@@ -77,7 +77,7 @@ fn maybe_variance(
             })
         }
         TokenKind::TIdentifier { raw, .. } if raw == "in" && parse_in_out => {
-            if peek::ith_is_type_identifier(env, 1) {
+            if peek::current_token_is_followed_by_type_identifier(env) {
                 let leading = peek::comments(env);
                 eat::token(env)?;
                 let (kind, loc) = match peek::token(env) {
@@ -98,7 +98,7 @@ fn maybe_variance(
             }
         }
         TokenKind::TIdentifier { raw, .. } if raw == "out" && parse_in_out => {
-            if peek::ith_is_type_identifier(env, 1) {
+            if peek::current_token_is_followed_by_type_identifier(env) {
                 let leading = peek::comments(env);
                 eat::token(env)?;
                 Some(Variance {
@@ -453,18 +453,17 @@ fn postfix_with(
             eat::token(env)?;
             postfix_brackets(env, in_optional_indexed_access, false, start_loc, t)
         }
-        TokenKind::TPeriod => match peek::ith_token(env, 1) {
-            TokenKind::TLbracket => {
+        TokenKind::TPeriod => {
+            if peek::current_token_is_followed_by_lbracket(env) {
                 env.error(ParseError::InvalidIndexedAccess { has_bracket: true })?;
                 expect::token(env, TokenKind::TPeriod)?;
                 expect::token(env, TokenKind::TLbracket)?;
                 postfix_brackets(env, in_optional_indexed_access, false, start_loc, t)
-            }
-            _ => {
+            } else {
                 env.error(ParseError::InvalidIndexedAccess { has_bracket: false })?;
                 Ok(t)
             }
-        },
+        }
         _ => Ok(t),
     }
 }
@@ -533,7 +532,9 @@ fn typeof_qualification(
     initial: types::typeof_::Target<Loc, Loc>,
 ) -> Result<types::typeof_::Target<Loc, Loc>, Rollback> {
     let mut target = initial;
-    while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_identifier_name(env, 1) {
+    while peek::token(env) == &TokenKind::TPeriod
+        && peek::current_token_is_followed_by_identifier_name(env)
+    {
         let (loc, id) = with_loc(Some(target.loc().dupe()), env, |env| {
             expect::token(env, TokenKind::TPeriod)?;
             let id = parser_common::identifier_name(env)?;
@@ -697,7 +698,7 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
             }))
         }
         TokenKind::TTypeof => typeof_type(env),
-        TokenKind::TImport if *peek::ith_token(env, 1) == TokenKind::TLparen => {
+        TokenKind::TImport if peek::current_token_is_followed_by_lparen(env) => {
             import_type_generic(env)
         }
         TokenKind::TLbracket => tuple(env),
@@ -749,7 +750,7 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
             }))
         }
         TokenKind::TIdentifier { raw, .. }
-            if raw == "unique" && *peek::ith_token(env, 1) == TokenKind::TSymbolType =>
+            if raw == "unique" && peek::identifier_token_is_followed_by_symbol_type(env) =>
         {
             let (loc, mut inner) = with_loc(None, env, |env| {
                 let leading = peek::comments(env);
@@ -765,29 +766,29 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
             Ok(types::Type::new(inner))
         }
         TokenKind::TIdentifier { raw, .. } if raw == "hook" && env.parse_options().components => {
-            match peek::ith_token(env, 1) {
-                TokenKind::TLessThan | TokenKind::TLparen => hook(env),
-                _ => {
-                    let (loc, g) = generic(env)?;
-                    Ok(types::Type::new(TypeInner::Generic {
-                        loc,
-                        inner: Arc::new(g),
-                    }))
-                }
-            }
-        }
-        TokenKind::TNew => match peek::ith_token(env, 1) {
-            TokenKind::TLessThan | TokenKind::TLparen => constructor_type(env, false),
-            _ => {
+            if peek::token_after_current_starts_type_call(env) {
+                hook(env)
+            } else {
                 let (loc, g) = generic(env)?;
                 Ok(types::Type::new(TypeInner::Generic {
                     loc,
                     inner: Arc::new(g),
                 }))
             }
-        },
+        }
+        TokenKind::TNew => {
+            if peek::token_after_current_starts_type_call(env) {
+                constructor_type(env, false)
+            } else {
+                let (loc, g) = generic(env)?;
+                Ok(types::Type::new(TypeInner::Generic {
+                    loc,
+                    inner: Arc::new(g),
+                }))
+            }
+        }
         TokenKind::TIdentifier { raw, .. } if raw == "abstract" => {
-            if *peek::ith_token(env, 1) == TokenKind::TNew {
+            if peek::token_after_current_is_new(env) {
                 constructor_type(env, true)
             } else {
                 let (loc, g) = generic(env)?;
@@ -972,10 +973,10 @@ fn template_literal_type(
             let t = parse_type(env)?;
             let t_loc = t.loc().dupe();
             types_acc.push(t);
-            let prev_lex_env = peek::lex_env(env);
+            let prev_lex_cursor = peek::lex_cursor(env);
             match peek::token(env) {
                 TokenKind::TRcurly => {
-                    eat::rescan_as_template_from(env, prev_lex_env);
+                    eat::rescan_as_template_from(env, prev_lex_cursor);
                     let (loc, part, is_tail) = match peek::token(env) {
                         TokenKind::TTemplatePart(template_part) => {
                             let template_part = template_part.clone();
@@ -1050,10 +1051,8 @@ fn negate(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
     let (loc, mut inner) = with_loc(None, env, |env| {
         let leading = peek::comments(env);
         eat::token(env)?;
-        match peek::token(env) {
+        match peek::token(env).clone() {
             TokenKind::TNumberSingletonType { kind, value, raw } => {
-                let kind = *kind;
-                let value = *value;
                 let raw = raw.to_owned();
                 let literal = number_singleton(env, Some(leading), kind, value, raw)?;
                 Ok(TypeInner::NumberLiteral {
@@ -1066,7 +1065,6 @@ fn negate(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 value,
                 raw,
             } => {
-                let value = *value;
                 let raw = raw.to_owned();
                 let literal = bigint_singleton(env, Some(leading), value, raw)?;
                 Ok(TypeInner::BigIntLiteral {
@@ -1280,19 +1278,19 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                         Ok(ElementResult::InexactTupleMarker)
                     }
                     _ => {
-                        let name = match (peek::is_identifier(env), peek::ith_token(env, 1)) {
-                            (true, TokenKind::TPling) | (true, TokenKind::TColon) => {
-                                let name = parser_common::identifier_name(env)?;
+                        let annot = type_annotation_before_label(env)?;
+                        let (name, annot) = match peek::token(env) {
+                            TokenKind::TPling | TokenKind::TColon => {
+                                let name = reparse_type_annotation_as_identifier(env, &annot)?;
                                 if peek::token(env) == &TokenKind::TPling {
                                     env.error(ParseError::InvalidTupleOptionalSpread)?;
                                     eat::token(env)?;
                                 }
                                 expect::token(env, TokenKind::TColon)?;
-                                Some(name)
+                                (Some(name), type_inner(env)?)
                             }
-                            _ => None,
+                            _ => (None, annot),
                         };
-                        let annot = type_inner(env)?;
                         Ok(ElementResult::TupleElement(
                             types::tuple::Element::SpreadElement {
                                 loc: LOC_NONE,
@@ -1304,14 +1302,14 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
             } else {
                 let is_plus = matches!(peek::token(env), TokenKind::TPlus);
                 let is_minus_with_identifier = matches!(peek::token(env), TokenKind::TMinus)
-                    && peek::ith_is_identifier(env, 1);
+                    && peek::current_token_is_followed_by_identifier(env);
                 // readonly foo: T
                 let is_readonly_with_identifier = matches!(peek::token(env), TokenKind::TReadonly)
-                    && peek::ith_is_identifier(env, 1);
+                    && peek::current_token_is_followed_by_identifier(env);
                 // writeonly foo: T
                 let is_writeonly_with_identifier =
                     matches!(peek::token(env), TokenKind::TWriteonly)
-                        && peek::ith_is_identifier(env, 1);
+                        && peek::current_token_is_followed_by_identifier(env);
                 let variance = if is_plus || is_minus_with_identifier {
                     // `-1` is a valid type but not a valid tuple label.
                     //   But `-foo` is only valid as a tuple label.
@@ -1322,11 +1320,22 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                     None
                 };
 
-                match (peek::is_identifier(env), peek::ith_token(env, 1)) {
-                    (true, TokenKind::TPling) => {
-                        let name = parser_common::identifier_name(env)?;
+                let error_invalid_tuple_variance = |env: &mut ParserEnv,
+                                                    variance: &Option<Variance<Loc>>,
+                                                    annot: &types::Type<Loc, Loc>|
+                 -> Result<(), Rollback> {
+                    if variance.is_some() {
+                        env.error_at(annot.loc().dupe(), ParseError::InvalidTupleVariance)?;
+                    }
+                    Ok(())
+                };
+
+                let annot = type_annotation_before_label(env)?;
+                match peek::token(env) {
+                    TokenKind::TPling => {
                         eat::token(env)?; // eat T_PLING
                         if peek::token(env) == &TokenKind::TColon {
+                            let name = reparse_type_annotation_as_identifier(env, &annot)?;
                             // foo?: type — labeled optional element
                             eat::token(env)?;
                             let annot = type_inner(env)?;
@@ -1343,19 +1352,7 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                             ))
                         } else {
                             // Foo? — optional unlabeled element with identifier type
-                            if variance.is_some() {
-                                env.error(ParseError::InvalidTupleVariance)?;
-                            }
-                            let id = types::generic::Identifier::Unqualified(name.dupe());
-                            let name_loc = name.loc.dupe();
-                            let annot = types::Type::new(TypeInner::Generic {
-                                loc: name_loc,
-                                inner: Arc::new(types::Generic {
-                                    id,
-                                    targs: None,
-                                    comments: None,
-                                }),
-                            });
+                            error_invalid_tuple_variance(env, &variance, &annot)?;
                             Ok(ElementResult::TupleElement(
                                 types::tuple::Element::UnlabeledElement {
                                     loc: LOC_NONE,
@@ -1365,8 +1362,8 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                             ))
                         }
                     }
-                    (true, TokenKind::TColon) => {
-                        let name = parser_common::identifier_name(env)?;
+                    TokenKind::TColon => {
+                        let name = reparse_type_annotation_as_identifier(env, &annot)?;
                         expect::token(env, TokenKind::TColon)?;
                         let annot = type_inner(env)?;
                         Ok(ElementResult::TupleElement(
@@ -1382,16 +1379,12 @@ fn tuple(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                         ))
                     }
                     _ => {
-                        if variance.is_some() {
-                            env.error(ParseError::InvalidTupleVariance)?;
-                        }
-                        let annot = type_inner(env)?;
-                        let optional = eat::maybe(env, TokenKind::TPling)?;
+                        error_invalid_tuple_variance(env, &variance, &annot)?;
                         Ok(ElementResult::TupleElement(
                             types::tuple::Element::UnlabeledElement {
                                 loc: LOC_NONE,
                                 annot,
-                                optional,
+                                optional: false,
                             },
                         ))
                     }
@@ -1478,8 +1471,155 @@ fn anonymous_function_param(annot: types::Type<Loc, Loc>) -> types::function::Pa
     }
 }
 
-// Port of function_param_with_id from type_parser.ml (lines 788-799)
-fn function_param_with_id(
+fn primitive_type_annotation_as_identifier(
+    loc: &Loc,
+    name: &'static str,
+    comments: &Option<Syntax<Loc, ()>>,
+) -> Identifier<Loc, Loc> {
+    Identifier::new(IdentifierInner {
+        loc: loc.dupe(),
+        name: FlowSmolStr::new_inline(name),
+        comments: comments.clone(),
+    })
+}
+
+fn type_annotation_as_identifier(annot: &types::Type<Loc, Loc>) -> Option<Identifier<Loc, Loc>> {
+    match annot.deref() {
+        TypeInner::Any { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "any", comments,
+        )),
+        TypeInner::Mixed { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "mixed", comments,
+        )),
+        TypeInner::Empty { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "empty", comments,
+        )),
+        TypeInner::Boolean { loc, raw, comments } => {
+            let name = match raw {
+                types::BooleanRaw::Boolean => "boolean",
+                types::BooleanRaw::Bool => "bool",
+            };
+            Some(primitive_type_annotation_as_identifier(loc, name, comments))
+        }
+        TypeInner::Number { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "number", comments,
+        )),
+        TypeInner::BigInt { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "bigint", comments,
+        )),
+        TypeInner::String { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "string", comments,
+        )),
+        TypeInner::Symbol { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "symbol", comments,
+        )),
+        TypeInner::Void { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "void", comments,
+        )),
+        TypeInner::Null { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "null", comments,
+        )),
+        TypeInner::Unknown { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "unknown", comments,
+        )),
+        TypeInner::Never { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc, "never", comments,
+        )),
+        TypeInner::Undefined { loc, comments } => Some(primitive_type_annotation_as_identifier(
+            loc,
+            "undefined",
+            comments,
+        )),
+        TypeInner::Generic { inner, .. } if inner.targs.is_none() => match &inner.id {
+            types::generic::Identifier::Unqualified(id) => Some(id.dupe()),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn reparse_type_annotation_as_identifier(
+    env: &mut ParserEnv,
+    annot: &types::Type<Loc, Loc>,
+) -> Result<Identifier<Loc, Loc>, Rollback> {
+    match type_annotation_as_identifier(annot) {
+        Some(id) => Ok(id),
+        None => {
+            env.error_at(
+                annot.loc().dupe(),
+                ParseError::UnexpectedWithExpected("type".to_owned(), "an identifier".to_owned()),
+            )?;
+            Ok(Identifier::new(IdentifierInner {
+                loc: annot.loc().dupe(),
+                name: FlowSmolStr::new_inline(""),
+                comments: None,
+            }))
+        }
+    }
+}
+
+fn function_param_from_type_annotation(
+    env: &mut ParserEnv,
+    left: types::Type<Loc, Loc>,
+) -> Result<types::function::Param<Loc, Loc>, Rollback> {
+    let start_loc = left.loc().dupe();
+    let name = reparse_type_annotation_as_identifier(env, &left)?;
+    let (loc, (optional, annot)) = with_loc(Some(start_loc), env, |env| {
+        let optional = eat::maybe(env, TokenKind::TPling)?;
+        expect::token(env, TokenKind::TColon)?;
+        let annot = type_inner(env)?;
+        Ok((optional, annot))
+    })?;
+    Ok(types::function::Param {
+        loc,
+        param: types::function::ParamKind::Labeled {
+            name,
+            annot,
+            optional,
+        },
+    })
+}
+
+fn generic_type_from_current_identifier_name(
+    env: &mut ParserEnv,
+) -> Result<types::Type<Loc, Loc>, Rollback> {
+    let (loc, id) = with_loc(None, env, parser_common::identifier_name)?;
+    Ok(types::Type::new(TypeInner::Generic {
+        loc,
+        inner: Arc::new(types::Generic {
+            id: types::generic::Identifier::Unqualified(id),
+            targs: None,
+            comments: None,
+        }),
+    }))
+}
+
+fn token_needs_identifier_reparse_before_label(env: &mut ParserEnv) -> bool {
+    let token_needs_reparse = match peek::token(env) {
+        TokenKind::TStatic
+        | TokenKind::TReadonly
+        | TokenKind::TWriteonly
+        | TokenKind::TKeyof
+        | TokenKind::TInfer
+        | TokenKind::TAsserts
+        | TokenKind::TIs
+        | TokenKind::TImplies
+        | TokenKind::TVoidType => true,
+        TokenKind::TIdentifier { raw, .. } => raw == "component" || raw == "renders",
+        _ => false,
+    };
+    token_needs_reparse && peek::token_after_current_is_pling_or_colon(env)
+}
+
+fn type_annotation_before_label(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
+    if token_needs_identifier_reparse_before_label(env) {
+        generic_type_from_current_identifier_name(env)
+    } else {
+        type_inner(env)
+    }
+}
+
+fn function_param_with_current_token_identifier(
     env: &mut ParserEnv,
 ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
     let (loc, (name, optional, annot)) = with_loc(None, env, |env| {
@@ -1504,6 +1644,36 @@ fn function_param_with_id(
     })
 }
 
+fn function_param_with_renders_question(
+    env: &mut ParserEnv,
+) -> Result<types::function::Param<Loc, Loc>, Rollback> {
+    let (loc, (name, annot)) = with_loc(None, env, |env| {
+        let leading = peek::comments(env);
+        let mut name_loc = peek::loc(env).dupe();
+        name_loc.end.column -= 1;
+        eat::token(env)?;
+        if !env.should_parse_types() {
+            env.error(ParseError::UnexpectedTypeAnnotation)?;
+        }
+        expect::token(env, TokenKind::TColon)?;
+        let annot = type_inner(env)?;
+        let name = Identifier::new(IdentifierInner {
+            loc: name_loc,
+            name: FlowSmolStr::new_inline("renders"),
+            comments: mk_comments_opt(Some(leading.into()), None),
+        });
+        Ok((name, annot))
+    })?;
+    Ok(types::function::Param {
+        loc,
+        param: types::function::ParamKind::Labeled {
+            name,
+            annot,
+            optional: true,
+        },
+    })
+}
+
 fn destructuring_function_param(
     env: &mut ParserEnv,
     allow_optional: bool,
@@ -1523,7 +1693,7 @@ fn function_param_list_without_parens(
         env: &mut ParserEnv,
         allow_optional: bool,
     ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
-        match peek::token(env) {
+        match peek::token(env).clone() {
             TokenKind::TLcurly | TokenKind::TLbracket => {
                 if env.is_d_ts() {
                     destructuring_function_param(env, allow_optional)
@@ -1532,19 +1702,23 @@ fn function_param_list_without_parens(
                     Ok(anonymous_function_param(annot))
                 }
             }
-            _ => match peek::ith_token(env, 1) {
-                TokenKind::TColon | TokenKind::TPling => function_param_with_id(env),
-                _ => {
-                    let annot = type_inner(env)?;
+            _ => {
+                if token_needs_identifier_reparse_before_label(env) {
+                    return function_param_with_current_token_identifier(env);
+                }
+                let annot = type_inner(env)?;
+                if matches!(peek::token(env), TokenKind::TPling | TokenKind::TColon) {
+                    function_param_from_type_annotation(env, annot)
+                } else {
                     Ok(anonymous_function_param(annot))
                 }
-            },
+            }
         }
     }
 
     let mut this = None;
     loop {
-        match peek::token(env) {
+        match peek::token(env).clone() {
             TokenKind::TEof | TokenKind::TEllipsis | TokenKind::TRparen => {
                 let rest = if peek::token(env) == &TokenKind::TEllipsis {
                     let (loc, mut param) = with_loc(None, env, |env| {
@@ -1570,35 +1744,37 @@ fn function_param_list_without_parens(
                     comments: None,
                 });
             }
+            token
+                if (matches!(token, TokenKind::TThis)
+                    || matches!(&token, TokenKind::TIdentifier { raw, .. } if raw == "this"))
+                    && peek::token_after_current_is_pling_or_colon(env) =>
+            {
+                if this.is_some() || !params.is_empty() {
+                    env.error(ParseError::ThisParamMustBeFirst)?;
+                }
+                let (loc, mut this_param) = with_loc(None, env, |env| {
+                    let leading = peek::comments(env);
+                    eat::token(env)?;
+                    if peek::token(env) == &TokenKind::TPling {
+                        env.error(ParseError::ThisParamMayNotBeOptional)?;
+                    }
+                    let annot = annotation(env)?;
+                    Ok(types::function::ThisParam {
+                        loc: LOC_NONE,
+                        annot,
+                        comments: mk_comments_opt(Some(leading.into()), None),
+                    })
+                })?;
+                this_param.loc = loc;
+                if peek::token(env) != &TokenKind::TRparen {
+                    expect::token(env, TokenKind::TComma)?;
+                }
+                this = Some(this_param);
+            }
             TokenKind::TIdentifier { raw, .. } if raw == "this" => {
-                let next_token = peek::ith_token(env, 1);
-                if matches!(next_token, TokenKind::TColon | TokenKind::TPling) {
-                    if this.is_some() || !params.is_empty() {
-                        env.error(ParseError::ThisParamMustBeFirst)?;
-                    }
-                    let (loc, mut this_param) = with_loc(None, env, |env| {
-                        let leading = peek::comments(env);
-                        eat::token(env)?;
-                        if peek::token(env) == &TokenKind::TPling {
-                            env.error(ParseError::ThisParamMayNotBeOptional)?;
-                        }
-                        let annot = annotation(env)?;
-                        Ok(types::function::ThisParam {
-                            loc: LOC_NONE,
-                            annot,
-                            comments: mk_comments_opt(Some(leading.into()), None),
-                        })
-                    })?;
-                    this_param.loc = loc;
-                    if peek::token(env) != &TokenKind::TRparen {
-                        expect::token(env, TokenKind::TComma)?;
-                    }
-                    this = Some(this_param);
-                } else {
-                    params.push(param(env, true)?);
-                    if peek::token(env) != &TokenKind::TRparen {
-                        expect::token(env, TokenKind::TComma)?;
-                    }
+                params.push(param(env, true)?);
+                if peek::token(env) != &TokenKind::TRparen {
+                    expect::token(env, TokenKind::TComma)?;
                 }
             }
             _ => {
@@ -1630,17 +1806,26 @@ fn function_param_list(env: &mut ParserEnv) -> Result<types::function::Params<Lo
     Ok(params)
 }
 
+fn function_param_list_with_first(
+    env: &mut ParserEnv,
+    param: types::function::Param<Loc, Loc>,
+) -> Result<types::function::Params<Loc, Loc>, Rollback> {
+    if peek::token(env) != &TokenKind::TRparen {
+        expect::token(env, TokenKind::TComma)?;
+    }
+    function_param_list_without_parens(env, vec![param])
+}
+
 fn component_param_list_without_parens(
     env: &mut ParserEnv,
 ) -> Result<types::component_params::Params<Loc, Loc>, Rollback> {
     fn param_name(
         env: &mut ParserEnv,
     ) -> Result<statement::component_params::ParamName<Loc, Loc>, Rollback> {
-        match peek::token(env) {
+        match peek::token(env).clone() {
             TokenKind::TString(_, value, raw, octal) => {
                 let value = value.dupe();
                 let raw = raw.dupe();
-                let octal = *octal;
                 let loc = peek::loc(env).dupe();
                 if octal {
                     env.strict_error(ParseError::StrictOctalLiteral)?;
@@ -1689,25 +1874,16 @@ fn component_param_list_without_parens(
                     let (loc, mut rest) = with_loc(None, env, |env| {
                         let leading = peek::comments(env);
                         expect::token(env, TokenKind::TEllipsis)?;
-                        let (argument, optional) = match peek::ith_token(env, 1) {
-                            TokenKind::TColon => {
-                                eat::push_lex_mode(env, LexMode::Normal);
-                                let ident = parser_common::identifier_name(env)?;
-                                eat::pop_lex_mode(env);
+                        let left = type_annotation_before_label(env)?;
+                        let (argument, optional, annot) = match peek::token(env) {
+                            TokenKind::TColon | TokenKind::TPling => {
+                                let ident = reparse_type_annotation_as_identifier(env, &left)?;
+                                let optional = eat::maybe(env, TokenKind::TPling)?;
                                 expect::token(env, TokenKind::TColon)?;
-                                (Some(ident), false)
+                                (Some(ident), optional, type_inner(env)?)
                             }
-                            TokenKind::TPling => {
-                                eat::push_lex_mode(env, LexMode::Normal);
-                                let ident = parser_common::identifier_name(env)?;
-                                eat::pop_lex_mode(env);
-                                expect::token(env, TokenKind::TPling)?;
-                                expect::token(env, TokenKind::TColon)?;
-                                (Some(ident), true)
-                            }
-                            _ => (None, false),
+                            _ => (None, false, left),
                         };
-                        let annot = type_inner(env)?;
                         if peek::token(env) == &TokenKind::TComma {
                             eat::token(env)?;
                         }
@@ -1773,7 +1949,7 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
     expect::token(env, TokenKind::TLparen)?;
 
     let ret = env.with_no_anon_function_type(false, |env| {
-        match peek::token(env) {
+        match peek::token(env).clone() {
             TokenKind::TEof | TokenKind::TEllipsis => {
                 // (... is definitely the beginning of a param list
                 Ok(ParamListOrType::ParamList(
@@ -1790,35 +1966,44 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
                     comments: None,
                 }))
             }
+            TokenKind::TThis if peek::token_after_current_is_pling_or_colon(env) => Ok(
+                ParamListOrType::ParamList(function_param_list_without_parens(env, Vec::new())?),
+            ),
+            TokenKind::TIdentifier { raw, .. }
+                if raw == "this" && peek::token_after_current_is_pling_or_colon(env) =>
+            {
+                Ok(ParamListOrType::ParamList(
+                    function_param_list_without_parens(env, Vec::new())?,
+                ))
+            }
             TokenKind::TRendersQuestion => {
-                match peek::ith_token(env, 1) {
-                    TokenKind::TColon => {
-                        // Ok this is definitely a parameter
-                        Ok(ParamListOrType::ParamList(
-                            function_param_list_without_parens(env, Vec::new())?,
-                        ))
-                    }
-                    _ => Ok(ParamListOrType::Type(type_inner(env)?)),
+                if peek::token_after_current_is_colon(env) {
+                    // Ok this is definitely a parameter
+                    let param = function_param_with_renders_question(env)?;
+                    Ok(ParamListOrType::ParamList(function_param_list_with_first(
+                        env, param,
+                    )?))
+                } else {
+                    Ok(ParamListOrType::Type(type_inner(env)?))
                 }
             }
             TokenKind::TIdentifier { raw, .. } if raw == "renders" => {
-                match peek::ith_token(env, 1) {
-                    TokenKind::TPling | TokenKind::TColon => {
-                        // Ok this is definitely a parameter
-                        Ok(ParamListOrType::ParamList(
-                            function_param_list_without_parens(env, Vec::new())?,
-                        ))
-                    }
-                    _ => Ok(ParamListOrType::Type(type_inner(env)?)),
+                if peek::token_after_current_is_pling_or_colon(env) {
+                    // Ok this is definitely a parameter
+                    let param = function_param_with_current_token_identifier(env)?;
+                    Ok(ParamListOrType::ParamList(function_param_list_with_first(
+                        env, param,
+                    )?))
+                } else {
+                    Ok(ParamListOrType::Type(type_inner(env)?))
                 }
             }
             TokenKind::TIdentifier { raw, .. } if raw == "component" => {
                 if env.parse_options().components {
-                    match peek::ith_token(env, 1) {
-                        TokenKind::TLessThan | TokenKind::TLparen => {
-                            Ok(ParamListOrType::Type(type_inner(env)?))
-                        }
-                        _ => function_param_or_generic_type(env),
+                    if peek::token_after_current_starts_type_call(env) {
+                        Ok(ParamListOrType::Type(type_inner(env)?))
+                    } else {
+                        function_param_or_generic_type(env)
                     }
                 } else {
                     // This could be a function parameter or a generic type
@@ -1832,18 +2017,28 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
             | TokenKind::TInfer
             | TokenKind::TAsserts
             | TokenKind::TIs
-            | TokenKind::TImplies => match peek::ith_token(env, 1) {
-                TokenKind::TPling | TokenKind::TColon => Ok(ParamListOrType::ParamList(
-                    function_param_list_without_parens(env, Vec::new())?,
-                )),
-                _ => Ok(ParamListOrType::Type(type_inner(env)?)),
-            },
+            | TokenKind::TImplies => {
+                if peek::token_after_current_is_pling_or_colon(env) {
+                    let param = function_param_with_current_token_identifier(env)?;
+                    Ok(ParamListOrType::ParamList(function_param_list_with_first(
+                        env, param,
+                    )?))
+                } else {
+                    Ok(ParamListOrType::Type(type_inner(env)?))
+                }
+            }
             TokenKind::TIdentifier { raw, .. } if raw == "abstract" => {
-                if *peek::ith_token(env, 1) == TokenKind::TNew {
+                if peek::token_after_current_is_new(env) {
                     Ok(ParamListOrType::Type(type_inner(env)?))
                 } else {
                     function_param_or_generic_type(env)
                 }
+            }
+            TokenKind::TStatic if peek::token_after_current_is_pling_or_colon(env) => {
+                let param = function_param_with_current_token_identifier(env)?;
+                Ok(ParamListOrType::ParamList(function_param_list_with_first(
+                    env, param,
+                )?))
             }
             TokenKind::TIdentifier { .. } | TokenKind::TStatic => {
                 // This could be a function parameter or a generic type
@@ -1895,15 +2090,7 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
                 } else if is_primitive(peek::token(env)) {
                     // Don't know if this is (number) or (number: number). The first
                     // is a type, the second is a param.
-                    match peek::ith_token(env, 1) {
-                        TokenKind::TPling | TokenKind::TColon => {
-                            // Ok this is definitely a parameter
-                            Ok(ParamListOrType::ParamList(
-                                function_param_list_without_parens(env, Vec::new())?,
-                            ))
-                        }
-                        _ => Ok(ParamListOrType::Type(type_inner(env)?)),
-                    }
+                    function_param_or_generic_type(env)
                 } else {
                     // All params start with an identifier or `...`
                     Ok(ParamListOrType::Type(type_inner(env)?))
@@ -1918,18 +2105,6 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
         ParamListOrType::ParamList(_) => ret,
         ParamListOrType::Type(_) if env.no_anon_function_type() => ret,
         ParamListOrType::Type(t) => match peek::token(env) {
-            TokenKind::TRparen => {
-                // Reinterpret `(type) =>` as a ParamList
-                if peek::ith_token(env, 1) == &TokenKind::TArrow {
-                    let param = anonymous_function_param(t);
-                    ParamListOrType::ParamList(function_param_list_without_parens(
-                        env,
-                        vec![param],
-                    )?)
-                } else {
-                    ParamListOrType::Type(t)
-                }
-            }
             TokenKind::TComma => {
                 // Reinterpret `(type,` as a ParamList
                 expect::token(env, TokenKind::TComma)?;
@@ -1953,6 +2128,25 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
             );
             ParamListOrType::ParamList(params)
         }
+        ParamListOrType::Type(t)
+            if !env.no_anon_function_type() && peek::token(env) == &TokenKind::TArrow =>
+        {
+            // Reinterpret `(type) =>` as a ParamList after consuming `)`, so the
+            // arrow is the current token instead of token 2.
+            let mut params = types::function::Params {
+                loc: LOC_NONE,
+                params: vec![anonymous_function_param(t)].into(),
+                rest: None,
+                this: None,
+                comments: None,
+            };
+            params.comments = ast_utils::mk_comments_with_internal_opt(
+                Some(leading.into()),
+                Some(trailing.into()),
+                Some(internal.into()),
+            );
+            ParamListOrType::ParamList(params)
+        }
         ParamListOrType::Type(t) => ParamListOrType::Type(add_comments(t, leading, trailing)),
     };
 
@@ -1960,25 +2154,20 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
 }
 
 fn function_param_or_generic_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> {
-    match peek::ith_token(env, 1) {
-        TokenKind::TPling | TokenKind::TColon => {
-            // optional param or param with type annotation
-            Ok(ParamListOrType::ParamList(
-                function_param_list_without_parens(env, Vec::new())?,
-            ))
-        }
-        _ => {
-            let start_loc = peek::loc(env).dupe();
-            let id = type_identifier(env)?;
-            let t = generic_type_with_identifier(env, id)?;
-            let t = postfix_with(env, false, start_loc.dupe(), t)?;
-            let t = anon_function_without_parens_with(env, t)?;
-            let t = intersection_with(env, vec![], start_loc.dupe(), t)?;
-            let t = union_with(env, vec![], start_loc.dupe(), t)?;
-            let t =
-                env.with_no_conditional_type(false, |env| conditional_with(env, start_loc, t))?;
-            Ok(ParamListOrType::Type(t))
-        }
+    if token_needs_identifier_reparse_before_label(env) {
+        let param = function_param_with_current_token_identifier(env)?;
+        return Ok(ParamListOrType::ParamList(function_param_list_with_first(
+            env, param,
+        )?));
+    }
+    let t = type_inner(env)?;
+    if matches!(peek::token(env), TokenKind::TPling | TokenKind::TColon) {
+        let param = function_param_from_type_annotation(env, t)?;
+        Ok(ParamListOrType::ParamList(function_param_list_with_first(
+            env, param,
+        )?))
+    } else {
+        Ok(ParamListOrType::Type(t))
     }
 }
 
@@ -2155,14 +2344,14 @@ fn type_guard_annotation(
     Ok(types::TypeGuardAnnotation { loc, guard })
 }
 
-// and ith_is_object_key ~i ~is_class env =
+// and object_key_after_current_in_normal_mode ~is_class env =
 //   Eat.push_lex_mode env Lex_mode.NORMAL;
-//   let result = Peek.ith_is_object_key ~i ~is_class env in
+//   let result = Peek.object_key_after_current ~is_class env in
 //   Eat.pop_lex_mode env;
 //   result
-fn ith_is_object_key(env: &mut ParserEnv, i: usize, is_class: bool) -> bool {
+fn object_key_after_current_in_normal_mode(env: &mut ParserEnv, is_class: bool) -> bool {
     eat::push_lex_mode(env, LexMode::Normal);
-    let result = peek::ith_is_object_key(env, i, is_class);
+    let result = peek::current_token_is_followed_by_object_key(env, is_class);
     eat::pop_lex_mode(env);
     result
 }
@@ -2403,7 +2592,7 @@ fn object_type(
         leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         let (loc, mut indexer) = with_loc(Some(start_loc), env, |env| {
-            let id = if peek::ith_token(env, 1) == &TokenKind::TColon {
+            let id = if peek::token_after_current_is_colon(env) {
                 let id = parser_common::identifier_name(env)?;
                 expect::token(env, TokenKind::TColon)?;
                 Some(id)
@@ -2592,7 +2781,7 @@ fn object_type(
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         let leading = [leading, peek::comments(env)].concat();
         expect::token(env, TokenKind::TLbracket)?;
-        let ith_1 = peek::ith_token(env, 1).clone();
+        let ith_1 = peek::computed_type_property_continuation(env);
         match (peek::token(env), &ith_1) {
             (_, TokenKind::TIdentifier { raw, .. }) if raw == "in" && static_.is_none() => {
                 mapped_type(env, start_loc, variance, variance_op, leading)
@@ -2763,8 +2952,8 @@ fn object_type(
                     Vec::new(),
                 )
             }
-            TokenKind::TPling => match peek::ith_token(env, 1) {
-                TokenKind::TLparen | TokenKind::TLessThan => {
+            TokenKind::TPling => {
+                if peek::class_optional_method_continuation_is_call_or_type_args(env) {
                     eat::token(env)?;
                     error_unexpected_variance(env, variance.as_ref())?;
                     method_property(
@@ -2778,22 +2967,23 @@ fn object_type(
                         ts_accessibility,
                         Vec::new(),
                     )
+                } else {
+                    init_property(
+                        env,
+                        start_loc,
+                        variance,
+                        static_,
+                        None,
+                        abstract_,
+                        override_,
+                        ts_accessibility,
+                        Vec::new(),
+                        computed_loc,
+                        key,
+                        is_class,
+                    )
                 }
-                _ => init_property(
-                    env,
-                    start_loc,
-                    variance,
-                    static_,
-                    None,
-                    abstract_,
-                    override_,
-                    ts_accessibility,
-                    Vec::new(),
-                    computed_loc,
-                    key,
-                    is_class,
-                ),
-            },
+            }
             _ => init_property(
                 env,
                 start_loc,
@@ -3006,6 +3196,41 @@ fn object_type(
         mut leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         loop {
+            if is_class
+                && !override_
+                && matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "override")
+            {
+                if object_key_after_current_in_normal_mode(env, is_class) {
+                    leading = [leading, peek::comments(env)].concat();
+                    eat::token(env)?;
+                    allow_static = false;
+                    allow_proto = false;
+                    allow_accessibility = false;
+                    override_ = true;
+                    continue;
+                } else {
+                    break;
+                }
+            }
+            if allow_abstract
+                && matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "abstract")
+            {
+                if object_key_after_current_in_normal_mode(env, is_class) {
+                    if static_.is_some() {
+                        env.error(ParseError::StaticAbstractMethod)?;
+                    }
+                    leading = [leading, peek::comments(env)].concat();
+                    eat::token(env)?;
+                    allow_static = false;
+                    allow_proto = false;
+                    allow_abstract = false;
+                    allow_accessibility = false;
+                    abstract_ = true;
+                    continue;
+                } else {
+                    break;
+                }
+            }
             match peek::token(env) {
                 TokenKind::TPlus | TokenKind::TMinus if variance.is_none() => {
                     variance = maybe_variance(env, false, false)?;
@@ -3033,36 +3258,6 @@ fn object_type(
                     allow_accessibility = false;
                 }
                 TokenKind::TIdentifier { raw, .. }
-                    if raw == "override" && is_class && !override_ =>
-                {
-                    if ith_is_object_key(env, 1, is_class) {
-                        leading = [leading, peek::comments(env)].concat();
-                        eat::token(env)?;
-                        allow_static = false;
-                        allow_proto = false;
-                        allow_accessibility = false;
-                        override_ = true;
-                    } else {
-                        break;
-                    }
-                }
-                TokenKind::TIdentifier { raw, .. } if raw == "abstract" && allow_abstract => {
-                    if ith_is_object_key(env, 1, is_class) {
-                        if static_.is_some() {
-                            env.error(ParseError::StaticAbstractMethod)?;
-                        }
-                        leading = [leading, peek::comments(env)].concat();
-                        eat::token(env)?;
-                        allow_static = false;
-                        allow_proto = false;
-                        allow_abstract = false;
-                        allow_accessibility = false;
-                        abstract_ = true;
-                    } else {
-                        break;
-                    }
-                }
-                TokenKind::TIdentifier { raw, .. }
                     if (raw == "private" || raw == "protected" || raw == "public")
                         && allow_accessibility =>
                 {
@@ -3072,8 +3267,8 @@ fn object_type(
                         "public" => class::ts_accessibility::Kind::Public,
                         _ => unreachable!("Must be one of the above"),
                     };
-                    if ith_is_object_key(env, 1, is_class)
-                        || peek::ith_token(env, 1) == &TokenKind::TStatic
+                    if object_key_after_current_in_normal_mode(env, is_class)
+                        || peek::token_after_current_is_static(env)
                     {
                         let acc_loc = peek::loc(env).dupe();
                         leading = [leading, peek::comments(env)].concat();
@@ -3097,7 +3292,7 @@ fn object_type(
                             matches!(v.kind, VarianceKind::Plus | VarianceKind::Minus)
                         }
                     };
-                    if variance_allows && ith_is_object_key(env, 1, is_class) {
+                    if variance_allows && object_key_after_current_in_normal_mode(env, is_class) {
                         let variance_op = match &variance {
                             Some(v) if v.kind == VarianceKind::Plus => {
                                 Some(types::object::MappedTypeVarianceOp::Add)
@@ -3148,12 +3343,11 @@ fn object_type(
                 }
                 TokenKind::TLbracket => {
                     error_unexpected_proto(env, proto.as_ref())?;
-                    return match peek::ith_token(env, 1) {
-                        TokenKind::TLbracket => {
-                            error_unexpected_variance(env, variance.as_ref())?;
-                            internal_slot(env, start_loc, static_, leading)
-                        }
-                        _ => bracket_property(
+                    return if peek::current_token_is_followed_by_lbracket(env) {
+                        error_unexpected_variance(env, variance.as_ref())?;
+                        internal_slot(env, start_loc, static_, leading)
+                    } else {
+                        bracket_property(
                             env,
                             abstract_,
                             override_,
@@ -3164,7 +3358,7 @@ fn object_type(
                             ts_accessibility,
                             leading,
                             is_class,
-                        ),
+                        )
                     };
                 }
                 TokenKind::TLessThan | TokenKind::TLparen => {
@@ -3267,9 +3461,8 @@ fn object_type(
                             )
                         }
                         TokenKind::TPling
-                            if matches!(
-                                peek::ith_token(env, 1),
-                                TokenKind::TLparen | TokenKind::TLessThan
+                            if peek::class_optional_method_continuation_is_call_or_type_args(
+                                env,
                             ) =>
                         {
                             eat::token(env)?;
@@ -3340,10 +3533,7 @@ fn object_type(
                         )
                     }
                     TokenKind::TPling
-                        if matches!(
-                            peek::ith_token(env, 1),
-                            TokenKind::TLparen | TokenKind::TLessThan
-                        ) =>
+                        if peek::class_optional_method_continuation_is_call_or_type_args(env) =>
                     {
                         eat::token(env)?;
                         error_unexpected_proto(env, proto.as_ref())?;
@@ -3724,7 +3914,9 @@ fn raw_generic_with_identifier(
         env: &mut ParserEnv,
         mut qualification: (Loc, types::generic::Identifier<Loc, Loc>),
     ) -> Result<(Loc, types::generic::Identifier<Loc, Loc>), Rollback> {
-        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_identifier_name(env, 1) {
+        while peek::token(env) == &TokenKind::TPeriod
+            && peek::current_token_is_followed_by_identifier_name(env)
+        {
             let (loc, mut q) = with_loc(Some(qualification.0.dupe()), env, |env| {
                 expect::token(env, TokenKind::TPeriod)?;
                 let id = parser_common::identifier_name(env)?;
@@ -3762,17 +3954,6 @@ fn raw_generic_with_identifier(
             comments: None,
         })
     })
-}
-
-fn generic_type_with_identifier(
-    env: &mut ParserEnv,
-    id: Identifier<Loc, Loc>,
-) -> Result<types::Type<Loc, Loc>, Rollback> {
-    let (loc, generic) = raw_generic_with_identifier(env, id)?;
-    Ok(types::Type::new(TypeInner::Generic {
-        loc,
-        inner: Arc::new(generic),
-    }))
 }
 
 fn import_type_generic(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
@@ -3824,7 +4005,9 @@ fn import_type_generic(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rol
             }));
 
         let mut qualification = (import_loc.dupe(), initial);
-        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_identifier_name(env, 1) {
+        while peek::token(env) == &TokenKind::TPeriod
+            && peek::current_token_is_followed_by_identifier_name(env)
+        {
             let (loc, mut q) = with_loc(Some(qualification.0.dupe()), env, |env| {
                 expect::token(env, TokenKind::TPeriod)?;
                 let id = parser_common::identifier_name(env)?;

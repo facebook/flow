@@ -690,16 +690,32 @@ fn object_pattern(env: &mut ParserEnv) -> Result<match_pattern::ObjectPattern<Lo
                     shorthand_prop(env, binding, leading)
                 }
                 _ => {
-                    if peek::is_identifier(env)
-                        && matches!(
-                            peek::ith_token(env, 1),
-                            TokenKind::TComma | TokenKind::TRcurly
-                        )
-                    {
-                        Ok(match_pattern::object_pattern::Property::InvalidShorthand {
-                            loc: LOC_NONE,
-                            identifier: parser_common::identifier_name(env)?,
-                        })
+                    if peek::is_identifier(env) {
+                        let identifier = parser_common::identifier_name(env)?;
+                        if matches!(peek::token(env), TokenKind::TComma | TokenKind::TRcurly) {
+                            Ok(match_pattern::object_pattern::Property::InvalidShorthand {
+                                loc: LOC_NONE,
+                                identifier,
+                            })
+                        } else {
+                            let key = match_pattern::object_pattern::Key::Identifier(identifier);
+                            expect::token(env, TokenKind::TColon)?;
+                            let pattern = parse_match_pattern(env)?;
+                            let trailing = eat::trailing_comments(env);
+                            let comments = ast_utils::mk_comments_opt(
+                                Some(leading.into()),
+                                Some(trailing.into()),
+                            );
+                            Ok(match_pattern::object_pattern::Property::Valid {
+                                loc: LOC_NONE,
+                                property: match_pattern::object_pattern::PropertyStruct {
+                                    key,
+                                    pattern,
+                                    shorthand: false,
+                                    comments,
+                                },
+                            })
+                        }
                     } else {
                         let key = property_key(env)?;
                         expect::token(env, TokenKind::TColon)?;

@@ -21,7 +21,6 @@ use crate::loc::LOC_NONE;
 use crate::loc::Loc;
 use crate::main_parser;
 use crate::parse_error::ParseError;
-use crate::parser_common;
 use crate::parser_common::is_simple_parameter_list;
 use crate::parser_common::with_loc;
 use crate::parser_env::ParserEnv;
@@ -374,20 +373,21 @@ pub(super) fn parse_function_params(
             }
 
             // Check conditions before the match to avoid borrow checker issues
-            let is_accessibility_with_ident = matches!(
-                peek::token(env),
-                TokenKind::TPublic | TokenKind::TPrivate | TokenKind::TProtected
-            ) && peek::ith_is_identifier(env, 1);
+            let is_accessibility_with_ident =
+                matches!(
+                    peek::token(env),
+                    TokenKind::TPublic | TokenKind::TPrivate | TokenKind::TProtected
+                ) && peek::current_token_is_followed_by_identifier(env);
 
             let is_readonly_with_ident = matches!(
                 peek::token(env),
                 TokenKind::TIdentifier { raw, .. } if raw == "readonly"
-            ) && peek::ith_is_identifier(env, 1);
+            ) && peek::current_token_is_followed_by_identifier(env);
 
             let is_writeonly_with_ident = matches!(
                 peek::token(env),
                 TokenKind::TIdentifier { raw, .. } if raw == "writeonly"
-            ) && peek::ith_is_identifier(env, 1);
+            ) && peek::current_token_is_followed_by_identifier(env);
 
             if is_accessibility_with_ident {
                 let (acc_loc, (kind, leading)) = with_loc(None, env, |env| {
@@ -648,7 +648,7 @@ pub(super) fn parse_generator(env: &mut ParserEnv) -> Result<(bool, Vec<Comment<
 /// Returns true and consumes a token if the token is `async` and the token after it is on
 /// the same line (see https://tc39.es/ecma262/#sec-async-function-definitions)
 pub(super) fn parse_async(env: &mut ParserEnv) -> Result<(bool, Vec<Comment<Loc>>), Rollback> {
-    if peek::token(env) == &TokenKind::TAsync && !peek::ith_is_line_terminator(env, 1) {
+    if peek::async_token_continues_on_same_line(env) {
         let leading = peek::comments(env);
         eat::token(env)?;
         Ok((true, leading))
@@ -1082,8 +1082,24 @@ pub(super) fn parse_const(
     ),
     Rollback,
 > {
+    let leading_comments = peek::comments(env);
+    expect::token(env, TokenKind::TConst)?;
+    parse_const_after_const(env, leading_comments)
+}
+
+pub(super) fn parse_const_after_const(
+    env: &mut ParserEnv,
+    leading_comments: Vec<Comment<Loc>>,
+) -> Result<
+    (
+        Vec<statement::variable::Declarator<Loc, Loc>>,
+        Vec<Comment<Loc>>,
+        Vec<(Loc, ParseError)>,
+    ),
+    Rollback,
+> {
     env.with_no_let(true, |env| {
-        let (declarations, leading_comments, mut errs) = declarations(TokenKind::TConst, env)?;
+        let (declarations, mut errs) = variable_declaration_list(env)?;
         // Make sure all consts defined are initialized, unless we're in an ambient context with type annotation
         for decl in &declarations {
             if decl.init.is_none() {
@@ -1138,14 +1154,9 @@ pub(super) fn parse_component_params(
     ) -> Result<statement::component_params::Param<Loc, Loc>, Rollback> {
         let (loc, param_inner) = with_loc(None, env, |env| {
             let leading = peek::comments(env);
-            let first_token = peek::token(env).clone();
-            let second_token = peek::ith_token(env, 1).clone();
-            let (name, local, shorthand) = match (first_token, second_token) {
+            let (name, local, shorthand) = match peek::token(env).clone() {
                 // "prop-key" as propKey
-                (TokenKind::TString(str_loc, value, str_raw, octal), ref next_token)
-                    if matches!(next_token, TokenKind::TColon | TokenKind::TPling)
-                        || matches!(next_token, TokenKind::TIdentifier { raw, .. } if raw == "as") =>
-                {
+                TokenKind::TString(str_loc, value, str_raw, octal) => {
                     if octal {
                         env.strict_error(ParseError::StrictOctalLiteral)?;
                     }
@@ -1162,11 +1173,17 @@ pub(super) fn parse_component_params(
                             ),
                         },
                     ));
-                    match next_token {
+                    match peek::token(env) {
+                        TokenKind::TIdentifier { raw, .. } if raw == "as" => {
+                            eat::token(env)?;
+                            let local =
+                                pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
+                            (name, local, false)
+                        }
                         TokenKind::TColon | TokenKind::TPling => {
                             // This is an error probably due to someone learning component syntax.
                             // Let's make a good error message and supply a quick fix
-                            let optional = matches!(next_token, TokenKind::TPling);
+                            let optional = peek::token(env) == &TokenKind::TPling;
                             env.error(ParseError::InvalidComponentStringParameterBinding {
                                 optional,
                                 name: value.as_str().to_owned(),
@@ -1192,22 +1209,30 @@ pub(super) fn parse_component_params(
                             (name, local, false)
                         }
                         _ => {
-                            eat::token(env)?;
-                            let local =
-                                pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
+                            env.error(ParseError::InvalidComponentStringParameterBinding {
+                                optional: false,
+                                name: value.as_str().to_owned(),
+                            })?;
+                            let loc = peek::loc(env).dupe();
+                            let fallback_ident = Identifier::new(IdentifierInner {
+                                loc: loc.dupe(),
+                                name: FlowSmolStr::new_inline(""),
+                                comments: None,
+                            });
+                            let annot = type_parser::parse_annotation_opt(env)?;
+                            let local = pattern::Pattern::Identifier {
+                                loc,
+                                inner: Arc::new(pattern::Identifier {
+                                    name: fallback_ident,
+                                    annot,
+                                    optional: false,
+                                }),
+                            };
                             (name, local, false)
                         }
                     }
                 }
-                (_, TokenKind::TIdentifier { raw, .. }) if raw == "as" => {
-                    let name = statement::component_params::ParamName::Identifier(
-                        parser_common::identifier_name(env)?,
-                    );
-                    expect::identifier(env, "as")?;
-                    let local = pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
-                    (name, local, false)
-                }
-                (TokenKind::TLcurly, _) => {
+                TokenKind::TLcurly => {
                     env.error(ParseError::InvalidComponentParamName)?;
                     let fake_name_loc = peek::loc(env).dupe();
                     let fallback_ident = Identifier::new(IdentifierInner {
@@ -1225,14 +1250,20 @@ pub(super) fn parse_component_params(
                         true,
                         Some(ParseError::StrictParamName),
                     )?;
-                    (
-                        statement::component_params::ParamName::Identifier(id.name.dupe()),
-                        pattern::Pattern::Identifier {
+                    let name = statement::component_params::ParamName::Identifier(id.name.dupe());
+                    if matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "as")
+                    {
+                        expect::identifier(env, "as")?;
+                        let local =
+                            pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
+                        (name, local, false)
+                    } else {
+                        let local = pattern::Pattern::Identifier {
                             loc,
                             inner: Arc::new(id),
-                        },
-                        true,
-                    )
+                        };
+                        (name, local, true)
+                    }
                 }
             };
 

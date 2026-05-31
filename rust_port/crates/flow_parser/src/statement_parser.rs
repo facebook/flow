@@ -47,6 +47,7 @@ use crate::parser_env::LexMode;
 use crate::parser_env::ParserEnv;
 use crate::parser_env::eat;
 use crate::parser_env::expect;
+use crate::parser_env::is_reserved_type;
 use crate::parser_env::peek;
 use crate::parser_env::try_parse;
 use crate::parser_env::try_parse::Rollback;
@@ -448,27 +449,26 @@ fn for_loop(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollb
         let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
         let init_starts_with_async = matches!(peek::token(env), TokenKind::TAsync);
 
-        let (init, errs) = env.with_no_in(true, |env| match peek::token(env) {
+        let (init, errs) = env.with_no_in(true, |env| match peek::token(env).clone() {
             TokenKind::TSemicolon => Ok((None, vec![])),
+            TokenKind::TLet if !peek::let_token_is_followed_by_in(env) => {
+                let (loc, (declarations, leading, errs)) =
+                    with_loc(None, env, declaration_parser::parse_let)?;
+                Ok((
+                    Some(ForLhs::ForDeclaration((
+                        loc,
+                        statement::VariableDeclaration {
+                            kind: VariableKind::Let,
+                            declarations: declarations.into(),
+                            comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
+                        },
+                    ))),
+                    errs,
+                ))
+            }
             TokenKind::TLet => {
-                if peek::ith_token(env, 1) != &TokenKind::TIn {
-                    let (loc, (declarations, leading, errs)) =
-                        with_loc(None, env, declaration_parser::parse_let)?;
-                    Ok((
-                        Some(ForLhs::ForDeclaration((
-                            loc,
-                            statement::VariableDeclaration {
-                                kind: VariableKind::Let,
-                                declarations: declarations.into(),
-                                comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                            },
-                        ))),
-                        errs,
-                    ))
-                } else {
-                    let expr = main_parser::parse_expression_or_pattern(env)?;
-                    Ok((Some(ForLhs::ForExpression(expr)), vec![]))
-                }
+                let expr = main_parser::parse_expression_or_pattern(env)?;
+                Ok((Some(ForLhs::ForExpression(expr)), vec![]))
             }
             TokenKind::TConst => {
                 let (loc, (declarations, leading, errs)) =
@@ -1096,10 +1096,15 @@ fn var_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, 
     ))
 }
 
-fn const_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
-    let (loc, s) = with_loc(None, env, |env| {
+fn const_statement_after_const(
+    env: &mut ParserEnv,
+    start_loc: Loc,
+    leading: Vec<Comment<Loc>>,
+) -> Result<statement::Statement<Loc, Loc>, Rollback> {
+    let (loc, s) = with_loc(Some(start_loc), env, |env| {
         let kind = VariableKind::Const;
-        let (mut declarations, leading, errs) = declaration_parser::parse_const(env)?;
+        let (mut declarations, leading, errs) =
+            declaration_parser::parse_const_after_const(env, leading)?;
         let trailing = variable_declaration_end(env, kind, &mut declarations)?;
         for err in errs {
             env.error_at(err.0, err.1)?;
@@ -1338,6 +1343,13 @@ fn type_alias_helper(
         l
     };
     expect::token(env, TokenKind::TType)?;
+    type_alias_helper_after_type(env, leading)
+}
+
+fn type_alias_helper_after_type(
+    env: &mut ParserEnv,
+    leading: Vec<Comment<Loc>>,
+) -> Result<statement::TypeAlias<Loc, Loc>, Rollback> {
     eat::push_lex_mode(env, LexMode::Type);
     let id = {
         let mut id = type_parser::type_identifier(env)?;
@@ -1389,7 +1401,9 @@ fn declare_type_alias(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
 /// However, if there's a line separator between the two, ASI makes it valid JS, so line
 /// separators are disallowed.
 fn type_alias(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
-    if peek::ith_is_identifier(env, 1) && !peek::ith_is_implicit_semicolon(env, 1) {
+    if peek::current_token_is_followed_by_identifier(env)
+        && !peek::current_token_is_followed_by_implicit_semicolon(env)
+    {
         let (loc, type_alias) = with_loc(None, env, |env| type_alias_helper(env, Vec::new()))?;
         Ok(statement::Statement::new(StatementInner::TypeAlias {
             loc,
@@ -1579,16 +1593,15 @@ fn declare_opaque_type(env: &mut ParserEnv) -> Result<statement::Statement<Loc, 
 }
 
 fn opaque_type(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
-    match peek::ith_token(env, 1) {
-        TokenKind::TType => {
-            let (loc, opaque_t) =
-                with_loc(None, env, |env| opaque_type_helper(env, false, Vec::new()))?;
-            Ok(statement::Statement::new(StatementInner::OpaqueType {
-                loc,
-                inner: Arc::new(opaque_t),
-            }))
-        }
-        _ => parse_statement(env, true),
+    if peek::opaque_token_is_followed_by_type(env) {
+        let (loc, opaque_t) =
+            with_loc(None, env, |env| opaque_type_helper(env, false, Vec::new()))?;
+        Ok(statement::Statement::new(StatementInner::OpaqueType {
+            loc,
+            inner: Arc::new(opaque_t),
+        }))
+    } else {
+        parse_statement(env, true)
     }
 }
 
@@ -1655,7 +1668,7 @@ fn declare_interface(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Lo
 /// Disambiguate between a value named `interface`, like `var interface = 1; interface++`,
 /// and an interface declaration like `interface Foo {}`.
 fn interface(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollback> {
-    if peek::ith_is_identifier_name(env, 1) {
+    if peek::current_token_is_followed_by_identifier_name(env) {
         let (loc, iface) = with_loc(None, env, |env| interface_helper(env, Vec::new()))?;
         Ok(statement::Statement::new(
             StatementInner::InterfaceDeclaration {
@@ -1861,18 +1874,9 @@ fn declare_async_statement(
         let leading = peek::comments(env);
         expect::token(env, TokenKind::TDeclare)?;
         // Now T_ASYNC is at position 0 and we can peek at position 1
-        let is_component = env.parse_options().components
-            && !peek::ith_is_line_terminator(env, 1)
-            && matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TIdentifier { raw, .. } if raw == "component"
-            );
-        let is_hook = env.parse_options().components
-            && !peek::ith_is_line_terminator(env, 1)
-            && matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TIdentifier { raw, .. } if raw == "hook"
-            );
+        let is_component =
+            env.parse_options().components && peek::async_token_is_followed_by_component(env);
+        let is_hook = env.parse_options().components && peek::async_token_is_followed_by_hook(env);
         if is_component {
             env.error(ParseError::DeclareAsyncComponent)?;
             let leading_async = peek::comments(env);
@@ -1938,7 +1942,7 @@ fn declare_const_or_enum(env: &mut ParserEnv) -> Result<statement::Statement<Loc
         let leading = peek::comments(env);
         expect::token(env, TokenKind::TDeclare)?;
         let parse_enums = env.parse_options().enums;
-        if parse_enums && peek::ith_token(env, 1) == &TokenKind::TEnum {
+        if parse_enums && peek::current_token_is_followed_by_enum(env) {
             expect::token(env, TokenKind::TConst)?;
             let enum_decl = enum_parser::declaration(leading, true, env)?;
             Ok(DeclarationKind::Enum(enum_decl))
@@ -2442,7 +2446,7 @@ fn declare(
     let parse_enums = env.parse_options().enums;
     let current_token_is_import = peek::token(env) == &TokenKind::TImport;
     // Eventually, just emit a wrapper AST node
-    match peek::ith_token(env, 1) {
+    match peek::declaration_after_declare(env) {
         TokenKind::TClass => declare_class_statement(env, false),
         TokenKind::TIdentifier { raw, .. } if raw == "abstract" => {
             declare_class_statement(env, true)
@@ -2563,13 +2567,13 @@ fn export_specifiers(
                             }
                             // `type as ...` - ambiguous
                             TokenKind::TIdentifier { raw, .. } if raw == "as" => {
-                                match peek::ith_token(env, 1) {
+                                let local_or_as = identifier_name(env)?;
+                                match peek::token(env) {
                                     // `type as` - type export of "as"
                                     TokenKind::TEof | TokenKind::TRcurly | TokenKind::TComma => {
-                                        let local = identifier_name(env)?;
                                         Ok(statement::export_named_declaration::ExportSpecifier {
                                             loc: LOC_NONE,
-                                            local,
+                                            local: local_or_as,
                                             exported: None,
                                             export_kind: statement::ExportKind::ExportType,
                                             from_remote: false,
@@ -2578,12 +2582,11 @@ fn export_specifiers(
                                     }
                                     // `type as as foo` - type export of "as" renamed to "foo"
                                     TokenKind::TIdentifier { raw, .. } if raw == "as" => {
-                                        let local = identifier_name(env)?;
                                         eat::token(env)?;
                                         let exported = Some(identifier_name(env)?);
                                         Ok(statement::export_named_declaration::ExportSpecifier {
                                             loc: LOC_NONE,
-                                            local,
+                                            local: local_or_as,
                                             exported,
                                             export_kind: statement::ExportKind::ExportType,
                                             from_remote: false,
@@ -2593,7 +2596,6 @@ fn export_specifiers(
                                     _ => {
                                         // `type as foo` - value named "type" exported as "foo"
                                         let local = type_keyword_or_local;
-                                        eat::token(env)?;
                                         let exported = Some(identifier_name(env)?);
                                         Ok(statement::export_named_declaration::ExportSpecifier {
                                             loc: LOC_NONE,
@@ -2678,7 +2680,7 @@ fn import_equals_module_reference(
     env: &mut ParserEnv,
 ) -> Result<statement::import_equals_declaration::ModuleReference<Loc, Loc>, Rollback> {
     let is_require_call = matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "require")
-        && peek::ith_token(env, 1) == &TokenKind::TLparen;
+        && peek::import_equals_module_reference_starts_require_call(env);
     match peek::token(env) {
         TokenKind::TIdentifier { raw, .. } if raw == "require" && is_require_call => {
             // require("module")
@@ -2730,6 +2732,16 @@ fn import_equals_declaration(
     leading: Vec<Comment<Loc>>,
 ) -> Result<Arc<statement::ImportEqualsDeclaration<Loc, Loc>>, Rollback> {
     let id = main_parser::parse_identifier(env, None)?;
+    import_equals_declaration_with_id(env, import_kind, is_export, leading, id)
+}
+
+fn import_equals_declaration_with_id(
+    env: &mut ParserEnv,
+    import_kind: statement::ImportKind,
+    is_export: bool,
+    leading: Vec<Comment<Loc>>,
+    id: Identifier<Loc, Loc>,
+) -> Result<Arc<statement::ImportEqualsDeclaration<Loc, Loc>>, Rollback> {
     expect::token(env, TokenKind::TAssign)?;
     let module_reference = import_equals_module_reference(env)?;
     let trailing = match semicolon(env, None, true)? {
@@ -2759,13 +2771,10 @@ fn export_declaration(
         let parse_enum = env.parse_options().enums;
         let in_ambient_context = env.in_ambient_context();
         let is_d_ts = env.is_d_ts();
-        let is_import_equals =
-            peek::token(env) == &TokenKind::TImport && peek::ith_is_identifier(env, 1);
+        let is_import_equals = peek::token(env) == &TokenKind::TImport
+            && peek::current_token_is_followed_by_identifier(env);
         let is_export_as_namespace = matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "as")
-            && matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TIdentifier { raw, .. } if raw == "namespace"
-            );
+            && peek::identifier_token_is_followed_by_namespace(env);
         match peek::token(env) {
             // export = expr;
             TokenKind::TAssign => with_loc(Some(start_loc), env, |env| {
@@ -2870,9 +2879,10 @@ fn export_declaration(
                         l
                     };
                     eat::token(env)?;
-                    let import_kind = match peek::token(env) {
+                    match peek::token(env) {
                         TokenKind::TType => {
-                            match peek::ith_token(env, 1) {
+                            let type_id = main_parser::parse_identifier(env, None)?;
+                            let import_kind = match peek::token(env) {
                                 // `export import type, ...` or `export import type from ...` or
                                 // `export import type = ...` means 'type' is the binding name, not a keyword
                                 TokenKind::TComma | TokenKind::TAssign => {
@@ -2881,15 +2891,27 @@ fn export_declaration(
                                 TokenKind::TIdentifier { raw, .. } if raw == "from" => {
                                     statement::ImportKind::ImportValue
                                 }
-                                _ => {
-                                    eat::token(env)?;
-                                    statement::ImportKind::ImportType
-                                }
+                                _ => statement::ImportKind::ImportType,
+                            };
+                            if import_kind == statement::ImportKind::ImportValue {
+                                import_equals_declaration_with_id(
+                                    env,
+                                    import_kind,
+                                    true,
+                                    leading,
+                                    type_id,
+                                )
+                            } else {
+                                import_equals_declaration(env, import_kind, true, leading)
                             }
                         }
-                        _ => statement::ImportKind::ImportValue,
-                    };
-                    import_equals_declaration(env, import_kind, true, leading)
+                        _ => import_equals_declaration(
+                            env,
+                            statement::ImportKind::ImportValue,
+                            true,
+                            leading,
+                        ),
+                    }
                 })
                 .map(|(loc, inner)| {
                     statement::Statement::new(StatementInner::ImportEqualsDeclaration {
@@ -3267,15 +3289,49 @@ fn export_declaration(
                 statement::Statement::new(inner)
             }),
             t => {
-                if t == &TokenKind::TType && peek::ith_token(env, 1) != &TokenKind::TLcurly {
+                if t == &TokenKind::TType {
                     // export type ...
                     with_loc(Some(start_loc), env, |env| {
                         if !env.should_parse_types() {
                             env.error(ParseError::UnexpectedTypeExport)?;
                         }
-                        match peek::ith_token(env, 1) {
+                        let type_loc = peek::loc(env).dupe();
+                        let type_alias_leading = peek::comments(env);
+                        expect::token(env, TokenKind::TType)?;
+                        match peek::token(env) {
+                            TokenKind::TLcurly => {
+                                expect::token(env, TokenKind::TLcurly)?;
+                                let mut specifiers = export_specifiers(env)?;
+                                expect::token(env, TokenKind::TRcurly)?;
+                                let (source, trailing, specifiers) = match peek::token(env) {
+                                    TokenKind::TIdentifier { raw, .. } if raw == "from" => {
+                                        let (source, trailing) = export_source_and_semicolon(env)?;
+                                        specifiers.iter_mut().for_each(|s| {
+                                            s.from_remote = true;
+                                        });
+                                        (Some(source), trailing, specifiers)
+                                    }
+                                    _ => {
+                                        assert_export_specifier_identifiers(env, &specifiers)?;
+                                        let trailing = match semicolon(env, None, true)? {
+                                            SemicolonType::Explicit(trailing) => trailing,
+                                            SemicolonType::Implicit(result) => result.trailing,
+                                        };
+                                        (None, trailing, specifiers)
+                                    }
+                                };
+                                Ok(StatementInner::ExportNamedDeclaration {
+                                    loc: LOC_NONE,
+                                    inner: Arc::new(statement::ExportNamedDeclaration {
+                                        declaration: None,
+                                        specifiers: Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers)),
+                                        source,
+                                        export_kind: statement::ExportKind::ExportType,
+                                        comments: ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into())),
+                                    }),
+                                })
+                            }
                             TokenKind::TMult => {
-                                expect::token(env, TokenKind::TType)?;
                                 let specifier_loc = peek::loc(env).dupe();
                                 expect::token(env, TokenKind::TMult)?;
                                 let (source, trailing) = export_source_and_semicolon(env)?;
@@ -3292,8 +3348,7 @@ fn export_declaration(
                                 })
                             }
                             TokenKind::TEnum => {
-                                env.error(ParseError::EnumInvalidExport)?;
-                                expect::token(env, TokenKind::TType)?;
+                                env.error_at(type_loc, ParseError::EnumInvalidExport)?;
                                 Ok(StatementInner::ExportNamedDeclaration {
                                     loc: LOC_NONE,
                                     inner: Arc::new(statement::ExportNamedDeclaration {
@@ -3306,7 +3361,9 @@ fn export_declaration(
                                 })
                             }
                             _ => {
-                                let (loc, type_alias) = with_loc(None, env, |env| type_alias_helper(env, Vec::new()))?;
+                                let (loc, type_alias) = with_loc(Some(type_loc), env, |env| {
+                                    type_alias_helper_after_type(env, type_alias_leading)
+                                })?;
                                 let type_alias = statement::Statement::new(StatementInner::TypeAlias {
                                     loc,
                                     inner: Arc::new(type_alias),
@@ -3613,10 +3670,7 @@ fn declare_export_declaration_body(
                     }
                     TokenKind::TAsync if parse_components => {
                         // Check if it's `declare export default async component`
-                        if matches!(
-                            peek::ith_token(env, 1),
-                            TokenKind::TIdentifier { raw, .. } if raw == "component"
-                        ) {
+                        if peek::async_token_is_followed_by_component(env) {
                             // declare export default async component Foo();
                             env.error(ParseError::DeclareAsyncComponent)?;
                             eat::token(env)?; // consume 'async'
@@ -3633,10 +3687,7 @@ fn declare_export_declaration_body(
                                 ),
                                 Vec::new(),
                             ))
-                        } else if matches!(
-                            peek::ith_token(env, 1),
-                            TokenKind::TIdentifier { raw, .. } if raw == "hook"
-                        ) {
+                        } else if peek::async_token_is_followed_by_hook(env) {
                             // declare export default async hook foo (...): ...
                             env.error(ParseError::DeclareAsyncHook)?;
                             eat::token(env)?; // consume 'async'
@@ -3771,7 +3822,7 @@ fn declare_export_declaration_body(
                 }
                 TokenKind::TConst => {
                     // declare export const foo: ... or declare export const enum ...
-                    if parse_enums && peek::ith_token(env, 1) == &TokenKind::TEnum {
+                    if parse_enums && peek::current_token_is_followed_by_enum(env) {
                         expect::token(env, TokenKind::TConst)?;
                         let (loc, declaration) = with_loc(None, env, |env| {
                             enum_parser::declaration(Vec::new(), true, env)
@@ -3856,10 +3907,7 @@ fn declare_export_declaration_body(
         }
         TokenKind::TAsync if parse_components => {
             // Check if it's `declare export async component` vs `declare export async hook` vs `declare export async function`
-            if matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TIdentifier { raw, .. } if raw == "component"
-            ) {
+            if peek::async_token_is_followed_by_component(env) {
                 // declare export async component Foo();
                 env.error(ParseError::DeclareAsyncComponent)?;
                 eat::token(env)?; // consume 'async'
@@ -3886,10 +3934,7 @@ fn declare_export_declaration_body(
                         comments,
                     }),
                 })
-            } else if matches!(
-                peek::ith_token(env, 1),
-                TokenKind::TIdentifier { raw, .. } if raw == "hook"
-            ) {
+            } else if peek::async_token_is_followed_by_hook(env) {
                 // declare export async hook foo (...): ...
                 env.error(ParseError::DeclareAsyncHook)?;
                 eat::token(env)?; // consume 'async'
@@ -4345,36 +4390,46 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
         for_type: bool,
         error_if_type: Option<ParseError>,
     ) -> Result<(Identifier<Loc, Loc>, Option<Identifier<Loc, Loc>>), Rollback> {
-        fn identifier(
+        fn check_identifier(
             env: &mut ParserEnv,
             for_type: bool,
-        ) -> Result<Identifier<Loc, Loc>, Rollback> {
+            id: &Identifier<Loc, Loc>,
+        ) -> Result<(), Rollback> {
             if for_type {
-                type_parser::type_identifier(env)
+                if is_reserved_type(&id.name) {
+                    env.error_at(id.loc.dupe(), ParseError::UnexpectedReservedType)?;
+                }
             } else {
-                main_parser::parse_identifier(env, None)
+                assert_identifier_name_is_identifier(None, env, id)?;
             }
+            Ok(())
         }
 
-        match peek::ith_token(env, 1) {
+        let current_is_type_import = is_type_import(peek::token(env));
+        let remote = identifier_name(env)?;
+        match peek::token(env) {
             TokenKind::TIdentifier { raw, .. } if raw == "as" => {
-                let remote = identifier_name(env)?;
-                eat::token(env)?; // consume "as"
-                let local = Some(identifier(env, for_type)?);
-                Ok((remote, local))
+                eat::token(env)?;
+                let local = if for_type {
+                    type_parser::type_identifier(env)?
+                } else {
+                    main_parser::parse_identifier(env, None)?
+                };
+                Ok((remote, Some(local)))
             }
             TokenKind::TEof | TokenKind::TComma | TokenKind::TRcurly => {
-                Ok((identifier(env, for_type)?, None))
+                check_identifier(env, for_type, &remote)?;
+                Ok((remote, None))
             }
             _ => {
-                if let Some(err) = error_if_type {
-                    if is_type_import(peek::token(env)) {
-                        env.error(err)?;
-                        eat::token(env)?; // consume type/typeof
+                if current_is_type_import {
+                    if let Some(err) = error_if_type {
+                        env.error_at(remote.loc.dupe(), err)?;
                         return Ok((type_parser::type_identifier(env)?, None));
                     }
                 }
-                Ok((identifier(env, for_type)?, None))
+                check_identifier(env, for_type, &remote)?;
+                Ok((remote, None))
             }
         }
     }
@@ -4432,11 +4487,12 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 }
                 // `type as foo` (value named `type`) or `type as,` (type named `as`)
                 TokenKind::TIdentifier { raw, .. } if raw == "as" => {
-                    match peek::ith_token(env, 1) {
+                    let remote_or_as = type_parser::type_identifier(env)?;
+                    match peek::token(env) {
                         TokenKind::TEof | TokenKind::TRcurly | TokenKind::TComma => {
                             // `type as`
                             Ok(statement::import_declaration::NamedSpecifier {
-                                remote: type_parser::type_identifier(env)?,
+                                remote: remote_or_as,
                                 remote_name_def_loc: None,
                                 local: None,
                                 kind,
@@ -4445,14 +4501,13 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                         }
                         TokenKind::TIdentifier { raw: as_raw, .. } if as_raw == "as" => {
                             // `type as as foo`
-                            let remote = identifier_name(env)?;
                             // first "as"
                             eat::token(env)?;
                             // second `as`
                             let local = Some(type_parser::type_identifier(env)?);
                             // foo
                             Ok(statement::import_declaration::NamedSpecifier {
-                                remote,
+                                remote: remote_or_as,
                                 remote_name_def_loc: None,
                                 local,
                                 kind,
@@ -4464,8 +4519,6 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                             let remote = type_keyword_or_remote;
                             // `type` becomes a value
                             assert_identifier_name_is_identifier(None, env, &remote)?;
-                            eat::token(env)?;
-                            // "as"
                             let local = Some(main_parser::parse_identifier(env, None)?);
                             Ok(statement::import_declaration::NamedSpecifier {
                                 remote,
@@ -4663,7 +4716,15 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 }
             }
         };
+        with_default_identifier(env, import_kind, leading, default_specifier)
+    }
 
+    fn with_default_identifier(
+        env: &mut ParserEnv,
+        import_kind: statement::ImportKind,
+        leading: Vec<Comment<Loc>>,
+        default_specifier: statement::import_declaration::DefaultIdentifier<Loc, Loc>,
+    ) -> Result<StatementInner<Loc, Loc>, Rollback> {
         let additional_specifiers = match peek::token(env) {
             TokenKind::TComma => {
                 // `import Foo, ...`
@@ -4729,22 +4790,36 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 // `import type [...] from "ModuleName";`
                 // note that if [...] is missing, we're importing a value named `type`!
                 TokenKind::TType if should_parse_types => {
-                    match peek::ith_token(env, 1) {
+                    let type_id = main_parser::parse_identifier(env, None)?;
+                    let type_default = statement::import_declaration::DefaultIdentifier {
+                        identifier: type_id,
+                        remote_default_name_def_loc: None,
+                    };
+                    match peek::token(env) {
                         // `import type, { other, names } from "ModuleName";`
-                        TokenKind::TComma => {
-                            with_default(env, statement::ImportKind::ImportValue, leading)
-                        }
+                        TokenKind::TComma => with_default_identifier(
+                            env,
+                            statement::ImportKind::ImportValue,
+                            leading,
+                            type_default,
+                        ),
                         // `import type from "ModuleName";`
                         TokenKind::TIdentifier { raw, .. } if raw == "from" => {
                             // Importing the exported value named "type". This is not a type-import.
-                            with_default(env, statement::ImportKind::ImportValue, leading)
+                            with_default_identifier(
+                                env,
+                                statement::ImportKind::ImportValue,
+                                leading,
+                                type_default,
+                            )
                         }
                         // `import type = ...`: 'type' is the binding name, not a keyword
-                        TokenKind::TAssign => import_equals_declaration(
+                        TokenKind::TAssign => import_equals_declaration_with_id(
                             env,
                             statement::ImportKind::ImportValue,
                             false,
                             leading,
+                            type_default.identifier,
                         )
                         .map(|inner| {
                             StatementInner::ImportEqualsDeclaration {
@@ -4753,27 +4828,26 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                             }
                         }),
                         TokenKind::TMult => {
-                            // consume "type"
-                            eat::token(env)?;
                             with_specifiers(env, statement::ImportKind::ImportType, leading)
                         }
                         TokenKind::TLcurly => {
-                            // consume "type"
-                            eat::token(env)?;
                             with_specifiers(env, statement::ImportKind::ImportType, leading)
                         }
                         _ => {
-                            // consume "type"
-                            eat::token(env)?;
                             // Check for import type Foo = ...
-                            if peek::is_identifier(env)
-                                && peek::ith_token(env, 1) == &TokenKind::TAssign
-                            {
-                                import_equals_declaration(
+                            let id = type_parser::type_identifier(env)?;
+                            let default_specifier =
+                                statement::import_declaration::DefaultIdentifier {
+                                    identifier: id,
+                                    remote_default_name_def_loc: None,
+                                };
+                            if peek::token(env) == &TokenKind::TAssign {
+                                import_equals_declaration_with_id(
                                     env,
                                     statement::ImportKind::ImportType,
                                     false,
                                     leading,
+                                    default_specifier.identifier,
                                 )
                                 .map(|inner| {
                                     StatementInner::ImportEqualsDeclaration {
@@ -4782,7 +4856,12 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                                     }
                                 })
                             } else {
-                                with_default(env, statement::ImportKind::ImportType, leading)
+                                with_default_identifier(
+                                    env,
+                                    statement::ImportKind::ImportType,
+                                    leading,
+                                    default_specifier,
+                                )
                             }
                         }
                     }
@@ -4800,12 +4879,18 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                 // import Foo from "ModuleName"; or import Foo = ...
                 // Check for import equals: import Foo = ...
                 _ => {
-                    if peek::is_identifier(env) && peek::ith_token(env, 1) == &TokenKind::TAssign {
-                        import_equals_declaration(
+                    let id = main_parser::parse_identifier(env, None)?;
+                    let default_specifier = statement::import_declaration::DefaultIdentifier {
+                        identifier: id,
+                        remote_default_name_def_loc: None,
+                    };
+                    if peek::token(env) == &TokenKind::TAssign {
+                        import_equals_declaration_with_id(
                             env,
                             statement::ImportKind::ImportValue,
                             false,
                             leading,
+                            default_specifier.identifier,
                         )
                         .map(|inner| {
                             StatementInner::ImportEqualsDeclaration {
@@ -4814,7 +4899,12 @@ fn import_declaration(env: &mut ParserEnv) -> Result<statement::Statement<Loc, L
                             }
                         })
                     } else {
-                        with_default(env, statement::ImportKind::ImportValue, leading)
+                        with_default_identifier(
+                            env,
+                            statement::ImportKind::ImportValue,
+                            leading,
+                            default_specifier,
+                        )
                     }
                 }
             }
@@ -4835,18 +4925,19 @@ fn parse_statement_list_item(
     let parse_enums = env.parse_options().enums;
     let in_ambient_context = env.in_ambient_context();
     let is_d_ts = env.is_d_ts();
-    let next_is_lcurly = peek::ith_token(env, 1) == &TokenKind::TLcurly;
-    let next_is_identifier = matches!(peek::ith_token(env, 1), TokenKind::TIdentifier { .. });
-    match peek::token(env) {
+    let current_token = peek::token(env).clone();
+    match &current_token {
         // Remember kids, these look like statements but they're not
         // statements... (see section 13)
         TokenKind::TLet => let_statement(env),
         TokenKind::TConst => {
-            if parse_enums && peek::ith_token(env, 1) == &TokenKind::TEnum {
-                eat::token(env)?;
+            let start_loc = peek::loc(env).dupe();
+            let leading = peek::comments(env);
+            eat::token(env)?;
+            if parse_enums && peek::token(env) == &TokenKind::TEnum {
                 declaration_parser::parse_enum_declaration(env, None, true)
             } else {
-                const_statement(env)
+                const_statement_after_const(env, start_loc, leading)
             }
         }
         TokenKind::TInterface => interface(env),
@@ -4860,12 +4951,17 @@ fn parse_statement_list_item(
             declare_namespace(env, false, true)
         }
         TokenKind::TIdentifier { raw, .. }
-            if raw == "module" && in_ambient_context && next_is_identifier && is_d_ts =>
+            if raw == "module"
+                && in_ambient_context
+                && is_d_ts
+                && peek::token_after_current_is_identifier_token(env) =>
         {
             declare_namespace(env, false, true)
         }
         TokenKind::TIdentifier { raw, .. }
-            if raw == "global" && in_ambient_context && next_is_lcurly =>
+            if raw == "global"
+                && in_ambient_context
+                && peek::token_after_current_is_lcurly(env) =>
         {
             declare_namespace(env, true, true)
         }
@@ -4911,9 +5007,7 @@ fn parse_statement(
         TokenKind::TReturn => return_statement(env),
         TokenKind::TSwitch => switch(env),
         TokenKind::TMatch if parse_pattern_matching => {
-            if !peek::ith_is_line_terminator(env, 1)
-                && peek::ith_token(env, 1) == &TokenKind::TLparen
-            {
+            if peek::match_token_is_followed_by_lparen_on_same_line(env) {
                 return match try_parse::to_parse(env, match_statement) {
                     try_parse::ParseResult::ParsedSuccessfully(m) => Ok(m),
                     try_parse::ParseResult::FailedToParse => expression(env, allow_sequence),
@@ -4961,17 +5055,30 @@ fn parse_statement(
             // The rest of these patterns handle ExpressionStatement and its negative
             // lookaheads, which prevent ambiguities.
             // See https://tc39.github.io/ecma262/#sec-expression-statement
-            if t == &TokenKind::TLet && peek::ith_token(env, 1) == &TokenKind::TLbracket {
-                // `let [foo]` is ambiguous: either a let binding pattern, or a
-                // member expression, so it is banned.
-                let loc = {
-                    let curr_loc = peek::loc(env).dupe();
-                    let next_loc = peek::ith_loc(env, 1);
-                    Loc::between(&curr_loc, next_loc)
-                };
-                env.error_at(loc, ParseError::AmbiguousLetBracket)?;
-                // recover as a member expression
-                expression(env, allow_sequence)
+            if t == &TokenKind::TLet {
+                if let Some(next_loc) = peek::loc_after_current_if_lbracket(env) {
+                    // `let [foo]` is ambiguous: either a let binding pattern, or a
+                    // member expression, so it is banned.
+                    let loc = {
+                        let curr_loc = peek::loc(env).dupe();
+                        Loc::between(&curr_loc, &next_loc)
+                    };
+                    env.error_at(loc, ParseError::AmbiguousLetBracket)?;
+                    // recover as a member expression
+                    expression(env, allow_sequence)
+                } else if peek::is_function(env) || peek::is_hook(env) {
+                    let func = declaration_parser::parse_function(env)?;
+                    env.function_as_statement_error_at(func.loc().dupe())?;
+                    Ok(func)
+                } else if peek::is_identifier(env) {
+                    maybe_labeled(env)
+                } else if peek::is_class(env) {
+                    env.error_unexpected(None)?;
+                    eat::token(env)?;
+                    expression(env, allow_sequence)
+                } else {
+                    expression(env, allow_sequence)
+                }
             } else if peek::is_function(env) || peek::is_hook(env) {
                 let func = declaration_parser::parse_function(env)?;
                 env.function_as_statement_error_at(func.loc().dupe())?;
@@ -5014,16 +5121,15 @@ fn parse_module_item(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Lo
         TokenKind::TExport => export_declaration(env, decorators),
         TokenKind::TImport => {
             env.error_on_decorators(&decorators)?;
-            match peek::ith_token(env, 1) {
-                TokenKind::TLparen | TokenKind::TPeriod => {
-                    // import(...) or import.meta
-                    expression(env, true)
-                }
-                _ => import_declaration(env),
+            if peek::current_token_is_followed_by_import_expression_continuation(env) {
+                // import(...) or import.meta
+                expression(env, true)
+            } else {
+                import_declaration(env)
             }
         }
         TokenKind::TDeclare => {
-            if peek::ith_token(env, 1) == &TokenKind::TExport {
+            if peek::declare_token_is_followed_by_export(env) {
                 env.error_on_decorators(&decorators)?;
                 declare_export_declaration(env)
             } else {

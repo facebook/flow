@@ -203,15 +203,16 @@ fn name(env: &mut ParserEnv) -> Result<jsx::Name<Loc, Loc>, Rollback> {
         }
     }
 
-    match peek::ith_token(env, 1) {
+    let first = identifier(env)?;
+    match peek::token(env) {
         TokenKind::TColon => {
-            let (loc, mut name) = with_loc(None, env, |env| {
-                let namespace = identifier(env)?;
+            let start_loc = first.loc.dupe();
+            let (loc, mut name) = with_loc(Some(start_loc), env, |env| {
                 expect::token(env, TokenKind::TColon)?;
                 let name = identifier(env)?;
                 Ok(jsx::NamespacedName {
                     loc: LOC_NONE,
-                    namespace,
+                    namespace: first,
                     name,
                 })
             })?;
@@ -219,23 +220,20 @@ fn name(env: &mut ParserEnv) -> Result<jsx::Name<Loc, Loc>, Rollback> {
             Ok(jsx::Name::NamespacedName(name))
         }
         TokenKind::TPeriod => {
-            let (loc, mut member) = with_loc(None, env, |env| {
-                let object = jsx::member_expression::Object::Identifier(identifier(env)?);
+            let start_loc = first.loc.dupe();
+            let (loc, mut member) = with_loc(Some(start_loc), env, |env| {
                 expect::token(env, TokenKind::TPeriod)?;
                 let property = identifier(env)?;
                 Ok(jsx::MemberExpression {
                     loc: LOC_NONE,
-                    object,
+                    object: jsx::member_expression::Object::Identifier(first),
                     property,
                 })
             })?;
             member.loc = loc;
             Ok(jsx::Name::MemberExpression(member_expression(env, member)?))
         }
-        _ => {
-            let name = identifier(env)?;
-            Ok(jsx::Name::Identifier(name))
-        }
+        _ => Ok(jsx::Name::Identifier(first)),
     }
 }
 
@@ -283,25 +281,22 @@ fn names_are_equal(a: &jsx::Name<Loc, Loc>, b: &jsx::Name<Loc, Loc>) -> bool {
 
 fn attribute(env: &mut ParserEnv) -> Result<(Loc, jsx::Attribute<Loc, Loc>), Rollback> {
     with_loc(None, env, |env| {
-        let name = match peek::ith_token(env, 1) {
-            TokenKind::TColon => {
-                let (loc, mut namespaced_name) = with_loc(None, env, |env| {
-                    let namespace = identifier(env)?;
-                    expect::token(env, TokenKind::TColon)?;
-                    let name = identifier(env)?;
-                    Ok(jsx::NamespacedName {
-                        loc: LOC_NONE,
-                        namespace,
-                        name,
-                    })
-                })?;
-                namespaced_name.loc = loc;
-                jsx::attribute::Name::NamespacedName(namespaced_name)
-            }
-            _ => {
+        let first = identifier(env)?;
+        let name = if peek::token(env) == &TokenKind::TColon {
+            let start_loc = first.loc.dupe();
+            let (loc, mut namespaced_name) = with_loc(Some(start_loc), env, |env| {
+                expect::token(env, TokenKind::TColon)?;
                 let name = identifier(env)?;
-                jsx::attribute::Name::Identifier(name)
-            }
+                Ok(jsx::NamespacedName {
+                    loc: LOC_NONE,
+                    namespace: first,
+                    name,
+                })
+            })?;
+            namespaced_name.loc = loc;
+            jsx::attribute::Name::NamespacedName(namespaced_name)
+        } else {
+            jsx::attribute::Name::Identifier(first)
         };
         let value = if peek::token(env) == &TokenKind::TAssign {
             expect::token(env, TokenKind::TAssign)?;
@@ -389,7 +384,7 @@ impl OpeningElementResult {
     }
 }
 
-fn opening_element(
+fn opening_element_after_less_than(
     env: &mut ParserEnv,
 ) -> Result<Result<OpeningElementResult, OpeningElementResult>, Rollback> {
     fn attributes(
@@ -413,44 +408,50 @@ fn opening_element(
         Ok(acc)
     }
 
-    let (loc, mut result) = with_loc(None, env, |env| {
-        expect::token(env, TokenKind::TLessThan)?;
-        match peek::token(env) {
-            TokenKind::TGreaterThan => {
-                eat::token(env)?;
-                Ok(Ok(OpeningElementResult::Fragment(LOC_NONE)))
-            }
-            TokenKind::TJsxIdentifier { .. } => {
-                let jsx_name = name(env)?;
-                let targs = if env.should_parse_types()
-                    && peek::token(env) == &TokenKind::TLessThan
-                    && peek::ith_token(env, 1) != &TokenKind::TDiv
-                {
-                    parser_env::try_parse::or_else(env, expression_parser::call_type_args, None)
-                } else {
-                    None
-                };
-                let attributes = attributes(env, Vec::new())?;
-                let self_closing = eat::maybe(env, TokenKind::TDiv)?;
-                let element = OpeningElementResult::Element(jsx::Opening {
-                    loc: LOC_NONE,
-                    name: jsx_name,
-                    targs,
-                    self_closing,
-                    attributes: attributes.into(),
-                });
-                if eat::maybe(env, TokenKind::TGreaterThan)? {
-                    Ok(Ok(element))
-                } else {
-                    expect::error(env, &TokenKind::TGreaterThan)?;
-                    Ok(Err(element))
-                }
-            }
-            _ => {
+    match peek::token(env) {
+        TokenKind::TGreaterThan => {
+            eat::token(env)?;
+            Ok(Ok(OpeningElementResult::Fragment(LOC_NONE)))
+        }
+        TokenKind::TJsxIdentifier { .. } => {
+            let jsx_name = name(env)?;
+            let targs = if env.should_parse_types()
+                && peek::token(env) == &TokenKind::TLessThan
+                && peek::jsx_type_args_can_follow_current_less_than(env)
+            {
+                parser_env::try_parse::or_else(env, expression_parser::call_type_args, None)
+            } else {
+                None
+            };
+            let attributes = attributes(env, Vec::new())?;
+            let self_closing = eat::maybe(env, TokenKind::TDiv)?;
+            let element = OpeningElementResult::Element(jsx::Opening {
+                loc: LOC_NONE,
+                name: jsx_name,
+                targs,
+                self_closing,
+                attributes: attributes.into(),
+            });
+            if eat::maybe(env, TokenKind::TGreaterThan)? {
+                Ok(Ok(element))
+            } else {
                 expect::error(env, &TokenKind::TGreaterThan)?;
-                Ok(Err(OpeningElementResult::Fragment(LOC_NONE)))
+                Ok(Err(element))
             }
         }
+        _ => {
+            expect::error(env, &TokenKind::TGreaterThan)?;
+            Ok(Err(OpeningElementResult::Fragment(LOC_NONE)))
+        }
+    }
+}
+
+fn opening_element(
+    env: &mut ParserEnv,
+) -> Result<Result<OpeningElementResult, OpeningElementResult>, Rollback> {
+    let (loc, mut result) = with_loc(None, env, |env| {
+        expect::token(env, TokenKind::TLessThan)?;
+        opening_element_after_less_than(env)
     })?;
     match &mut result {
         Ok(r) | Err(r) => r.mod_loc(loc),
@@ -458,37 +459,49 @@ fn opening_element(
     Ok(result)
 }
 
-enum ClosingElementResult {
-    Fragment(Loc),
-    Element(jsx::Closing<Loc, Loc>),
+fn opening_element_after_consumed_less_than(
+    env: &mut ParserEnv,
+    start_loc: Loc,
+) -> Result<Result<OpeningElementResult, OpeningElementResult>, Rollback> {
+    let (loc, mut result) = with_loc(Some(start_loc), env, opening_element_after_less_than)?;
+    match &mut result {
+        Ok(r) | Err(r) => r.mod_loc(loc),
+    }
+    Ok(result)
 }
 
-fn closing_element(env: &mut ParserEnv) -> Result<ClosingElementResult, Rollback> {
-    let (loc, name_opt) = with_loc(None, env, |env| {
-        expect::token(env, TokenKind::TLessThan)?;
-        expect::token(env, TokenKind::TDiv)?;
-        match peek::token(env) {
-            TokenKind::TGreaterThan => {
-                eat::token(env)?;
-                Ok(None)
-            }
-            TokenKind::TJsxIdentifier { .. } => {
-                let jsx_name = name(env)?;
-                expect::token_opt(env, TokenKind::TGreaterThan)?;
-                Ok(Some(jsx_name))
-            }
-            _ => {
-                expect::error(env, &TokenKind::TGreaterThan)?;
-                Ok(None)
-            }
+fn closing_element_after_less_than(
+    env: &mut ParserEnv,
+) -> Result<Option<jsx::Name<Loc, Loc>>, Rollback> {
+    expect::token(env, TokenKind::TDiv)?;
+    match peek::token(env) {
+        TokenKind::TGreaterThan => {
+            eat::token(env)?;
+            Ok(None)
         }
-    })?;
+        TokenKind::TJsxIdentifier { .. } => {
+            let jsx_name = name(env)?;
+            expect::token_opt(env, TokenKind::TGreaterThan)?;
+            Ok(Some(jsx_name))
+        }
+        _ => {
+            expect::error(env, &TokenKind::TGreaterThan)?;
+            Ok(None)
+        }
+    }
+}
+
+fn closing_element_after_consumed_less_than(
+    env: &mut ParserEnv,
+    start_loc: Loc,
+) -> Result<ClosingResult, Rollback> {
+    let (loc, name_opt) = with_loc(Some(start_loc), env, closing_element_after_less_than)?;
     Ok(match name_opt {
-        Some(jsx_name) => ClosingElementResult::Element(jsx::Closing {
+        Some(jsx_name) => ClosingResult::Element(jsx::Closing {
             loc,
             name: jsx_name,
         }),
-        None => ClosingElementResult::Fragment(loc),
+        None => ClosingResult::Fragment(loc),
     })
 }
 
@@ -550,9 +563,10 @@ enum ClosingResult {
     None,
 }
 
-fn element(
+fn element_with_optional_opening_less_than(
     env: &mut ParserEnv,
     parent_opening_name: Option<&jsx::Name<Loc, Loc>>,
+    consumed_less_than: Option<(Vec<Comment<Loc>>, Loc)>,
 ) -> Result<(Loc, Result<jsx::Element<Loc, Loc>, jsx::Fragment<Loc, Loc>>), Rollback> {
     fn children_and_closing_helper(
         env: &mut ParserEnv,
@@ -609,19 +623,22 @@ fn element(
             match peek::token(env) {
                 TokenKind::TLessThan => {
                     eat::push_lex_mode(env, LexMode::JsxTag);
-                    let next_token = peek::ith_token(env, 1).clone();
-                    match (peek::token(env), &next_token) {
-                        (TokenKind::TLessThan, TokenKind::TEof)
-                        | (TokenKind::TLessThan, TokenKind::TDiv) => {
-                            let closing = match closing_element(env)? {
-                                ClosingElementResult::Element(c) => ClosingResult::Element(c),
-                                ClosingElementResult::Fragment(loc) => ClosingResult::Fragment(loc),
-                            };
+                    let leading = peek::comments(env);
+                    let start_loc = peek::loc(env).dupe();
+                    eat::token(env)?;
+                    match peek::token(env) {
+                        TokenKind::TEof | TokenKind::TDiv => {
+                            let closing = closing_element_after_consumed_less_than(env, start_loc)?;
                             eat::double_pop_lex_mode(env);
                             return Ok((acc, previous_loc, closing));
                         }
                         _ => {
-                            let (loc, result) = element(env, opening_name)?;
+                            let (loc, result) = element_after_consumed_less_than(
+                                env,
+                                opening_name,
+                                leading,
+                                start_loc,
+                            )?;
                             let child = match result {
                                 Ok(element) => jsx::Child::Element {
                                     loc,
@@ -686,8 +703,17 @@ fn element(
         }
     }
 
-    let leading = peek::comments(env);
-    let opening_element = opening_element(env)?;
+    let (leading, opening_element) = match consumed_less_than {
+        Some((leading, start_loc)) => (
+            leading,
+            opening_element_after_consumed_less_than(env, start_loc)?,
+        ),
+        None => {
+            let leading = peek::comments(env);
+            let opening_element = opening_element(env)?;
+            (leading, opening_element)
+        }
+    };
     eat::pop_lex_mode(env);
     let (children, closing_element) = if match &opening_element {
         Ok(OpeningElementResult::Element(e)) => e.self_closing,
@@ -793,6 +819,22 @@ fn element(
         &end_loc,
     );
     Ok((final_loc, result))
+}
+
+fn element(
+    env: &mut ParserEnv,
+    parent_opening_name: Option<&jsx::Name<Loc, Loc>>,
+) -> Result<(Loc, Result<jsx::Element<Loc, Loc>, jsx::Fragment<Loc, Loc>>), Rollback> {
+    element_with_optional_opening_less_than(env, parent_opening_name, None)
+}
+
+fn element_after_consumed_less_than(
+    env: &mut ParserEnv,
+    parent_opening_name: Option<&jsx::Name<Loc, Loc>>,
+    leading: Vec<Comment<Loc>>,
+    start_loc: Loc,
+) -> Result<(Loc, Result<jsx::Element<Loc, Loc>, jsx::Fragment<Loc, Loc>>), Rollback> {
+    element_with_optional_opening_less_than(env, parent_opening_name, Some((leading, start_loc)))
 }
 
 fn element_or_fragment(

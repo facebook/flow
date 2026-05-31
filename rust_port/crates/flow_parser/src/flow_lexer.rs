@@ -34,12 +34,10 @@ static HEX_DIGIT: [char; 22] = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C',
     'D', 'E', 'F',
 ];
-static ASCII_ID_CONTINUE: [char; 63] = [
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-    't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-    'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '$', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9',
-];
+
+fn is_ascii_id_continue(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'$' | b'_')
+}
 
 #[derive(Clone, Copy, PartialEq)]
 enum IdentifierMode {
@@ -75,8 +73,14 @@ fn starts_with_id_continues(remainder: &str, identifier_mode: IdentifierMode) ->
     if identifier_mode == IdentifierMode::Jsx && remainder.starts_with('-') {
         return Some(1);
     }
-    if remainder.starts_with(ASCII_ID_CONTINUE) {
-        return Some(1);
+    let first = remainder.as_bytes()[0];
+    if first.is_ascii() {
+        if is_ascii_id_continue(first) {
+            return Some(1);
+        }
+        if first != b'\\' {
+            return None;
+        }
     }
     if let Some(remainder) = remainder.strip_prefix("\\u") {
         // unicode escape: \uHexHexHexHex
@@ -115,11 +119,47 @@ fn loop_id_continues(lexer: &mut logos::Lexer<MainToken>, identifier_mode: Ident
         if remainder.is_empty() {
             return true;
         }
+        let mut ascii_len = 0;
+        for byte in remainder.as_bytes() {
+            if is_ascii_id_continue(*byte) {
+                ascii_len += 1;
+            } else {
+                break;
+            }
+        }
+        if ascii_len > 0 {
+            lexer.bump(ascii_len);
+            continue;
+        }
         if let Some(l) = starts_with_id_continues(remainder, identifier_mode) {
             lexer.bump(l);
             continue;
         }
         return false;
+    }
+}
+
+fn mk_identifier_token(
+    errors: &mut LexErrors,
+    env: &LexEnv,
+    start_offset: usize,
+    loc: Loc,
+    id_str: &str,
+) -> TokenKind {
+    if id_str.is_ascii() && !id_str.as_bytes().contains(&b'\\') {
+        let raw = FlowSmolStr::new(id_str);
+        TokenKind::TIdentifier {
+            loc: loc.dupe(),
+            value: raw.dupe(),
+            raw,
+        }
+    } else {
+        let value = decode_identifier(errors, env, start_offset, id_str);
+        TokenKind::TIdentifier {
+            loc: loc.dupe(),
+            value: FlowSmolStr::new(value),
+            raw: FlowSmolStr::new(id_str),
+        }
     }
 }
 
@@ -136,7 +176,7 @@ fn mk_comment(
     env: &LexEnv,
     start: Position,
     end: Position,
-    text: String,
+    text: &str,
     multiline: bool,
 ) -> Comment<Loc> {
     let loc = Loc {
@@ -153,7 +193,7 @@ fn mk_comment(
     Comment {
         loc: loc.dupe(),
         kind,
-        text: Arc::from(text.as_str()),
+        text: Arc::from(text),
         on_newline,
     }
 }
@@ -343,81 +383,120 @@ fn decode_identifier<'a>(
     value
 }
 
-fn comment(
-    lexer: &mut logos::Lexer<MainToken>,
-    env: &mut LexEnv,
-    errors: &mut LexErrors,
-    buf: &mut String,
-) -> usize {
-    let start_offset = lexer.span().end;
-    let mut offset = start_offset;
-    loop {
-        let remainder = &lexer.source()[offset..];
-        if remainder.is_empty() {
-            let end = lexer.source().len();
-            let loc = env.loc_of_offsets(end, end);
-            errors.push(loc, ParseError::UnexpectedTokenIllegal);
-            lexer.bump(end - start_offset);
-            return end;
-        }
-        if let Some(len) = line_terminator_len(remainder) {
-            env.new_line(offset..(offset + len));
-            buf.push_str(&remainder[..len]);
-            offset += len;
-            continue;
-        }
-        if remainder.starts_with("*/") {
-            let end = offset + 2;
-            if env.in_comment_syntax {
-                let loc = env.loc_of_offsets(offset, end);
-                errors.push(
-                    loc,
-                    ParseError::UnexpectedTokenWithSuggestion("*/".to_owned(), "*-/".to_owned()),
-                );
-            }
-            lexer.bump(end - start_offset);
-            return end;
-        }
-        if remainder.starts_with("*-/") {
-            let end = offset + 3;
-            if env.in_comment_syntax {
-                lexer.bump(end - start_offset);
-                return end;
-            } else {
-                buf.push_str("*-/");
-                offset = end;
-                continue;
-            }
-        }
-        let c = remainder.chars().next().unwrap();
-        buf.push(c);
-        offset += c.len_utf8();
+fn unicode_line_terminator_len(bytes: &[u8], offset: usize) -> Option<usize> {
+    if bytes.get(offset) == Some(&0xe2)
+        && bytes.get(offset + 1) == Some(&0x80)
+        && matches!(bytes.get(offset + 2), Some(0xa8 | 0xa9))
+    {
+        Some(3)
+    } else {
+        None
     }
 }
 
-fn line_comment(
-    lexer: &mut logos::Lexer<MainToken>,
+fn scan_line_comment(
+    source: &str,
+    start_offset: usize,
     env: &mut LexEnv,
-    buf: &mut String,
-) -> Position {
-    let start_offset = lexer.span().end;
+) -> (usize, usize, Position) {
+    let bytes = source.as_bytes();
+    let mut offset = start_offset;
+    while offset < source.len() {
+        match bytes[offset] {
+            b'\r' => {
+                let newline_len = if bytes.get(offset + 1) == Some(&b'\n') {
+                    2
+                } else {
+                    1
+                };
+                let end = env.pos_at_offset(offset);
+                env.new_line(offset..(offset + newline_len));
+                return (offset + newline_len, offset, end);
+            }
+            b'\n' => {
+                let end = env.pos_at_offset(offset);
+                env.new_line(offset..(offset + 1));
+                return (offset + 1, offset, end);
+            }
+            _ => {
+                if let Some(newline_len) = unicode_line_terminator_len(bytes, offset) {
+                    let end = env.pos_at_offset(offset);
+                    env.new_line(offset..(offset + newline_len));
+                    return (offset + newline_len, offset, end);
+                }
+                offset += if bytes[offset].is_ascii() {
+                    1
+                } else {
+                    source[offset..].chars().next().unwrap().len_utf8()
+                };
+            }
+        }
+    }
+    (source.len(), source.len(), env.pos_at_offset(source.len()))
+}
+
+fn scan_block_comment(
+    source: &str,
+    start_offset: usize,
+    env: &mut LexEnv,
+    errors: &mut LexErrors,
+) -> (usize, usize) {
+    let bytes = source.as_bytes();
     let mut offset = start_offset;
     loop {
-        let remainder = &lexer.source()[offset..];
-        if remainder.is_empty() {
-            let end = lexer.source().len();
-            lexer.bump(end - start_offset);
-            return env.pos_at_offset(end);
+        if offset >= source.len() {
+            let loc = env.loc_of_offsets(source.len(), source.len());
+            errors.push(loc, ParseError::UnexpectedTokenIllegal);
+            return (source.len(), source.len());
         }
-        if let Some(len) = line_terminator_len(remainder) {
-            let end_pos = env.pos_at_offset(offset);
-            env.new_line(offset..(offset + len));
-            lexer.bump(offset + len - start_offset);
-            return end_pos;
+        match bytes[offset] {
+            b'*' if bytes.get(offset + 1) == Some(&b'/') => {
+                if env.in_comment_syntax {
+                    let loc = env.loc_of_offsets(offset, offset + 2);
+                    errors.push(
+                        loc,
+                        ParseError::UnexpectedTokenWithSuggestion(
+                            "*/".to_owned(),
+                            "*-/".to_owned(),
+                        ),
+                    );
+                }
+                return (offset + 2, offset);
+            }
+            b'*' if bytes.get(offset + 1) == Some(&b'-')
+                && bytes.get(offset + 2) == Some(&b'/') =>
+            {
+                if env.in_comment_syntax {
+                    return (offset + 3, offset);
+                }
+                offset += 3;
+            }
+            b'\r' => {
+                let newline_len = if bytes.get(offset + 1) == Some(&b'\n') {
+                    2
+                } else {
+                    1
+                };
+                env.new_line(offset..(offset + newline_len));
+                offset += newline_len;
+            }
+            b'\n' => {
+                env.new_line(offset..(offset + 1));
+                offset += 1;
+            }
+            _ => {
+                if let Some(newline_len) = unicode_line_terminator_len(bytes, offset) {
+                    env.new_line(offset..(offset + newline_len));
+                    offset += newline_len;
+                } else {
+                    offset += if bytes[offset].is_ascii() {
+                        1
+                    } else {
+                        source[offset..].chars().next().unwrap().len_utf8()
+                    };
+                }
+            }
         }
-        let c = remainder.chars().next().unwrap();
-        buf.push(c);
-        offset += c.len_utf8();
     }
 }
 
@@ -592,8 +671,32 @@ fn string_quote<'a>(
 ) -> (Cow<'a, str>, usize, bool) {
     let mut intermediate_value: StringQuoteValue<'a> = StringQuoteValue::NoEscape("");
     let mut local_offset = 0;
+    let end_quote = if is_double_quote { b'"' } else { b'\'' };
     loop {
         let remainder = &original_remainder[local_offset..];
+        let mut ascii_len = 0;
+        for byte in remainder.as_bytes() {
+            if !byte.is_ascii() || *byte == end_quote || *byte == b'\\' || *byte == b'\n' {
+                break;
+            }
+            ascii_len += 1;
+        }
+        if ascii_len > 0 {
+            local_offset += ascii_len;
+            match &mut intermediate_value {
+                StringQuoteValue::NoEscape(s) => {
+                    *s = &original_remainder[..local_offset];
+                }
+                StringQuoteValue::Escaped(s) => {
+                    s.extend(
+                        remainder.as_bytes()[..ascii_len]
+                            .iter()
+                            .map(|byte| *byte as u32),
+                    );
+                }
+            }
+            continue;
+        }
         let Some(c) = remainder.chars().next() else {
             let loc = env.loc_of_offsets(start_offset, start_offset);
             errors.push(loc, ParseError::UnexpectedTokenIllegal);
@@ -822,7 +925,13 @@ fn lex_sci_number(
                 TokenResult::Token(loc, gen_bigint_kind_for_sci_bigint(FlowSmolStr::new(s))),
             ));
         }
-        let v = match s.replace('_', "").parse::<f64>() {
+        let v = match if s.as_bytes().contains(&b'_') {
+            Cow::Owned(s.replace('_', ""))
+        } else {
+            Cow::Borrowed(s)
+        }
+        .parse::<f64>()
+        {
             Ok(v) => v,
             Err(_) => {
                 // Due to logos bug, we might be in this weird state, even through it should be
@@ -882,7 +991,13 @@ fn lex_whole_number(
     }
     let loc = env.loc_of_span(&range);
     let s = &original_source[range];
-    let v = match s.replace('_', "").parse::<f64>() {
+    let v = match if s.as_bytes().contains(&b'_') {
+        Cow::Owned(s.replace('_', ""))
+    } else {
+        Cow::Borrowed(s)
+    }
+    .parse::<f64>()
+    {
         Ok(v) => v,
         Err(_) => {
             // Due to logos bug, we might be in this weird state, even through it should be
@@ -975,17 +1090,26 @@ fn token_base_inner<'a>(
                 }
             }
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end_offset = comment(lexer, env, errors, &mut buf);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end) =
+                scan_block_comment(lexer.source(), text_start, env, errors);
+            lexer.bump(end_offset - text_start);
             let end = env.pos_at_offset(end_offset);
-            let c = mk_comment(env, start, end, buf, true);
+            let c = mk_comment(env, start, end, &lexer.source()[text_start..text_end], true);
             TokenResult::Comment(c)
         }
         MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end = line_comment(lexer, env, &mut buf);
-            let c = mk_comment(env, start, end, buf, false);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end, end) = scan_line_comment(lexer.source(), text_start, env);
+            lexer.bump(end_offset - text_start);
+            let c = mk_comment(
+                env,
+                start,
+                end,
+                &lexer.source()[text_start..text_end],
+                false,
+            );
             TokenResult::Comment(c)
         }
         // Support for the shebang at the beginning of a file. It is treated like a
@@ -996,14 +1120,19 @@ fn token_base_inner<'a>(
                 TokenResult::Token(loc, TokenKind::TError("#!".to_owned()))
             } else if lexer.span().start == 0 {
                 let start = env.pos_at_offset(lexer.span().start);
-                let mut buf = String::new();
-                let end = line_comment(lexer, env, &mut buf);
+                let text_start = lexer.span().end;
+                let (end_offset, text_end, end) =
+                    scan_line_comment(lexer.source(), text_start, env);
+                lexer.bump(end_offset - text_start);
                 let loc = Loc {
                     source: env.source(),
                     start,
                     end,
                 };
-                TokenResult::Token(loc.dupe(), TokenKind::TInterpreter(loc, buf))
+                TokenResult::Token(
+                    loc.dupe(),
+                    TokenKind::TInterpreter(loc, lexer.source()[text_start..text_end].to_owned()),
+                )
             } else {
                 let loc = env.loc_of_span(&lexer.span());
                 TokenResult::Token(loc, TokenKind::TError("#!".to_owned()))
@@ -1631,14 +1760,7 @@ fn token_base_inner<'a>(
                     "undefined" => TokenKind::TUndefinedType,
                     "unknown" => TokenKind::TUnknownType,
                     "void" => TokenKind::TVoidType,
-                    _ => {
-                        let value = decode_identifier(errors, env, start_offset, id_str);
-                        TokenKind::TIdentifier {
-                            loc: loc.dupe(),
-                            value: FlowSmolStr::new(value),
-                            raw: FlowSmolStr::new(id_str),
-                        }
-                    }
+                    _ => mk_identifier_token(errors, env, start_offset, loc.dupe(), id_str),
                 }
             } else {
                 // Normal keyword table
@@ -1696,14 +1818,7 @@ fn token_base_inner<'a>(
                     "while" => TokenKind::TWhile,
                     "with" => TokenKind::TWith,
                     "yield" => TokenKind::TYield,
-                    _ => {
-                        let value = decode_identifier(errors, env, start_offset, id_str);
-                        TokenKind::TIdentifier {
-                            loc: loc.dupe(),
-                            value: FlowSmolStr::new(value),
-                            raw: FlowSmolStr::new(id_str),
-                        }
-                    }
+                    _ => mk_identifier_token(errors, env, start_offset, loc.dupe(), id_str),
                 }
             };
             TokenResult::Token(loc, token_kind)
@@ -1718,12 +1833,7 @@ fn token_base_inner<'a>(
                 let end_offset = lexer.span().end;
                 let loc = env.loc_of_offsets(start_offset, end_offset);
                 let id_str = &lexer.source()[start_offset..end_offset];
-                let value = decode_identifier(errors, env, start_offset, id_str);
-                let token_kind = TokenKind::TIdentifier {
-                    loc: loc.dupe(),
-                    value: FlowSmolStr::new(value),
-                    raw: FlowSmolStr::new(id_str),
-                };
+                let token_kind = mk_identifier_token(errors, env, start_offset, loc.dupe(), id_str);
                 TokenResult::Token(loc, token_kind)
             } else {
                 let loc = env.loc_of_span(&lexer.span());
@@ -1837,19 +1947,27 @@ fn regexp_inner<'a>(
         let span = offset..(offset + 2);
         lexer.bump(2);
         let start = env.pos_at_offset(span.start);
-        let mut buf = String::new();
-        let end = line_comment(lexer, env, &mut buf);
-        let c = mk_comment(env, start, end, buf, false);
+        let text_start = lexer.span().end;
+        let (end_offset, text_end, end) = scan_line_comment(lexer.source(), text_start, env);
+        lexer.bump(end_offset - text_start);
+        let c = mk_comment(
+            env,
+            start,
+            end,
+            &lexer.source()[text_start..text_end],
+            false,
+        );
         return TokenResult::Comment(c);
     }
     if remainder.starts_with("/*") {
         let span = offset..(offset + 2);
         lexer.bump(2);
         let start = env.pos_at_offset(span.start);
-        let mut buf = String::new();
-        let end_offset = comment(lexer, env, errors, &mut buf);
+        let text_start = lexer.span().end;
+        let (end_offset, text_end) = scan_block_comment(lexer.source(), text_start, env, errors);
+        lexer.bump(end_offset - text_start);
         let end = env.pos_at_offset(end_offset);
-        let c = mk_comment(env, start, end, buf, true);
+        let c = mk_comment(env, start, end, &lexer.source()[text_start..text_end], true);
         return TokenResult::Comment(c);
     }
     if remainder.starts_with('/') {
@@ -2197,13 +2315,13 @@ fn consume_jsx_entity(remainder: &str) -> Option<(usize, String)> {
             }
         }
     }
-    if remainder.starts_with('&') {
+    if let Some(after_amp) = remainder.strip_prefix('&') {
         let mut len = 0;
-        for c in remainder[1..].chars() {
+        for c in after_amp.chars() {
             if c == ';' {
                 if (2..=8).contains(&len) {
                     let raw_len = 1 + len + 1;
-                    let entity = &remainder[1..(1 + len)];
+                    let entity = &after_amp[..len];
                     return Some((
                         raw_len,
                         decode_html_entity(entity)
@@ -2379,17 +2497,26 @@ fn jsx_tag_inner<'a>(
         MainToken::Whitespace => TokenResult::Continue,
         MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end = line_comment(lexer, env, &mut buf);
-            let c = mk_comment(env, start, end, buf, false);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end, end) = scan_line_comment(lexer.source(), text_start, env);
+            lexer.bump(end_offset - text_start);
+            let c = mk_comment(
+                env,
+                start,
+                end,
+                &lexer.source()[text_start..text_end],
+                false,
+            );
             TokenResult::Comment(c)
         }
         MainToken::BlockCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end_offset = comment(lexer, env, errors, &mut buf);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end) =
+                scan_block_comment(lexer.source(), text_start, env, errors);
+            lexer.bump(end_offset - text_start);
             let end = env.pos_at_offset(end_offset);
-            let c = mk_comment(env, start, end, buf, true);
+            let c = mk_comment(env, start, end, &lexer.source()[text_start..text_end], true);
             TokenResult::Comment(c)
         }
         MainToken::LessThan => {
@@ -2562,17 +2689,26 @@ fn template_tail_inner<'a>(
         MainToken::Whitespace => TokenResult::Continue,
         MainToken::LineCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end = line_comment(lexer, env, &mut buf);
-            let c = mk_comment(env, start, end, buf, false);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end, end) = scan_line_comment(lexer.source(), text_start, env);
+            lexer.bump(end_offset - text_start);
+            let c = mk_comment(
+                env,
+                start,
+                end,
+                &lexer.source()[text_start..text_end],
+                false,
+            );
             TokenResult::Comment(c)
         }
         MainToken::BlockCommentStart => {
             let start = env.pos_at_offset(lexer.span().start);
-            let mut buf = String::new();
-            let end_offset = comment(lexer, env, errors, &mut buf);
+            let text_start = lexer.span().end;
+            let (end_offset, text_end) =
+                scan_block_comment(lexer.source(), text_start, env, errors);
+            lexer.bump(end_offset - text_start);
             let end = env.pos_at_offset(end_offset);
-            let c = mk_comment(env, start, end, buf, true);
+            let c = mk_comment(env, start, end, &lexer.source()[text_start..text_end], true);
             TokenResult::Comment(c)
         }
         MainToken::RCurly => {
