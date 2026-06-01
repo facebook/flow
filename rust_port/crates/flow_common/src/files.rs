@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::ffi::OsStr;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::path::Path;
@@ -568,6 +569,7 @@ pub fn ordered_and_unordered_lib_paths(
 
                 let mut files: std::collections::BTreeSet<String> =
                     std::collections::BTreeSet::new();
+                let mut symlink_ancestor_cache = HashMap::new();
                 if lib.exists() {
                     for entry in jwalk::WalkDir::new(lib)
                         .parallelism(jwalk::Parallelism::RayonNewPool(2))
@@ -581,8 +583,20 @@ pub fn ordered_and_unordered_lib_paths(
                         if !entry.file_type().is_file() {
                             continue;
                         }
-                        if let Ok(real_path) = cached_canonicalize(&path) {
-                            let path_str = real_path.to_string_lossy().to_string();
+                        if should_canonicalize_discovered_entry(
+                            &path,
+                            entry.path_is_symlink(),
+                            None,
+                            &mut symlink_ancestor_cache,
+                        ) {
+                            if let Ok(real_path) = cached_canonicalize(&path) {
+                                let path_str = real_path.to_string_lossy().to_string();
+                                if filter_prime(&path_str) {
+                                    files.insert(path_str);
+                                }
+                            }
+                        } else {
+                            let path_str = path.to_string_lossy().to_string();
                             if filter_prime(&path_str) {
                                 files.insert(path_str);
                             }
@@ -714,6 +728,80 @@ pub fn watched_paths(options: &FileOptions) -> Vec<PathBuf> {
 
 const MAX_FILES: usize = 1000;
 
+fn has_symlink_ancestor(path: &Path, symlink_ancestor_cache: &mut HashMap<PathBuf, bool>) -> bool {
+    fn dir_has_symlink_in_path(
+        dir: &Path,
+        symlink_ancestor_cache: &mut HashMap<PathBuf, bool>,
+    ) -> bool {
+        if let Some(result) = symlink_ancestor_cache.get(dir) {
+            return *result;
+        }
+
+        let parent_has_symlink = dir
+            .parent()
+            .is_some_and(|parent| dir_has_symlink_in_path(parent, symlink_ancestor_cache));
+        let is_symlink = std::fs::symlink_metadata(dir)
+            .map(|metadata| metadata.file_type().is_symlink())
+            .unwrap_or(false);
+        let result = parent_has_symlink || is_symlink;
+        symlink_ancestor_cache.insert(dir.to_path_buf(), result);
+        result
+    }
+
+    path.parent()
+        .is_some_and(|parent| dir_has_symlink_in_path(parent, symlink_ancestor_cache))
+}
+
+fn has_symlink_ancestor_under_root(
+    root: &Path,
+    path: &Path,
+    symlink_ancestor_cache: &mut HashMap<PathBuf, bool>,
+) -> bool {
+    fn dir_has_symlink_in_path(
+        root: &Path,
+        dir: &Path,
+        symlink_ancestor_cache: &mut HashMap<PathBuf, bool>,
+    ) -> bool {
+        if !dir.starts_with(root) {
+            return false;
+        }
+        if let Some(result) = symlink_ancestor_cache.get(dir) {
+            return *result;
+        }
+
+        let parent_has_symlink = dir != root
+            && dir.parent().is_some_and(|parent| {
+                dir_has_symlink_in_path(root, parent, symlink_ancestor_cache)
+            });
+        let is_symlink = dir != root
+            && std::fs::symlink_metadata(dir)
+                .map(|metadata| metadata.file_type().is_symlink())
+                .unwrap_or(false);
+        let result = parent_has_symlink || is_symlink;
+        symlink_ancestor_cache.insert(dir.to_path_buf(), result);
+        result
+    }
+
+    path.parent()
+        .is_some_and(|parent| dir_has_symlink_in_path(root, parent, symlink_ancestor_cache))
+}
+
+fn should_canonicalize_discovered_entry(
+    path: &Path,
+    path_is_symlink: bool,
+    symlink_ancestor_root: Option<&Path>,
+    symlink_ancestor_cache: &mut HashMap<PathBuf, bool>,
+) -> bool {
+    path_is_symlink
+        || path
+            .components()
+            .any(|component| component.as_os_str() == OsStr::new("node_modules"))
+        || match symlink_ancestor_root {
+            None => has_symlink_ancestor(path, symlink_ancestor_cache),
+            Some(root) => has_symlink_ancestor_under_root(root, path, symlink_ancestor_cache),
+        }
+}
+
 /// Creates a "next" function for finding the files in a given FlowConfig root.
 /// This means all the files under the root (if the implicit behavior is enabled)
 /// and all the included files, minus the ignored files and the libs.
@@ -805,6 +893,7 @@ pub fn make_next_files(
 
     let can_prune = can_prune_dir(&options);
     let mut chunk = Vec::new();
+    let mut symlink_ancestor_cache = HashMap::new();
     for starting_point_path in starting_point_paths {
         if is_node_module(&options, &starting_point_path.to_string_lossy()) {
             let dirname = starting_point_path
@@ -890,19 +979,33 @@ pub fn make_next_files(
             } {
                 continue;
             }
-            // Note: try_exists() check removed because canonicalize() already
-            // verifies the path exists (returns Err for non-existent paths).
-            if let Ok(real_path) = cached_canonicalize(&path)
-                && (path == real_path
-                    || realpath_filter(
-                        &options,
-                        &real_path,
-                        all,
-                        include_libdef,
-                        &all_unordered_libs,
-                    ))
-            {
-                chunk.push(real_path);
+            if should_canonicalize_discovered_entry(
+                &path,
+                entry.path_is_symlink(),
+                Some(root),
+                &mut symlink_ancestor_cache,
+            ) {
+                // Note: try_exists() check removed because canonicalize() already
+                // verifies the path exists (returns Err for non-existent paths).
+                if let Ok(real_path) = cached_canonicalize(&path)
+                    && (path == real_path
+                        || realpath_filter(
+                            &options,
+                            &real_path,
+                            all,
+                            include_libdef,
+                            &all_unordered_libs,
+                        ))
+                {
+                    chunk.push(real_path);
+                    if chunk.len() == MAX_FILES {
+                        chunk.reverse();
+                        send_chunked(chunk);
+                        chunk = Vec::new();
+                    }
+                }
+            } else {
+                chunk.push(path);
                 if chunk.len() == MAX_FILES {
                     chunk.reverse();
                     send_chunked(chunk);

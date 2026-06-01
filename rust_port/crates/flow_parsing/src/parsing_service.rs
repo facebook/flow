@@ -7,6 +7,7 @@
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use dupe::Dupe;
 use flow_common::docblock::Docblock;
@@ -601,6 +602,8 @@ pub fn next_of_filename_set(
     }
 }
 
+const PARSE_BATCH_MAX_SIZE: usize = 16;
+
 fn parse(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
@@ -609,24 +612,47 @@ fn parse(
     skip_unchanged: bool,
     is_init: bool,
     locs_to_dirtify: &[Loc],
-    mut next: Next,
+    next: Next,
 ) -> ParseResults {
     let shared_mem_for_job = shared_mem.clone();
     let options_for_job = options.clone();
     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
 
-    let mut results = ParseResults::default();
     let t = std::time::Instant::now();
 
-    while let Some(batch) = next() {
-        let batch_results = map_reduce::fold(
-            pool,
-            batch,
-            {
-                let shared_mem = shared_mem_for_job.clone();
-                let options = options_for_job.clone();
-                let locs = locs_to_dirtify_vec.clone();
-                move |acc, file_key| {
+    let next_state = Arc::new(Mutex::new((next, Vec::<FileKey>::new())));
+    let results = map_reduce::call(
+        pool,
+        {
+            let next_state = next_state.clone();
+            move || {
+                let mut state = next_state
+                    .lock()
+                    .expect("next mutex should not be poisoned");
+                loop {
+                    if state.1.is_empty() {
+                        match (state.0)() {
+                            Some(batch) if !batch.is_empty() => {
+                                state.1 = batch;
+                            }
+                            Some(_) => {}
+                            None => return map_reduce::Bucket::Done,
+                        }
+                    } else if state.1.len() <= PARSE_BATCH_MAX_SIZE {
+                        return map_reduce::Bucket::Job(std::mem::take(&mut state.1));
+                    } else {
+                        let at = state.1.len() - PARSE_BATCH_MAX_SIZE;
+                        return map_reduce::Bucket::Job(state.1.split_off(at));
+                    }
+                }
+            }
+        },
+        {
+            let shared_mem = shared_mem_for_job.clone();
+            let options = options_for_job.clone();
+            let locs = locs_to_dirtify_vec.clone();
+            move |acc: &mut ParseResults, batch: Vec<FileKey>| {
+                for file_key in batch {
                     reducer(
                         &shared_mem,
                         &options,
@@ -635,14 +661,13 @@ fn parse(
                         is_init,
                         &locs,
                         acc,
-                        file_key.clone(),
+                        file_key,
                     );
                 }
-            },
-            merge,
-        );
-        merge(&mut results, batch_results);
-    }
+            }
+        },
+        merge,
+    );
 
     if options.profile {
         let elapsed = t.elapsed().as_secs_f64();
