@@ -1329,6 +1329,13 @@ TypeScript's `asserts x is T` return type declares a function that throws when t
 
 The closest Flow equivalent is a type guard combined with an explicit `throw` at the call site: `function isStr(x: unknown): x is string { ... }` then `if (!isStr(x)) throw new Error();`.
 
+### `ThisType<T>` utility {#toc-this-type-utility}
+
+TypeScript's `ThisType<T>` is a marker used inside a contextual type to rewire `this` to `T` within the methods of an object literal. Flow does not implement that rewiring. The two language differences that make `ThisType<T>` useful in TypeScript are absent in Flow:
+
+- Object literals [reject `this` references](#toc-shape-rules) outright, so there is no object-literal method body whose `this` Flow could rewire.
+- Class and interface methods have a [fixed `this` binding](#toc-method-unbinding) tied to their declaring type, which cannot be reassigned by an external marker.
+
 ### Expressions with type arguments {#toc-expression-type-args}
 
 TypeScript accepts type arguments on a *value expression*: `Foo<string>` as a standalone expression specializes the generic and can be bound to a name. Flow does not parse the form and errors with a `ParseError` shortly after the closing `>`.
@@ -1407,7 +1414,6 @@ TypeScript features that are in-progress on the Flow side and will be released i
 - `satisfies` expression - validates an expression against a type without widening the inferred type.
 - Mapped type modifiers - optionality removal `-?`, variance removal `-readonly`, and `as` key remapping.
 - Template literal types - e.g. `` `${'a' | 'b'}-${'x' | 'y'}` ``.
-- Additional TS utility types - `ConstructorParameters`, `InstanceType`, `ThisType`.
 - `override` keyword on class members.
 - Abstract classes and methods.
 - Constructor types - `type Ctor = new (x: number) => R`.

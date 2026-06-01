@@ -695,6 +695,25 @@ fn resolve_computed_key_name(
 // converter
 // =========================================================================
 
+fn empty_interface_annot(loc: ALoc) -> ast::types::Type<ALoc, ALoc> {
+    ast::types::Type::new(ast::types::TypeInner::Interface {
+        loc: loc.dupe(),
+        inner: std::sync::Arc::new(ast::types::Interface {
+            body: (
+                loc,
+                ast::types::Object {
+                    exact: false,
+                    inexact: true,
+                    properties: Vec::new().into(),
+                    comments: None,
+                },
+            ),
+            extends: Vec::new().into(),
+            comments: None,
+        }),
+    })
+}
+
 fn convert_inner<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
@@ -1883,6 +1902,24 @@ fn convert_inner<'a>(
                                 )
                                 .expect("mk_type_destructor should not fail");
                             Ok(reconstruct_ast(result_t, None, targs_ast))
+                        })?
+                    }
+                    // TS-only: `ThisType<T>` is a marker used by TypeScript to rewire `this`
+                    // inside object literal methods. That rewiring is moot in Flow -- Flow
+                    // bans `this` references in object literals outright, and methods on
+                    // classes/interfaces cannot be unbound from their declaring type -- so
+                    // there is no value to importing the semantics. We accept the name only
+                    // in .ts/.d.ts files so library `.d.ts` types parse and check, treating
+                    // it as a structurally-empty interface (intersections like
+                    // `M & ThisType<T>` reduce to `M`).
+                    "ThisType" if flow_common::files::has_ts_ext(cx.file()) => {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (_ts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let interface_ast = empty_interface_annot(loc.dupe());
+                            let result = convert_inner(cx, env, &interface_ast)?;
+                            let (_, result_t) = result.loc();
+                            Ok(reconstruct_ast(result_t.dupe(), None, targs_ast))
                         })?
                     }
                     // `$Shape` is deprecated in favor of `Partial`
@@ -8756,22 +8793,7 @@ pub fn mk_empty_interface_type<'a>(
     cx: &Context<'a>,
     loc: ALoc,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-    let interface_type = ast::types::Type::new(ast::types::TypeInner::Interface {
-        loc: loc.dupe(),
-        inner: std::sync::Arc::new(ast::types::Interface {
-            body: (
-                loc.dupe(),
-                ast::types::Object {
-                    exact: false,
-                    inexact: true,
-                    properties: Vec::new().into(),
-                    comments: None,
-                },
-            ),
-            extends: Vec::new().into(),
-            comments: None,
-        }),
-    });
+    let interface_type = empty_interface_annot(loc);
     let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::default());
     let result = convert_inner(cx, &mut env, &interface_type)?;
     let (_, t) = result.loc();

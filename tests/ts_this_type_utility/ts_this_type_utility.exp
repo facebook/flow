@@ -1,0 +1,26 @@
+Error ---------------------------------------------------------------------------------------------------- arity.ts:3:13
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   3| type Zero = ThisType<>; // ERROR -- too few type arguments
+                  ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- arity.ts:4:12
+
+Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
+
+   4| type Two = ThisType<number, string>; // ERROR -- too many type arguments
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ js_unrecognized.js:4:10
+
+Cannot resolve name `ThisType`. [cannot-resolve-name]
+
+   4| type T = ThisType<number>; // ERROR -- cannot-resolve-name
+               ^^^^^^^^
+
+
+
+Found 3 errors

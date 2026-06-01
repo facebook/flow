@@ -412,6 +412,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       (typed_expr, resolved_name)
 
+  let empty_interface_annot loc =
+    ( loc,
+      Ast.Type.Interface
+        {
+          Ast.Type.Interface.body =
+            ( loc,
+              { Ast.Type.Object.exact = false; inexact = true; properties = []; comments = None }
+            );
+          extends = [];
+          comments = None;
+        }
+    )
+
   let rec convert env =
     let open Ast.Type in
     function
@@ -942,6 +955,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               reconstruct_ast
                 (mk_type_destructor cx (use_op reason) reason t RequiredType (mk_eval_id cx loc))
                 targs
+          )
+        (* TS-only: `ThisType<T>` is a marker used by TypeScript to rewire `this`
+           inside object literal methods. That rewiring is moot in Flow -- Flow
+           bans `this` references in object literals outright, and methods on
+           classes/interfaces cannot be unbound from their declaring type -- so
+           there is no value to importing the semantics. We accept the name only
+           in .ts/.d.ts files so library `.d.ts` types parse and check, treating
+           it as a structurally-empty interface (intersections like
+           `M & ThisType<T>` reduce to `M`). *)
+        | "ThisType" when Files.has_ts_ext (Context.file cx) ->
+          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+              let (_ts, targs) = convert_type_params () in
+              let ((_, t), _) = convert env (empty_interface_annot loc) in
+              reconstruct_ast t targs
           )
         (* `$Shape` is deprecated in favor of `Partial` *)
         | "$Shape" ->
@@ -4599,27 +4626,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   let convert_indexer cx tparams_map = convert_indexer_internal (mk_convert_env cx tparams_map)
 
   let mk_empty_interface_type cx loc =
-    let ((_, t), _) =
-      convert
-        cx
-        Subst_name.Map.empty
-        ( loc,
-          Ast.Type.Interface
-            {
-              Ast.Type.Interface.body =
-                ( loc,
-                  {
-                    Ast.Type.Object.exact = false;
-                    inexact = true;
-                    properties = [];
-                    comments = None;
-                  }
-                );
-              extends = [];
-              comments = None;
-            }
-        )
-    in
+    let ((_, t), _) = convert cx Subst_name.Map.empty (empty_interface_annot loc) in
     t
 
   let mk_super cx tparams_map = mk_super (mk_convert_env cx tparams_map)
