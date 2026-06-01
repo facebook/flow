@@ -27,6 +27,109 @@ References:
                          ^^^^^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- constructor_type.js:39:12
+
+Cannot get `create(...).b` because property `b` is missing in `A1` [1]. [prop-missing]
+
+   constructor_type.js:39:12
+   39| create(A1).b;             // ERROR — nominal: A1 has no `b`
+                  ^
+
+References:
+   constructor_type.js:35:7
+   35| class A1 { a: number = 1 }
+             ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- constructor_type.js:47:13
+
+Cannot call `instantiate` with `CtorArgs` bound to `C` because in the first argument: string [1] is incompatible with
+number [2]. [incompatible-type]
+
+   constructor_type.js:47:13
+   47| instantiate(CtorArgs, "bad", "s"); // ERROR — number expected
+                   ^^^^^^^^
+
+References:
+   constructor_type.js:47:23
+   47| instantiate(CtorArgs, "bad", "s"); // ERROR — number expected
+                             ^^^^^ [1]
+   constructor_type.js:45:33
+   45| class CtorArgs { constructor(x: number, y: string) {} }
+                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- constructor_type.js:55:25
+
+Cannot assign `makeOne(...)` to `same1bad` because `Same2` [1] is incompatible with `Same1` [2]. [incompatible-type]
+
+   constructor_type.js:55:25
+   55| const same1bad: Same1 = makeOne(Same2);   // ERROR — Same2 is not Same1
+                               ^^^^^^^^^^^^^^
+
+References:
+   constructor_type.js:52:7
+   52| class Same2 { v: number = 0 }
+             ^^^^^ [1]
+   constructor_type.js:55:17
+   55| const same1bad: Same1 = makeOne(Same2);   // ERROR — Same2 is not Same1
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- constructor_type.js:67:32
+
+Cannot assign `ctorVal` to `ctorAsClass` because interface type [1] is incompatible with statics of `A1` [2].
+[incompatible-type]
+
+   constructor_type.js:67:32
+   67| const ctorAsClass: Class<A1> = ctorVal; // ERROR — construct sig is not Class<A1>
+                                      ^^^^^^^
+
+References:
+   constructor_type.js:66:24
+   66| declare const ctorVal: new () => A1;
+                              ^^^^^^^^^^^^ [1]
+   constructor_type.js:67:20
+   67| const ctorAsClass: Class<A1> = ctorVal; // ERROR — construct sig is not Class<A1>
+                          ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- constructor_type.js:81:36
+
+Cannot assign `NeedsArg` to `fNeeds` because function [1] requires another argument from function type [2].
+[incompatible-type]
+
+   constructor_type.js:81:36
+   81| const fNeeds: new () => NeedsArg = NeedsArg;  // ERROR — arity mismatch
+                                          ^^^^^^^^
+
+References:
+   constructor_type.js:80:18
+   80| class NeedsArg { constructor(x: number) {} }
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   constructor_type.js:81:15
+   81| const fNeeds: new () => NeedsArg = NeedsArg;  // ERROR — arity mismatch
+                     ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- constructor_type.js:88:30
+
+Cannot assign `ctorObj` to `ctorC8` because in the return value: object type [1] is incompatible with `C8` [2].
+[incompatible-type]
+
+   constructor_type.js:88:30
+   88| const ctorC8: new () => C8 = ctorObj;  // ERROR — {v: number} is not C8 nominally
+                                    ^^^^^^^
+
+References:
+   constructor_type.js:87:34
+   87| declare const ctorObj: new () => {v: number};
+                                        ^^^^^^^^^^^ [1]
+   constructor_type.js:88:25
+   88| const ctorC8: new () => C8 = ctorObj;  // ERROR — {v: number} is not C8 nominally
+                               ^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- utilities.js:10:28
 
 Cannot assign array literal to `fp2` because in index `1`: number [1] is incompatible with string [2].
@@ -369,4 +472,4 @@ References:
 
 
 
-Found 23 errors
+Found 29 errors
