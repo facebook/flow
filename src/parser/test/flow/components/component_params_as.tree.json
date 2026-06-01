@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":54}},
-  "range":[0,310],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":15,"column":48}},
+  "range":[0,360],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -391,6 +391,71 @@
               }
             },
             "optional":true
+          },
+          "shorthand":false
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":15,"column":0},"end":{"line":15,"column":48}},
+      "range":[312,360],
+      "async":false,
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":15,"column":46},"end":{"line":15,"column":48}},
+        "range":[358,360],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":15,"column":10},"end":{"line":15,"column":15}},
+        "range":[322,327],
+        "name":"Comp8",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "implicitDeclare":false,
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":15,"column":16},"end":{"line":15,"column":44}},
+          "range":[328,356],
+          "name":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":15,"column":16},"end":{"line":15,"column":20}},
+            "range":[328,332],
+            "name":"case",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":15,"column":24},"end":{"line":15,"column":44}},
+            "range":[336,356],
+            "name":"caseValue",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":15,"column":33},"end":{"line":15,"column":44}},
+              "range":[345,356],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":15,"column":35},"end":{"line":15,"column":44}},
+                "range":[347,356],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":15,"column":35},"end":{"line":15,"column":44}},
+                  "range":[347,356],
+                  "name":"CaseValue",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
+            "optional":false
           },
           "shorthand":false
         }
