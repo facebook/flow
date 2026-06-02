@@ -3536,6 +3536,7 @@ pub fn reinit(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     allow_fallback: bool,
     reason: &str,
     updates: &CheckedSet,
@@ -3570,7 +3571,7 @@ pub fn reinit(
     };
     // We loaded a saved state successfully! We are awesome!
     flow_hh_logger::info!("Reinitializing from saved state");
-    let (env, _libs_ok, _node_modules_containers) = init_from_saved_state(
+    let (env, _libs_ok, new_node_modules_containers) = init_from_saved_state(
         pool,
         shared_mem,
         options,
@@ -3578,6 +3579,7 @@ pub fn reinit(
         &updates_since_saved_state,
         Some(&env),
     );
+    *node_modules_containers.write().unwrap() = new_node_modules_containers.read().unwrap().clone();
 
     let updates_since_saved_state = if !options.lazy_mode || options.saved_state_force_recheck {
         updates_since_saved_state
@@ -3751,6 +3753,7 @@ pub fn recheck(
                 pool,
                 shared_mem,
                 options,
+                node_modules_containers,
                 false,
                 reason,
                 updates,
@@ -3772,6 +3775,7 @@ pub fn recheck(
                 pool,
                 shared_mem,
                 options,
+                node_modules_containers,
                 true,
                 "libdef_change_with_mergebase_change",
                 updates,

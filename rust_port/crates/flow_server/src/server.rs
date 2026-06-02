@@ -527,6 +527,14 @@ fn run(
         Ok(result) => result,
         Err(error) => exit_on_recheck_error(error),
     };
+    let node_modules_containers = match &genv_arc.live_node_modules_containers {
+        Some(live_node_modules_containers) => {
+            *live_node_modules_containers.write().unwrap() =
+                node_modules_containers.read().unwrap().clone();
+            live_node_modules_containers.clone()
+        }
+        None => node_modules_containers,
+    };
     let init_duration = profiling.get_profiling_duration();
 
     monitor_rpc::send_telemetry(

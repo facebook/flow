@@ -516,6 +516,8 @@ fn reducer(
         }
         ParseResult::ParseSkip(ParseSkipReason::SkipPackageJson(result)) => match result {
             Ok(package_json) => {
+                acc.package_json.0.push(file_key.dupe());
+                acc.package_json.1.push(None);
                 let package_info = PackageInfo::new(Some(package_json.clone()));
                 let haste_module_info =
                     flow_services_module::exported_module(options, &file_key, &package_info);

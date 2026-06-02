@@ -1,0 +1,6 @@
+find-module resolves package main from saved state:
+pkg/main.js
+
+check-contents resolves package main from saved state:
+No errors!
+
