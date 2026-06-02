@@ -296,8 +296,8 @@ const z: ObjB = {...x, c: true}; // Works!
 ```
 
 You have to be careful spreading inexact objects.
-The resulting object must also be inexact,
-and the spread inexact object may have unknown properties that can override previous properties in unknown ways:
+Spreading inexact types only works when the spread appears **before any named properties** AND the resulting object is also inexact; otherwise make the spread source exact.
+The spread inexact object may have unknown properties that can override previous properties in unknown ways:
 
 ```js flow-check
 type Inexact = {

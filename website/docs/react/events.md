@@ -63,9 +63,11 @@ related to are:
 - `SyntheticFocusEvent<T>` for [FocusEvent](https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent)
 - `SyntheticKeyboardEvent<T>` for [KeyboardEvent](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent)
 - `SyntheticMouseEvent<T>` for [MouseEvent](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent)
+- `SyntheticPointerEvent<T>` for [PointerEvent](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent)
 - `SyntheticDragEvent<T>` for [DragEvent](https://developer.mozilla.org/en-US/docs/Web/API/DragEvent)
 - `SyntheticWheelEvent<T>` for [WheelEvent](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent)
 - `SyntheticTouchEvent<T>` for [TouchEvent](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent)
+- `SyntheticClipboardEvent<T>` for [ClipboardEvent](https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent)
 - `SyntheticTransitionEvent<T>` for [TransitionEvent](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent)
 
 ## See Also {#toc-see-also}

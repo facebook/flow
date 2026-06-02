@@ -163,7 +163,7 @@ declare class InvalidStatic {
   static m(): this is D;
 }
 
-type InvalidTypeAlias = (x: unknown): this is A;
+type InvalidTypeAlias = (x: unknown) => this is A;
 
 function invalidFunction(this: unknown): this is A;
 

@@ -147,4 +147,3 @@ In this case, Flow will use the `.js` file as the common interface file, and che
 - [Component Types](./component-types.md) — typing component references used in common interface files
 - [React Types](./types.md) — `React.Node`, `React.ComponentType`, and other types used across platforms
 - [Declaration Files](../declarations/index.md) — `.flow` files, including `.js.flow` used for common interfaces
-- [`.flowconfig` Options](../config/options.md) — configuring `experimental.multi_platform` and related settings

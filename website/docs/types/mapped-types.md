@@ -139,7 +139,7 @@ type MappedType = {[key in Union]: number};
 // = {foo: number, bar: number, baz: number};
 ```
 
-> NOTE: Flow does not yet support removing variance or optionality modifiers.
+> NOTE: Flow does not yet support `+readonly`/`-readonly` variance modifiers.
 
 ## Mapped Type on Arrays {#toc-mapped-type-on-arrays}
 

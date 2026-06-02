@@ -59,6 +59,12 @@ function MyComponent({foo = 42, bar}: Props) {
 <MyComponent bar={"abc"} />;
 ```
 
+> **Note:** React 19 no longer applies `defaultProps` at runtime for function components, and Flow has never treated it as making the prop optional. Use destructuring defaults instead:
+
+```js flow-check
+function MyComponent({foo = 42}: {foo?: number}) { /* ... */ }
+```
+
 ## Class Components {#toc-class-components}
 
 To Flowify a [class component](https://react.dev/reference/react/Component#defining-a-class-component), the type of the props can be passed as the first
@@ -180,14 +186,6 @@ type Props = {
 };
 ```
 This way you avoid duplicating the properties that happen to have a default value.
-
-> **Note:** You can also apply this format of default props to functional components
-> by adding a `defaultProps` property to a the component function. However, it is generally
-> simpler to use the destructuring pattern described above.
-> ```js
-> function MyComponent(props: {foo: number}) {}
-> MyComponent.defaultProps = {foo: 42};
-> ```
 
 ## See Also {#toc-see-also}
 

@@ -19,6 +19,9 @@ Found 1 error
 No errors!
 
 === block 3 ===
+No errors!
+
+=== block 4 ===
 Error ------------------------------------------------------- -:11:16
 
 Cannot get `this.props.doesNotExist` because property `doesNotExist` is missing in `Props` [1]. [prop-missing]
@@ -35,11 +38,11 @@ References:
 
 Found 1 error
 
-=== block 4 ===
-No errors!
-
 === block 5 ===
 No errors!
 
 === block 6 ===
+No errors!
+
+=== block 7 ===
 No errors!

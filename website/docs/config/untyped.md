@@ -16,7 +16,7 @@ This also does not typecheck the file contents, but `[declarations]` does extrac
 
 `[untyped]` instead causes a file to be ignored by the typechecker as if it had `@noflow` in it,
 resolve modules as `any` type, but allow them to NOT be ignored by the module resolver.
-Any matching file is skipped by Flow (not even parsed, like other `@noflow` files!), but can still be `require()`'d.
+Any matching file is parsed but treated as if it had `@noflow` in it, so its contents are not typechecked and its exports are typed as `any`, but it can still be `require()`'d.
 
 Things to keep in mind:
 
@@ -51,9 +51,9 @@ For example, you can write:
 <PROJECT_ROOT>/third_party/.*
 ```
 
-Which would parse in declaration mode any file or directory under the directory
+Which would treat as untyped any file or directory under the directory
 named `third_party/` within the project root. However, unlike the previous
-example's `.*/third_party/.*`, it would NOT parse files or directories under
+example's `.*/third_party/.*`, it would NOT match files or directories under
 directories named `third_party/`, like `src/third_party/`.
 
 ## See Also {#toc-see-also}

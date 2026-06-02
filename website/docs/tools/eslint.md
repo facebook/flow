@@ -17,14 +17,14 @@ yarn add --dev eslint hermes-eslint eslint-plugin-ft-flow
 npm install --save-dev eslint hermes-eslint eslint-plugin-ft-flow
 ```
 
-Then create a `eslint.config.(js|mjs|cjs)` or `.eslintrc.js` file in your project root with the following:
+Then create a `.eslintrc.js` file in your project root with the following:
 
 ```js
 module.exports = {
   root: true,
   parser: 'hermes-eslint',
   plugins: [
-    'ft-flow'
+    'ft-flow',
   ],
   extends: [
     'eslint:recommended',
@@ -59,7 +59,7 @@ Using this config by adding it to the **_end_** of your `extends`:
     root: true,
     parser: 'hermes-eslint',
     plugins: [
-      'ft-flow'
+      'ft-flow',
     ],
     extends: [
       'eslint:recommended',
@@ -91,7 +91,7 @@ A typical plugin might be used like:
     root: true,
     parser: 'hermes-eslint',
     plugins: [
-      'ft-flow'
+      'ft-flow',
 +     'jest',
     ],
     extends: [

@@ -52,8 +52,8 @@ import * as React from 'react';
 ## `React.Node` {#toc-react-node}
 
 This represents any node that can be rendered in a React application.
-`React.Node` can be null, a boolean, a number, a string, a React
-element, or an array of any of those types recursively.
+`React.Node` can be undefined, null, a boolean, a number, a string, a React
+element, a React portal, or an iterable (including arrays) of any of those, possibly nested.
 
 `React.Node` is a good default to use to annotate the return type of a function component
 and class render methods. You can also use it to type elements your component takes in as children.

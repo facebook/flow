@@ -226,12 +226,12 @@ import typeof MyComp from './GenericComp';
 type CompType = MyComp; // Error: missing 1 type argument
 ```
 
-To preserve the polymorphism, use a namespace `import typeof` and index into it:
+To sidestep the eager-instantiation error at declaration time, use a namespace `import typeof` and index into it. Note that this collapses the polymorphism — the resulting type is treated as a concrete (non-polymorphic) component type, so you still cannot instantiate it with a type argument like `CompType<number>`:
 
 ```js
 import typeof * as GenericCompModule from './GenericComp';
 
-type CompType = GenericCompModule['default']; // Works
+type CompType = GenericCompModule['default']; // Declaration works, but CompType is no longer polymorphic
 ```
 
 ## Enable Component Syntax {#toc-enable-component-syntax}

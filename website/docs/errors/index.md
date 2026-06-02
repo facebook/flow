@@ -29,8 +29,6 @@ A suppressor can be one of the following:
 - `$FlowFixMe`: for type errors that you intend to fix later
 - `$FlowExpectedError`: for a location where you expect Flow to produce a type error (for instance, when performing an invalid type cast).
 
-Note that all of the suppressors behave identically; we simply recommend using them as described here for your own ease of reference.
-
 The `<CODE>` portion of a suppression is required. It specifies which error code the suppression affects.
 
 Some examples of suppression comments:
@@ -57,7 +55,7 @@ In order to be a valid suppression comment, there are also some conditions that 
 
 Suppressions must have error codes. Suppressible Flow errors will also have an error code associated with them. This code concisely describes the type of issue the error is reporting, and is different between different kinds of errors.
 
-In order to prevent suppressions from suppressing different kinds of type errors on the same line (by default suppressions without codes suppress every error on the following line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
+In order to prevent suppressions from suppressing different kinds of type errors on the same line (suppressions without an error code are rejected — they emit a missing-code error — so every suppression must specify a code, which scopes it to one error kind on the next line), you can add an error code to your suppression. For example: `// $FlowFixMe[incompatible-type]` would only suppress errors with the `incompatible-type` code. So:
 
 ```js flow-check
 // $FlowFixMe[incompatible-type]

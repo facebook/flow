@@ -174,7 +174,7 @@ const y2 = constFoo([42, "hello"]);
 The variables `y1` and `y2` will have the same type as `x1` and `x2`, respectively.
 
 ## Adoption of `const` type parameter syntax
-To use the `as const` syntax, you need to upgrade your infrastructure:
+To use the `const` type parameter syntax, you need to upgrade your infrastructure:
 - Prettier: 3.5+
 - Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../tools/babel.md) for more details.
 - ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../tools/eslint.md) for more details.

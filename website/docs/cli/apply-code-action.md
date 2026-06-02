@@ -121,8 +121,8 @@ The output is a JSON object keyed by unbound name, where each value is an array 
             {
               "newText": "import OtherModule from \"./OtherModule\";\n\n",
               "range": {
-                "start": { "character": 0, "line": 1 },
-                "end": { "character": 0, "line": 1 }
+                "start": { "character": 0, "line": 2 },
+                "end": { "character": 0, "line": 2 }
               }
             }
           ]

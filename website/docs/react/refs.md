@@ -57,4 +57,4 @@ Again, note that the ref value is wrapped in an object with a `current` property
 ## See Also {#toc-see-also}
 
 - [React Types](./types.md) — `React.RefObject` and other built-in React types
-- [Function and Class Components](./function-and-class-components.md) — `createRef` usage in class components
+- [Function and Class Components](./function-and-class-components.md) — typing class components in general

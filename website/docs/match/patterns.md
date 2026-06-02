@@ -74,7 +74,7 @@ If you have a property with either a wildcard or variable declaration pattern, e
 
 When checking objects with optional properties, in order to make the check exhaustive you must include a pattern that doesn’t include the optional properties. For example, for `{name: string, age?: number}`, if you first match with the pattern `{name: _, age: _}`, you still need to match with the pattern `{name: _, ...}` in order to handle the cases where the `age` property doesn’t exist.
 
-Property names can be identifiers (e.g. `foo: pattern`), string literals (e.g. `'foo': <pattern>)`, or number literals (e.g. `2: <pattern>`). Repeated object keys are banned, and BigInts are not supported as object keys (Flow doesn’t yet support them).
+Property names can be identifiers (e.g. `foo: pattern`), string literals (e.g. `'foo': <pattern>`), or number literals (e.g. `2: <pattern>`). Repeated object keys are banned, and BigInts are not supported as object keys (Flow doesn’t yet support them).
 
 Example:
 ```js
@@ -85,7 +85,7 @@ const e = match (x) {
 };
 ```
 
-[Getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) are also not supported \- at runtime they will be evaluated multiple times, once for each conditional check done against them. Flow doesn’t support getters anyway.
+[Getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) are also not supported \- at runtime they will be evaluated multiple times, once for each conditional check done against them.
 
 ## Array patterns
 

@@ -557,7 +557,7 @@ const counts = new Map<Status, number>([
   [Status.Active, 2],
   [Status.Off, 5],
 ]);
-const activeCount: Status | void = counts.get(Status.Active);
+const activeCount: number | void = counts.get(Status.Active);
 ```
 
 You can use enum members as computed keys in object literals if you type the object with an [indexer type](../types/objects.md#toc-objects-as-maps), as [explained later on this page](#toc-enum-members-as-distinct-object-keys).
