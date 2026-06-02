@@ -26,87 +26,6 @@ Found 1 error
 No errors!
 
 === block 4 ===
-Error ------------------------------------------------------------------------ -:16:12
-
-Cannot call `acceptsObj` with `new Foo()` bound to `x` because `Foo` [1] is not a subtype of `Obj` [2]. Class instances
-are not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
-
-   -:16:12
-   16| acceptsObj(new Foo());       // ERROR
-                  ^^^^^^^^^ [1]
-
-References:
-   -:10:32
-   10| declare function acceptsObj(x: Obj): void;
-                                      ^^^ [2]
-
-Error ------------------------------------------------------------------------ -:17:12
-
-Cannot call `acceptsObj` with `someI` bound to `x` because `I` [1] is not a subtype of `Obj` [2]. Class instances are
-not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
-
-   -:17:12
-   17| acceptsObj(someI);           // ERROR: same [class-object-subtyping] code
-                  ^^^^^
-
-References:
-   -:11:22
-   11| declare const someI: I;
-                            ^ [1]
-   -:10:32
-   10| declare function acceptsObj(x: Obj): void;
-                                      ^^^ [2]
-
-
-Found 2 errors
-
-=== block 5 ===
-Error ------------------------------------------------------------------------- -:4:20
-
-Cannot implement `ObjType` because it is not an interface. [cannot-implement]
-
-   4| class C implements ObjType { // ERROR: [cannot-implement]
-                         ^^^^^^^
-
-Error ------------------------------------------------------------------------- -:8:11
-
-Cannot extend `ObjType` [1] with `I` because `ObjType` [1] is not inheritable. [incompatible-use]
-
-   -:8:11
-   8| interface I extends ObjType { // ERROR: [incompatible-use]
-                ^
-
-References:
-   -:8:21
-   8| interface I extends ObjType { // ERROR: [incompatible-use]
-                          ^^^^^^^ [1]
-
-
-Found 2 errors
-
-=== block 6 ===
-Error -------------------------------------------------------------------------- -:7:8
-
-Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
-subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
-subtype of an interface. [incompatible-type]
-
-   -:7:8
-   7| logAll(msgs); // ERROR: `string` is not a subtype of `Iterable<string>`
-             ^^^^
-
-References:
-   -:6:14
-   6| const msgs = "foo";
-                   ^^^^^ [1]
-   -:3:24
-   3| function logAll(items: Iterable<string>) {
-                             ^^^^^^^^^^^^^^^^ [2]
-
-
-Found 1 error
-
-=== block 7 ===
 Error ------------------------------------------------------------------------- -:9:33
 
 Cannot assign `e` to `baseExact` because property `timestamp` is extra in `LogEntry` [1] but missing in object type [2].
@@ -169,6 +88,87 @@ References:
 
 Found 3 errors
 
+=== block 5 ===
+Error ------------------------------------------------------------------------ -:16:12
+
+Cannot call `acceptsObj` with `new Foo()` bound to `x` because `Foo` [1] is not a subtype of `Obj` [2]. Class instances
+are not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
+
+   -:16:12
+   16| acceptsObj(new Foo());       // ERROR
+                  ^^^^^^^^^ [1]
+
+References:
+   -:10:32
+   10| declare function acceptsObj(x: Obj): void;
+                                      ^^^ [2]
+
+Error ------------------------------------------------------------------------ -:17:12
+
+Cannot call `acceptsObj` with `someI` bound to `x` because `I` [1] is not a subtype of `Obj` [2]. Class instances are
+not subtypes of object types; consider rewriting `Obj` [2] as an interface. [class-object-subtyping]
+
+   -:17:12
+   17| acceptsObj(someI);           // ERROR: same [class-object-subtyping] code
+                  ^^^^^
+
+References:
+   -:11:22
+   11| declare const someI: I;
+                            ^ [1]
+   -:10:32
+   10| declare function acceptsObj(x: Obj): void;
+                                      ^^^ [2]
+
+
+Found 2 errors
+
+=== block 6 ===
+Error ------------------------------------------------------------------------- -:4:20
+
+Cannot implement `ObjType` because it is not an interface. [cannot-implement]
+
+   4| class C implements ObjType { // ERROR: [cannot-implement]
+                         ^^^^^^^
+
+Error ------------------------------------------------------------------------- -:8:11
+
+Cannot extend `ObjType` [1] with `I` because `ObjType` [1] is not inheritable. [incompatible-use]
+
+   -:8:11
+   8| interface I extends ObjType { // ERROR: [incompatible-use]
+                ^
+
+References:
+   -:8:21
+   8| interface I extends ObjType { // ERROR: [incompatible-use]
+                          ^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 7 ===
+Error -------------------------------------------------------------------------- -:7:8
+
+Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
+subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
+
+   -:7:8
+   7| logAll(msgs); // ERROR: `string` is not a subtype of `Iterable<string>`
+             ^^^^
+
+References:
+   -:6:14
+   6| const msgs = "foo";
+                   ^^^^^ [1]
+   -:3:24
+   3| function logAll(items: Iterable<string>) {
+                             ^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
 === block 8 ===
 No errors!
 
@@ -192,6 +192,46 @@ References:
 Found 1 error
 
 === block 10 ===
+Error ------------------------------------------------------------------------- -:8:22
+
+Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   -:8:22
+   8| const tick = counter.increment; // ERROR: [method-unbinding]
+                           ^^^^^^^^^ [1]
+
+References:
+   -:5:3
+   5|   increment(): number { return ++this.count; }
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+Error ------------------------------------------------------------------------- -:5:34
+
+Cannot reference `this` from within method `increment` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   -:5:34
+   5|   increment(): number { return ++this.count; } // ERROR: [object-this-reference]
+                                       ^^^^
+
+References:
+   -:5:3
+   5|   increment(): number { return ++this.count; } // ERROR: [object-this-reference]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
 Error ------------------------------------------------------------------------- -:4:51
 
 Cannot assign array literal to `fullName` because array literal [1] has an unknown number of elements, so is
@@ -209,25 +249,7 @@ References:
 
 Found 1 error
 
-=== block 11 ===
-Error ------------------------------------------------------------------------- -:8:36
-
-Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   -:8:36
-   8| const tick: () => number = counter.increment; // ERROR: [method-unbinding]
-                                         ^^^^^^^^^ [1]
-
-References:
-   -:5:3
-   5|   increment(): number { return ++this.count; }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Found 1 error
-
-=== block 12 ===
+=== block 14 ===
 Error ------------------------------------------------------------------------- -:3:15
 
 The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
@@ -239,13 +261,13 @@ types. [unsupported-syntax]
 
 Found 1 error
 
-=== block 13 ===
-No errors!
-
-=== block 14 ===
-No errors!
-
 === block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
 Error ------------------------------------------------------------------------- -:4:10
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -263,7 +285,7 @@ References:
 
 Found 1 error
 
-=== block 16 ===
+=== block 18 ===
 Error ------------------------------------------------------------------------- -:7:10
 
 Cannot call `markFree` with `item` bound to `p` because in property `price`: `number` [1] is not exactly the same as
@@ -295,10 +317,10 @@ References:
 
 Found 1 error
 
-=== block 17 ===
+=== block 19 ===
 No errors!
 
-=== block 18 ===
+=== block 20 ===
 Error -------------------------------------------------------------------------- -:7:3
 
 Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
@@ -319,10 +341,10 @@ References:
 
 Found 1 error
 
-=== block 19 ===
+=== block 21 ===
 No errors!
 
-=== block 20 ===
+=== block 22 ===
 Error ------------------------------------------------------------------------- -:7:13
 
 Cannot call `appendError` with `errors` bound to `es` because in array element: `string` [1] is not exactly the same as
@@ -354,10 +376,10 @@ References:
 
 Found 1 error
 
-=== block 21 ===
+=== block 23 ===
 No errors!
 
-=== block 22 ===
+=== block 24 ===
 Error -------------------------------------------------------------------------- -:9:7
 
 Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: string [2] is incompatible with
@@ -381,7 +403,7 @@ References:
 
 Found 1 error
 
-=== block 23 ===
+=== block 25 ===
 Error ------------------------------------------------------------------------ -:10:13
 
 Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
@@ -433,7 +455,7 @@ References:
 
 Found 2 errors
 
-=== block 24 ===
+=== block 26 ===
 Error ------------------------------------------------------------------------- -:6:20
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
@@ -465,7 +487,7 @@ References:
 
 Found 2 errors
 
-=== block 25 ===
+=== block 27 ===
 Error ------------------------------------------------------------------------- -:5:10
 
 Cannot return `((typeof x) === "object") && (x !== null)` because indexed object [1] is incompatible with exact
@@ -571,7 +593,7 @@ References:
 
 Found 4 errors
 
-=== block 26 ===
+=== block 28 ===
 Error ------------------------------------------------------------------------- -:6:10
 
 Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
@@ -590,50 +612,7 @@ References:
 
 Found 1 error
 
-=== block 27 ===
-Error ------------------------------------------------------------------------- -:5:10
-
-Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
-
-   -:5:10
-   5|   return typeof x === "number"; // ERROR
-               ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   -:3:32
-   3| function isNumber(x: unknown): x is number {
-                                     ^ [1]
-   -:4:3
-   4|   x = 1;
-        ^ [2]
-
-
-Found 1 error
-
-=== block 28 ===
-Error ------------------------------------------------------------------------- -:3:32
-
-Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
-
-   -:3:32
-   3| function isNumber(x: unknown): x is number { // ERROR: `x` is reassigned via the `reset()` call below
-                                     ^
-
-References:
-   -:3:19
-   3| function isNumber(x: unknown): x is number { // ERROR: `x` is reassigned via the `reset()` call below
-                        ^ [1]
-   -:5:3
-   5|   reset();
-        ^^^^^^^ [2]
-
-
-Found 1 error
-
 === block 29 ===
-No errors!
-
-=== block 30 ===
 Error ------------------------------------------------------------------------ -:15:23
 
 Cannot assign `obj.x` to `a` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
@@ -655,7 +634,7 @@ Error ------------------------------------------------------------------------ -
 Cannot assign `x` to `a` because null [1] is incompatible with number [2]. [incompatible-type]
 
    -:22:23
-   22|     const a: number = x; // ERROR: direct write invalidates the refinement
+   22|     const a: number = x; // ERROR: `x` is now typed `null` after the write
                              ^
 
 References:
@@ -663,37 +642,37 @@ References:
    21|     x = null;
                ^^^^ [1]
    -:22:14
-   22|     const a: number = x; // ERROR: direct write invalidates the refinement
+   22|     const a: number = x; // ERROR: `x` is now typed `null` after the write
                     ^^^^^^ [2]
 
 
 Found 2 errors
 
-=== block 31 ===
+=== block 30 ===
 No errors!
 
-=== block 32 ===
-Error ------------------------------------------------------------------------- -:3:11
+=== block 31 ===
+Error ------------------------------------------------------------------------- -:5:11
 
 Cannot cast object literal to object type because property `name` is missing in object literal [1] but exists in object
 type [2]. [incompatible-type]
 
-   -:3:11
-   3| const u = {id: 1} as {id: number, name: string}; // ERROR
+   -:5:11
+   5| const u = {id: 1} as {id: number, name: string}; // ERROR - unsafe downcast
                 ^^^^^^^ [1]
 
 References:
-   -:3:22
-   3| const u = {id: 1} as {id: number, name: string}; // ERROR
+   -:5:22
+   5| const u = {id: 1} as {id: number, name: string}; // ERROR - unsafe downcast
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Found 1 error
 
-=== block 33 ===
+=== block 32 ===
 No errors!
 
-=== block 34 ===
+=== block 33 ===
 Error ------------------------------------------------------------------------- -:4:10
 
 Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
@@ -710,10 +689,10 @@ References:
 
 Found 1 error
 
-=== block 35 ===
+=== block 34 ===
 No errors!
 
-=== block 36 ===
+=== block 35 ===
 Error -------------------------------------------------------------------------- -:6:3
 
 Components may not be nested directly within other components or hooks. [nested-component]
@@ -738,7 +717,7 @@ References:
 
 Found 2 errors
 
-=== block 37 ===
+=== block 36 ===
 Error ------------------------------------------------------------------------- -:14:8
 
 Cannot call `callIt` with `useToggle` bound to `fn` because function [1] is a React hook but function type [2] is not a
@@ -761,14 +740,14 @@ References:
 
 Found 1 error
 
-=== block 38 ===
+=== block 37 ===
 Error ------------------------------------------------------------------------ -:20:29
 
 Cannot create `Layout` element because in property `header`: React element [1] does not render `Header` [2].
 [incompatible-type]
 
    -:20:29
-   20| const bad = <Layout header={<footer />} />; // ERROR
+   20| const bad = <Layout header={<footer />} />; // ERROR: `<footer />` does not satisfy `renders Header`
                                    ^^^^^^^^^^ [1]
 
 References:
@@ -779,10 +758,10 @@ References:
 
 Found 1 error
 
-=== block 39 ===
+=== block 38 ===
 No errors!
 
-=== block 40 ===
+=== block 39 ===
 Error ------------------------------------------------------------------------ -:11:29
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
@@ -800,10 +779,10 @@ References:
 
 Found 1 error
 
-=== block 41 ===
+=== block 40 ===
 No errors!
 
-=== block 42 ===
+=== block 41 ===
 Error ------------------------------------------------------------------------- -:9:24
 
 Cannot assign `42` to `forged` because number [1] is incompatible with `UserId` [2]. [incompatible-type]
@@ -836,7 +815,7 @@ References:
 
 Found 2 errors
 
-=== block 43 ===
+=== block 42 ===
 Error ------------------------------------------------------------------------- -:12:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `st`.
@@ -854,6 +833,9 @@ References:
 
 Found 1 error
 
+=== block 43 ===
+No errors!
+
 === block 44 ===
 No errors!
 
@@ -861,9 +843,6 @@ No errors!
 No errors!
 
 === block 46 ===
-No errors!
-
-=== block 47 ===
 Error ------------------------------------------------------------------------ -:10:21
 
 Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -883,5 +862,5 @@ References:
 
 Found 1 error
 
-=== block 48 ===
+=== block 47 ===
 No errors!

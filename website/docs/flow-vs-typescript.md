@@ -6,9 +6,7 @@ description: "Flow vs. TypeScript: how object exactness, variance defaults, `as`
 
 Flow and TypeScript share most of the same syntax, much of the same vocabulary, and a large set of overlapping concepts (conditional types, mapped types, type guards, `keyof`, `as const`, `unknown`, `Readonly`). The convergence is largely intentional: Flow's syntax has shifted to align with TypeScript's over the past several years. If you know TypeScript, your intuition will get you most of the way through a Flow program.
 
-Where the two diverge, the divergence is usually a deliberate Flow choice in favor of stronger static guarantees. Flow rejects a number of patterns that TypeScript accepts but that can throw at runtime, silently corrupt values, or cause logic bugs.
-
-React is one notable area where Flow does not mirror TypeScript: Flow ships its own first-class [`component`](./react/component-syntax.md), [`hook`](./react/hook-syntax.md), and [`renders`](./react/render-types.md) syntax instead of modeling components through function types, `forwardRef`, and framework/library patterns (covered in [Flow-only concepts](#toc-flow-only) below).
+Where the two diverge, the divergence is usually a deliberate Flow choice in favor of stronger static guarantees. Flow rejects a number of patterns that TypeScript accepts but that can throw at runtime, silently corrupt values, or cause logic bugs. Flow also ships several features with no built-in TypeScript counterpart, covered in [Flow-only concepts](#toc-flow-only) below. The most prominent is React: Flow has its own first-class [`component`](./react/component-syntax.md), [`hook`](./react/hook-syntax.md), and [`renders`](./react/render-types.md) syntax.
 
 This page is organized in four sections:
 
@@ -26,7 +24,7 @@ Additional reference sections cover [upcoming TS-aligned work](#toc-coming-soon)
 The features below are close enough in syntax and semantics that you can reuse your TypeScript intuition more or less directly.
 
 - [Conditional types](./types/conditional.md) with `infer`, including the `infer T extends Bound` constraint form.
-- [Mapped types](./types/mapped-types.md).
+- [Mapped types](./types/mapped-types.md) including optionality removal `-?`.
 - [Type guards](./types/type-guards.md) of the form `param is T` (with additional validations), including inferred type predicates.
 - [`T[K]`](./types/indexed-access.md) indexed access types.
 - [`keyof T`](./types/utilities.md) operator.
@@ -34,13 +32,17 @@ The features below are close enough in syntax and semantics that you can reuse y
 - [`const` type parameters](./types/const-expression.md#const-type-parameters) - `function f<const T>(x: T): T`.
 - [`unknown`](./types/unknown.md) top type.
 - [Generic bounds](./types/generics.md#toc-adding-types-to-generics) with `<T extends Bound>`.
-- [Array](./types/arrays.md) shorthand `T[]` (in addition to `Array<T>`).
-- [Utility types](./types/utilities.md): `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`.
+- [Utility types](./types/utilities.md): `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `NoInfer`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `ConstructorParameters`, `InstanceType`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`.
 - [Type-only imports and exports](./types/modules.md#toc-importing-and-exporting-types) - `import type` and `export type`.
 - [Function-overload encoding via intersection](./types/intersections.md#toc-intersection-of-function-types) - `((x: number) => string) & ((x: string) => number)` resolves the per-call return type by argument type in both languages.
 - [Ambient declaration forms](./libdefs/creation.md) like `declare const`, `declare let`, `declare class`, and `declare function`.
 
-For example, the function below type-checks identically in both languages:
+Two more syntax forms match TypeScript directly even though the underlying semantics diverge - see [Variance](#toc-variance).
+
+- [Array](#toc-variance-arrays) shorthand `T[]` (in addition to `Array<T>`).
+- [Variance keywords](#toc-variance-keywords): `readonly` on properties and `in` / `out` on type parameters.
+
+Combining several of these features, the function below type-checks identically in both languages:
 
 ```js flow-check
 type User = {
@@ -71,12 +73,12 @@ In most subsections the syntax is the same but the semantics differ: code that's
 :::info Nominal vs. structural typing.
 TypeScript is primarily structural - two types with the same public shape are interchangeable, with narrow nominal carve-outs (`#private` fields, `private`/`protected` modifiers, and `unique symbol`). Flow is structural for plain objects and functions, but deliberately *nominal* for [classes](#toc-classes-nominal), [opaque types](#toc-opaque-types), and [Flow Enums](#toc-flow-enums).
 
-The reason is that identity carries real information at those boundaries: a `UserId` is not a `PostId`, a `Celsius` is not a `Fahrenheit`, two distinct classes with the same fields are different concepts. Treating identity nominally rather than structurally lets the type system catch entire categories of logic bugs (the "right shape, wrong meaning" class of mistakes) and lets users model their domain at the level of *what something is*, not just *what it looks like*. The [Classes are nominal](#toc-classes-nominal) subsection below is the concrete instance of this principle; opaque types and Flow Enums (covered later in [Flow-only concepts](#toc-flow-only)) are the others.
+Flow chose nominal typing here because identity carries real information in those constructs: for example, a `UserId` and a `PostId` can have the same underlying representation but are not interchangeable. Treating identity nominally rather than structurally lets the type system catch entire categories of logic bugs (right shape, wrong meaning) and lets users model their domain at the level of *what something is*, not just *what it looks like*.
 :::
 
 ### Objects, classes, and interfaces {#toc-shape-rules}
 
-How Flow types objects, classes, and interfaces: the exact-by-default object rule, nominal class identity, the asymmetric subtyping rules, primitive-to-interface assignability, optional re-introduction, type-level spread, tuple spread, and class-method `this` binding.
+How Flow types objects, classes, and interfaces: the exact-by-default object rule, nominal class identity, the asymmetric subtyping rules, primitive-to-interface assignability, type-level spread, the `this`-binding rules for class methods and object literals, and tuple spread.
 
 | Surface | TypeScript | Flow | Details |
 |---|---|---|---|
@@ -85,19 +87,23 @@ How Flow types objects, classes, and interfaces: the exact-by-default object rul
 | `implements` / `extends` arg | Can target object-shaped utility types like `Pick<T, K>` or `Omit<T, K>`. | Must name an interface or class, not an object type alias. | [`implements` and `extends` clauses](#toc-implements-extends-rhs) |
 | Primitives vs interfaces | Primitives satisfy object/interface shapes that exist on the boxed prototype. | Primitives are not subtypes of object types or interfaces. | [Primitives are not subtypes of interfaces or object types](#toc-primitives-interfaces) |
 | Object combination | Intersections are the standard way to combine object types. | Use object type spread (`{...A, ...B}`); intersections, while supported for inexact objects, don't work for exact objects. | [Object spread typing](#toc-type-spread) |
+| `this` bindings | Method extraction unsafely loses `this`; `this` in object literals is allowed. | Class method extraction is rejected; `this` in object literals is banned. | [`this` is bound on class methods and banned in object literals](#toc-method-unbinding) |
+| Tuple spread after an optional element | Allowed; the resulting tuple type doesn't match the runtime layout when the optional element is absent. | Rejected when the source tuple's arity isn't statically fixed. | [Tuple spread after an optional element is banned](#toc-tuple-spread-optional) |
 
 #### Object exactness {#toc-object-exactness}
 
 In Flow, object types are *exact by default*: `{x: number}` admits exactly the property `x` and no others. To allow additional properties, write the inexact form with a trailing `...`: `{x: number, ...}`. In TypeScript, object types are open at the type-system level - `{x: number}` allows additional properties, and the rule that catches extras is the *excess-property check*, which fires only on direct object-literal assignment.
 
-That distinction matters because it explains why TypeScript code can look like it agrees with Flow's exactness when it doesn't: `const o: {x: number} = {x: 1, y: 2}` errors in TS too, but only because the literal is inlined. Indirect cases (assigning the literal to a variable first, passing it through a function, or other paths where the literal's "fresh" status is lost) type-check in TS and would not be exactness violations there. Flow's exactness applies uniformly regardless of binding shape.
+That distinction matters because it explains why TypeScript code can look like it agrees with Flow's exactness when it doesn't: `const o: {x: number} = {x: 1, y: 2}` errors in TS too, but only because the literal is inlined. Indirect cases (assigning the literal to a variable first, passing it through a function, or other paths where the literal's "fresh" status is lost) type-check in TS and would not be exactness violations there. Flow's exactness applies uniformly regardless of binding shape, and shows up in two TS-shaped patterns below.
+
+**• Pattern: extra properties slip through indirect assignment.**
 
 ```ts
 // TypeScript:
 type Settings = {volume: number, brightness: number};
 const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
 const settings: Settings = raw;
-Object.values(settings).map(v => v.toFixed(2)); // Runtime crash! `theme` is a string
+Object.values(settings).map(v => v.toFixed(2)); // Runtime crash! `Settings` types every value as `number`, so `.toFixed` runs on the `"dark"` string
 ```
 
 TypeScript accepts this: `raw` is inferred as `{volume: number, brightness: number, theme: string}`, which is structurally a subtype of `{volume: number, brightness: number}` because TS object types are open. The excess-property check does not fire on indirect assignment. Flow rejects the same code:
@@ -116,6 +122,37 @@ When the extra properties are intentional, the fix is the inexact form - write `
 type Settings = {volume: number, brightness: number, ...};
 const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
 const settings: Settings = raw; // OK
+```
+
+**• Pattern: a property is forgotten and re-introduced at a different type.** Typical when modeling a Flow function on a TypeScript signature that takes a "looser" type and adds optional fields. TypeScript allows the property to be forgotten via inexact subtyping and then re-introduced at a different (optional) type - leaving `timestamp` typed as `number | undefined` while it actually holds the string `'2026-01-15'`:
+
+```ts
+// TypeScript:
+type LogEntry = {id: string, timestamp: string};
+type WithUnixTime = {id: string, timestamp?: number};
+
+const e: LogEntry = {id: 'a', timestamp: '2026-01-15'};
+const base: {id: string} = e;       // `timestamp` "forgotten"
+const widened: WithUnixTime = base; // `timestamp` re-introduced at a new type
+widened.timestamp?.toFixed(); // Runtime crash! ?. only short-circuits on nullish; the value
+                              // is the string '2026-01-15', so .toFixed runs and throws.
+```
+
+Flow blocks this path in two places: the literal translation fails at the forget step (`{id: string}` is exact by default), and modeling the forget with an inexact target pushes the failure to the re-introduce step. Exactness gates both directions: a property can only be forgotten when the target is inexact, and re-introduced only when the source is exact.
+
+```js flow-check
+// Flow:
+type LogEntry = {id: string, timestamp: string};
+type WithUnixTime = {id: string, timestamp?: number};
+
+declare const e: LogEntry;
+
+// Literal Flow translation: fails at the forget step because `{id: string}` is exact.
+const baseExact: {id: string} = e; // ERROR
+
+// Modeled with inexact target: forget step passes, but re-introduction fails.
+const baseInexact: {id: string, ...} = e;     // OK
+const widened: WithUnixTime = baseInexact;    // ERROR
 ```
 
 #### Classes are nominal; the object/interface/class subtyping is asymmetric {#toc-classes-nominal}
@@ -206,48 +243,11 @@ logAll(msgs); // ERROR: `string` is not a subtype of `Iterable<string>`
 
 The Flow rewrite is at the call site: if a one-element list was intended, wrap the string in `[s]`; otherwise the call was the wrong shape.
 
-#### Optional properties cannot be silently re-introduced {#toc-optional-reintroduction}
-
-TypeScript allows a property to be forgotten via inexact subtyping and then re-introduced at a different (optional) type - leaving `timestamp` typed as `number | undefined` while it actually holds the string `'2026-01-15'`:
-
-```ts
-// TypeScript:
-type LogEntry = {id: string, timestamp: string};
-type WithUnixTime = {id: string, timestamp?: number};
-
-const e: LogEntry = {id: 'a', timestamp: '2026-01-15'};
-const base: {id: string} = e;       // `timestamp` "forgotten"
-const widened: WithUnixTime = base; // `timestamp` re-introduced at a new type
-widened.timestamp?.toFixed(); // Runtime crash! ?. only short-circuits on nullish; the value
-                              // is the string '2026-01-15', so .toFixed runs and throws.
-```
-
-Flow blocks this path in two places: the literal translation fails at the forget step (`{id: string}` is exact by default), and modeling the forget with an inexact target pushes the failure to the re-introduce step. Exactness gates both directions: a property can only be forgotten when the target is inexact, and re-introduced only when the source is exact.
-
-```js flow-check
-// Flow:
-type LogEntry = {id: string, timestamp: string};
-type WithUnixTime = {id: string, timestamp?: number};
-
-declare const e: LogEntry;
-
-// Literal Flow translation: fails at the forget step because `{id: string}` is exact.
-const baseExact: {id: string} = e; // ERROR
-
-// Modeled with inexact target: forget step passes, but re-introduction fails.
-const baseInexact: {id: string, ...} = e;     // OK
-const widened: WithUnixTime = baseInexact;    // ERROR
-```
-
-This is the same underlying mechanism as [object exactness](#toc-object-exactness) showing up in a different shape (typical when modeling a Flow function on a TypeScript signature that takes a "looser" type and adds optional fields).
-
 #### Object spread typing {#toc-type-spread}
 
 Flow lifts `{...A, b: T}` to the type level: `type C = {...A, b: T}` is a real type annotation that combines `A`'s properties with `b: T`. TypeScript has no type-level spread; it uses intersection (`type C = A & {b: T}`) instead.
 
-This isn't a stylistic choice: it falls out of [exact object types](./types/objects.md#exact-and-inexact-object-types). Because Flow's exact object types forbid unlisted properties, intersecting two exact object types produces an *impossible* type: a value would have to be exactly `A` *and* exactly `B` simultaneously, which is uninhabitable as soon as `A` and `B` differ at all (see [impossible intersection types](./types/intersections.md#toc-impossible-intersection-types)). So Flow needs a different operation to combine exact object types. Type-level spread (`{...A, ...B}`) is that operation, and it mirrors the runtime semantics of value-level spread directly: own properties only (so [interfaces can't be spread](./types/objects.md#object-type-spread), since they don't track own-vs-prototype), later keys overwrite earlier ones, and exactness propagates - spreading an inexact type forces the result inexact, since the source could carry unknown properties.
-
-The intersection form `A & {b: T}` is the natural reach if you're thinking in TypeScript, but it's the wrong tool for the job in Flow: `&` keeps its TypeScript intersection semantics, so writing `A & {b: T}` when `A` already declares `b` silently produces an uninhabitable type rather than the merged shape you wanted. The Flow idiom is `{...A, b: T}` - same shape as runtime spread, accurate semantics, no accidental impossibility. The [objects docs](./types/objects.md#object-type-spread) cover the full spread rules.
+This isn't a stylistic choice: it falls out of [exact object types](./types/objects.md#exact-and-inexact-object-types). Because Flow's exact object types forbid unlisted properties, intersecting two exact object types produces an *impossible* type: a value would have to be exactly `A` *and* exactly `B` simultaneously, which is impossible to satisfy as soon as `A` and `B` differ at all (see [impossible intersection types](./types/intersections.md#toc-impossible-intersection-types)). So Flow needs a different operation to combine exact object types. Type-level spread (`{...A, ...B}`) is that operation, and it mirrors the runtime semantics of value-level spread directly: own properties only (so [interfaces can't be spread](./types/objects.md#object-type-spread), since they don't track own-vs-prototype), later keys overwrite earlier ones, and spreading an inexact type requires the result to also be marked inexact (with the spread before any named properties); otherwise Flow rejects the spread, since unknown properties from the source can't be soundly admitted into an exact target.
 
 ```js flow-check
 // Flow:
@@ -279,6 +279,80 @@ declare const c: Counter;
 const o = {...c}; // ERROR: [cannot-spread-interface]
 ```
 
+#### `this` is bound on class methods and banned in object literals {#toc-method-unbinding}
+
+Flow's two `this`-related rules both head off the same runtime crash: a method body running with `this` undefined. The class case rejects the *extraction* so the call stays bound to its receiver; the object-literal case rejects the *construct* so there's no `this`-aware method on a plain object to extract in the first place.
+
+|   | `this` usage | Method extraction |
+|---|---|---|
+| **Classes** | Allowed | *Banned* |
+| **Object literals** | *Banned* | Allowed |
+
+**• Method extraction from a class instance.** TypeScript treats methods as plain function values and lets them be extracted silently: calling the extracted version runs the method body with `this` undefined, and any access through `this.field` crashes.
+
+```ts
+// TypeScript:
+class Counter {
+  count = 0;
+  increment(): number { return ++this.count; }
+}
+const counter = new Counter();
+const tick = counter.increment;
+tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
+```
+
+Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.increment` because property `increment` cannot be unbound from the context where it was defined.") because it tracks the `this` binding on method-shorthand properties of a *class*:
+
+```js flow-check
+// Flow:
+class Counter {
+  count: number = 0;
+  increment(): number { return ++this.count; }
+}
+const counter = new Counter();
+const tick = counter.increment; // ERROR: [method-unbinding]
+const tickFixed = () => counter.increment(); // OK - arrow captures `this`
+tickFixed(); // OK
+```
+
+The Flow rewrite is to wrap with an arrow function that captures `this`, as shown by `tickFixed` above.
+
+**• `this` inside an object literal.** TypeScript allows `this` references inside object-literal methods (TS infers `this` as the enclosing literal's type); the same extraction hazard then applies at the call site.
+
+```ts
+// TypeScript:
+const counter = {
+  count: 0,
+  increment(): number { return ++this.count; }
+};
+const tick = counter.increment;
+tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
+```
+
+Flow forbids the construct itself with `[object-this-reference]`, so the unsafe extraction never gets the chance to be attempted:
+
+```js flow-check
+// Flow:
+const counter = {
+  count: 0,
+  increment(): number { return ++this.count; } // ERROR: [object-this-reference]
+};
+```
+
+The Flow rewrite is to use the name of the object literal binding directly instead of `this`.
+
+```js flow-check
+// Flow:
+const counter = {
+  count: 0,
+  increment(): number { return ++counter.count; } // Use object name directly instead of `this`
+};
+const tick = counter.increment; // Extraction allowed: no `this` in the function
+tick(); // OK
+```
+
+Method-shorthand on plain object *types* (`{m(x: number): number}`) carries no `this` context to lose, so extraction is fine there; this is also why a class instance can't flow into an object type but an object literal can.
+
 #### Tuple spread after an optional element is banned {#toc-tuple-spread-optional}
 
 Spreading a tuple type with optional elements into another tuple is allowed in TypeScript but produces an inaccurate tuple type: if the optional element is absent at runtime, the trailing positions shift left and the slots TS computed don't match the runtime layout.
@@ -299,35 +373,6 @@ const fullName: [string, string | void, string] = ["Ada", ...middle, "Lovelace"]
 ```
 
 The Flow rewrite is to branch explicitly on whether the optional element is present and assemble each shape on its own arm.
-
-#### Class methods cannot be unbound from their `this` {#toc-method-unbinding}
-
-TypeScript treats methods as plain function values and lets them be extracted silently: calling the extracted version runs the method body with `this` undefined, and any access through `this.field` crashes.
-
-```ts
-// TypeScript:
-class Counter {
-  count = 0;
-  increment(): number { return ++this.count; }
-}
-const counter = new Counter();
-const tick: () => number = counter.increment;
-tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
-```
-
-Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.increment` because property `increment` cannot be unbound from the context where it was defined.") because it tracks the `this` binding on method-shorthand properties of a *class*:
-
-```js flow-check
-// Flow:
-class Counter {
-  count: number = 0;
-  increment(): number { return ++this.count; }
-}
-const counter = new Counter();
-const tick: () => number = counter.increment; // ERROR: [method-unbinding]
-```
-
-The Flow rewrites are either keep the call bound (`counter.increment()` directly) or wrap with an arrow that captures `this` (`const tick = () => counter.increment()`). Note this is a class-instance rule: method-shorthand on plain object types (`{m(x: number): number}`) doesn't carry a `this` context to lose (usage of `this` in object literals is banned), so extraction is allowed there.
 
 ### Type spellings {#toc-type-spellings}
 
@@ -387,6 +432,7 @@ Flow's variance defaults are stricter than TypeScript's. The subsections below c
 | Mutable arrays | Covariant. | Invariant. | [Mutable arrays](#toc-variance-arrays) |
 | Generic type arguments | Variance is inferred from usage with compatibility-oriented exceptions. | Invariant by default unless declared `out` or `in`. | [Generic type arguments](#toc-variance-generics) |
 | Method parameters | Bivariant for method syntax; function-typed fields are contravariant. | Contravariant. | [Method parameters](#toc-variance-methods) |
+| `this` type positions | Allowed in input and invariant (mutable field) positions. | Restricted to covariant positions (return types and `readonly` fields). | [`this` type positions](#toc-this-variance) |
 
 :::info Variance - a quick overview.
 *Variance* describes how subtyping flows through a position where a type `T` appears - for example, the property type in `{x: T}`, a function parameter or return type, or a generic argument like `Container<T>`. Given that `Sub` is a subtype of `Super`, that position is:
@@ -594,7 +640,7 @@ See the [variance docs](./lang/variance.md) and the [subtyping docs](./lang/dept
 
 #### `this` type is restricted to covariant positions {#toc-this-variance}
 
-The `this` type is used for fluent APIs and polymorphic method receivers. In covariant positions (return types, and `readonly` fields in Flow), both languages accept it: a method declared `m(): this` preserves the subclass type through fluent chains, so `new SubBuilder().add(1).extra()` keeps its `SubBuilder` type. The divergence is in input and invariant (mutable field) positions. TypeScript accepts `this` there too, but a writable slot typed `this` lets a caller stash a parent-class instance into a subclass-typed field; later access that calls a subclass-only method crashes:
+The `this` type is used for fluent APIs and polymorphic method receivers. In covariant positions (return types, and `readonly` fields in Flow), both languages accept it: a method declared `m(): this` preserves the subclass type through fluent chains, so `new SubBuilder().add(1).extra()` keeps its `SubBuilder` type. The divergence is in input and invariant (mutable field) positions. TypeScript accepts `this` there too, but a writable slot typed `this` lets a caller write a parent-class instance into a subclass-typed field; later access that calls a subclass-only method crashes:
 
 ```ts
 // TypeScript:
@@ -611,12 +657,12 @@ const sb = new SubBuilder();
 stash(sb); // `SubBuilder` flows into `Builder`; the write inside `stash` lands on `sb.parent`
 if (sb.parent !== null) {
   // The null check only excludes null; it doesn't verify the class identity.
-  // The unsound write in `stash` parked a `Builder` in a slot typed `this` (= `SubBuilder`).
+  // The unsound write in `stash` put a `Builder` in a slot typed `this` (= `SubBuilder`).
   sb.parent.extra(); // Runtime crash! `sb.parent` is a `Builder`, not a `SubBuilder`
 }
 ```
 
-Flow rejects `this` in input and invariant positions with `[incompatible-variance]` "Cannot use `this` in an input position because `this` is expected to occur only in output positions." This falls out of the same variance model that makes [mutable object properties](#toc-variance-mutable-props) and [mutable arrays](#toc-variance-arrays) invariant:
+Flow rejects `this` in both input and invariant (mutable field) positions with `[incompatible-variance]`. This falls out of the same variance model that makes [mutable object properties](#toc-variance-mutable-props) and [mutable arrays](#toc-variance-arrays) invariant:
 
 ```js flow-check
 // Flow:
@@ -650,9 +696,9 @@ if (isUser(data)) {
 }
 ```
 
-Flow validates the body of a type-guard function in **both directions**, and adds a separate rule about parameter writes. Each direction surfaces with its own diagnostic.
+Flow validates the body of a type-guard function in **both directions**. Each direction surfaces with its own diagnostic.
 
-**Positive direction (`[incompatible-type-guard]`).** At every `return` expression, the type of the refined parameter must be a subtype of the guard type. So the equivalent of the TypeScript example above is rejected:
+**• Positive direction (`[incompatible-type-guard]`).** At every `return` expression, the type of the refined parameter must be a subtype of the guard type. So the equivalent of the TypeScript example above is rejected:
 
 ```js flow-check
 // Flow:
@@ -662,7 +708,7 @@ function isUser(x: unknown): x is User {
 }
 ```
 
-**Negative direction (`[incompatible-type-guard]`).** When the predicate returns `false`, the negation must completely refine away the guard type from the parameter - otherwise a caller could see a value that *should* have been excluded. A predicate typed as `x is A` that actually checks `x instanceof B` (a strict subtype) is rejected for this reason:
+**• Negative direction (`[incompatible-type-guard]`).** When the predicate returns `false`, the negation must completely refine away the guard type from the parameter - otherwise a caller could see a value that *should* have been excluded. A predicate typed as `x is A` that actually checks `x instanceof B` (a strict subtype) is rejected for this reason:
 
 ```js flow-check
 // Flow:
@@ -675,38 +721,7 @@ function isA(x: unknown): x is A {
 
 The diagnostic explicitly suggests the escape hatch: "Consider using a one-sided type-guard (`implies x is T`)." [One-sided guards](./types/type-guards.md) (`implies x is T`) skip exactly this negation check - they refine the parameter to `T` when the function returns `true` and leave it unchanged when it returns `false`, which is the right shape when only the positive direction holds.
 
-**Parameter writes (`[function-predicate]`).** The refined parameter cannot be reassigned along the path to a `return`. A direct write triggers "at this return point it is written to":
-
-```js flow-check
-// Flow:
-function isNumber(x: unknown): x is number {
-  x = 1;
-  return typeof x === "number"; // ERROR
-}
-```
-
-A write via a captured closure triggers "`x` is reassigned" only if the closure is actually called between the original parameter and the `return`:
-
-```js flow-check
-// Flow:
-function isNumber(x: unknown): x is number { // ERROR: `x` is reassigned via the `reset()` call below
-  const reset = () => { x = 1; };
-  reset();
-  return typeof x === "number";
-}
-```
-
-Defining the closure without calling it is fine:
-
-```js flow-check
-// Flow:
-function isNumber(x: unknown): x is number {
-  const reset = () => { x = 1; }; // OK - never invoked
-  return typeof x === "number";
-}
-```
-
-See the [type guards docs](./types/type-guards.md#toc-consistency-checks-of-type-guard-functions) for the full consistency rules. When only the positive direction of the predicate holds (so the negation check would correctly reject the guard), the Flow-only [one-sided type guard](#toc-one-sided-guards) form `implies x is T` is the intended escape hatch.
+See the [type guards docs](./types/type-guards.md#toc-consistency-checks-of-type-guard-functions) for the full consistency rules, and the [one-sided type guard](#toc-one-sided-guards) section below for the `implies` form.
 
 #### Refinement invalidation rules differ {#toc-refinement-invalidation}
 
@@ -739,7 +754,7 @@ function propertyCase(obj: {x: ?number}) {
 function writeCase(x: ?number) {
   if (x != null) {
     x = null;
-    const a: number = x; // ERROR: direct write invalidates the refinement
+    const a: number = x; // ERROR: `x` is now typed `null` after the write
   }
 }
 ```
@@ -816,11 +831,13 @@ const u = {id: 1} as {id: number, name: string};
 u.name.toUpperCase(); // Runtime crash! `u.name` is undefined
 ```
 
-Flow rejects the cast:
+Flow accepts the widening and assertion uses, but rejects unsafe downcasts:
 
 ```js flow-check
 // Flow:
-const u = {id: 1} as {id: number, name: string}; // ERROR
+const n = 42 as number; // OK - widens the literal `42` to `number`
+const exact = 42 as 42; // OK - asserts at the literal type
+const u = {id: 1} as {id: number, name: string}; // ERROR - unsafe downcast
 ```
 
 Flow's escape hatch for a forced cast is the explicit `value as any as T` two-step; TypeScript's idiom is `value as unknown as T`.
@@ -975,7 +992,7 @@ component Layout(header: renders Header) {
 }
 
 const ok = <Layout header={<MainHeader text="Flow" />} />;
-const bad = <Layout header={<footer />} />; // ERROR
+const bad = <Layout header={<footer />} />; // ERROR: `<footer />` does not satisfy `renders Header`
 ```
 
 TypeScript has no equivalent. The closest is typing slots as `React.ReactNode`, which accepts any node - no composition contract is expressible, so the `<footer />` case below is accepted just like the intended `<MainHeader />`:
@@ -1070,12 +1087,9 @@ const description: string = match (action) { // ERROR: missing `{type: 'filter',
 
 [Opaque type aliases](./types/opaque-types.md) hide their underlying type outside the file in which they are defined, enforcing nominal abstraction across module boundaries. TypeScript has no native equivalent; the common idiom there is "branded types" using intersection with a (typically `unique symbol`-keyed) marker property, which is a userland pattern rather than a language feature.
 
-The boundary the branded types idiom enforces is weaker than Flow's file-scoped abstraction along two axes:
+The boundary the branded types idiom enforces is weaker than Flow's file-scoped abstraction: a single `as` cast is enough to produce a branded value. `42 as UserId` type-checks in TypeScript because the source (`number`) and the target (`number & {readonly [brand]: 'UserId'}`) overlap on `number`, and TS only rejects an `as` cast when the two sides are disjoint.
 
-- **`as` cast forging.** A single `as` cast is enough to produce a branded value - `"abc" as UserId` type-checks in TypeScript because the source (`string`) and the target (`string & {readonly [brand]: true}`) overlap on `string`, and TS only rejects an `as` cast when the two sides are disjoint.
-- **Brand-key exposure.** When the `unique symbol` is re-exported, any consumer holding the symbol can structurally construct a branded value (e.g. `Object.assign("abc", {[brand]: 'UserId'})`) - no cast required. Keeping the symbol unexported closes that path, but the `as` route from the first axis stays open regardless.
-
-Flow's opaque types, by contrast, are sealed by the module boundary itself: outside the defining file, the underlying type is not visible at all, so neither structural construction nor `as` widening can produce the opaque type from its underlying representation.
+Flow's opaque types, by contrast, are sealed by the module boundary itself: outside the defining file, the underlying type is not visible at all, so `as` widening cannot produce the opaque type from its underlying representation.
 
 ```js flow-check
 // Flow:
@@ -1105,7 +1119,7 @@ const forged: UserId = 42;    // ERROR: number is not a UserId
 const n: number = id;         // ERROR: UserId is not a number
 ```
 
-The TypeScript branded types encoding, with the cross-module `as` forge at the bottom:
+The TypeScript branded types encoding, with the unsafe `as` cast at the bottom:
 
 ```ts
 // TypeScript:
@@ -1118,8 +1132,9 @@ declare function lookupUser(id: UserId): string;
 const id: UserId = makeUserId(42);
 lookupUser(id); // OK
 
-const forged = 42 as UserId; // TS accepts
-lookupUser(forged);
+// `as` cast: source and target overlap on `number`, so TS accepts.
+const forgedByCast = 42 as UserId;
+lookupUser(forgedByCast);
 ```
 
 
@@ -1134,7 +1149,7 @@ lookupUser(forged);
 | Default member values | Number enums auto-number from `0`. | Number-enum members must be explicitly initialized; string enums default to mirroring member names. |
 | Re-declaration | Allowed; can collide with default values silently. | `[name-already-bound]`. |
 | Reverse mapping | Number enums get a runtime reverse-map; string enums error on the same access. | `.getName(value)` works for both number and string enums. |
-| Iterating members | `for...in` over a number enum produces both numeric keys *and* member names. | `Status.members()` returns just the values. |
+| Iterating members | `Object.values(Status)` is the natural value-iteration form, but on a number enum it returns both the values *and* the member-name strings from the runtime reverse-map. | `Status.members()` returns just the values. |
 | Symbol enums | None. | Supported (`enum X of symbol { ... }`). |
 | Definition restrictions | Permits heterogeneous initializers, non-literal initializers, and lowercase-leading member names. | All three error. |
 
@@ -1142,7 +1157,7 @@ A few of these have rationales worth knowing:
 
 - The default-value rule exists because adding or removing a member from the middle of an auto-numbered enum silently renumbers everything after it, which is a serialization/logging hazard.
 - The TS string-enum reverse-mapping error is structural: `StatusStr.Off` has literal type `"off"` (the value), not `"Off"` (the key), so `StatusStr[StatusStr.Off]` resolves to a non-existent `StatusStr["off"]`.
-- TS `for...in` over a 3-member number enum produces `[ '0', '1', '2', 'Active', 'Paused', 'Off' ]` - both halves of the runtime reverse-map are enumerable.
+- TS `Object.values` over a 3-member number enum produces `[ 'Active', 'Paused', 'Off', 0, 1, 2 ]` - both halves of the runtime reverse-map land in the result (and `for...in` over the same enum exposes the same duplication on its keys).
 - Lowercase-leading member names are reserved because Flow Enums expose lowercase methods like `.cast` and `.members`.
 
 Exhaustiveness is built in: omitting a case in a `switch` over a Flow Enum is `[invalid-exhaustive-check]`, with the missing member named. Adding a new member then surfaces every site that hasn't handled it:
@@ -1232,7 +1247,7 @@ A handful of [utility types](./types/utilities.md) have no TypeScript counterpar
 - [`Values<T>`](./types/utilities.md#toc-values) - the union of value types of `T`'s properties. TS spelling is the indexed access `T[keyof T]`.
 - [`$KeyMirror<O>`](./types/utilities.md#toc-keymirror) - an object type whose property values are string-literal types mirroring their keys. No TS native form.
 - [`$Exports<'mod'>`](./types/utilities.md#toc-exports) - the type of a module's exports given a path string. TS's nearest equivalent is `typeof import('mod')`, with a different shape.
-- [`StringPrefix<P>` / `StringSuffix<S>`](./types/utilities.md#stringprefix-and-stringsuffix) - strings constrained to a literal prefix or suffix. The TS equivalent is template literal types (`` `${P}${string}` `` / `` `${string}${S}` ``), which Flow does not yet have (see [Coming soon](#toc-coming-soon)).
+- [`StringPrefix<P>` / `StringSuffix<S>`](./types/utilities.md#toc-string-prefix-suffix) - strings constrained to a literal prefix or suffix. The TS equivalent is template literal types (`` `${P}${string}` `` / `` `${string}${S}` ``), which Flow does not yet have (see [Coming soon](#toc-coming-soon)).
 - [`$Exact<T>`](./types/utilities.md#toc-exact) - promotes an inexact object type to exact. Discouraged in new code; object types are exact by default, so this is only useful when wrapping an inexact alias.
 
 ### Flow-only syntactic forms {#toc-flow-only-syntax}
@@ -1288,7 +1303,7 @@ const data = useFragment<MyFragment$key>(
 
 ## TypeScript-only features that do not exist in Flow {#toc-ts-only}
 
-These are TypeScript features that have no Flow equivalent today. Some Flow has deliberately not adopted, either because they overlap a Flow feature with different (usually more conservative) defaults or because they introduce footguns Flow's design avoids. Others are simply not implemented yet (see the separate [Coming soon](#toc-coming-soon) section for features that are in-flight). Reaching for any of the items below in Flow code won't work, and in some cases the TypeScript syntax will parse, so the failure shows up later than expected.
+These are TypeScript features that have no Flow equivalent today. Some Flow has deliberately not adopted, either because they overlap a Flow feature with different (usually more conservative) defaults or because they introduce footguns Flow's design avoids. Others are simply not implemented yet (see the separate [Coming soon](#toc-coming-soon) section for features in progress or pending a release gate). Reaching for any of the items below in Flow code won't work, and in some cases the TypeScript syntax will parse, so the failure shows up later than expected.
 
 ### TS-only syntactic forms {#toc-ts-only-syntax}
 
@@ -1309,11 +1324,11 @@ Flow parses decorator syntax but does not type-check it: the decorator's type is
 
 TypeScript has several class-syntax extensions Flow has deliberately not adopted, asking users to write the equivalent JS instead.
 
-**Parameter properties** (`constructor(public x: number)`) - a TS-only shorthand that emits runtime code: it auto-declares the field and assigns it from the constructor argument. Flow's diagnostic: "Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in the constructor."
+- **Parameter properties** (`constructor(public x: number)`) - a TS-only shorthand that emits runtime code: it auto-declares the field and assigns it from the constructor argument. Flow's diagnostic: "Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in the constructor."
 
-**`public` / `protected` / `private` access modifiers** - TS-checked access control. These are type-checker-only in TypeScript (the field is still publicly accessible at runtime), so dropping them is safe. Flow rejects all three; drop them (`public` / `protected` carry no runtime effect) or migrate `private foo` to `#foo`. The `#private` rewrite lands at a different runtime shape from the TS form: ECMAScript `#private` fields are nominally private at runtime, while TS `private` is erased.
+- **`public` / `protected` / `private` access modifiers** - TS-checked access control. These are type-checker-only in TypeScript (the field is still publicly accessible at runtime), so dropping them is safe. Flow rejects all three; drop them (`public` / `protected` carry no runtime effect) or migrate `private foo` to `#foo`. The `#private` rewrite lands at a different runtime shape from the TS form: ECMAScript `#private` fields are nominally private at runtime, while TS `private` is erased.
 
-**`accessor` auto-accessors** (`class C { accessor x: T = init }`) - a TC39 proposal that desugars to a paired getter/setter backed by a private field. Flow does not parse the form. Write the getter and setter explicitly with a `#private` backing field, or use a plain field if no accessor wrapping is needed.
+- **`accessor` auto-accessors** (`class C { accessor x: T = init }`) - a TC39 proposal that desugars to a paired getter/setter backed by a private field. Flow does not parse the form. Write the getter and setter explicitly with a `#private` backing field, or use a plain field if no accessor wrapping is needed.
 
 ### Runtime `namespace` blocks {#toc-namespace-blocks}
 
@@ -1333,7 +1348,7 @@ The closest Flow equivalent is a type guard combined with an explicit `throw` at
 
 TypeScript's `ThisType<T>` is a marker used inside a contextual type to rewire `this` to `T` within the methods of an object literal. Flow does not implement that rewiring. The two language differences that make `ThisType<T>` useful in TypeScript are absent in Flow:
 
-- Object literals [reject `this` references](#toc-shape-rules) outright, so there is no object-literal method body whose `this` Flow could rewire.
+- Object literals [reject `this` references](#toc-method-unbinding) outright, so there is no object-literal method body whose `this` Flow could rewire.
 - Class and interface methods have a [fixed `this` binding](#toc-method-unbinding) tied to their declaring type, which cannot be reassigned by an external marker.
 
 ### Expressions with type arguments {#toc-expression-type-args}
@@ -1409,17 +1424,20 @@ No equivalent at the source level. TypeScript users routinely re-open third-part
 
 ## Coming soon {#toc-coming-soon}
 
-TypeScript features that are in-progress on the Flow side and will be released in the future. Each of these is TS-only *for now*; the entries in [TypeScript-only features](#toc-ts-only) above are the ones Flow has no in-flight plans to add.
+The following TypeScript features have type-checking support implemented in Flow, but are waiting for tooling updates (e.g. Prettier) before Flow removes the release gate. They are enabled in the [Flow playground](../../../try).
 
-- `satisfies` expression - validates an expression against a type without widening the inferred type.
-- Mapped type modifiers - optionality removal `-?`, variance removal `-readonly`, and `as` key remapping.
 - Template literal types - e.g. `` `${'a' | 'b'}-${'x' | 'y'}` ``.
-- `override` keyword on class members.
-- Abstract classes and methods.
+- Mapped type modifiers - variance removal `-readonly` and `as` key remapping.
 - Constructor types - `type Ctor = new (x: number) => R`.
-- Symbol-keyed properties and `unique symbol`.
+- `satisfies` expression - validates an expression against a type without widening the inferred type.
 - Inline `import()` type expression - `type A = import('./m').A`.
 - `import X = require('foo')` and `export = X` - CommonJS-style import and export bindings.
+
+Planned:
+
+- Abstract classes and methods.
+- `override` on class members.
+- Support for symbol-keyed property accesses at the type level. The `unique symbol` syntax parses today, but the type system doesn't yet model symbol keys as distinct nominal keys.
 
 ## Syntax convergence with TypeScript {#toc-convergence}
 
@@ -1474,15 +1492,15 @@ Flow uses the same split-namespace model as TypeScript and supports a subset of 
 
 What Flow merges:
 
-- `interface` + `interface` - members union (compatible duplicates allowed; conflicting members error). In library definition files, `extends` lists also concatenate, call signatures overload as intersections, and type-param arity mismatches error. In regular source files, the merge is limited to members — `extends` lists and call signatures don't combine across declarations, and same-named interfaces can't both be exported from a file.
+- `interface` + `interface` - members union (compatible duplicates allowed; conflicting members error). In library definition files, `extends` lists also concatenate, call signatures overload as intersections, and type-param arity mismatches error. In regular source files, the merge is limited to members; `extends` lists and call signatures don't combine across declarations, and same-named interfaces can't both be exported from a file.
 - `declare class` + `interface` - interface members fold into the class (either order).
 - `function` / `declare function` + `declare namespace` - the namespace's type members fold into the function (either order), accessible as `fn.T`.
 - `class` / `declare class` + `declare namespace` - the namespace's type members fold into the class (either order), accessible as `Cls.T`.
 
 What Flow does *not* do:
 
-- *Runtime-merging*. Only the *type* members of a `declare namespace` reliably propagate to a sibling function or class — value members are not treated as runtime properties on the host. TS-style `function` + `namespace` value-side merging where the namespace contributes runtime members is not supported.
-- *Multi-block `declare module` merging.* Multiple `declare module 'name' { ... }` blocks for the same module do not union — the second is treated as an override of the first. A libdef for a given module should live in one place.
+- *Runtime-merging*. Only the *type* members of a `declare namespace` reliably propagate to a sibling function or class; value members are not treated as runtime properties on the host. TS-style `function` + `namespace` value-side merging where the namespace contributes runtime members is not supported.
+- *Multi-block `declare module` merging.* Multiple `declare module 'name' { ... }` blocks for the same module do not union; the second is treated as an override of the first. A libdef for a given module should live in one place.
 - *User-side `declare module 'name' { ... }` source-level augmentation* (see [User-side module augmentation](#toc-module-augmentation)).
 
 ### Generating declaration files {#toc-generating-declarations}

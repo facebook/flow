@@ -545,7 +545,7 @@ import typeof * as T from 'my-module';
 export type MyModuleType = T;
 ```
 
-## `StringPrefix` and `StringSuffix`
+## `StringPrefix` and `StringSuffix` {#toc-string-prefix-suffix}
 
 The `StringPrefix` and `StringSuffix` types represent strings with the specified prefix or suffix, respectively.
 Their first type argument must be a string literal type, representing the prefix or suffix.
