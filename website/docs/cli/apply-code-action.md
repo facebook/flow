@@ -133,6 +133,8 @@ The output is a JSON object keyed by unbound name, where each value is an array 
 }
 ```
 
+(Other LSP code-action fields are omitted for brevity.)
+
 When multiple modules export the same name, all candidates are listed so you can choose the appropriate one.
 
 ## See Also {#toc-see-also}

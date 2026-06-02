@@ -91,7 +91,7 @@ export default class Image extends React.Component<Props> {
 }
 ```
 
-When you enabled multiplatform support, you will likely see that error that the `./Image` module cannot be resolved. To fix the error, you need to create a common interface file under the same directory:
+When you enable multiplatform support, you will likely see an error that the `./Image` module cannot be resolved. To fix the error, you need to create a common interface file under the same directory:
 
 ### Common Interface File in `.js.flow` {#toc-common-interface-file-in-js-flow}
 
@@ -117,7 +117,7 @@ declare const Image: React.ComponentType<Props>;
 export default Image;
 ```
 
-Flow will ensure that the module types of both `Image.ios.js` and `./Image.android.js` are subtype of the module type of `./Image.js.flow`. Flow will also ensure that there exists an implementation for each platform you declared in your `.flowconfig`.
+Flow will ensure that the module types of both `./Image.ios.js` and `./Image.android.js` are subtypes of the module type of `./Image.js.flow`. Flow will also ensure that there exists an implementation for each platform you declared in your `.flowconfig`.
 
 ### Common Interface File in `.js` {#toc-common-interface-file-in-js}
 
@@ -140,7 +140,7 @@ export default function Image(props: Props): React.Node {
 }
 ```
 
-In this case, Flow will use the `.js` file as the common interface file, and check all other platform-specific implementation files' against the `.js` file. Since the `.js` file is already a fallback implementation, Flow will no longer require that platform-specific implementation files exist for all platforms.
+In this case, Flow will use the `.js` file as the common interface file, and check all other platform-specific implementation files against the `.js` file. Since the `.js` file is already a fallback implementation, Flow will no longer require that platform-specific implementation files exist for all platforms.
 
 ## See Also {#toc-see-also}
 

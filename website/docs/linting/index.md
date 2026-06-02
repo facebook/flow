@@ -69,7 +69,7 @@ The lint settings parser is fairly intelligent and will stop you if you write a 
 The lint is ignored. Setting a lint to `off` is similar to suppressing a type error with a suppression comment, except with much more granularity.
 
 **warn:**
-Warnings are a new severity level introduced by the linting framework. They are treated differently than errors in a couple of ways:
+Warnings are a severity level introduced by the linting framework. They are treated differently than errors in a couple of ways:
 * Warnings don't affect the exit code of Flow. If Flow finds warnings but no errors, it still returns 0.
 * Warnings aren't shown on the CLI by default, to avoid spew. CLI warnings can be
     enabled by passing the `--include-warnings` flag to the Flow server or the

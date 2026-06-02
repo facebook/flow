@@ -261,7 +261,7 @@ interface MyInterface {
 }
 ```
 
-#### Covariant (read-only) properties on interfaces {#toc-covariant-read-only-properties-on-interfaces}
+### Covariant (read-only) properties on interfaces {#toc-covariant-read-only-properties-on-interfaces}
 
 You can make a property covariant by adding the `readonly` keyword in front of the
 property name:
@@ -311,7 +311,7 @@ function func2(value: Covariant) {
 }
 ```
 
-#### Contravariant (write-only) properties on interfaces {#toc-contravariant-write-only-properties-on-interfaces}
+### Contravariant (write-only) properties on interfaces {#toc-contravariant-write-only-properties-on-interfaces}
 
 You can make a property contravariant by adding the `writeonly` keyword in front of
 the property name.

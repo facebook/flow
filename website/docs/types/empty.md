@@ -54,7 +54,7 @@ if (typeof str === "string") {
 }
 ```
 
-We put "safe" in quotes above, as due type safety holes in your code or bugs within Flow itself,
+We put "safe" in quotes above, as due to type safety holes in your code or bugs within Flow itself,
 it is possible to get values which are `empty` typed.
 
 You can use the [coverage](../cli/coverage.md) command to identify code typed as `empty`.

@@ -23,9 +23,7 @@ read `<FILENAME>.flow` instead.
 In the second case, the implementation file is missing entirely. `<FILENAME>.flow`
 is treated as if it is named `<FILENAME>`.
 
-Note that the `.flow` extension applies both to `.js` files as well as `.json`
-ones. The corresponding declaration files have extensions `.js.flow` and `.json.flow`,
-respectively.
+Declaration files can shadow both `.js` and `.json` implementation files; the corresponding declaration-file extensions are `.js.flow` and `.json.flow`, respectively.
 
 Now let's see an example of the first case documented above. Suppose we have the
 following code in a file `src/LookBeforeYouLeap.js`:

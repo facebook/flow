@@ -35,7 +35,7 @@ const arr2: Array<string> = ["A", "B", "C"];
 const arr3: Array<unknown> = [1, true, "three"];
 ```
 
-## `ReadonlyArray<T>` (alias `$ReadOnlyArray`) Type {#toc-readonlyarray}
+## `ReadonlyArray<T>` {#toc-readonlyarray}
 
 You can use the type `ReadonlyArray<T>` instead of `Array<T>` to represent a [read-only](../lang/variance.md) array which cannot be mutated.
 You can't write to a read-only array directly, and can't use methods which mutate the array like `.push()`, `.unshift()`, etc.

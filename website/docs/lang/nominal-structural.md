@@ -28,7 +28,7 @@ This is because the name (and declaration location) of the classes is different.
 
 ## Structural typing {#toc-structural-typing}
 
-Languages like Go and Elm have primarily structural type systems.
+Languages like Go and TypeScript have primarily structural type systems.
 
 ```js
 // Pseudo code: structural system

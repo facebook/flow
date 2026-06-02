@@ -95,7 +95,7 @@ class MyClass {
 }
 ```
 
-The `this` type can also appear in a method signature — typically as a return type (`add(x: T): this`) for fluent APIs that preserve the subclass type through chained calls. Flow allows `this` only in covariant positions (return types and `readonly` fields); see [The `this` type is restricted to covariant positions](../lang/variance.md#toc-this-covariant) for the input/mutable-field rules and rewrites.
+The `this` type can also appear in a method signature — typically as a return type (`add(x: number): this`) for fluent APIs that preserve the subclass type through chained calls. Flow allows `this` only in covariant positions (return types and `readonly` fields); see [The `this` type is restricted to covariant positions](../lang/variance.md#toc-this-covariant) for the input/mutable-field rules and rewrites.
 
 Methods are considered [read-only](../lang/variance.md):
 
@@ -186,8 +186,8 @@ function func(x: number): number {
 
 class MyClass {
   static constant: number;
-  static helper: (number) => number;
-  prop: number => number;
+  static helper: (x: number) => number;
+  prop: (x: number) => number;
 }
 MyClass.helper = func
 MyClass.constant = 42

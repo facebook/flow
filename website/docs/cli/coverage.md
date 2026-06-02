@@ -72,7 +72,7 @@ the case of `any`.
 
 ## Command Line Use {#toc-command-line-use}
 
-To find out the coverage of a file foo.js with the following contents
+To find out the coverage of a file file.js with the following contents
 
 ```js flow-check
 function add(one: any, two: any): number {
@@ -91,7 +91,7 @@ Covered: 50.00% (5 of 10 expressions)
 This output means that 5 out of the 10 nodes of this program were inferred to have type
 `any`. To see exactly which parts are uncovered you can also pass one of the following
 flags:
-* `--color`: This will print foo.js on the terminal with the uncovered locations in
+* `--color`: This will print file.js on the terminal with the uncovered locations in
 red color. E.g. `flow coverage --color file.js`
 * `--json`: This will list out all location spans that are uncovered under
 the tag `"uncovered_locs"`. E.g. `flow coverage --json file.js`

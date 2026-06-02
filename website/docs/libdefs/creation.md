@@ -39,7 +39,7 @@ use the `declare class` syntax in a libdef file:
 **flow-typed/myLibDef.js**
 ```js flow-check
 declare class URL {
-  constructor(urlStr: string): URL;
+  constructor(urlStr: string): void;
   toString(): string;
 
   static compare(url1: URL, url2: URL): boolean;
@@ -130,7 +130,8 @@ the module specifier `foo/bar/baz`, Flow will look into `@flowtyped/foo/bar/baz.
 
 For example, if you want to declare the types for `react`, you can do:
 
-```js title="@flowtyped/react.js.flow"
+**@flowtyped/react.js.flow**
+```js
 export type SetStateFunction<S> = ((S => S) | S) => void;
 declare export function useState<S>(initial: S): [S, SetStateFunction<S>];
 
@@ -139,7 +140,8 @@ declare export function useState<S>(initial: S): [S, SetStateFunction<S>];
 
 which will allow you to import these functions and types from `react`:
 
-```js title="foo/bar/baz/my-product-code.jsx"
+**foo/bar/baz/my-product-code.jsx**
+```js
 import * as React from 'react';
 
 function MyComponent({onSelect}: {onSelect: React.SetStateFunction<string>}) {
@@ -151,7 +153,8 @@ function MyComponent({onSelect}: {onSelect: React.SetStateFunction<string>}) {
 
 If you want to declare the types for a scoped package like `@my-company/library-a`, you can do
 
-```js title="@flowtyped/@my-company/library-a.js.flow"
+**@flowtyped/@my-company/library-a.js.flow**
+```js
 declare export const foo: string;
 declare export const bar: number;
 ```
@@ -159,7 +162,8 @@ declare export const bar: number;
 If you want to declare the types for a deeply nested module in a package like
 `react-native/internals/foo`, you can do:
 
-```js title="@flowtyped/react-native/internals/foo.js.flow"
+**@flowtyped/react-native/internals/foo.js.flow**
+```js
 declare export const SECRET_INTERNALS_Foo: {...};
 ```
 
@@ -231,7 +235,7 @@ declare module "some-es-module" {
 ```js
 declare module "some-es-module" {
   declare class URL {
-    constructor(urlStr: string): URL;
+    constructor(urlStr: string): void;
     toString(): string;
 
     static compare(url1: URL, url2: URL): boolean;

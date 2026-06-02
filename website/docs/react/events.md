@@ -35,7 +35,7 @@ component MyComponent() {
 
 There are also more specific synthetic event types like
 `SyntheticKeyboardEvent<T>`, `SyntheticMouseEvent<T>`, or
-`SyntheticTouchEvent<T>`. The `SyntheticEvent<T>` types all take a single type
+`SyntheticTouchEvent<T>`. The `SyntheticEvent<T>` types typically take a single type
 argument: the type of the HTML element the event handler was placed on.
 
 If you don't want to add the type of your element instance you can also use

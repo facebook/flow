@@ -270,7 +270,7 @@ const array = ['a', 'b']
 export const genericArray = array.map(a => a) // Error
 ```
 
-Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](./types/generics.md), to express the fact that the type of the function passed to map is linked to the type of the array.
+Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. `Array.prototype.map` returns an `Array<U>` where `U` is inferred from the callback's return type — this `U` is a [generic](./types/generics.md), expressing the fact that the type of the function passed to map is linked to the type of the array.
 
 Understanding the logic behind generics might be useful, but what you really need to know to make your typings valid is that you need to help Flow to understand the type of `genericArray`.
 

@@ -119,7 +119,7 @@ only be a `string` inside of the `if` statement. This is known as a
 
 ## Versus `empty`
 `unknown` is the opposite of [`empty`](./empty.md):
-- Everything is a `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
+- Everything is an `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
 - Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
 
 ## Refining `unknown` {#toc-refining-unknown}

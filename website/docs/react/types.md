@@ -157,7 +157,7 @@ hook useRefDemo() {
 ## `React.RefSetter<T>` {#toc-react-refsetter}
 
 The general type of the [ref prop on React elements][]. `React.RefSetter<T>`
-could be a ref object with `?T` stored in the `current` property, or a ref function accepting `T`.
+could be a ref object with `T | null` stored in the `current` property, or a ref function accepting `T`.
 
 [ref prop on React elements]: https://react.dev/learn/manipulating-the-dom-with-refs
 
@@ -171,7 +171,7 @@ instance which is retrieved using
 The definition for `React.RefSetter<T>` is roughly:
 
 ```js
-type Ref<in T> =
+type RefSetter<-T> =
   | { writeonly current: T | null, ... }
   | ((T | null) => unknown)
   | null

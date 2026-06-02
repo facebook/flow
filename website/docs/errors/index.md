@@ -82,7 +82,7 @@ This will suppress both of the two errors on this line.
 
 ### Unsuppressable Errors {#toc-unsuppressable-errors}
 
-Certain kinds of errors can be made unsuppressable. For example, to make `react-rule-hook-naming-convention` and `react-rule-hook-conditional` errors unsuppressable, you can add the following to the `[options]` section in `flowconfig`:
+Certain kinds of errors can be made unsuppressable. For example, to make `react-rule-hook-naming-convention` and `react-rule-hook-conditional` errors unsuppressable, you can add the following to the `[options]` section in your `.flowconfig`:
 
 ```
 unsuppressable_error_codes=react-rule-hook-naming-convention

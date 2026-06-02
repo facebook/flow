@@ -23,7 +23,7 @@ Enum member names need to be unique, but the name `Active` has already been used
 `Status` [2]. [invalid-enum]
 
    -:4:3
-   4|   Active, // Error: the name 'Active` was already used above
+   4|   Active, // Error: the name 'Active' was already used above
         ^^^^^^
 
 References:

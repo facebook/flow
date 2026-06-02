@@ -33,7 +33,7 @@ If you want to create an enum type, [Flow Enums](../enums/index.md) might be a b
 
 ## `Values<T>` {#toc-values}
 
-`Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](./objects.md),
+`Values<T>` represents the union type of all the value types of the properties in an [object type](./objects.md),
 or the elements of an [array](./arrays.md) or [tuple](./tuples.md) type:
 
 ```js flow-check
@@ -181,7 +181,7 @@ type AllRequired = [number, string];
 [] as Partial<AllRequired>; // OK: like `[a?: number, b?: string]` now
 ```
 
-A object or tuple of type `T` cannot be supplied to `Partial<T>`, due to mutability. You can resolve this by making the object [read-only](#toc-readonly):
+An object or tuple of type `T` cannot be supplied to `Partial<T>`, due to mutability. You can resolve this by making the object [read-only](#toc-readonly):
 
 ```js flow-check
 type Person = {

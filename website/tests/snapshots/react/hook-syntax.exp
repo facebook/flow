@@ -8,6 +8,9 @@ No errors!
 No errors!
 
 === block 4 ===
+No errors!
+
+=== block 5 ===
 Error --------------------------------------------------------------------------- -:9:9
 
 Cannot assign `42` to `state.val` because property `val` is not writable. [react-rule-hook-mutation]
@@ -39,7 +42,7 @@ Cannot read `current` from `ref` [1] because `ref` values may not be read during
 
 Found 2 errors
 
-=== block 5 ===
+=== block 6 ===
 Error --------------------------------------------------------------------------- -:3:3
 
 Cannot assign `42` to `values[0]` because read-only arrays cannot be written to. [react-rule-unsafe-mutation]
@@ -60,7 +63,7 @@ References:
 
 Found 1 error
 
-=== block 6 ===
+=== block 7 ===
 Error -------------------------------------------------------------------------- -:8:26
 
 Cannot call hook [1] because React hooks cannot be called in conditional contexts.
@@ -78,7 +81,7 @@ References:
 
 Found 1 error
 
-=== block 7 ===
+=== block 8 ===
 Error ------------------------------------------------------------------------- -:11:29
 
 Cannot call `args.map` because in the first argument: function [1] is a React hook but function type [2] is not a hook.
@@ -106,7 +109,7 @@ References:
 
 Found 1 error
 
-=== block 8 ===
+=== block 9 ===
 Error -------------------------------------------------------------------------- -:5:13
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not

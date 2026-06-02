@@ -53,10 +53,14 @@ export default hook useDefaultExportedHook(): boolean {
 There are a few cases where you might wish to define a value as having the type of a
 hook. Because function types and hook types aren’t compatible (more on this below!),
 we also introduce a new syntax for hook type annotations, which is simply the
-existing function type annotation but preceded by hook.
+existing function type annotation but preceded by `hook`.
 
-```js
-export const useGKOnlineStatus: hook (boolean) => boolean = 
+```js flow-check
+declare function experiment(name: string): boolean;
+declare hook useOnlineStatus(x: boolean): boolean;
+declare hook useAlwaysOnlineStatus(x: boolean): boolean;
+
+export const useGKOnlineStatus: hook (boolean) => boolean =
   experiment('show_online_status')
   ? useOnlineStatus
   : useAlwaysOnlineStatus
@@ -123,7 +127,7 @@ component StatusBar(shouldShowOnlineStatus: boolean) {
 
 ### Preventing Conflation of Hooks and Functions
 The distinction between hooks and regular functions is reflected in the Flow type system.
-Because of the different properties that hooks and functions must obey, it’s Flow error
+Because of the different properties that hooks and functions must obey, it’s a Flow error
 to pass a value defined as a hook into a position that expects a function type, and
 an error to pass a regular JavaScript function into a position that expects a hook.
 

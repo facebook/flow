@@ -93,7 +93,7 @@ Array patterns match both tuple and array values. For example, the pattern `['sm
 
 Like destructuring, a variable declaration pattern nested inside an array pattern creates a new variable with the value of that element.  E.g. `match (arg) { [const x] => x }` will initialize `x` with the value `arg[0]`. You can use array rest at the end of the pattern to gather the remaining elements, and check that the length is greater or equal to the pattern length: e.g. `[1, 2, ...const rest]`.
 
-Array patterns match values which pass `Array.isArray`, so they won’t match array-like objects that aren’t actually arrays, and won’t match iterables. Use `Array.from` on those types of values first first if you want to match them with array patterns.
+Array patterns match values which pass `Array.isArray`, so they won’t match array-like objects that aren’t actually arrays, and won’t match iterables. Use `Array.from` on those types of values first if you want to match them with array patterns.
 
 Example:
 ```js

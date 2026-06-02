@@ -36,7 +36,7 @@ Member names must be unique. This is not allowed:
 ```js flow-check
 enum Status {
   Active,
-  Active, // Error: the name 'Active` was already used above
+  Active, // Error: the name 'Active' was already used above
 }
 ```
 
@@ -125,7 +125,7 @@ enum Status {
 ```
 Optionally, you can use an `of` clause.
 This does not affect the type-checking behavior of a valid Flow Enum,
-it just ensures that all enum members are `number`s as the definition site.
+it just ensures that all enum members are `number`s at the definition site.
 
 ```js flow-check
 enum Status of number {
@@ -164,7 +164,7 @@ enum Status {
 ```
 Optionally, you can use an `of` clause.
 This does not affect the type-checking behavior of a valid Flow Enum,
-it just ensures that all enum members are `boolean`s as the definition site.
+it just ensures that all enum members are `boolean`s at the definition site.
 
 ```js flow-check
 enum Status of boolean {
@@ -253,7 +253,7 @@ match (status) { // Error
 }
 ```
 
-When this is used, Flow will always require a `default` (for `switch`) or wildcard `_` (for [`match`](../match/index.md))when [checking the enum](./using-enums.md#toc-exhaustive-checking-with-unknown-members),
+When this is used, Flow will always require a `default` (for `switch`) or wildcard `_` (for [`match`](../match/index.md)) when [checking the enum](./using-enums.md#toc-exhaustive-checking-with-unknown-members),
 even if all known enum members are checked. The `default`/`_` checks for "unknown" members you haven't explicitly listed.
 
 This feature is useful when an enum value crosses some boundary and the enum declaration on each side may have different members.

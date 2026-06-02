@@ -747,6 +747,8 @@ declare type React$CustomJSXFactory = (
 ) => React.MixedElement;
 ```
 
+Flow exposes the `React` namespace as a global, so no import is needed in `.js.flow` files.
+
 The default value for `react.custom_jsx_typing` is `false`.
 
 ### react.runtime {#toc-react-runtime}

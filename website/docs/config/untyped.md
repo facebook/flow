@@ -9,7 +9,7 @@ matching the specified regular expressions and instead throw away types and trea
 
 This is different from the [`[ignore]`](./ignore.md) config section that causes matching files to be ignored by the module resolver,
 which inherently makes them un-typechecked, and also unresolvable by `import` or `require`.
-When ignored, [`[libs]`](./libs.md) must then be specified for each `import` using `flow-typed`, which may not always be desired.
+When ignored, a separate library definition (e.g. via [`[libs]`](./libs.md) or `flow-typed`) must be provided to type any imports from those files, which may not always be desired.
 
 It is also different from the [`[declarations]`](./declarations.md) section.
 This also does not typecheck the file contents, but `[declarations]` does extract and use the signatures of functions, classes, etc, when checking other code.
@@ -33,7 +33,7 @@ An example `[untyped]` section might look like:
 .*\.untyped\.js
 ```
 
-This `[untyped]` section will parse:
+This `[untyped]` section will treat the following files as untyped:
 
 1.  Any file or directory under a directory named `third_party`
 2.  Any file or directory under `.*/src/foo` or under `.*/src/bar`

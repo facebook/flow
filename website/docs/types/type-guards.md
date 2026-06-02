@@ -42,7 +42,7 @@ function isA(value: AorB): value is A {
 ```
 We have defined a data type `AorB` that is a disjoint union of two types `A` and `B` that each have a property `type` used as tag.
 
-We have also written a *user defined type guard* function `isA` defined over objects of type `AorB`. This function returns `true` when the value of of the `type` property of its input is `"A"`. Using the definitions of `A` and `B`, Flow can prove that when the value of `type` is `"A"` then the type of `value` will be `A`.
+We have also written a *user defined type guard* function `isA` defined over objects of type `AorB`. This function returns `true` when the value of the `type` property of its input is `"A"`. Using the definitions of `A` and `B`, Flow can prove that when the value of `type` is `"A"` then the type of `value` will be `A`.
 
 ### Using a type guard function to refine values
 
@@ -165,7 +165,7 @@ declare class InvalidStatic {
 
 type InvalidTypeAlias = (x: unknown) => this is A;
 
-function invalidFunction(this: unknown): this is A;
+declare function invalidFunction(this: unknown): this is A;
 
 class InvalidNonDeclareClass {
   m(): this is B { return this instanceof B; }
@@ -332,7 +332,7 @@ function isPosNum(x: unknown): x is number {
 ```
 This is because the negation of the predicate of `isPosNum` is "`x` is not a number or `x<=0`". This predicate is equivalent to the empty predicate and does not refine the input type it is applied to.
 
-If you're seeing errors related to this check, consider using a one-sided type guard (write `implies x is T`). Ones-sided type guards do not require this check, since they do not refine the else-branch of conditionals.
+If you're seeing errors related to this check, consider using a one-sided type guard (write `implies x is T`). One-sided type guards do not require this check, since they do not refine the else-branch of conditionals.
 
 3. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
 ```js flow-check
@@ -393,7 +393,7 @@ function isKnown<T>(x: Item<T>): x is Known {
 
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `prettier`: 3. `this` type guards require version 3.5 or later. See [these instructions](../tools/prettier.md) for installing prettier.
+- `prettier`: version 3 or later, with the `@prettier/plugin-hermes` plugin installed (see [these instructions](../tools/prettier.md)). `this` type guards require Prettier 3.5 or later.
 - `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
   * `this` type guards require hermes-parser version 0.26 or later.
 - `eslint` with `hermes-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.

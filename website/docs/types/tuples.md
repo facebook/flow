@@ -194,7 +194,7 @@ function f(readOnlyTuple: [readonly foo: number, readonly bar: string]) {
 You can also use the [`Readonly`](./utilities.md#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
 
 ```js flow-check
-type T = Readonly<[number, string]>; // Same as `[readonly a: number, readonly b: string]`
+type T = Readonly<[number, string]>; // Like marking each element readonly
 ```
 
 ## Optional tuple elements

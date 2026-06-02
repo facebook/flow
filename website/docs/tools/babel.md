@@ -24,7 +24,7 @@ Then add the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser`
 ```json
 {
   "presets": ["@babel/preset-flow"],
-  "plugins": ["babel-plugin-syntax-hermes-parser"],
+  "plugins": ["babel-plugin-syntax-hermes-parser"]
 }
 ```
 

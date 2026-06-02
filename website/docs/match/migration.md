@@ -16,7 +16,7 @@ If you are using an IDE, you can use the “Refactor `switch` to `match`” refa
 
 And the caveats for the resulting match:
 * It may contain other `break`s (other than the last one that was removed) that will be a parse error and you will have to figure out what to do with that.
-* It may not be exhaustively checked, or identifier patterns may not be valid (e.g. just typed as `string`). You will get new errors you will have to resolve.
+* It may not be exhaustively checked, or patterns that worked as `case` tests may not be valid match patterns (e.g., when the value is just typed as `string`, an exhaustive match becomes impossible). You will get new errors you will have to resolve.
 
 ### To match statement
 
@@ -24,7 +24,7 @@ Most `switch` statements can be turned into match statements:
 
 * Replace `switch` with `match`
 * Delete the `case`
-* Replace the colon `:` after the case test with an arrow  `=>`
+* Replace the colon `:` after the case test with an arrow `=>`
 * Wrap the case body in a block `{ ... }`
 * Remove the `break;`
 * If multiple cases share a body, use an ["or" pattern](./patterns.md#or-patterns) `|`
@@ -79,7 +79,7 @@ function getSizeBefore(imageSize: 'small' | 'medium' | 'large') {
       return 100;
     case 'large':
       return 200;
-  };
+  }
 }
 
 // After

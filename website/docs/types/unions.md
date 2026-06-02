@@ -61,7 +61,7 @@ maybeString(null); // Works!
 maybeString(undefined); // Works!
 ```
 
-The union of every single type that exists is the [`unknown`](./unknown.md) type:
+The type that accepts every possible value is [`unknown`](./unknown.md):
 
 ```js flow-check
 function everything(x: unknown) { /* ... */ }
