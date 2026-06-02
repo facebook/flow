@@ -13,3 +13,5 @@ component Comp6('string-key' as alias?: string) {}
 component Comp7('aria-label' as ariaLabel?: string) {}
 
 component Comp8(case as caseValue: CaseValue) {}
+
+component Comp9(function as func: TFunc) {}

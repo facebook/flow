@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":15,"column":48}},
-  "range":[0,360],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":17,"column":43}},
+  "range":[0,405],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -449,6 +449,71 @@
                   "loc":{"source":null,"start":{"line":15,"column":35},"end":{"line":15,"column":44}},
                   "range":[347,356],
                   "name":"CaseValue",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
+            "optional":false
+          },
+          "shorthand":false
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":17,"column":0},"end":{"line":17,"column":43}},
+      "range":[362,405],
+      "async":false,
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":17,"column":41},"end":{"line":17,"column":43}},
+        "range":[403,405],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":17,"column":10},"end":{"line":17,"column":15}},
+        "range":[372,377],
+        "name":"Comp9",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "implicitDeclare":false,
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":17,"column":16},"end":{"line":17,"column":39}},
+          "range":[378,401],
+          "name":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":17,"column":16},"end":{"line":17,"column":24}},
+            "range":[378,386],
+            "name":"function",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":17,"column":28},"end":{"line":17,"column":39}},
+            "range":[390,401],
+            "name":"func",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":17,"column":32},"end":{"line":17,"column":39}},
+              "range":[394,401],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":17,"column":34},"end":{"line":17,"column":39}},
+                "range":[396,401],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":17,"column":34},"end":{"line":17,"column":39}},
+                  "range":[396,401],
+                  "name":"TFunc",
                   "typeAnnotation":null,
                   "optional":false
                 },

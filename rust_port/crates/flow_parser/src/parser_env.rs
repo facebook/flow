@@ -1719,14 +1719,6 @@ pub(crate) mod peek {
         current_token_is_followed_by_word(env, "static", |token| token == &TokenKind::TStatic)
     }
 
-    pub(crate) fn token_after_current_is_as(env: &mut ParserEnv) -> bool {
-        current_token_is_followed_by_word(
-            env,
-            "as",
-            |token| matches!(token, TokenKind::TIdentifier { raw, .. } if raw == "as"),
-        )
-    }
-
     pub(crate) fn token_after_current_starts_type_call(env: &mut ParserEnv) -> bool {
         match offset_after_current_trivia(env) {
             Ok((Some(offset), _)) => {

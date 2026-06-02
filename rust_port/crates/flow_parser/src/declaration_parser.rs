@@ -21,6 +21,7 @@ use crate::loc::LOC_NONE;
 use crate::loc::Loc;
 use crate::main_parser;
 use crate::parse_error::ParseError;
+use crate::parser_common::assert_identifier_name_is_identifier;
 use crate::parser_common::identifier_name;
 use crate::parser_common::is_simple_parameter_list;
 use crate::parser_common::with_loc;
@@ -1245,20 +1246,9 @@ pub(super) fn parse_component_params(
                     let local = pattern_parser::pattern(env, false, ParseError::StrictParamName)?;
                     (name, local, false)
                 }
-                _ if peek::is_identifier_name(env) && peek::token_after_current_is_as(env) => {
-                    let name =
-                        statement::component_params::ParamName::Identifier(identifier_name(env)?);
-                    expect::identifier(env, "as")?;
-                    let local = pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
-                    (name, local, false)
-                }
                 _ => {
-                    let (loc, id) = main_parser::parse_identifier_with_type(
-                        env,
-                        true,
-                        Some(ParseError::StrictParamName),
-                    )?;
-                    let name = statement::component_params::ParamName::Identifier(id.name.dupe());
+                    let id = identifier_name(env)?;
+                    let name = statement::component_params::ParamName::Identifier(id.dupe());
                     if matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "as")
                     {
                         expect::identifier(env, "as")?;
@@ -1266,6 +1256,29 @@ pub(super) fn parse_component_params(
                             pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
                         (name, local, false)
                     } else {
+                        let (loc, id) = with_loc(Some(id.loc.dupe()), env, |env| {
+                            assert_identifier_name_is_identifier(
+                                Some(ParseError::StrictParamName),
+                                env,
+                                &id,
+                            )?;
+                            let optional = match peek::token(env) {
+                                TokenKind::TPling => {
+                                    if !env.should_parse_types() {
+                                        env.error(ParseError::UnexpectedTypeAnnotation)?;
+                                    }
+                                    eat::token(env)?;
+                                    true
+                                }
+                                _ => false,
+                            };
+                            let annot = type_parser::parse_annotation_opt(env)?;
+                            Ok(pattern::Identifier {
+                                name: id,
+                                annot,
+                                optional,
+                            })
+                        })?;
                         let local = pattern::Pattern::Identifier {
                             loc,
                             inner: Arc::new(id),
