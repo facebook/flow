@@ -1,8 +1,8 @@
 //@flow
 
 class C {
-  +f: () => this;
-  +f2: () => C;
+  readonly f: () => this;
+  readonly f2: () => C;
   g(): this {
     if (C) {
       return this.f2();

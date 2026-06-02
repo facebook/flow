@@ -118,9 +118,9 @@ Cannot get `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. 
          ^^^^^^^^ [1]
 
 References:
-   indexer.js:30:5
-   30|   +[Keys]: number | string;
-           ^^^^ [2]
+   indexer.js:30:13
+   30|   readonly [Keys]: number | string;
+                   ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:50:5
@@ -140,9 +140,9 @@ Cannot assign `1` to `x['xxx']` because string `xxx` [1] is incompatible with `K
          ^^^^^^^^ [1]
 
 References:
-   indexer.js:33:5
-   33|   -[Keys]: number;
-           ^^^^ [2]
+   indexer.js:33:14
+   33|   writeonly [Keys]: number;
+                    ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:58:5
@@ -163,9 +163,9 @@ Cannot get `x[true]` because boolean [1] is incompatible with string [2]. [incom
            ^^^^ [1]
 
 References:
-   indexer.js:55:33
-   55|   declare const x: interface {+[string]: number};
-                                       ^^^^^^ [2]
+   indexer.js:55:41
+   55|   declare const x: interface {readonly [string]: number};
+                                               ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:64:3
@@ -256,16 +256,16 @@ Cannot cast `x` to interface type because in the indexer property: string [1] is
 [incompatible-type]
 
    indexer.js:78:3
-   78|   x as interface {+[Keys]: number}; // ERROR
+   78|   x as interface {readonly [Keys]: number}; // ERROR
          ^
 
 References:
    indexer.js:76:38
    76|   declare const x: {[Keys]: number | string};
                                             ^^^^^^ [1]
-   indexer.js:78:28
-   78|   x as interface {+[Keys]: number}; // ERROR
-                                  ^^^^^^ [2]
+   indexer.js:78:36
+   78|   x as interface {readonly [Keys]: number}; // ERROR
+                                          ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:83:3
@@ -292,16 +292,16 @@ Cannot cast `x` to interface type because in the indexer property: string [1] is
 [incompatible-type]
 
    indexer.js:84:3
-   84|   x as interface {+[Keys]: number}; // ERROR
+   84|   x as interface {readonly [Keys]: number}; // ERROR
          ^
 
 References:
    indexer.js:82:48
    82|   declare const x: interface {[Keys]: number | string};
                                                       ^^^^^^ [1]
-   indexer.js:84:28
-   84|   x as interface {+[Keys]: number}; // ERROR
-                                  ^^^^^^ [2]
+   indexer.js:84:36
+   84|   x as interface {readonly [Keys]: number}; // ERROR
+                                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:137:3
@@ -529,19 +529,19 @@ References:
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- inline.js:25:29
+Error -------------------------------------------------------------------------------------------------- inline.js:25:32
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   inline.js:25:29
-   25| type C<+T> = interface { p: T }
-                                   ^
+   inline.js:25:32
+   25| type C<out T> = interface { p: T }
+                                      ^
 
 References:
-   inline.js:25:9
-   25| type C<+T> = interface { p: T }
-               ^ [1]
+   inline.js:25:12
+   25| type C<out T> = interface { p: T }
+                  ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- inline.js:29:6

@@ -11,8 +11,8 @@
 
 type $unwrap = <T>(l: JSResourceReference<T>) => T;
 
-class JSResourceReference<+T> {
-  +_moduleId: $Flow$ModuleRef<T>;
+class JSResourceReference<out T> {
+  readonly _moduleId: $Flow$ModuleRef<T>;
 
   constructor(moduleId: $Flow$ModuleRef<T>) {
     this._moduleId = moduleId;

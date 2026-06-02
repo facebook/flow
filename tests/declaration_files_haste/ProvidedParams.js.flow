@@ -11,10 +11,10 @@ declare class ProvidedParamsBase {
 
   constructor(
     value: {|
-      +description?: ?string,
-      +id?: ?string,
-      +ownerId: string,
-      +tags: Immutable.List<string>,
+      readonly description?: ?string,
+      readonly id?: ?string,
+      readonly ownerId: string,
+      readonly tags: Immutable.List<string>,
     |},
   ): void;
 
@@ -28,10 +28,10 @@ declare class ProvidedParamsBase {
 
   merge(
     value: {|
-      +description?: ?string,
-      +id?: ?string,
-      +ownerId?: string,
-      +tags?: Immutable.List<string>,
+      readonly description?: ?string,
+      readonly id?: ?string,
+      readonly ownerId?: string,
+      readonly tags?: Immutable.List<string>,
     |},
   ): this;
 

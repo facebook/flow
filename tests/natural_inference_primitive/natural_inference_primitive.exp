@@ -2890,9 +2890,9 @@ is incompatible with union type [3]. [incompatible-type]
          -^
 
 References:
-   nested_generic_calls.js:67:17
-   67|   type Wrapper<+V> = (value: unknown) => Readonly<{value: V}>;
-                       ^ [1]
+   nested_generic_calls.js:67:20
+   67|   type Wrapper<out V> = (value: unknown) => Readonly<{value: V}>;
+                          ^ [1]
    nested_generic_calls.js:75:28
    75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
                                   ^^^^^^^^^^^^^^^^^^^^^^^ [2]

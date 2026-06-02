@@ -56,7 +56,7 @@ while (0 < 1) {
    x;
 // ^?
 
-type CA<+T> =
+type CA<out T> =
 //   ^?
   ReadonlyArray<CA<T>>;
 //                ^?

@@ -8,9 +8,9 @@ Cannot use `T` [1] in an output position because `T` [1] is expected to occur on
                                          ^
 
 References:
-   test.js:15:12
-   15| class Baz<-T> {
-                  ^ [1]
+   test.js:15:14
+   15| class Baz<in T> {
+                    ^ [1]
 
 
 

@@ -17,7 +17,7 @@ type F<T> = Readonly<{
 
 declare function map<A extends ReadonlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
 const boo = Promise.all([{log: (f: () => string) => {}}]);
-map(boo) as [+v: number]; // error
+map(boo) as [readonly v: number]; // error
 
 declare const issue2674: {[K in keyof [unknown, unknown]]: 'FOO'};
 

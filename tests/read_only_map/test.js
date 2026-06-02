@@ -6,25 +6,25 @@ class Bar<K, V> {
     }
 }
 
-class FooK<+K, V> {
+class FooK<out K, V> {
     bad (x: number) : ReadonlyMap<K, V> { // Error: K in invariant position
         return new Map();
     }
 }
 
-class FooV<K, +V> {
+class FooV<K, out V> {
     bad (x: number) : ReadonlyMap<K, V> { // Fine, V in covariant position
         return new Map();
     }
 }
 
-class BazK<-K, V> {
+class BazK<in K, V> {
     bad (x: number) : ReadonlyMap<K, V> {// Error: K in invariant position
         return new Map();
     }
 }
 
-class BazV<K, -V> {
+class BazV<K, in V> {
     bad (x: number) : ReadonlyMap<K, V> {// Error: V in invariant position
         return new Map();
     }

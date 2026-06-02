@@ -116,7 +116,7 @@ type TreeNode<T> = {
 
 // --- Mapped types ---
 
-type MakeReadonly<T extends {...}> = {+[K in keyof T]: T[K]};
+type MakeReadonly<T extends {...}> = {readonly [K in keyof T]: T[K]};
 type MakeOptional<T extends {...}> = {[K in keyof T]+?: T[K]};
 type Methodify<T extends {...}> = {[K in keyof T]: () => T[K]};
 

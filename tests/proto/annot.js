@@ -16,7 +16,7 @@ o_optional.q as empty; // error: property `q` not found
 o_optional.__proto__ as empty; // error: void ~> empty, object type ~> empty
 
 // +__proto__ and -__proto__ treated like a normal property
-type O_variance = { +__proto__: { q: 0, ... }, ... };
+type O_variance = { readonly __proto__: { q: 0, ... }, ... };
 declare const o_variance: O_variance;
 o_variance.q as empty; // error: property `q` not found
 o_variance.__proto__ as empty; // error: object type ~> empty

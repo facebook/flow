@@ -9,7 +9,7 @@ Any2 as empty; // ok. Any2 is any typed.
 
 import * as Any3 from "any";
 Any3 as number; // error
-Any3 as {+[key: string]: any}; // ok
+Any3 as {readonly [key: string]: any}; // ok
 Any3.foo as string; Any3.foo as empty; // ok: Any3.foo is any
 
 import {x as obj_x, y as obj_y} from "object";
@@ -22,7 +22,7 @@ Any5 as empty; // ok. Any5 is any typed.
 
 import * as Any6 from "object";
 Any6 as number; // error
-Any6 as {+[key: string]: any}; // ok
+Any6 as {readonly [key: string]: any}; // ok
 Any6.foo as string; Any3.foo as empty; // ok: Any6.foo is any
 
 import {x as str_x, y as str_y} from "string"; // error

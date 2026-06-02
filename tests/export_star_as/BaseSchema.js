@@ -1,3 +1,3 @@
 export type AnySchema = {
-  +kind: 'base',
+  readonly kind: 'base',
 };

@@ -60,7 +60,7 @@ calc('add', 999); // ERROR
 
 {
   // Non-readable
-  declare const x: [true, number] | [false, string, -c: true];
+  declare const x: [true, number] | [false, string, writeonly c: true];
   if (x[2]) { // ERROR: element not readable
     x as empty; // ERROR
   }

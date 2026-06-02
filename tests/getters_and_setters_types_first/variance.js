@@ -10,8 +10,8 @@ declare const c: C;
 
 class Base {
   x: B;
-  +pos: B;
-  -neg: B;
+  readonly pos: B;
+  writeonly neg: B;
   get get(): B { return this.x };
   set set(value: B): void { this.x = value };
   get getset(): B { return this.x };

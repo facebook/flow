@@ -229,7 +229,7 @@
 
 // Non-readable
 {
-  declare const x: {-foo: boolean};
+  declare const x: {writeonly foo: boolean};
 
   match (x) { // OK
     {foo: _} => {} // OK
@@ -242,7 +242,7 @@
 
 // Non-readable optional
 {
-  declare const x: {-foo?: boolean};
+  declare const x: {writeonly foo?: boolean};
 
   match (x) { // ERROR: missing `{...}`
     {foo: _} => {} // OK

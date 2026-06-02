@@ -1,5 +1,5 @@
 // We make conditional types where we cannot decide which branch to take uninhabitable.
-function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
+function generic_in_check_type<T>(x: T) : [T] extends [readonly _K:string] ? boolean : number {
   if (typeof x === 'string') {
     return true; // error
   } else {

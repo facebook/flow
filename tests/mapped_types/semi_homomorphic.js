@@ -3,7 +3,7 @@ type Semi<O extends {...}, Keys extends keyof O> = {
 }
 {
   // Regular properties work
-  type O = {+foo: number};
+  type O = {readonly foo: number};
 
   type Mapped = Semi<O, 'foo'>;
 

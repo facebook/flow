@@ -1,4 +1,4 @@
 class C { m = function(): void { } }
 class D extends C { }
 
-var d: interface { +m: () => void } = new D();
+var d: interface { readonly m: () => void } = new D();

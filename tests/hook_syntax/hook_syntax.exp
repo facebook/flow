@@ -279,19 +279,19 @@ References:
            ^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------- declare_hook_tests.js:84:32
+Error -------------------------------------------------------------------------------------- declare_hook_tests.js:84:35
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   declare_hook_tests.js:84:32
-   84|   type NonTransitive<+T> = {o: T}; // expected variance error
-                                      ^
+   declare_hook_tests.js:84:35
+   84|   type NonTransitive<out T> = {o: T}; // expected variance error
+                                         ^
 
 References:
-   declare_hook_tests.js:84:23
-   84|   type NonTransitive<+T> = {o: T}; // expected variance error
-                             ^ [1]
+   declare_hook_tests.js:84:26
+   84|   type NonTransitive<out T> = {o: T}; // expected variance error
+                                ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1

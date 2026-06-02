@@ -12,15 +12,15 @@ type DeepPartialState<T> =
   a as empty; // error: number ~> empty
 
   declare const b: DeepPartialState<{foo: {bar: {baz: string}}}>;
-  b as {+foo?: {+bar?: {+baz?: string}}};
-  b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
-  b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
-  b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
+  b as {readonly foo?: {readonly bar?: {readonly baz?: string}}};
+  b as {readonly foo: {readonly bar?: {readonly baz?: string}}}; // error: foo not optional
+  b as {readonly foo?: {readonly bar: {readonly baz?: string}}}; // error: bar not optional
+  b as {readonly foo?: {readonly bar?: {readonly baz: string}}}; // error: baz not optional
 }
 
 type DeepReadOnly<T> =
   T extends ReadonlyArray<infer V> ? ReadonlyArray<DeepReadOnly<V>> :
-  T extends {...} ? {+[K in keyof T]: DeepReadOnly<T[K]>} : T;
+  T extends {...} ? {readonly [K in keyof T]: DeepReadOnly<T[K]>} : T;
 
 {
   const obj: DeepReadOnly<{

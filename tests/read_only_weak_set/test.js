@@ -6,13 +6,13 @@ class Bar<T extends {}> {
     }
 }
 
-class Foo<+T extends {}> {
+class Foo<out T extends {}> {
     bad (x: number) : $ReadOnlyWeakSet<T> { // Error: T in invariant position
         return new WeakSet();
       }
 }
 
-class Baz<-T extends {}> {
+class Baz<in T extends {}> {
     bad (x: number) : $ReadOnlyWeakSet<T> {// Error: T in invariant position
         return new WeakSet();
     }
@@ -25,13 +25,13 @@ class Baz<-T extends {}> {
         }
     }
 
-    class Foo<+T extends {}> {
+    class Foo<out T extends {}> {
         bad (x: number) : ReadonlyWeakSet<T> { // Error: T in invariant position
             return new WeakSet();
         }
     }
 
-    class Baz<-T extends {}> {
+    class Baz<in T extends {}> {
         bad (x: number) : ReadonlyWeakSet<T> {// Error: T in invariant position
             return new WeakSet();
         }

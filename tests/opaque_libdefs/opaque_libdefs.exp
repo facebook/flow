@@ -79,9 +79,9 @@ Cannot return `x` because in type argument `T` [1]: number [2] is incompatible w
                 ^
 
 References:
-   flow-typed/decls.js:15:36
-   15| declare export opaque type Contra<-T>;
-                                          ^ [1]
+   flow-typed/decls.js:15:38
+   15| declare export opaque type Contra<in T>;
+                                            ^ [1]
    test.js:34:30
    34| function contraBad(x: Contra<number>): Contra<number | string> {
                                     ^^^^^^ [2]

@@ -1,8 +1,8 @@
 // @flow
 
 type ResultSet<Row> = {
-  +rowCount: number,
-  +rows: Array<Row>,
+  readonly rowCount: number,
+  readonly rows: Array<Row>,
  ...};
 
 interface Submittable {

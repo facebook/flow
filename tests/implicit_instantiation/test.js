@@ -17,7 +17,7 @@ a as {x: number}; // Not ok, number incompatible with string, OK in LTI since ta
 const z = identity<_>(3); // Give z a lower bound.
 z as string; // Error, number lower bound string upper bound
 
-declare function readOnly<T>(): {+x: T};
+declare function readOnly<T>(): {readonly x: T};
 
 const result = {
   x: unimplementable<_>(), // Error in LTI, requires concrete annot

@@ -15,14 +15,14 @@ f = () => {
 }
 
 f = () => {
-  declare const Comp: React.ComponentType<{+[key in keyof SourceObj]: SourceObj[key]}>;
+  declare const Comp: React.ComponentType<{readonly [key in keyof SourceObj]: SourceObj[key]}>;
   <Comp foo={''} bar={3} />;
 //       ^
 }
 
 f = () => {
   declare const BaseComp: React.ComponentType<SourceObj>;
-  type MapProps<O> = {[K in keyof O]: O[K] extends { +$fragmentType: empty, ... } ? O[K] : O[K]};
+  type MapProps<O> = {[K in keyof O]: O[K] extends { readonly $fragmentType: empty, ... } ? O[K] : O[K]};
   type $RelayProps<T> = MapProps<
     Omit<T, empty>,
   >;
@@ -39,7 +39,7 @@ f = () => {
 }
 
 f = () => {
-  type MapType<T> = {+[key in keyof T]: SourceObj[key]};
+  type MapType<T> = {readonly [key in keyof T]: SourceObj[key]};
   declare const Comp: React.ComponentType<MapType<SourceObj>>;
   <Comp foo={''} bar={3} />;
 //       ^

@@ -7,7 +7,7 @@
 // Optional elements
 type Single = [a: number];
 type WithOpt = [a: number, b?: string];
-type WithReadOnlyOpt = [a: number, +b?: string];
+type WithReadOnlyOpt = [a: number, readonly b?: string];
 
 {
   declare const single: Single;
@@ -37,14 +37,14 @@ type WithReadOnlyOpt = [a: number, +b?: string];
   withReadOnlyOpt[1] = undefined; // ERROR
 }
 {
-  declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
+  declare const withWriteOnlyOpt: [a: number, writeonly b?: string | boolean];
   withWriteOnlyOpt as [a: number]; // ERROR
   withWriteOnlyOpt as [a: number, b?: string | boolean]; // ERROR
-  withWriteOnlyOpt as [a: number, -b?: string]; // OK
+  withWriteOnlyOpt as [a: number, writeonly b?: string]; // OK
 }
 {
-  declare const f11: (...[+foo?: string]) => number;
-  declare const f12: (...[+foo: string | void]) => number;
+  declare const f11: (...[readonly foo?: string]) => number;
+  declare const f12: (...[readonly foo: string | void]) => number;
   declare const f2: (foo?: string) => number;
 
   f11 as typeof f2; // error

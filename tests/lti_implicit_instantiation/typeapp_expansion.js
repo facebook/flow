@@ -1,11 +1,11 @@
-declare class MySet<+T> {}
+declare class MySet<out T> {}
 
 type $ElementOfSet<SetType> =
   SetType extends MySet<infer ElementType>
     ? ElementType
     : empty;
 
-class Entry<+X> {}
+class Entry<out X> {}
 
 type SetOfEntries = MySet<Entry<unknown>>;
 
@@ -28,7 +28,7 @@ function test2() {
  * Without the normalization, we will hit the issue of TypeAppExpansion being too conservative.
  */
 function test3() {
-  declare opaque type Opaque<-T>;
+  declare opaque type Opaque<in T>;
 
   type ID<T> = T;
 
@@ -41,7 +41,7 @@ function test3() {
 
   // The HOCs above are basically convoluted identity functions...
 
-  type Foo = {+foo: string, ...};
+  type Foo = {readonly foo: string, ...};
   declare const OriginalComponent: Opaque<Foo>;
 
   const IdWrapped = wrapWithId(OriginalComponent);

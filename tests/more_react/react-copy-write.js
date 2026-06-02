@@ -26,8 +26,8 @@ type ConsumerProps<T, TSelect extends ReadonlyArray<(T) => unknown>> = {
 type Selector<T, R> = T => R;
 
 export type Store<T> = {
-  +Provider: Provider<T>,
-  +Consumer: {
+  readonly Provider: Provider<T>,
+  readonly Consumer: {
     <TSelect extends ReadonlyArray<(T) => unknown> = ReadonlyArray<(T) => unknown>>(
       ConsumerProps<T, TSelect>,
     ): globalThis.React.Node,
@@ -36,7 +36,7 @@ export type Store<T> = {
     propTypes?: any,
     contextTypes?: any,
  ...  },
-  +mutate: Mutate<T>,
+  readonly mutate: Mutate<T>,
   createSelector<R>(Selector<T, R>): Selector<T, R>,
  ...};
 

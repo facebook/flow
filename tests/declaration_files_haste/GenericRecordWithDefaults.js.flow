@@ -8,8 +8,8 @@ declare class GenericRecordWithDefaultsBase {
 
   constructor(
     value?: {
-      +foo?: string,
-      +bar?: ?string,
+      readonly foo?: string,
+      readonly bar?: ?string,
       ...
     },
   ): void;
@@ -22,8 +22,8 @@ declare class GenericRecordWithDefaultsBase {
 
   merge(
     value: {
-      +foo?: string,
-      +bar?: ?string,
+      readonly foo?: string,
+      readonly bar?: ?string,
       ...
     },
   ): this;

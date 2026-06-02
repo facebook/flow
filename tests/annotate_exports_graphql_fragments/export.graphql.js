@@ -1,10 +1,10 @@
 // @flow
 
 export type Foo = {
-  +f?: {
-    +g: {
-      +h: ?ReadonlyArray<{
-        +i: {},
+  readonly f?: {
+    readonly g: {
+      readonly h: ?ReadonlyArray<{
+        readonly i: {},
       }>,
     },
   },
@@ -13,10 +13,10 @@ export type Foo = {
 declare export function foo(): Foo;
 
 export type Bar = {
-  +f: {
-    +g: {
-      +h: ReadonlyArray<{
-        +i: {},
+  readonly f: {
+    readonly g: {
+      readonly h: ReadonlyArray<{
+        readonly i: {},
       }>,
     },
   },

@@ -35,12 +35,14 @@ import * as React from 'react';
  * the GetPropFragmentRef function.
  */
 declare export opaque type $$TypeofFragment;
-type FragmentData = {+$$typeof: $$TypeofFragment, ...};
+type FragmentData = {readonly $$typeof: $$TypeofFragment, ...};
 
-export type Fragment<Ref, +Data extends FragmentData> = Data;
+export type Fragment<Ref, out Data extends FragmentData> = Data;
 
 export type GetPropFragmentRef<O> = {
-  [K in keyof O]: [+t: O[K]] extends [+t: Fragment<infer T, FragmentData>]
+  [K in keyof O]: [readonly t: O[K]] extends [
+    readonly t: Fragment<infer T, FragmentData>,
+  ]
     ? T
     : O[K],
 };

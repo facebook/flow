@@ -64,7 +64,7 @@ function reversed() {
   }
 }
 
-declare class Set<+T> {
+declare class Set<out T> {
   add<U>(U): Set<T | U>;
 }
 

@@ -1,7 +1,7 @@
 export type AnySchema =
   | {
-      +kind: 'base',
+      readonly kind: 'base',
     }
   | {
-      +kind: 'list',
+      readonly kind: 'list',
     };

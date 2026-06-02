@@ -112,16 +112,16 @@ Cannot cast `x1` to object type because in property `f`: number [1] is incompati
 [incompatible-type]
 
    file.js:68:3
-   68|   x1 as {+f:1}; // error number ~> 1, const has no effect
+   68|   x1 as {readonly f:1}; // error number ~> 1, const has no effect
          ^^
 
 References:
    file.js:66:25
    66|   declare const c: C<{f:number}>;
                                ^^^^^^ [1]
-   file.js:68:13
-   68|   x1 as {+f:1}; // error number ~> 1, const has no effect
-                   ^ [2]
+   file.js:68:21
+   68|   x1 as {readonly f:1}; // error number ~> 1, const has no effect
+                           ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- file.js:79:14
@@ -145,16 +145,16 @@ Cannot cast `x1` to object type because in property `a`: number [1] is incompati
 [incompatible-type]
 
    file.js:87:3
-   87|   x1 as {+a: 1}; // error number ~> 1
+   87|   x1 as {readonly a: 1}; // error number ~> 1
          ^^
 
 References:
    file.js:85:20
    85|   const obj1 = {a: 1}; // infers {a:number}
                           ^ [1]
-   file.js:87:14
-   87|   x1 as {+a: 1}; // error number ~> 1
-                    ^ [2]
+   file.js:87:22
+   87|   x1 as {readonly a: 1}; // error number ~> 1
+                            ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- file.js:98:14

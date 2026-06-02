@@ -36,9 +36,9 @@ Cannot create `Foo` element because in property `a`: number [1] is incompatible 
             ^ [1]
 
 References:
-   test.js:6:7
-    6|   +a: boolean,
-             ^^^^^^^ [2]
+   test.js:6:15
+    6|   readonly a: boolean,
+                     ^^^^^^^ [2]
 
 
 

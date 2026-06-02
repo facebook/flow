@@ -14,7 +14,7 @@ x as number | void;
 var y: number = 42;
 delete y;
 
-type A = {-a?: string};
+type A = {writeonly a?: string};
 
 declare const a: A;
 
@@ -37,7 +37,7 @@ w2.a as void;
 const obj4 = Object.freeze({f: 1});
 delete obj4.f; // error, just like when writing to frozen object
 
-declare const obj5: {+f?: number};
+declare const obj5: {readonly f?: number};
 delete obj5.f; // error, just like when writing to read-only object
 
 class C {

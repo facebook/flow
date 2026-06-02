@@ -18,7 +18,7 @@ function remove_anno<A>(a: A): A {
 const q: empty = remove_anno<number>(1);
 const r: empty = remove_anno(1);
 
-function removex<A extends {+p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
+function removex<A extends {readonly p: unknown, ...}, B>(a: A): [Omit<A, 'p'>, B] {
   const {p, ...o} = a;
   return [o, p];
 }

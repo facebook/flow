@@ -18,8 +18,8 @@ class PolyBar2<T> extends PolyFoo {}
 export opaque type PolyBad2<T>: PolyFoo<T> = PolyBar2<T>; // Error: Incompatible instantiation
 export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2
 
-class Contra<-T> {}
-class EContra<-T> extends Contra<T> {}
+class Contra<in T> {}
+class EContra<in T> extends Contra<T> {}
 
 export opaque type OContra: Contra<number> = EContra<number | string>;
 export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number

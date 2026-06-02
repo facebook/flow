@@ -3,14 +3,14 @@
 const React = require('react');
 
 type Props = {
-  +a: boolean,
-  +b: boolean,
-  +c: boolean,
-  +d: boolean,
-  +e : boolean,
-  +f: boolean,
-  +g: boolean,
-  +h: boolean,
+  readonly a: boolean,
+  readonly b: boolean,
+  readonly c: boolean,
+  readonly d: boolean,
+  readonly e : boolean,
+  readonly f: boolean,
+  readonly g: boolean,
+  readonly h: boolean,
 };
 declare function Foo(props: Props): React.Node;
 

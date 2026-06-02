@@ -7,11 +7,11 @@ export function f<T extends string>(t: T): void {} // ok
 
 export class Covariant<out T> {
     readonly prop: T;
-    -bad: T; // error
+    writeonly bad: T; // error
 }
 export class Contravariant<in T> {
-    -prop: T;
-    +bad: T; // error
+    writeonly prop: T;
+    readonly bad: T; // error
 }
 export class Invariant<in out T> {
     prop: number;

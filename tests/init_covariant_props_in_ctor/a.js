@@ -1,5 +1,5 @@
 class A {
-  +prop: number;
+  readonly prop: number;
 
   constructor(prop: number) {
     this.prop = prop;         // OK
@@ -10,7 +10,7 @@ const a = new A(1);
 a.prop = 2;                   // ERROR: Cannot assign outside of ctor to + prop
 
 class B {
-  +prop: number;
+  readonly prop: number;
   m() {};
 
   constructor(prop: string) {
@@ -20,7 +20,7 @@ class B {
 }
 
 class C {
-  -prop: number;
+  writeonly prop: number;
 
   constructor(prop: number) {
     this.prop = prop;         // OK
@@ -36,7 +36,7 @@ class D {
 }
 
 class E {
-  +prop: number;
+  readonly prop: number;
 
   constructor(prop: number) {
     this.prop = prop;         // OK
@@ -69,7 +69,7 @@ class F extends A {
 }
 
 class G extends F {
-  -prop: number               // ERROR: Was covariant in F and A
+  writeonly prop: number               // ERROR: Was covariant in F and A
   constructor(prop: number) {
     super(prop);
     this.prop = prop;         // OK

@@ -10,7 +10,7 @@ type Foo = {foo: string};
 type FooPlus = {foo: string, bar: number};
 
 class Baz {
-  +z : (x: FooPlus) => boolean = (x) => { return true; }
+  readonly z : (x: FooPlus) => boolean = (x) => { return true; }
   f() {
     const x: Array<Foo> = [];
     x.filter(this.z);

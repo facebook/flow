@@ -2,7 +2,7 @@ declare const dict: {[string]: number};
 
 declare const dictWithProps: {[string]: number, a: boolean};
 
-declare const writeOnlyDict: {-[string]: number};
+declare const writeOnlyDict: {writeonly [string]: number};
 
 declare const dictUnion: {[string]: number} | {[string]: boolean};
 

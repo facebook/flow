@@ -12,4 +12,4 @@ declare function new_stack<T>(x: T): PolyStack<T>;
 declare function push<T>(x: T, y: PolyStack<T>): PolyStack<T>;
 declare function pop<T>(x: PolyStack<T>): T;
 
-declare export opaque type Contra<-T>;
+declare export opaque type Contra<in T>;

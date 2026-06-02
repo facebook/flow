@@ -694,7 +694,7 @@ type ConditionalNestedObjType = NestedObj extends {
 
 'ConditionalNestedObjType' defined at type-destructor.js:92:5
 'NestedObj' defined at type-destructor.js:82:5
-'T' defined at type-destructor.js:96:19
+'T' defined at type-destructor.js:96:27
 
 type-destructor.js:92:6,92:29
 

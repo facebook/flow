@@ -61,7 +61,7 @@ class PrivateMethodUnbound {
   }
 }
 
-class C<+T> {
+class C<out T> {
   #private(): this {
       return this;
   }

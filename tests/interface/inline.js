@@ -22,7 +22,7 @@ function f(o: interface extends J, K {}) {
 }
 
 // unlike named interfaces, inline interfaces are checked for polarity
-type C<+T> = interface { p: T }
+type C<out T> = interface { p: T }
 
 interface Base { p: number }
 type Derived = interface extends Base {

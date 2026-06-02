@@ -1,7 +1,7 @@
 //@flow
 const React = require('react');
 
-type Props = {+foo: number};
+type Props = {readonly foo: number};
 const FancyButton = React.forwardRef<Props, ButtonInstance>((props, ref) => (
   <button ref={ref} className="FancyButton"></button>
 ));

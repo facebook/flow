@@ -1,14 +1,14 @@
 // minimized from https://github.com/facebook/stylex/blob/10501b354a02776dcb55229ed1bae6aef54875c0/packages/stylex/src/StyleXTypes.js#L69-L94
 import type {StyleXClassNameFor, StyleXVar} from './opaque';
 
-export type MapNamespaces<+S extends {+[string]: unknown}> = {
-  +[Key in keyof S]: S[Key] extends (...args: infer Args) => infer Obj
+export type MapNamespaces<out S extends {readonly [string]: unknown}> = {
+  readonly [Key in keyof S]: S[Key] extends (...args: infer Args) => infer Obj
     ? (...args: Args) => Readonly<[MapNamespace<Obj>, InlineStyles]>
     : MapNamespace<S[Key]>,
 };
 
-export type MapNamespace<+CSS extends {+[string]: unknown}> = {
-  +[Key in keyof CSS]: StyleXClassNameFor<Key, ComplexStyleValueType<CSS[Key]>>,
+export type MapNamespace<out CSS extends {readonly [string]: unknown}> = {
+  readonly [Key in keyof CSS]: StyleXClassNameFor<Key, ComplexStyleValueType<CSS[Key]>>,
 };
 
 export type InlineStyles = Readonly<{
@@ -17,17 +17,17 @@ export type InlineStyles = Readonly<{
   [key: string]: string | number,
 }>;
 
-type ComplexStyleValueType<+T> =
+type ComplexStyleValueType<out T> =
   T extends StyleXVar<infer U>
     ? U
     : T extends string | number | null
       ? T
       : T extends ReadonlyArray<infer U>
         ? ComplexStyleValueType<U>
-        : T extends { +default: infer A, +[string]: infer B }
+        : T extends { readonly default: infer A, readonly [string]: infer B }
           ? ComplexStyleValueType<A> | ComplexStyleValueType<B>
           : Readonly<T>;
 
 
-declare const x: MapNamespaces<{+item: {+hover: {+backgroundColor: '#f9f2ec'}}}>;
+declare const x: MapNamespaces<{readonly item: {readonly hover: {readonly backgroundColor: '#f9f2ec'}}}>;
 x as MapNamespaces<{item: {hover: {backgroundColor: '#f9f2ec'}}}>; // okay

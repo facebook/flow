@@ -38,15 +38,15 @@ interface MethodInterface {
 }
 
 // Same restriction applies to the +/- variance spellings (no flag required)
-type FnPlus = <+T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
-type FnMinus = <-T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+type FnPlus = <out T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
+type FnMinus = <in T>(x: T) => void; // ERROR - variance modifiers not allowed on function type parameters
 
 class MethodHostShortForm {
-  contraMethod<-T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
-  coMethod<+T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
+  contraMethod<in T>(x: T): void {} // ERROR - variance modifiers not allowed on method type parameters
+  coMethod<out T>(): T { throw 0; } // ERROR - variance modifiers not allowed on method type parameters
 }
 
 interface MethodInterfaceShortForm {
-  contraMethod<-T>(x: T): void; // ERROR - variance modifiers not allowed on method type parameters
-  coMethod<+T>(): T; // ERROR - variance modifiers not allowed on method type parameters
+  contraMethod<in T>(x: T): void; // ERROR - variance modifiers not allowed on method type parameters
+  coMethod<out T>(): T; // ERROR - variance modifiers not allowed on method type parameters
 }

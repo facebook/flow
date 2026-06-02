@@ -45,12 +45,12 @@ function test_mapped_types() {
   declare function g<T>(literalValue: T): {f: T};
 
   const x1 = f({f: 1, g: 2});
-  type T1 = {+f: number, +g: number};
+  type T1 = {readonly f: number, readonly g: number};
   x1 as T1; // okay
   _ as T1 as typeof x1; // okay
 
   const x2 = g(f({f: 1, g: 2}));
-  type T2 = {f: {+f: number, +g: number}};
+  type T2 = {f: {readonly f: number, readonly g: number}};
   x2 as T2; // okay
   _ as T2 as typeof x2; // okay
 }
@@ -60,11 +60,11 @@ function test_regression() {
   declare function union<V>(
     ...wrappers: ReadonlyArray<Wrapper<V>>
   ): Wrapper<V>;
-  declare function object<Wrappers extends {+[key: string]: Wrapper<unknown>}>(
+  declare function object<Wrappers extends {readonly [key: string]: Wrapper<unknown>}>(
     wrappers: Wrappers,
   ): Wrapper<Readonly<MapWrapperObject<Wrappers>>>;
 
-  type Wrapper<+V> = (value: unknown) => Readonly<{value: V}>;
+  type Wrapper<out V> = (value: unknown) => Readonly<{value: V}>;
   type MapWrapper<C> = C extends null | void
     ? C
     : C extends Wrapper<infer T>
@@ -76,7 +76,7 @@ function test_regression() {
   };
 
   const example0 = object({format: literal('A')});
-  const example1: Wrapper<{+format: 'A'}> = object({format: literal('A')}); // okay
+  const example1: Wrapper<{readonly format: 'A'}> = object({format: literal('A')}); // okay
 
   type Params = Readonly<{format: 'A' | 'B'}>;
   const example2: Wrapper<Params> = object({ // okay

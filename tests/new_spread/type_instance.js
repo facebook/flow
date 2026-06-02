@@ -1,4 +1,4 @@
-class A {+p: string|number}
+class A {readonly p: string|number}
 class B extends A {p: number}
 
 type O1 = {...B, ...};

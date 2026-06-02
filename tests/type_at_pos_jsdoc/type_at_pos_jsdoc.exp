@@ -937,9 +937,9 @@ Flags: --strip-root --pretty
   "endline":168,
   "line":168,
   "loc":{
-    "end":{"column":5,"line":168,"offset":2441},
+    "end":{"column":5,"line":168,"offset":2457},
     "source":"objects.js",
-    "start":{"column":5,"line":168,"offset":2440},
+    "start":{"column":5,"line":168,"offset":2456},
     "type":"SourceFile"
   },
   "path":"objects.js",
@@ -956,9 +956,9 @@ Flags: --strip-root --pretty
   "endline":170,
   "line":170,
   "loc":{
-    "end":{"column":5,"line":170,"offset":2454},
+    "end":{"column":5,"line":170,"offset":2470},
     "source":"objects.js",
-    "start":{"column":5,"line":170,"offset":2453},
+    "start":{"column":5,"line":170,"offset":2469},
     "type":"SourceFile"
   },
   "path":"objects.js",
@@ -975,9 +975,9 @@ Flags: --strip-root --pretty
   "endline":172,
   "line":172,
   "loc":{
-    "end":{"column":5,"line":172,"offset":2467},
+    "end":{"column":5,"line":172,"offset":2483},
     "source":"objects.js",
-    "start":{"column":5,"line":172,"offset":2466},
+    "start":{"column":5,"line":172,"offset":2482},
     "type":"SourceFile"
   },
   "path":"objects.js",
@@ -994,9 +994,9 @@ Flags: --strip-root --pretty
   "endline":174,
   "line":174,
   "loc":{
-    "end":{"column":5,"line":174,"offset":2480},
+    "end":{"column":5,"line":174,"offset":2496},
     "source":"objects.js",
-    "start":{"column":5,"line":174,"offset":2479},
+    "start":{"column":5,"line":174,"offset":2495},
     "type":"SourceFile"
   },
   "path":"objects.js",
@@ -1013,9 +1013,9 @@ Flags: --strip-root --pretty
   "endline":178,
   "line":178,
   "loc":{
-    "end":{"column":5,"line":178,"offset":2565},
+    "end":{"column":5,"line":178,"offset":2581},
     "source":"objects.js",
-    "start":{"column":5,"line":178,"offset":2564},
+    "start":{"column":5,"line":178,"offset":2580},
     "type":"SourceFile"
   },
   "path":"objects.js",
@@ -1032,9 +1032,9 @@ Flags: --strip-root --pretty
   "endline":180,
   "line":180,
   "loc":{
-    "end":{"column":5,"line":180,"offset":2578},
+    "end":{"column":5,"line":180,"offset":2594},
     "source":"objects.js",
-    "start":{"column":5,"line":180,"offset":2577},
+    "start":{"column":5,"line":180,"offset":2593},
     "type":"SourceFile"
   },
   "path":"objects.js",

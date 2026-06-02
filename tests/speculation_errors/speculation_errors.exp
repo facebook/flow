@@ -15,304 +15,319 @@ References:
                    ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:13:13
+Error ------------------------------------------------------------------------------------- errors_intersection.js:13:21
 
 Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
-   errors_intersection.js:13:13
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                   ^^^^^^^ [1]
+   errors_intersection.js:13:21
+   13| any as {readonly b: boolean, readonly a: boolean, readonly c: boolean} as {
+                           ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:13:56
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                                                              ^ [2]
+   errors_intersection.js:14:15
+   14|   readonly b: 2,
+                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:13:26
+Error ------------------------------------------------------------------------------------- errors_intersection.js:13:42
 
 Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
-   errors_intersection.js:13:26
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                                ^^^^^^^ [1]
+   errors_intersection.js:13:42
+   13| any as {readonly b: boolean, readonly a: boolean, readonly c: boolean} as {
+                                                ^^^^^^^ [1]
 
 References:
+   errors_intersection.js:15:15
+   15|   readonly a: 1,
+                     ^ [2]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:13:63
+
+Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
+[incompatible-type]
+
    errors_intersection.js:13:63
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                                                                     ^ [2]
-
-
-Error ------------------------------------------------------------------------------------- errors_intersection.js:13:39
-
-Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
-[incompatible-type]
-
-   errors_intersection.js:13:39
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                                             ^^^^^^^ [1]
+   13| any as {readonly b: boolean, readonly a: boolean, readonly c: boolean} as {
+                                                                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:13:70
-   13| any as {+b: boolean, +a: boolean, +c: boolean} as {+b: 2, +a: 1, +c: 3};
-                                                                            ^ [2]
+   errors_intersection.js:16:15
+   16|   readonly c: 3,
+                     ^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:16:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `1` [2].
  - Or string [3] is incompatible with number literal `1` [2].
 
-   errors_intersection.js:16:8
+   errors_intersection.js:20:8
               v
-   16| any as {
-   17|   +b: boolean & string,
-   18|   +a: boolean & string,
-   19|   +c: boolean & string,
-   20| } as {+b: 2, +a: 1, +c: 3};
+   20| any as {
+   21|   readonly b: boolean & string,
+   22|   readonly a: boolean & string,
+   23|   readonly c: boolean & string,
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
        ^
 
 References:
-   errors_intersection.js:18:7
-   18|   +a: boolean & string,
-             ^^^^^^^ [1]
-   errors_intersection.js:20:18
-   20| } as {+b: 2, +a: 1, +c: 3};
-                        ^ [2]
-   errors_intersection.js:18:17
-   18|   +a: boolean & string,
-                       ^^^^^^ [3]
+   errors_intersection.js:22:15
+   22|   readonly a: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:24:34
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
+                                        ^ [2]
+   errors_intersection.js:22:25
+   22|   readonly a: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:16:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `2` [2].
  - Or string [3] is incompatible with number literal `2` [2].
 
-   errors_intersection.js:16:8
+   errors_intersection.js:20:8
               v
-   16| any as {
-   17|   +b: boolean & string,
-   18|   +a: boolean & string,
-   19|   +c: boolean & string,
-   20| } as {+b: 2, +a: 1, +c: 3};
+   20| any as {
+   21|   readonly b: boolean & string,
+   22|   readonly a: boolean & string,
+   23|   readonly c: boolean & string,
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
        ^
 
 References:
-   errors_intersection.js:17:7
-   17|   +b: boolean & string,
-             ^^^^^^^ [1]
-   errors_intersection.js:20:11
-   20| } as {+b: 2, +a: 1, +c: 3};
-                 ^ [2]
-   errors_intersection.js:17:17
-   17|   +b: boolean & string,
-                       ^^^^^^ [3]
+   errors_intersection.js:21:15
+   21|   readonly b: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:24:19
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
+                         ^ [2]
+   errors_intersection.js:21:25
+   21|   readonly b: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:16:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `3` [2].
  - Or string [3] is incompatible with number literal `3` [2].
 
-   errors_intersection.js:16:8
+   errors_intersection.js:20:8
               v
-   16| any as {
-   17|   +b: boolean & string,
-   18|   +a: boolean & string,
-   19|   +c: boolean & string,
-   20| } as {+b: 2, +a: 1, +c: 3};
+   20| any as {
+   21|   readonly b: boolean & string,
+   22|   readonly a: boolean & string,
+   23|   readonly c: boolean & string,
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
        ^
 
 References:
-   errors_intersection.js:19:7
-   19|   +c: boolean & string,
-             ^^^^^^^ [1]
-   errors_intersection.js:20:25
-   20| } as {+b: 2, +a: 1, +c: 3};
-                               ^ [2]
-   errors_intersection.js:19:17
-   19|   +c: boolean & string,
-                       ^^^^^^ [3]
+   errors_intersection.js:23:15
+   23|   readonly c: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:24:49
+   24| } as {readonly b: 2, readonly a: 1, readonly c: 3};
+                                                       ^ [2]
+   errors_intersection.js:23:25
+   23|   readonly c: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:23:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:27:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `1` [2].
  - Or string [3] is incompatible with number literal `1` [2].
 
-   errors_intersection.js:23:8
-   23| any as {+b: boolean, +a: boolean & string, +c: boolean} as {
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:27:8
+              v
+   27| any as {
+   28|   readonly b: boolean,
+   29|   readonly a: boolean & string,
+   30|   readonly c: boolean,
+   31| } as {
+       ^
 
 References:
-   errors_intersection.js:23:26
-   23| any as {+b: boolean, +a: boolean & string, +c: boolean} as {
-                                ^^^^^^^ [1]
-   errors_intersection.js:25:7
-   25|   +a: 1,
-             ^ [2]
-   errors_intersection.js:23:36
-   23| any as {+b: boolean, +a: boolean & string, +c: boolean} as {
-                                          ^^^^^^ [3]
+   errors_intersection.js:29:15
+   29|   readonly a: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:33:15
+   33|   readonly a: 1,
+                     ^ [2]
+   errors_intersection.js:29:25
+   29|   readonly a: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:23:13
+Error ------------------------------------------------------------------------------------- errors_intersection.js:28:15
 
 Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
-   errors_intersection.js:23:13
-   23| any as {+b: boolean, +a: boolean & string, +c: boolean} as {
-                   ^^^^^^^ [1]
+   errors_intersection.js:28:15
+   28|   readonly b: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:24:7
-   24|   +b: 2,
-             ^ [2]
+   errors_intersection.js:32:15
+   32|   readonly b: 2,
+                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:23:48
+Error ------------------------------------------------------------------------------------- errors_intersection.js:30:15
 
 Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
-   errors_intersection.js:23:48
-   23| any as {+b: boolean, +a: boolean & string, +c: boolean} as {
-                                                      ^^^^^^^ [1]
+   errors_intersection.js:30:15
+   30|   readonly c: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:26:7
-   26|   +c: 3,
-             ^ [2]
+   errors_intersection.js:34:15
+   34|   readonly c: 3,
+                     ^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:30:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:38:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `2` [2].
  - Or string [3] is incompatible with number literal `2` [2].
 
-   errors_intersection.js:30:8
-   30| any as {+b: boolean & string, +a: boolean, +c: boolean} as {
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:38:8
+              v
+   38| any as {
+   39|   readonly b: boolean & string,
+   40|   readonly a: boolean,
+   41|   readonly c: boolean,
+   42| } as {
+       ^
 
 References:
-   errors_intersection.js:30:13
-   30| any as {+b: boolean & string, +a: boolean, +c: boolean} as {
-                   ^^^^^^^ [1]
-   errors_intersection.js:31:7
-   31|   +b: 2,
-             ^ [2]
-   errors_intersection.js:30:23
-   30| any as {+b: boolean & string, +a: boolean, +c: boolean} as {
-                             ^^^^^^ [3]
+   errors_intersection.js:39:15
+   39|   readonly b: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:43:15
+   43|   readonly b: 2,
+                     ^ [2]
+   errors_intersection.js:39:25
+   39|   readonly b: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:30:35
+Error ------------------------------------------------------------------------------------- errors_intersection.js:40:15
 
 Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
-   errors_intersection.js:30:35
-   30| any as {+b: boolean & string, +a: boolean, +c: boolean} as {
-                                         ^^^^^^^ [1]
+   errors_intersection.js:40:15
+   40|   readonly a: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:32:7
-   32|   +a: 1,
-             ^ [2]
+   errors_intersection.js:44:15
+   44|   readonly a: 1,
+                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:30:48
+Error ------------------------------------------------------------------------------------- errors_intersection.js:41:15
 
 Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
-   errors_intersection.js:30:48
-   30| any as {+b: boolean & string, +a: boolean, +c: boolean} as {
-                                                      ^^^^^^^ [1]
+   errors_intersection.js:41:15
+   41|   readonly c: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:33:7
-   33|   +c: 3,
-             ^ [2]
+   errors_intersection.js:45:15
+   45|   readonly c: 3,
+                     ^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:37:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:49:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `3` [2].
  - Or string [3] is incompatible with number literal `3` [2].
 
-   errors_intersection.js:37:8
-   37| any as {+b: boolean, +a: boolean, +c: boolean & string} as {
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:49:8
+              v
+   49| any as {
+   50|   readonly b: boolean,
+   51|   readonly a: boolean,
+   52|   readonly c: boolean & string,
+   53| } as {
+       ^
 
 References:
-   errors_intersection.js:37:39
-   37| any as {+b: boolean, +a: boolean, +c: boolean & string} as {
-                                             ^^^^^^^ [1]
-   errors_intersection.js:40:7
-   40|   +c: 3,
-             ^ [2]
-   errors_intersection.js:37:49
-   37| any as {+b: boolean, +a: boolean, +c: boolean & string} as {
-                                                       ^^^^^^ [3]
+   errors_intersection.js:52:15
+   52|   readonly c: boolean & string,
+                     ^^^^^^^ [1]
+   errors_intersection.js:56:15
+   56|   readonly c: 3,
+                     ^ [2]
+   errors_intersection.js:52:25
+   52|   readonly c: boolean & string,
+                               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:37:13
+Error ------------------------------------------------------------------------------------- errors_intersection.js:50:15
 
 Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
-   errors_intersection.js:37:13
-   37| any as {+b: boolean, +a: boolean, +c: boolean & string} as {
-                   ^^^^^^^ [1]
+   errors_intersection.js:50:15
+   50|   readonly b: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:38:7
-   38|   +b: 2,
-             ^ [2]
+   errors_intersection.js:54:15
+   54|   readonly b: 2,
+                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:37:26
+Error ------------------------------------------------------------------------------------- errors_intersection.js:51:15
 
 Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
-   errors_intersection.js:37:26
-   37| any as {+b: boolean, +a: boolean, +c: boolean & string} as {
-                                ^^^^^^^ [1]
+   errors_intersection.js:51:15
+   51|   readonly a: boolean,
+                     ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:39:7
-   39|   +a: 1,
-             ^ [2]
+   errors_intersection.js:55:15
+   55|   readonly a: 1,
+                     ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:44:18
+Error ------------------------------------------------------------------------------------- errors_intersection.js:60:34
 
 Cannot cast `any` to object type because in property `a.b`: boolean [1] is incompatible with number literal `42` [2].
 [incompatible-type]
 
-   errors_intersection.js:44:18
-   44| any as {+a: {+b: boolean}} as {+a: {+b: 42}};
-                        ^^^^^^^ [1]
+   errors_intersection.js:60:34
+   60| any as {readonly a: {readonly b: boolean}} as {readonly a: {readonly b: 42}};
+                                        ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:44:41
-   44| any as {+a: {+b: boolean}} as {+a: {+b: 42}};
-                                               ^^ [2]
+   errors_intersection.js:60:73
+   60| any as {readonly a: {readonly b: boolean}} as {readonly a: {readonly b: 42}};
+                                                                               ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:48:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:64:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
  - Either in property `b`: boolean [1] is incompatible with number literal `42` [2].
@@ -321,38 +336,38 @@ Cannot cast `any` to object type because in property `a`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:48:8
-   48| any as {+a: boolean & {+b: boolean & {}}} as {+a: {+b: 42}};
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:64:8
+   64| any as {readonly a: boolean & {readonly b: boolean & {}}} as {
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:48:28
-   48| any as {+a: boolean & {+b: boolean & {}}} as {+a: {+b: 42}};
-                                  ^^^^^^^ [1]
-   errors_intersection.js:48:56
-   48| any as {+a: boolean & {+b: boolean & {}}} as {+a: {+b: 42}};
-                                                              ^^ [2]
-   errors_intersection.js:48:38
-   48| any as {+a: boolean & {+b: boolean & {}}} as {+a: {+b: 42}};
-                                            ^^ [3]
+   errors_intersection.js:64:44
+   64| any as {readonly a: boolean & {readonly b: boolean & {}}} as {
+                                                  ^^^^^^^ [1]
+   errors_intersection.js:65:28
+   65|   readonly a: {readonly b: 42},
+                                  ^^ [2]
+   errors_intersection.js:64:54
+   64| any as {readonly a: boolean & {readonly b: boolean & {}}} as {
+                                                            ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:50:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:68:8
 
 Cannot cast `any` to number literal `42` because boolean [1] is incompatible with number literal `42` [2].
 [incompatible-type]
 
-   errors_intersection.js:50:8
-   50| any as boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:68:8
+   68| any as boolean as 42; // Error: number ~> boolean
               ^^^^^^^ [1]
 
 References:
-   errors_intersection.js:50:19
-   50| any as boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:68:19
+   68| any as boolean as 42; // Error: number ~> boolean
                          ^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:51:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:69:1
 
 Cannot cast `any` to number literal `42` because: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `42` [2].
@@ -361,23 +376,23 @@ Cannot cast `any` to number literal `42` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:51:1
-   51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:69:1
+   69| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:51:23
-   51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:69:23
+   69| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
                              ^^^^^^^ [1]
-   errors_intersection.js:51:34
-   51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:69:34
+   69| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
                                         ^^ [2]
-   errors_intersection.js:51:8
-   51| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
+   errors_intersection.js:69:8
+   69| any as {} & {} & {} & boolean as 42; // Error: number ~> boolean
               ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:52:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:70:1
 
 Cannot cast `any` to number literal `42` because: [incompatible-type]
  - Either boolean [1] is incompatible with number literal `42` [2].
@@ -386,45 +401,45 @@ Cannot cast `any` to number literal `42` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:52:1
-   52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
+   errors_intersection.js:70:1
+   70| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:52:25
-   52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
+   errors_intersection.js:70:25
+   70| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
                                ^^^^^^^ [1]
-   errors_intersection.js:52:38
-   52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
+   errors_intersection.js:70:38
+   70| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
                                             ^^ [2]
-   errors_intersection.js:52:8
-   52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
+   errors_intersection.js:70:8
+   70| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
               ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:54:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:72:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:54:1
-   54| any as number & string as true; // Error
+   errors_intersection.js:72:1
+   72| any as number & string as true; // Error
        ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:54:8
-   54| any as number & string as true; // Error
+   errors_intersection.js:72:8
+   72| any as number & string as true; // Error
               ^^^^^^ [1]
-   errors_intersection.js:54:27
-   54| any as number & string as true; // Error
+   errors_intersection.js:72:27
+   72| any as number & string as true; // Error
                                  ^^^^ [2]
-   errors_intersection.js:54:17
-   54| any as number & string as true; // Error
+   errors_intersection.js:72:17
+   72| any as number & string as true; // Error
                        ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:55:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:73:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -433,23 +448,23 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:55:1
-   55| any as number & string & {} as true; // Error: should not show the {} branch
+   errors_intersection.js:73:1
+   73| any as number & string & {} as true; // Error: should not show the {} branch
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:55:8
-   55| any as number & string & {} as true; // Error: should not show the {} branch
+   errors_intersection.js:73:8
+   73| any as number & string & {} as true; // Error: should not show the {} branch
               ^^^^^^ [1]
-   errors_intersection.js:55:32
-   55| any as number & string & {} as true; // Error: should not show the {} branch
+   errors_intersection.js:73:32
+   73| any as number & string & {} as true; // Error: should not show the {} branch
                                       ^^^^ [2]
-   errors_intersection.js:55:17
-   55| any as number & string & {} as true; // Error: should not show the {} branch
+   errors_intersection.js:73:17
+   73| any as number & string & {} as true; // Error: should not show the {} branch
                        ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:56:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:74:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -458,23 +473,23 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:56:1
-   56| any as {} & number & string as true; // Error: should not show the {} branch
+   errors_intersection.js:74:1
+   74| any as {} & number & string as true; // Error: should not show the {} branch
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:56:13
-   56| any as {} & number & string as true; // Error: should not show the {} branch
+   errors_intersection.js:74:13
+   74| any as {} & number & string as true; // Error: should not show the {} branch
                    ^^^^^^ [1]
-   errors_intersection.js:56:32
-   56| any as {} & number & string as true; // Error: should not show the {} branch
+   errors_intersection.js:74:32
+   74| any as {} & number & string as true; // Error: should not show the {} branch
                                       ^^^^ [2]
-   errors_intersection.js:56:22
-   56| any as {} & number & string as true; // Error: should not show the {} branch
+   errors_intersection.js:74:22
+   74| any as {} & number & string as true; // Error: should not show the {} branch
                             ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:57:1
+Error -------------------------------------------------------------------------------------- errors_intersection.js:75:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -483,194 +498,194 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:57:1
-   57| any as number & {} & string as true; // Error: should not show the {} branch
+   errors_intersection.js:75:1
+   75| any as number & {} & string as true; // Error: should not show the {} branch
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:57:8
-   57| any as number & {} & string as true; // Error: should not show the {} branch
-              ^^^^^^ [1]
-   errors_intersection.js:57:32
-   57| any as number & {} & string as true; // Error: should not show the {} branch
-                                      ^^^^ [2]
-   errors_intersection.js:57:22
-   57| any as number & {} & string as true; // Error: should not show the {} branch
-                            ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:59:8
-
-Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
-
-   errors_intersection.js:59:8
-   59| any as {+a: number & string} as {+a: true}; // Error
-              ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:59:13
-   59| any as {+a: number & string} as {+a: true}; // Error
-                   ^^^^^^ [1]
-   errors_intersection.js:59:38
-   59| any as {+a: number & string} as {+a: true}; // Error
-                                            ^^^^ [2]
-   errors_intersection.js:59:22
-   59| any as {+a: number & string} as {+a: true}; // Error
-                            ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:61:8
-
-Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
-
-   errors_intersection.js:61:8
-              v
-   61| any as {
-   62|   +a: number & string,
-   63|   +b: {} & number & string,
-   64|   +c: number & {} & string,
-   65|   +d: number & string & {},
-   66| } as {
-       ^
-
-References:
-   errors_intersection.js:62:7
-   62|   +a: number & string,
-             ^^^^^^ [1]
-   errors_intersection.js:67:7
-   67|   +a: true, // Error: should be grouped
-             ^^^^ [2]
-   errors_intersection.js:62:16
-   62|   +a: number & string,
-                      ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:61:8
-
-Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   errors_intersection.js:61:8
-              v
-   61| any as {
-   62|   +a: number & string,
-   63|   +b: {} & number & string,
-   64|   +c: number & {} & string,
-   65|   +d: number & string & {},
-   66| } as {
-       ^
-
-References:
-   errors_intersection.js:63:12
-   63|   +b: {} & number & string,
-                  ^^^^^^ [1]
-   errors_intersection.js:68:7
-   68|   +b: true, // Error: should be grouped, should not show the {} branch
-             ^^^^ [2]
-   errors_intersection.js:63:21
-   63|   +b: {} & number & string,
-                           ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:61:8
-
-Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   errors_intersection.js:61:8
-              v
-   61| any as {
-   62|   +a: number & string,
-   63|   +b: {} & number & string,
-   64|   +c: number & {} & string,
-   65|   +d: number & string & {},
-   66| } as {
-       ^
-
-References:
-   errors_intersection.js:64:7
-   64|   +c: number & {} & string,
-             ^^^^^^ [1]
-   errors_intersection.js:69:7
-   69|   +c: true, // Error: should be grouped, should not show the {} branch
-             ^^^^ [2]
-   errors_intersection.js:64:21
-   64|   +c: number & {} & string,
-                           ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:61:8
-
-Cannot cast `any` to object type because in property `d`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   errors_intersection.js:61:8
-              v
-   61| any as {
-   62|   +a: number & string,
-   63|   +b: {} & number & string,
-   64|   +c: number & {} & string,
-   65|   +d: number & string & {},
-   66| } as {
-       ^
-
-References:
-   errors_intersection.js:65:7
-   65|   +d: number & string & {},
-             ^^^^^^ [1]
-   errors_intersection.js:70:7
-   70|   +d: true, // Error: should be grouped, should not show the {} branch
-             ^^^^ [2]
-   errors_intersection.js:65:16
-   65|   +d: number & string & {},
-                      ^^^^^^ [3]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
-
-Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
- - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
-
-   errors_intersection.js:74:8
-              v
-   74| any as {
-   75|   +a: [number] & [string],
-   76|   +b: [{}] & [number] & [string],
-   77|   +c: [number] & [{}] & [string],
-   78|   +d: [number] & [string] & [{}],
-   79| } as {
-       ^
 
 References:
    errors_intersection.js:75:8
-   75|   +a: [number] & [string],
+   75| any as number & {} & string as true; // Error: should not show the {} branch
               ^^^^^^ [1]
-   errors_intersection.js:80:8
-   80|   +a: [true], // Error: should be grouped
-              ^^^^ [2]
-   errors_intersection.js:75:19
-   75|   +a: [number] & [string],
-                         ^^^^^^ [3]
+   errors_intersection.js:75:32
+   75| any as number & {} & string as true; // Error: should not show the {} branch
+                                      ^^^^ [2]
+   errors_intersection.js:75:22
+   75| any as number & {} & string as true; // Error: should not show the {} branch
+                            ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:77:8
+
+Cannot cast `any` to object type because in property `a`: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:77:8
+   77| any as {readonly a: number & string} as {readonly a: true}; // Error
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:77:21
+   77| any as {readonly a: number & string} as {readonly a: true}; // Error
+                           ^^^^^^ [1]
+   errors_intersection.js:77:54
+   77| any as {readonly a: number & string} as {readonly a: true}; // Error
+                                                            ^^^^ [2]
+   errors_intersection.js:77:30
+   77| any as {readonly a: number & string} as {readonly a: true}; // Error
+                                    ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
+
+Cannot cast `any` to object type because in property `a`: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:79:8
+              v
+   79| any as {
+   80|   readonly a: number & string,
+   81|   readonly b: {} & number & string,
+   82|   readonly c: number & {} & string,
+   83|   readonly d: number & string & {},
+   84| } as {
+       ^
+
+References:
+   errors_intersection.js:80:15
+   80|   readonly a: number & string,
+                     ^^^^^^ [1]
+   errors_intersection.js:85:15
+   85|   readonly a: true, // Error: should be grouped
+                     ^^^^ [2]
+   errors_intersection.js:80:24
+   80|   readonly a: number & string,
+                              ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
+
+Cannot cast `any` to object type because in property `b`: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   errors_intersection.js:79:8
+              v
+   79| any as {
+   80|   readonly a: number & string,
+   81|   readonly b: {} & number & string,
+   82|   readonly c: number & {} & string,
+   83|   readonly d: number & string & {},
+   84| } as {
+       ^
+
+References:
+   errors_intersection.js:81:20
+   81|   readonly b: {} & number & string,
+                          ^^^^^^ [1]
+   errors_intersection.js:86:15
+   86|   readonly b: true, // Error: should be grouped, should not show the {} branch
+                     ^^^^ [2]
+   errors_intersection.js:81:29
+   81|   readonly b: {} & number & string,
+                                   ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
+
+Cannot cast `any` to object type because in property `c`: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   errors_intersection.js:79:8
+              v
+   79| any as {
+   80|   readonly a: number & string,
+   81|   readonly b: {} & number & string,
+   82|   readonly c: number & {} & string,
+   83|   readonly d: number & string & {},
+   84| } as {
+       ^
+
+References:
+   errors_intersection.js:82:15
+   82|   readonly c: number & {} & string,
+                     ^^^^^^ [1]
+   errors_intersection.js:87:15
+   87|   readonly c: true, // Error: should be grouped, should not show the {} branch
+                     ^^^^ [2]
+   errors_intersection.js:82:29
+   82|   readonly c: number & {} & string,
+                                   ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
+
+Cannot cast `any` to object type because in property `d`: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   errors_intersection.js:79:8
+              v
+   79| any as {
+   80|   readonly a: number & string,
+   81|   readonly b: {} & number & string,
+   82|   readonly c: number & {} & string,
+   83|   readonly d: number & string & {},
+   84| } as {
+       ^
+
+References:
+   errors_intersection.js:83:15
+   83|   readonly d: number & string & {},
+                     ^^^^^^ [1]
+   errors_intersection.js:88:15
+   88|   readonly d: true, // Error: should be grouped, should not show the {} branch
+                     ^^^^ [2]
+   errors_intersection.js:83:24
+   83|   readonly d: number & string & {},
+                              ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
+
+Cannot cast `any` to object type because in property `a`: [incompatible-type]
+ - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:92:8
+              v
+   92| any as {
+   93|   readonly a: [number] & [string],
+   94|   readonly b: [{}] & [number] & [string],
+   95|   readonly c: [number] & [{}] & [string],
+   96|   readonly d: [number] & [string] & [{}],
+   97| } as {
+       ^
+
+References:
+   errors_intersection.js:93:16
+   93|   readonly a: [number] & [string],
+                      ^^^^^^ [1]
+   errors_intersection.js:98:16
+   98|   readonly a: [true], // Error: should be grouped
+                      ^^^^ [2]
+   errors_intersection.js:93:27
+   93|   readonly a: [number] & [string],
+                                 ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
  - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
@@ -679,29 +694,29 @@ Cannot cast `any` to object type because in property `b`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:74:8
+   errors_intersection.js:92:8
               v
-   74| any as {
-   75|   +a: [number] & [string],
-   76|   +b: [{}] & [number] & [string],
-   77|   +c: [number] & [{}] & [string],
-   78|   +d: [number] & [string] & [{}],
-   79| } as {
+   92| any as {
+   93|   readonly a: [number] & [string],
+   94|   readonly b: [{}] & [number] & [string],
+   95|   readonly c: [number] & [{}] & [string],
+   96|   readonly d: [number] & [string] & [{}],
+   97| } as {
        ^
 
 References:
-   errors_intersection.js:76:15
-   76|   +b: [{}] & [number] & [string],
-                     ^^^^^^ [1]
-   errors_intersection.js:81:8
-   81|   +b: [true], // Error: should be grouped, should not show the [{}] branch
-              ^^^^ [2]
-   errors_intersection.js:76:26
-   76|   +b: [{}] & [number] & [string],
-                                ^^^^^^ [3]
+   errors_intersection.js:94:23
+   94|   readonly b: [{}] & [number] & [string],
+                             ^^^^^^ [1]
+   errors_intersection.js:99:16
+   99|   readonly b: [true], // Error: should be grouped, should not show the [{}] branch
+                      ^^^^ [2]
+   errors_intersection.js:94:34
+   94|   readonly b: [{}] & [number] & [string],
+                                        ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
  - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
@@ -710,29 +725,29 @@ Cannot cast `any` to object type because in property `c`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:74:8
-              v
-   74| any as {
-   75|   +a: [number] & [string],
-   76|   +b: [{}] & [number] & [string],
-   77|   +c: [number] & [{}] & [string],
-   78|   +d: [number] & [string] & [{}],
-   79| } as {
-       ^
+   errors_intersection.js:92:8
+               v
+    92| any as {
+    93|   readonly a: [number] & [string],
+    94|   readonly b: [{}] & [number] & [string],
+    95|   readonly c: [number] & [{}] & [string],
+    96|   readonly d: [number] & [string] & [{}],
+    97| } as {
+        ^
 
 References:
-   errors_intersection.js:77:8
-   77|   +c: [number] & [{}] & [string],
-              ^^^^^^ [1]
-   errors_intersection.js:82:8
-   82|   +c: [true], // Error: should be grouped, should not show the [{}] branch
-              ^^^^ [2]
-   errors_intersection.js:77:26
-   77|   +c: [number] & [{}] & [string],
-                                ^^^^^^ [3]
+   errors_intersection.js:95:16
+    95|   readonly c: [number] & [{}] & [string],
+                       ^^^^^^ [1]
+   errors_intersection.js:100:16
+   100|   readonly c: [true], // Error: should be grouped, should not show the [{}] branch
+                       ^^^^ [2]
+   errors_intersection.js:95:34
+    95|   readonly c: [number] & [{}] & [string],
+                                         ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
+Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `d`: [incompatible-type]
  - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
@@ -741,110 +756,139 @@ Cannot cast `any` to object type because in property `d`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:74:8
-              v
-   74| any as {
-   75|   +a: [number] & [string],
-   76|   +b: [{}] & [number] & [string],
-   77|   +c: [number] & [{}] & [string],
-   78|   +d: [number] & [string] & [{}],
-   79| } as {
-       ^
+   errors_intersection.js:92:8
+               v
+    92| any as {
+    93|   readonly a: [number] & [string],
+    94|   readonly b: [{}] & [number] & [string],
+    95|   readonly c: [number] & [{}] & [string],
+    96|   readonly d: [number] & [string] & [{}],
+    97| } as {
+        ^
 
 References:
-   errors_intersection.js:78:8
-   78|   +d: [number] & [string] & [{}],
-              ^^^^^^ [1]
-   errors_intersection.js:83:8
-   83|   +d: [true], // Error: should be grouped, should not show the [{}] branch
-              ^^^^ [2]
-   errors_intersection.js:78:19
-   78|   +d: [number] & [string] & [{}],
-                         ^^^^^^ [3]
+   errors_intersection.js:96:16
+    96|   readonly d: [number] & [string] & [{}],
+                       ^^^^^^ [1]
+   errors_intersection.js:101:16
+   101|   readonly d: [true], // Error: should be grouped, should not show the [{}] branch
+                       ^^^^ [2]
+   errors_intersection.js:96:27
+    96|   readonly d: [number] & [string] & [{}],
+                                  ^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:86:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:104:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
  - Or string [3] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:86:1
-   86| any as number & (string & false) as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:104:1
+   104| any as number & (string & false) as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:86:8
-   86| any as number & (string & false) as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:86:37
-   86| any as number & (string & false) as true; // Error: should be flattened
-                                           ^^^^ [2]
-   errors_intersection.js:86:18
-   86| any as number & (string & false) as true; // Error: should be flattened
-                        ^^^^^^ [3]
-   errors_intersection.js:86:27
-   86| any as number & (string & false) as true; // Error: should be flattened
-                                 ^^^^^ [4]
+   errors_intersection.js:104:8
+   104| any as number & (string & false) as true; // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:104:37
+   104| any as number & (string & false) as true; // Error: should be flattened
+                                            ^^^^ [2]
+   errors_intersection.js:104:18
+   104| any as number & (string & false) as true; // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_intersection.js:104:27
+   104| any as number & (string & false) as true; // Error: should be flattened
+                                  ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:87:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:105:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either string [1] is incompatible with boolean literal `true` [2].
  - Or boolean literal `false` [3] is incompatible with boolean literal `true` [2].
  - Or number [4] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:87:1
-   87| any as (string & false) & number as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:105:1
+   105| any as (string & false) & number as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:87:9
-   87| any as (string & false) & number as true; // Error: should be flattened
+   errors_intersection.js:105:9
+   105| any as (string & false) & number as true; // Error: should be flattened
+                ^^^^^^ [1]
+   errors_intersection.js:105:37
+   105| any as (string & false) & number as true; // Error: should be flattened
+                                            ^^^^ [2]
+   errors_intersection.js:105:18
+   105| any as (string & false) & number as true; // Error: should be flattened
+                         ^^^^^ [3]
+   errors_intersection.js:105:27
+   105| any as (string & false) & number as true; // Error: should be flattened
+                                  ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
+
+Cannot cast `any` to boolean literal `true` because: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   errors_intersection.js:106:1
+   106| any as {} & number & (string & false) as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:106:13
+   106| any as {} & number & (string & false) as true; // Error: should be flattened
+                    ^^^^^^ [1]
+   errors_intersection.js:106:42
+   106| any as {} & number & (string & false) as true; // Error: should be flattened
+                                                 ^^^^ [2]
+   errors_intersection.js:106:23
+   106| any as {} & number & (string & false) as true; // Error: should be flattened
+                              ^^^^^^ [3]
+   errors_intersection.js:106:32
+   106| any as {} & number & (string & false) as true; // Error: should be flattened
+                                       ^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:107:1
+
+Cannot cast `any` to boolean literal `true` because: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or string [3] is incompatible with boolean literal `true` [2].
+ - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   errors_intersection.js:107:1
+   107| any as number & (string & false) & {} as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:107:8
+   107| any as number & (string & false) & {} as true; // Error: should be flattened
                ^^^^^^ [1]
-   errors_intersection.js:87:37
-   87| any as (string & false) & number as true; // Error: should be flattened
-                                           ^^^^ [2]
-   errors_intersection.js:87:18
-   87| any as (string & false) & number as true; // Error: should be flattened
-                        ^^^^^ [3]
-   errors_intersection.js:87:27
-   87| any as (string & false) & number as true; // Error: should be flattened
-                                 ^^^^^^ [4]
+   errors_intersection.js:107:42
+   107| any as number & (string & false) & {} as true; // Error: should be flattened
+                                                 ^^^^ [2]
+   errors_intersection.js:107:18
+   107| any as number & (string & false) & {} as true; // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_intersection.js:107:27
+   107| any as number & (string & false) & {} as true; // Error: should be flattened
+                                  ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:88:1
-
-Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   errors_intersection.js:88:1
-   88| any as {} & number & (string & false) as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:88:13
-   88| any as {} & number & (string & false) as true; // Error: should be flattened
-                   ^^^^^^ [1]
-   errors_intersection.js:88:42
-   88| any as {} & number & (string & false) as true; // Error: should be flattened
-                                                ^^^^ [2]
-   errors_intersection.js:88:23
-   88| any as {} & number & (string & false) as true; // Error: should be flattened
-                             ^^^^^^ [3]
-   errors_intersection.js:88:32
-   88| any as {} & number & (string & false) as true; // Error: should be flattened
-                                      ^^^^^ [4]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:89:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:108:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -854,55 +898,26 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:89:1
-   89| any as number & (string & false) & {} as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:108:1
+   108| any as number & (string & {} & false) as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:89:8
-   89| any as number & (string & false) & {} as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:89:42
-   89| any as number & (string & false) & {} as true; // Error: should be flattened
-                                                ^^^^ [2]
-   errors_intersection.js:89:18
-   89| any as number & (string & false) & {} as true; // Error: should be flattened
-                        ^^^^^^ [3]
-   errors_intersection.js:89:27
-   89| any as number & (string & false) & {} as true; // Error: should be flattened
-                                 ^^^^^ [4]
+   errors_intersection.js:108:8
+   108| any as number & (string & {} & false) as true; // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:108:42
+   108| any as number & (string & {} & false) as true; // Error: should be flattened
+                                                 ^^^^ [2]
+   errors_intersection.js:108:18
+   108| any as number & (string & {} & false) as true; // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_intersection.js:108:32
+   108| any as number & (string & {} & false) as true; // Error: should be flattened
+                                       ^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:90:1
-
-Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   errors_intersection.js:90:1
-   90| any as number & (string & {} & false) as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:90:8
-   90| any as number & (string & {} & false) as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:90:42
-   90| any as number & (string & {} & false) as true; // Error: should be flattened
-                                                ^^^^ [2]
-   errors_intersection.js:90:18
-   90| any as number & (string & {} & false) as true; // Error: should be flattened
-                        ^^^^^^ [3]
-   errors_intersection.js:90:32
-   90| any as number & (string & {} & false) as true; // Error: should be flattened
-                                      ^^^^^ [4]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:92:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:110:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -910,59 +925,29 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or string [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:92:1
-   92| any as number & number & number & string as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:110:1
+   110| any as number & number & number & string as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:92:8
-   92| any as number & number & number & string as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:92:45
-   92| any as number & number & number & string as true; // Error: should be flattened
-                                                   ^^^^ [2]
-   errors_intersection.js:92:17
-   92| any as number & number & number & string as true; // Error: should be flattened
-                       ^^^^^^ [3]
-   errors_intersection.js:92:26
-   92| any as number & number & number & string as true; // Error: should be flattened
-                                ^^^^^^ [4]
-   errors_intersection.js:92:35
-   92| any as number & number & number & string as true; // Error: should be flattened
-                                         ^^^^^^ [5]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:93:1
-
-Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or string [5] is incompatible with boolean literal `true` [2].
-
-   errors_intersection.js:93:1
-   93| any as number & number & (number & string) as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:93:8
-   93| any as number & number & (number & string) as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:93:47
-   93| any as number & number & (number & string) as true; // Error: should be flattened
-                                                     ^^^^ [2]
-   errors_intersection.js:93:17
-   93| any as number & number & (number & string) as true; // Error: should be flattened
-                       ^^^^^^ [3]
-   errors_intersection.js:93:27
-   93| any as number & number & (number & string) as true; // Error: should be flattened
+   errors_intersection.js:110:8
+   110| any as number & number & number & string as true; // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:110:45
+   110| any as number & number & number & string as true; // Error: should be flattened
+                                                    ^^^^ [2]
+   errors_intersection.js:110:17
+   110| any as number & number & number & string as true; // Error: should be flattened
+                        ^^^^^^ [3]
+   errors_intersection.js:110:26
+   110| any as number & number & number & string as true; // Error: should be flattened
                                  ^^^^^^ [4]
-   errors_intersection.js:93:36
-   93| any as number & number & (number & string) as true; // Error: should be flattened
+   errors_intersection.js:110:35
+   110| any as number & number & number & string as true; // Error: should be flattened
                                           ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:94:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:111:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -970,59 +955,59 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or string [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:94:1
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:111:1
+   111| any as number & number & (number & string) as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:94:8
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-              ^^^^^^ [1]
-   errors_intersection.js:94:49
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-                                                       ^^^^ [2]
-   errors_intersection.js:94:18
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-                        ^^^^^^ [3]
-   errors_intersection.js:94:28
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-                                  ^^^^^^ [4]
-   errors_intersection.js:94:37
-   94| any as number & (number & (number & string)) as true; // Error: should be flattened
-                                           ^^^^^^ [5]
-
-
-Error -------------------------------------------------------------------------------------- errors_intersection.js:95:1
-
-Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either string [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or number [5] is incompatible with boolean literal `true` [2].
-
-   errors_intersection.js:95:1
-   95| any as (string & number) & number & number as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   errors_intersection.js:95:9
-   95| any as (string & number) & number & number as true; // Error: should be flattened
+   errors_intersection.js:111:8
+   111| any as number & number & (number & string) as true; // Error: should be flattened
                ^^^^^^ [1]
-   errors_intersection.js:95:47
-   95| any as (string & number) & number & number as true; // Error: should be flattened
-                                                     ^^^^ [2]
-   errors_intersection.js:95:18
-   95| any as (string & number) & number & number as true; // Error: should be flattened
+   errors_intersection.js:111:47
+   111| any as number & number & (number & string) as true; // Error: should be flattened
+                                                      ^^^^ [2]
+   errors_intersection.js:111:17
+   111| any as number & number & (number & string) as true; // Error: should be flattened
                         ^^^^^^ [3]
-   errors_intersection.js:95:28
-   95| any as (string & number) & number & number as true; // Error: should be flattened
+   errors_intersection.js:111:27
+   111| any as number & number & (number & string) as true; // Error: should be flattened
                                   ^^^^^^ [4]
-   errors_intersection.js:95:37
-   95| any as (string & number) & number & number as true; // Error: should be flattened
+   errors_intersection.js:111:36
+   111| any as number & number & (number & string) as true; // Error: should be flattened
                                            ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:96:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:112:1
+
+Cannot cast `any` to boolean literal `true` because: [incompatible-type]
+ - Either number [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or string [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:112:1
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:112:8
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+               ^^^^^^ [1]
+   errors_intersection.js:112:49
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+                                                        ^^^^ [2]
+   errors_intersection.js:112:18
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+                         ^^^^^^ [3]
+   errors_intersection.js:112:28
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+                                   ^^^^^^ [4]
+   errors_intersection.js:112:37
+   112| any as number & (number & (number & string)) as true; // Error: should be flattened
+                                            ^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:113:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either string [1] is incompatible with boolean literal `true` [2].
@@ -1030,29 +1015,59 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Or number [4] is incompatible with boolean literal `true` [2].
  - Or number [5] is incompatible with boolean literal `true` [2].
 
-   errors_intersection.js:96:1
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:113:1
+   113| any as (string & number) & number & number as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:96:10
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
+   errors_intersection.js:113:9
+   113| any as (string & number) & number & number as true; // Error: should be flattened
                 ^^^^^^ [1]
-   errors_intersection.js:96:49
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
-                                                       ^^^^ [2]
-   errors_intersection.js:96:19
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
+   errors_intersection.js:113:47
+   113| any as (string & number) & number & number as true; // Error: should be flattened
+                                                      ^^^^ [2]
+   errors_intersection.js:113:18
+   113| any as (string & number) & number & number as true; // Error: should be flattened
                          ^^^^^^ [3]
-   errors_intersection.js:96:29
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
+   errors_intersection.js:113:28
+   113| any as (string & number) & number & number as true; // Error: should be flattened
                                    ^^^^^^ [4]
-   errors_intersection.js:96:39
-   96| any as ((string & number) & number) & number as true; // Error: should be flattened
-                                             ^^^^^^ [5]
+   errors_intersection.js:113:37
+   113| any as (string & number) & number & number as true; // Error: should be flattened
+                                            ^^^^^^ [5]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:98:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:114:1
+
+Cannot cast `any` to boolean literal `true` because: [incompatible-type]
+ - Either string [1] is incompatible with boolean literal `true` [2].
+ - Or number [3] is incompatible with boolean literal `true` [2].
+ - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or number [5] is incompatible with boolean literal `true` [2].
+
+   errors_intersection.js:114:1
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   errors_intersection.js:114:10
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+                 ^^^^^^ [1]
+   errors_intersection.js:114:49
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+                                                        ^^^^ [2]
+   errors_intersection.js:114:19
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+                          ^^^^^^ [3]
+   errors_intersection.js:114:29
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+                                    ^^^^^^ [4]
+   errors_intersection.js:114:39
+   114| any as ((string & number) & number) & number as true; // Error: should be flattened
+                                              ^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------- errors_intersection.js:116:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -1061,23 +1076,23 @@ Cannot cast `any` to boolean literal `true` because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:98:1
-   98| any as number & {} as true; // Error
-       ^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:116:1
+   116| any as number & {} as true; // Error
+        ^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:98:8
-   98| any as number & {} as true; // Error
-              ^^^^^^ [1]
-   errors_intersection.js:98:23
-   98| any as number & {} as true; // Error
-                             ^^^^ [2]
-   errors_intersection.js:98:17
-   98| any as number & {} as true; // Error
-                       ^^ [3]
+   errors_intersection.js:116:8
+   116| any as number & {} as true; // Error
+               ^^^^^^ [1]
+   errors_intersection.js:116:23
+   116| any as number & {} as true; // Error
+                              ^^^^ [2]
+   errors_intersection.js:116:17
+   116| any as number & {} as true; // Error
+                        ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:99:8
+Error ------------------------------------------------------------------------------------- errors_intersection.js:117:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -1086,23 +1101,23 @@ Cannot cast `any` to object type because in property `a`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:99:8
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:117:8
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:99:13
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                   ^^^^^^ [1]
-   errors_intersection.js:99:51
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                                         ^^^^ [2]
-   errors_intersection.js:99:22
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                            ^^ [3]
+   errors_intersection.js:117:21
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+                            ^^^^^^ [1]
+   errors_intersection.js:118:15
+   118|   readonly a: true,
+                      ^^^^ [2]
+   errors_intersection.js:117:30
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+                                     ^^ [3]
 
 
-Error -------------------------------------------------------------------------------------- errors_intersection.js:99:8
+Error ------------------------------------------------------------------------------------- errors_intersection.js:117:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -1111,23 +1126,23 @@ Cannot cast `any` to object type because in property `b`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:99:8
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:117:8
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:99:30
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                    ^^^^^^ [1]
-   errors_intersection.js:99:61
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                                                   ^^^^ [2]
-   errors_intersection.js:99:39
-   99| any as {+a: number & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                             ^^ [3]
+   errors_intersection.js:117:46
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+                                                     ^^^^^^ [1]
+   errors_intersection.js:119:15
+   119|   readonly b: true,
+                      ^^^^ [2]
+   errors_intersection.js:117:55
+   117| any as {readonly a: number & {}, readonly b: number & {}} as {
+                                                              ^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:100:8
+Error ------------------------------------------------------------------------------------- errors_intersection.js:121:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -1136,23 +1151,23 @@ Cannot cast `any` to object type because in property `a`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:100:8
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:121:8
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:100:13
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                    ^^^^^^ [1]
-   errors_intersection.js:100:60
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                                                   ^^^^ [2]
-   errors_intersection.js:100:22
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                             ^^^^^^ [3]
+   errors_intersection.js:121:21
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+                            ^^^^^^ [1]
+   errors_intersection.js:122:15
+   122|   readonly a: true,
+                      ^^^^ [2]
+   errors_intersection.js:121:30
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+                                     ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:100:8
+Error ------------------------------------------------------------------------------------- errors_intersection.js:121:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
  - Either number [1] is incompatible with boolean literal `true` [2].
@@ -1161,23 +1176,23 @@ Cannot cast `any` to object type because in property `b`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:100:8
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   errors_intersection.js:121:8
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:100:39
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                              ^^^^^^ [1]
-   errors_intersection.js:100:70
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                                                             ^^^^ [2]
-   errors_intersection.js:100:48
-   100| any as {+a: number & string & {}, +b: number & {}} as {+a: true, +b: true}; // Error
-                                                       ^^ [3]
+   errors_intersection.js:121:55
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+                                                              ^^^^^^ [1]
+   errors_intersection.js:123:15
+   123|   readonly b: true,
+                      ^^^^ [2]
+   errors_intersection.js:121:64
+   121| any as {readonly a: number & string & {}, readonly b: number & {}} as {
+                                                                       ^^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:103:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:127:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
  - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
@@ -1185,29 +1200,29 @@ Cannot cast `any` to tuple type because: [incompatible-type]
  - Or in index `0` > index `1`: `C` [4] is incompatible with number [2].
  - Or in index `0` > index `1`: `D` [5] is incompatible with number [2].
 
-   errors_intersection.js:103:1
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:1
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:103:16
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:16
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
                        ^ [1]
-   errors_intersection.js:103:69
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:69
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
                                                                             ^^^^^^ [2]
-   errors_intersection.js:103:28
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:28
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
                                    ^ [3]
-   errors_intersection.js:103:42
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:42
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
                                                  ^ [4]
-   errors_intersection.js:103:54
-   103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:127:54
+   127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
                                                              ^ [5]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:130:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
  - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
@@ -1217,26 +1232,26 @@ Cannot cast `any` to tuple type because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:106:1
-   106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:130:1
+   130| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:106:16
-   106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:130:16
+   130| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
                        ^ [1]
-   errors_intersection.js:106:62
-   106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:130:62
+   130| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
                                                                      ^^^^^^ [2]
-   errors_intersection.js:106:35
-   106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:130:35
+   130| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
                                           ^ [3]
-   errors_intersection.js:106:47
-   106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
+   errors_intersection.js:130:47
+   130| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
                                                       ^ [4]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:109:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:133:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
  - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
@@ -1245,23 +1260,23 @@ Cannot cast `any` to tuple type because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:109:1
-   109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:133:1
+   133| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:109:16
-   109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:133:16
+   133| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
                        ^ [1]
-   errors_intersection.js:109:55
-   109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:133:55
+   133| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
                                                               ^^^^^^ [2]
-   errors_intersection.js:109:35
-   109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:133:35
+   133| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
                                           ^ [3]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:112:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:136:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
  - Either in index `0` > index `1`: `C` [1] is incompatible with number [2].
@@ -1270,148 +1285,148 @@ Cannot cast `any` to tuple type because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   errors_intersection.js:112:1
-   112| any as {} & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:136:1
+   136| any as {} & [[null, C] & {}] as [[null, number]];
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   errors_intersection.js:112:21
-   112| any as {} & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:136:21
+   136| any as {} & [[null, C] & {}] as [[null, number]];
                             ^ [1]
-   errors_intersection.js:112:41
-   112| any as {} & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:136:41
+   136| any as {} & [[null, C] & {}] as [[null, number]];
                                                 ^^^^^^ [2]
-   errors_intersection.js:112:26
-   112| any as {} & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:136:26
+   136| any as {} & [[null, C] & {}] as [[null, number]];
                                  ^^ [3]
-   errors_intersection.js:112:34
-   112| any as {} & [[null, C] & {}] as [[null, number]];
+   errors_intersection.js:136:34
+   136| any as {} & [[null, C] & {}] as [[null, number]];
                                          ^^^^^^^^^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:115:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:139:1
 
 Cannot call `f1` because `A` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:115:1
-   115| f1(); // Error
+   errors_intersection.js:139:1
+   139| f1(); // Error
         ^^
 
 References:
-   errors_intersection.js:114:19
-   114| declare const f1: A | B;
+   errors_intersection.js:138:19
+   138| declare const f1: A | B;
                           ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:115:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:139:1
 
 Cannot call `f1` because `B` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:115:1
-   115| f1(); // Error
+   errors_intersection.js:139:1
+   139| f1(); // Error
         ^^
 
 References:
-   errors_intersection.js:114:23
-   114| declare const f1: A | B;
+   errors_intersection.js:138:23
+   138| declare const f1: A | B;
                               ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:142:1
 
 Cannot call `f2` because `A` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:118:1
-   118| f2(); // Error
+   errors_intersection.js:142:1
+   142| f2(); // Error
         ^^
 
 References:
-   errors_intersection.js:117:19
-   117| declare const f2: A | (B | C);
+   errors_intersection.js:141:19
+   141| declare const f2: A | (B | C);
                           ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:142:1
 
 Cannot call `f2` because `B` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:118:1
-   118| f2(); // Error
+   errors_intersection.js:142:1
+   142| f2(); // Error
         ^^
 
 References:
-   errors_intersection.js:117:24
-   117| declare const f2: A | (B | C);
+   errors_intersection.js:141:24
+   141| declare const f2: A | (B | C);
                                ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:118:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:142:1
 
 Cannot call `f2` because `C` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:118:1
-   118| f2(); // Error
+   errors_intersection.js:142:1
+   142| f2(); // Error
         ^^
 
 References:
-   errors_intersection.js:117:28
-   117| declare const f2: A | (B | C);
+   errors_intersection.js:141:28
+   141| declare const f2: A | (B | C);
                                    ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:145:1
 
 Cannot call `f3` because `A` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:121:1
-   121| f3(); // Error
+   errors_intersection.js:145:1
+   145| f3(); // Error
         ^^
 
 References:
-   errors_intersection.js:120:19
-   120| declare const f3: A | (B | (C | D));
+   errors_intersection.js:144:19
+   144| declare const f3: A | (B | (C | D));
                           ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:145:1
 
 Cannot call `f3` because `B` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:121:1
-   121| f3(); // Error
+   errors_intersection.js:145:1
+   145| f3(); // Error
         ^^
 
 References:
-   errors_intersection.js:120:24
-   120| declare const f3: A | (B | (C | D));
+   errors_intersection.js:144:24
+   144| declare const f3: A | (B | (C | D));
                                ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:145:1
 
 Cannot call `f3` because `C` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:121:1
-   121| f3(); // Error
+   errors_intersection.js:145:1
+   145| f3(); // Error
         ^^
 
 References:
-   errors_intersection.js:120:29
-   120| declare const f3: A | (B | (C | D));
+   errors_intersection.js:144:29
+   144| declare const f3: A | (B | (C | D));
                                     ^ [1]
 
 
-Error ------------------------------------------------------------------------------------- errors_intersection.js:121:1
+Error ------------------------------------------------------------------------------------- errors_intersection.js:145:1
 
 Cannot call `f3` because `D` [1] is not a function. [not-a-function]
 
-   errors_intersection.js:121:1
-   121| f3(); // Error
+   errors_intersection.js:145:1
+   145| f3(); // Error
         ^^
 
 References:
-   errors_intersection.js:120:33
-   120| declare const f3: A | (B | (C | D));
+   errors_intersection.js:144:33
+   144| declare const f3: A | (B | (C | D));
                                         ^ [1]
 
 

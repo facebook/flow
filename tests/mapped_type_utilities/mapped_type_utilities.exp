@@ -143,8 +143,8 @@ Cannot cast `x` to object type because property `foo` is read-only in `Omit` [1]
 
 References:
    omit.js:52:20
-   52|   declare const x: Omit<{+foo: 1, bar: 2}, 'bar'>;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   52|   declare const x: Omit<{readonly foo: 1, bar: 2}, 'bar'>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    omit.js:54:8
    54|   x as {foo: 1}; // ERROR
               ^^^^^^^^ [2]
@@ -290,9 +290,9 @@ Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with 
       ^^^^^^^^^^^^
 
 References:
-   pick.js:1:32
-   1| type O1 = {+foo: number, bar?: string};
-                                     ^^^^^^ [1]
+   pick.js:1:40
+   1| type O1 = {readonly foo: number, bar?: string};
+                                             ^^^^^^ [1]
    pick.js:9:17
    9| pickedO1.bar as string; // ERROR bar is optional
                       ^^^^^^ [2]

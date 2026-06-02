@@ -122,11 +122,11 @@ References:
          v-----------
    15|   constructor(
    16|     value: {
-   17|       +foo: Map<string, number>,
-   18|       +bar: string,
-   19|       +baz?: ?Immutable.List<string>,
-   20|       +qux: T,
-   21|       +fn?: ?GenericFn,
+   17|       readonly foo: Map<string, number>,
+   18|       readonly bar: string,
+   19|       readonly baz?: ?Immutable.List<string>,
+   20|       readonly qux: T,
+   21|       readonly fn?: ?GenericFn,
    22|       ...
    23|     },
    24|   ): void;

@@ -5,21 +5,21 @@ function test_basic() {
   2 as typeof x1; // error 2 ~> 1
 
   const x2 = f({ a: 1, b: "c", d: ["e", 2, true, { f: "g" }] });
-  x2 as {+a: 1, +b: "c", +d: Readonly<["e", 2, true, {+f: "g"}]>}; // okay
+  x2 as {readonly a: 1, readonly b: "c", readonly d: Readonly<["e", 2, true, {readonly f: "g"}]>}; // okay
 
   const x3 = f({f: 1});
-  x3 as {+f: 1}; // okay
+  x3 as {readonly f: 1}; // okay
   x3 as {f: 1}; // error -f ~> f, x3 should not have a lit reason
 
   function f2<const T>(x: T): T {
     return x;
   }
   const x4 = f2({f: 1});
-  x4 as {+f: 1}; // okay
+  x4 as {readonly f: 1}; // okay
 
   const arrow = <const X>(x: X): X => x;
   const x5 = arrow({f: 1});
-  x5 as {+f: 1}; // okay
+  x5 as {readonly f: 1}; // okay
 }
 
 function test_complex_input() {
@@ -40,12 +40,12 @@ function test_tparam_deeper_in_type() {
   type A<T> = Readonly<{f: {g: T}}>;
   declare function f1<const X>(x: A<X>): X;
   const x1 = f1({f: {g: {h: 1}}});
-  x1 as {+h: 1}; // okay
+  x1 as {readonly h: 1}; // okay
   x1 as {h: 1}; // error +h ~> h
 
   declare function f2<const X>(x: () => X): X;
   const x2 = f2(() => ({f: 1}));
-  x2 as {+f: 1}; // okay
+  x2 as {readonly f: 1}; // okay
   x2 as {f: 1}; // error +f ~> f
 }
 
@@ -65,10 +65,10 @@ function test_class() {
 
   declare const c: C<{f:number}>;
   const x1 = c.m({f:1})
-  x1 as {+f:1}; // error number ~> 1, const has no effect
+  x1 as {readonly f:1}; // error number ~> 1, const has no effect
 
   const x2 = c.n({f:1})
-  x2 as {+f:1}; // okay
+  x2 as {readonly f:1}; // okay
 }
 
 function test_singletons_are_annot_like() {
@@ -84,8 +84,8 @@ function test_reference() {
 
   const obj1 = {a: 1}; // infers {a:number}
   const x1 = f(obj1); // does not change type of obj
-  x1 as {+a: 1}; // error number ~> 1
-  x1 as {+a: number}; // okay
+  x1 as {readonly a: 1}; // error number ~> 1
+  x1 as {readonly a: number}; // okay
   x1 as {a:number}; // okay x is not readonly
 
   const a = 2;

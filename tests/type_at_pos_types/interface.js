@@ -7,9 +7,9 @@ type I1 = interface {};
 //   ^?
 type I2 = interface { (): number };
 //   ^?
-type I3 = interface { +[my_key: string]: number };
+type I3 = interface { readonly [my_key: string]: number };
 //   ^?
-type I4 = interface { -[my_key: string]: number };
+type I4 = interface { writeonly [my_key: string]: number };
 //   ^?
 type I5 = interface { [my_key: string]: number };
 //   ^?

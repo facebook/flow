@@ -10,11 +10,11 @@ export class Visitor {
       }
     }
 
-    +block = (node: Ast.BlockStatement | Ast.StaticBlock): void => {
+    readonly block = (node: Ast.BlockStatement | Ast.StaticBlock): void => {
       node.body.forEach(stmt => this.statement(stmt));
     };
 
-    +statement = (stmt: Ast.Statement | Ast.ModuleDeclaration): void => {
+    readonly statement = (stmt: Ast.Statement | Ast.ModuleDeclaration): void => {
       match (stmt) {
         {type: 'BlockStatement', ...} as stmt => {
           this.block(stmt);
@@ -195,7 +195,7 @@ export class Visitor {
       this.identifier(specifier.exported);
       this.identifier(specifier.local);
     }
-    +expression = (expr: Ast.Expression): void => {
+    readonly expression = (expr: Ast.Expression): void => {
       match (expr) {
         {type: 'ThisExpression', ...} as expr => {
           this.thisExpression(expr);
@@ -394,13 +394,13 @@ export class Visitor {
       this.expression(expr.right);
     }
 
-    +bindingIdentifier = (id: Ast.Identifier) => {};
+    readonly bindingIdentifier = (id: Ast.Identifier) => {};
 
     bindingMemberExpression(expr: Ast.MemberExpression): void {
       this.memberExpression(expr);
     }
 
-    +bindingPattern = (pat: Ast.BindingName): void => {
+    readonly bindingPattern = (pat: Ast.BindingName): void => {
       this.optional(this.typeAnnotation, pat.typeAnnotation?.typeAnnotation);
       match (pat) {
         {type: 'Identifier', ...} as pat => {
@@ -597,7 +597,7 @@ export class Visitor {
       this.identifier(expr.meta);
     }
 
-    +identifier = (expr: Ast.Identifier): void => {};
+    readonly identifier = (expr: Ast.Identifier): void => {};
 
     awaitExpression(expr: Ast.AwaitExpression): void {
       this.expression(expr.argument);
@@ -702,7 +702,7 @@ export class Visitor {
       this.expression(pat.property);
     }
 
-    +matchBindingPattern = (pat: Ast.MatchBindingPattern) => {
+    readonly matchBindingPattern = (pat: Ast.MatchBindingPattern) => {
       this.bindingIdentifier(pat.id);
     };
 
@@ -723,7 +723,7 @@ export class Visitor {
       this.optional(this.matchRestPattern, pat.rest);
     }
 
-    +matchRestPattern = (pat: Ast.MatchRestPattern): void => {
+    readonly matchRestPattern = (pat: Ast.MatchRestPattern): void => {
       this.optional(this.matchBindingPattern, pat.argument);
     };
 
@@ -897,7 +897,7 @@ export class Visitor {
       this.expression(stmt.argument);
     }
 
-    +label = (id: Ast.Identifier): void => {};
+    readonly label = (id: Ast.Identifier): void => {};
 
     breakStatement(stmt: Ast.BreakStatement): void {
       this.optional(this.label, stmt.label);
@@ -1165,7 +1165,7 @@ export class Visitor {
         this.block(caseStmt.body);
       });
     }
-    +typeAnnotation = (typeAnnotation: Ast.TypeAnnotationType): void => {
+    readonly typeAnnotation = (typeAnnotation: Ast.TypeAnnotationType): void => {
       match (typeAnnotation) {
         {type: 'NumberTypeAnnotation', ...} as type => {
         }
@@ -1445,12 +1445,12 @@ export class Visitor {
       this.typeAnnotation(slot.value.typeAnnotation);
     }
 
-    +functionTypeParam = (param: Ast.FunctionTypeParam): void => {
+    readonly functionTypeParam = (param: Ast.FunctionTypeParam): void => {
       this.optional(this.bindingIdentifier, param.name);
       this.typeAnnotation(param.typeAnnotation);
     };
 
-    +componentTypeParam = (param: Ast.ComponentTypeParameter): void => {
+    readonly componentTypeParam = (param: Ast.ComponentTypeParameter): void => {
       if (param.name?.type === 'Identifier') {
         this.bindingIdentifier(param.name);
       }
@@ -1462,11 +1462,11 @@ export class Visitor {
       this.optional(this.typeArguments, ext.typeParameters);
     }
 
-    +typeParameters = (params: Ast.TypeParameterDeclaration): void => {
+    readonly typeParameters = (params: Ast.TypeParameterDeclaration): void => {
       params.params.forEach(param => this.typeParameter(param));
     };
 
-    +typeArguments = (params: Ast.TypeParameterInstantiation): void => {
+    readonly typeArguments = (params: Ast.TypeParameterInstantiation): void => {
       params.params.forEach(param => this.typeAnnotation(param));
     };
 
@@ -1475,7 +1475,7 @@ export class Visitor {
       this.optional(this.typeAnnotation, param.default);
     }
 
-    +rendersType = (type: Ast.RendersType): void => {
+    readonly rendersType = (type: Ast.RendersType): void => {
       this.typeAnnotation(type.typeAnnotation);
     };
   }

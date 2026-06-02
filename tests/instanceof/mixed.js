@@ -13,7 +13,7 @@ function bar(x: unknown) {
   }
 }
 
-class PA<+X> { }
+class PA<out X> { }
 class PB<X> extends PA<X> { }
 function baz(x: unknown) {
   if (x instanceof PB) {

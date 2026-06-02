@@ -31,9 +31,9 @@ export type $RelayProps<Props, _RelayPropT = RelayProp> = MapRelayProps<
 type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
 // prettier-ignore
 type MapRelayProp<T> = T extends null | void ? T
-  : T extends {+__typeof: infer V extends FragmentTypeof, ...}
-    ? {+__fragments: FragmentReference<V>, ...}
-    : T extends ReadonlyArray<?{+__typeof: FragmentTypeof, ...}>
+  : T extends {readonly __typeof: infer V extends FragmentTypeof, ...}
+    ? {readonly __fragments: FragmentReference<V>, ...}
+    : T extends ReadonlyArray<?{readonly __typeof: FragmentTypeof, ...}>
       ? ReadonlyArray<MapRelayProp<T[number]>> : T;
 
 declare function createFragmentContainer<Props extends {...}>(
@@ -47,14 +47,14 @@ declare function createFragmentContainer<Props extends {...}>(
 
 declare export opaque type RelayModernTypedFlowtest_user$reference: FragmentTypeof;
 export type RelayModernTypedFlowtest_user = {
-  +__typeof: RelayModernTypedFlowtest_user$reference,
-  +name: ?string,
+  readonly __typeof: RelayModernTypedFlowtest_user$reference,
+  readonly name: ?string,
 };
 
 declare export opaque type RelayModernTypedFlowtest_users$reference: FragmentTypeof;
 export type RelayModernTypedFlowtest_users = ReadonlyArray<{
-  +__typeof: RelayModernTypedFlowtest_users$reference,
-  +name: ?string,
+  readonly __typeof: RelayModernTypedFlowtest_users$reference,
+  readonly name: ?string,
 }>;
 
 /*********************************
@@ -86,22 +86,22 @@ const PluralTest = createFragmentContainer(
 );
 
 declare const aUserRef: {
-  +__fragments: FragmentReference<RelayModernTypedFlowtest_user$reference>,
+  readonly __fragments: FragmentReference<RelayModernTypedFlowtest_user$reference>,
   ...
 };
 
 declare const oneOfUsersRef: {
-  +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
+  readonly __fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
   ...
 };
 
 declare const usersRef: ReadonlyArray<{
-  +__fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
+  readonly __fragments: FragmentReference<RelayModernTypedFlowtest_users$reference>,
   ...
 }>;
 
 declare const nonUserRef: {
-  +__fragments: BadFragmentReference<{thing: true, ...}>,
+  readonly __fragments: BadFragmentReference<{thing: true, ...}>,
   ...
 };
 

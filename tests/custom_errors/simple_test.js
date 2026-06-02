@@ -235,9 +235,9 @@ const treeTest3: Tree<string> = 42; // Error: Should show custom error
  * @description custom desc
  * @example {value: 42, label: 'answer'}
  */
-type ReadOnlyBox<+T> = {
-  +value: T,
-  +label: string,
+type ReadOnlyBox<out T> = {
+  readonly value: T,
+  readonly label: string,
 };
 
 const roBoxTest1: ReadOnlyBox<number> = { value: 42, label: "readonly" }; // OK

@@ -35,7 +35,7 @@ function nonMaybe(
 
 function array_filter() {
 
-  declare class ReadOnlyArray_<+T> {
+  declare class ReadOnlyArray_<out T> {
     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => value is S, thisArg?: This): Array<S>;
     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;
@@ -238,7 +238,7 @@ function one_sided(
     value as number; // error string ~> number
   }
 
-  declare class ReadOnlyArray_<+T> {
+  declare class ReadOnlyArray_<out T> {
     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg : This): Array<T>;

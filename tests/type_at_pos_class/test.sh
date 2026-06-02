@@ -102,8 +102,8 @@ assert_ok "$FLOW" type-at-pos class-statics.js 16 5 --strip-root --pretty
 printf "class-statics.js:17:5 = "
 assert_ok "$FLOW" type-at-pos class-statics.js 17 5 --strip-root --pretty
 # NOTE here Flow infers 'this', even though this is a static member
-printf "class-statics.js:20:11 = "
-assert_ok "$FLOW" type-at-pos class-statics.js 20 11 --strip-root --pretty
+printf "class-statics.js:20:19 = "
+assert_ok "$FLOW" type-at-pos class-statics.js 20 19 --strip-root --pretty
 
 # class-statics-poly.js
 printf "class-statics-poly.js:4:10 = "

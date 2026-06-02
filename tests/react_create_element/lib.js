@@ -3,7 +3,7 @@ type PropsFromPropsArgAndChildrenArg<
   ChildrenArg extends ReadonlyArray<unknown>,
 > = ChildrenArg extends []
   ? PropsArg
-  : ChildrenArg extends [+onlyChild: infer OnlyChild]
+  : ChildrenArg extends [readonly onlyChild: infer OnlyChild]
     ? {...$Exact<PropsArg>, children: OnlyChild}
     : {...$Exact<PropsArg>, children: ChildrenArg};
 

@@ -17,5 +17,5 @@ var bCtor = B.m();
 var b = new bCtor;
 
 class C {
-  static +y: this;
+  static readonly y: this;
 }

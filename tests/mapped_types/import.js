@@ -14,8 +14,8 @@ import type {
   ({foo: 3, bar: 'str', baz: true} as MappedO); // OK
 
   declare const mapped: MappedO;
-  mapped as {foo: number, bar?: string, +baz: boolean}; // OK
-  mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+  mapped as {foo: number, bar?: string, readonly baz: boolean}; // OK
+  mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
   mapped.baz = true; // ERROR
 }
 
@@ -23,7 +23,7 @@ import type {
 {
   ({foo: undefined, bar: undefined, baz: undefined} as AddOptional); // OK
   declare const addOptional: AddOptional;
-  addOptional as {foo?: number, bar?: string, +baz?: boolean}; // OK
+  addOptional as {foo?: number, bar?: string, readonly baz?: boolean}; // OK
   addOptional.baz = true; // ERROR
 }
 
@@ -37,14 +37,14 @@ import type {
 }
 
 // All of these tests are the same as above but use a parameterize type alias
-type O = {foo: number, bar?: string, +baz: boolean};
+type O = {foo: number, bar?: string, readonly baz: boolean};
 // No modifiers parameterized
 {
   ({foo: 3, bar: 'str', baz: true} as ParameterizedId<O>); // OK
 
   declare const mapped: ParameterizedId<O>;
-  mapped as {foo: number, bar?: string, +baz: boolean}; // OK
-  mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+  mapped as {foo: number, bar?: string, readonly baz: boolean}; // OK
+  mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
   mapped.baz = true; // ERROR
 }
 
@@ -52,7 +52,7 @@ type O = {foo: number, bar?: string, +baz: boolean};
 {
   ({foo: undefined, bar: undefined, baz: undefined} as ParameterizedPartial<O>); // OK
   declare const addOptional: ParameterizedPartial<O>;
-  addOptional as {foo?: number, bar?: string, +baz?: boolean}; // OK
+  addOptional as {foo?: number, bar?: string, readonly baz?: boolean}; // OK
   addOptional.baz = true; // ERROR
 }
 
@@ -73,18 +73,18 @@ type O = {foo: number, bar?: string, +baz: boolean};
 
 // Semi-homomorphic mapped types
 {
-  declare const semi: SemiHomomorphic<{+foo: number, bar: string}, 'foo'>;
-  semi as {+foo: number}; // OK
+  declare const semi: SemiHomomorphic<{readonly foo: number, bar: string}, 'foo'>;
+  semi as {readonly foo: number}; // OK
   semi as {foo: number}; // ERROR
 }
 
 // Both homomorphic and semi-homomorphic mapped types are distributive
 {
-  declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-  semi as {+foo: number} | {+foo: string}; // OK!
+  declare const semi: SemiHomomorphic<{readonly foo: number} | {readonly foo: string}, 'foo'>;
+  semi as {readonly foo: number} | {readonly foo: string}; // OK!
   semi as {foo: number} | {foo: string}; // ERROR 2x
 
   declare const homomorphic: ParameterizedReadonly<{foo: number} | {bar:number} >;
-  homomorphic as {+foo: number} | {+bar: number}; // OK!
+  homomorphic as {readonly foo: number} | {readonly bar: number}; // OK!
   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
 }

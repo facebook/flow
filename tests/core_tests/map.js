@@ -4,7 +4,7 @@ function* generator(): Iterable<[string, number]> {
   }
 }
 
-function* readonlyGenerator(): Iterable<[+key: string, +value: number]> {
+function* readonlyGenerator(): Iterable<[readonly key: string, readonly value: number]> {
   while (true) {
     yield ['foo', 123];
   }

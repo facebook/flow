@@ -4,7 +4,7 @@ declare export default class CycleNodeB {
   parent: CycleNodeA;
 
   constructor(value: {|
-    +parent: CycleNodeA,
+    readonly parent: CycleNodeA,
   |}): void;
 
   get(key: 'parent'): CycleNodeA;

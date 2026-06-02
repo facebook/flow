@@ -16,7 +16,7 @@ if (true) {
   x = {foo: 3, bar: 3};
 }
 
-type AllOpt = {+foo?: number, +bar?: number, +baz?: number, +qux?: number, ...};
+type AllOpt = {readonly foo?: number, readonly bar?: number, readonly baz?: number, readonly qux?: number, ...};
 
 const a = spreadExact(x);
 
@@ -105,7 +105,7 @@ if (true) {
 }
 
 // We use read only fields to avoid unification
-const union_spread: {+foo: number | string, ...} = spread(union);
+const union_spread: {readonly foo: number | string, ...} = spread(union);
 
 let optional;
 

@@ -4,8 +4,8 @@ declare class RecordWithDefaultsBase {
 
   constructor(
     value?: {|
-      +label?: string,
-      +note?: ?string,
+      readonly label?: string,
+      readonly note?: ?string,
     |},
   ): void;
 
@@ -17,8 +17,8 @@ declare class RecordWithDefaultsBase {
 
   merge(
     value: {|
-      +label?: string,
-      +note?: ?string,
+      readonly label?: string,
+      readonly note?: ?string,
     |},
   ): this;
 }

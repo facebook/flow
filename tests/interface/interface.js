@@ -50,9 +50,9 @@ declare const o4 : {["asdf"] : number};
 
 o4 as interface {[string] : number}; // error
 
-declare const o5 : {+["asdf"] : number};
+declare const o5 : {readonly ["asdf"] : number};
 
-o5 as interface {+[string] : number}; // OK
+o5 as interface {readonly [string] : number}; // OK
 
 declare const o6 : {[string] : number};
 

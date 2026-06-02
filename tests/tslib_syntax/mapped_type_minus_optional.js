@@ -1,7 +1,7 @@
 type O = {foo: number, bar?: string};
 
 // -? combined with -readonly
-type ReadOnlyOptional = {+foo?: number, +bar?: string};
+type ReadOnlyOptional = {readonly foo?: number, readonly bar?: string};
 type Mutable = {-readonly [K in keyof ReadOnlyOptional]-?: ReadOnlyOptional[K]};
 declare const m: Mutable;
 m.foo as number; // OK - required, readable

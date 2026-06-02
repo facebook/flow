@@ -49,8 +49,8 @@ type OmitInstance = Omit<C, 'foo'>;
 
 // Omit preserves polarity
 {
-  declare const x: Omit<{+foo: 1, bar: 2}, 'bar'>;
-  x as {+foo: 1}; // OK
+  declare const x: Omit<{readonly foo: 1, bar: 2}, 'bar'>;
+  x as {readonly foo: 1}; // OK
   x as {foo: 1}; // ERROR
 }
 

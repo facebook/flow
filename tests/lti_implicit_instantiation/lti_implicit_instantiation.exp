@@ -251,9 +251,9 @@ exists in object type [3]. [incompatible-type]
          ^^^^^^^^
 
 References:
-   typeapp_expansion.js:31:31
-   31|   declare opaque type Opaque<-T>;
-                                     ^ [1]
+   typeapp_expansion.js:31:33
+   31|   declare opaque type Opaque<in T>;
+                                       ^ [1]
    typeapp_expansion.js:54:22
    54|   Spreaded as Opaque<{...}>; // error: {} ~> Foo
                             ^^^^^ [2]

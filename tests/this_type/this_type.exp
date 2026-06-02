@@ -642,36 +642,36 @@ Unexpected use of `this` type. [illegal-this]
                                             ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- interface.js:154:23
+Error ---------------------------------------------------------------------------------------------- interface.js:154:31
 
 Unexpected use of `this` type. [illegal-this]
 
-   154|   +nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
-                              ^^^^
+   154|   readonly nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
+                                      ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- interface.js:157:33
-
-Unexpected use of `this` type. [illegal-this]
-
-   157|   +nested: interface { clone(): this }; // ERROR
-                                        ^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- interface.js:161:23
+Error ---------------------------------------------------------------------------------------------- interface.js:157:41
 
 Unexpected use of `this` type. [illegal-this]
 
-   161|   +nested: { clone(): this }; // ERROR
-                              ^^^^
+   157|   readonly nested: interface { clone(): this }; // ERROR
+                                                ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- interface.js:165:33
+Error ---------------------------------------------------------------------------------------------- interface.js:161:31
 
 Unexpected use of `this` type. [illegal-this]
 
-   165|   +list: ReadonlyArray<{ +item: this }>; // ERROR
-                                        ^^^^
+   161|   readonly nested: { clone(): this }; // ERROR
+                                      ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- interface.js:165:49
+
+Unexpected use of `this` type. [illegal-this]
+
+   165|   readonly list: ReadonlyArray<{ readonly item: this }>; // ERROR
+                                                        ^^^^
 
 
 Error ---------------------------------------------------------------------------------------------- interface.js:166:24
@@ -682,12 +682,12 @@ Unexpected use of `this` type. [illegal-this]
                                ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- interface.js:170:24
+Error ---------------------------------------------------------------------------------------------- interface.js:170:48
 
 Unexpected use of `this` type. [illegal-this]
 
-   170|   +doubly: { +a: { +b: this } }; // ERROR
-                               ^^^^
+   170|   readonly doubly: { readonly a: { readonly b: this } }; // ERROR
+                                                       ^^^^
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:188:4
@@ -931,12 +931,12 @@ References:
                                                                   ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- utility-type.js:3:27
+Error --------------------------------------------------------------------------------------------- utility-type.js:3:35
 
 Unexpected use of `this` type. [illegal-this]
 
-   3|     baz: Readonly<{+prop: this}>, // ok due to unsoundness
-                                ^^^^
+   3|     baz: Readonly<{readonly prop: this}>, // ok due to unsoundness
+                                        ^^^^
 
 
 Error --------------------------------------------------------------------------------------------- utility-type.js:4:22

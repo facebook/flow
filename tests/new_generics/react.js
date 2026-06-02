@@ -9,7 +9,7 @@ type Props = Readonly<{
 
 function a<Props extends Props>() {
   declare const a: React.ComponentType<Props>;
-  declare const b: React.Component<{+a: number, ...}>;
+  declare const b: React.Component<{readonly a: number, ...}>;
   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
   b as React.Component<Props>; // nope
 }

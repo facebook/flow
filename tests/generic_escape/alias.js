@@ -1,6 +1,6 @@
 //@flow
 
-declare class Pr<+T> {}
+declare class Pr<out T> {}
 
 type Tr = <Return>(() => Pr<Return>) => Return;
 

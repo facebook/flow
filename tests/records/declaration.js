@@ -191,7 +191,7 @@ interface Equatable<T> {
   x as Equatable<R>; // OK
 
   interface A {
-    +a: number;
+    readonly a: number;
   }
   x as A; // OK
 
@@ -209,8 +209,8 @@ interface Equatable<T> {
 
   declare const x: R;
 
-  x as {+a: number}; // ERROR
-  x as {+a: number, ...}; // ERROR
+  x as {readonly a: number}; // ERROR
+  x as {readonly a: number, ...}; // ERROR
 }
 
 // Generics and implements

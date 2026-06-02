@@ -218,8 +218,8 @@ Cannot cast `x` to `ExactReactElement_DEPRECATED` because object type [1] is inc
 
 References:
    no_spoofing_element_types.js:2:18
-   2| declare const x: {+type: typeof Foo};
-                       ^^^^^^^^^^^^^^^^^^^ [1]
+   2| declare const x: {readonly type: typeof Foo};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:3:6
    3| x as ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -250,8 +250,8 @@ Cannot cast `y` to renders `Bar` because object type [1] does not render `Bar` [
 
 References:
    no_spoofing_element_types.js:7:18
-   7| declare const y: {+type: typeof Bar};
-                       ^^^^^^^^^^^^^^^^^^^ [1]
+   7| declare const y: {readonly type: typeof Bar};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    no_spoofing_element_types.js:8:6
    8| y as renders Bar; // ERROR! TODO better error message
            ^^^^^^^^^^^ [2]

@@ -115,19 +115,19 @@ References:
               ^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- decltest.js:2:33
+Error ------------------------------------------------------------------------------------------------- decltest.js:2:36
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   decltest.js:2:33
-   2| declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
-                                      ^
+   decltest.js:2:36
+   2| declare opaque type Foo<out T>: {p:T}; // Error, invariant use of T
+                                         ^
 
 References:
-   decltest.js:2:26
-   2| declare opaque type Foo<+T>: {p:T}; // Error, invariant use of T
-                               ^ [1]
+   decltest.js:2:29
+   2| declare opaque type Foo<out T>: {p:T}; // Error, invariant use of T
+                                  ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
@@ -147,9 +147,9 @@ References:
    distribute.js:9:8
    9| o as A<number>; // error
              ^^^^^^ [2]
-   distribute.js:3:45
-   3| type A<T> = { +tag: 1, value: T } | { +tag: 2, value: T };
-                                                  ^ [3]
+   distribute.js:3:61
+   3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
+                                                                  ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
@@ -166,9 +166,9 @@ References:
    distribute.js:7:18
    7| declare const o: O;
                        ^ [1]
-   distribute.js:3:21
-   3| type A<T> = { +tag: 1, value: T } | { +tag: 2, value: T };
-                          ^ [2]
+   distribute.js:3:29
+   3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
+                                  ^ [2]
    distribute.js:9:8
    9| o as A<number>; // error
              ^^^^^^ [3]
@@ -366,9 +366,9 @@ In type argument `T` [1]: string [2] is incompatible with number [3]. [incompati
                                                                        ^^^^^^ [2]
 
 References:
-   test.js:21:15
-   21| class Contra<-T> {}
-                     ^ [1]
+   test.js:21:17
+   21| class Contra<in T> {}
+                       ^ [1]
    test.js:25:38
    25| export opaque type BadContra: Contra<number | string> = EContra<string>; // Error: string ~> number
                                             ^^^^^^ [3]

@@ -1,5 +1,5 @@
 interface I_Function_this {
-    +x : (this : I_Function_this) => void
+    readonly x : (this : I_Function_this) => void
 }
 
 interface I_Method_this {
@@ -7,7 +7,7 @@ interface I_Method_this {
 }
 
 interface I_Function_mixed {
-    +x : (this : unknown) => void
+    readonly x : (this : unknown) => void
 }
 
 interface I_Method_mixed {
@@ -15,13 +15,13 @@ interface I_Method_mixed {
 }
 
 interface I_Function_empty {
-    +x : (this : empty) => void
+    readonly x : (this : empty) => void
 }
 
 /* ----------------- */
 
 class C_Function_this {
-    +x : (this : C_Function_this) => void
+    readonly x : (this : C_Function_this) => void
 }
 
 class C_Method_this {
@@ -29,7 +29,7 @@ class C_Method_this {
 }
 
 class C_Function_mixed {
-    +x : (this : unknown) => void
+    readonly x : (this : unknown) => void
 }
 
 class C_Method_mixed {
@@ -37,7 +37,7 @@ class C_Method_mixed {
 }
 
 class C_Function_empty {
-    +x : (this : empty) => void
+    readonly x : (this : empty) => void
 }
 
 

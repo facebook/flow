@@ -492,9 +492,9 @@ References:
    prefix.js:121:46
    121|   const obj: {[SpreadOverOptionalProperies]: number} = {foo: 1};
                                                      ^^^^^^ [1]
-   prefix.js:133:15
-   133|     +foobar?: string,
-                      ^^^^^^ [2]
+   prefix.js:133:23
+   133|     readonly foobar?: string,
+                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1

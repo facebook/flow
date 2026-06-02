@@ -1,3 +1,3 @@
-class C { -p: string }
+class C { writeonly p: string }
 declare const i: C;
 ({ ...i });

@@ -3,9 +3,9 @@ annot_t.js:9:23 = {
   "endline":9,
   "line":9,
   "loc":{
-    "end":{"column":26,"line":9,"offset":160},
+    "end":{"column":26,"line":9,"offset":166},
     "source":"annot_t.js",
-    "start":{"column":22,"line":9,"offset":155},
+    "start":{"column":22,"line":9,"offset":161},
     "type":"SourceFile"
   },
   "path":"annot_t.js",
@@ -538,19 +538,19 @@ class-statics.js:17:5 = {
   "start":5,
   "types":{"evaluated":null,"unevaluated":{"type":"B"}}
 }
-class-statics.js:20:11 = {
-  "end":11,
+class-statics.js:20:19 = {
+  "end":19,
   "endline":20,
   "line":20,
   "loc":{
-    "end":{"column":11,"line":20,"offset":230},
+    "end":{"column":19,"line":20,"offset":238},
     "source":"class-statics.js",
-    "start":{"column":11,"line":20,"offset":229},
+    "start":{"column":19,"line":20,"offset":237},
     "type":"SourceFile"
   },
   "path":"class-statics.js",
   "reasons":[],
-  "start":11,
+  "start":19,
   "types":{"evaluated":null,"unevaluated":{"type":"this"}}
 }
 class-statics-poly.js:4:10 = {

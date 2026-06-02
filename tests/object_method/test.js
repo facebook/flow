@@ -1,7 +1,7 @@
 const id = require('./id');
 
 export type ObjectType = {
-  +m: () => void,
+  readonly m: () => void,
  ...};
 
 function methodCaller(x: ObjectType) {

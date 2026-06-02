@@ -54,7 +54,7 @@ r.b as 'b'; // OK
 
 // Composes with -readonly and -?
 type Mut<T> = {-readonly [K in keyof T as K]-?: T[K]};
-type M = Mut<{+a?: number, +b?: string}>;
+type M = Mut<{readonly a?: number, readonly b?: string}>;
 declare const m: M;
 m.a as number; // OK
 m.a = 5; // OK
@@ -74,7 +74,7 @@ co.X as number | string | void; // OK - 'a' was optional, merged result is optio
 
 // Polarity-merge on collision: if any contributor is readonly, the merged property must remain
 // readonly (TS "loses write permission" semantics).
-type SrcRO = {+a: number, b: string};
+type SrcRO = {readonly a: number, b: string};
 type CollRO = {[K in keyof SrcRO as 'X']: SrcRO[K]};
 declare const cro: CollRO;
 cro.X as number | string; // OK

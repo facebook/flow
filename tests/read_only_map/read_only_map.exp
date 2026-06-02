@@ -8,9 +8,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                          ^
 
 References:
-   test.js:9:13
-    9| class FooK<+K, V> {
-                   ^ [1]
+   test.js:9:16
+    9| class FooK<out K, V> {
+                      ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:35
@@ -23,9 +23,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                          ^
 
 References:
-   test.js:21:13
-   21| class BazK<-K, V> {
-                   ^ [1]
+   test.js:21:15
+   21| class BazK<in K, V> {
+                     ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:38
@@ -38,9 +38,9 @@ Cannot use `V` [1] in an output position because `V` [1] is expected to occur on
                                             ^
 
 References:
-   test.js:27:16
-   27| class BazV<K, -V> {
-                      ^ [1]
+   test.js:27:18
+   27| class BazV<K, in V> {
+                        ^ [1]
 
 
 

@@ -1,4 +1,4 @@
-declare export class List<+T> {
+declare export class List<out T> {
   get(index: number): T | void;
   size: number;
 }

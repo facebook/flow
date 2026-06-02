@@ -27,8 +27,8 @@ function area2(shape: ExactShape): number {
 }
 
 type ReadOnlyShape =
-  {+type: 'rectangle', width: number, height: number} |
-  {+type: 'circle', radius: number};
+  {readonly type: 'rectangle', width: number, height: number} |
+  {readonly type: 'circle', radius: number};
 
 function area3(shape: ReadOnlyShape): number {
   if (shape.type === 'square') { // error

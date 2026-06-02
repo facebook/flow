@@ -19,7 +19,7 @@ type SourceObj = { foo: string, bar: number };
 }
 
 {
-  declare const obj: {+[key in keyof SourceObj]: SourceObj[key]};
+  declare const obj: {readonly [key in keyof SourceObj]: SourceObj[key]};
   obj.foo;
 //     ^
 }

@@ -9,14 +9,14 @@ type $FragmentRef<T> = {
 };
 
 type X = NonNullable<{
-  +$refType: 3,
+  readonly $refType: 3,
 }>;
 
 type $RelayProps<Props, RelayPropT = {}> = MapProps<
   Props,
 >;
 type MapProps<O> = {
-  [K in keyof O]: O[K] extends {+$refType: empty, ...} ? O[K] : O[K] extends ?{+$refType: 3, ...} ? $FragmentRef<O[K]> : empty
+  [K in keyof O]: O[K] extends {readonly $refType: empty, ...} ? O[K] : O[K] extends ?{readonly $refType: 3, ...} ? $FragmentRef<O[K]> : empty
 };
 
 type Props = {

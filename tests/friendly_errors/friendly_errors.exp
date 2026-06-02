@@ -421,9 +421,9 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
               ^^^^^^^^^^^^^^^^^^^
 
 References:
-   loc-primary-for-covariant-ops.js:10:9
-   10| type X<-T> = unknown;
-               ^ [1]
+   loc-primary-for-covariant-ops.js:10:11
+   10| type X<in T> = unknown;
+                 ^ [1]
    loc-primary-for-covariant-ops.js:11:37
    11| any as X<{p: number, ...}> as X<{p: string, ...}>;
                                            ^^^^^^ [2]
@@ -1220,13 +1220,13 @@ Cannot cast `any` to object type because property `p` is read-only in object typ
 [incompatible-variance]
 
    prop-variance.js:12:8
-   12| any as {+p: T, ...} as {p: T, ...}; // Error: read-only ~> writable
-              ^^^^^^^^^^^^ [1]
+   12| any as {readonly p: T, ...} as {p: T, ...}; // Error: read-only ~> writable
+              ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   prop-variance.js:12:24
-   12| any as {+p: T, ...} as {p: T, ...}; // Error: read-only ~> writable
-                              ^^^^^^^^^^^ [2]
+   prop-variance.js:12:32
+   12| any as {readonly p: T, ...} as {p: T, ...}; // Error: read-only ~> writable
+                                      ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:14:8
@@ -1235,13 +1235,13 @@ Cannot cast `any` to object type because property `p` is read-only in object typ
 [incompatible-variance]
 
    prop-variance.js:14:8
-   14| any as {+p: T, ...} as {-p: T, ...}; // Error: read-only ~> write-only
-              ^^^^^^^^^^^^ [1]
+   14| any as {readonly p: T, ...} as {writeonly p: T, ...}; // Error: read-only ~> write-only
+              ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   prop-variance.js:14:24
-   14| any as {+p: T, ...} as {-p: T, ...}; // Error: read-only ~> write-only
-                              ^^^^^^^^^^^^ [2]
+   prop-variance.js:14:32
+   14| any as {readonly p: T, ...} as {writeonly p: T, ...}; // Error: read-only ~> write-only
+                                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:15:8
@@ -1250,13 +1250,13 @@ Cannot cast `any` to object type because property `p` is write-only in object ty
 [incompatible-variance]
 
    prop-variance.js:15:8
-   15| any as {-p: T, ...} as {p: T, ...}; // Error: write-only ~> readable
-              ^^^^^^^^^^^^ [1]
+   15| any as {writeonly p: T, ...} as {p: T, ...}; // Error: write-only ~> readable
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   prop-variance.js:15:24
-   15| any as {-p: T, ...} as {p: T, ...}; // Error: write-only ~> readable
-                              ^^^^^^^^^^^ [2]
+   prop-variance.js:15:33
+   15| any as {writeonly p: T, ...} as {p: T, ...}; // Error: write-only ~> readable
+                                       ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:16:8
@@ -1265,13 +1265,13 @@ Cannot cast `any` to object type because property `p` is write-only in object ty
 [incompatible-variance]
 
    prop-variance.js:16:8
-   16| any as {-p: T, ...} as {+p: T, ...}; // Error: write-only ~> read-only
-              ^^^^^^^^^^^^ [1]
+   16| any as {writeonly p: T, ...} as {readonly p: T, ...}; // Error: write-only ~> read-only
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   prop-variance.js:16:24
-   16| any as {-p: T, ...} as {+p: T, ...}; // Error: write-only ~> read-only
-                              ^^^^^^^^^^^^ [2]
+   prop-variance.js:16:33
+   16| any as {writeonly p: T, ...} as {readonly p: T, ...}; // Error: write-only ~> read-only
+                                       ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- typeof-unexpected.js:5:16

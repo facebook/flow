@@ -14,7 +14,7 @@ export type Props = {
   /**
    * baz is an identifier property with variance
    */
-  +baz : 3,
+  readonly baz : 3,
   /**
    * qux is a literal property
    */
@@ -45,7 +45,7 @@ class Foo {
   /**
    * property with variance
    */
-  +varianceProp : 3;
+  readonly varianceProp : 3;
 }
 
 /**

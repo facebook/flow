@@ -1,6 +1,6 @@
 class Foo1 {
   bar(
-    baz: Readonly<{+prop: this}>, // ok due to unsoundness
+    baz: Readonly<{readonly prop: this}>, // ok due to unsoundness
   ): Readonly<{prop: this}> { // ok
     baz.prop.bar(baz);
     return {prop: this}

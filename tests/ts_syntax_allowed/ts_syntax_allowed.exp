@@ -26,14 +26,14 @@ References:
                        ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:10:11
+Error ------------------------------------------------------------------------------------------------ exported.js:10:20
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   exported.js:10:11
-   10|     -bad: T; // error
-                 ^
+   exported.js:10:20
+   10|     writeonly bad: T; // error
+                          ^
 
 References:
    exported.js:8:28
@@ -41,14 +41,14 @@ References:
                                   ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ exported.js:14:11
+Error ------------------------------------------------------------------------------------------------ exported.js:14:19
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   exported.js:14:11
-   14|     +bad: T; // error
-                 ^
+   exported.js:14:19
+   14|     readonly bad: T; // error
+                         ^
 
 References:
    exported.js:12:31
@@ -100,14 +100,14 @@ References:
                 ^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- polarity.js:3:11
+Error ------------------------------------------------------------------------------------------------- polarity.js:3:20
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   polarity.js:3:11
-   3|     -bad: T; // error
-                ^
+   polarity.js:3:20
+   3|     writeonly bad: T; // error
+                         ^
 
 References:
    polarity.js:1:21
@@ -115,14 +115,14 @@ References:
                           ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- polarity.js:7:11
+Error ------------------------------------------------------------------------------------------------- polarity.js:7:19
 
 Cannot use `T` [1] in an output position because `T` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   polarity.js:7:11
-   7|     +bad: T; // error
-                ^
+   polarity.js:7:19
+   7|     readonly bad: T; // error
+                        ^
 
 References:
    polarity.js:5:24

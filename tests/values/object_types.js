@@ -108,7 +108,7 @@ interface IfaceWithDict {
   [string]: 1;
 }
 interface IfaceWithWriteOnlyDict {
-  -[string]: 1;
+  writeonly [string]: 1;
 }
 interface IfaceWithDictAndProps {
   [string]: 1;

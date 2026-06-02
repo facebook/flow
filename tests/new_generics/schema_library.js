@@ -1,5 +1,5 @@
 export type Schema<TValue> = {
-  +__value: TValue,
+  readonly __value: TValue,
  ...};
 
 export type ListSchemaType<TItem> = Schema<ReadonlyArray<TItem>>;

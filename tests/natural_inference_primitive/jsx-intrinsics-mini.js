@@ -23,8 +23,8 @@ type ReactDOM$HTMLElementJSXIntrinsicTyped<Props, Instance = HTMLElement> = {
 type ReactDOM$HTMLElementJSXIntrinsic = {
   instance: HTMLElement,
   props: {
-    +[key: string]: any,
-    +children?: React.Node,
+    readonly [key: string]: any,
+    readonly children?: React.Node,
     ...
   },
   ...

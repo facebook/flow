@@ -6,10 +6,10 @@
 // when checking the spread branch below. The fixed commit accepts the file
 // with no errors, matching the intended suppression behavior.
 
-type FunctionReturning<+T> = (...args: ReadonlyArray<unknown>) => T;
+type FunctionReturning<out T> = (...args: ReadonlyArray<unknown>) => T;
 
 const emptyFunction: {
-  +thatReturnsNull: FunctionReturning<null>,
+  readonly thatReturnsNull: FunctionReturning<null>,
 } = {
   thatReturnsNull() {
     return null;
@@ -18,13 +18,13 @@ const emptyFunction: {
 
 type LocalDate = number;
 type LocalDateInterval = {
-  +start: number,
-  +end: number,
+  readonly start: number,
+  readonly end: number,
 };
 
 type Option = {
-  +value: string,
-  +calculateInterval: LocalDate => LocalDateInterval,
+  readonly value: string,
+  readonly calculateInterval: LocalDate => LocalDateInterval,
 };
 
 const CUSTOM = {

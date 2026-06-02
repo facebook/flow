@@ -5,7 +5,7 @@ declare export default class CycleNodeA {
   items: Immutable.List<CycleNodeB>;
 
   constructor(value: {|
-    +items: Immutable.List<CycleNodeB>,
+    readonly items: Immutable.List<CycleNodeB>,
   |}): void;
 
   get(key: 'items'): Immutable.List<CycleNodeB>;

@@ -459,14 +459,14 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
 
 References:
    type_contra.js:3:15
-   3| type O1 = {...{-p:T, ...}, ...};
-                    ^^^^^^^^^^^ [1]
+   3| type O1 = {...{writeonly p:T, ...}, ...};
+                    ^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:6:11
    6| o1 as {p?:T, ...}; // error: unknown ~> T
                 ^ [2]
    type_contra.js:3:11
-   3| type O1 = {...{-p:T, ...}, ...};
-                ^^^^^^^^^^^^^^^^^^^^^ [3]
+   3| type O1 = {...{writeonly p:T, ...}, ...};
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    type_contra.js:6:7
    6| o1 as {p?:T, ...}; // error: unknown ~> T
             ^^^^^^^^^^^ [4]
@@ -482,8 +482,8 @@ Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatib
 
 References:
    type_contra.js:3:15
-   3| type O1 = {...{-p:T, ...}, ...};
-                    ^^^^^^^^^^^ [1]
+   3| type O1 = {...{writeonly p:T, ...}, ...};
+                    ^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:7:9
    7| o1.p as T; // errors: undefined ~> T, unknown ~> T
               ^ [2]
@@ -505,14 +505,14 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
 
 References:
    type_contra.js:9:15
-    9| type O2 = {...{-[string]:T}, ...};
-                     ^^^^^^^^^^^^^ [1]
+    9| type O2 = {...{writeonly [string]:T}, ...};
+                     ^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:12:17
    12| o2 as {[string]:T}; // error: unknown ~> T
                        ^ [2]
    type_contra.js:9:11
-    9| type O2 = {...{-[string]:T}, ...};
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9| type O2 = {...{writeonly [string]:T}, ...};
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    type_contra.js:12:7
    12| o2 as {[string]:T}; // error: unknown ~> T
              ^^^^^^^^^^^^ [4]
@@ -529,8 +529,8 @@ Cannot cast `o2.p` to `T` because computed property of unknown type [1] is incom
 
 References:
    type_contra.js:9:15
-    9| type O2 = {...{-[string]:T}, ...};
-                     ^^^^^^^^^^^^^ [1]
+    9| type O2 = {...{writeonly [string]:T}, ...};
+                     ^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:13:9
    13| o2.p as T; // errors: unknown ~> T
                ^ [2]
@@ -552,8 +552,8 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
 
 References:
    type_contra.js:15:11
-   15| type O3 = {...{}, -p: T, ...};
-                 ^^^^^^^^^^^^^^^^^^^ [1]
+   15| type O3 = {...{}, writeonly p: T, ...};
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:18:10
    18| o3 as {p:T, ...}; // error: unknown ~> T
                 ^ [2]
@@ -572,8 +572,8 @@ Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatib
 
 References:
    type_contra.js:15:11
-   15| type O3 = {...{}, -p: T, ...};
-                 ^^^^^^^^^^^^^^^^^^^ [1]
+   15| type O3 = {...{}, writeonly p: T, ...};
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    type_contra.js:19:9
    19| o3.p as T; // errors: unknown ~> T
                ^ [2]
@@ -653,13 +653,13 @@ Cannot cast `spread(...)` to object type because in property `p`: number [1] is 
 [incompatible-type]
 
    type_generic.js:3:11
-   3| spread({p:0},{q:0}) as {+p:empty,+q:empty}; // number ~> empty (x2)
+   3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
                 ^ [1]
 
 References:
-   type_generic.js:3:28
-   3| spread({p:0},{q:0}) as {+p:empty,+q:empty}; // number ~> empty (x2)
-                                 ^^^^^ [2]
+   type_generic.js:3:36
+   3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
+                                         ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:17
@@ -668,13 +668,13 @@ Cannot cast `spread(...)` to object type because in property `q`: number [1] is 
 [incompatible-type]
 
    type_generic.js:3:17
-   3| spread({p:0},{q:0}) as {+p:empty,+q:empty}; // number ~> empty (x2)
+   3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
                       ^ [1]
 
 References:
-   type_generic.js:3:37
-   3| spread({p:0},{q:0}) as {+p:empty,+q:empty}; // number ~> empty (x2)
-                                          ^^^^^ [2]
+   type_generic.js:3:53
+   3| spread({p:0},{q:0}) as {readonly p:empty,readonly q:empty}; // number ~> empty (x2)
+                                                          ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:1

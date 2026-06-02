@@ -5,7 +5,7 @@
 // the class's type params. Without save/restore, subsequent method
 // processing sees the method's type vars (now out of scope -> unknown).
 
-declare class Base<K, +V> {
+declare class Base<K, out V> {
   get(key: K): V | void;
   // $FlowFixMe[incompatible-variance]
   toJSON(): {[key: string]: V, ...};
@@ -13,7 +13,7 @@ declare class Base<K, +V> {
   toArray(): Array<V>;
 }
 
-declare class Child<K, +V> extends Base<K, V> {
+declare class Child<K, out V> extends Base<K, V> {
   // This static method has type params <K, V> that shadow the class's <K, +V>.
   // Without the fix, the class's K,V in env.tparams_map get overwritten,
   // causing subsequent properties to resolve V as unknown.

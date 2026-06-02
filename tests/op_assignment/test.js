@@ -83,7 +83,7 @@ declare function invariant(x: boolean): empty;
 
 {
   // Read-only property
-  const o: {+p: number} = {p: 1};
+  const o: {readonly p: number} = {p: 1};
   o.p += 2; // Error: property is non-writable
   o.p -= 2; // Error: property is non-writable
   o.p *= 2; // Error: property is non-writable
@@ -97,13 +97,13 @@ declare function invariant(x: boolean): empty;
 
 {
   // Read-only property, string value
-  const o: {+p: string} = {p: "a"};
+  const o: {readonly p: string} = {p: "a"};
   o.p += "b"; // Error: property is non-writable
 }
 
 {
   // Write-only property
-  const o: {-p: number} = {p: 1};
+  const o: {writeonly p: number} = {p: 1};
   o.p += 2; // Error: property is non-readable
   // TODO(T56716039): If you read a write-only property after it is written, there is no error
   // o.p -= 2; // Error: property is non-readable

@@ -1,5 +1,5 @@
 //@flow
-type T<+A,B> = {+a: A, b: B};
+type T<out A,B> = {readonly a: A, b: B};
 
 function f<A,B>(a: A, b: B): T<A,B> {
   return {a, b}

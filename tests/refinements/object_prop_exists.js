@@ -11,7 +11,7 @@
 
 {
   // Non-readable
-  declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
+  declare const x: {a: true, b: number} | {a: false, b: string, writeonly c: true};
   if (x.c) { // ERROR: prop not readable
     x as empty; // ERROR
   } else {

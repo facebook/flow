@@ -1,19 +1,19 @@
 type Field<T> = {x: T}; // OK
-type FieldNeg<-T> = {x: T}; // Error: -T in neutral position
-type FieldPos<+T> = {x: T}; // Error: +T in neutral position
-type PosField<T> = {+p: T}; // OK
-type PosFieldNeg<-T> = {+p: T}; // Error: -T in positive position
-type PosFieldPos<+T> = {+p: T}; // OK
-type FlipPosFieldNeg<-T> = ({+x: T}) => void; // OK
-type FlipPosFieldPos<+T> = ({+x: T}) => void; // Error: +T in negative position
-type NegField<T> = {-p: T}; // OK
-type NegFieldNeg<-T> = {-p: T}; // OK
-type NegFieldPos<+T> = {-p: T}; // Error: +T in negative position
-type FlipNegFieldNeg<-T> = ({-x: T}) => void; // Error: -T in positive position
-type FlipNegFieldPos<+T> = ({-x: T}) => void; // OK
+type FieldNeg<in T> = {x: T}; // Error: in T in neutral position
+type FieldPos<out T> = {x: T}; // Error: out T in neutral position
+type PosField<T> = {readonly p: T}; // OK
+type PosFieldNeg<in T> = {readonly p: T}; // Error: in T in positive position
+type PosFieldPos<out T> = {readonly p: T}; // OK
+type FlipPosFieldNeg<in T> = ({readonly x: T}) => void; // OK
+type FlipPosFieldPos<out T> = ({readonly x: T}) => void; // Error: out T in negative position
+type NegField<T> = {writeonly p: T}; // OK
+type NegFieldNeg<in T> = {writeonly p: T}; // OK
+type NegFieldPos<out T> = {writeonly p: T}; // Error: out T in negative position
+type FlipNegFieldNeg<in T> = ({writeonly x: T}) => void; // Error: in T in positive position
+type FlipNegFieldPos<out T> = ({writeonly x: T}) => void; // OK
 type Get<T> = {get p(): T}; // OK
-type GetNeg<-T> = {get p(): T}; // Error: -T in positive position
-type GetPos<+T> = {get p(): T}; // OK
+type GetNeg<in T> = {get p(): T}; // Error: in T in positive position
+type GetPos<out T> = {get p(): T}; // OK
 type Set<T> = {set p(x:T): void}; // OK
-type SetNeg<-T> = {set p(x:T): void}; // OK
-type SetPos<+T> = {set p(x:T): void}; // Error: +T in negative position
+type SetNeg<in T> = {set p(x:T): void}; // OK
+type SetPos<out T> = {set p(x:T): void}; // Error: out T in negative position

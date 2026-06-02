@@ -1,7 +1,7 @@
 // Regression test for using ground_eq to summarize solution of implicit instantiation
 
-export type TRefFor<-TElement> =
-  | {-current: TElement | null, ...}
+export type TRefFor<in TElement> =
+  | {writeonly current: TElement | null, ...}
   | ((TElement | null) => unknown);
 
 type RefType<TElement> = TRefFor<TElement>;

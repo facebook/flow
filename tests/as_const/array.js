@@ -61,13 +61,13 @@ function test_arr5() {
 }
 
 function test_arr6() {
-  arr6 as readonly [{+f: 1}]; // okay
-  arr6 as [{+f: 1}]; // error cast to non-readonly array
+  arr6 as readonly [{readonly f: 1}]; // okay
+  arr6 as [{readonly f: 1}]; // error cast to non-readonly array
   arr6 as [{f: 1}]; // error cast to non-readonly prop
-  arr6 as readonly [{+f: number}]; // okay
+  arr6 as readonly [{readonly f: number}]; // okay
 
   _ as [{f: 1}] as typeof arr6; // okay
-  _ as readonly [{+f: 1}] as typeof arr6; // okay
+  _ as readonly [{readonly f: 1}] as typeof arr6; // okay
 }
 
 function test_arr7() {

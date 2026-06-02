@@ -1,5 +1,5 @@
 type GenericComponentType<TLayoutProps extends {...}> = component<
-  +TItem,
+  out TItem,
 >(
   children: (item: TItem) => React.Node,
   items: ReadonlyArray<TItem>,

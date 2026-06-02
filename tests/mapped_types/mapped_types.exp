@@ -21,16 +21,16 @@ Cannot cast `b` to object type because in property `foo`: undefined [1] is incom
 [incompatible-type]
 
    deep_types.js:16:3
-   16|   b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
+   16|   b as {readonly foo: {readonly bar?: {readonly baz?: string}}}; // error: foo not optional
          ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:16:15
-   16|   b as {+foo: {+bar?: {+baz?: string}}}; // error: foo not optional
-                     ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   deep_types.js:16:23
+   16|   b as {readonly foo: {readonly bar?: {readonly baz?: string}}}; // error: foo not optional
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:17:3
@@ -39,16 +39,16 @@ Cannot cast `b` to object type because in property `foo.bar`: undefined [1] is i
 [incompatible-type]
 
    deep_types.js:17:3
-   17|   b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
+   17|   b as {readonly foo?: {readonly bar: {readonly baz?: string}}}; // error: bar not optional
          ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:17:23
-   17|   b as {+foo?: {+bar: {+baz?: string}}}; // error: bar not optional
-                             ^^^^^^^^^^^^^^^ [2]
+   deep_types.js:17:39
+   17|   b as {readonly foo?: {readonly bar: {readonly baz?: string}}}; // error: bar not optional
+                                             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:18:3
@@ -57,16 +57,16 @@ Cannot cast `b` to object type because in property `foo.bar.baz`: undefined [1] 
 [incompatible-type]
 
    deep_types.js:18:3
-   18|   b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
+   18|   b as {readonly foo?: {readonly bar?: {readonly baz: string}}}; // error: baz not optional
          ^
 
 References:
    deep_types.js:6:23
     6|       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   deep_types.js:18:31
-   18|   b as {+foo?: {+bar?: {+baz: string}}}; // error: baz not optional
-                                     ^^^^^^ [2]
+   deep_types.js:18:55
+   18|   b as {readonly foo?: {readonly bar?: {readonly baz: string}}}; // error: baz not optional
+                                                             ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:44:3
@@ -104,9 +104,9 @@ Cannot call `obj.arr.push` because property `push` is missing in `$ReadOnlyArray
                  ^^^^
 
 References:
-   deep_types.js:23:39
-   23|   T extends {...} ? {+[K in keyof T]: DeepReadOnly<T[K]>} : T;
-                                             ^^^^^^^^^^^^^^^^^^ [1]
+   deep_types.js:23:47
+   23|   T extends {...} ? {readonly [K in keyof T]: DeepReadOnly<T[K]>} : T;
+                                                     ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- deep_types.js:47:14
@@ -262,7 +262,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `oExplicit` to object type because null [1] is incompatible with object type [2]. [incompatible-type]
 
    distributivity.js:25:3
-   25|   oExplicit as {-foo: number}; // ERROR 2x
+   25|   oExplicit as {writeonly foo: number}; // ERROR 2x
          ^^^^^^^^^
 
 References:
@@ -270,8 +270,8 @@ References:
    23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    distributivity.js:25:16
-   25|   oExplicit as {-foo: number}; // ERROR 2x
-                      ^^^^^^^^^^^^^^ [2]
+   25|   oExplicit as {writeonly foo: number}; // ERROR 2x
+                      ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:25:3
@@ -279,7 +279,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `oExplicit` to object type because undefined [1] is incompatible with object type [2]. [incompatible-type]
 
    distributivity.js:25:3
-   25|   oExplicit as {-foo: number}; // ERROR 2x
+   25|   oExplicit as {writeonly foo: number}; // ERROR 2x
          ^^^^^^^^^
 
 References:
@@ -287,8 +287,8 @@ References:
    23|   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    distributivity.js:25:16
-   25|   oExplicit as {-foo: number}; // ERROR 2x
-                      ^^^^^^^^^^^^^^ [2]
+   25|   oExplicit as {writeonly foo: number}; // ERROR 2x
+                      ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:29:3
@@ -297,7 +297,7 @@ Cannot cast `oMaybe` to object type because null or undefined [1] is incompatibl
 [incompatible-type]
 
    distributivity.js:29:3
-   29|   oMaybe as {-foo: number}; // ERROR
+   29|   oMaybe as {writeonly foo: number}; // ERROR
          ^^^^^^
 
 References:
@@ -305,8 +305,8 @@ References:
    27|   declare const oMaybe: DistributeNullAndVoid<?O>;
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    distributivity.js:29:13
-   29|   oMaybe as {-foo: number}; // ERROR
-                   ^^^^^^^^^^^^^^ [2]
+   29|   oMaybe as {writeonly foo: number}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:13:6
@@ -852,9 +852,9 @@ Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [inc
          ^
 
 References:
-   idx_replacement.js:85:40
-   85|   declare const props: { data: { +id: ?string } };
-                                              ^^^^^^ [1]
+   idx_replacement.js:85:48
+   85|   declare const props: { data: { readonly id: ?string } };
+                                                      ^^^^^^ [1]
    idx_replacement.js:89:8
    89|   a as empty; // error
               ^^^^^ [2]
@@ -869,9 +869,9 @@ Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [inc
            ^
 
 References:
-   idx_replacement.js:85:40
-   85|   declare const props: { data: { +id: ?string } };
-                                              ^^^^^^ [1]
+   idx_replacement.js:85:48
+   85|   declare const props: { data: { readonly id: ?string } };
+                                                      ^^^^^^ [1]
    idx_replacement.js:91:10
    91|     a as empty; // error
                 ^^^^^ [2]
@@ -889,13 +889,13 @@ error,
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    import.js:18:3
-   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+   18|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
          ^^^^^^ [1]
 
 References:
    import.js:18:13
-   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   18|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    export.js:3:24
     3| export type MappedO = {[key in keyof O]: O[key]};
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -907,16 +907,16 @@ Cannot cast `mapped` to object type because in property `baz`: boolean [1] is in
 [incompatible-type]
 
    import.js:18:3
-   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+   18|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
          ^^^^^^
 
 References:
-   export.js:1:44
-    1| type O = {foo: number, bar?: string, +baz: boolean};
-                                                  ^^^^^^^ [1]
-   import.js:18:44
-   18|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
-                                                  ^^^^^ [2]
+   export.js:1:52
+    1| type O = {foo: number, bar?: string, readonly baz: boolean};
+                                                          ^^^^^^^ [1]
+   import.js:18:52
+   18|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
+                                                          ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:19:10
@@ -971,13 +971,13 @@ error,
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    import.js:47:3
-   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+   47|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
          ^^^^^^ [1]
 
 References:
    import.js:47:13
-   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   47|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    export.js:7:49
     7| export type ParameterizedId<O extends {...}> = {[key in keyof O]: O[key]};
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -989,16 +989,16 @@ Cannot cast `mapped` to object type because in property `baz`: boolean [1] is in
 [incompatible-type]
 
    import.js:47:3
-   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
+   47|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
          ^^^^^^
 
 References:
-   import.js:40:44
-   40| type O = {foo: number, bar?: string, +baz: boolean};
-                                                  ^^^^^^^ [1]
-   import.js:47:44
-   47|   mapped as {foo: empty, bar: empty, +baz: empty}; // ERROR
-                                                  ^^^^^ [2]
+   import.js:40:52
+   40| type O = {foo: number, bar?: string, readonly baz: boolean};
+                                                          ^^^^^^^ [1]
+   import.js:47:52
+   47|   mapped as {foo: empty, bar: empty, readonly baz: empty}; // ERROR
+                                                          ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- import.js:48:10
@@ -1082,8 +1082,8 @@ type [2]. [incompatible-variance]
 
 References:
    import.js:76:23
-   76|   declare const semi: SemiHomomorphic<{+foo: number, bar: string}, 'foo'>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   76|   declare const semi: SemiHomomorphic<{readonly foo: number, bar: string}, 'foo'>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    import.js:78:11
    78|   semi as {foo: number}; // ERROR
                  ^^^^^^^^^^^^^ [2]
@@ -1103,15 +1103,15 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
          ^^^^
 
 References:
-   import.js:83:46
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                                                    ^^^^^^ [1]
+   import.js:83:54
+   83|   declare const semi: SemiHomomorphic<{readonly foo: number} | {readonly foo: string}, 'foo'>;
+                                                            ^^^^^^ [1]
    import.js:85:33
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
                                        ^^^^^^ [2]
    import.js:83:23
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   83|   declare const semi: SemiHomomorphic<{readonly foo: number} | {readonly foo: string}, 'foo'>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    import.js:85:11
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
                  ^^^^^^^^^^^^^ [4]
@@ -1131,15 +1131,15 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
          ^^^^
 
 References:
-   import.js:83:63
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                                                                     ^^^^^^ [1]
+   import.js:83:79
+   83|   declare const semi: SemiHomomorphic<{readonly foo: number} | {readonly foo: string}, 'foo'>;
+                                                                                     ^^^^^^ [1]
    import.js:85:17
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
                        ^^^^^^ [2]
    import.js:83:23
-   83|   declare const semi: SemiHomomorphic<{+foo: number} | {+foo: string}, 'foo'>;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   83|   declare const semi: SemiHomomorphic<{readonly foo: number} | {readonly foo: string}, 'foo'>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    import.js:85:27
    85|   semi as {foo: number} | {foo: string}; // ERROR 2x
                                  ^^^^^^^^^^^^^ [4]
@@ -1215,7 +1215,7 @@ Cannot cast `i` to object type because mapped type [1] is not a subtype of objec
 subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    instancet.js:10:3
-   10|   i as {+foo: number, ...}; // ERROR (class object subtyping)
+   10|   i as {readonly foo: number, ...}; // ERROR (class object subtyping)
          ^
 
 References:
@@ -1223,8 +1223,8 @@ References:
     7|   declare const i: MappedInterface;
                           ^^^^^^^^^^^^^^^ [1]
    instancet.js:10:8
-   10|   i as {+foo: number, ...}; // ERROR (class object subtyping)
-              ^^^^^^^^^^^^^^^^^^^ [2]
+   10|   i as {readonly foo: number, ...}; // ERROR (class object subtyping)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:21:3
@@ -1233,7 +1233,7 @@ Cannot cast `i` to interface type because an index signature declaring the expec
 mapped type [1] but writable in interface type [2]. [incompatible-variance]
 
    instancet.js:21:3
-   21|   i as interface {+foo: number, [string]: boolean}; // ERROR
+   21|   i as interface {readonly foo: number, [string]: boolean}; // ERROR
          ^
 
 References:
@@ -1241,8 +1241,8 @@ References:
    19|   declare const i: MappedInterfaceWithIndexer;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    instancet.js:21:8
-   21|   i as interface {+foo: number, [string]: boolean}; // ERROR
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   21|   i as interface {readonly foo: number, [string]: boolean}; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:33:3
@@ -1379,16 +1379,16 @@ Cannot cast `map(...)` to object type because in property `bar`: string [1] is i
 [incompatible-type]
 
    lti_implicit_instantiation.js:9:14
-   9|   const o1 = map(foo) as {+bar: number}; // error
+   9|   const o1 = map(foo) as {readonly bar: number}; // error
                    ^^^^^^^^
 
 References:
    lti_implicit_instantiation.js:6:66
    6|   declare function map<O extends {...}>(o1: O): {[K in keyof O]: O[K] extends F<infer V> ? V : empty};
                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   lti_implicit_instantiation.js:9:33
-   9|   const o1 = map(foo) as {+bar: number}; // error
-                                      ^^^^^^ [2]
+   lti_implicit_instantiation.js:9:41
+   9|   const o1 = map(foo) as {readonly bar: number}; // error
+                                              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- minus_optional.js:7:2
@@ -2310,15 +2310,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
          ^^^^
 
 References:
-   test.js:55:62
-   55|   declare const badC: [a: {contents: number}, +b: {contents: string}];
-                                                                    ^^^^^^ [1]
+   test.js:55:70
+   55|   declare const badC: [a: {contents: number}, readonly b: {contents: string}];
+                                                                            ^^^^^^ [1]
    test.js:14:25
    14|   [key in keyof O]: Box<O[key]>,
                                ^^^^^^ [2]
-   test.js:55:51
-   55|   declare const badC: [a: {contents: number}, +b: {contents: string}];
-                                                         ^^^^^^^^^^^^^^^^^^ [3]
+   test.js:55:59
+   55|   declare const badC: [a: {contents: number}, readonly b: {contents: string}];
+                                                                 ^^^^^^^^^^^^^^^^^^ [3]
    test.js:5:15
     5| type Box<T> = {contents: T};
                      ^^^^^^^^^^^^^ [4]
@@ -2405,8 +2405,8 @@ Error --------------------------------------------------------------------------
 
 Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
 
-   104|   type _Unsupported = {+[key in keyof Arr]: Arr[key]}; // error: unsupported variance
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   104|   type _Unsupported = {readonly [key in keyof Arr]: Arr[key]}; // error: unsupported variance
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:3

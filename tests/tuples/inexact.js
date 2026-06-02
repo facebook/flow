@@ -78,7 +78,7 @@ function h<T extends [...]>(x: T): T { // OK
   x[1] as string; // OK
   x[2]; // ERROR - out of bounds
 
-  x as [+a: number | boolean, +b: string, ...]; // OK
+  x as [readonly a: number | boolean, readonly b: string, ...]; // OK
 }
 
 // Spread into inexact is inexact

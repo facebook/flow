@@ -137,7 +137,7 @@ cl.reset() as Callable; // OK
 
 // this inside indexer / dict — covariant value position should work
 interface Dict {
-  +[key: string]: this;
+  readonly [key: string]: this;
 }
 declare const dict: Dict;
 dict['k'] as Dict; // OK — indexer value rebound to Dict
@@ -151,23 +151,23 @@ interface BadExtends extends Holder<this> { } // ERROR: this not in scope here
 // behavior in classes (which errors with [incompatible-variance] on the
 // same shape). All of the following should error.
 interface OuterNestedObject {
-  +nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
+  readonly nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
 }
 interface OuterNestedInterface {
-  +nested: interface { clone(): this }; // ERROR
+  readonly nested: interface { clone(): this }; // ERROR
 }
 interface OuterWithThisAndNestedObject {
   self(): this; // OK — top-level `this` is fine
-  +nested: { clone(): this }; // ERROR
+  readonly nested: { clone(): this }; // ERROR
 }
 interface OuterWithDeepNestedThis {
   self(): this; // OK
-  +list: ReadonlyArray<{ +item: this }>; // ERROR
+  readonly list: ReadonlyArray<{ readonly item: this }>; // ERROR
   factory(): { make(): this }; // ERROR
 }
 interface OuterDoublyNested {
   self(): this; // OK
-  +doubly: { +a: { +b: this } }; // ERROR
+  readonly doubly: { readonly a: { readonly b: this } }; // ERROR
 }
 
 // Inherited members from each branch of the intersection must

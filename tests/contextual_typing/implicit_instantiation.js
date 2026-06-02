@@ -123,8 +123,8 @@ function test9() {
 
 function test10() {
   type V = {};
-  type Variables = {+[string]: any};
-  declare opaque type Query<-TVariables extends Variables>;
+  type Variables = {readonly [string]: any};
+  declare opaque type Query<in TVariables extends Variables>;
   declare const q: Query<V>;
   declare function poly<TVariables extends Variables>(q: Query<TVariables>): void;
   poly(q); // ok
@@ -134,7 +134,7 @@ function test11() {
   declare const jest: {
     fn<TArguments extends ReadonlyArray<any> = ReadonlyArray<any>>(): (...args: TArguments)=>void
   }
-  declare const C1: React.ComponentType<{+f: () => void}>;
+  declare const C1: React.ComponentType<{readonly f: () => void}>;
   <C1 f={jest.fn()} />; // ok
 
   declare const C2: React.ComponentType<{f1: () => void, f2: () => void}>

@@ -1,2 +1,2 @@
-interface I<-T> {}
-class C<+T> implements I<T> {} // Error: +T in a negative position
+interface I<in T> {}
+class C<out T> implements I<T> {} // Error: out T in a negative position

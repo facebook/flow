@@ -1,2 +1,2 @@
 export type Node = any;
-export type RefSetter<-T> = any;
+export type RefSetter<in T> = any;

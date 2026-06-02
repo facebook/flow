@@ -32,12 +32,12 @@ export type NoBar =
 
 export type $DeepReadOnly<T> =
   T extends ReadonlyArray<infer V> ? ReadonlyArray<$DeepReadOnly<V>> :
-  T extends {...} ? {+[K in keyof T]: $DeepReadOnly<T[K]>} : T;
+  T extends {...} ? {readonly [K in keyof T]: $DeepReadOnly<T[K]>} : T;
 
 export type Info<
-  T: {+bar: {+type: string, ...}, ...},
+  T: {readonly bar: {readonly type: string, ...}, ...},
 > =
-  [+t: T] extends [+t: {bar: infer A, ...}]
+  [readonly t: T] extends [readonly t: {bar: infer A, ...}]
   ? {
       bar:
         | BarOne

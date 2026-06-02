@@ -1,7 +1,7 @@
 0 as string; // error: intentially left here to ensure that implicit instantiation
              // below does not reset it
 
-declare export class C<K, +V> {
+declare export class C<K, out V> {
   static <K, V>(_: void): C<K, V>;
   static <K, V>(iter: Array<[K, V]>): C<K, V>;
 }

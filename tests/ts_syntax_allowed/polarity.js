@@ -1,10 +1,10 @@
 class Covariant<out T> {
     readonly prop: T;
-    -bad: T; // error
+    writeonly bad: T; // error
 }
 class Contravariant<in T> {
-    -prop: T;
-    +bad: T; // error
+    writeonly prop: T;
+    readonly bad: T; // error
 }
 class Invariant<in out T> {
     prop: number;

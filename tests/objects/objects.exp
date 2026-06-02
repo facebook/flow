@@ -94,12 +94,12 @@ Cannot assign `y` to `x` because in property `foo`: number [1] is incompatible w
                ^
 
 References:
-   compatibility.js:14:49
-   14|   function(x: { +foo: string, ... }, y: { +foo: number, ... }) {
-                                                       ^^^^^^ [1]
-   compatibility.js:14:23
-   14|   function(x: { +foo: string, ... }, y: { +foo: number, ... }) {
-                             ^^^^^^ [2]
+   compatibility.js:14:65
+   14|   function(x: { readonly foo: string, ... }, y: { readonly foo: number, ... }) {
+                                                                       ^^^^^^ [1]
+   compatibility.js:14:31
+   14|   function(x: { readonly foo: string, ... }, y: { readonly foo: number, ... }) {
+                                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
@@ -117,18 +117,18 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                ^
 
 References:
-   compatibility.js:18:58
-   18|   function(x: { x: { +foo: string, ... }, ... }, y: { x: { +foo: number, ... }, ... }) {
-                                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   compatibility.js:18:66
+   18|   function(x: { x: { readonly foo: string, ... }, ... }, y: { x: { readonly foo: number, ... }, ... }) {
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    compatibility.js:18:20
-   18|   function(x: { x: { +foo: string, ... }, ... }, y: { x: { +foo: number, ... }, ... }) {
-                          ^^^^^^^^^^^^^^^^^^^^^ [2]
-   compatibility.js:18:53
-   18|   function(x: { x: { +foo: string, ... }, ... }, y: { x: { +foo: number, ... }, ... }) {
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   18|   function(x: { x: { readonly foo: string, ... }, ... }, y: { x: { readonly foo: number, ... }, ... }) {
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   compatibility.js:18:61
+   18|   function(x: { x: { readonly foo: string, ... }, ... }, y: { x: { readonly foo: number, ... }, ... }) {
+                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    compatibility.js:18:15
-   18|   function(x: { x: { +foo: string, ... }, ... }, y: { x: { +foo: number, ... }, ... }) {
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   18|   function(x: { x: { readonly foo: string, ... }, ... }, y: { x: { readonly foo: number, ... }, ... }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
@@ -140,12 +140,12 @@ Cannot assign `y` to `x` because in property `foo`: string [1] is incompatible w
                ^
 
 References:
-   compatibility.js:22:23
-   22|   function(x: { -foo: string, ... }, y: { -foo: number, ... }) {
-                             ^^^^^^ [1]
-   compatibility.js:22:49
-   22|   function(x: { -foo: string, ... }, y: { -foo: number, ... }) {
-                                                       ^^^^^^ [2]
+   compatibility.js:22:32
+   22|   function(x: { writeonly foo: string, ... }, y: { writeonly foo: number, ... }) {
+                                      ^^^^^^ [1]
+   compatibility.js:22:67
+   22|   function(x: { writeonly foo: string, ... }, y: { writeonly foo: number, ... }) {
+                                                                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
@@ -163,18 +163,18 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
                ^
 
 References:
-   compatibility.js:26:58
-   26|   function(x: { x: { -foo: string, ... }, ... }, y: { x: { -foo: number, ... }, ... }) {
-                                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
+   compatibility.js:26:67
+   26|   function(x: { x: { writeonly foo: string, ... }, ... }, y: { x: { writeonly foo: number, ... }, ... }) {
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    compatibility.js:26:20
-   26|   function(x: { x: { -foo: string, ... }, ... }, y: { x: { -foo: number, ... }, ... }) {
-                          ^^^^^^^^^^^^^^^^^^^^^ [2]
-   compatibility.js:26:53
-   26|   function(x: { x: { -foo: string, ... }, ... }, y: { x: { -foo: number, ... }, ... }) {
-                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   26|   function(x: { x: { writeonly foo: string, ... }, ... }, y: { x: { writeonly foo: number, ... }, ... }) {
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   compatibility.js:26:62
+   26|   function(x: { x: { writeonly foo: string, ... }, ... }, y: { x: { writeonly foo: number, ... }, ... }) {
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    compatibility.js:26:15
-   26|   function(x: { x: { -foo: string, ... }, ... }, y: { x: { -foo: number, ... }, ... }) {
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   26|   function(x: { x: { writeonly foo: string, ... }, ... }, y: { x: { writeonly foo: number, ... }, ... }) {
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:10:1

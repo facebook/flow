@@ -7,7 +7,7 @@
 // Any definitions here will override similarly-named ones in
 // library files declared earlier, including default flow libs.
 
-declare class Promise<+R> { // intentional-libdef-override
+declare class Promise<out R> { // intentional-libdef-override
   constructor(callback: (
     resolve: (result?: Promise<R> | R) => void,
     reject: (error?: any) => void

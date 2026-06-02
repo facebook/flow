@@ -134,7 +134,7 @@ function test3() {
     m5<Y>(y: Y): this is Y;
   }
 
-  declare class D<+X> extends C<X> {}
+  declare class D<out X> extends C<X> {}
 
   declare const x: C<number>;
   if (x.m1()) {

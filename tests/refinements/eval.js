@@ -1,14 +1,14 @@
 type A = {
-  +f: ?{
-    +id: ?string,
+  readonly f: ?{
+    readonly id: ?string,
  }
 };
 
 type Foo = A['f'];
 
 type B = {
-  +f: ?{
-    +id: ?string,
+  readonly f: ?{
+    readonly id: ?string,
  }
 };
 

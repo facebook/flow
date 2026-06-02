@@ -1,6 +1,6 @@
 // @flow
 
-type A<T> = { +$$type: 1, value: T } | { +$$type: 2, value: T };
+type A<T> = { readonly $$type: 1, value: T } | { readonly $$type: 2, value: T };
 type B<T> = A<T>;
 declare opaque type O<T>;
 type C<T> = B<T> | O<T>;

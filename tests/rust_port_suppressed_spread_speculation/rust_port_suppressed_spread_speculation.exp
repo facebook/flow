@@ -30,9 +30,9 @@ Cannot return `emptyFunction.thatReturnsNull` because inexact `FunctionReturning
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:12:21
-   12|   +thatReturnsNull: FunctionReturning<null>,
-                           ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:12:29
+   12|   readonly thatReturnsNull: FunctionReturning<null>,
+                                   ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:43:47
    43|         calculateInterval(_today: LocalDate): LocalDateInterval {
                                                      ^^^^^^^^^^^^^^^^^ [2]

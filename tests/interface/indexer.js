@@ -27,10 +27,10 @@ interface Invariant {
   [Keys]: number | string;
 }
 interface Covariant {
-  +[Keys]: number | string;
+  readonly [Keys]: number | string;
 }
 interface Contravariant {
-  -[Keys]: number;
+  writeonly [Keys]: number;
 }
 
 {
@@ -52,7 +52,7 @@ interface Contravariant {
   x['xxx'] = 1; // ERROR
 }
 {
-  declare const x: interface {+[string]: number};
+  declare const x: interface {readonly [string]: number};
   declare const s: string;
   x[s]; // OK
   x[s] = 1; // ERROR
@@ -75,14 +75,14 @@ interface Contravariant {
 {
   declare const x: {[Keys]: number | string};
   x as interface {[Keys]: number}; // ERROR
-  x as interface {+[Keys]: number}; // ERROR
-  x as interface {-[Keys]: number}; // OK
+  x as interface {readonly [Keys]: number}; // ERROR
+  x as interface {writeonly [Keys]: number}; // OK
 }
 {
   declare const x: interface {[Keys]: number | string};
   x as interface {[Keys]: number}; // ERROR
-  x as interface {+[Keys]: number}; // ERROR
-  x as interface {-[Keys]: number}; // OK
+  x as interface {readonly [Keys]: number}; // ERROR
+  x as interface {writeonly [Keys]: number}; // OK
 }
 
 // Extends
@@ -178,6 +178,6 @@ interface M2 extends M {
   x['a'] = 1; // ERROR
   x[true]; // ERROR
 
-  declare const y: {+a: number};
+  declare const y: {readonly a: number};
   y as Readonly<interface {[string]: number}>; // OK
 }

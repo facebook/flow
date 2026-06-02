@@ -1,6 +1,6 @@
-declare class IterableClass<+K, +V> {}
+declare class IterableClass<out K, out V> {}
 
 export type LogMap<K, V> =
-  | {+[key: K]: V, ...}
+  | {readonly [key: K]: V, ...}
   | IterableClass<K, V>
   | ReadonlyMap<K, V>;

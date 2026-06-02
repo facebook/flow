@@ -19,8 +19,8 @@ export const frozenNegativeNumber = Object.freeze({foo: -1});
 
 frozenObject.bar = '23456'; // error bar is not writable
 frozenObject as {bar: '12345'}; // error bar is readonly
-frozenObject as {+bar: '1234'}; // error '12345' ~> '1234'
-frozenObject as {+bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
+frozenObject as {readonly bar: '1234'}; // error '12345' ~> '1234'
+frozenObject as {readonly bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
 // $FlowExpectedError[unsafe-object-assign]
 Object.assign(frozenObject, {bar: '12345'}); // error bar is not writable
 
@@ -31,8 +31,8 @@ frozenObjectWithSpread.constructor = baz; // error baz not a function
 frozenObjectWithSpread.toString = function () {}; // error toString missing
 
 frozenObjectWithSpread as {bar: '12345', baz: number}; // error bar and baz are readonly
-frozenObjectWithSpread as {+bar: '1234', +baz: number}; // error '12345' ~> '1234'
-frozenObjectWithSpread as {+bar: '12345', }; // error baz is missing in frozenObjectWithSpread
+frozenObjectWithSpread as {readonly bar: '1234', readonly baz: number}; // error '12345' ~> '1234'
+frozenObjectWithSpread as {readonly bar: '12345', }; // error baz is missing in frozenObjectWithSpread
 // $FlowExpectedError[unsafe-object-assign]
 Object.assign(frozenObjectWithSpread, {bar: '12345'}); // error bar is not writable
 

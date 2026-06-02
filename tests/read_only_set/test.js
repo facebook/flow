@@ -6,13 +6,13 @@ class Bar<T> {
     }
 }
 
-class Foo<+T> {
+class Foo<out T> {
     bad (x: number) : ReadonlySet<T> {
         return new Set();
     }
 }
 
-class Baz<-T> {
+class Baz<in T> {
     bad (x: number) : ReadonlySet<T> {// Error: T in invariant position
         return new Set();
     }

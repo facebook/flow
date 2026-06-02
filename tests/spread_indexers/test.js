@@ -25,8 +25,8 @@ const r = {...p, ...q}; // Error, indexer may overwrite properties with explicit
 
 const v: {[string]: number} = {};
 const w: {[number]: string} = {};
-const x: {+[string | number]: string | number} = v;
-const y: {+[string | number]: string | number} = w;
+const x: {readonly [string | number]: string | number} = v;
+const y: {readonly [string | number]: string | number} = w;
 const z: {[string | number]: string | number} = {...x, ...y}; // ok
 
 

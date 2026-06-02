@@ -81,7 +81,7 @@ hook useC() {
 }
 
 {
-  type NonTransitive<+T> = {o: T}; // expected variance error
+  type NonTransitive<out T> = {o: T}; // expected variance error
 
   declare hook useReturn(): NonTransitive<''>;
   useReturn as hook () => NonTransitive<string>; // ok: ReactDRO is applied at calling time, so it won't force unwrap the TypeAppT

@@ -14,11 +14,11 @@ declare class GenericRecordBase<T> {
 
   constructor(
     value: {
-      +foo: Map<string, number>,
-      +bar: string,
-      +baz?: ?Immutable.List<string>,
-      +qux: T,
-      +fn?: ?GenericFn,
+      readonly foo: Map<string, number>,
+      readonly bar: string,
+      readonly baz?: ?Immutable.List<string>,
+      readonly qux: T,
+      readonly fn?: ?GenericFn,
       ...
     },
   ): void;
@@ -38,11 +38,11 @@ declare class GenericRecordBase<T> {
 
   merge(
     value: {
-      +foo?: Map<string, number>,
-      +bar?: string,
-      +baz?: ?Immutable.List<string>,
-      +qux?: T,
-      +fn?: ?GenericFn,
+      readonly foo?: Map<string, number>,
+      readonly bar?: string,
+      readonly baz?: ?Immutable.List<string>,
+      readonly qux?: T,
+      readonly fn?: ?GenericFn,
       ...
     },
   ): this;

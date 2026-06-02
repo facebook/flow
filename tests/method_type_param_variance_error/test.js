@@ -6,19 +6,19 @@
 // in T, out T) regardless of any experimental flag.
 
 // Function type annotations
-type F = <+T>(x: T) => void; // ERROR
-type G = <-T>() => T; // ERROR
+type F = <out T>(x: T) => void; // ERROR
+type G = <in T>() => T; // ERROR
 
 // Class method type parameters
 class C {
-  foo<+T>(x: T): void {} // ERROR
-  bar<-T>(): T {
+  foo<out T>(x: T): void {} // ERROR
+  bar<in T>(): T {
     throw 0;
   } // ERROR
 }
 
 // Interface method type parameters
 interface I {
-  foo<+T>(x: T): void; // ERROR
-  bar<-T>(): T; // ERROR
+  foo<out T>(x: T): void; // ERROR
+  bar<in T>(): T; // ERROR
 }

@@ -148,9 +148,9 @@ Cannot cast `o_variance.__proto__` to empty because object type [1] is incompati
        ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   annot.js:19:33
-   19| type O_variance = { +__proto__: { q: 0, ... }, ... };
-                                       ^^^^^^^^^^^^^ [1]
+   annot.js:19:41
+   19| type O_variance = { readonly __proto__: { q: 0, ... }, ... };
+                                               ^^^^^^^^^^^^^ [1]
    annot.js:22:25
    22| o_variance.__proto__ as empty; // error: object type ~> empty
                                ^^^^^ [2]

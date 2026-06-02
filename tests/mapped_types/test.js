@@ -1,7 +1,7 @@
 type O = { foo: number }
 type Arr = Array<number>;
 type ROArr = ReadonlyArray<number>;
-type Tuple = [a: number, +b?: string];
+type Tuple = [a: number, readonly b?: string];
 type Box<T> = {contents: T};
 
 type WithIndexer = {
@@ -27,7 +27,7 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
   declare const c: Mapped<Tuple>;
   a as Array<{contents: number}>; // OK
   b as ReadonlyArray<{contents: number}>; // OK
-  c as [a: {contents: number}, +b?: {contents: string | void}]; // OK
+  c as [a: {contents: number}, readonly b?: {contents: string | void}]; // OK
   a as empty; // ERROR
   b as empty; // ERROR
   c as empty; // ERROR
@@ -49,10 +49,10 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
 {
   declare const a: Array<{contents: number}>;
   declare const b: ReadonlyArray<{contents: number}>;
-  declare const c: [a: {contents: number}, +b?: {contents: string | void}];
+  declare const c: [a: {contents: number}, readonly b?: {contents: string | void}];
   declare const badA: Array<{contents: string}>;
   declare const badB: ReadonlyArray<{contents: string}>;
-  declare const badC: [a: {contents: number}, +b: {contents: string}];
+  declare const badC: [a: {contents: number}, readonly b: {contents: string}];
   a as Mapped<Arr>; // OK
   b as Mapped<ROArr>; // OK
   c as Mapped<Tuple>; // OK
@@ -86,12 +86,12 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
 
 // Variance
 {
-  type ReadOnly<T extends {...}> = {+[key in keyof T]: T[key]};
+  type ReadOnly<T extends {...}> = {readonly [key in keyof T]: T[key]};
   declare const readonly: ReadOnly<O>;
   readonly.foo as number; // OK
   readonly.foo = 3; // ERROR
 
-  type WriteOnly<T extends {...}> = {-[key in keyof T]: T[key]};
+  type WriteOnly<T extends {...}> = {writeonly [key in keyof T]: T[key]};
   declare const writeonly: WriteOnly<O>;
   writeonly.foo as number; // ERROR
   writeonly.foo = 3; // OK
@@ -101,7 +101,7 @@ type Mapped<O extends {...} | ReadonlyArray<unknown>> = {
   readonlyIndexer.qux as string; // OK
   readonlyIndexer.qux = 'str'; // ERROR
 
-  type _Unsupported = {+[key in keyof Arr]: Arr[key]}; // error: unsupported variance
+  type _Unsupported = {readonly [key in keyof Arr]: Arr[key]}; // error: unsupported variance
 }
 
 // Optionality

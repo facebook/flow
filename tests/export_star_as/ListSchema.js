@@ -1,3 +1,3 @@
 export type ListSchema = {
-  +kind: 'list',
+  readonly kind: 'list',
 };

@@ -857,16 +857,16 @@ Cannot cast `props1` to object type because in property `bar`: number [1] is inc
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1
-   16| props1 as {+foo: number, +bar: string}; // error: string != number
+   16| props1 as {readonly foo: number, readonly bar: string}; // error: string != number
        ^^^^^^
 
 References:
    props_implicit_instantiation.js:14:39
    14| declare component B(foo: string, bar: number);
                                              ^^^^^^ [1]
-   props_implicit_instantiation.js:16:32
-   16| props1 as {+foo: number, +bar: string}; // error: string != number
-                                      ^^^^^^ [2]
+   props_implicit_instantiation.js:16:48
+   16| props1 as {readonly foo: number, readonly bar: string}; // error: string != number
+                                                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
@@ -875,16 +875,16 @@ Cannot cast `props1` to object type because in property `foo`: string [1] is inc
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1
-   16| props1 as {+foo: number, +bar: string}; // error: string != number
+   16| props1 as {readonly foo: number, readonly bar: string}; // error: string != number
        ^^^^^^
 
 References:
    props_implicit_instantiation.js:14:26
    14| declare component B(foo: string, bar: number);
                                 ^^^^^^ [1]
-   props_implicit_instantiation.js:16:18
-   16| props1 as {+foo: number, +bar: string}; // error: string != number
-                        ^^^^^^ [2]
+   props_implicit_instantiation.js:16:26
+   16| props1 as {readonly foo: number, readonly bar: string}; // error: string != number
+                                ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:21:1

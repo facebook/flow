@@ -3,19 +3,19 @@
 // This test times out quite reliably without the OpenT indirection in
 // Implicit_instantiation.instantiate_poly_with_subst_map
 
-interface $Iterator_<+Yield,+Return,-Next> {
+interface $Iterator_<out Yield,out Return,in Next> {
   @@iterator(): $Iterator_<Yield,Return,Next>;
 }
 
-type Iterator_<+T> = $Iterator_<T,void,void>;
+type Iterator_<out T> = $Iterator_<T,void,void>;
 
-interface $Iterable_<+Yield,+Return,-Next> {
+interface $Iterable_<out Yield,out Return,in Next> {
   @@iterator(): $Iterator<Yield,Return,Next>;
 }
 
-type Iterable_<+T> = $Iterable_<T,void,void>;
+type Iterable_<out T> = $Iterable_<T,void,void>;
 
-declare class $CustomReadOnlyMap<K, +V> {
+declare class $CustomReadOnlyMap<K, out V> {
   @@iterator(): Iterator_<[K, V]>;
 }
 

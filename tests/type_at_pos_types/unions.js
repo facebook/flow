@@ -16,8 +16,8 @@ if (random()) {
 bar;
 //^?
 
-declare const numObj: { +f: number, ... };
-declare const strObj: { +f: string, ... };
+declare const numObj: { readonly f: number, ... };
+declare const strObj: { readonly f: string, ... };
 
 let obj;
 if (random()) {

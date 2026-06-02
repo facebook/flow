@@ -6,11 +6,11 @@ declare class B extends A {}
 
 type O1 = {...{p:T, ...}&{q:U, ...}, ...};
 declare const o1: O1;
-o1 as {+p?:T, +q?:U, ...}; // ok
+o1 as {readonly p?:T, readonly q?:U, ...}; // ok
 
 type O2 = {...{p:A, ...}&{p:B, ...}, ...};
 declare const o2: O2;
-o2 as {+p?:B, ...}; // ok
+o2 as {readonly p?:B, ...}; // ok
 ({p: new B} as O2); // ok
 ({p: new A} as O2); // error: A ~> B
 

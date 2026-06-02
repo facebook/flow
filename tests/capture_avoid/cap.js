@@ -12,7 +12,7 @@
    though that `this` is supposed to be `L`'s `this`, not `P`'s!
    `L`'s `this` has been captured by the `ThisClassT` abstraction
    for `P`. */
-declare class P<+R> {
+declare class P<out R> {
   constructor(r: R): void;
 }
 

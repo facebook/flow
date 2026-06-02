@@ -16,15 +16,15 @@
 }
 
 {
-  type DistributeNullAndVoid<O> = {-[key in keyof O]: number};
+  type DistributeNullAndVoid<O> = {writeonly [key in keyof O]: number};
 
   type O = {foo: number};
 
   declare const oExplicit: DistributeNullAndVoid<O | null | void>;
-  oExplicit as {-foo: number} | null | void;
-  oExplicit as {-foo: number}; // ERROR 2x
+  oExplicit as {writeonly foo: number} | null | void;
+  oExplicit as {writeonly foo: number}; // ERROR 2x
 
   declare const oMaybe: DistributeNullAndVoid<?O>;
-  oMaybe as {-foo: number} | null | void;
-  oMaybe as {-foo: number}; // ERROR
+  oMaybe as {writeonly foo: number} | null | void;
+  oMaybe as {writeonly foo: number}; // ERROR
 }

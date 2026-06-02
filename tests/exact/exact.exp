@@ -574,21 +574,21 @@ References:
                             ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- optional.js:3:79
+Error ------------------------------------------------------------------------------------------------- optional.js:3:87
 
 Cannot return `x` because in property `p`: string [1] is incompatible with number [2]. [incompatible-type]
 
-   optional.js:3:79
-   3| function foo3(x: {__proto__: { p: string, ...}}): {+p?: number, ...} { return x; } // error, type incompatibility
-                                                                                    ^
+   optional.js:3:87
+   3| function foo3(x: {__proto__: { p: string, ...}}): {readonly p?: number, ...} { return x; } // error, type incompatibility
+                                                                                            ^
 
 References:
    optional.js:3:35
-   3| function foo3(x: {__proto__: { p: string, ...}}): {+p?: number, ...} { return x; } // error, type incompatibility
+   3| function foo3(x: {__proto__: { p: string, ...}}): {readonly p?: number, ...} { return x; } // error, type incompatibility
                                         ^^^^^^ [1]
-   optional.js:3:57
-   3| function foo3(x: {__proto__: { p: string, ...}}): {+p?: number, ...} { return x; } // error, type incompatibility
-                                                              ^^^^^^ [2]
+   optional.js:3:65
+   3| function foo3(x: {__proto__: { p: string, ...}}): {readonly p?: number, ...} { return x; } // error, type incompatibility
+                                                                      ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- other_utilities.js:20:13

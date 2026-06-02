@@ -3,12 +3,12 @@
 const React = require('react');
 
 type Props1 = {
-    +x : number;
+    readonly x : number;
     y : string;
  ...}
 
 type Props2 = {
-    +x : number;
+    readonly x : number;
     y : string;
 }
 

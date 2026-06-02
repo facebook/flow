@@ -1,6 +1,6 @@
 type A = {
-  +r: number,
-  -w: number,
+  readonly r: number,
+  writeonly w: number,
   n: number,
 };
 

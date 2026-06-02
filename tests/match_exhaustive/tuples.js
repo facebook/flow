@@ -403,7 +403,7 @@
 
 // Non-readable
 {
-  declare const x: [-foo: boolean];
+  declare const x: [writeonly foo: boolean];
 
   match (x) { // OK
     [_] => {} // OK

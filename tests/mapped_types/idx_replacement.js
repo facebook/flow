@@ -1,9 +1,9 @@
-declare opaque type DeepRequiredArray<+T>: ReadonlyArray<
+declare opaque type DeepRequiredArray<out T>: ReadonlyArray<
   DeepRequired<NonNullable<T>>,
 >;
 
-declare opaque type DeepRequiredObject<+T extends interface {}>: Required<{
-  +[K in keyof T]: DeepRequired<T[K]>,
+declare opaque type DeepRequiredObject<out T extends interface {}>: Required<{
+  readonly [K in keyof T]: DeepRequired<T[K]>,
 }>;
 
 declare opaque type IdxNonMaybeType<T>: NonNullable<T>;
@@ -82,7 +82,7 @@ declare function idx<T1, T2>(
 
 // Additional tests
 {
-  declare const props: { data: { +id: ?string } };
+  declare const props: { data: { readonly id: ?string } };
   declare function nullthrows<T>(x: ?T): T;
 
   const a = nullthrows(idx(props, _ => _.data.id));

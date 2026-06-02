@@ -10,7 +10,7 @@ declare export opaque type ProfilePic_imageRef;
 export type ProfilePic_image = Relay.Fragment<
   ProfilePic_imageRef,
   {
-    +$$typeof: Relay.$$TypeofFragment,
-    +url: string,
+    readonly $$typeof: Relay.$$TypeofFragment,
+    readonly url: string,
   },
 >;

@@ -6,7 +6,7 @@ declare let y: U;
 
 type O1 = {...{p:T, ...}|{q:U, ...}, ...};
 declare const o1: O1;
-o1 as {+p?:T, ...}|{+q?:U, ...}; // ok
+o1 as {readonly p?:T, ...}|{readonly q?:U, ...}; // ok
 
 type Union1 = {[string]: number} | {foo: number}
 type Union2 = {bar: number} | {[number]: string};

@@ -28,7 +28,7 @@ type P<X> = $Exact<{ m: (x: X) => void, ...}>;
 type Q<X> = $Exact<P<X>>;
 //   ^
 
-type R = $Exact<{ +f: number, ... }>;
+type R = $Exact<{ readonly f: number, ... }>;
 declare const r: {response: R};
 const d = r.response;
 function bar({d}:{d: R, ...}) {}

@@ -20,7 +20,7 @@ interface B {
   9007199254740992: false; // ERROR
 }
 
-// Variance with numeric key in interface
+// Variance with numeric key in interface (legacy sigils: ambiguity with unary +/-)
 interface C {
   -1: string; // ERROR
   +2: boolean; // ERROR

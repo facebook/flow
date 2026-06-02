@@ -1,6 +1,6 @@
 //@flow
 
-type Props = {+foo: number, ...};
+type Props = {readonly foo: number, ...};
 function Component(x: Props): React.Node {
   return null;
 }

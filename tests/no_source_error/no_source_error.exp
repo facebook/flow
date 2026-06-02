@@ -15,12 +15,12 @@ References:
    no_source.js:15:20
      15|     const x: Array<Foo> = [];
                             ^^^ [1]
-   no_source.js:13:12
-     13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
-                    ^^^^^^^ [2]
-   no_source.js:13:8
-     13|   +z : (x: FooPlus) => boolean = (x) => { return true; }
-                ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   no_source.js:13:20
+     13|   readonly z : (x: FooPlus) => boolean = (x) => { return true; }
+                            ^^^^^^^ [2]
+   no_source.js:13:16
+     13|   readonly z : (x: FooPlus) => boolean = (x) => { return true; }
+                        ^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/core.js:1064:24
    1064|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                                 ^^^^^^^^^^^^^^ [4]

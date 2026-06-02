@@ -18,9 +18,9 @@ References:
    a.js:16:21
    16|   constructor(prop: string) {
                            ^^^^^^ [1]
-   a.js:13:10
-   13|   +prop: number;
-                ^^^^^^ [2]
+   a.js:13:18
+   13|   readonly prop: number;
+                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- a.js:18:10
@@ -56,9 +56,9 @@ Cannot assign empty string to `this.prop` because string [1] is incompatible wit
                        ^^ [1]
 
 References:
-   a.js:2:10
-    2|   +prop: number;
-                ^^^^^^ [2]
+   a.js:2:18
+    2|   readonly prop: number;
+                        ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- a.js:71:7

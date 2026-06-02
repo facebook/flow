@@ -1,6 +1,6 @@
 /* @flow */
 
-function f(this: {+p: unknown, ...}) {
+function f(this: {readonly p: unknown, ...}) {
   return this.p;
 }
 

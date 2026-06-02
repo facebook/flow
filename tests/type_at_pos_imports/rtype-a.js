@@ -1,3 +1,3 @@
 // @flow
 
-export class Value<+T>{}
+export class Value<out T>{}

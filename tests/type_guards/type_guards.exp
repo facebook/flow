@@ -1853,9 +1853,9 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
                            ^
 
 References:
-   refinement.js:38:33
-   38|   declare class ReadOnlyArray_<+T> {
-                                       ^ [1]
+   refinement.js:38:36
+   38|   declare class ReadOnlyArray_<out T> {
+                                          ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:41:129
@@ -1868,9 +1868,9 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
                                                                                                                                        ^
 
 References:
-   refinement.js:38:33
-   38|   declare class ReadOnlyArray_<+T> {
-                                       ^ [1]
+   refinement.js:38:36
+   38|   declare class ReadOnlyArray_<out T> {
+                                          ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:47:35
@@ -2551,9 +2551,9 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
                             ^
 
 References:
-   refinement.js:241:33
-   241|   declare class ReadOnlyArray_<+T> {
-                                        ^ [1]
+   refinement.js:241:36
+   241|   declare class ReadOnlyArray_<out T> {
+                                           ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- refinement.js:244:129
@@ -2566,9 +2566,9 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
                                                                                                                                         ^
 
 References:
-   refinement.js:241:33
-   241|   declare class ReadOnlyArray_<+T> {
-                                        ^ [1]
+   refinement.js:241:36
+   241|   declare class ReadOnlyArray_<out T> {
+                                           ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:249:7
@@ -3319,19 +3319,19 @@ Cannot resolve name `Unresolved`. [cannot-resolve-name]
                                           ^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:137:33
+Error --------------------------------------------------------------------------------------------------- this.js:137:36
 
 Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   this.js:137:33
-   137|   declare class D<+X> extends C<X> {}
-                                        ^
+   this.js:137:36
+   137|   declare class D<out X> extends C<X> {}
+                                           ^
 
 References:
-   this.js:137:20
-   137|   declare class D<+X> extends C<X> {}
-                           ^ [1]
+   this.js:137:23
+   137|   declare class D<out X> extends C<X> {}
+                              ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:143:5
@@ -3343,9 +3343,9 @@ Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompati
             ^
 
 References:
-   this.js:137:20
-   137|   declare class D<+X> extends C<X> {}
-                           ^ [1]
+   this.js:137:23
+   137|   declare class D<out X> extends C<X> {}
+                              ^ [1]
    this.js:139:22
    139|   declare const x: C<number>;
                              ^^^^^^ [2]
@@ -3363,9 +3363,9 @@ Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompati
             ^
 
 References:
-   this.js:137:20
-   137|   declare class D<+X> extends C<X> {}
-                           ^ [1]
+   this.js:137:23
+   137|   declare class D<out X> extends C<X> {}
+                              ^ [1]
    this.js:150:12
    150|   if (x.m2<number>()) {
                    ^^^^^^ [2]
@@ -3383,9 +3383,9 @@ Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompati
             ^
 
 References:
-   this.js:137:20
-   137|   declare class D<+X> extends C<X> {}
-                           ^ [1]
+   this.js:137:23
+   137|   declare class D<out X> extends C<X> {}
+                              ^ [1]
    this.js:155:12
    155|   if (x.m3(1)) {
                    ^ [2]

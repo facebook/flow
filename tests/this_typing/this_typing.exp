@@ -8,12 +8,12 @@ incompatible with `I_Function_this` [2]. [incompatible-type]
        ^^^
 
 References:
-   class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:51:1
@@ -26,9 +26,9 @@ incompatible with `I_Method_this` [2]. [incompatible-type]
        ^^^
 
 References:
-   class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -44,12 +44,12 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   class_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:1
@@ -62,9 +62,9 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    class_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -188,12 +188,12 @@ Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` para
        ^^^
 
 References:
-   class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   class_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   class_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:75:1
@@ -206,9 +206,9 @@ Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parame
        ^^^
 
 References:
-   class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    class_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -224,12 +224,12 @@ Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` par
        ^^^
 
 References:
-   class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   class_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   class_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:1
@@ -242,9 +242,9 @@ Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` param
        ^^^
 
 References:
-   class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    class_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -605,12 +605,12 @@ incompatible with `I_Function_this` [2]. [incompatible-type]
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   declare_class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:55:1
@@ -623,9 +623,9 @@ incompatible with `I_Method_this` [2]. [incompatible-type]
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -641,12 +641,12 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   declare_class_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   declare_class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:1
@@ -659,9 +659,9 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   declare_class_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    declare_class_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -785,12 +785,12 @@ Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` para
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   declare_class_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   declare_class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   declare_class_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:79:1
@@ -803,9 +803,9 @@ Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parame
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   declare_class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    declare_class_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -821,12 +821,12 @@ Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` par
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   declare_class_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   declare_class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   declare_class_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:1
@@ -839,9 +839,9 @@ Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` param
        ^^^
 
 References:
-   declare_class_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   declare_class_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    declare_class_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -1024,9 +1024,9 @@ Cannot call `myFun.bind` because in property `prop`: boolean [1] is incompatible
                          ^^^^ [1]
 
 References:
-   declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number, ...}): string;
-                                            ^^^^^^ [2]
+   declare_function.js:1:46
+    1| declare function myFun(this: {readonly prop: number, ...}): string;
+                                                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:13:1
@@ -1039,9 +1039,9 @@ boolean [2]. [incompatible-type]
        ^^^^^
 
 References:
-   declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number, ...}): string;
-                                            ^^^^^^ [1]
+   declare_function.js:1:46
+    1| declare function myFun(this: {readonly prop: number, ...}): string;
+                                                    ^^^^^^ [1]
    declare_function.js:13:20
    13| myFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
                           ^^^^ [2]
@@ -1057,9 +1057,9 @@ Cannot call `myFun.call` because in the `this` parameter > property `prop`: numb
        ^^^^^
 
 References:
-   declare_function.js:1:38
-    1| declare function myFun(this: {+prop: number, ...}): string;
-                                            ^^^^^^ [1]
+   declare_function.js:1:46
+    1| declare function myFun(this: {readonly prop: number, ...}): string;
+                                                    ^^^^^^ [1]
    declare_function.js:14:19
    14| myFun.call({prop: true}); // Error - boolean ~> number
                          ^^^^ [2]
@@ -1075,9 +1075,9 @@ Cannot call `myPolyFun.bind` because in property `prop`: boolean [1] is incompat
                              ^^^^ [1]
 
 References:
-   declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
-                                                   ^^^^^^ [2]
+   declare_function.js:2:53
+    2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
+                                                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:16:1
@@ -1090,9 +1090,9 @@ boolean [2]. [incompatible-type]
        ^^^^^^^^^
 
 References:
-   declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
-                                                   ^^^^^^ [1]
+   declare_function.js:2:53
+    2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
+                                                           ^^^^^^ [1]
    declare_function.js:16:24
    16| myPolyFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
                               ^^^^ [2]
@@ -1108,9 +1108,9 @@ boolean [2]. [incompatible-type]
        ^^^^^^^^^
 
 References:
-   declare_function.js:2:45
-    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
-                                                   ^^^^^^ [1]
+   declare_function.js:2:53
+    2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
+                                                           ^^^^^^ [1]
    declare_function.js:17:23
    17| myPolyFun.call({prop: true}); // Error - boolean ~> number
                              ^^^^ [2]
@@ -1142,8 +1142,8 @@ Cannot call `myFun.apply` because in the `this` parameter: object type [1] is in
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {+prop: number, ...}): string;
-                                    ^^^^^^^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {readonly prop: number, ...}): string;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:20:1
    20| myFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^ [2]
@@ -1160,8 +1160,8 @@ Cannot call `myFun.call` because in the `this` parameter: object type [1] is inc
 
 References:
    declare_function.js:1:30
-    1| declare function myFun(this: {+prop: number, ...}): string;
-                                    ^^^^^^^^^^^^^^^^^^^^ [1]
+    1| declare function myFun(this: {readonly prop: number, ...}): string;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:21:1
    21| myFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^ [2]
@@ -1193,8 +1193,8 @@ Cannot call `myPolyFun.apply` because in the `this` parameter: object type [1] i
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
-                                           ^^^^^^^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:23:1
    23| myPolyFun.apply(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^^ [2]
@@ -1211,8 +1211,8 @@ Cannot call `myPolyFun.call` because in the `this` parameter: object type [1] is
 
 References:
    declare_function.js:2:37
-    2| declare function myPolyFun<T>(this: {+prop: number, ...}, x: T): T;
-                                           ^^^^^^^^^^^^^^^^^^^^ [1]
+    2| declare function myPolyFun<T>(this: {readonly prop: number, ...}, x: T): T;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    declare_function.js:24:1
    24| myPolyFun.call(); // Error - void ~> number
        ^^^^^^^^^^^^^^^^ [2]
@@ -1692,12 +1692,12 @@ subtype of `C_Function_this` [2]. Class instances are not subtypes of object typ
        ^^^
 
 References:
-   object_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:1
@@ -1715,9 +1715,9 @@ References:
    object_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
    object_interface_subtyping.js:6:5
     6|     x(this : I_Method_this) : void
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -1737,9 +1737,9 @@ References:
    object_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:1
@@ -1752,12 +1752,12 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   object_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   object_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:1
@@ -1770,9 +1770,9 @@ incompatible with `unknown` [2]. [incompatible-type]
        ^^^
 
 References:
-   object_interface_subtyping.js:24:18
-   24|     +x : (this : C_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:24:26
+   24|     readonly x : (this : C_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -1789,9 +1789,9 @@ as an interface. [class-object-subtyping]
        ^^^
 
 References:
-   object_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:28:14
    28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -1852,9 +1852,9 @@ References:
    object_interface_subtyping.js:28:14
    28|     x(this : C_Method_this) : void
                     ^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   object_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:1
@@ -1885,12 +1885,12 @@ Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` para
        ^^^
 
 References:
-   object_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   object_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   object_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:80:1
@@ -1903,9 +1903,9 @@ Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parame
        ^^^
 
 References:
-   object_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   object_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    object_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -1921,12 +1921,12 @@ Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` par
        ^^^
 
 References:
-   object_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   object_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   object_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   object_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:1
@@ -1939,9 +1939,9 @@ Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` param
        ^^^
 
 References:
-   object_interface_subtyping.js:40:18
-   40|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   object_interface_subtyping.js:40:26
+   40|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    object_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]
@@ -1957,12 +1957,12 @@ Cannot cast `cme` to `I_Function_this` because in property `x` > the `this` para
        ^^^
 
 References:
-   object_interface_subtyping.js:44:18
-   44|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   object_interface_subtyping.js:2:18
-    2|     +x : (this : I_Function_this) => void
-                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:44:26
+   44|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   object_interface_subtyping.js:2:26
+    2|     readonly x : (this : I_Function_this) => void
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:86:1
@@ -1975,9 +1975,9 @@ Cannot cast `cme` to `I_Method_this` because in property `x` > the `this` parame
        ^^^
 
 References:
-   object_interface_subtyping.js:44:18
-   44|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   object_interface_subtyping.js:44:26
+   44|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    object_interface_subtyping.js:6:14
     6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
@@ -1993,12 +1993,12 @@ Cannot cast `cme` to `I_Function_mixed` because in property `x` > the `this` par
        ^^^
 
 References:
-   object_interface_subtyping.js:44:18
-   44|     +x : (this : empty) => void
-                        ^^^^^ [1]
-   object_interface_subtyping.js:10:18
-   10|     +x : (this : unknown) => void
-                        ^^^^^^^ [2]
+   object_interface_subtyping.js:44:26
+   44|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
+   object_interface_subtyping.js:10:26
+   10|     readonly x : (this : unknown) => void
+                                ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:1
@@ -2011,9 +2011,9 @@ Cannot cast `cme` to `I_Method_mixed` because in property `x` > the `this` param
        ^^^
 
 References:
-   object_interface_subtyping.js:44:18
-   44|     +x : (this : empty) => void
-                        ^^^^^ [1]
+   object_interface_subtyping.js:44:26
+   44|     readonly x : (this : empty) => void
+                                ^^^^^ [1]
    object_interface_subtyping.js:14:14
    14|     x(this : unknown) : void
                     ^^^^^^^ [2]

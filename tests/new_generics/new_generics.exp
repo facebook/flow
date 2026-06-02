@@ -1194,8 +1194,8 @@ References:
    968|     declare class Component<Props, State = void> {
                                     ^^^^^ [1]
    react.js:12:36
-    12|   declare const b: React.Component<{+a: number, ...}>;
-                                           ^^^^^^^^^^^^^^^^^ [2]
+    12|   declare const b: React.Component<{readonly a: number, ...}>;
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    react.js:14:24
     14|   b as React.Component<Props>; // nope
                                ^^^^^ [3]
@@ -1584,9 +1584,9 @@ Cannot return `this.f2()` because `C` [1] is incompatible with `this` [2]. [inco
                    ^^^^^^^^^
 
 References:
-   this.js:5:14
-   5|   +f2: () => C;
-                   ^ [1]
+   this.js:5:22
+   5|   readonly f2: () => C;
+                           ^ [1]
    this.js:6:8
    6|   g(): this {
              ^^^^ [2]

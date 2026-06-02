@@ -3,8 +3,8 @@
 type MyEnum = 'FOO' | 'BAR';
 type T<X> = X;
 
-declare function getKeys1<TKey>(x: {+[{foo: TKey}['foo']]: unknown}): TKey;
-declare function getKeys2<TKey>(x: {+[T<TKey>]: unknown}): TKey;
+declare function getKeys1<TKey>(x: {readonly [{foo: TKey}['foo']]: unknown}): TKey;
+declare function getKeys2<TKey>(x: {readonly [T<TKey>]: unknown}): TKey;
 
 declare const dict: {[MyEnum]: unknown};
 

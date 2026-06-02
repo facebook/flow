@@ -17,7 +17,7 @@
   o as {['1']: boolean}; // ERROR
 
   o as {'1': boolean, '2': boolean}; // OK
-  o as {+'1': true, +[number]: false}; // OK
+  o as {readonly '1': true, readonly [number]: false}; // OK
   o as {'1': true, [number]: true}; // ERROR
 
   '1' as keyof typeof o; // OK
@@ -57,15 +57,15 @@
   }
   // Conditional types
   {
-    type GetKeys<T> = T extends {+[infer K]: unknown} ? K : empty;
+    type GetKeys<T> = T extends {readonly [infer K]: unknown} ? K : empty;
     declare const x: GetKeys<{'1': boolean, '2': string}>;
     x as number; // ERROR
   }
 }
 
 {
-  declare class MyMap<+K, +V> {
-    static <K, V>({+[k: K]: V, ...}): MyMap<K, V>;
+  declare class MyMap<out K, out V> {
+    static <K, V>({readonly [k: K]: V, ...}): MyMap<K, V>;
   }
   const map = MyMap({'1': true});
   map as MyMap<string, boolean>; // OK
@@ -78,11 +78,11 @@
     '2': 'two',
   };
 
-  o as {+[number]: boolean | string}; // OK
-  o as {+[string]: string}; // ERROR
+  o as {readonly [number]: boolean | string}; // OK
+  o as {readonly [string]: string}; // ERROR
 
   o as {'1': 'one', '2': 'two', [number]: boolean}; // OK
-  o as {'1': 'one', +[number]: boolean | 'two'}; // OK
+  o as {'1': 'one', readonly [number]: boolean | 'two'}; // OK
 
   o as {'1': 'one', '2': 'two', '3': boolean, [number]: boolean}; // OK
 }

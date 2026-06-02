@@ -92,7 +92,7 @@ function false_(x: unknown) {
 
 function obj2(x: unknown) {
   if (typeof x === 'object') {
-    x as {+[key: string]: unknown} | null;
+    x as {readonly [key: string]: unknown} | null;
     if (x !== null) {
       x['foo'] as string; // error, mixed
     }

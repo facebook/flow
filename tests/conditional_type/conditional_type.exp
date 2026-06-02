@@ -549,8 +549,8 @@ Cannot return `true` because boolean [1] is incompatible with conditional type [
 
 References:
    generic.js:2:43
-   2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   2| function generic_in_check_type<T>(x: T) : [T] extends [readonly _K:string] ? boolean : number {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:12
@@ -563,8 +563,8 @@ Cannot return `1` because number [1] is incompatible with conditional type [2]. 
 
 References:
    generic.js:2:43
-   2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   2| function generic_in_check_type<T>(x: T) : [T] extends [readonly _K:string] ? boolean : number {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:12:1
@@ -577,9 +577,9 @@ Cannot cast `generic_in_check_type(...)` to empty because boolean [1] is incompa
        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   generic.js:2:70
-    2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
-                                                                            ^^^^^^^ [1]
+   generic.js:2:78
+    2| function generic_in_check_type<T>(x: T) : [T] extends [readonly _K:string] ? boolean : number {
+                                                                                    ^^^^^^^ [1]
    generic.js:12:30
    12| generic_in_check_type('') as empty; // error
                                     ^^^^^ [2]
@@ -594,9 +594,9 @@ Cannot cast `generic_in_check_type(...)` to empty because number [1] is incompat
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   generic.js:2:80
-    2| function generic_in_check_type<T>(x: T) : [T] extends [+_K:string] ? boolean : number {
-                                                                                      ^^^^^^ [1]
+   generic.js:2:88
+    2| function generic_in_check_type<T>(x: T) : [T] extends [readonly _K:string] ? boolean : number {
+                                                                                              ^^^^^^ [1]
    generic.js:13:29
    13| generic_in_check_type(1) as empty; // error
                                    ^^^^^ [2]

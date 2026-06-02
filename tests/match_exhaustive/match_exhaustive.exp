@@ -1722,8 +1722,8 @@ type [1]. [match-not-exhaustive]
 
 References:
    objects.js:232:20
-   232|   declare const x: {-foo: boolean};
-                           ^^^^^^^^^^^^^^^ [1]
+   232|   declare const x: {writeonly foo: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ objects.js:238:10
@@ -1745,8 +1745,8 @@ type [1]. [match-not-exhaustive]
 
 References:
    objects.js:245:20
-   245|   declare const x: {-foo?: boolean};
-                           ^^^^^^^^^^^^^^^^ [1]
+   245|   declare const x: {writeonly foo?: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- objects.js:263:3
@@ -2452,8 +2452,8 @@ type [1]. [match-not-exhaustive]
 
 References:
    tuples.js:406:20
-   406|   declare const x: [-foo: boolean];
-                           ^^^^^^^^^^^^^^^ [1]
+   406|   declare const x: [writeonly foo: boolean];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- tuples.js:412:10
@@ -2466,8 +2466,8 @@ Tuple element at index `0` [1] labeled `foo` is not readable. [cannot-read]
 
 References:
    tuples.js:406:20
-   406|   declare const x: [-foo: boolean];
-                           ^^^^^^^^^^^^^^^ [1]
+   406|   declare const x: [writeonly foo: boolean];
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- tuples.js:423:5

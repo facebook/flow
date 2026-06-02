@@ -25,7 +25,7 @@ class Registry<TItems extends ItemDef = {}> {
   getAll<TKey extends keyof TItems>(
     key: TKey,
     ...context: TItems[TKey] extends {
-      +isAvailable: (...infer TArg) => boolean,
+      readonly isAvailable: (...infer TArg) => boolean,
       ...
     }
       ? TArg

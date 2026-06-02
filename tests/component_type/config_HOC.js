@@ -2,11 +2,11 @@
 const React = require('react');
 type Props = {foo: number, bar: number, ...};
 type DefaultProps = {foo: number, ...};
-type Config = {+foo?: number, +bar: number, ...};
+type Config = {readonly foo?: number, readonly bar: number, ...};
 
 declare const x: Config;
 
-type NotTheRightConfig = {+baz: number, +qux: number, ...};
+type NotTheRightConfig = {readonly baz: number, readonly qux: number, ...};
 x as NotTheRightConfig; // Error, configs don't match
 
 function HOC<Config extends {...}>(

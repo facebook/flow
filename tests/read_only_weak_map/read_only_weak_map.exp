@@ -8,9 +8,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                               ^
 
 References:
-   test.js:9:13
-    9| class FooK<+K extends {}, V> {
-                   ^ [1]
+   test.js:9:16
+    9| class FooK<out K extends {}, V> {
+                      ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:40
@@ -23,9 +23,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                               ^
 
 References:
-   test.js:21:13
-   21| class BazK<-K extends {}, V> {
-                   ^ [1]
+   test.js:21:15
+   21| class BazK<in K extends {}, V> {
+                     ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:43
@@ -38,9 +38,9 @@ Cannot use `V` [1] in an output position because `V` [1] is expected to occur on
                                                  ^
 
 References:
-   test.js:27:27
-   27| class BazV<K extends {}, -V> {
-                                 ^ [1]
+   test.js:27:29
+   27| class BazV<K extends {}, in V> {
+                                   ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:42:43
@@ -53,9 +53,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                                  ^
 
 References:
-   test.js:41:17
-   41|     class FooK<+K extends {}, V> {
-                       ^ [1]
+   test.js:41:20
+   41|     class FooK<out K extends {}, V> {
+                          ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:43
@@ -68,9 +68,9 @@ Cannot use `K` [1] in an input/output position because `K` [1] is expected to oc
                                                  ^
 
 References:
-   test.js:53:17
-   53|     class BazK<-K extends {}, V> {
-                       ^ [1]
+   test.js:53:19
+   53|     class BazK<in K extends {}, V> {
+                         ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:60:46
@@ -83,9 +83,9 @@ Cannot use `V` [1] in an output position because `V` [1] is expected to occur on
                                                     ^
 
 References:
-   test.js:59:31
-   59|     class BazV<K extends {}, -V> {
-                                     ^ [1]
+   test.js:59:33
+   59|     class BazV<K extends {}, in V> {
+                                       ^ [1]
 
 
 

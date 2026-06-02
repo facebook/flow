@@ -26,7 +26,7 @@ if (unionObj.key === 1) {
   unionObj.p as number; // OK
   unionObj.q as number; // OK
 }
-unionObj as {+key: 1, +p: number, ...} | {+key: 2, +p: number, +q: number, ...}; // OK
+unionObj as {readonly key: 1, readonly p: number, ...} | {readonly key: 2, readonly p: number, readonly q: number, ...}; // OK
 
 type SpreadUnionObj = {...UnionObj, z: number, ...};
 declare const spreadUnionObj: Readonly<SpreadUnionObj>
@@ -88,7 +88,7 @@ declare const instance: Readonly<A>;
 instance.p = 42; // Should error!
 instance.p as number; // OK
 
-type WriteOnlyObj = {-p: 42, ...};
+type WriteOnlyObj = {writeonly p: 42, ...};
 declare const writeOnlyObj: Readonly<WriteOnlyObj>;
 writeOnlyObj.p = 42; // Should error!
 writeOnlyObj.p as number // OK

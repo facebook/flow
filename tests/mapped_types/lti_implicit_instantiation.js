@@ -6,4 +6,4 @@ type F<T> = Readonly<{
   declare function map<O extends {...}>(o1: O): {[K in keyof O]: O[K] extends F<infer V> ? V : empty};
 
   const foo = Object.freeze({bar: {log: (f: () => string) => {}}})
-  const o1 = map(foo) as {+bar: number}; // error
+  const o1 = map(foo) as {readonly bar: number}; // error

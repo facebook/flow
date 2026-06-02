@@ -7936,12 +7936,12 @@ References:
    issue-7105.js:7:21
    7|       yield { type: "PENDING" }; // TODO(T225770374)
                           ^^^^^^^^^ [1]
-   issue-7105.js:2:23
-   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
-                            ^^^^^^^^^ [2]
-   issue-7105.js:2:44
-   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
-                                                 ^^^^^^ [3]
+   issue-7105.js:2:31
+   2| type Result = {readonly type: "PENDING"} | {readonly type: "DONE", value: number};
+                                    ^^^^^^^^^ [2]
+   issue-7105.js:2:60
+   2| type Result = {readonly type: "PENDING"} | {readonly type: "DONE", value: number};
+                                                                 ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:15
@@ -7962,12 +7962,12 @@ References:
    issue-7105.js:9:23
    9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
                             ^^^^^^ [1]
-   issue-7105.js:2:44
-   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
-                                                 ^^^^^^ [2]
+   issue-7105.js:2:60
+   2| type Result = {readonly type: "PENDING"} | {readonly type: "DONE", value: number};
+                                                                 ^^^^^^ [2]
    issue-7105.js:2:15
-   2| type Result = {+type: "PENDING"} | {+type: "DONE", value: number};
-                    ^^^^^^^^^^^^^^^^^^ [4]
+   2| type Result = {readonly type: "PENDING"} | {readonly type: "DONE", value: number};
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
@@ -9479,7 +9479,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    mixed.js:95:5
-   95|     x as {+[key: string]: unknown} | null;
+   95|     x as {readonly [key: string]: unknown} | null;
            ^
 
 References:
@@ -10916,8 +10916,8 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
 
 References:
    object_prop_exists.js:14:43
-   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, writeonly c: true};
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:16:10
    16|     x as empty; // ERROR
                 ^^^^^ [2]
@@ -10947,7 +10947,7 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
 
 References:
    object_prop_exists.js:14:20
-   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, writeonly c: true};
                           ^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:18:10
    18|     x as empty; // ERROR
@@ -10964,8 +10964,8 @@ Cannot cast `x` to empty because object type [1] is incompatible with empty [2].
 
 References:
    object_prop_exists.js:14:43
-   14|   declare const x: {a: true, b: number} | {a: false, b: string, -c: true};
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   14|   declare const x: {a: true, b: number} | {a: false, b: string, writeonly c: true};
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prop_exists.js:18:10
    18|     x as empty; // ERROR
                 ^^^^^ [2]
@@ -15570,7 +15570,7 @@ Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out 
 
 References:
    tuple_union.js:63:20
-   63|   declare const x: [true, number] | [false, string, -c: true];
+   63|   declare const x: [true, number] | [false, string, writeonly c: true];
                           ^^^^^^^^^^^^^^ [1]
 
 
@@ -15600,8 +15600,8 @@ Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. 
 
 References:
    tuple_union.js:63:37
-   63|   declare const x: [true, number] | [false, string, -c: true];
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   63|   declare const x: [true, number] | [false, string, writeonly c: true];
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    tuple_union.js:65:10
    65|     x as empty; // ERROR
                 ^^^^^ [2]

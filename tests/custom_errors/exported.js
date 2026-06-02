@@ -102,5 +102,5 @@ export type Optional<T> = T | null | void;
  * @description custom desc
  */
 export type ReadonlyRecord<K extends string, V> = {
-  +[key: K]: V,
+  readonly [key: K]: V,
 };

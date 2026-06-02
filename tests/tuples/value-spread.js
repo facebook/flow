@@ -34,7 +34,7 @@
 
 // Variance is not preserved when doing value spread as the result is a copy
 {
-  declare const x: [+b: string, -c: boolean];
+  declare const x: [readonly b: string, writeonly c: boolean];
   const y = [0, ...x]; // OK
   y[1] = 's'; // OK
   const n: boolean = y[2]; // OK

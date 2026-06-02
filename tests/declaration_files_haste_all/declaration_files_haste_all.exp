@@ -44,9 +44,9 @@ References:
    RecordModel.js.flow:8:22
                             v-
     8|   constructor(value: {|
-    9|     +count: number,
-   10|     +label: string,
-   11|     +tags: Immutable.List<string>,
+    9|     readonly count: number,
+   10|     readonly label: string,
+   11|     readonly tags: Immutable.List<string>,
    12|   |}): void;
          -^ [2]
 

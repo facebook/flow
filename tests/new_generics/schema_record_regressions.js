@@ -15,7 +15,7 @@ type RecordFactory<TInput extends interface {}, TRecord extends interface {}> = 
   value: TInput,
 ) => TRecord;
 
-declare class IndexedMap<K, +V> {
+declare class IndexedMap<K, out V> {
   get(key: K): V | void;
   map<U>(mapper: (value: V) => U): IndexedMap<K, U>;
 }

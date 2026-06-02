@@ -15,6 +15,6 @@ declare class D extends C { }
 new D(123); // error, number ~> string
 
 declare class E {
-    +[key: string]: number;
+    readonly [key: string]: number;
 }
 ;new E()['a'] as number // no error

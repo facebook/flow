@@ -1,6 +1,6 @@
 /* @flow */
 
-class Foo<+T> {
+class Foo<out T> {
   good(x: number): ReadonlyArray<T> {
     return []; // Fine, covariant can flow to covariant
   }
@@ -12,14 +12,14 @@ class Bar<T> {
   }
 }
 
-class Baz<-T> {
+class Baz<in T> {
   bad(x: number): ReadonlyArray<T> {
     // Error: T in covariant position
     return [];
   }
 }
 
-class ContraBaz<-T> {
+class ContraBaz<in T> {
   bad(x: (ReadonlyArray<T>) => number): number {
     // Error: T used covariantly
     // x is used contravariantly, the ROArray is used contravariantly in x,

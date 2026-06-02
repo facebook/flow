@@ -444,9 +444,9 @@ References:
    use_ops.js:1:15
    1| type A = { p: {...}, ... }
                     ^^^^^ [1]
-   use_ops.js:2:16
-   2| type B = { +p: () => void, ... }
-                     ^^^^^^^^^^ [2]
+   use_ops.js:2:24
+   2| type B = { readonly p: () => void, ... }
+                             ^^^^^^^^^^ [2]
 
 
 

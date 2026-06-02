@@ -4,7 +4,7 @@ function test(this: interface {length: number}, a: string, b: string): number {
 
 test.apply("", "foo"); // ERROR
 declare class MyArrayLike<T> {
-  +[index: number]: T;
+  readonly [index: number]: T;
   @@iterator(): Iterator<T>;
   length: number;
 }

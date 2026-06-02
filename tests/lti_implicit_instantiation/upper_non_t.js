@@ -134,7 +134,7 @@ function ResolveSpreadsToMultiflowSubtypeFull() {
   declare function funArgRest<Rest>(f: (first: empty, second: empty, ...args: Rest) => unknown): Rest;
   declare function funArgRestInput(a: string, b: number, c: boolean, d: Date): void;
   const f4 = funArgRest(funArgRestInput);
-  f4 as [+label1: boolean, +label2: Date]; // ok
+  f4 as [readonly label1: boolean, readonly label2: Date]; // ok
   f4 as empty; // error: tuple ~> empty
 }
 

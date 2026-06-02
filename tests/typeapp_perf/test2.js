@@ -4,15 +4,15 @@
 class A {}
 
 type B<T> = A & {
-  +a: (x: B<T>) => void;
-  +b: (x: B<T>) => void;
-  +c: (x: B<T>) => void;
-  +d: (x: B<T>) => void;
-  +e: (x: B<T>) => void;
-  +f: (x: B<T>) => void;
-  +g: (x: B<T>) => void;
-  +h: (x: B<T>) => void;
-  +i: (x: B<T>) => void;
+  readonly a: (x: B<T>) => void;
+  readonly b: (x: B<T>) => void;
+  readonly c: (x: B<T>) => void;
+  readonly d: (x: B<T>) => void;
+  readonly e: (x: B<T>) => void;
+  readonly f: (x: B<T>) => void;
+  readonly g: (x: B<T>) => void;
+  readonly h: (x: B<T>) => void;
+  readonly i: (x: B<T>) => void;
 };
 
 declare const b: B<any>;

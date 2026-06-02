@@ -1,15 +1,15 @@
 type Arg<T> = T => void; // OK
-type ArgNeg<-T> = T => void; // OK
-type ArgPos<+T> = T => void; // Error: +T in negative position
-type FlipArgNeg<-T> = (T => void) => void; // Error: -T in positive position
-type FlipArgPos<+T> = (T => void) => void; // OK
+type ArgNeg<in T> = T => void; // OK
+type ArgPos<out T> = T => void; // Error: out T in negative position
+type FlipArgNeg<in T> = (T => void) => void; // Error: in T in positive position
+type FlipArgPos<out T> = (T => void) => void; // OK
 type Ret<T> = () => T; // OK
-type RetNeg<-T> = () => T; // Error: -T in positive position
-type RetPos<+T> = () => T; // OK
-type FlipRetNeg<-T> = (() => T) => void; // OK
-type FlipRetPos<+T> = (() => T) => void; // Error: +T in negative position
+type RetNeg<in T> = () => T; // Error: in T in positive position
+type RetPos<out T> = () => T; // OK
+type FlipRetNeg<in T> = (() => T) => void; // OK
+type FlipRetPos<out T> = (() => T) => void; // Error: out T in negative position
 
-function func_decl<+T>(): void {} // error
-const func_expr = function <+T>() {} // error
-const arrow_expr = <+T>() => {} // error
-const obj = { arg<+T>(): void {} } // error
+function func_decl<out T>(): void {} // error
+const func_expr = function <out T>() {} // error
+const arrow_expr = <out T>() => {} // error
+const obj = { arg<out T>(): void {} } // error

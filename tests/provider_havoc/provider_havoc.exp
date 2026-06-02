@@ -11,9 +11,9 @@ type is desired.
                        ^
 
 References:
-   empty.js:67:20
-   67| declare class Set<+T> {
-                          ^ [1]
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
    empty.js:13:22
    13|     declare const x: ?string;
                             ^^^^^^^ [2]
@@ -38,9 +38,9 @@ type is desired.
                        ^
 
 References:
-   empty.js:67:20
-   67| declare class Set<+T> {
-                          ^ [1]
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
    empty.js:13:23
    13|     declare const x: ?string;
                              ^^^^^^ [2]
@@ -130,9 +130,9 @@ type is desired.
                       ^^^^^^ [2]
 
 References:
-   empty.js:67:20
-   67| declare class Set<+T> {
-                          ^ [1]
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
    empty.js:72:20
    72|   let si = new Set<number>();
                           ^^^^^^ [3]
@@ -151,9 +151,9 @@ Cannot cast `si` to `Set` because in type argument `T` [1]: string [2] is incomp
          ^^
 
 References:
-   empty.js:67:20
-   67| declare class Set<+T> {
-                          ^ [1]
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
    empty.js:74:16
    74|   si = new Set<string>(); // error
                       ^^^^^^ [2]
@@ -175,9 +175,9 @@ type is desired.
                      ^^ [2]
 
 References:
-   empty.js:67:20
-   67| declare class Set<+T> {
-                          ^ [1]
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
    empty.js:86:20
    86|   let si = new Set<empty>();
                           ^^^^^ [3]

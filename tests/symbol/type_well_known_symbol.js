@@ -31,7 +31,7 @@ DStaticIterable as Iterable<number>; // OK
 new DStaticIterable() as Iterable<number>; // ERROR: no instance @@iterator
 
 // Variance on well-known symbol fields
-type CovariantField = { +[Symbol.iterator]: () => Iterator<number> }; // OK
+type CovariantField = { readonly [Symbol.iterator]: () => Iterator<number> }; // OK
 
 // Unrecognized Symbol.XXX should error during type checking, not parsing
 type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key

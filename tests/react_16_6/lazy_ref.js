@@ -4,7 +4,7 @@ const React = require('react');
 const {useImperativeHandle} = React;
 
 type T = {moo(x: string): void}
-function Demo(props: {}, ref: ?({-current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
+function Demo(props: {}, ref: ?({writeonly current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
   useImperativeHandle(ref, () => ({
     moo(x: string) {},
   }));

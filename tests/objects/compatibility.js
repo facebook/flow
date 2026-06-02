@@ -11,19 +11,19 @@ let tests = [
     x = y; // 2 errors: string !~> number; number !~> string
   },
 
-  function(x: { +foo: string, ... }, y: { +foo: number, ... }) {
+  function(x: { readonly foo: string, ... }, y: { readonly foo: number, ... }) {
     x = y; // 1 error: number !~> string
   },
 
-  function(x: { x: { +foo: string, ... }, ... }, y: { x: { +foo: number, ... }, ... }) {
+  function(x: { x: { readonly foo: string, ... }, ... }, y: { x: { readonly foo: number, ... }, ... }) {
     x = y; // 2 errors: string !~> number; number !~> string
   },
 
-  function(x: { -foo: string, ... }, y: { -foo: number, ... }) {
+  function(x: { writeonly foo: string, ... }, y: { writeonly foo: number, ... }) {
     x = y; // 1 error: string !~> number
   },
 
-  function(x: { x: { -foo: string, ... }, ... }, y: { x: { -foo: number, ... }, ... }) {
+  function(x: { x: { writeonly foo: string, ... }, ... }, y: { x: { writeonly foo: number, ... }, ... }) {
     x = y; // 2 errors: string !~> number; number !~> string
   },
 ];

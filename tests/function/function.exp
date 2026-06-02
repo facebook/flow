@@ -627,9 +627,9 @@ string [3]. [incompatible-type]
            ^^^
 
 References:
-   call_error_generic.js:8:24
-    8| declare class ROArray<+T> { }
-                              ^ [1]
+   call_error_generic.js:8:27
+    8| declare class ROArray<out T> { }
+                                 ^ [1]
    call_error_generic.js:14:23
    14|   const set = new Set<?string>();
                              ^^^^^^^ [2]
@@ -652,8 +652,8 @@ References:
    3| function bar2(fragmentRef?: {...}) {
                                   ^^^^^ [1]
    call_error_generic2.js:1:37
-   1| declare function bar1<TKey extends ?{+$data?: unknown, ...}>(key: TKey): void;
-                                          ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   1| declare function bar1<TKey extends ?{readonly $data?: unknown, ...}>(key: TKey): void;
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:23:3

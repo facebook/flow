@@ -207,16 +207,16 @@ Cannot cast `o2` to object type because in the indexer property: boolean [1] is 
 `true` [2]. [incompatible-type]
 
    non_literal_number.js:22:3
-   22|   o2 as {+[number]: true}; // OK
+   22|   o2 as {readonly [number]: true}; // OK
          ^^
 
 References:
    non_literal_number.js:19:32
    19|   declare const o1: {[number]: boolean};
                                       ^^^^^^^ [1]
-   non_literal_number.js:22:21
-   22|   o2 as {+[number]: true}; // OK
-                           ^^^^ [2]
+   non_literal_number.js:22:29
+   22|   o2 as {readonly [number]: true}; // OK
+                                   ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
@@ -327,16 +327,16 @@ Cannot cast `o` to object type because in property `1`: boolean [1] is incompati
 [incompatible-type]
 
    test.js:20:3
-   20|   o as {+'1': true, +[number]: false}; // OK
+   20|   o as {readonly '1': true, readonly [number]: false}; // OK
          ^
 
 References:
    test.js:3:10
     3|     '1': true,
                 ^^^^ [1]
-   test.js:20:15
-   20|   o as {+'1': true, +[number]: false}; // OK
-                     ^^^^ [2]
+   test.js:20:23
+   20|   o as {readonly '1': true, readonly [number]: false}; // OK
+                             ^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
@@ -345,16 +345,16 @@ Cannot cast `o` to object type because in property `2`: boolean [1] is incompati
 [incompatible-type]
 
    test.js:20:3
-   20|   o as {+'1': true, +[number]: false}; // OK
+   20|   o as {readonly '1': true, readonly [number]: false}; // OK
          ^
 
 References:
    test.js:4:10
     4|     '2': false,
                 ^^^^^ [1]
-   test.js:20:32
-   20|   o as {+'1': true, +[number]: false}; // OK
-                                      ^^^^^ [2]
+   test.js:20:48
+   20|   o as {readonly '1': true, readonly [number]: false}; // OK
+                                                      ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
@@ -548,16 +548,16 @@ Cannot cast `o` to object type because in the indexer property: boolean [1] is i
 [incompatible-type]
 
    test.js:82:3
-   82|   o as {+[string]: string}; // ERROR
+   82|   o as {readonly [string]: string}; // ERROR
          ^
 
 References:
    test.js:76:15
    76|     [number]: boolean,
                      ^^^^^^^ [1]
-   test.js:82:20
-   82|   o as {+[string]: string}; // ERROR
-                          ^^^^^^ [2]
+   test.js:82:28
+   82|   o as {readonly [string]: string}; // ERROR
+                                  ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
@@ -566,16 +566,16 @@ Cannot cast `o` to object type because in the indexer property's key: number [1]
 [incompatible-type]
 
    test.js:82:3
-   82|   o as {+[string]: string}; // ERROR
+   82|   o as {readonly [string]: string}; // ERROR
          ^
 
 References:
    test.js:76:6
    76|     [number]: boolean,
             ^^^^^^ [1]
-   test.js:82:11
-   82|   o as {+[string]: string}; // ERROR
-                 ^^^^^^ [2]
+   test.js:82:19
+   82|   o as {readonly [string]: string}; // ERROR
+                         ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:105:3

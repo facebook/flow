@@ -220,7 +220,7 @@ class Calls {
 }
 
 class PrivateReadOnly {
-  +#p: number;
+  readonly #p: number;
   constructor(other: PrivateReadOnly) {
     this.#p = 42; // ok
     other.#p = 42; // error;

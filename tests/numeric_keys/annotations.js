@@ -11,14 +11,14 @@ type A = {
   o['1'] as empty; // ERROR
 }
 
-// With variance
+// With variance (legacy sigils: ambiguity with unary +/- on the numeric key)
 type B = {
   -1: string, // ERROR
   +2: boolean, // ERROR
 };
 type C = {
-  -'1': string, // OK
-  +'2': boolean, // OK
+  writeonly '1': string, // OK
+  readonly '2': boolean, // OK
 };
 {
   declare const o: C;

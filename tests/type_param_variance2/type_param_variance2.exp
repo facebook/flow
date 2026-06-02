@@ -4,7 +4,7 @@ This name declaration overrides an existing binding `Promise` [1]. Overriding in
 surprising behaviors. [libdef-override]
 
    libs/Promise.js:10:15
-     10| declare class Promise<+R> { // intentional-libdef-override
+     10| declare class Promise<out R> { // intentional-libdef-override
                        ^^^^^^^
 
 References:

@@ -1,6 +1,6 @@
 // This test ensures that unification does not alter the type of fully resolved tvars
-type Foo = {+foo?: ReadonlyArray<{
-  +bar: string,
+type Foo = {readonly foo?: ReadonlyArray<{
+  readonly bar: string,
 }>};
 
 declare function useState<S>(

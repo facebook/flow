@@ -24,9 +24,9 @@ Cannot cast `this.props.user.id` to empty because string [1] is incompatible wit
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   Profile.graphql.js:15:10
-   15|     +id: string,
-                ^^^^^^ [1]
+   Profile.graphql.js:15:18
+   15|     readonly id: string,
+                        ^^^^^^ [1]
    Profile.js:22:27
    22|     this.props.user.id as empty; // Error: string ~> empty
                                  ^^^^^ [2]
@@ -41,9 +41,9 @@ Cannot cast `this.props.user.name` to empty because string [1] is incompatible w
            ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   Profile.graphql.js:16:12
-   16|     +name: string,
-                  ^^^^^^ [1]
+   Profile.graphql.js:16:20
+   16|     readonly name: string,
+                          ^^^^^^ [1]
    Profile.js:23:29
    23|     this.props.user.name as empty; // Error: string ~> empty
                                    ^^^^^ [2]
@@ -58,9 +58,9 @@ Cannot cast `this.props.user.pic.id` to empty because string [1] is incompatible
            ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   Profile.graphql.js:18:12
-   18|       +id: string,
-                  ^^^^^^ [1]
+   Profile.graphql.js:18:20
+   18|       readonly id: string,
+                          ^^^^^^ [1]
    Profile.js:24:31
    24|     this.props.user.pic.id as empty; // Error: string ~> empty
                                      ^^^^^ [2]
@@ -90,9 +90,9 @@ Cannot cast `this.props.image.url` to empty because string [1] is incompatible w
            ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ProfilePic.graphql.js:14:11
-   14|     +url: string,
-                 ^^^^^^ [1]
+   ProfilePic.graphql.js:14:19
+   14|     readonly url: string,
+                         ^^^^^^ [1]
    ProfilePic.js:19:29
    19|     this.props.image.url as empty; // Error: string ~> empty
                                    ^^^^^ [2]
@@ -291,12 +291,12 @@ with `FragmentReference` [2]. [incompatible-type]
                                                     ^^^^^^^^^^
 
 References:
-   more.js:104:17
-   104|   +__fragments: BadFragmentReference<{thing: true, ...}>,
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:35:22
-    35|     ? {+__fragments: FragmentReference<V>, ...}
-                             ^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:104:25
+   104|   readonly __fragments: BadFragmentReference<{thing: true, ...}>,
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   more.js:35:30
+    35|     ? {readonly __fragments: FragmentReference<V>, ...}
+                                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:145:17
@@ -317,8 +317,8 @@ References:
     31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                                       ^^^^^^^^ [2]
    more.js:35:7
-    35|     ? {+__fragments: FragmentReference<V>, ...}
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    35|     ? {readonly __fragments: FragmentReference<V>, ...}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:150:34
@@ -394,12 +394,12 @@ Cannot create `PluralTest` element because in property `users` > array element >
                             ^^^^^^^^^^
 
 References:
-   more.js:104:17
-   104|   +__fragments: BadFragmentReference<{thing: true, ...}>,
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   more.js:35:22
-    35|     ? {+__fragments: FragmentReference<V>, ...}
-                             ^^^^^^^^^^^^^^^^^^^^ [2]
+   more.js:104:25
+   104|   readonly __fragments: BadFragmentReference<{thing: true, ...}>,
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   more.js:35:30
+    35|     ? {readonly __fragments: FragmentReference<V>, ...}
+                                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:194:66

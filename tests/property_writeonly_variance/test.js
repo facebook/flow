@@ -2,7 +2,7 @@
 
 // 1. Object types — writeonly equivalent to -
 type Wo = { writeonly p: number };
-type Mn = { -p: number };
+type Mn = { writeonly p: number };
 declare const wo: Wo;
 declare const mn: Mn;
 wo as Mn; // ok
@@ -23,7 +23,7 @@ interface I {
 
 // 4. Indexer
 type Idx = { writeonly [string]: number };
-type IdxMinus = { -[string]: number };
+type IdxMinus = { writeonly [string]: number };
 declare const ix: Idx;
 ix as IdxMinus; // ok
 
@@ -48,7 +48,7 @@ aw.foo as number; // error: writeonly property is not readable
 aw.foo = 3; // ok
 
 // 9. Mapped types: -writeonly removes Negative variance
-type WriteOnlyO = { -foo: number, -bar: string };
+type WriteOnlyO = { writeonly foo: number, writeonly bar: string };
 type RemoveWriteonly<T extends {...}> = { -writeonly [K in keyof T]: T[K] };
 declare const rw: RemoveWriteonly<WriteOnlyO>;
 rw.foo as number; // ok — writeonly was removed

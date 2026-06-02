@@ -402,7 +402,7 @@ Cannot cast `FnWithRequiredRefProp` to `React.ComponentType` because property `r
 in object type [2]. [incompatible-type]
 
    subtyping.js:13:1
-   13| FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // error: missing ref prop
+   13| FnWithRequiredRefProp as React.ComponentType<{readonly foo: string}>; // error: missing ref prop
        ^^^^^^^^^^^^^^^^^^^^^
 
 References:
@@ -456,13 +456,13 @@ Cannot cast `CompWithRequiredRefProp` to `React.ComponentType` because property 
 exists in props of component CompWithRequiredRefProp [2]. [incompatible-type]
 
    subtyping.js:25:1
-   25| CompWithRequiredRefProp as React.ComponentType<{+foo: string}>; // ok
+   25| CompWithRequiredRefProp as React.ComponentType<{readonly foo: string}>; // ok
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    subtyping.js:25:48
-   25| CompWithRequiredRefProp as React.ComponentType<{+foo: string}>; // ok
-                                                      ^^^^^^^^^^^^^^ [1]
+   25| CompWithRequiredRefProp as React.ComponentType<{readonly foo: string}>; // ok
+                                                      ^^^^^^^^^^^^^^^^^^^^^^ [1]
    component_syntax_components.js:3:49
     3| declare export component CompWithRequiredRefProp(foo: string, ref: React.RefSetter<HTMLElement>);
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]

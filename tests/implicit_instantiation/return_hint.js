@@ -1,4 +1,4 @@
-type MyUnion = {+FOO: unknown} | {+BAR: unknown};
+type MyUnion = {readonly FOO: unknown} | {readonly BAR: unknown};
 declare const x: MyUnion;
 
 declare function f<T>(x: Readonly<T>): T;

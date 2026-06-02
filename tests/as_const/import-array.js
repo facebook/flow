@@ -5,7 +5,7 @@ declare const _: any;
 // Tests
 
 function test_arr1() {
-  arr1 as [+_:1, +_:2, 3]; // error cast 3rd element to non-readonly
+  arr1 as [readonly _:1, readonly _:2, 3]; // error cast 3rd element to non-readonly
   arr1 as readonly [1, 2, 3]; // okay
   arr1 as readonly [1, 2, 3, ...]; // okay
 
@@ -22,13 +22,13 @@ function test_arr2() {
 
 
 function test_arr6() {
-  arr6 as readonly [{+f: 1}]; // okay
-  arr6 as [{+f: 1}]; // error cast to non-readonly array
+  arr6 as readonly [{readonly f: 1}]; // okay
+  arr6 as [{readonly f: 1}]; // error cast to non-readonly array
   arr6 as readonly [{f: 1}]; // error cast to non-readonly prop
-  arr6 as readonly [{+f: number}]; // okay
+  arr6 as readonly [{readonly f: number}]; // okay
 
   _ as [{f: 1}] as typeof arr6; // okay
-  _ as readonly [{+f: 1}] as typeof arr6; // okay
+  _ as readonly [{readonly f: 1}] as typeof arr6; // okay
 }
 
 function test_arr8() {

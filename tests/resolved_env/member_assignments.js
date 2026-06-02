@@ -12,7 +12,7 @@ function member_assignment_simple() {
 }
 
 function member_assignment_contravariant() {
-  type Foo = {-bar: string, ...};
+  type Foo = {writeonly bar: string, ...};
   declare const foo: Foo;
 
   foo.bar; // error: not readable
@@ -38,7 +38,7 @@ function member_op_assignment_refinement_ok(o: {p: ?number}) {
   o.p as number; // ok
 }
 
-function member_op_assignment_non_writeable(o: {+p: number}) {
+function member_op_assignment_non_writeable(o: {readonly p: number}) {
   o.p += 2; // Error: property is non-writable
   o.p -= 2; // Error: property is non-writable
   o.p *= 2; // Error: property is non-writable

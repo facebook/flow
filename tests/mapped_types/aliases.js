@@ -1,5 +1,5 @@
 // Mapped Type aliases should not participate in the buggy TypeAppT ~> TypeAppT special case
-type ReadOnly<O> = {+[key in keyof O]: O[key]};
+type ReadOnly<O> = {readonly [key in keyof O]: O[key]};
 type ReadOnlyDeeper<O> = ReadOnly<O>;
 type ReadOnlyDeepest<O> = ReadOnlyDeeper<O>;
 

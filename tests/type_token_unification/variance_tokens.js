@@ -5,14 +5,14 @@
 
 // Covariant and contravariant properties
 type WithVariance = {
-  +readonlyProp: string,
-  -writeonlyProp: number,
+  readonly readonlyProp: string,
+  writeonly writeonlyProp: number,
  ...};
 
 // Multiple variance annotations on interface (each + is separate)
 interface I {
-  +x: string;
-  -y: number;
+  readonly x: string;
+  writeonly y: number;
 }
 
 var obj: WithVariance = {readonlyProp: 'hello', writeonlyProp: 42};

@@ -837,16 +837,16 @@ Cannot cast `map(...)` to tuple type because in index `0`: string [1] is incompa
 [incompatible-type]
 
    mapped_type_on_tuple.js:20:1
-   20| map(boo) as [+v: number]; // error
+   20| map(boo) as [readonly v: number]; // error
        ^^^^^^^^
 
 References:
    mapped_type_on_tuple.js:18:90
    18| declare function map<A extends ReadonlyArray<unknown>>(o2: Promise<A>): {[K in keyof A]: A[K] extends F<infer V> ? V : empty};
                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   mapped_type_on_tuple.js:20:18
-   20| map(boo) as [+v: number]; // error
-                        ^^^^^^ [2]
+   mapped_type_on_tuple.js:20:26
+   20| map(boo) as [readonly v: number]; // error
+                                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:25:1
@@ -1104,9 +1104,9 @@ Cannot assign `undefined` to `withReadOnlyOpt[1]` because you cannot assign unde
                               ^^^^^^^^^ [1]
 
 References:
-   optional.js:10:41
-   10| type WithReadOnlyOpt = [a: number, +b?: string];
-                                               ^^^^^^ [2]
+   optional.js:10:49
+   10| type WithReadOnlyOpt = [a: number, readonly b?: string];
+                                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:41:3
@@ -1120,8 +1120,8 @@ Cannot cast `withWriteOnlyOpt` to tuple type because tuple type [1] has 1-2 elem
 
 References:
    optional.js:40:35
-   40|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   40|   declare const withWriteOnlyOpt: [a: number, writeonly b?: string | boolean];
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    optional.js:41:23
    41|   withWriteOnlyOpt as [a: number]; // ERROR
                              ^^^^^^^^^^^ [2]
@@ -1138,8 +1138,8 @@ readable in tuple type [2]. [incompatible-variance]
 
 References:
    optional.js:40:35
-   40|   declare const withWriteOnlyOpt: [a: number, -b?: string | boolean];
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   40|   declare const withWriteOnlyOpt: [a: number, writeonly b?: string | boolean];
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    optional.js:42:23
    42|   withWriteOnlyOpt as [a: number, b?: string | boolean]; // ERROR
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1155,9 +1155,9 @@ Cannot cast `f11` to `typeof f2` because in index `0`: string [1] is incompatibl
          ^^^
 
 References:
-   optional.js:46:34
-   46|   declare const f11: (...[+foo?: string]) => number;
-                                        ^^^^^^ [1]
+   optional.js:46:42
+   46|   declare const f11: (...[readonly foo?: string]) => number;
+                                                ^^^^^^ [1]
    optional.js:48:28
    48|   declare const f2: (foo?: string) => number;
                                   ^^^^^^ [2]
@@ -1173,12 +1173,12 @@ Cannot cast `f11` to `typeof f12` because in index `0`: string [1] is incompatib
          ^^^
 
 References:
-   optional.js:46:34
-   46|   declare const f11: (...[+foo?: string]) => number;
-                                        ^^^^^^ [1]
-   optional.js:47:42
-   47|   declare const f12: (...[+foo: string | void]) => number;
-                                                ^^^^ [2]
+   optional.js:46:42
+   46|   declare const f11: (...[readonly foo?: string]) => number;
+                                                ^^^^^^ [1]
+   optional.js:47:50
+   47|   declare const f12: (...[readonly foo: string | void]) => number;
+                                                        ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:60:1
@@ -1236,9 +1236,9 @@ element [2] (to do so, add `| void` to the tuple element type). [incompatible-ty
            ^^^^^^^^^ [1]
 
 References:
-   optional.js:10:41
-   10| type WithReadOnlyOpt = [a: number, +b?: string];
-                                               ^^^^^^ [2]
+   optional.js:10:49
+   10| type WithReadOnlyOpt = [a: number, readonly b?: string];
+                                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- optional.js:70:5
@@ -1251,9 +1251,9 @@ Cannot cast array literal to `WithReadOnlyOpt` because in index `1`: boolean [1]
            ^^^^ [1]
 
 References:
-   optional.js:10:41
-   10| type WithReadOnlyOpt = [a: number, +b?: string];
-                                               ^^^^^^ [2]
+   optional.js:10:49
+   10| type WithReadOnlyOpt = [a: number, readonly b?: string];
+                                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ optional.js:72:27
@@ -2267,7 +2267,7 @@ Cannot cast `a` to tuple type because tuple element at index `0` is read-only in
 type [2]. [incompatible-variance]
 
    variance.js:5:1
-   5| a as [-foo: string]; // ERROR
+   5| a as [writeonly foo: string]; // ERROR
       ^
 
 References:
@@ -2275,8 +2275,8 @@ References:
    3| declare const a: A;
                        ^ [1]
    variance.js:5:6
-   5| a as [-foo: string]; // ERROR
-           ^^^^^^^^^^^^^^ [2]
+   5| a as [writeonly foo: string]; // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- variance.js:6:1
@@ -2311,7 +2311,7 @@ Cannot cast `b` to tuple type because tuple element at index `0` is write-only i
 type [2]. [incompatible-variance]
 
    variance.js:15:1
-   15| b as [+foo: string]; // ERROR
+   15| b as [readonly foo: string]; // ERROR
        ^
 
 References:
@@ -2319,8 +2319,8 @@ References:
    13| declare const b: B;
                         ^ [1]
    variance.js:15:6
-   15| b as [+foo: string]; // ERROR
-            ^^^^^^^^^^^^^^ [2]
+   15| b as [readonly foo: string]; // ERROR
+            ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:16:1
@@ -2371,13 +2371,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `c` to tuple type because in index `0`: undefined [1] is incompatible with string [2]. [incompatible-type]
 
    variance.js:27:1
-   27| c as [-foo: string | void]; // ERROR
+   27| c as [writeonly foo: string | void]; // ERROR
        ^
 
 References:
-   variance.js:27:22
-   27| c as [-foo: string | void]; // ERROR
-                            ^^^^ [1]
+   variance.js:27:31
+   27| c as [writeonly foo: string | void]; // ERROR
+                                     ^^^^ [1]
    variance.js:20:16
    20| type C = [foo: string];
                       ^^^^^^ [2]
@@ -2414,8 +2414,8 @@ References:
    35| declare class K<T> {}
                        ^ [1]
    variance.js:36:20
-   36| declare const m: K<[+foo: string]>;
-                          ^^^^^^^^^^^^^^ [2]
+   36| declare const m: K<[readonly foo: string]>;
+                          ^^^^^^^^^^^^^^^^^^^^^^ [2]
    variance.js:38:8
    38| m as K<[string]>; // ERROR
               ^^^^^^^^ [3]
@@ -2437,14 +2437,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    variance.js:42:24
-   42| declare const n: Array<[+n: number]>;
-                              ^^^^^^^^^^^^ [1]
+   42| declare const n: Array<[readonly n: number]>;
+                              ^^^^^^^^^^^^^^^^^^^^ [1]
    variance.js:41:32
    41| declare function f<K>(x: Array<[K]>): K;
                                       ^^^ [2]
    variance.js:42:18
-   42| declare const n: Array<[+n: number]>;
-                        ^^^^^^^^^^^^^^^^^^^ [3]
+   42| declare const n: Array<[readonly n: number]>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    variance.js:41:26
    41| declare function f<K>(x: Array<[K]>): K;
                                 ^^^^^^^^^^ [4]
@@ -2459,9 +2459,9 @@ Cannot cast `res` to empty because number [1] is incompatible with empty [2]. [i
        ^^^
 
 References:
-   variance.js:42:29
-   42| declare const n: Array<[+n: number]>;
-                                   ^^^^^^ [1]
+   variance.js:42:37
+   42| declare const n: Array<[readonly n: number]>;
+                                           ^^^^^^ [1]
    variance.js:45:8
    45| res as empty; // ERROR
               ^^^^^ [2]
@@ -2478,8 +2478,8 @@ Incorrect arguments passed to `Object.assign` because tuple element at index `0`
 
 References:
    variance.js:50:20
-   50| declare const osw: [-foo: {a: number}];
-                          ^^^^^^^^^^^^^^^^^^^ [1]
+   50| declare const osw: [writeonly foo: {a: number}];
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:58:1
@@ -2488,7 +2488,7 @@ Cannot cast `roc` to tuple type because tuple element at index `0` is read-only 
 type [2]. [incompatible-variance]
 
    variance.js:58:1
-   58| roc as [-foo: string]; // ERROR
+   58| roc as [writeonly foo: string]; // ERROR
        ^^^
 
 References:
@@ -2496,8 +2496,8 @@ References:
    56| declare const roc: ROC;
                           ^^^ [1]
    variance.js:58:8
-   58| roc as [-foo: string]; // ERROR
-              ^^^^^^^^^^^^^^ [2]
+   58| roc as [writeonly foo: string]; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:59:1
@@ -2532,7 +2532,7 @@ Cannot cast `rob` to tuple type because tuple element at index `0` is read-only 
 type [2]. [incompatible-variance]
 
    variance.js:66:1
-   66| rob as [-foo: string]; // ERROR
+   66| rob as [writeonly foo: string]; // ERROR
        ^^^
 
 References:
@@ -2540,8 +2540,8 @@ References:
    64| declare const rob: ROB;
                           ^^^ [1]
    variance.js:66:8
-   66| rob as [-foo: string]; // ERROR
-              ^^^^^^^^^^^^^^ [2]
+   66| rob as [writeonly foo: string]; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:67:1

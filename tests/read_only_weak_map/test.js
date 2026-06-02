@@ -6,25 +6,25 @@ class Bar<K extends {}, V> {
     }
 }
 
-class FooK<+K extends {}, V> {
+class FooK<out K extends {}, V> {
     bad (x: number) : $ReadOnlyWeakMap<K, V> { // Error: K in invariant position
         return new WeakMap();
     }
 }
 
-class FooV<K extends {}, +V> {
+class FooV<K extends {}, out V> {
     bad (x: number) : $ReadOnlyWeakMap<K, V> { // Fine, V in covarint position
         return new WeakMap();
     }
 }
 
-class BazK<-K extends {}, V> {
+class BazK<in K extends {}, V> {
     bad (x: number) : $ReadOnlyWeakMap<K, V> {// Error: K in covariant position
         return new WeakMap();
     }
 }
 
-class BazV<K extends {}, -V> {
+class BazV<K extends {}, in V> {
     bad (x: number) : $ReadOnlyWeakMap<K, V> {// Error: V in covariant position
         return new WeakMap();
     }
@@ -38,25 +38,25 @@ class BazV<K extends {}, -V> {
         }
     }
 
-    class FooK<+K extends {}, V> {
+    class FooK<out K extends {}, V> {
         bad (x: number) : ReadonlyWeakMap<K, V> { // Error: K in invariant position
             return new WeakMap();
         }
     }
 
-    class FooV<K extends {}, +V> {
+    class FooV<K extends {}, out V> {
         bad (x: number) : ReadonlyWeakMap<K, V> { // Fine, V in covarint position
             return new WeakMap();
         }
     }
 
-    class BazK<-K extends {}, V> {
+    class BazK<in K extends {}, V> {
         bad (x: number) : ReadonlyWeakMap<K, V> {// Error: K in covariant position
             return new WeakMap();
         }
     }
 
-    class BazV<K extends {}, -V> {
+    class BazV<K extends {}, in V> {
         bad (x: number) : ReadonlyWeakMap<K, V> {// Error: V in covariant position
             return new WeakMap();
         }
