@@ -958,7 +958,7 @@ pub fn concretize_placeholders<'cx>(
         }
         match extract_strings_concretized(concretize, cx, t)? {
             Some(ss) => {
-                match mk_singleton_or_union(&union_reason, union_aloc.dupe(), &mk_str, &ss) {
+                match mk_singleton_or_union(&union_reason, union_aloc.dupe(), mk_str, &ss) {
                     Some(t2) => out.push(t2),
                     None => out.push(t.dupe()),
                 }
