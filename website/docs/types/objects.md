@@ -161,6 +161,22 @@ const b = {
 }
 ```
 
+Because method shorthand is read-only while a function-typed field is mutable, the two have different variance at the property. Method shorthand only triggers function-input contravariance, so a wider-input function can flow into a narrower-input method slot. A mutable function-typed field is [invariant](../lang/variance.md), so the same assignment is rejected:
+
+```js flow-check
+type ByMethod = {compare(a: string, b: string): number};
+type ByField = {compare: (a: string, b: string) => number};
+declare const wider: {compare: (a: string | number, b: string | number) => number};
+
+const m: ByMethod = wider; // Works — method shorthand is read-only
+const f: ByField = wider;  // Error — function-typed field is mutable and therefore invariant
+
+type ByReadonlyField = {readonly compare: (a: string, b: string) => number};
+const rof: ByReadonlyField = wider; // Works — readonly field is covariant, like method shorthand
+```
+
+Marking the field `readonly` restores the covariant property position, which is why the third assignment succeeds where the mutable field rejected it. See [Flow's method-parameter contravariance](../flow-vs-typescript.md#toc-variance-methods) for the contrast with TypeScript's bivariance and the full mechanics.
+
 ## Object type inference {#toc-object-type-inference}
 
 When you create an object value, its type is set at the creation point. You cannot add new properties,

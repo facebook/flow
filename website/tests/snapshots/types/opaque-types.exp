@@ -2,12 +2,45 @@
 No errors!
 
 === block 2 ===
-No errors!
+Error ------------------------------------------------------------------------ -:11:21
+
+Cannot assign `"abc"` to `c` because string [1] is incompatible with `OpaqueID` [2]. [incompatible-type]
+
+   -:11:21
+   11| const c: OpaqueID = "abc"; // Error — outside the defining file, string is not an OpaqueID
+                           ^^^^^ [1]
+
+References:
+   -:11:10
+   11| const c: OpaqueID = "abc"; // Error — outside the defining file, string is not an OpaqueID
+                ^^^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:12:19
+
+Cannot assign `oid` to `d` because `OpaqueID` [1] is incompatible with string [2]. [incompatible-type]
+
+   -:12:19
+   12| const d: string = oid; // Error — outside the defining file, OpaqueID is not a string
+                         ^^^
+
+References:
+   -:10:12
+   10| const oid: OpaqueID = makeOpaqueID("abc"); // Works — the only way to obtain an OpaqueID
+                  ^^^^^^^^ [1]
+   -:12:10
+   12| const d: string = oid; // Error — outside the defining file, OpaqueID is not a string
+                ^^^^^^ [2]
+
+
+Found 2 errors
 
 === block 3 ===
 No errors!
 
 === block 4 ===
+No errors!
+
+=== block 5 ===
 Error -------------------------------------------------------------------------- -:5:1
 
 Cannot cast `0` to `NumberAlias` because number [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
@@ -40,10 +73,10 @@ References:
 
 Found 2 errors
 
-=== block 5 ===
+=== block 6 ===
 No errors!
 
-=== block 6 ===
+=== block 7 ===
 Error ------------------------------------------------------------------------ -:10:12
 
 Cannot return `x` because string [1] is incompatible with `ID` [2]. [incompatible-type]
@@ -63,7 +96,7 @@ References:
 
 Found 1 error
 
-=== block 7 ===
+=== block 8 ===
 Error ------------------------------------------------------------------------- -:2:27
 
 number [1] is incompatible with string [2]. [incompatible-type]
@@ -80,8 +113,8 @@ References:
 
 Found 1 error
 
-=== block 8 ===
+=== block 9 ===
 No errors!
 
-=== block 9 ===
+=== block 10 ===
 No errors!

@@ -16,7 +16,34 @@ Opaque types are Flow-only — TypeScript has no native equivalent. The common T
 
 ## When to use this {#toc-when-to-use}
 
-Use opaque types over regular [type aliases](./aliases.md) when you need to enforce abstraction boundaries across module boundaries — for example, preventing callers from treating an `ID` as a plain `string`. Use the optional [supertype constraint](#toc-subtyping-constraints) when consumers need partial access (e.g. reading an `ID` as a `string` but not creating one from a `string`).
+Use opaque types over regular [type aliases](./aliases.md) when you need to enforce abstraction boundaries across module boundaries — for example, preventing callers from treating an `ID` as a plain `string`. A regular `type ID = string` is transparent at every file boundary, so any consumer can treat an `ID` exactly like a `string`; `opaque type ID = string` keeps that transparency inside the defining file but seals the underlying type at the module boundary.
+
+**`exports.js`**
+
+```js
+export type TransparentID = string;
+
+export opaque type OpaqueID = string;
+export function makeOpaqueID(s: string): OpaqueID { return s; }
+```
+
+**`imports.js`**
+
+```js flow-check
+// The importer's view: `TransparentID` is still `string`; `OpaqueID` is nominal.
+declare type TransparentID = string;
+declare opaque type OpaqueID;
+declare function makeOpaqueID(s: string): OpaqueID;
+
+const a: TransparentID = "abc"; // Works — transparent alias is interchangeable with string
+const b: string = a; // Works — round-trips with no boundary
+
+const oid: OpaqueID = makeOpaqueID("abc"); // Works — the only way to obtain an OpaqueID
+const c: OpaqueID = "abc"; // Error — outside the defining file, string is not an OpaqueID
+const d: string = oid; // Error — outside the defining file, OpaqueID is not a string
+```
+
+Reach for `opaque type` when callers must obtain a value only through a constructor function the defining module controls — for example IDs, sanitized strings, or units of measure. Keep `type` when the alias is documentation only and you're fine with consumers treating it as its underlying representation. Use the optional [supertype constraint](#toc-subtyping-constraints) when consumers need partial access (e.g. reading an `ID` as a `string` but not creating one from a `string`).
 
 ## Opaque Type Alias Syntax {#toc-opaque-type-alias-syntax}
 
