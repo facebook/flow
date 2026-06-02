@@ -2190,7 +2190,6 @@ pub mod opts {
             "experimental.projects_path_mapping",
             "experimental.records",
             "experimental.records.includes",
-            "experimental.restart_on_flowconfig_change",
             "experimental.strict_es6_import_export",
             "experimental.ts_syntax",
             "experimental.allow_variance_keywords",
@@ -2554,12 +2553,6 @@ pub mod opts {
                         values,
                         config,
                     ))
-                }
-                // Parsed for backwards compatibility with flowconfigs that still set
-                // `experimental.restart_on_flowconfig_change`. Has no runtime effect;
-                // kept so those flowconfigs do not error out.
-                "experimental.restart_on_flowconfig_change" => {
-                    Some(parse_boolean(|_, _| Ok(()), values, config))
                 }
                 "experimental.strict_es6_import_export" => {
                     Some(strict_es6_import_export_parser(values, config))

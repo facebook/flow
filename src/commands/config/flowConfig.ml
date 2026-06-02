@@ -1238,10 +1238,6 @@ module Opts = struct
           ~multiple:true
           (fun opts v -> Ok { opts with records_includes = v :: opts.records_includes })
       );
-      (* Parsed for backwards compatibility with flowconfigs that still set
-         [experimental.restart_on_flowconfig_change]. Has no runtime effect;
-         kept so those flowconfigs do not error out. *)
-      ("experimental.restart_on_flowconfig_change", boolean (fun opts _ -> Ok opts));
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = Some v }));
       ( "experimental.allow_variance_keywords",
