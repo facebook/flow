@@ -36,7 +36,6 @@ describe('MethodDefinition', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {
@@ -155,7 +154,6 @@ describe('MethodDefinition', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {
@@ -275,7 +273,6 @@ describe('MethodDefinition', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {

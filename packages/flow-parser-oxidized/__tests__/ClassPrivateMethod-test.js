@@ -35,7 +35,6 @@ describe('Private properties', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {
@@ -115,7 +114,6 @@ describe('Private properties', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {

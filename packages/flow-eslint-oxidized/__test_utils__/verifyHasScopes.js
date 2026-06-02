@@ -38,7 +38,15 @@ export function verifyHasScopes(
   }>,
   parserOptions?: ParseForESLintOptions,
 ) {
-  const {scopeManager} = parseForESLint(code, parserOptions);
+  let scopeManager;
+  try {
+    ({scopeManager} = parseForESLint(code, parserOptions));
+  } catch (e) {
+    if (e instanceof Error) {
+      e.message += '\nSource:\n' + code;
+    }
+    throw e;
+  }
 
   it('should have the correct scopes', () => {
     // report as an array so that it's easier to debug the tests
@@ -94,7 +102,9 @@ export function verifyHasScopes(
                 });
               });
             } else {
-              it.skip('has the expected reference count', () => {});
+              it('has no reference count expectation', () => {
+                expect(expectedVariable.referenceCount == null).toBe(true);
+              });
             }
 
             if (expectedVariable.type != null) {
@@ -123,7 +133,9 @@ export function verifyHasScopes(
                 );
               });
             } else {
-              it.skip('has the expected eslintUsed value', () => {});
+              it('has no eslintUsed expectation', () => {
+                expect(expectedVariable.eslintUsed).toBeUndefined();
+              });
             }
           });
         }

@@ -37,7 +37,7 @@ describe('DeclareEnum', () => {
        "body": [
          {
            "body": {
-             "explicitType": null,
+             "explicitType": false,
              "hasUnknownMembers": false,
              "members": [
                {
@@ -59,9 +59,8 @@ describe('DeclareEnum', () => {
                  "type": "EnumDefaultedMember",
                },
              ],
-             "type": "EnumBody",
+             "type": "EnumStringBody",
            },
-           "const": false,
            "id": {
              "name": "T1",
              "optional": false,

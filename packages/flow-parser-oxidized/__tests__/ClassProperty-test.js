@@ -40,7 +40,6 @@ describe('PropertyDefinition', () => {
      {
        "body": [
          {
-           "abstract": false,
            "body": {
              "body": [
                {
@@ -160,7 +159,6 @@ describe('PropertyDefinition', () => {
          {
            "body": [
              {
-               "abstract": false,
                "body": {
                  "body": [
                    {
@@ -251,7 +249,6 @@ describe('PropertyDefinition', () => {
          {
            "body": [
              {
-               "abstract": false,
                "body": {
                  "body": [
                    {
@@ -330,7 +327,6 @@ describe('PropertyDefinition', () => {
          {
            "body": [
              {
-               "abstract": false,
                "body": {
                  "body": [
                    {

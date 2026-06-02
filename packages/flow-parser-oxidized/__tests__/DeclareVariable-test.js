@@ -38,23 +38,17 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "declarations": [
-               {
-                 "id": {
-                   "name": "T1",
-                   "optional": false,
-                   "type": "Identifier",
-                   "typeAnnotation": {
-                     "type": "TypeAnnotation",
-                     "typeAnnotation": {
-                       "type": "NumberTypeAnnotation",
-                     },
-                   },
+             "id": {
+               "name": "T1",
+               "optional": false,
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
                  },
-                 "init": null,
-                 "type": "VariableDeclarator",
                },
-             ],
+             },
              "kind": "var",
              "type": "DeclareVariable",
            },
@@ -111,23 +105,17 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "declarations": [
-               {
-                 "id": {
-                   "name": "T1",
-                   "optional": false,
-                   "type": "Identifier",
-                   "typeAnnotation": {
-                     "type": "TypeAnnotation",
-                     "typeAnnotation": {
-                       "type": "NumberTypeAnnotation",
-                     },
-                   },
+             "id": {
+               "name": "T1",
+               "optional": false,
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
                  },
-                 "init": null,
-                 "type": "VariableDeclarator",
                },
-             ],
+             },
              "kind": "let",
              "type": "DeclareVariable",
            },
@@ -184,23 +172,17 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "declarations": [
-               {
-                 "id": {
-                   "name": "T1",
-                   "optional": false,
-                   "type": "Identifier",
-                   "typeAnnotation": {
-                     "type": "TypeAnnotation",
-                     "typeAnnotation": {
-                       "type": "NumberTypeAnnotation",
-                     },
-                   },
+             "id": {
+               "name": "T1",
+               "optional": false,
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
                  },
-                 "init": null,
-                 "type": "VariableDeclarator",
                },
-             ],
+             },
              "kind": "const",
              "type": "DeclareVariable",
            },

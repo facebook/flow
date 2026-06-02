@@ -1062,9 +1062,6 @@ describe('TupleTypeAnnotation', () => {
                "internalSlots": [],
                "properties": [
                  {
-                   "abstract": false,
-                   "computed": false,
-                   "init": null,
                    "key": {
                      "name": "foo",
                      "optional": false,
@@ -1074,10 +1071,8 @@ describe('TupleTypeAnnotation', () => {
                    "kind": "init",
                    "method": false,
                    "optional": false,
-                   "override": false,
                    "proto": false,
                    "static": false,
-                   "tsAccessibility": null,
                    "type": "ObjectTypeProperty",
                    "value": {
                      "type": "StringTypeAnnotation",
@@ -1185,7 +1180,6 @@ describe('TupleTypeAnnotation', () => {
                    "key": {
                      "type": "StringTypeAnnotation",
                    },
-                   "optional": false,
                    "static": false,
                    "type": "ObjectTypeIndexer",
                    "value": {
@@ -1291,9 +1285,6 @@ describe('TupleTypeAnnotation', () => {
                "internalSlots": [],
                "properties": [
                  {
-                   "abstract": false,
-                   "computed": false,
-                   "init": null,
                    "key": {
                      "name": "readonly",
                      "optional": false,
@@ -1303,10 +1294,8 @@ describe('TupleTypeAnnotation', () => {
                    "kind": "init",
                    "method": false,
                    "optional": false,
-                   "override": false,
                    "proto": false,
                    "static": false,
-                   "tsAccessibility": null,
                    "type": "ObjectTypeProperty",
                    "value": {
                      "type": "StringTypeAnnotation",
@@ -1407,9 +1396,6 @@ describe('TupleTypeAnnotation', () => {
                "internalSlots": [],
                "properties": [
                  {
-                   "abstract": false,
-                   "computed": false,
-                   "init": null,
                    "key": {
                      "name": "with",
                      "optional": false,
@@ -1419,10 +1405,8 @@ describe('TupleTypeAnnotation', () => {
                    "kind": "init",
                    "method": false,
                    "optional": false,
-                   "override": false,
                    "proto": false,
                    "static": false,
-                   "tsAccessibility": null,
                    "type": "ObjectTypeProperty",
                    "value": {
                      "type": "StringTypeAnnotation",
@@ -1529,9 +1513,6 @@ describe('TupleTypeAnnotation', () => {
                "internalSlots": [],
                "properties": [
                  {
-                   "abstract": false,
-                   "computed": false,
-                   "init": null,
                    "key": {
                      "name": "default",
                      "optional": false,
@@ -1541,10 +1522,8 @@ describe('TupleTypeAnnotation', () => {
                    "kind": "init",
                    "method": false,
                    "optional": true,
-                   "override": false,
                    "proto": false,
                    "static": false,
-                   "tsAccessibility": null,
                    "type": "ObjectTypeProperty",
                    "value": {
                      "type": "StringTypeAnnotation",

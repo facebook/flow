@@ -1318,11 +1318,10 @@ describe('Declare statements', () => {
         declare module Foo {
           declare export type T = string;
           declare export opaque type O: string;
-          declare export interface I {}
 
           declare export var V: string;
           declare export class C {}
-          declare export function F(T, O, I): void;
+          declare export function F(T, O): void;
 
           declare export {V, C, F as T};
         }
@@ -1346,11 +1345,6 @@ describe('Declare statements', () => {
               referenceCount: 1,
             },
             {
-              name: 'I',
-              type: DefinitionType.Type,
-              referenceCount: 1,
-            },
-            {
               name: 'V',
               type: DefinitionType.Variable,
               referenceCount: 1,
@@ -1364,6 +1358,31 @@ describe('Declare statements', () => {
               name: 'F',
               type: DefinitionType.FunctionName,
               referenceCount: 1,
+            },
+          ],
+        },
+      ],
+    );
+
+    verifyHasScopes(
+      `
+          declare module Foo {
+            declare export interface I {}
+          }
+        `,
+      [
+        {
+          type: ScopeType.Module,
+          variables: [],
+        },
+        {
+          type: ScopeType.DeclareModule,
+          variables: [
+            {
+              name: 'I',
+              type: DefinitionType.Type,
+              referenceCount: 0,
+              eslintUsed: true,
             },
           ],
         },
@@ -1570,7 +1589,7 @@ describe('FunctionExpression', () => {
     //           ^^^ refers to the function name !!!
   })
   */
-  test.skip('Function name shadows type parameter', () => {
+  describe('Function name shadows type parameter', () => {
     verifyHasScopes(
       `
         type foo = 1;
@@ -1595,12 +1614,7 @@ describe('FunctionExpression', () => {
             {
               name: 'foo',
               type: DefinitionType.FunctionName,
-              referenceCount: 1, // flow's weirdness
-            },
-            {
-              name: 'foo',
-              type: DefinitionType.TypeParameter,
-              referenceCount: 2,
+              referenceCount: 0,
             },
           ],
         },
@@ -1611,6 +1625,16 @@ describe('FunctionExpression', () => {
               name: 'arguments',
               type: null,
               referenceCount: 0,
+            },
+            {
+              name: 'foo',
+              type: DefinitionType.TypeParameter,
+              referenceCount: 3,
+            },
+            {
+              name: 'a',
+              type: DefinitionType.Parameter,
+              referenceCount: 1,
             },
           ],
         },

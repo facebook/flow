@@ -35,7 +35,6 @@ describe('Private properties', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {
@@ -104,7 +103,6 @@ describe('Private properties', () => {
        {
          "body": [
            {
-             "abstract": false,
              "body": {
                "body": [
                  {
@@ -206,11 +204,7 @@ describe('Private properties', () => {
     });
   });
 
-  // Brand check (`#priv in obj`) is not supported by the current OCaml/Rust
-  // flow_parser — see ADAPTER_GAPS.md "Deferred — brand-check (#priv in obj)".
-  // Skipped here rather than worked around with source rewriting or AST
-  // encoding tricks; revisit when OCaml flow_parser grows native support.
-  describe.skip('Brand Check (deferred — brand-check not supported by current parser; tracked in ADAPTER_GAPS.md)', () => {
+  describe('Brand Check', () => {
     const testCase: AlignmentCase = {
       code: `
         class Foo {
@@ -220,7 +214,11 @@ describe('Private properties', () => {
           }
         }
       `,
-      espree: {expectToFail: false},
+      espree: {
+        expectToFail: 'hermes-exception',
+        expectedExceptionMessage:
+          'Unexpected token `#`, expected an identifier (5:12)',
+      },
       babel: {
         // the version of babel we test against does not support private brand checks
         expectToFail: 'babel-exception',
@@ -229,95 +227,9 @@ describe('Private properties', () => {
     };
 
     test('ESTree', () => {
-      expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-       {
-         "body": [
-           {
-             "body": {
-               "body": [
-                 {
-                   "computed": false,
-                   "declare": false,
-                   "decorators": [],
-                   "key": {
-                     "name": "private",
-                     "type": "PrivateIdentifier",
-                   },
-                   "optional": false,
-                   "static": false,
-                   "tsModifiers": null,
-                   "type": "PropertyDefinition",
-                   "typeAnnotation": null,
-                   "value": null,
-                   "variance": null,
-                 },
-                 {
-                   "computed": false,
-                   "decorators": [],
-                   "key": {
-                     "name": "constructor",
-                     "optional": false,
-                     "type": "Identifier",
-                     "typeAnnotation": null,
-                   },
-                   "kind": "constructor",
-                   "static": false,
-                   "type": "MethodDefinition",
-                   "value": {
-                     "async": false,
-                     "body": {
-                       "body": [
-                         {
-                           "directive": null,
-                           "expression": {
-                             "left": {
-                               "name": "private",
-                               "type": "PrivateIdentifier",
-                             },
-                             "operator": "in",
-                             "right": {
-                               "name": "foo",
-                               "optional": false,
-                               "type": "Identifier",
-                               "typeAnnotation": null,
-                             },
-                             "type": "BinaryExpression",
-                           },
-                           "type": "ExpressionStatement",
-                         },
-                       ],
-                       "type": "BlockStatement",
-                     },
-                     "expression": false,
-                     "generator": false,
-                     "id": null,
-                     "params": [],
-                     "predicate": null,
-                     "returnType": null,
-                     "type": "FunctionExpression",
-                     "typeParameters": null,
-                   },
-                 },
-               ],
-               "type": "ClassBody",
-             },
-             "decorators": [],
-             "id": {
-               "name": "Foo",
-               "optional": false,
-               "type": "Identifier",
-               "typeAnnotation": null,
-             },
-             "implements": [],
-             "superClass": null,
-             "superTypeArguments": null,
-             "type": "ClassDeclaration",
-             "typeParameters": null,
-           },
-         ],
-         "type": "Program",
-       }
-      `);
+      expect(() => parseForSnapshot(testCase.code)).toThrow(
+        'Unexpected token `#`, expected an identifier (5:12)',
+      );
       expectEspreeAlignment(testCase);
     });
 

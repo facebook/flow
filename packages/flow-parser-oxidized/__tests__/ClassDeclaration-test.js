@@ -23,7 +23,6 @@ describe('Super type arguments', () => {
      {
        "body": [
          {
-           "abstract": false,
            "body": {
              "body": [],
              "type": "ClassBody",

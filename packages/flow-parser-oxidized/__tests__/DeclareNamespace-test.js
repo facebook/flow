@@ -39,38 +39,29 @@ describe('DeclareNamespace', () => {
            "body": {
              "body": [
                {
-                 "declarations": [
-                   {
-                     "id": {
-                       "name": "foo",
-                       "optional": false,
-                       "type": "Identifier",
-                       "typeAnnotation": {
-                         "type": "TypeAnnotation",
-                         "typeAnnotation": {
-                           "type": "StringTypeAnnotation",
-                         },
-                       },
+                 "id": {
+                   "name": "foo",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "StringTypeAnnotation",
                      },
-                     "init": null,
-                     "type": "VariableDeclarator",
                    },
-                 ],
+                 },
                  "kind": "const",
                  "type": "DeclareVariable",
                },
              ],
              "type": "BlockStatement",
            },
-           "global": false,
            "id": {
              "name": "NS",
              "optional": false,
              "type": "Identifier",
              "typeAnnotation": null,
            },
-           "implicitDeclare": false,
-           "keyword": "namespace",
            "type": "DeclareNamespace",
          },
          {

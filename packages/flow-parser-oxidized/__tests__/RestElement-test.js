@@ -89,7 +89,6 @@ describe('RestElement', () => {
                    "type": "RestElement",
                  },
                ],
-               "optional": false,
                "type": "ArrayPattern",
                "typeAnnotation": null,
              },
@@ -253,7 +252,6 @@ describe('RestElement', () => {
                      "type": "RestElement",
                    },
                  ],
-                 "optional": false,
                  "type": "ArrayPattern",
                  "typeAnnotation": null,
                },
@@ -384,7 +382,6 @@ describe('RestElement', () => {
                {
                  "argument": {
                    "elements": [],
-                   "optional": false,
                    "type": "ArrayPattern",
                    "typeAnnotation": {
                      "type": "TypeAnnotation",
@@ -421,7 +418,6 @@ describe('RestElement', () => {
                    {
                      "argument": {
                        "elements": [],
-                       "optional": false,
                        "type": "ArrayPattern",
                        "typeAnnotation": {
                          "type": "TypeAnnotation",
@@ -433,7 +429,6 @@ describe('RestElement', () => {
                      "type": "RestElement",
                    },
                  ],
-                 "optional": false,
                  "type": "ArrayPattern",
                  "typeAnnotation": null,
                },

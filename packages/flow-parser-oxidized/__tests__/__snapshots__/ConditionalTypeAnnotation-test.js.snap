@@ -179,7 +179,10 @@ exports[`ConditionalTypeAnnotation InferType ESTree 1`] = `
                   "type": "InferTypeAnnotation",
                   "typeParameter": {
                     "bound": {
-                      "type": "NumberTypeAnnotation",
+                      "type": "TypeAnnotation",
+                      "typeAnnotation": {
+                        "type": "NumberTypeAnnotation",
+                      },
                     },
                     "const": false,
                     "default": null,

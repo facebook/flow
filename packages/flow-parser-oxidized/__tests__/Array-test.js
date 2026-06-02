@@ -48,7 +48,6 @@ describe('Array', () => {
                      "typeAnnotation": null,
                    },
                  ],
-                 "optional": false,
                  "type": "ArrayPattern",
                  "typeAnnotation": null,
                },

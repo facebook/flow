@@ -1852,7 +1852,7 @@ impl<'a> Serializer<'a> {
                 );
             }
             ast::class::BodyElement::IndexSignature(indexer) => {
-                // 150: ObjectTypeIndexer — id key value static variance optional
+                // 150: ObjectTypeIndexer — id key value static variance
                 self.write_node_header(NodeKind::ObjectTypeIndexer, &indexer.loc);
                 match &indexer.id {
                     Some(id) => self.serialize_identifier_node(id),
@@ -1865,7 +1865,6 @@ impl<'a> Serializer<'a> {
                     Some(v) => self.serialize_variance(v),
                     None => self.write_null_node(),
                 }
-                self.write_bool(indexer.optional);
             }
         }
     }
@@ -3103,11 +3102,11 @@ impl<'a> Serializer<'a> {
                         self.write_node_header(NodeKind::InterfaceDeclaration, loc);
                         self.serialize_identifier_node(&declaration.id);
                         self.serialize_type_params_opt(&declaration.tparams);
-                        self.serialize_type_object(&declaration.body.0, &declaration.body.1);
                         self.buf.push(declaration.extends.len() as u32);
                         for (ext_loc, ext) in declaration.extends.iter() {
                             self.serialize_interface_extends(ext_loc, ext);
                         }
+                        self.serialize_type_object(&declaration.body.0, &declaration.body.1);
                     }
                     Declaration::Enum { loc, declaration } => {
                         // Emit DeclareEnum, not the value-statement
