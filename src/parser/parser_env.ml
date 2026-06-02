@@ -1072,10 +1072,10 @@ module Peek = struct
     | T_STRING _
     | T_NUMBER _
     | T_BIGINT _
-    | T_LBRACKET
-    | T_FUNCTION ->
+    | T_LBRACKET ->
       true
     | T_POUND when is_class -> true
+    | t when token_is_reserved t -> true
     | _ -> ith_is_identifier_name ~i env
 
   (* This returns true if the next token is identifier-ish (even if it is an

@@ -1055,6 +1055,49 @@ pub(crate) fn is_reserved(str_val: &str) -> bool {
     }
 }
 
+pub(crate) fn token_is_reserved(token: &TokenKind) -> bool {
+    match token {
+        TokenKind::TIdentifier { raw, .. } if is_reserved(raw) => true,
+        TokenKind::TBreak
+        | TokenKind::TCase
+        | TokenKind::TCatch
+        | TokenKind::TClass
+        | TokenKind::TConst
+        | TokenKind::TContinue
+        | TokenKind::TDebugger
+        | TokenKind::TDefault
+        | TokenKind::TDelete
+        | TokenKind::TDo
+        | TokenKind::TElse
+        | TokenKind::TEnum
+        | TokenKind::TExport
+        | TokenKind::TExtends
+        | TokenKind::TFalse
+        | TokenKind::TFinally
+        | TokenKind::TFor
+        | TokenKind::TFunction
+        | TokenKind::TIf
+        | TokenKind::TImport
+        | TokenKind::TIn
+        | TokenKind::TInstanceof
+        | TokenKind::TNew
+        | TokenKind::TNull
+        | TokenKind::TReturn
+        | TokenKind::TSuper
+        | TokenKind::TSwitch
+        | TokenKind::TThis
+        | TokenKind::TThrow
+        | TokenKind::TTrue
+        | TokenKind::TTry
+        | TokenKind::TTypeof
+        | TokenKind::TVar
+        | TokenKind::TVoid
+        | TokenKind::TWhile
+        | TokenKind::TWith => true,
+        _ => false,
+    }
+}
+
 pub(crate) fn is_reserved_type(str_val: &str) -> bool {
     match str_val {
         "any" | "bigint" | "bool" | "boolean" | "const" | "empty" | "extends" | "false"
@@ -1977,9 +2020,9 @@ pub(crate) mod peek {
             TokenKind::TString { .. }
             | TokenKind::TNumber { .. }
             | TokenKind::TBigint { .. }
-            | TokenKind::TLbracket
-            | TokenKind::TFunction => true,
+            | TokenKind::TLbracket => true,
             TokenKind::TPound if is_class => true,
+            t if token_is_reserved(t) => true,
             t => lookahead1_kind_is_identifier_name(lex_mode, t),
         }
     }
@@ -2004,8 +2047,9 @@ pub(crate) mod peek {
 
     // let is_object_key ~is_class env =
     //   match token env with
-    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET | T_FUNCTION -> true
+    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET -> true
     //   | T_POUND when is_class -> true
+    //   | t when token_is_reserved t -> true
     //   | _ -> is_identifier_name env
     #[expect(dead_code)]
     pub(crate) fn is_object_key(env: &mut ParserEnv, is_class: bool) -> bool {
@@ -2013,9 +2057,9 @@ pub(crate) mod peek {
             TokenKind::TString { .. }
             | TokenKind::TNumber { .. }
             | TokenKind::TBigint { .. }
-            | TokenKind::TLbracket
-            | TokenKind::TFunction => true,
+            | TokenKind::TLbracket => true,
             TokenKind::TPound if is_class => true,
+            t if token_is_reserved(t) => true,
             _ => is_identifier_name(env),
         }
     }
