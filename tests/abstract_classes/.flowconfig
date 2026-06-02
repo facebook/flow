@@ -2,3 +2,4 @@
 all=true
 no_flowlib=false
 experimental.abstract_classes=true
+experimental.tslib_syntax=true

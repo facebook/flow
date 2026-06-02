@@ -58,6 +58,7 @@ pub enum TSClassVisibilityKind {
 pub enum ParseError {
     AbstractMethodInNonAbstractClass,
     AbstractMethodWithBody,
+    AbstractPrivateMember,
     AbstractPropertyInNonAbstractClass,
     AbstractPropertyWithInitializer,
     AccessorDataProperty,
@@ -256,6 +257,12 @@ impl fmt::Display for ParseError {
             }
             Self::AbstractMethodWithBody => {
                 write!(f, "Abstract methods cannot have an implementation.")
+            }
+            Self::AbstractPrivateMember => {
+                write!(
+                    f,
+                    "The `abstract` modifier cannot be used with a private identifier."
+                )
             }
             Self::AbstractPropertyInNonAbstractClass => {
                 write!(

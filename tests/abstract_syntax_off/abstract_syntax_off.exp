@@ -1,0 +1,63 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:1
+
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+      v----------------------------
+   4| abstract class Foo { // ERROR
+   5|   abstract getName(): string; // ERROR
+   6|
+   7|   concreteMethod(): void {}
+   8| }
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:5:3
+
+Flow does not support `abstract` methods. [unsupported-syntax]
+
+   5|   abstract getName(): string; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+       v------------------------------------
+   10| declare abstract class Bar { // ERROR
+   11|   abstract getName(): string; // ERROR
+   12|
+   13|   meth(): void;
+   14| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:11:3
+
+Flow does not support `abstract` methods. [unsupported-syntax]
+
+   11|   abstract getName(): string; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+       v-------------------------------------------------
+   16| declare abstract class AbstractComputed { // ERROR
+   17|   abstract [Symbol.iterator](): Iterator<any>;
+   18| }
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:3
+
+Flow does not support `abstract` methods. [unsupported-syntax]
+
+   17|   abstract [Symbol.iterator](): Iterator<any>;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 6 errors

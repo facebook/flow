@@ -525,6 +525,8 @@ mod tests {
                         class_private_methods: mk_properties(private_method),
                         class_private_static_methods: mk_properties(private_static_method),
                         inst_react_dro: None,
+                        inst_abstract: false,
+                        inst_abstract_props: FlowOrdSet::new(),
                     }),
                     static_: Type::new(TypeInner::ObjProtoT(dummy_reason())),
                     super_: Type::new(TypeInner::ObjProtoT(dummy_reason())),

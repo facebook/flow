@@ -1230,6 +1230,8 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             class_private_methods: class_private_methods_prime,
             class_private_static_methods: class_private_static_methods_prime,
             inst_react_dro: i.inst_react_dro.clone(),
+            inst_abstract: i.inst_abstract,
+            inst_abstract_props: i.inst_abstract_props.clone(),
         })
     }
 }

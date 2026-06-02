@@ -26,6 +26,7 @@ use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_context::Context;
 use flow_typing_default::Default;
+use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
@@ -3766,6 +3767,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::ETSSyntax(box ETSSyntaxData { loc, .. }) => {
             format!("ETSSyntax ({})", string_of_aloc(None, loc))
+        }
+        ErrorMessage::EAbstractClass(box EAbstractClassData { loc, .. }) => {
+            format!("EAbstractClass ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { loc, .. }) => {
             format!("EVarianceKeyword ({})", string_of_aloc(None, loc))

@@ -58,6 +58,7 @@ use flow_typing_type::type_::union_rep::OptimizedError;
 use flow_typing_type::type_util::mod_loc_of_virtual_use_op;
 use vec1::Vec1;
 
+use crate::intermediate_error_types::AbstractErrorKind;
 use crate::intermediate_error_types::AssignedConstLikeBindingType;
 use crate::intermediate_error_types::ClassKind;
 use crate::intermediate_error_types::ConstantConditionKind;
@@ -2113,6 +2114,22 @@ pub struct ETSSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct EAbstractClassData<L: Dupe> {
+    pub kind: AbstractErrorKind<L>,
+    pub loc: L,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EVarianceKeywordData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub kind: VarianceKeywordKind,
     pub loc: L,
@@ -2782,6 +2799,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     },
 
     ETSSyntax(Box<ETSSyntaxData<L>>),
+
+    EAbstractClass(Box<EAbstractClassData<L>>),
 
     EVarianceKeyword(Box<EVarianceKeywordData<L>>),
 
@@ -4914,6 +4933,36 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ETSSyntax(Box::new(ETSSyntaxData { kind, loc: f(loc) }))
             }
 
+            EAbstractClass(box EAbstractClassData { kind, loc }) => {
+                let kind = match kind {
+                    AbstractErrorKind::AbstractClassInstantiation => {
+                        AbstractErrorKind::AbstractClassInstantiation
+                    }
+                    AbstractErrorKind::AbstractMemberNotImplemented {
+                        class_name,
+                        member_name,
+                        member_def_loc,
+                    } => AbstractErrorKind::AbstractMemberNotImplemented {
+                        class_name,
+                        member_name,
+                        member_def_loc: f(member_def_loc),
+                    },
+                    AbstractErrorKind::AbstractMemberOnNonAbstractClass { member_name } => {
+                        AbstractErrorKind::AbstractMemberOnNonAbstractClass { member_name }
+                    }
+                    AbstractErrorKind::AbstractPrivateMember { member_name } => {
+                        AbstractErrorKind::AbstractPrivateMember { member_name }
+                    }
+                    AbstractErrorKind::AbstractSuperCall { member_name } => {
+                        AbstractErrorKind::AbstractSuperCall { member_name }
+                    }
+                    AbstractErrorKind::AbstractConstructorAssignedToNonAbstract => {
+                        AbstractErrorKind::AbstractConstructorAssignedToNonAbstract
+                    }
+                };
+                EAbstractClass(Box::new(EAbstractClassData { kind, loc: f(loc) }))
+            }
+
             EVarianceKeyword(box EVarianceKeywordData { kind, loc }) => {
                 EVarianceKeyword(Box::new(EVarianceKeywordData { kind, loc: f(loc) }))
             }
@@ -5802,6 +5851,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnsafeGettersSetters(loc)
             | Self::EUnsafeObjectAssign(loc)
             | Self::ETSSyntax(box ETSSyntaxData { kind: _, loc })
+            | Self::EAbstractClass(box EAbstractClassData { kind: _, loc })
             | Self::EVarianceKeyword(box EVarianceKeywordData { kind: _, loc }) => Some(loc.dupe()),
 
             Self::EInvalidTypeof(box (loc, _)) => Some(loc.dupe()),
@@ -8998,6 +9048,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(msg)
             }
 
+            ErrorMessage::EAbstractClass(box EAbstractClassData { kind, .. }) => {
+                use crate::intermediate_error_types::Message;
+                Normal(Message::MessageAbstract(kind))
+            }
+
             ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { kind, .. }) => {
                 use crate::intermediate_error_types::Message;
                 use crate::intermediate_error_types::VarianceSigilKind;
@@ -9161,11 +9216,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         match self {
             ErrorMessage::EArithmeticOperand { .. } => Some(UnsafeArith),
 
-            // | EInvalidBinaryArith(Box::new(EInvalidBinaryArithData { kind = (_, op); _ })) -> begin
-            //     match op with
-            //     | Type.ArithKind.Plus -> Some UnsafeAddition
-            //     | _ -> Some UnsafeArith
-            //   end
             ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData { kind, .. }) => {
                 match kind.1 {
                     flow_typing_type::type_::arith_kind::ArithKindInner::Plus => {
@@ -9710,6 +9760,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 _ => None,
             },
             ErrorMessage::ETSSyntax(box ETSSyntaxData { .. }) => Some(UnsupportedSyntax),
+            ErrorMessage::EAbstractClass(box EAbstractClassData { .. }) => Some(InvalidAbstract),
             ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { .. }) => {
                 Some(UnsupportedSyntax)
             }

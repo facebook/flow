@@ -891,6 +891,8 @@ pub struct ClassSig<Loc, T> {
     pub proto_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub own_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub dict: Option<ObjAnnotDict<T>>,
+    pub abstract_: bool,
+    pub abstract_props: std::collections::BTreeSet<FlowSmolStr>,
 }
 
 impl<Loc, T> ClassSig<Loc, T> {
@@ -946,6 +948,8 @@ impl<Loc, T> ClassSig<Loc, T> {
                 .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
                 .collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
+            abstract_: self.abstract_,
+            abstract_props: self.abstract_props.clone(),
         }
     }
 }
@@ -967,6 +971,8 @@ pub struct DeclareClassSig<Loc, T> {
     pub constructs: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
     pub static_dict: Option<ObjAnnotDict<T>>,
+    pub abstract_: bool,
+    pub abstract_props: std::collections::BTreeSet<FlowSmolStr>,
 }
 
 impl<Loc, T> DeclareClassSig<Loc, T> {
@@ -1074,6 +1080,8 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
             constructs: self.constructs.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
             static_dict: self.static_dict.as_ref().map(|d| d.map(cx, &f_t)),
+            abstract_: self.abstract_,
+            abstract_props: self.abstract_props.clone(),
         }
     }
 }
@@ -1086,6 +1094,12 @@ pub struct InterfaceSig<Loc, T> {
     pub calls: Vec<T>,
     pub constructs: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
+    /// True only for the inline interface lowered from
+    /// `abstract new (...) => T`. Regular `interface`, inline object types,
+    /// and declare classes desugared to interfaces all set this to false.
+    /// Read at `merge_interface` in `type_sig_merge.rs` to set `inst_abstract`
+    /// so the abstract bit survives cross-module type-sig roundtripping.
+    pub abstract_: bool,
 }
 
 impl<Loc, T> InterfaceSig<Loc, T> {
@@ -1138,6 +1152,7 @@ impl<Loc, T> InterfaceSig<Loc, T> {
             calls: self.calls.iter().map(|t| f_t(cx, t)).collect(),
             constructs: self.constructs.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
+            abstract_: self.abstract_,
         }
     }
 }

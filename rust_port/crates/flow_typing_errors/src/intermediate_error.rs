@@ -3800,7 +3800,6 @@ where
                              ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>|
      -> friendly::MessageFeature<Loc> {
         match ty_or_desc {
-            // | Ok ty ->
             Ok(ty) => {
                 let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
                 let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
@@ -8210,12 +8209,9 @@ where
                 code("Readonly<T>"),
                 text("."),
             ]),
-            // | MessageTSClassAccessibility kind ->
             MessageTSClassAccessibility(kind) => {
                 use flow_parser::ast::class::ts_accessibility::Kind;
-                // let (modifier, suffix) = match kind with ...
                 let (modifier, suffix) = match kind {
-                    // | Flow_ast.Class.TSAccessibility.Private ->
                     Kind::Private => (
                         "private",
                         vec![
@@ -8226,7 +8222,6 @@ where
                             text("."),
                         ],
                     ),
-                    // | Flow_ast.Class.TSAccessibility.Public ->
                     Kind::Public => (
                         "public",
                         vec![
@@ -8235,7 +8230,6 @@ where
                             text(" modifier."),
                         ],
                     ),
-                    // | Flow_ast.Class.TSAccessibility.Protected ->
                     Kind::Protected => (
                         "protected",
                         vec![
@@ -8245,7 +8239,6 @@ where
                         ],
                     ),
                 };
-                // [text "Flow does not support using "; code modifier; text " in classes. "] @ suffix
                 let mut parts = vec![
                     text("Flow does not support using "),
                     code(modifier),
@@ -8260,18 +8253,82 @@ where
                     "To fix, declare the property in the class body and assign it in the constructor.",
                 ),
             ]),
-            // | MessageAbstractClass -> [text "Flow does not support "; code "abstract"; text " classes."]
             MessageAbstractClass => friendly::Message(vec![
                 text("Flow does not support "),
                 code("abstract"),
                 text(" classes."),
             ]),
-            // | MessageAbstractMethod -> [text "Flow does not support "; code "abstract"; text " methods."]
             MessageAbstractMethod => friendly::Message(vec![
                 text("Flow does not support "),
                 code("abstract"),
                 text(" methods."),
             ]),
+            MessageAbstract(kind) => {
+                use crate::intermediate_error_types::AbstractErrorKind::*;
+                match kind {
+                    AbstractClassInstantiation => friendly::Message(vec![
+                        text("Cannot instantiate an "),
+                        code("abstract"),
+                        text(" class."),
+                    ]),
+                    AbstractMemberNotImplemented {
+                        class_name,
+                        member_name,
+                        member_def_loc,
+                    } => {
+                        let lead = match class_name {
+                            Some(n) => {
+                                vec![text("Non-"), code("abstract"), text(" class "), code(n)]
+                            }
+                            None => vec![text("Non-"), code("abstract"), text(" subclass")],
+                        };
+                        let mut parts = lead;
+                        parts.extend(vec![
+                            text(" does not implement inherited "),
+                            code("abstract"),
+                            text(" member "),
+                            friendly::hardcoded_string_desc_ref(
+                                member_name,
+                                loc_of_aloc(member_def_loc),
+                            ),
+                            text("."),
+                        ]);
+                        friendly::Message(parts)
+                    }
+                    AbstractMemberOnNonAbstractClass { member_name } => friendly::Message(vec![
+                        code("abstract"),
+                        text(" member "),
+                        code(member_name),
+                        text(" can only appear within an "),
+                        code("abstract"),
+                        text(" class."),
+                    ]),
+                    AbstractPrivateMember { member_name } => friendly::Message(vec![
+                        text("The "),
+                        code("abstract"),
+                        text(" modifier cannot be used with "),
+                        code("private"),
+                        text(" member "),
+                        code(member_name),
+                        text("."),
+                    ]),
+                    AbstractSuperCall { member_name } => friendly::Message(vec![
+                        code("abstract"),
+                        text(" member "),
+                        code(member_name),
+                        text(" cannot be accessed via "),
+                        code("super"),
+                        text("."),
+                    ]),
+                    AbstractConstructorAssignedToNonAbstract => friendly::Message(vec![
+                        text("Cannot assign an "),
+                        code("abstract"),
+                        text(" constructor type to a non-"),
+                        code("abstract"),
+                        text(" constructor type."),
+                    ]),
+                }
+            }
             MessageTSVarianceIn => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("in"),

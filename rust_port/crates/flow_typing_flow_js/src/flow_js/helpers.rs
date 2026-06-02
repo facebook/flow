@@ -524,7 +524,6 @@ pub(super) fn handle_generic<'cx>(
         };
 
     if match bound.deref() {
-        // | GenericT { bound; id = id'; no_infer; _ } ->
         TypeInner::GenericT(box GenericTData {
             bound: inner_bound,
             id: id_prime,

@@ -4937,6 +4937,61 @@ let to_printable_error :
       ]
     | MessageAbstractClass -> [text "Flow does not support "; code "abstract"; text " classes."]
     | MessageAbstractMethod -> [text "Flow does not support "; code "abstract"; text " methods."]
+    | MessageAbstract kind -> begin
+      match kind with
+      | AbstractClassInstantiation ->
+        [text "Cannot instantiate an "; code "abstract"; text " class."]
+      | AbstractMemberNotImplemented { class_name; member_name; member_def_loc } ->
+        let lead =
+          match class_name with
+          | Some n -> [text "Non-"; code "abstract"; text " class "; code n]
+          | None -> [text "Non-"; code "abstract"; text " subclass"]
+        in
+        lead
+        @ [
+            text " does not implement inherited ";
+            code "abstract";
+            text " member ";
+            hardcoded_string_desc_ref member_name member_def_loc;
+            text ".";
+          ]
+      | AbstractMemberOnNonAbstractClass { member_name } ->
+        [
+          code "abstract";
+          text " member ";
+          code member_name;
+          text " can only appear within an ";
+          code "abstract";
+          text " class.";
+        ]
+      | AbstractPrivateMember { member_name } ->
+        [
+          text "The ";
+          code "abstract";
+          text " modifier cannot be used with ";
+          code "private";
+          text " member ";
+          code member_name;
+          text ".";
+        ]
+      | AbstractSuperCall { member_name } ->
+        [
+          code "abstract";
+          text " member ";
+          code member_name;
+          text " cannot be accessed via ";
+          code "super";
+          text ".";
+        ]
+      | AbstractConstructorAssignedToNonAbstract ->
+        [
+          text "Cannot assign an ";
+          code "abstract";
+          text " constructor type to a non-";
+          code "abstract";
+          text " constructor type.";
+        ]
+    end
     | MessageTSVarianceIn ->
       [
         text "The equivalent of TypeScript's ";

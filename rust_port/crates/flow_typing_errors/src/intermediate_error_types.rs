@@ -401,6 +401,36 @@ pub enum RecordDeclarationInvalidSyntax<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum AbstractErrorKind<L: Dupe> {
+    AbstractClassInstantiation,
+    AbstractMemberNotImplemented {
+        class_name: Option<FlowSmolStr>,
+        member_name: FlowSmolStr,
+        member_def_loc: L,
+    },
+    AbstractMemberOnNonAbstractClass {
+        member_name: FlowSmolStr,
+    },
+    AbstractPrivateMember {
+        member_name: FlowSmolStr,
+    },
+    AbstractSuperCall {
+        member_name: FlowSmolStr,
+    },
+    AbstractConstructorAssignedToNonAbstract,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InvalidRenderTypeKind<L: Dupe> {
     InvalidRendersNullVoidFalse,
     InvalidRendersIterable,
@@ -2204,6 +2234,7 @@ pub enum Message<L: Dupe> {
     MessageTSParameterProperty,
     MessageAbstractClass,
     MessageAbstractMethod,
+    MessageAbstract(AbstractErrorKind<L>),
     MessageTSUndefinedType,
 
     MessageTupleElementNotReadable(Box<MessageTupleElementNotReadableData<L>>),

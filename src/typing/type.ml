@@ -1466,6 +1466,8 @@ module rec TypeTerm : sig
     class_private_methods: Properties.id;
     class_private_static_methods: Properties.id;
     inst_react_dro: react_dro option;
+    inst_abstract: bool;
+    inst_abstract_props: NameUtils.Set.t;
   }
 
   and instance_kind =

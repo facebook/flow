@@ -301,6 +301,8 @@ fn check_polarity_impl<'cx>(
                     class_private_static_fields: _,
                     class_private_methods,
                     class_private_static_methods: _,
+                    inst_abstract: _,
+                    inst_abstract_props: _,
                 } = instance_t.inst.deref();
                 check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.static_)?;
                 check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.super_)?;

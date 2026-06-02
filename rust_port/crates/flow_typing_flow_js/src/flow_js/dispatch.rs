@@ -1307,7 +1307,6 @@ fn __flow_impl<'cx>(
         {
             let call_t = cx.find_call(*id);
             let t = match call_t.deref() {
-                // | DefT (rf, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))) ->
                 TypeInner::DefT(rf, inner_def)
                     if let DefTInner::FunT(s, funtype) = inner_def.deref()
                         && funtype.effect_ == ReactEffectType::ArbitraryEffect =>
@@ -1331,7 +1330,6 @@ fn __flow_impl<'cx>(
                         }))),
                     ))
                 }
-                // | DefT (rp, PolyT ({ t_out = DefT (rf, FunT (s, ({ effect_ = ArbitraryEffect; _ } as funtype))); _ } as poly)) ->
                 TypeInner::DefT(rp, inner_def)
                     if let DefTInner::PolyT(box PolyTData {
                         tparams_loc,
@@ -1803,7 +1801,7 @@ fn __flow_impl<'cx>(
             rec_flow(cx, trace, (&t, u))?;
         }
         // This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
-        // The first step is in subtyping_kit.ml, and concretizes the c for our
+        // The first step is in subtyping_kit.rs, and concretizes the c for our
         // upper bound TypeAppT.
         //
         // When we have done that, then we want to concretize the lower bound. We
@@ -5058,6 +5056,20 @@ fn __flow_impl<'cx>(
                 .dupe()
                 .replace_desc(VirtualReasonDesc::RConstructorVoidReturn);
             let annot_loc = reason_op.loc().dupe();
+            // Reject [new C(...)] where [C] is an abstract class. We do not
+            // short-circuit — let the constructor call proceed so downstream
+            // typing still produces sensible results.
+            if flow_js_utils::is_class_abstract(cx, this) {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EAbstractClass(Box::new(
+                        flow_typing_errors::error_message::EAbstractClassData {
+                            kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractClassInstantiation,
+                            loc: annot_loc.dupe(),
+                        },
+                    )),
+                )?;
+            }
             // early error if type args passed to non-polymorphic class
             if targs.is_some() {
                 flow_js_utils::add_output(
@@ -5140,13 +5152,14 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow_t(cx, trace, unknown_use(), (&any_op, &ctor_data.tout))?;
         }
-        // (* Interfaces with a construct signature can be constructed. The
-        //    sig is the [inst_construct_t] slot plus anything inherited via
-        //    [extends]; [collect_construct_ts] collects both in
-        //    derived-first order. *)
+        // Interfaces with a construct signature can be constructed. The
+        // sig is the [inst_construct_t] slot plus anything inherited via
+        // [extends]; [collect_construct_ts] collects both in
+        // derived-first order.
         (TypeInner::DefT(reason_l, def_t), UseTInner::ConstructorT(box ctor_data))
-            if let DefTInner::InstanceT(_instance_t) = def_t.deref() =>
+            if let DefTInner::InstanceT(instance_t) = def_t.deref() =>
         {
+            let inst_abstract = instance_t.inst.inst_abstract;
             let use_op = &ctor_data.use_op;
             let reason_op = &ctor_data.reason;
             let targs = &ctor_data.targs;
@@ -5154,6 +5167,17 @@ fn __flow_impl<'cx>(
             let t = &ctor_data.tout;
             let return_hint = &ctor_data.return_hint;
             let specialized_ctor = &ctor_data.specialized_ctor;
+            if inst_abstract {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EAbstractClass(Box::new(
+                        flow_typing_errors::error_message::EAbstractClassData {
+                            kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractClassInstantiation,
+                            loc: reason_op.loc().dupe(),
+                        },
+                    )),
+                )?;
+            }
             match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(cx, l)) {
                 Some(construct_t) => {
                     let ret = flow_typing_tvar::mk_no_wrap_where(
@@ -5873,7 +5897,7 @@ fn __flow_impl<'cx>(
         }
 
         // *****************************************************************
-        // * Object.assign logic has been moved to type_operation_utils.ml *
+        // * Object.assign logic has been moved to type_operation_utils.rs *
         // *****************************************************************
         (
             _,
@@ -7387,11 +7411,13 @@ fn __flow_impl<'cx>(
                 && matches!(&inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let inst = &inst_t.inst;
+            let upper_inst_abstract = inst.inst_abstract;
             let super_ = &inst_t.super_;
             structural_subtype(
                 cx,
                 trace,
                 use_op.dupe(),
+                upper_inst_abstract,
                 t,
                 reason_inst,
                 (
@@ -7439,6 +7465,7 @@ fn __flow_impl<'cx>(
                 cx,
                 trace,
                 use_op.dupe(),
+                false,
                 implementor,
                 reason_obj,
                 (props_tmap.dupe(), proto_props, *call_t, None, &None),
@@ -8383,11 +8410,6 @@ fn __flow_impl<'cx>(
                 false_t: tout,
             }),
         ) => {
-            //   let then_t =
-            //     match then_t_opt with
-            //     | Some t -> t
-            //     | None -> l
-            //   in
             let then_t = match then_t_opt {
                 Some(t) => t,
                 None => l,
@@ -9204,6 +9226,7 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let own_props = inst_t.inst.own_props.dupe();
             let inst_kind = &inst_t.inst.inst_kind;
+            let upper_inst_abstract = inst_t.inst.inst_abstract;
             // In TS mode, classes are structural and `constructor` is not part of
             // the structural shape, so drop it from proto_props before checking.
             // Matches TS, where `const c: C = { x: 1 }` is accepted.
@@ -9238,6 +9261,7 @@ fn __flow_impl<'cx>(
                 cx,
                 trace,
                 use_op.dupe(),
+                upper_inst_abstract,
                 ext_l,
                 reason_inst,
                 (

@@ -1,47 +1,363 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:1:1
+Error -------------------------------------------------------------------------- abstract_ctor_type_cross_module.js:13:7
 
-Flow does not support `abstract` classes. [unsupported-syntax]
+Cannot assign an `abstract` constructor type to a non-`abstract` constructor type. [invalid-abstract]
 
-      v----------------------------
-   1| abstract class Foo { // ERROR
-   2|   abstract getName(): string; // ERROR
-   3|
-   4|   concreteMethod(): void {}
-   5| }
-      ^
+   13| ac as ConcreteCtor; // ERROR: abstract ctor into non-abstract slot
+             ^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:2:3
+Error -------------------------------------------------------------------------- abstract_ctor_type_cross_module.js:15:1
 
-Flow does not support `abstract` methods. [unsupported-syntax]
+Cannot instantiate an `abstract` class. [invalid-abstract]
 
-   2|   abstract getName(): string; // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   15| new ac(); // ERROR: cannot `new` an abstract-typed constructor
+       ^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+Error ---------------------------------------------------------------------------------- abstract_on_non_abstract.js:8:3
 
-Flow does not support `abstract` classes. [unsupported-syntax]
+Abstract methods can only appear within an abstract class. [ParseError]
 
-       v------------------------------------
-    7| declare abstract class Bar { // ERROR
-    8|   abstract getName(): string; // ERROR
-    9|
-   10|   meth(): void;
-   11| }
+   8|   abstract m(): void; // ERROR
+        ^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:14:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   14| new Animal(); // ERROR
+       ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:17:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   17| new ctor(); // ERROR
+       ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ constructor_type.js:9:6
+
+Cannot assign an `abstract` constructor type to a non-`abstract` constructor type. [invalid-abstract]
+
+   9| A as new () => A; // ERROR: abstract into non-abstract ctor slot
+           ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- constructor_type.js:18:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   18| new c2() as A; // ERROR: c2 is abstract
+       ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- constructor_type.js:19:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   19| new c3() as A; // ERROR: c3 is abstract
+       ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- cross_module_basic.js:8:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   8| new Animal(); // ERROR: imported abstract class is still abstract
+      ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- cross_module_basic.js:10:1
+
+Non-`abstract` class `Cat` does not implement inherited `abstract` member makeSound [1]. [invalid-abstract]
+
+   cross_module_basic.js:10:1
+   10| class Cat extends Animal {} // ERROR: missing `makeSound`
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   cross_module_basic_lib.js:5:12
+    5|   abstract makeSound(): string;
+                  ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:10:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   10| new D(); // ERROR
+       ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:12:1
+
+Non-`abstract` class `E` does not implement inherited `abstract` member m [1]. [invalid-abstract]
+
+   declare_class.js:12:1
+       v---------------------------------------------------
+   12| class E extends D { // ERROR: E missing abstract `m`
+   13|   concrete(): void {}
+   14| }
        ^
 
+References:
+   declare_class.js:2:12
+    2|   abstract m(): string;
+                  ^ [1]
 
-Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Flow does not support `abstract` classes. [unsupported-syntax]
+Error -------------------------------------------------------------------------------------------- declare_class.js:25:3
 
-       v-------------------------------------------------
-   13| declare abstract class AbstractComputed { // ERROR
-   14|   abstract [Symbol.iterator](): Iterator<any>;
-   15| }
+`abstract` member `m` can only appear within an `abstract` class. [invalid-abstract]
+
+   25|   abstract m(): void; // ERROR: abstract member in non-abstract class
+         ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------ es6_private_abstract.js:10:12
+
+The `abstract` modifier cannot be used with a private identifier. [ParseError]
+
+   10|   abstract #priv(): number; // ERROR: #private+abstract method
+                  ^^^^^
+
+
+Error ------------------------------------------------------------------------------- es6_private_abstract_field.js:5:12
+
+The `abstract` modifier cannot be used with a private identifier. [ParseError]
+
+   5|   abstract #priv: number; // ERROR: #private+abstract field
+                 ^^^^^
+
+
+Error -------------------------------------------------------------------------------------- inheritance_override.js:6:8
+
+Cannot extend `A` [1] with `B` because in property `m` > the first parameter: string [2] is incompatible with
+number [3]. [incompatible-type]
+
+   inheritance_override.js:6:8
+   6|   m(x: string): void {} // ERROR: narrowing parameter type
+             ^^^^^^ [2]
+
+References:
+   inheritance_override.js:5:17
+   5| class B extends A {
+                      ^ [1]
+   inheritance_override.js:2:26
+   2|   abstract m(x: string | number): void;
+                               ^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- inherited_concrete_impl.js:31:1
+
+Non-`abstract` class `F` does not implement inherited `abstract` member extra [1]. [invalid-abstract]
+
+   inherited_concrete_impl.js:31:1
+       v--------------------------------------------
+   31| class F extends E { // ERROR: missing `extra`
+   32|   m(): number {
+   33|     return 1;
+   34|   }
+   35|   n(): string {
+   36|     return "f";
+   37|   }
+   38| }
        ^
 
+References:
+   inherited_concrete_impl.js:29:12
+   29|   abstract extra(): boolean;
+                  ^^^^^ [1]
 
 
-Found 4 errors
+Error -------------------------------------------------------------------------------------------- instantiation.js:14:1
+
+Non-`abstract` class `Cat` does not implement inherited `abstract` member makeSound [1]. [invalid-abstract]
+
+   instantiation.js:14:1
+       v----------------------------------
+   14| class Cat extends Animal { // ERROR
+   15|   name: string = "c";
+   16| }
+       ^
+
+References:
+   instantiation.js:3:12
+    3|   abstract makeSound(): string;
+                  ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- instantiation.js:18:1
+
+Non-`abstract` class `Mute` does not implement inherited `abstract` member name [1]. [invalid-abstract]
+
+   instantiation.js:18:1
+       v-----------------------------------
+   18| class Mute extends Animal { // ERROR
+   19|   makeSound(): string {
+   20|     return "";
+   21|   }
+   22| }
+       ^
+
+References:
+   instantiation.js:2:12
+    2|   abstract name: string;
+                  ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- instantiation.js:25:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   25| new Stub(); // ERROR
+       ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- instantiation.js:33:1
+
+Non-`abstract` class `C` does not implement inherited `abstract` member b [1]. [invalid-abstract]
+
+   instantiation.js:33:1
+       v---------------------------
+   33| class C extends B { // ERROR
+   34|   a(): number {
+   35|     return 1;
+   36|   }
+   37| }
+       ^
+
+References:
+   instantiation.js:31:12
+   31|   abstract b(): number;
+                  ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- method_unbinding.js:10:13
+
+Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   method_unbinding.js:10:13
+   10| const f = b.m; // ERROR
+                   ^ [1]
+
+References:
+   method_unbinding.js:6:3
+    6|   m(): void {}
+         ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ private_abstract.js:8:3
+
+The `abstract` modifier cannot be used with `private` member `priv`. [invalid-abstract]
+
+   8|   private abstract priv(): number; // ERROR: private+abstract method
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ private_abstract.js:9:3
+
+The `abstract` modifier cannot be used with `private` member `privField`. [invalid-abstract]
+
+   9|   private abstract privField: number; // ERROR: private+abstract field
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- private_abstract.js:23:1
+
+Non-`abstract` class `C` does not implement inherited `abstract` member pub [1]. [invalid-abstract]
+
+   private_abstract.js:23:1
+   23| class C extends A {} // ERROR: missing pub
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   private_abstract.js:10:12
+   10|   abstract pub(): number;
+                  ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ static_abstract.js:16:1
+
+Non-`abstract` class `F` does not implement inherited `abstract` member instanceM [1]. [invalid-abstract]
+
+   static_abstract.js:16:1
+   16| class F extends D {} // ERROR: missing instanceM
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   static_abstract.js:9:12
+    9|   abstract instanceM(): void;
+                  ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- super_call.js:13:12
+
+`abstract` member `m` cannot be accessed via `super`. [invalid-abstract]
+
+   13|     return super.m(); // ERROR
+                  ^^^^^
+
+
+Error ------------------------------------------------------------------------------------ super_call_inherited.js:22:12
+
+`abstract` member `m` cannot be accessed via `super`. [invalid-abstract]
+
+   22|     return super.m(); // ERROR: super.m() dispatches to A's abstract m
+                  ^^^^^
+
+
+Error ------------------------------------------------------------------------------------- super_call_inherited.js:36:5
+
+`abstract` member `x` cannot be accessed via `super`. [invalid-abstract]
+
+   36|     super.x = 5; // ERROR: super.x = e on abstract prop
+           ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typeof_ctor.js:18:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   18| new ctor(); // ERROR
+       ^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- typeof_ctor.js:27:11
+
+Cannot assign an `abstract` constructor type to a non-`abstract` constructor type. [invalid-abstract]
+
+   27| Animal as new () => Animal; // ERROR
+                 ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typeof_ctor.js:31:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   31| new c2(); // ERROR: still an abstract-typed ctor
+       ^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- typeof_ctor.js:37:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   37| new u(); // ERROR: union may resolve to Animal at runtime
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- union_constructor.js:9:1
+
+Cannot instantiate an `abstract` class. [invalid-abstract]
+
+   9| new u(); // ERROR: union may resolve to AbstractA at runtime
+      ^^^^^^^
+
+
+
+Found 34 errors

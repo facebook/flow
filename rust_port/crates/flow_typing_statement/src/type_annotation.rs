@@ -3324,6 +3324,7 @@ fn convert_inner<'a>(
                 cx,
                 &mut env,
                 None,
+                false,
                 intermediate_error_types::ObjKind::Interface,
                 this,
                 properties,
@@ -3458,6 +3459,7 @@ fn convert_inner<'a>(
                 );
                 let construct_id = cx.make_call_prop(ctor_t);
                 let iface_t = class_sig::thistype(cx, &iface_sig);
+                let mark_abstract = *abstract_ && cx.abstract_classes();
                 let with_construct = {
                     use std::rc::Rc;
 
@@ -3474,6 +3476,7 @@ fn convert_inner<'a>(
                             let inner: &InstanceTInner = instance;
                             let new_inst = InstType::new(InstTypeInner {
                                 inst_construct_t: Some(construct_id),
+                                inst_abstract: mark_abstract || inner.inst.inst_abstract,
                                 ..(*inner.inst).clone()
                             });
                             let new_instance = InstanceT::new(InstanceTInner {
@@ -3489,6 +3492,7 @@ fn convert_inner<'a>(
                             let inner: &InstanceTInner = &data.instance;
                             let new_inst = InstType::new(InstTypeInner {
                                 inst_construct_t: Some(construct_id),
+                                inst_abstract: mark_abstract || inner.inst.inst_abstract,
                                 ..(*inner.inst).clone()
                             });
                             let new_instance = InstanceT::new(InstanceTInner {
@@ -5049,7 +5053,6 @@ fn convert_tuple_element<'a>(
                         ),
                     ))),
                 );
-                // let element_ast = Tast_utils.error_mapper#tuple_element (loc, el) in
                 let Ok(element_ast) = polymorphic_ast_mapper::tuple_element(
                     &mut typed_ast_utils::ErrorMapper,
                     element,
@@ -5952,9 +5955,6 @@ fn mk_type_param_inner<'a>(
         }
         (None, _) => false,
     };
-    // (match (bound_kind, bound) with
-    // | (Ast.Type.TypeParam.Colon, Ast.Type.Available _)
-    //   when (not (kind = Flow_ast_mapper.InferTP)) && Context.is_colon_extends_deprecated env.cx ->
     if *bound_kind == ast::types::type_param::BoundKind::Colon
         && matches!(bound, ast::types::AnnotationOrHint::Available(_))
         && !matches!(kind, TypeParamsContext::Infer)
@@ -6412,6 +6412,7 @@ fn add_interface_properties<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
     record_for_interface: Option<ALoc>,
+    enclosing_class_abstract: bool,
     obj_kind: intermediate_error_types::ObjKind,
     this: Type,
     properties: &[ast::types::object::Property<ALoc, ALoc>],
@@ -6622,6 +6623,7 @@ fn add_interface_properties<'a>(
                     );
                     prop_asts.push(error_prop);
                 } else {
+                    let abstract_on = np.abstract_ && cx.abstract_classes();
                     if np.abstract_ && !cx.metadata().frozen.abstract_classes {
                         flow_js_utils::add_output_non_speculating(
                             cx,
@@ -6630,6 +6632,27 @@ fn add_interface_properties<'a>(
                                     flow_typing_errors::error_message::TSSyntaxKind::AbstractMethod,
                                 loc: np.loc.dupe(),
                             })),
+                        );
+                    }
+                    if abstract_on && !enclosing_class_abstract {
+                        let member_name = match &np.key {
+                            ast::expression::object::Key::Identifier(id) => id.name.dupe(),
+                            ast::expression::object::Key::StringLiteral((_, str_lit)) => {
+                                str_lit.value.dupe()
+                            }
+                            _ => FlowSmolStr::new("<unknown>"),
+                        };
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EAbstractClass(Box::new(
+                                flow_typing_errors::error_message::EAbstractClassData {
+                                    kind:
+                                        flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractMemberOnNonAbstractClass {
+                                            member_name,
+                                        },
+                                    loc: np.loc.dupe(),
+                                },
+                            )),
                         );
                     }
                     if np.optional && np.method && !cx.tslib_syntax() {
@@ -6654,6 +6677,34 @@ fn add_interface_properties<'a>(
                         flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
                         np.variance.as_ref(),
                     );
+                    let add_field_or_proto = |name: FlowSmolStr,
+                                              id_loc: ALoc,
+                                              t: Type,
+                                              s: &mut func_class_sig_types::class::Class<
+                        FuncTypeParamsConfig,
+                    >| {
+                        if np.proto {
+                            class_sig::add_proto_field(
+                                abstract_on,
+                                name,
+                                id_loc,
+                                polarity,
+                                func_class_sig_types::class::Field::Annot(t),
+                                s,
+                            );
+                        } else {
+                            record_field(&name, &t);
+                            class_sig::add_field(
+                                np.static_,
+                                abstract_on,
+                                name,
+                                id_loc,
+                                polarity,
+                                func_class_sig_types::class::Field::Annot(t),
+                                s,
+                            );
+                        }
+                    };
                     let mut handle_init_only_property =
                         |name: FlowSmolStr,
                          id_loc: ALoc,
@@ -6677,25 +6728,7 @@ fn add_interface_properties<'a>(
                                     } else {
                                         t
                                     };
-                                    if np.proto {
-                                        class_sig::add_proto_field(
-                                            name.dupe(),
-                                            id_loc.dupe(),
-                                            polarity,
-                                            func_class_sig_types::class::Field::Annot(t.dupe()),
-                                            &mut s,
-                                        );
-                                    } else {
-                                        record_field(&name, &t);
-                                        class_sig::add_field(
-                                            np.static_,
-                                            name.dupe(),
-                                            id_loc.dupe(),
-                                            polarity,
-                                            func_class_sig_types::class::Field::Annot(t.dupe()),
-                                            &mut s,
-                                        );
-                                    }
+                                    add_field_or_proto(name.dupe(), id_loc.dupe(), t.dupe(), &mut s);
                                     Some(Property::NormalProperty(
                                         ast::types::object::NormalProperty {
                                             loc: np.loc.dupe(),
@@ -6784,6 +6817,7 @@ fn add_interface_properties<'a>(
                                                 );
                                                 class_sig::append_method(
                                                     np.static_,
+                                                    abstract_on,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     None,
@@ -6852,29 +6886,12 @@ fn add_interface_properties<'a>(
                                                 } else {
                                                     t.dupe()
                                                 };
-                                                if np.proto {
-                                                    class_sig::add_proto_field(
-                                                        name.dupe(),
-                                                        id_loc.dupe(),
-                                                        polarity,
-                                                        func_class_sig_types::class::Field::Annot(
-                                                            t_with_optional.dupe(),
-                                                        ),
-                                                        &mut s,
-                                                    );
-                                                } else {
-                                                    record_field(&name, &t_with_optional);
-                                                    class_sig::add_field(
-                                                        np.static_,
-                                                        name.dupe(),
-                                                        id_loc.dupe(),
-                                                        polarity,
-                                                        func_class_sig_types::class::Field::Annot(
-                                                            t_with_optional.dupe(),
-                                                        ),
-                                                        &mut s,
-                                                    );
-                                                }
+                                                add_field_or_proto(
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    t_with_optional.dupe(),
+                                                    &mut s,
+                                                );
                                                 let init_ast = init_.as_ref().map(|init_expr| {
                                                     crate::statement::expression(
                                                         None,
@@ -7156,6 +7173,7 @@ fn add_interface_properties<'a>(
                                                 _ => {
                                                     class_sig::append_method(
                                                         np.static_,
+                                                        abstract_on,
                                                         name.dupe(),
                                                         key_loc.dupe(),
                                                         None,
@@ -7232,29 +7250,12 @@ fn add_interface_properties<'a>(
                                         } else {
                                             t.dupe()
                                         };
-                                        if np.proto {
-                                            class_sig::add_proto_field(
-                                                name.dupe(),
-                                                key_loc.dupe(),
-                                                polarity,
-                                                func_class_sig_types::class::Field::Annot(
-                                                    t_with_optional.dupe(),
-                                                ),
-                                                &mut s,
-                                            );
-                                        } else {
-                                            record_field(&name, &t_with_optional);
-                                            class_sig::add_field(
-                                                np.static_,
-                                                name.dupe(),
-                                                key_loc.dupe(),
-                                                polarity,
-                                                func_class_sig_types::class::Field::Annot(
-                                                    t_with_optional.dupe(),
-                                                ),
-                                                &mut s,
-                                            );
-                                        }
+                                        add_field_or_proto(
+                                            name.dupe(),
+                                            key_loc.dupe(),
+                                            t_with_optional.dupe(),
+                                            &mut s,
+                                        );
                                         let init_ast = init_.as_ref().map(|init_expr| {
                                             crate::statement::expression(
                                                 None,
@@ -7343,6 +7344,7 @@ fn add_interface_properties<'a>(
                                         .dupe();
                                         class_sig::add_getter(
                                             np.static_,
+                                            abstract_on,
                                             name.dupe(),
                                             key_loc.dupe(),
                                             None,
@@ -7418,6 +7420,7 @@ fn add_interface_properties<'a>(
                                         };
                                         class_sig::add_setter(
                                             np.static_,
+                                            abstract_on,
                                             name.dupe(),
                                             key_loc.dupe(),
                                             None,
@@ -7913,6 +7916,7 @@ pub fn mk_interface_sig<'a>(
         cx,
         &mut env,
         Some(id_loc.dupe()),
+        false,
         intermediate_error_types::ObjKind::Interface,
         this_t,
         &body.properties,
@@ -8629,6 +8633,10 @@ pub fn mk_declare_class_sig<'a>(
         );
         // All classes have a static "name" property.
         class_sig::add_name_field(&mut iface_sig);
+        let abstract_on = decl.abstract_ && cx.abstract_classes();
+        if abstract_on {
+            iface_sig.abstract_ = true;
+        }
         let tparams_map_with_this = {
             let mut m = env.tparams_map.dupe();
             m.insert(SubstName::name(FlowSmolStr::new("this")), this_t.dupe());
@@ -8642,6 +8650,7 @@ pub fn mk_declare_class_sig<'a>(
             cx,
             &mut env_with_this,
             Some(id_loc.dupe()),
+            abstract_on,
             intermediate_error_types::ObjKind::DeclareClass,
             this_type,
             &body.properties,

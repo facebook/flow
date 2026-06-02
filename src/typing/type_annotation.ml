@@ -1815,6 +1815,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let ctor_t = Func_type_sig.methodtype env.cx None (Type.dummy_this loc) fsig in
         let construct_id = Context.make_call_prop env.cx ctor_t in
         let iface_t = Class_type_sig.thistype env.cx iface_sig in
+        let mark_abstract = abstract_ && Context.abstract_classes env.cx in
         let with_construct =
           let open Type in
           match iface_t with
@@ -1824,13 +1825,26 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 InstanceT
                   {
                     instance with
-                    inst = { instance.inst with inst_construct_t = Some construct_id };
+                    inst =
+                      {
+                        instance.inst with
+                        inst_construct_t = Some construct_id;
+                        inst_abstract = mark_abstract || instance.inst.inst_abstract;
+                      };
                   }
               )
           | ThisInstanceT (r, instance, is_this, this_name) ->
             ThisInstanceT
               ( r,
-                { instance with inst = { instance.inst with inst_construct_t = Some construct_id } },
+                {
+                  instance with
+                  inst =
+                    {
+                      instance.inst with
+                      inst_construct_t = Some construct_id;
+                      inst_abstract = mark_abstract || instance.inst.inst_abstract;
+                    };
+                },
                 is_this,
                 this_name
               )
@@ -3314,7 +3328,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     in
     (dict, { indexer with Ast.Type.Object.Indexer.key = key_ast; value = value_ast })
 
-  and add_interface_properties env ?record_for_interface ~obj_kind ~this properties s =
+  and add_interface_properties
+      env ?record_for_interface ?(enclosing_class_abstract = false) ~obj_kind ~this properties s =
     let record_field name t =
       Base.Option.iter record_for_interface ~f:(fun id_loc ->
           Context.record_interface_field env.cx id_loc (Reason.OrdinaryName name) t
@@ -3469,11 +3484,33 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     (Ast.Type.Object.Property (loc, prop))
                   :: rev_prop_asts
                 )
-              else (
+              else
+                let abstract_on = abstract && Context.abstract_classes env.cx in
                 if abstract && not (Context.abstract_classes env.cx) then
                   Flow_js_utils.add_output
                     env.cx
                     (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                if abstract_on && not enclosing_class_abstract then begin
+                  let member_name =
+                    match key with
+                    | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ }) ->
+                      name
+                    | Ast.Expression.Object.Property.StringLiteral
+                        (_, { Ast.StringLiteral.value; _ }) ->
+                      value
+                    | _ -> "<unknown>"
+                  in
+                  Flow_js_utils.add_output
+                    env.cx
+                    (Error_message.EAbstractClass
+                       {
+                         kind =
+                           Flow_intermediate_error_types.AbstractMemberOnNonAbstractClass
+                             { member_name };
+                         loc;
+                       }
+                    )
+                end;
                 if optional && _method && not (Context.tslib_syntax env.cx) then
                   Flow_js_utils.add_output
                     env.cx
@@ -3481,6 +3518,27 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalShorthandMethod))
                     );
                 let polarity = polarity env.cx ~on:`Property variance in
+                let add_field_or_proto name id_loc t x =
+                  if proto then
+                    Class_type_sig.add_proto_field
+                      ~abstract:abstract_on
+                      name
+                      id_loc
+                      polarity
+                      (Class_type_sig.Types.Annot t)
+                      x
+                  else begin
+                    record_field name t;
+                    Class_type_sig.add_field
+                      ~static
+                      ~abstract:abstract_on
+                      name
+                      id_loc
+                      polarity
+                      (Class_type_sig.Types.Annot t)
+                      x
+                  end
+                in
                 let handle_init_only_property name id_loc ~rebuild_key =
                   match init_ with
                   | Some init_expr when Context.tslib_syntax env.cx && is_literal_init init_expr ->
@@ -3493,16 +3551,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       else
                         t
                     in
-                    let add =
-                      if proto then
-                        Class_type_sig.add_proto_field
-                      else begin
-                        record_field name t;
-                        Class_type_sig.add_field ~static
-                      end
-                    in
+                    let x = add_field_or_proto name id_loc t x in
                     let open Ast.Type in
-                    ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
+                    ( x,
                       ( loc,
                         {
                           prop with
@@ -3587,6 +3638,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let open Ast.Type in
                         ( Class_type_sig.append_method
                             ~static
+                            ~abstract:abstract_on
                             name
                             ~id_loc
                             ~this_write_loc
@@ -3636,16 +3688,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           else
                             t
                         in
-                        let add =
-                          if proto then
-                            Class_type_sig.add_proto_field
-                          else begin
-                            record_field name t;
-                            Class_type_sig.add_field ~static
-                          end
-                        in
+                        let x = add_field_or_proto name id_loc t x in
                         let open Ast.Type in
-                        ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
+                        ( x,
                           ( loc,
                             {
                               prop with
@@ -3770,6 +3815,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                               | _ ->
                                 Class_type_sig.append_method
                                   ~static
+                                  ~abstract:abstract_on
                                   name
                                   ~id_loc:key_loc
                                   ~this_write_loc
@@ -3805,16 +3851,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           else
                             t
                         in
-                        let add =
-                          if proto then
-                            Class_type_sig.add_proto_field
-                          else begin
-                            record_field name t;
-                            Class_type_sig.add_field ~static
-                          end
-                        in
+                        let x = add_field_or_proto name key_loc t x in
                         let open Ast.Type in
-                        ( add name key_loc polarity (Class_type_sig.Types.Annot t) x,
+                        ( x,
                           ( loc,
                             {
                               prop with
@@ -3846,6 +3885,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let open Ast.Type in
                         ( Class_type_sig.add_getter
                             ~static
+                            ~abstract:abstract_on
                             name
                             ~id_loc:key_loc
                             ~this_write_loc:None
@@ -3880,6 +3920,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         let open Ast.Type in
                         ( Class_type_sig.add_setter
                             ~static
+                            ~abstract:abstract_on
                             name
                             ~id_loc:key_loc
                             ~this_write_loc:None
@@ -3897,7 +3938,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   )
                 in
                 (x, Ast.Type.Object.Property prop :: rev_prop_asts)
-              )
             | InternalSlot (loc, slot) as prop ->
               let {
                 InternalSlot.id = (_, { Ast.Identifier.name; comments = _ });
@@ -4554,6 +4594,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       (* All classes have a static "name" property. *)
       let iface_sig = Class_type_sig.add_name_field iface_sig in
+      let abstract_on = abstract && Context.abstract_classes cx in
+      let iface_sig =
+        if abstract_on then
+          { iface_sig with Class_type_sig_types.abstract = true }
+        else
+          iface_sig
+      in
       let (iface_sig, properties) =
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t env.tparams_map
@@ -4561,6 +4608,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         add_interface_properties
           { env with tparams_map = tparams_map_with_this }
           ~record_for_interface:id_loc
+          ~enclosing_class_abstract:abstract_on
           ~obj_kind:`DeclareClass
           properties
           ~this:(implicit_mixed_this (reason_of_t this_t))

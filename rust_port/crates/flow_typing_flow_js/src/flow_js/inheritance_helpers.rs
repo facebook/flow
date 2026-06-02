@@ -118,6 +118,7 @@ pub(super) fn structural_subtype<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
+    upper_inst_abstract: bool,
     lower: &Type,
     reason_struct: &Reason,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
@@ -168,6 +169,7 @@ pub(super) fn structural_subtype<'cx>(
                 cx,
                 trace,
                 use_op,
+                upper_inst_abstract,
                 lower,
                 reason_struct,
                 (
@@ -187,6 +189,7 @@ pub(super) fn inst_structural_subtype<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
+    upper_inst_abstract: bool,
     lower: &Type,
     reason_struct: &Reason,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
@@ -454,6 +457,20 @@ pub(super) fn inst_structural_subtype<'cx>(
         // type-check time, just verbose in [ty_normalizer] output.
         // Deduping would need structural equality on funtypes and isn't
         // worth the extra machinery here.
+        // Detect abstract-vs-non-abstract assignment: lower carries an
+        // abstract bit (either an abstract class via [ClassT] or an
+        // [abstract new () => T] interface) and upper does not.
+        if !upper_inst_abstract && flow_js_utils::is_class_abstract(cx, lower) {
+            add_output(
+                cx,
+                ErrorMessage::EAbstractClass(Box::new(
+                    flow_typing_errors::error_message::EAbstractClassData {
+                        kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractConstructorAssignedToNonAbstract,
+                        loc: reason_struct.loc().dupe(),
+                    },
+                )),
+            )?;
+        }
         fn dispatch_lower<'cx>(
             cx: &Context<'cx>,
             trace: DepthTrace,

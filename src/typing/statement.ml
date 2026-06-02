@@ -2689,7 +2689,7 @@ module Make
       } =
         decl
       in
-      if abstract then
+      if abstract && not (Context.abstract_classes cx) then
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc });
@@ -3571,6 +3571,71 @@ module Make
     | None -> Type_env.var_ref cx (OrdinaryName "this") loc
 
   and super_ cx loc = Type_env.var_ref cx (OrdinaryName "super") loc
+
+  (* Walk the super chain leaf→root looking for [name]. A concrete impl
+     in any ancestor "wins" (no error); if we instead find [name] in some
+     ancestor's [inst_abstract_props] before any concrete impl, emit
+     EAbstractClass.AbstractSuperCall. Walking the full chain is required
+     because the immediate super may be an abstract subclass that doesn't
+     re-declare [name] but inherits an abstract decl from a grandparent.
+     Gated on [Context.abstract_classes]: with the flag off,
+     [inst_abstract_props] is guaranteed empty everywhere, so this walk
+     would run on every super-access in every Flow root and always find
+     nothing. *)
+  and check_super_abstract cx super_t name super_loc =
+    if not (Context.abstract_classes cx) then
+      ()
+    else
+      let (OrdinaryName name_str) = name in
+      let seen = ref Type.Properties.Set.empty in
+      let exception FoundConcrete in
+      let exception FoundAbstract in
+      let rec walk t =
+        let concretes =
+          Context.with_suppressed_errors cx (fun () ->
+              Flow.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+          )
+        in
+        List.iter walk_one concretes
+      and walk_one t =
+        match t with
+        | Type.ThisInstanceT (_, inst_t, _, _)
+        | Type.DefT (_, Type.InstanceT inst_t) ->
+          let inst = inst_t.Type.inst in
+          if not (Type.Properties.Set.mem inst.Type.own_props !seen) then begin
+            seen := Type.Properties.Set.add inst.Type.own_props !seen;
+            let own_props = Context.find_props cx inst.Type.own_props in
+            let proto_props = Context.find_props cx inst.Type.proto_props in
+            (* A concrete (non-abstract) impl at this level satisfies the
+               super-call. *)
+            let has_concrete =
+              (NameUtils.Map.mem name own_props || NameUtils.Map.mem name proto_props)
+              && not (NameUtils.Set.mem name inst.Type.inst_abstract_props)
+            in
+            if has_concrete then raise FoundConcrete;
+            if NameUtils.Set.mem name inst.Type.inst_abstract_props then raise FoundAbstract;
+            walk inst_t.Type.super
+          end
+        | Type.IntersectionT (_, rep) -> List.iter walk_one (Type.InterRep.members rep)
+        | _ -> ()
+      in
+      let is_abstract =
+        try
+          walk super_t;
+          false
+        with
+        | FoundConcrete -> false
+        | FoundAbstract -> true
+      in
+      if is_abstract then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EAbstractClass
+             {
+               kind = Flow_intermediate_error_types.AbstractSuperCall { member_name = name_str };
+               loc = super_loc;
+             }
+          )
 
   and expression_ cx syntactic_flags loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let { Natural_inference.encl_ctx; decl; as_const; frozen; has_hint } = syntactic_flags in
@@ -4762,6 +4827,7 @@ module Make
         let reason_lookup = mk_reason (RProperty (Some name)) callee_loc in
         let reason_prop = mk_reason (RProperty (Some name)) ploc in
         let super_t = super_ cx super_loc in
+        check_super_abstract cx super_t name super_loc;
         let meth_generic_this = Tvar.mk cx reason in
         let (targts, targs) = convert_call_targs_opt cx targs in
         let (argts, arguments_ast) = arg_list cx arguments in
@@ -5090,6 +5156,7 @@ module Make
             comments;
           } ->
         let super_t = super_ cx super_loc in
+        check_super_abstract cx super_t (OrdinaryName name) super_loc;
         let expr_reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let lhs_t =
@@ -6251,6 +6318,7 @@ module Make
       let prop_name = OrdinaryName name in
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let super_t = super_ cx super_loc in
+      check_super_abstract cx super_t prop_name super_loc;
       let prop_t =
         Tvar_resolver.mk_tvar_and_fully_resolve_where cx prop_reason (fun prop_t ->
             let use_op =
@@ -8602,10 +8670,29 @@ module Make
                 (Error_message.ETSSyntax { kind = Error_message.TSClassAccessibility kind; loc })
             | None -> ()
         in
-        if abstract then
-          Flow_js_utils.add_output
-            cx
-            (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc = class_loc });
+        (* Match [type_sig_parse.ml]'s skip behavior for `private abstract`
+           members: a private abstract obligation can never be satisfied by
+           a subclass (subclasses cannot access private), so adding the
+           obligation produces a false positive. Both pipelines drop private
+           abstracts from the class signature. *)
+        let is_ts_private ts_accessibility =
+          match ts_accessibility with
+          | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
+            true
+          | _ -> false
+        in
+        let class_sig =
+          if abstract then
+            if not (Context.abstract_classes cx) then begin
+              Flow_js_utils.add_output
+                cx
+                (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc = class_loc });
+              class_sig
+            end else
+              { class_sig with Class_stmt_sig_types.abstract = true }
+          else
+            class_sig
+        in
 
         (* NOTE: We used to mine field declarations from field assignments in a
            constructor as a convenience, but it was not worth it: often, all that did
@@ -9427,22 +9514,245 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
-              | Body.AbstractMethod (loc, _) as elem ->
-                Flow_js_utils.add_output
-                  cx
-                  (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
-                ( c,
-                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
-                  public_seen_names
-                )
-              | Body.AbstractProperty (loc, _) as elem ->
-                Flow_js_utils.add_output
-                  cx
-                  (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
-                ( c,
-                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
-                  public_seen_names
-                )
+              | Body.AbstractMethod (loc, abs_meth) as elem ->
+                if not (Context.abstract_classes cx) then (
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                ) else if is_ts_private abs_meth.Ast.Class.AbstractMethod.ts_accessibility then begin
+                  (* `private abstract` is unimplementable: subclasses cannot
+                     access private members, so the obligation can never be
+                     discharged. Reject the combination (matches TS1243).
+                     Drop the obligation from the class signature so we don't
+                     also flag every subclass as missing the implementation. *)
+                  let name =
+                    match abs_meth.Ast.Class.AbstractMethod.key with
+                    | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ }) ->
+                      name
+                    | _ -> "<unknown>"
+                  in
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.EAbstractClass
+                       {
+                         kind =
+                           Flow_intermediate_error_types.AbstractPrivateMember
+                             { member_name = name };
+                         loc;
+                       }
+                    );
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  let {
+                    Ast.Class.AbstractMethod.key;
+                    annot = (func_annot_loc, func_annot);
+                    override;
+                    ts_accessibility;
+                    comments;
+                  } =
+                    abs_meth
+                  in
+                  check_ts_accessibility ts_accessibility;
+                  if override then
+                    Flow.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                      );
+                  (match key with
+                  | Ast.Expression.Object.Property.Identifier
+                      (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+                    if not abstract then
+                      Flow_js_utils.add_output
+                        cx
+                        (Error_message.EAbstractClass
+                           {
+                             kind =
+                               Flow_intermediate_error_types.AbstractMemberOnNonAbstractClass
+                                 { member_name = name };
+                             loc;
+                           }
+                        );
+                    let meth_kind = Anno.MethodKind { static = false } in
+                    let (func_sig, typed_func) =
+                      mk_declare_method_func_sig ~meth_kind func_annot_loc func_annot
+                    in
+                    let func_t =
+                      Func_stmt_sig.methodtype
+                        cx
+                        None
+                        (Type.implicit_mixed_this func_sig.Func_stmt_sig_types.reason)
+                        func_sig
+                    in
+                    let c =
+                      Class_stmt_sig.add_method
+                        ~static:false
+                        ~abstract:true
+                        name
+                        ~id_loc
+                        ~this_write_loc:None
+                        ~func_sig
+                        c
+                    in
+                    let public_seen_names' =
+                      check_duplicate_name
+                        public_seen_names
+                        id_loc
+                        name
+                        ~static:false
+                        ~private_:false
+                        Class_Member_Method
+                    in
+                    let get_element () =
+                      Body.AbstractMethod
+                        ( (loc, func_t),
+                          {
+                            Ast.Class.AbstractMethod.key =
+                              Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
+                            annot = (func_annot_loc, typed_func);
+                            override;
+                            ts_accessibility;
+                            comments;
+                          }
+                        )
+                    in
+                    (c, get_element :: rev_elements, public_seen_names')
+                  | _ ->
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.IllegalName)
+                      );
+                    ( c,
+                      (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                      public_seen_names
+                    ))
+              | Body.AbstractProperty (loc, abs_prop) as elem ->
+                if not (Context.abstract_classes cx) then (
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                ) else if is_ts_private abs_prop.Ast.Class.AbstractProperty.ts_accessibility then begin
+                  (* `private abstract` is unimplementable — see AbstractMethod
+                     branch above. Same rationale here for fields. *)
+                  let name =
+                    match abs_prop.Ast.Class.AbstractProperty.key with
+                    | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ }) ->
+                      name
+                    | _ -> "<unknown>"
+                  in
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.EAbstractClass
+                       {
+                         kind =
+                           Flow_intermediate_error_types.AbstractPrivateMember
+                             { member_name = name };
+                         loc;
+                       }
+                    );
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  let {
+                    Ast.Class.AbstractProperty.key;
+                    annot;
+                    override;
+                    ts_accessibility;
+                    variance;
+                    comments;
+                  } =
+                    abs_prop
+                  in
+                  check_ts_accessibility ts_accessibility;
+                  if override then
+                    Flow.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
+                      );
+                  (match key with
+                  | Ast.Expression.Object.Property.Identifier
+                      (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+                    if not abstract then
+                      Flow_js_utils.add_output
+                        cx
+                        (Error_message.EAbstractClass
+                           {
+                             kind =
+                               Flow_intermediate_error_types.AbstractMemberOnNonAbstractClass
+                                 { member_name = name };
+                             loc;
+                           }
+                        );
+                    let polarity = Anno.polarity cx ~on:`Property variance in
+                    let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
+                    let (_field, annot_t, annot_ast, _get_value) =
+                      mk_field
+                        cx
+                        ~suppress_missing_annot:false
+                        tparams_map_with_this
+                        reason
+                        annot
+                        Ast.Class.Property.Declared
+                    in
+                    let c =
+                      Class_stmt_sig.add_field
+                        ~static:false
+                        ~abstract:true
+                        name
+                        id_loc
+                        polarity
+                        (Annot annot_t)
+                        c
+                    in
+                    let public_seen_names' =
+                      check_duplicate_name
+                        public_seen_names
+                        id_loc
+                        name
+                        ~static:false
+                        ~private_:false
+                        Class_Member_Field
+                    in
+                    let get_element () =
+                      Body.AbstractProperty
+                        ( (loc, annot_t),
+                          {
+                            Ast.Class.AbstractProperty.key =
+                              Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
+                            annot = annot_ast;
+                            override;
+                            ts_accessibility;
+                            variance;
+                            comments;
+                          }
+                        )
+                    in
+                    (c, get_element :: rev_elements, public_seen_names')
+                  | _ ->
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.IllegalName)
+                      );
+                    ( c,
+                      (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                      public_seen_names
+                    ))
               | Body.IndexSignature (loc, indexer) ->
                 if not (Context.tslib_syntax cx && Context.under_declaration_context cx) then (
                   Flow.add_output

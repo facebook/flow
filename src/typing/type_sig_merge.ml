@@ -1872,7 +1872,7 @@ and merge_interface_extends ~bind_this env file packed =
     | t -> (merge env file t, false, None)
 
 and merge_interface ~inline env file reason class_name id def =
-  let (InterfaceSig { extends; props; computed_props; calls; constructs; dict }) = def in
+  let (InterfaceSig { extends; props; computed_props; calls; constructs; dict; abstract }) = def in
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
     (* TODO: interfaces don't have a name field, or even statics *)
@@ -1983,6 +1983,11 @@ and merge_interface ~inline env file reason class_name id def =
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        (* Preserve the [abstract] bit from the InterfaceSig — set only for
+           the inline interface lowered from [abstract new (...) => T].
+           Other interfaces stay non-abstract. *)
+        inst_abstract = abstract;
+        inst_abstract_props = NameUtils.Set.empty;
       },
       make_super
     )
@@ -2075,7 +2080,19 @@ and merge_class_mixin =
       TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
 and merge_this_class_t file reason class_name id def this_reason inst_kind =
-  let (ClassSig { extends; implements; static_props; own_props; proto_props; dict; tparams = _ }) =
+  let (ClassSig
+        {
+          extends;
+          implements;
+          static_props;
+          own_props;
+          proto_props;
+          dict;
+          tparams = _;
+          abstract;
+          abstract_props;
+        }
+        ) =
     def
   in
   fun env targs rec_type ->
@@ -2144,6 +2161,12 @@ and merge_this_class_t file reason class_name id def this_reason inst_kind =
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        inst_abstract = abstract;
+        inst_abstract_props =
+          SSet.fold
+            (fun n acc -> NameUtils.Set.add (Reason.OrdinaryName n) acc)
+            abstract_props
+            NameUtils.Set.empty;
       }
     in
     TypeUtil.class_type
@@ -2465,6 +2488,8 @@ let merge_declare_class file reason class_name id def =
           constructs;
           dict;
           static_dict = _ (* We don't actually support static indexers yet. *);
+          abstract;
+          abstract_props;
         }
         ) =
     def
@@ -2588,6 +2613,12 @@ let merge_declare_class file reason class_name id def =
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
+        inst_abstract = abstract;
+        inst_abstract_props =
+          SSet.fold
+            (fun n acc -> NameUtils.Set.add (Reason.OrdinaryName n) acc)
+            abstract_props
+            NameUtils.Set.empty;
       }
     in
     TypeUtil.class_type

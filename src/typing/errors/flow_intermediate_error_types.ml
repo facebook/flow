@@ -184,6 +184,18 @@ type 'loc record_declaration_invalid_syntax =
   | InvalidRecordDeclarationSyntaxSuffixSemicolon
   | InvalidRecordDeclarationSyntaxInfixEquals
 
+type 'loc abstract_error_kind =
+  | AbstractClassInstantiation
+  | AbstractMemberNotImplemented of {
+      class_name: string option;
+      member_name: string;
+      member_def_loc: 'loc;
+    }
+  | AbstractMemberOnNonAbstractClass of { member_name: string }
+  | AbstractPrivateMember of { member_name: string }
+  | AbstractSuperCall of { member_name: string }
+  | AbstractConstructorAssignedToNonAbstract
+
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
@@ -1170,6 +1182,7 @@ type 'loc message =
   | MessageTSParameterProperty
   | MessageAbstractClass
   | MessageAbstractMethod
+  | MessageAbstract of 'loc abstract_error_kind
   | MessageTSUndefinedType
   | MessageTupleElementNotReadable of {
       reason: 'loc virtual_reason;

@@ -409,6 +409,8 @@ class ['a] t =
         class_private_methods;
         class_private_static_methods;
         inst_react_dro = _;
+        inst_abstract = _;
+        inst_abstract_props = _;
       } =
         i
       in

@@ -1116,7 +1116,8 @@ let%expect_test "export_class_reference" =
                  [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1166,7 +1167,8 @@ let%expect_test "export_class_reference_check1" =
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1215,7 +1217,8 @@ let%expect_test "export_class_reference_check2" =
                  [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -1267,7 +1270,8 @@ let%expect_test "export_class_reference_check3" =
                  [])) };
            own_props =
            { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -1337,7 +1341,8 @@ let%expect_test "type_alias_dependencies" =
            { "f" ->
              (ObjValueField ([5:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [5:5-7]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1372,7 +1377,8 @@ let%expect_test "class_dependencies" =
            proto_props = {};
            own_props =
            { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
@@ -1402,7 +1408,8 @@ let%expect_test "class_dependencies" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1439,7 +1446,8 @@ let%expect_test "class_dependencies_check" =
            { "f" ->
              (ObjValueField ([1:10-11], (
                 Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
@@ -1469,7 +1477,8 @@ let%expect_test "class_dependencies_check" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1504,7 +1513,8 @@ let%expect_test "export_new_typecast" =
            proto_props = {};
            own_props =
            { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
@@ -1534,7 +1544,8 @@ let%expect_test "export_new_typecast" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1571,7 +1582,8 @@ let%expect_test "export_new_typecast_check" =
            { "f" ->
              (ObjValueField ([1:10-11], (
                 Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
@@ -1601,7 +1613,8 @@ let%expect_test "export_new_typecast_check" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1655,7 +1668,8 @@ let%expect_test "recursive_dependencies" =
            { "f" ->
              (ObjValueField ([2:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [2:5-6]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1706,7 +1720,8 @@ let%expect_test "recursive_dependencies_check" =
                    },
                  [])) };
            own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -1750,7 +1765,8 @@ let%expect_test "typeof_dependencies" =
                      qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
                 Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -1791,7 +1807,8 @@ let%expect_test "typeof_dependencies_check" =
                      qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
                 Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -1982,7 +1999,8 @@ let%expect_test "import_default_dependencies" =
                      qname = ["x"]; t = (Ref RemoteRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
                 Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Remote refs:
@@ -2043,7 +2061,8 @@ let%expect_test "import_type_dependencies" =
            { "f" ->
              (ObjValueField ([3:2-3],
                 (TyRef (Unqualified RemoteRef {ref_loc = [3:5-7]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Remote refs:
@@ -2113,7 +2132,8 @@ let%expect_test "qualified_references" =
                      effect_ = ArbitraryEffect}
                    },
                  [])) };
-           own_props = {}; dict = None};
+           own_props = {}; dict = None;
+           abstract = false; abstract_props = {}};
          namespace_types = {}}
 
     Remote refs:
@@ -2190,7 +2210,8 @@ let%expect_test "hoisted_requires" =
            { "f" ->
              (ObjValueField ([9:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [9:5-6]; index = 1})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Pattern defs:
@@ -2244,7 +2265,8 @@ let%expect_test "hoisted_locals" =
            { "f" ->
              (ObjValueField ([8:2-3],
                 (TyRef (Unqualified LocalRef {ref_loc = [8:5-6]; index = 1})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -2403,7 +2425,8 @@ let%expect_test "scope_extrusion" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. Variable {id_loc = [3:6-7]; name = "x";
          def = (TyRef (Unqualified LocalRef {ref_loc = [3:9-10]; index = 0}))}
@@ -2449,7 +2472,8 @@ let%expect_test "scope_extrusion_nested" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. Variable {id_loc = [5:8-9]; name = "x";
          def = (TyRef (Unqualified LocalRef {ref_loc = [5:11-12]; index = 0}))}
@@ -2519,7 +2543,8 @@ let%expect_test "report_all_errors" =
                        effect_ = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -2556,7 +2581,8 @@ let%expect_test "munged_methods_ignored_if_directive" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -2601,7 +2627,8 @@ let%expect_test "munged_methods_not_ignored" =
                      effect_ = ArbitraryEffect}
                    },
                  [])) };
-           own_props = {}; dict = None};
+           own_props = {}; dict = None;
+           abstract = false; abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -2636,7 +2663,8 @@ let%expect_test "munged_fields_ignored_if_directive" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -2682,7 +2710,8 @@ let%expect_test "munged_fields_not_ignored" =
                        effect_ = ArbitraryEffect};
                      statics = {}}),
                 Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
 
     Errors:
@@ -2722,7 +2751,8 @@ let%expect_test "propTypes_static_failure" =
                 (Value ObjLit {loc = [2:21-23]; frozen = false; proto = None; props = {}}),
                 Polarity.Neutral)) };
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -2941,7 +2971,8 @@ let%expect_test "named_class_expression" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -2999,7 +3030,7 @@ let%expect_test "interface_coverage" =
          InterfaceSig {extends = [];
            props = {}; computed_props = [];
            calls = []; constructs = [];
-           dict = None}}
+           dict = None; abstract = false}}
     1. DeclareClassBinding {id_loc = [2:21-22];
          nominal_id_loc = [2:21-22];
          name = "C";
@@ -3020,7 +3051,8 @@ let%expect_test "interface_coverage" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -3088,7 +3120,8 @@ let%expect_test "recursive_class_coverage" =
            { "x" ->
              (ObjValueField ([1:27-28],
                 (TyRef (Unqualified LocalRef {ref_loc = [1:30-31]; index = 0})), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -3112,7 +3145,8 @@ let%expect_test "shadowed_class_expression" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
   |}]
 
@@ -3584,7 +3618,7 @@ let%expect_test "inline_interface" =
                InterfaceSig {extends = [];
                  props = {}; computed_props = [];
                  calls = []; constructs = [];
-                 dict = None}
+                 dict = None; abstract = false}
                )))}
     1. TypeAlias {id_loc = [2:12-13];
          custom_error_loc_opt = None;
@@ -3600,7 +3634,7 @@ let%expect_test "inline_interface" =
                       Annot (String [2:41-47])), Polarity.Neutral)) };
                  computed_props = [];
                  calls = []; constructs = [];
-                 dict = None}
+                 dict = None; abstract = false}
                )))}
   |}]
 
@@ -3652,7 +3686,8 @@ let%expect_test "interface_optional" =
              (InterfaceField ((Some [1:21-22]), (
                 Annot (Optional (Annot (String [1:25-31])))), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}} |}]
+           constructs = []; dict = None;
+           abstract = false}} |}]
 
 let%expect_test "interface_method" =
   print_sig {|
@@ -3683,7 +3718,8 @@ let%expect_test "interface_method" =
                     effect_ = ArbitraryEffect}),
                  [])) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
   |}]
 
 let%expect_test "interface_indexer" =
@@ -3709,7 +3745,8 @@ let%expect_test "interface_indexer" =
            (Some ObjDict {name = (Some "key");
                    polarity = Polarity.Neutral;
                    key = (Annot (String [1:26-32]));
-                   value = (Annot (Number [1:35-41]))})}} |}]
+                   value = (Annot (Number [1:35-41]))});
+           abstract = false}} |}]
 
 let%expect_test "object_annot_method" =
   print_sig {|
@@ -3817,7 +3854,8 @@ let%expect_test "interface_optional_method" =
                             ))))),
                 Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}} |}]
+           constructs = []; dict = None;
+           abstract = false}} |}]
 
 let%expect_test "declare_class_optional_method" =
   print_sig {|
@@ -3862,7 +3900,8 @@ let%expect_test "declare_class_optional_method" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "object_annot_call_poly" =
@@ -4346,7 +4385,8 @@ let%expect_test "class_extends" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. Variable {id_loc = [2:6-7]; name = "M";
          def =
@@ -4366,7 +4406,8 @@ let%expect_test "class_extends" =
              t = (Ref LocalRef {ref_loc = [3:24-25]; index = 0})};
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     3. ClassBinding {id_loc = [4:13-15];
          name = "C2";
@@ -4377,7 +4418,8 @@ let%expect_test "class_extends" =
              t = (Eval ([4:24-27], (Ref LocalRef {ref_loc = [4:24-25]; index = 1}), (GetProp "C")))};
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     4. DeclareClassBinding {id_loc = [5:21-23];
          nominal_id_loc = [5:21-23];
@@ -4394,7 +4436,8 @@ let%expect_test "class_extends" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     5. DeclareClassBinding {id_loc = [6:21-23];
          nominal_id_loc = [6:21-23];
@@ -4411,7 +4454,8 @@ let%expect_test "class_extends" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "class_this" =
@@ -4450,7 +4494,8 @@ let%expect_test "class_this" =
                      effect_ = ArbitraryEffect}
                    },
                  [])) };
-           own_props = {}; dict = None};
+           own_props = {}; dict = None;
+           abstract = false; abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "declare_class_this" =
@@ -4492,7 +4537,8 @@ let%expect_test "declare_class_this" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "existential" =
@@ -4535,7 +4581,8 @@ let%expect_test "existential" =
            proto_props = {};
            own_props =
            { "p" -> (ObjValueField ([2:2-3], (Annot (Exists [2:5-6])), Polarity.Neutral)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "exact_by_default" =
@@ -4999,7 +5046,8 @@ let%expect_test "export_default_class_binding" =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
            proto_props = {}; own_props = {};
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "declared_export_default_function_binding" =
@@ -5055,7 +5103,8 @@ let%expect_test "declared_export_default_class_binding" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "module_ref_prefix" =
@@ -5367,7 +5416,8 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     3. TypeAlias {id_loc = [4:5-14];
          custom_error_loc_opt = None;
@@ -5623,7 +5673,8 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     5. ComponentBinding {id_loc = [9:20-23];
          name = "foo"; fn_loc = [9:2-25];
@@ -5780,7 +5831,8 @@ let%expect_test "builtin_interface_merge_props" =
            { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral));
              "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5823,7 +5875,8 @@ let%expect_test "builtin_interface_merge_methods_overload" =
                      effect_ = ArbitraryEffect})
                    ])) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5853,7 +5906,8 @@ let%expect_test "builtin_interface_merge_extends" =
            { "x" ->
              (InterfaceField ((Some [1:18-19]), (Annot (String [1:21-27])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. Interface {id_loc = [2:10-15];
          name = "Base2"; tparams = Mono;
          def =
@@ -5862,7 +5916,8 @@ let%expect_test "builtin_interface_merge_extends" =
            { "y" ->
              (InterfaceField ((Some [2:18-19]), (Annot (Number [2:21-27])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     2. Interface {id_loc = [3:10-13];
          name = "Foo"; tparams = Mono;
          def =
@@ -5874,7 +5929,8 @@ let%expect_test "builtin_interface_merge_extends" =
            { "a" -> (InterfaceField ((Some [4:2-3]), (Annot (String [4:5-11])), Polarity.Neutral));
              "b" -> (InterfaceField ((Some [7:2-3]), (Annot (Number [7:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     3. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 3})) };
@@ -5924,7 +5980,8 @@ let%expect_test "builtin_interface_merge_calls" =
                      effect_ = ArbitraryEffect}
                    )))
              ];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5956,7 +6013,8 @@ let%expect_test "builtin_interface_merge_three_way" =
              "b" -> (InterfaceField ((Some [5:2-3]), (Annot (Number [5:5-11])), Polarity.Neutral));
              "c" -> (InterfaceField ((Some [8:2-3]), (Annot (Boolean [8:5-12])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -5983,7 +6041,8 @@ let%expect_test "builtin_interface_merge_prop_conflict" =
            props =
            { "a" -> (InterfaceField ((Some [2:2-3]), (Annot (String [2:5-11])), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -6019,7 +6078,8 @@ let%expect_test "builtin_interface_merge_tparam_mismatch" =
              (InterfaceField ((Some [2:2-3]), (
                 Annot Bound {ref_loc = [2:5-6]; name = "T"}), Polarity.Neutral)) };
            computed_props = []; calls = [];
-           constructs = []; dict = None}}
+           constructs = []; dict = None;
+           abstract = false}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -6457,7 +6517,8 @@ let%expect_test "this_param_2" =
                      effect_ = ArbitraryEffect}
                    },
                  [])) };
-           own_props = {}; dict = None};
+           own_props = {}; dict = None;
+           abstract = false; abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "this_param_3" =
@@ -6523,7 +6584,8 @@ let%expect_test "this_param_4" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "this_param_5" =
@@ -7895,7 +7957,8 @@ let%expect_test "record_named_export" =
            own_props =
            { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
              "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          defaulted_props = { "b" }}
   |}]
 
@@ -7926,7 +7989,8 @@ let%expect_test "record_default_export" =
            own_props =
            { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
              "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) };
-           dict = None};
+           dict = None; abstract = false;
+           abstract_props = {}};
          defaulted_props = { "b" }}
   |}]
 
@@ -8157,7 +8221,7 @@ let%expect_test "d_ts_computed_property_in_interface" =
            [((Ref LocalRef {ref_loc = [3:3-12]; index = 0}),
              (InterfaceField ((Some [3:3-12]), (Annot (Boolean [3:15-22])), Polarity.Neutral)))];
            calls = []; constructs = [];
-           dict = None}} |}]
+           dict = None; abstract = false}} |}]
 
 let%expect_test "d_ts_computed_property_in_declare_class" =
   print_d_ts_sig {|
@@ -8194,7 +8258,8 @@ let%expect_test "d_ts_computed_property_in_declare_class" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}} |}]
 
 let%expect_test "d_ts_computed_property_bigint_key" =
@@ -8334,7 +8399,8 @@ let%expect_test "declare_class_interface_merging_basic" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
@@ -8377,7 +8443,8 @@ let%expect_test "declare_class_interface_merging_new" =
                     effect_ = ArbitraryEffect}
                   )))
              ];
-           dict = None; static_dict = None};
+           dict = None; static_dict = None;
+           abstract = false; abstract_props = {}};
          namespace_types = {}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
@@ -8414,7 +8481,8 @@ let%expect_test "declare_class_interface_merging_reverse" =
            computed_static_props = [];
            static_calls = []; calls = [];
            constructs = []; dict = None;
-           static_dict = None};
+           static_dict = None; abstract = false;
+           abstract_props = {}};
          namespace_types = {}}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";

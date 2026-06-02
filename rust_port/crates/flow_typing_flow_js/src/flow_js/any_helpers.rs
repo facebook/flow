@@ -283,6 +283,8 @@ pub(super) fn any_prop_inst<'cx>(
         class_private_methods: _,
         class_private_static_fields: _,
         class_private_static_methods: _,
+        inst_abstract: _,
+        inst_abstract_props: _,
     } = **inst;
 
     any_prop_to_type_args(

@@ -1395,7 +1395,19 @@ module Scope = struct
 
     and rename_tparams_in_class_sig
         rename_map
-        (ClassSig { tparams; extends; implements; static_props; proto_props; own_props; dict }) =
+        (ClassSig
+          {
+            tparams;
+            extends;
+            implements;
+            static_props;
+            proto_props;
+            own_props;
+            dict;
+            abstract;
+            abstract_props;
+          }
+          ) =
       let (tparams, body_rename_map) = rename_tparams_for_nested_scope rename_map tparams in
       ClassSig
         {
@@ -1406,10 +1418,13 @@ module Scope = struct
           proto_props = SMap.map (rename_tparams_in_obj_value_prop body_rename_map) proto_props;
           own_props = SMap.map (rename_tparams_in_obj_value_prop body_rename_map) own_props;
           dict = Option.map ~f:(rename_tparams_in_obj_annot_dict body_rename_map) dict;
+          abstract;
+          abstract_props;
         }
 
     and rename_tparams_in_interface_sig
-        rename_map (InterfaceSig { extends; props; computed_props; calls; constructs; dict }) =
+        rename_map
+        (InterfaceSig { extends; props; computed_props; calls; constructs; dict; abstract }) =
       InterfaceSig
         {
           extends = List.map (rename_tparams_in_parsed rename_map) extends;
@@ -1424,6 +1439,7 @@ module Scope = struct
           calls = List.map (rename_tparams_in_parsed rename_map) calls;
           constructs = List.map (rename_tparams_in_parsed rename_map) constructs;
           dict = Option.map ~f:(rename_tparams_in_obj_annot_dict rename_map) dict;
+          abstract;
         }
 
     let rename_interface_sig ~from_tparams ~to_tparams sig_ =
@@ -1521,6 +1537,11 @@ module Scope = struct
             Some existing_dict
           | (Some _, None) -> old_s.dict
           | (None, _) -> new_s.dict);
+        (* Merge target abstractness: declarations + interfaces only set
+           [abstract=false]; the only [abstract=true] producer (inline
+           interface from [abstract new () => T]) is never merged. OR for
+           defensive correctness anyway. *)
+        abstract = old_s.abstract || new_s.abstract;
       }
 
   let bind_interface scope tbls id_loc name new_def k =
@@ -2774,15 +2795,25 @@ module ClassAcc = struct
     proto: 'loc prop SMap.t;
     own: 'loc prop SMap.t;
     dict: 'loc parsed obj_annot_dict option;
+    abstract_props: SSet.t;
   }
 
-  let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty; dict = None }
+  let empty =
+    {
+      static = SMap.empty;
+      proto = SMap.empty;
+      own = SMap.empty;
+      dict = None;
+      abstract_props = SSet.empty;
+    }
 
   let map_static f acc = { acc with static = f acc.static }
 
   let map_proto f acc = { acc with proto = f acc.proto }
 
   let map_own f acc = { acc with own = f acc.own }
+
+  let add_abstract_name name acc = { acc with abstract_props = SSet.add name acc.abstract_props }
 
   let add_field ~static name id_loc polarity t acc =
     let f = SMap.add name (ObjValueField (id_loc, t, polarity)) in
@@ -2826,7 +2857,7 @@ module ClassAcc = struct
       | Some _ -> acc
       | None -> { acc with dict = Some dict }
 
-  let class_def tparams extends implements { static; proto; own; dict } =
+  let class_def ~abstract tparams extends implements { static; proto; own; dict; abstract_props } =
     ClassSig
       {
         tparams;
@@ -2836,6 +2867,8 @@ module ClassAcc = struct
         proto_props = proto;
         own_props = own;
         dict;
+        abstract;
+        abstract_props;
       }
 end
 
@@ -2856,6 +2889,7 @@ module DeclareClassAcc = struct
     constructs: 'loc calls;
     dict: 'loc parsed obj_annot_dict option;
     static_dict: 'loc parsed obj_annot_dict option;
+    abstract_props: SSet.t;
   }
 
   let empty =
@@ -2871,7 +2905,10 @@ module DeclareClassAcc = struct
       constructs = [];
       dict = None;
       static_dict = None;
+      abstract_props = SSet.empty;
     }
+
+  let add_abstract_name name acc = { acc with abstract_props = SSet.add name acc.abstract_props }
 
   let map_static f acc = { acc with static = f acc.static }
 
@@ -2944,7 +2981,7 @@ module DeclareClassAcc = struct
     else
       { acc with calls = f acc.calls }
 
-  let declare_class_def tparams extends mixins implements acc =
+  let declare_class_def ~abstract tparams extends mixins implements acc =
     DeclareClassSig
       {
         tparams;
@@ -2962,6 +2999,8 @@ module DeclareClassAcc = struct
         constructs = acc.constructs;
         dict = acc.dict;
         static_dict = acc.static_dict;
+        abstract;
+        abstract_props = acc.abstract_props;
       }
 end
 
@@ -3025,9 +3064,17 @@ module InterfaceAcc = struct
     let f = List.cons t in
     { acc with constructs = f acc.constructs }
 
-  let interface_def extends { props; computed_props; calls; constructs; dict } =
+  let interface_def ?(abstract = false) extends { props; computed_props; calls; constructs; dict } =
     InterfaceSig
-      { extends; props; computed_props = List.rev computed_props; calls; constructs; dict }
+      {
+        extends;
+        props;
+        computed_props = List.rev computed_props;
+        calls;
+        constructs;
+        dict;
+        abstract;
+      }
 end
 
 module ObjectLiteralAcc = struct
@@ -3186,7 +3233,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
         let fsig = function_type opts scope tbls xs func in
         let acc = InterfaceAcc.empty in
         let acc = InterfaceAcc.append_construct (Annot (FunAnnot (loc, fsig))) acc in
-        let def = InterfaceAcc.interface_def [] acc in
+        let def = InterfaceAcc.interface_def ~abstract:abstract_ [] acc in
         Annot (InlineInterface (loc, def))
     | T.ConstructorType { T.ConstructorType.func; _ } ->
       (* tslib_syntax off: degrade to Any, matching the TemplateLiteral
@@ -4009,7 +4056,7 @@ and declare_class_props =
       static;
       proto;
       _method;
-      abstract = _;
+      abstract;
       override = _;
       variance;
       ts_accessibility;
@@ -4018,10 +4065,22 @@ and declare_class_props =
     } =
       p
     in
+    (* Static abstract is parsed but not enforced — TS-style static abstract
+       requires checking [typeof Subclass] at constructor sites and we don't
+       wire that up. Filter [static] OUT of the abstract obligation set so
+       a `declare abstract class { static abstract foo }` does not falsely
+       require subclasses to provide an INSTANCE foo. *)
+    let is_abstract = abstract && opts.abstract_classes && not static in
     (* Skip private properties entirely *)
     match ts_accessibility with
     | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> acc
     | _ ->
+      let mark_abstract name acc =
+        if is_abstract then
+          Acc.add_abstract_name name acc
+        else
+          acc
+      in
       let add_named_prop name id_loc =
         match (_method, value) with
         | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
@@ -4029,14 +4088,14 @@ and declare_class_props =
             let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
             let polarity = polarity variance in
             if proto then
-              Acc.add_proto_field name id_loc polarity t acc
+              mark_abstract name (Acc.add_proto_field name id_loc polarity t acc)
             else
-              Acc.add_field ~static name id_loc polarity t acc
+              mark_abstract name (Acc.add_field ~static name id_loc polarity t acc)
           else
             let fn_loc = push_loc tbls fn_loc in
             let id_loc = push_loc tbls id_loc in
             let def = function_type ~is_method:true opts scope tbls xs fn in
-            Acc.append_method ~static name id_loc fn_loc def acc
+            mark_abstract name (Acc.append_method ~static name id_loc fn_loc def acc)
         | (true, _) -> acc (* unexpected non-function method *)
         | (false, O.Property.Init (Some t)) ->
           let id_loc = push_loc tbls id_loc in
@@ -4049,9 +4108,9 @@ and declare_class_props =
           in
           let polarity = polarity variance in
           if proto then
-            Acc.add_proto_field name id_loc polarity t acc
+            mark_abstract name (Acc.add_proto_field name id_loc polarity t acc)
           else
-            Acc.add_field ~static name id_loc polarity t acc
+            mark_abstract name (Acc.add_field ~static name id_loc polarity t acc)
         | (false, O.Property.Init None) ->
           (* No type annotation — materialize singleton type from literal init *)
           let id_loc = push_loc tbls id_loc in
@@ -4065,18 +4124,18 @@ and declare_class_props =
             in
             let polarity = polarity variance in
             if proto then
-              Acc.add_proto_field name id_loc polarity t acc
+              mark_abstract name (Acc.add_proto_field name id_loc polarity t acc)
             else
-              Acc.add_field ~static name id_loc polarity t acc
+              mark_abstract name (Acc.add_field ~static name id_loc polarity t acc)
           | None -> acc (* non-literal or missing init — error emitted by type checker *))
         | (_, O.Property.Get (_, fn)) ->
           let id_loc = push_loc tbls id_loc in
           let getter = getter_type opts scope tbls xs id_loc fn in
-          Acc.add_accessor ~static name getter acc
+          mark_abstract name (Acc.add_accessor ~static name getter acc)
         | (_, O.Property.Set (_, fn)) ->
           let id_loc = push_loc tbls id_loc in
           let setter = setter_type opts scope tbls xs id_loc fn in
-          Acc.add_accessor ~static name setter acc
+          mark_abstract name (Acc.add_accessor ~static name setter acc)
       in
       let add_computed_prop build_key =
         match (_method, value) with
@@ -5802,8 +5861,80 @@ and class_def =
           acc
         (* unexpected non-private method/field with private name *)
         | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *)
-        | C.Body.AbstractMethod _ -> acc (* abstract methods are not supported *)
-        | C.Body.AbstractProperty _ -> acc (* abstract properties are not supported *)
+        | C.Body.AbstractMethod
+            ( _,
+              {
+                C.AbstractMethod.key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
+                annot = (fn_loc, f);
+                override = _;
+                ts_accessibility;
+                comments = _;
+              }
+            )
+          when opts.abstract_classes ->
+          if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else if is_ts_private ts_accessibility then
+            acc
+          else
+            let id_loc = push_loc tbls id_loc in
+            let fn_loc = push_loc tbls fn_loc in
+            let def = function_type ~is_method:true opts scope tbls xs f in
+            acc
+            |> Acc.add_method ~static:false name id_loc fn_loc ~async:false ~generator:false def
+            |> Acc.add_abstract_name name
+        | C.Body.AbstractMethod _ ->
+          (* Reached when [abstract_classes] is off OR when the key is
+             non-Identifier (computed / string-literal / number-literal).
+             Match the precedent for regular Method/Property with computed
+             keys above (silent drop): the type-sig pipeline doesn't carry
+             a slot for non-Identifier abstract members, so cross-module
+             consumers won't see the obligation. The typing pipeline
+             ([statement.ml]) still flags abstract-modifier issues at the
+             declaration site within the file. *)
+          acc
+        | C.Body.AbstractProperty
+            ( _,
+              {
+                C.AbstractProperty.key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
+                annot = t;
+                override = _;
+                ts_accessibility;
+                variance;
+                comments = _;
+              }
+            )
+          when opts.abstract_classes ->
+          if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else if is_ts_private ts_accessibility then
+            acc
+          else
+            let id_loc = push_loc tbls id_loc in
+            let t =
+              match t with
+              | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
+              | Ast.Type.Missing _ ->
+                (* Require an annotation on abstract properties (matches
+                   statement.ml's mk_field, which emits EMissingLocalAnnotation
+                   on the same shape). Silent fallback to [any] would let
+                   cross-module consumers see [any] for a member the local
+                   pipeline correctly rejects. *)
+                Err
+                  ( id_loc,
+                    SigError
+                      (Signature_error.ExpectedAnnotation
+                         (id_loc, Expected_annotation_sort.Property { name })
+                      )
+                  )
+            in
+            acc
+            |> Acc.add_field ~static:false name id_loc (polarity variance) t
+            |> Acc.add_abstract_name name
+        | C.Body.AbstractProperty _ ->
+          (* See AbstractMethod above — silent drop matches the precedent
+             for regular Property with computed keys. *)
+          acc
         | C.Body.IndexSignature (_, p) ->
           let { Ast.Type.Object.Indexer.static; _ } = p in
           let i = indexer opts scope tbls xs p in
@@ -5820,15 +5951,18 @@ and class_def =
       implements;
       class_decorators = _;
       comments = _;
-      abstract = _;
+      abstract;
     } =
       decl
     in
+    let abstract = abstract && opts.abstract_classes in
     let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
     let extends = mk_extends opts scope tbls xs extends in
     let implements = class_implements opts scope tbls xs implements in
-    Acc.empty |> props opts scope tbls xs elements |> Acc.class_def tparams extends implements
+    Acc.empty
+    |> props opts scope tbls xs elements
+    |> Acc.class_def ~abstract tparams extends implements
 
 and object_literal =
   let module O = Ast.Expression.Object in
@@ -6073,11 +6207,12 @@ let declare_class_def =
       extends;
       mixins;
       implements;
-      abstract = _;
+      abstract;
       comments = _;
     } =
       decl
     in
+    let abstract = abstract && opts.abstract_classes in
     let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
     let extends = mk_extends opts scope tbls xs id extends in
@@ -6085,7 +6220,7 @@ let declare_class_def =
     let implements = class_implements opts scope tbls xs implements in
     Acc.empty
     |> declare_class_props opts scope tbls xs properties
-    |> Acc.declare_class_def tparams extends mixins implements
+    |> Acc.declare_class_def ~abstract tparams extends mixins implements
 
 let type_alias_decl opts scope tbls ?export_comments decl =
   let {
@@ -6330,7 +6465,7 @@ let record_def opts scope tbls decl =
       acc
       elements
   in
-  Acc.class_def tparams extends implements acc
+  Acc.class_def ~abstract:false tparams extends implements acc
 
 let record_decl opts scope tbls decl =
   let open Ast.Statement.RecordDeclaration in

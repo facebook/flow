@@ -2446,6 +2446,8 @@ pub(super) mod scope {
                     .dict
                     .as_ref()
                     .map(|dict| rename_tparams_in_obj_annot_dict(&body_rename_map, dict)),
+                abstract_: sig.abstract_,
+                abstract_props: sig.abstract_props.clone(),
             }
         }
 
@@ -2494,6 +2496,7 @@ pub(super) mod scope {
                     .dict
                     .as_ref()
                     .map(|dict| rename_tparams_in_obj_annot_dict(rename_map, dict)),
+                abstract_: sig.abstract_,
             }
         }
 
@@ -2596,6 +2599,8 @@ pub(super) mod scope {
             constructs,
             dict,
             static_dict: dc_sig.static_dict.clone(),
+            abstract_: dc_sig.abstract_,
+            abstract_props: dc_sig.abstract_props.clone(),
         }
     }
 
@@ -2670,6 +2675,12 @@ pub(super) mod scope {
             (None, _) => new_sig.dict.clone(),
         };
 
+        // Merge target abstractness: declarations + interfaces only set
+        // [abstract=false]; the only [abstract=true] producer (inline
+        // interface from [abstract new () => T]) is never merged. OR for
+        // defensive correctness anyway.
+        let abstract_ = old_sig.abstract_ || new_sig.abstract_;
+
         InterfaceSig {
             extends,
             props,
@@ -2677,6 +2688,7 @@ pub(super) mod scope {
             calls,
             constructs,
             dict,
+            abstract_,
         }
     }
 
@@ -5319,6 +5331,7 @@ mod obj_annot_acc {
 
 mod class_acc {
     use std::collections::BTreeMap;
+    use std::collections::BTreeSet;
 
     use flow_common::polarity::Polarity;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -5333,6 +5346,7 @@ mod class_acc {
             BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) own: BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
+        pub(super) abstract_props: BTreeSet<FlowSmolStr>,
     }
 
     impl<'arena, 'ast> ClassAcc<'arena, 'ast> {
@@ -5342,7 +5356,12 @@ mod class_acc {
                 proto: BTreeMap::new(),
                 own: BTreeMap::new(),
                 dict: None,
+                abstract_props: BTreeSet::new(),
             }
+        }
+
+        pub(super) fn add_abstract_name(&mut self, name: FlowSmolStr) {
+            self.abstract_props.insert(name);
         }
 
         pub(super) fn add_field(
@@ -5447,6 +5466,7 @@ mod class_acc {
 
         pub(super) fn class_def(
             self,
+            abstract_: bool,
             tparams: TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
             extends: ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>>,
             implements: Vec<Parsed<'arena, 'ast>>,
@@ -5459,6 +5479,8 @@ mod class_acc {
                 proto_props: self.proto,
                 own_props: self.own,
                 dict: self.dict,
+                abstract_,
+                abstract_props: self.abstract_props,
             }
         }
     }
@@ -5466,6 +5488,7 @@ mod class_acc {
 
 mod declare_class_acc {
     use std::collections::BTreeMap;
+    use std::collections::BTreeSet;
 
     use flow_common::polarity::Polarity;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -5496,6 +5519,7 @@ mod declare_class_acc {
         pub(super) constructs: Vec<Parsed<'arena, 'ast>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
         pub(super) static_dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
+        pub(super) abstract_props: BTreeSet<FlowSmolStr>,
     }
 
     impl<'arena, 'ast> DeclareClassAcc<'arena, 'ast> {
@@ -5512,7 +5536,12 @@ mod declare_class_acc {
                 constructs: Vec::new(),
                 dict: None,
                 static_dict: None,
+                abstract_props: BTreeSet::new(),
             }
+        }
+
+        pub(super) fn add_abstract_name(&mut self, name: FlowSmolStr) {
+            self.abstract_props.insert(name);
         }
 
         pub(super) fn add_field(
@@ -5664,6 +5693,7 @@ mod declare_class_acc {
 
         pub(super) fn declare_class_def(
             self,
+            abstract_: bool,
             tparams: TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
             extends: ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>>,
             mixins: Vec<ClassMixins<LocNode<'arena>, Parsed<'arena, 'ast>>>,
@@ -5691,6 +5721,8 @@ mod declare_class_acc {
                 constructs: self.constructs,
                 dict: self.dict,
                 static_dict: self.static_dict,
+                abstract_,
+                abstract_props: self.abstract_props,
             }
         }
     }
@@ -5820,6 +5852,7 @@ mod interface_acc {
 
         pub(super) fn interface_def(
             self,
+            abstract_: bool,
             extends: Vec<Parsed<'arena, 'ast>>,
         ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
             let mut computed_props = self.computed_props;
@@ -5831,6 +5864,7 @@ mod interface_acc {
                 calls: self.calls,
                 constructs: self.constructs,
                 dict: self.dict,
+                abstract_,
             }
         }
     }
@@ -6348,7 +6382,7 @@ fn annot_with_loc<'arena, 'ast>(
                     loc.dupe(),
                     fsig,
                 ))))));
-                let def = acc.interface_def(vec![]);
+                let def = acc.interface_def(*abstract_, vec![]);
                 Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
             }
         }
@@ -6581,7 +6615,7 @@ fn return_annot<'arena, 'ast>(
             // Methods in `.ts` / `.d.ts` files default to implicit `any` to match
             // TypeScript's ambient-declaration semantics; everywhere else (and all
             // non-method callers) preserve the legacy Void default. The typing layer
-            // in `type_annotation.ml` applies the same gate so the cross-module
+            // in `type_annotation.rs` applies the same gate so the cross-module
             // signature stays consistent with in-file inference.
             if is_method && opts.is_ts_file {
                 (
@@ -7271,7 +7305,7 @@ fn interface_def<'arena, 'ast>(
     if added_this {
         let _removed = xs.remove_all(&this_name);
     }
-    acc.interface_def(extends)
+    acc.interface_def(false, extends)
 }
 
 fn interface_props<'arena, 'ast>(
@@ -7598,6 +7632,12 @@ fn declare_class_props<'arena, 'ast>(
     ) {
         use ast::types::object as O;
 
+        // Static abstract is parsed but not enforced — TS-style static abstract
+        // requires checking [typeof Subclass] at constructor sites and we don't
+        // wire that up. Filter [static] OUT of the abstract obligation set so
+        // a `declare abstract class { static abstract foo }` does not falsely
+        // require subclasses to provide an INSTANCE foo.
+        let is_abstract = p.abstract_ && opts.abstract_classes && !p.static_;
         // Skip private properties entirely
         if matches!(
             &p.ts_accessibility,
@@ -7609,6 +7649,16 @@ fn declare_class_props<'arena, 'ast>(
             return;
         }
 
+        fn mark_abstract<'arena, 'ast>(
+            is_abstract: bool,
+            name: &FlowSmolStr,
+            acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
+        ) {
+            if is_abstract {
+                acc.add_abstract_name(name.dupe());
+            }
+        }
+
         fn add_named_prop<'arena, 'ast>(
             opts: &TypeSigOptions,
             scope: ScopeId,
@@ -7617,6 +7667,7 @@ fn declare_class_props<'arena, 'ast>(
             xs: &mut tparam_stack::TParamStack,
             acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
             p: &ast::types::object::NormalProperty<Loc, Loc>,
+            is_abstract: bool,
             name: FlowSmolStr,
             id_loc: Loc,
         ) {
@@ -7640,16 +7691,18 @@ fn declare_class_props<'arena, 'ast>(
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                             if p.proto {
-                                acc.add_proto_field(name, id_loc, polarity_val, t);
+                                acc.add_proto_field(name.dupe(), id_loc, polarity_val, t);
                             } else {
-                                acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                                acc.add_field(p.static_, name.dupe(), id_loc, polarity_val, t);
                             }
+                            mark_abstract(is_abstract, &name, acc);
                         } else {
                             let fn_loc = tbls.push_loc(fn_loc.dupe());
                             let id_loc = tbls.push_loc(id_loc);
                             let def =
                                 function_type(true, opts, scope, scopes, tbls, xs, inner.as_ref());
-                            acc.append_method(p.static_, name, id_loc, fn_loc, def);
+                            acc.append_method(p.static_, name.dupe(), id_loc, fn_loc, def);
+                            mark_abstract(is_abstract, &name, acc);
                         }
                     }
                     // unexpected non-function method otherwise
@@ -7663,10 +7716,11 @@ fn declare_class_props<'arena, 'ast>(
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                     if p.proto {
-                        acc.add_proto_field(name, id_loc, polarity_val, t);
+                        acc.add_proto_field(name.dupe(), id_loc, polarity_val, t);
                     } else {
-                        acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                        acc.add_field(p.static_, name.dupe(), id_loc, polarity_val, t);
                     }
+                    mark_abstract(is_abstract, &name, acc);
                 }
                 (_, O::PropertyValue::Init(None)) => {
                     if let Some(ref init_expr) = p.init {
@@ -7678,22 +7732,25 @@ fn declare_class_props<'arena, 'ast>(
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                             if p.proto {
-                                acc.add_proto_field(name, id_loc, polarity_val, t);
+                                acc.add_proto_field(name.dupe(), id_loc, polarity_val, t);
                             } else {
-                                acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                                acc.add_field(p.static_, name.dupe(), id_loc, polarity_val, t);
                             }
+                            mark_abstract(is_abstract, &name, acc);
                         }
                     }
                 }
                 (_, O::PropertyValue::Get(_, fn_expr)) => {
                     let id_loc = tbls.push_loc(id_loc);
                     let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                    acc.add_accessor(p.static_, name, getter);
+                    acc.add_accessor(p.static_, name.dupe(), getter);
+                    mark_abstract(is_abstract, &name, acc);
                 }
                 (_, O::PropertyValue::Set(_, fn_expr)) => {
                     let id_loc = tbls.push_loc(id_loc);
                     let setter = setter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                    acc.add_accessor(p.static_, name, setter);
+                    acc.add_accessor(p.static_, name.dupe(), setter);
+                    mark_abstract(is_abstract, &name, acc);
                 }
             }
         }
@@ -7779,7 +7836,18 @@ fn declare_class_props<'arena, 'ast>(
 
         match resolve_prop_key(&p.key) {
             ResolvedPropKey::Named(name, id_loc) => {
-                add_named_prop(opts, scope, scopes, tbls, xs, acc, p, name, id_loc);
+                add_named_prop(
+                    opts,
+                    scope,
+                    scopes,
+                    tbls,
+                    xs,
+                    acc,
+                    p,
+                    is_abstract,
+                    name,
+                    id_loc,
+                );
             }
             ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
                 add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
@@ -10371,9 +10439,11 @@ fn class_def<'arena: 'ast, 'ast>(
         tparams: tps,
         extends,
         implements,
+        abstract_,
         ..
     } = c;
 
+    let abstract_ = *abstract_ && opts.abstract_classes;
     let mut xs = tparam_stack::TParamStack::new();
     let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
     xs.insert(FlowSmolStr::new_inline("this"));
@@ -10641,10 +10711,79 @@ fn class_def<'arena: 'ast, 'ast>(
             class::BodyElement::DeclareMethod(_) => {
                 // unsupported DeclareMethod key types
             }
-            // abstract methods are not supported
-            class::BodyElement::AbstractMethod(_) => {}
-            // abstract properties are not supported
-            class::BodyElement::AbstractProperty(_) => {}
+            class::BodyElement::AbstractMethod(class::AbstractMethod {
+                key: ObjKey::Identifier(id),
+                annot: (fn_loc, f),
+                ts_accessibility,
+                ..
+            }) if opts.abstract_classes => {
+                if (opts.munge
+                    && flow_parser_utils::signature_utils::is_munged_property_string(&id.name))
+                    || is_ts_private(ts_accessibility)
+                {
+                    continue;
+                }
+                let name = id.name.dupe();
+                let id_loc = tbls.push_loc(id.loc.dupe());
+                let fn_loc = tbls.push_loc(fn_loc.dupe());
+                let def = function_type(true, opts, scope, scopes, tbls, &mut xs, f);
+                acc.add_method(false, name.dupe(), id_loc, fn_loc, false, false, def);
+                acc.add_abstract_name(name);
+            }
+            class::BodyElement::AbstractMethod(_) => {
+                // Reached when [abstract_classes] is off OR when the key is
+                // non-Identifier (computed / string-literal / number-literal).
+                // Match the precedent for regular Method/Property with computed
+                // keys above (silent drop): the type-sig pipeline doesn't carry
+                // a slot for non-Identifier abstract members, so cross-module
+                // consumers won't see the obligation. The typing pipeline
+                // ([statement.rs]) still flags abstract-modifier issues at the
+                // declaration site within the file.
+            }
+            class::BodyElement::AbstractProperty(class::AbstractProperty {
+                key: ObjKey::Identifier(id),
+                annot: t,
+                ts_accessibility,
+                variance,
+                ..
+            }) if opts.abstract_classes => {
+                if (opts.munge
+                    && flow_parser_utils::signature_utils::is_munged_property_string(&id.name))
+                    || is_ts_private(ts_accessibility)
+                {
+                    continue;
+                }
+                let name = id.name.dupe();
+                let id_loc = tbls.push_loc(id.loc.dupe());
+                let t = match t {
+                    ast::types::AnnotationOrHint::Available(annot_t) => {
+                        annot(opts, scope, scopes, tbls, &mut xs, &annot_t.annotation)
+                    }
+                    ast::types::AnnotationOrHint::Missing(_) => {
+                        // Require an annotation on abstract properties (matches
+                        // statement.rs's mk_field, which emits EMissingLocalAnnotation
+                        // on the same shape). Silent fallback to [any] would let
+                        // cross-module consumers see [any] for a member the local
+                        // pipeline correctly rejects.
+                        Parsed::Err(
+                            id_loc.dupe(),
+                            Errno::SigError(Box::new(
+                                signature_error::SignatureError::ExpectedAnnotation(
+                                    id_loc.dupe(),
+                                    ExpectedAnnotationSort::Property { name: name.clone() },
+                                ),
+                            )),
+                        )
+                    }
+                };
+                let polarity_val = polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                acc.add_field(false, name.dupe(), id_loc, polarity_val, t);
+                acc.add_abstract_name(name);
+            }
+            class::BodyElement::AbstractProperty(_) => {
+                // See AbstractMethod above — silent drop matches the precedent
+                // for regular Property with computed keys.
+            }
             class::BodyElement::IndexSignature(p) => {
                 let static_ = p.static_;
                 let i = indexer(opts, scope, scopes, tbls, &mut xs, p);
@@ -10653,7 +10792,7 @@ fn class_def<'arena: 'ast, 'ast>(
         }
     }
 
-    acc.class_def(tparams, extends, implements)
+    acc.class_def(abstract_, tparams, extends, implements)
 }
 
 fn object_literal<'arena: 'ast, 'ast>(
@@ -11048,8 +11187,10 @@ fn declare_class_def<'arena, 'ast>(
         extends,
         mixins,
         implements,
+        abstract_,
         ..
     } = c;
+    let abstract_ = *abstract_ && opts.abstract_classes;
     let mut xs = tparam_stack::TParamStack::new();
     let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
     xs.insert(FlowSmolStr::new_inline("this"));
@@ -11122,7 +11263,13 @@ fn declare_class_def<'arena, 'ast>(
         &body.properties,
         &mut acc,
     );
-    acc.declare_class_def(tparams, extends, parsed_mixins, parsed_implements)
+    acc.declare_class_def(
+        abstract_,
+        tparams,
+        extends,
+        parsed_mixins,
+        parsed_implements,
+    )
 }
 
 fn type_alias_decl<'arena: 'ast, 'ast>(
@@ -11447,12 +11594,6 @@ fn variable_decl<'arena: 'ast, 'ast>(
                         ast::types::AnnotationOrHint::Missing(_),
                         Some(expr),
                     ) => expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, expr),
-                    // | P.Object { P.Object.annot; _ }
-                    // | P.Array { P.Array.annot; _ } ->
-                    //   ...
-                    //   annot_or_hint
-                    //     ~err_loc:None
-                    //     ~sort:Expected_annotation_sort.ArrayPattern
                     // Note: OCaml uses ArrayPattern for BOTH Object and Array patterns here
                     _ => annot_or_hint(
                         ExpectedAnnotationSort::ArrayPattern,
@@ -11644,7 +11785,7 @@ fn record_def<'arena: 'ast, 'ast>(
         }
     }
 
-    acc.class_def(tparams, extends, implements)
+    acc.class_def(false, tparams, extends, implements)
 }
 
 fn record_decl<'arena: 'ast, 'ast>(

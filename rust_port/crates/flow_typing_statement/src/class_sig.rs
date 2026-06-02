@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -25,9 +26,14 @@ use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EAbstractClassData;
+use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::intermediate_error_types::AbstractErrorKind;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
+use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_loc_env::func_class_sig_types;
 use flow_typing_loc_env::func_class_sig_types::ConfigTypes;
 use flow_typing_loc_env::func_class_sig_types::class as class_types;
@@ -62,6 +68,7 @@ pub fn empty<C: ConfigTypes>(
             calls: Vec::new(),
             constructs: Vec::new(),
             dict: None,
+            abstract_members: std::collections::BTreeSet::new(),
         }
     };
     let constructor = Vec::new();
@@ -82,13 +89,10 @@ pub fn empty<C: ConfigTypes>(
         constructor,
         static_,
         instance,
+        abstract_: false,
     }
 }
 
-// (* let structural x = *)
-// (*   match x.super with *)
-// (*   | Interface _ -> true *)
-// (*   | Class _ -> false *)
 fn structural<C: ConfigTypes>(x: &class_types::Class<C>) -> bool {
     match &x.super_ {
         class_types::Super::Interface(_) => true,
@@ -250,7 +254,37 @@ pub fn append_constructor_replacing_default<C: ConfigTypes>(
     }
 }
 
+// Track abstractness only on the instance side — [inst_abstract_props]
+// reads only [s.instance.abstract_members]; static-side writes are dead.
+// Add-only: a name in [abstract_members] means "some declared shape of
+// this name is abstract." Removing on [~abstract:false] would be wrong
+// for accessor pairs — an abstract [get x] followed by a concrete [set x]
+// shares the name [x], and a remove would silently clear the getter
+// obligation. The in-class shadow case the prior implementation tried to
+// handle (`abstract x; x = 0;` inside one class) is parser-blocked as a
+// duplicate member.
+//
+// Name-only granularity matches TS: [abstract get x] + [abstract set x]
+// collapse to a single obligation "x", and a subclass that implements
+// either half satisfies it. (TS2515 fires only when a subclass omits
+// both halves.)
+fn update_abstract_members<C: ConfigTypes>(
+    abstract_: bool,
+    static_: bool,
+    name: &FlowSmolStr,
+    s: &class_types::Signature<C>,
+) -> BTreeSet<FlowSmolStr> {
+    if static_ || !abstract_ {
+        s.abstract_members.clone()
+    } else {
+        let mut m = s.abstract_members.clone();
+        m.insert(name.dupe());
+        m
+    }
+}
+
 fn add_field_inner<C: ConfigTypes>(
+    abstract_: bool,
     static_: bool,
     name: FlowSmolStr,
     fld: class_types::FieldPrime<C>,
@@ -267,6 +301,8 @@ fn add_field_inner<C: ConfigTypes>(
                 s.getters.remove(&name);
                 s.setters.remove(&name);
             }
+            let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -274,13 +310,14 @@ fn add_field_inner<C: ConfigTypes>(
 
 pub fn add_field<C: ConfigTypes>(
     static_: bool,
+    abstract_: bool,
     name: FlowSmolStr,
     loc: ALoc,
     polarity: Polarity,
     field: class_types::Field<C>,
     x: &mut class_types::Class<C>,
 ) {
-    add_field_inner(static_, name, (Some(loc), polarity, field), x);
+    add_field_inner(abstract_, static_, name, (Some(loc), polarity, field), x);
 }
 
 pub fn add_indexer<C: ConfigTypes>(static_: bool, dict: DictType, x: &mut class_types::Class<C>) {
@@ -305,6 +342,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
         .update_desc(|desc| VirtualReasonDesc::RNameProperty(Arc::new(desc)));
     let t = str_module_t::why(r);
     add_field_inner(
+        false,
         true,
         FlowSmolStr::new("name"),
         (None, Polarity::Neutral, class_types::Field::Annot(t)),
@@ -313,6 +351,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
 }
 
 pub fn add_proto_field<C: ConfigTypes>(
+    abstract_: bool,
     name: FlowSmolStr,
     loc: ALoc,
     polarity: Polarity,
@@ -327,6 +366,8 @@ pub fn add_proto_field<C: ConfigTypes>(
             s.methods.remove(&name);
             s.getters.remove(&name);
             s.setters.remove(&name);
+            let new_abstract_members = update_abstract_members(abstract_, false, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -334,6 +375,7 @@ pub fn add_proto_field<C: ConfigTypes>(
 
 pub fn add_method<C: ConfigTypes>(
     static_: bool,
+    abstract_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -362,6 +404,8 @@ pub fn add_method<C: ConfigTypes>(
             s.methods.insert(name.dupe(), vec1::vec1![func_info]);
             s.getters.remove(&name);
             s.setters.remove(&name);
+            let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -372,6 +416,7 @@ pub fn add_method<C: ConfigTypes>(
 /// definitions as branches of a single overloaded method.  
 pub fn append_method<C: ConfigTypes>(
     static_: bool,
+    abstract_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -407,6 +452,8 @@ pub fn append_method<C: ConfigTypes>(
             }
             s.getters.remove(&name);
             s.setters.remove(&name);
+            let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -437,6 +484,7 @@ pub fn append_construct<C: ConfigTypes>(t: Type, x: &mut class_types::Class<C>) 
 
 pub fn add_getter<C: ConfigTypes>(
     static_: bool,
+    abstract_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -463,7 +511,9 @@ pub fn add_getter<C: ConfigTypes>(
             }
             s.proto_fields.remove(&name);
             s.methods.remove(&name);
-            s.getters.insert(name, func_info);
+            s.getters.insert(name.dupe(), func_info);
+            let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -471,6 +521,7 @@ pub fn add_getter<C: ConfigTypes>(
 
 pub fn add_setter<C: ConfigTypes>(
     static_: bool,
+    abstract_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -497,7 +548,9 @@ pub fn add_setter<C: ConfigTypes>(
             }
             s.proto_fields.remove(&name);
             s.methods.remove(&name);
-            s.setters.insert(name, func_info);
+            s.setters.insert(name.dupe(), func_info);
+            let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
+            s.abstract_members = new_abstract_members;
         },
         x,
     );
@@ -628,7 +681,6 @@ fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
     cx.generate_property_map(pmap)
 }
 
-// (* let elements cx ~this ?constructor s super = *)
 fn elements<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     this: Type,
@@ -1006,6 +1058,13 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             &private_this_type(&s.static_),
             &s.static_.private_methods,
         ),
+        inst_abstract: s.abstract_,
+        inst_abstract_props: s
+            .instance
+            .abstract_members
+            .iter()
+            .map(|name| Name::new(name.dupe()))
+            .collect(),
     })
 }
 
@@ -1535,6 +1594,197 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     );
 }
 
+// Walk super chain leaf→root collecting both:
+// - [obligations]: names declared abstract by some ancestor
+// - [satisfied]: names concretely implemented by some intermediate
+//   ancestor (shallower than the abstract declaration)
+// A name is only an open obligation if it's in [obligations] and
+// NOT in [satisfied] and NOT in [own_concrete_names]. Per-name
+// [first_loc] tracking uses the SHALLOWEST abstract decl so the
+// error points at the closest ancestor that left it open.
+fn post_inference_check_abstract_obligations<'cx>(
+    cx: &Context<'cx>,
+    super_: &Type,
+    class_name: &Option<FlowSmolStr>,
+    class_loc: &ALoc,
+    def_loc: &ALoc,
+    own_concrete_names: &BTreeSet<FlowSmolStr>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let seen: RefCell<BTreeSet<properties::Id>> = RefCell::new(BTreeSet::new());
+    let obligations: RefCell<BTreeMap<FlowSmolStr, ALoc>> = RefCell::new(BTreeMap::new());
+    let satisfied: RefCell<BTreeSet<FlowSmolStr>> = RefCell::new(BTreeSet::new());
+    let add_obligation = |name: FlowSmolStr, loc: ALoc| {
+        obligations.borrow_mut().entry(name).or_insert(loc);
+    };
+    let process_inst = |inst: &InstType| -> bool {
+        if seen.borrow().contains(&inst.own_props) {
+            false
+        } else {
+            seen.borrow_mut().insert(inst.own_props.dupe());
+            let own_props = cx.find_props(inst.own_props.dupe());
+            let proto_props = cx.find_props(inst.proto_props.dupe());
+            // Concrete impls on this ancestor satisfy any abstract
+            // obligation from a deeper (further-from-leaf) ancestor.
+            // We rely on leaf→root traversal: by the time we add a name
+            // to [obligations], any concrete impl above us has already
+            // been added to [satisfied].
+            let add_concrete = |name: &Name, _: &Property| {
+                let name_str = name.as_smol_str();
+                if !inst.inst_abstract_props.contains(name) {
+                    satisfied.borrow_mut().insert(name_str.dupe());
+                }
+            };
+            for (name, p) in own_props.iter() {
+                add_concrete(name, p);
+            }
+            for (name, p) in proto_props.iter() {
+                add_concrete(name, p);
+            }
+            for name in inst.inst_abstract_props.iter() {
+                let name_str = name.as_smol_str();
+                if !satisfied.borrow().contains(name_str) {
+                    let prop_loc = match own_props.get(name) {
+                        Some(p) => property::first_loc(p),
+                        None => match proto_props.get(name) {
+                            Some(p) => property::first_loc(p),
+                            None => None,
+                        },
+                    };
+                    let loc = prop_loc.unwrap_or_else(|| def_loc.dupe());
+                    add_obligation(name_str.dupe(), loc);
+                }
+            }
+            true
+        }
+    };
+    fn walk<'cx>(
+        cx: &Context<'cx>,
+        process_inst: &dyn Fn(&InstType) -> bool,
+        t: &Type,
+    ) -> Result<(), FlowJsException> {
+        let concretes = cx.with_suppressed_errors(|| {
+            FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
+        })?;
+        for c in &concretes {
+            walk_one(cx, process_inst, c)?;
+        }
+        Ok(())
+    }
+    fn walk_one<'cx>(
+        cx: &Context<'cx>,
+        process_inst: &dyn Fn(&InstType) -> bool,
+        t: &Type,
+    ) -> Result<(), FlowJsException> {
+        match t.deref() {
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. })
+                if process_inst(&instance.inst) =>
+            {
+                walk(cx, process_inst, &instance.super_)?;
+            }
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                DefTInner::InstanceT(inst_t) if process_inst(&inst_t.inst) => {
+                    walk(cx, process_inst, &inst_t.super_)?;
+                }
+                _ => {}
+            },
+            TypeInner::IntersectionT(_, rep) => {
+                for m in rep.members_iter() {
+                    walk_one(cx, process_inst, m)?;
+                }
+            }
+            // Union supers are not a real Flow construct here — a class
+            // can't [extends (A | B)] — and the previous implementation
+            // walked branches with shared [satisfied] state, letting a
+            // concrete impl in one branch silently discharge an abstract
+            // obligation declared only in another. We don't model the
+            // correct per-branch semantics; fall through and skip.
+            // If union supers ever become reachable, implement per-branch
+            // [satisfied] with [intersect across branches] semantics.
+            _ => {}
+        }
+        Ok(())
+    }
+    let walk_result = {
+        let pi: &dyn Fn(&InstType) -> bool = &process_inst;
+        walk(cx, pi, super_)
+    };
+    match walk_result {
+        Ok(()) => {}
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+        }
+        Err(_) => {}
+    }
+    // Emit one error per unimplemented obligation.
+    for (name, member_def_loc) in obligations.borrow().iter() {
+        if !own_concrete_names.contains(name) && !satisfied.borrow().contains(name) {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EAbstractClass(Box::new(EAbstractClassData {
+                    kind: AbstractErrorKind::AbstractMemberNotImplemented {
+                        class_name: class_name.clone(),
+                        member_name: name.dupe(),
+                        member_def_loc: member_def_loc.dupe(),
+                    },
+                    loc: class_loc.dupe(),
+                })),
+            );
+        }
+    }
+    Ok(())
+}
+
+// For each abstract member inherited via [super], verify that [x]
+// implements it. Members [x] itself re-declared as abstract do not
+// satisfy the obligation (those names live in [x.instance.abstract_members]).
+// Skipped entirely when [x] is itself abstract — an abstract subclass may
+// leave obligations open for its own concrete subclasses. Also skipped
+// when the experimental flag is off: [inst_abstract_props] is guaranteed
+// empty everywhere, so the walk would always find no obligations — pure
+// wasted work on every non-abstract class in every Flow root.
+fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
+    cx: &Context<'cx>,
+    def_reason: Reason,
+    x: &class_types::Class<C>,
+) {
+    if !cx.abstract_classes() || x.abstract_ {
+        return;
+    }
+    // Set of names [x] re-declares as abstract; these do not implement
+    // any inherited obligation.
+    let own_abstract = x.instance.abstract_members.clone();
+    // Names of [x]'s own concrete instance members (fields, methods,
+    // getters, setters, proto fields). These satisfy obligations.
+    let own_concrete_names: BTreeSet<FlowSmolStr> = {
+        let s = &x.instance;
+        let mut acc: BTreeSet<FlowSmolStr> = BTreeSet::new();
+        acc.extend(s.fields.keys().duped());
+        acc.extend(s.proto_fields.keys().duped());
+        acc.extend(s.methods.keys().duped());
+        acc.extend(s.getters.keys().duped());
+        acc.extend(s.setters.keys().duped());
+        let s = acc;
+        s.difference(&own_abstract).cloned().collect()
+    };
+    let (super_, _) = supertype(cx, x);
+    let class_name = x.class_name.clone();
+    let class_loc = x.class_loc.dupe();
+    let def_loc = def_reason.loc().dupe();
+    cx.add_post_inference_validation_callback(Box::new(move |cx: &Context<'cx>| {
+        post_inference_check_abstract_obligations(
+            cx,
+            &super_,
+            &class_name,
+            &class_loc,
+            &def_loc,
+            &own_concrete_names,
+        )
+    }));
+}
+
 pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     def_reason: Reason,
@@ -1542,7 +1792,8 @@ pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
 ) {
     check_super(cx, def_reason.dupe(), x);
     check_implements(cx, def_reason.dupe(), x);
-    check_methods(cx, def_reason, x);
+    check_methods(cx, def_reason.dupe(), x);
+    check_abstract_obligations(cx, def_reason, x);
 }
 
 // TODO: Ideally we should check polarity for all class types, but this flag is

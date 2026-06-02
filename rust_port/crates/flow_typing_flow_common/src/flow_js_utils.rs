@@ -217,6 +217,52 @@ pub fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     }
 }
 
+// Does [t] carry an [abstract] bit? Walks the wrappers used by
+// [extract_class_ctor_t] / [collect_construct_ts] so that
+// [Class<AbstractFoo>], a poly class, a [GenericT] bound, an
+// [AnnotT]-wrapped imported type, a [TypeAppT] instantiation, etc., all
+// reach the underlying [InstanceT].
+//
+// Connective semantics:
+// - [UnionT]: any-abstract. A runtime value satisfying the union may be
+//   the abstract branch, so [new]/assignment is unsafe.
+// - [IntersectionT]: any-abstract. The runtime class object must satisfy
+//   every branch, so if any branch is abstract the value IS that
+//   abstract class.
+//
+// Not handled (intentionally): [MaybeT]/[OptionalT]/[EvalT]. None of
+// these are expected at a constructor or constructor-assignment site —
+// null-check or evaluation runs first — and the catch-all [false] is a
+// safe miss (the existing typing pipeline rejects the construct on
+// other grounds before we get here).
+pub fn is_class_abstract<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+    use flow_typing_type::type_::ThisTypeAppTData;
+    let dropped = drop_resolved(cx, t);
+    match dropped.deref() {
+        TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+            inst_t.inst.inst_abstract
+        }
+        TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+            instance.inst.inst_abstract
+        }
+        TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+            is_class_abstract(cx, inner)
+        }
+        TypeInner::DefT(_, def_t)
+            if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() =>
+        {
+            is_class_abstract(cx, t_out)
+        }
+        TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => is_class_abstract(cx, c),
+        TypeInner::TypeAppT(box TypeAppTData { type_, .. }) => is_class_abstract(cx, type_),
+        TypeInner::GenericT(box GenericTData { bound, .. }) => is_class_abstract(cx, bound),
+        TypeInner::AnnotT(_, inner, _) => is_class_abstract(cx, inner),
+        TypeInner::UnionT(_, rep) => rep.members_iter().any(|m| is_class_abstract(cx, m)),
+        TypeInner::IntersectionT(_, rep) => rep.members_iter().any(|m| is_class_abstract(cx, m)),
+        _ => false,
+    }
+}
+
 // Both writer pipelines ([type_annotation.rs] and [type_sig_merge.rs]) store
 // the raw funtype produced by their respective signature lowering. Subtyping
 // requires the construct-sig form (unbound [this_t], optional [return_t]

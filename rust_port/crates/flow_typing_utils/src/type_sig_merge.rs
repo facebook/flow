@@ -1244,7 +1244,6 @@ pub fn merge_exports<'cx>(
         ys: &[(ALoc, FromNs<'cx>)],
         target_module_type: &ModuleType,
     ) {
-        // let rec loop file reason target_module_type = function
         let mut xs = xs;
         let mut ys = ys;
         loop {
@@ -1284,7 +1283,6 @@ pub fn merge_exports<'cx>(
             platform_availability_set,
         } => {
             let (def_loc_opt, exports_t) = match exports {
-                // | Some (lazy (def_loc_opt, t)) -> (def_loc_opt, t)
                 Some(lazy_val) => {
                     let (def_loc_opt, t) = lazy_val.get_forced(cx).clone();
                     (def_loc_opt, t)
@@ -1303,7 +1301,6 @@ pub fn merge_exports<'cx>(
                     ),
                 ),
             };
-            // let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
             let type_exports_map: type_::exports::T = type_exports
                 .iter()
                 .map(|(key, lazy_val)| (Name::new(key.dupe()), lazy_val.get_forced(cx).clone()))
@@ -1341,12 +1338,10 @@ pub fn merge_exports<'cx>(
             strict,
             platform_availability_set,
         } => {
-            // let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
             let mut exports_map: type_::exports::T = exports
                 .iter()
                 .map(|(key, lazy_val)| (Name::new(key.dupe()), lazy_val.get_forced(cx).clone()))
                 .collect();
-            // let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
             let mut type_exports_map: type_::exports::T = type_exports
                 .iter()
                 .map(|(key, lazy_val)| (Name::new(key.dupe()), lazy_val.get_forced(cx).clone()))
@@ -1957,7 +1952,6 @@ fn merge_annot<'cx>(
                 index: index_reason,
             }));
             let id = eval_id_of_aloc(cx, loc.dupe());
-            // let index = match index with ...
             let oia_index = match index {
                 Pack::Packed::Annot(annot) => match annot.as_ref() {
                     Annot::SingletonString(box (_, str)) => {
@@ -2336,7 +2330,6 @@ fn merge_annot<'cx>(
             match type_util::mk_possibly_generic_render_type(*variant, reason.dupe(), t.dupe()) {
                 Some(t) => t,
                 None => {
-                    // let renders_variant = match variant with ...
                     let renders_variant = match variant {
                         flow_parser::ast::types::RendersVariant::Normal => {
                             type_::RendersVariant::RendersNormal
@@ -3640,6 +3633,7 @@ fn merge_interface<'cx>(
         calls,
         constructs,
         dict,
+        abstract_,
     } = def;
     let static_ = {
         let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
@@ -3812,6 +3806,11 @@ fn merge_interface<'cx>(
                 .generate_property_map(type_::properties::PropertiesMap::new()),
             class_private_static_methods: cx
                 .generate_property_map(type_::properties::PropertiesMap::new()),
+            // Preserve the [abstract] bit from the InterfaceSig — set only for
+            // the inline interface lowered from [abstract new (...) => T].
+            // Other interfaces stay non-abstract.
+            inst_abstract: *abstract_,
+            inst_abstract_props: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
         });
         (inst, make_super)
     };
@@ -4015,6 +4014,8 @@ fn merge_this_class_t<'cx>(
         proto_props,
         dict,
         tparams: _,
+        abstract_,
+        abstract_props,
     } = def;
     let class_name_owned = class_name;
     move |env: &MergeEnv, targs: Vec<(SubstName, Reason, Type, Polarity)>, rec_type: Type| {
@@ -4039,7 +4040,6 @@ fn merge_this_class_t<'cx>(
             .collect();
         let mut env = env.dupe();
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
-        // let static =
         let static_ = {
             let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
             let mut props_map: BTreeMap<Name, type_::Property> = static_props
@@ -4114,6 +4114,8 @@ fn merge_this_class_t<'cx>(
                 .generate_property_map(type_::properties::PropertiesMap::new()),
             class_private_static_methods: cx
                 .generate_property_map(type_::properties::PropertiesMap::new()),
+            inst_abstract: abstract_,
+            inst_abstract_props: abstract_props.iter().map(|n| Name::new(n.dupe())).collect(),
         });
         type_util::class_type(
             Type::new(type_::TypeInner::ThisInstanceT(Box::new(
@@ -4419,7 +4421,6 @@ fn merge_component<'cx>(
     id_opt: Option<(ALoc, &FlowSmolStr)>,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
-    // let t (env, _) =
     let reason2 = reason.dupe();
     let t = |_cx: &Context<'cx>,
              env: &MergeEnv,
@@ -4599,7 +4600,6 @@ fn merge_opaque_type<'cx>(
     body: Option<&Pack::Packed<ALoc>>,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
-    // let t (env, targs) = ...
     let name_owned = name.dupe();
     let reason_clone = reason.dupe();
     let t = move |_cx: &Context<'cx>,
@@ -4672,6 +4672,8 @@ fn merge_declare_class<'cx>(
         dict,
         // We don't actually support static indexers yet.
         static_dict: _,
+        abstract_,
+        abstract_props,
     } = def;
     let this_reason = reason.dupe().replace_desc(RThisType);
     let class_name_owned = class_name.dupe();
@@ -4874,6 +4876,8 @@ fn merge_declare_class<'cx>(
                 .generate_property_map(type_::properties::PropertiesMap::new()),
             class_private_static_methods: cx
                 .generate_property_map(type_::properties::PropertiesMap::new()),
+            inst_abstract: *abstract_,
+            inst_abstract_props: abstract_props.iter().map(|n| Name::new(n.dupe())).collect(),
         });
         type_util::class_type(
             Type::new(type_::TypeInner::ThisInstanceT(Box::new(

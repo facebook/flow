@@ -1540,8 +1540,9 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 env.error_at(loc.dupe(), ParseError::AbstractPropertyWithInitializer)?;
             }
             match key {
-                // Private abstract properties fall back to PrivateField
                 expression::object::Key::PrivateName(priv_name) => {
+                    env.error_at(priv_name.loc.dupe(), ParseError::AbstractPrivateMember)?;
+                    // Recover as a regular PrivateField, dropping the abstract modifier.
                     Ok(class::BodyElement::PrivateField(class::PrivateField {
                         loc,
                         key: priv_name,
@@ -1895,6 +1896,15 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 // Abstract method - try to convert params to type params
                 match declaration_parser::convert_function_params_to_type_params(&params) {
                     Ok(type_params) => {
+                        match &key {
+                            expression::object::Key::PrivateName(priv_name) => {
+                                env.error_at(
+                                    priv_name.loc.dupe(),
+                                    ParseError::AbstractPrivateMember,
+                                )?;
+                            }
+                            _ => {}
+                        }
                         eat::maybe(env, TokenKind::TSemicolon)?;
                         let (annot_loc, func) = make_method_func_type(type_params);
                         let loc = Loc::between(&start_loc, &sig_loc);

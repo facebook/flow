@@ -1025,15 +1025,13 @@ module Object
         | _ -> ());
         let open Ast.Class in
         match key with
-        | Ast.Expression.Object.Property.PrivateName _ ->
-          (* Private abstract properties fall back to PrivateField *)
+        | Ast.Expression.Object.Property.PrivateName ((key_loc, _) as private_key) ->
+          error_at env (key_loc, Parse_error.AbstractPrivateMember);
+          (* Recover as a regular PrivateField, dropping the abstract modifier. *)
           Body.PrivateField
             ( loc,
               {
-                PrivateField.key =
-                  (match key with
-                  | Ast.Expression.Object.Property.PrivateName k -> k
-                  | _ -> failwith "unreachable");
+                PrivateField.key = private_key;
                 value;
                 annot;
                 static;
@@ -1361,6 +1359,10 @@ module Object
           (* Abstract method - try to convert params to type params *)
           match Declaration.convert_function_params_to_type_params params with
           | Ok type_params ->
+            (match key with
+            | Ast.Expression.Object.Property.PrivateName (key_loc, _) ->
+              error_at env (key_loc, Parse_error.AbstractPrivateMember)
+            | _ -> ());
             ignore (Eat.maybe env T_SEMICOLON);
             Class.Body.AbstractMethod
               ( Loc.btwn start_loc sig_loc,

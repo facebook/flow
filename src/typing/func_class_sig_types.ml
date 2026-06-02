@@ -238,6 +238,10 @@ module Class = struct
       calls: Type.t list;
       constructs: Type.t list;
       dict: Type.Object.dict;
+      (* Names of members in this signature (own/proto/getter/setter) that
+         were declared with the [abstract] modifier. Source of truth for which
+         names contribute to [insttype.inst_abstract_props]. *)
+      abstract_members: SSet.t;
     }
 
     type t = {
@@ -252,6 +256,9 @@ module Class = struct
       constructor: func_info list;
       static: signature;
       instance: signature;
+      (* Whether the class declaration carried the [abstract] class modifier.
+         Propagated to [insttype.inst_abstract]. *)
+      abstract: bool;
     }
   end
 
@@ -333,6 +340,10 @@ module Class = struct
       calls: Type.t list;
       constructs: Type.t list;
       dict: Type.Object.dict;
+      (* Names of members in this signature (own/proto/getter/setter) that
+         were declared with the [abstract] modifier. Source of truth for which
+         names contribute to [insttype.inst_abstract_props]. *)
+      abstract_members: SSet.t;
     }
 
     type t = {
@@ -347,6 +358,9 @@ module Class = struct
       constructor: func_info list;
       static: signature;
       instance: signature;
+      (* Whether the class declaration carried the [abstract] class modifier.
+         Propagated to [insttype.inst_abstract]. *)
+      abstract: bool;
     }
   end
 end

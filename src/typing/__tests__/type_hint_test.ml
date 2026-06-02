@@ -355,6 +355,8 @@ let mk_private_method_eval_hint_test
                 class_private_static_fields = mk_propertries private_static_field;
                 class_private_methods = mk_propertries private_method;
                 class_private_static_methods = mk_propertries private_static_method;
+                inst_abstract = false;
+                inst_abstract_props = NameUtils.Set.empty;
               };
           }
       )

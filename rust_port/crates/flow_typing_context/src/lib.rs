@@ -998,6 +998,10 @@ impl<'cx> Context<'cx> {
         &self.0.metadata
     }
 
+    pub fn abstract_classes(&self) -> bool {
+        self.0.metadata.frozen.abstract_classes
+    }
+
     pub fn babel_loose_array_spread(&self) -> bool {
         self.0.metadata.frozen.babel_loose_array_spread
     }

@@ -5485,6 +5485,8 @@ pub struct InstTypeInner {
     pub class_private_methods: properties::Id,
     pub class_private_static_methods: properties::Id,
     pub inst_react_dro: Option<ReactDro>,
+    pub inst_abstract: bool,
+    pub inst_abstract_props: FlowOrdSet<Name>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

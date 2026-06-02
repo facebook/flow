@@ -8,6 +8,7 @@
 type t =
   | AbstractMethodInNonAbstractClass
   | AbstractMethodWithBody
+  | AbstractPrivateMember
   | AbstractPropertyInNonAbstractClass
   | AbstractPropertyWithInitializer
   | AccessorDataProperty
@@ -190,6 +191,7 @@ module PP = struct
     | AbstractMethodInNonAbstractClass ->
       "Abstract methods can only appear within an abstract class."
     | AbstractMethodWithBody -> "Abstract methods cannot have an implementation."
+    | AbstractPrivateMember -> "The `abstract` modifier cannot be used with a private identifier."
     | AbstractPropertyInNonAbstractClass ->
       "Abstract properties can only appear within an abstract class."
     | AbstractPropertyWithInitializer -> "Abstract properties cannot have an initializer."

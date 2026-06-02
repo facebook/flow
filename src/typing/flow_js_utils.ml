@@ -58,6 +58,38 @@ let rec drop_resolved cx t =
   | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
   | _ -> t
 
+(* Does [t] carry an [abstract] bit? Walks the wrappers used by
+   [extract_class_ctor_t] / [collect_construct_ts] so that
+   [Class<AbstractFoo>], a poly class, a [GenericT] bound, an
+   [AnnotT]-wrapped imported type, a [TypeAppT] instantiation, etc., all
+   reach the underlying [InstanceT].
+
+   Connective semantics:
+   - [UnionT]: any-abstract. A runtime value satisfying the union may be
+     the abstract branch, so [new]/assignment is unsafe.
+   - [IntersectionT]: any-abstract. The runtime class object must satisfy
+     every branch, so if any branch is abstract the value IS that
+     abstract class.
+
+   Not handled (intentionally): [MaybeT]/[OptionalT]/[EvalT]. None of
+   these are expected at a constructor or constructor-assignment site —
+   null-check or evaluation runs first — and the catch-all [false] is a
+   safe miss (the existing typing pipeline rejects the construct on
+   other grounds before we get here). *)
+let rec is_class_abstract cx t =
+  match drop_resolved cx t with
+  | DefT (_, InstanceT { inst = { inst_abstract; _ }; _ }) -> inst_abstract
+  | ThisInstanceT (_, { inst = { inst_abstract; _ }; _ }, _, _) -> inst_abstract
+  | DefT (_, ClassT inner) -> is_class_abstract cx inner
+  | DefT (_, PolyT { t_out; _ }) -> is_class_abstract cx t_out
+  | ThisTypeAppT (_, c, _, _) -> is_class_abstract cx c
+  | TypeAppT { type_; _ } -> is_class_abstract cx type_
+  | GenericT { bound; _ } -> is_class_abstract cx bound
+  | AnnotT (_, inner, _) -> is_class_abstract cx inner
+  | UnionT (_, rep) -> List.exists (is_class_abstract cx) (UnionRep.members rep)
+  | IntersectionT (_, rep) -> List.exists (is_class_abstract cx) (InterRep.members rep)
+  | _ -> false
+
 (* Both writer pipelines ([type_annotation.ml] and [type_sig_merge.ml]) store
    the raw funtype produced by their respective signature lowering. Subtyping
    requires the construct-sig form (unbound [this_t], optional [return_t]

@@ -1,3 +1,6 @@
+// With `experimental.abstract_classes` OFF, every `abstract` class/member
+// must continue to fire [unsupported-syntax].
+
 abstract class Foo { // ERROR
   abstract getName(): string; // ERROR
 

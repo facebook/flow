@@ -778,6 +778,10 @@ and 'loc t' =
       kind: ts_syntax_kind;
       loc: 'loc;
     }
+  | EAbstractClass of {
+      kind: 'loc abstract_error_kind;
+      loc: 'loc;
+    }
   | EVarianceKeyword of {
       kind:
         [ `Writeonly | `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ];
@@ -1895,6 +1899,19 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidCatchParameterAnnotation { loc; ts_utility_syntax } ->
     EInvalidCatchParameterAnnotation { loc = f loc; ts_utility_syntax }
   | ETSSyntax { kind; loc } -> ETSSyntax { kind; loc = f loc }
+  | EAbstractClass { kind; loc } ->
+    let kind =
+      match kind with
+      | AbstractClassInstantiation -> AbstractClassInstantiation
+      | AbstractMemberNotImplemented { class_name; member_name; member_def_loc } ->
+        AbstractMemberNotImplemented { class_name; member_name; member_def_loc = f member_def_loc }
+      | AbstractMemberOnNonAbstractClass { member_name } ->
+        AbstractMemberOnNonAbstractClass { member_name }
+      | AbstractPrivateMember { member_name } -> AbstractPrivateMember { member_name }
+      | AbstractSuperCall { member_name } -> AbstractSuperCall { member_name }
+      | AbstractConstructorAssignedToNonAbstract -> AbstractConstructorAssignedToNonAbstract
+    in
+    EAbstractClass { kind; loc = f loc }
   | EVarianceKeyword { kind; loc } -> EVarianceKeyword { kind; loc = f loc }
   | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
     EInvalidBinaryArith
@@ -2374,6 +2391,7 @@ let util_use_op_of_msg nope util = function
   | EBigIntNumCoerce _
   | EInvalidCatchParameterAnnotation _
   | ETSSyntax _
+  | EAbstractClass _
   | EVarianceKeyword _
   | EInvalidBinaryArith _
   | EInvalidMappedType _
@@ -2590,6 +2608,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidMappedType { loc; _ }
   | EInvalidTemplateLiteralType { loc; _ }
   | ETSSyntax { loc; _ }
+  | EAbstractClass { loc; _ }
   | EVarianceKeyword { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
   | EReferenceInDefault (_, _, loc)
@@ -3842,6 +3861,7 @@ let friendly_message_of_msg = function
     | AbstractMethod -> Normal MessageAbstractMethod
     | DeprecatedTypeParamColon -> Normal MessageDeprecatedTypeParamColonBound
   end
+  | EAbstractClass { kind; _ } -> Normal (MessageAbstract kind)
   | EVarianceKeyword { kind = `Writeonly; _ } -> Normal MessageVarianceKeywordWriteonly
   | EVarianceKeyword { kind = (`Plus _ | `Minus _) as sigil; _ } ->
     Normal (MessageDeprecatedVarianceSigil sigil)
@@ -4333,6 +4353,7 @@ let error_code_of_message err : error_code option =
     | _ -> None
   end
   | ETSSyntax _ -> Some UnsupportedSyntax
+  | EAbstractClass _ -> Some InvalidAbstract
   | EVarianceKeyword _ -> Some UnsupportedSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupportWithAvailablePlatforms _ -> Some MissingPlatformSupport

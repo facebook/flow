@@ -6,7 +6,7 @@
  */
 
 // =============================================================================
-// OCaml: Func_class_sig_types from flow/src/typing/func_class_sig_types.ml
+// Func_class_sig_types (ported from func_class_sig_types.rs)
 // =============================================================================
 
 use std::collections::BTreeMap;
@@ -62,7 +62,6 @@ impl ConfigTypes for StmtConfigTypes {
     type Ast = Ast<(ALoc, Type)>;
 }
 
-// module Param
 pub mod param {
     use super::*;
 
@@ -90,7 +89,7 @@ pub mod param {
 }
 
 // =============================================================================
-// module Func
+// Func
 // =============================================================================
 
 pub mod func {
@@ -166,7 +165,7 @@ pub mod func {
 }
 
 // =============================================================================
-// module Class
+// Class
 // =============================================================================
 
 pub mod class {
@@ -187,7 +186,7 @@ pub mod class {
     /// [canonicalize_imported_type]'s [fix_this_instance], destroying the
     /// polymorphic-[this] shape). The raw override is computed via the parallel
     /// [_for_extends] import path that bypasses canonicalization. The class-sig
-    /// consumer ([class_sig.ml]) wraps this raw override in [TypeUtil.this_typeapp]
+    /// consumer ([class_sig.rs]) wraps this raw override in [TypeUtil.this_typeapp]
     /// so polymorphic [this] rebinds correctly across module boundaries. For
     /// namespace-member references like [NS.I] the converted [c] is already raw
     /// (the namespace's [types_tmap] stores raw exporter-side types), so the
@@ -306,6 +305,10 @@ pub mod class {
         pub calls: Vec<Type>,
         pub constructs: Vec<Type>,
         pub dict: ObjectDict,
+        /// Names of members in this signature (own/proto/getter/setter) that
+        /// were declared with the `abstract` modifier. Source of truth for
+        /// which names contribute to `insttype.inst_abstract_props`.
+        pub abstract_members: std::collections::BTreeSet<FlowSmolStr>,
     }
 
     impl<C: ConfigTypes> Clone for Signature<C> {
@@ -322,6 +325,7 @@ pub mod class {
                 calls: self.calls.clone(),
                 constructs: self.constructs.clone(),
                 dict: self.dict.clone(),
+                abstract_members: self.abstract_members.clone(),
             }
         }
     }
@@ -337,6 +341,9 @@ pub mod class {
         pub constructor: Vec<FuncInfo<C>>,
         pub static_: Signature<C>,
         pub instance: Signature<C>,
+        /// Whether the class declaration carried the `abstract` class modifier.
+        /// Propagated to `insttype.inst_abstract`.
+        pub abstract_: bool,
     }
 
     impl<C: ConfigTypes> Clone for Class<C> {
@@ -351,6 +358,7 @@ pub mod class {
                 constructor: self.constructor.clone(),
                 static_: self.static_.clone(),
                 instance: self.instance.clone(),
+                abstract_: self.abstract_,
             }
         }
     }

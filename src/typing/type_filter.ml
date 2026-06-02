@@ -904,6 +904,8 @@ and tag_of_inst inst =
     class_private_methods = _;
     class_private_static_fields = _;
     class_private_static_methods = _;
+    inst_abstract = _;
+    inst_abstract_props = _;
   } =
     inst
   in

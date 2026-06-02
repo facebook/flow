@@ -47,6 +47,7 @@ module Make
         calls = [];
         constructs = [];
         dict = None;
+        abstract_members = SSet.empty;
       }
     in
     let constructor = [] in
@@ -55,7 +56,18 @@ module Make
       empty_sig reason
     in
     let instance = empty_sig reason in
-    { id; class_name; class_loc; tparams; tparams_map; super; constructor; static; instance }
+    {
+      id;
+      class_name;
+      class_loc;
+      tparams;
+      tparams_map;
+      super;
+      constructor;
+      static;
+      instance;
+      abstract = false;
+    }
 
   let structural x =
     match x.super with
@@ -131,7 +143,27 @@ module Make
     | [{ id_loc = None; _ }] -> add_constructor ~id_loc ~func_sig ?set_asts ?set_type s
     | _ -> append_constructor ~id_loc ~func_sig ?set_asts ?set_type s
 
-  let add_field' ~static name fld x =
+  (* Track abstractness only on the instance side — [inst_abstract_props]
+     reads only [s.instance.abstract_members]; static-side writes are dead.
+     Add-only: a name in [abstract_members] means "some declared shape of
+     this name is abstract." Removing on [~abstract:false] would be wrong
+     for accessor pairs — an abstract [get x] followed by a concrete [set x]
+     shares the name [x], and a remove would silently clear the getter
+     obligation. The in-class shadow case the prior implementation tried to
+     handle (`abstract x; x = 0;` inside one class) is parser-blocked as a
+     duplicate member.
+
+     Name-only granularity matches TS: [abstract get x] + [abstract set x]
+     collapse to a single obligation "x", and a subclass that implements
+     either half satisfies it. (TS2515 fires only when a subclass omits
+     both halves.) *)
+  let update_abstract_members ~abstract ~static name s =
+    if static || not abstract then
+      s.abstract_members
+    else
+      SSet.add name s.abstract_members
+
+  let add_field' ?(abstract = false) ~static name fld x =
     let flat = static || structural x in
     map_sig
       ~static
@@ -163,11 +195,12 @@ module Make
             else
               s.setters
             );
+          abstract_members = update_abstract_members ~abstract ~static name s;
         })
       x
 
-  let add_field ~static name loc polarity field x =
-    add_field' ~static name (Some loc, polarity, field) x
+  let add_field ~static ?(abstract = false) name loc polarity field x =
+    add_field' ~abstract ~static name (Some loc, polarity, field) x
 
   let add_indexer ~static dict x = map_sig ~static (fun s -> { s with dict = Some dict }) x
 
@@ -178,7 +211,7 @@ module Make
     let t = Type.StrModuleT.why r in
     add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
-  let add_proto_field name loc polarity field x =
+  let add_proto_field ?(abstract = false) name loc polarity field x =
     map_sig
       ~static:false
       (fun s ->
@@ -188,11 +221,20 @@ module Make
           methods = SMap.remove name s.methods;
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
+          abstract_members = update_abstract_members ~abstract ~static:false name s;
         })
       x
 
   let add_method
-      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
+      ~static
+      ?(abstract = false)
+      name
+      ~id_loc
+      ~this_write_loc
+      ~func_sig
+      ?(set_asts = ignore)
+      ?(set_type = ignore)
+      x =
     let flat = static || structural x in
     let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
@@ -210,6 +252,7 @@ module Make
           methods = SMap.add name (Nel.one func_info) s.methods;
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
+          abstract_members = update_abstract_members ~abstract ~static name s;
         })
       x
 
@@ -217,7 +260,15 @@ module Make
      bahvior of interfaces and declared classes, which interpret duplicate
      definitions as branches of a single overloaded method. *)
   let append_method
-      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
+      ~static
+      ?(abstract = false)
+      name
+      ~id_loc
+      ~this_write_loc
+      ~func_sig
+      ?(set_asts = ignore)
+      ?(set_type = ignore)
+      x =
     let flat = static || structural x in
     let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
@@ -238,6 +289,7 @@ module Make
             | None -> SMap.add name (Nel.one func_info) s.methods);
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
+          abstract_members = update_abstract_members ~abstract ~static name s;
         })
       x
 
@@ -249,7 +301,15 @@ module Make
   let append_construct t = map_sig ~static:false (fun s -> { s with constructs = t :: s.constructs })
 
   let add_getter
-      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
+      ~static
+      ?(abstract = false)
+      name
+      ~id_loc
+      ~this_write_loc
+      ~func_sig
+      ?(set_asts = ignore)
+      ?(set_type = ignore)
+      x =
     let flat = static || structural x in
     let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
@@ -266,11 +326,20 @@ module Make
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           getters = SMap.add name func_info s.getters;
+          abstract_members = update_abstract_members ~abstract ~static name s;
         })
       x
 
   let add_setter
-      ~static name ~id_loc ~this_write_loc ~func_sig ?(set_asts = ignore) ?(set_type = ignore) x =
+      ~static
+      ?(abstract = false)
+      name
+      ~id_loc
+      ~this_write_loc
+      ~func_sig
+      ?(set_asts = ignore)
+      ?(set_type = ignore)
+      x =
     let flat = static || structural x in
     let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
@@ -287,6 +356,7 @@ module Make
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           setters = SMap.add name func_info s.setters;
+          abstract_members = update_abstract_members ~abstract ~static name s;
         })
       x
 
@@ -559,6 +629,12 @@ module Make
           s.instance.private_methods;
       class_private_static_methods =
         methods_to_prop_map ~cx ~this_default:(private_this_type s.static) s.static.private_methods;
+      inst_abstract = s.abstract;
+      inst_abstract_props =
+        SSet.fold
+          (fun name acc -> NameUtils.Set.add (Reason.OrdinaryName name) acc)
+          s.instance.abstract_members
+          NameUtils.Set.empty;
     }
 
   let mk_this ~self cx reason =
@@ -900,10 +976,147 @@ module Make
          )
       )
 
+  (* Walk super chain leaf→root collecting both:
+     - [obligations]: names declared abstract by some ancestor
+     - [satisfied]: names concretely implemented by some intermediate
+       ancestor (shallower than the abstract declaration)
+     A name is only an open obligation if it's in [obligations] and
+     NOT in [satisfied] and NOT in [own_concrete_names]. Per-name
+     [first_loc] tracking uses the SHALLOWEST abstract decl so the
+     error points at the closest ancestor that left it open. *)
+  let post_inference_check_abstract_obligations
+      cx ~super ~class_name ~class_loc ~def_loc ~own_concrete_names () =
+    let seen = ref Type.Properties.Set.empty in
+    let obligations = ref SMap.empty in
+    let satisfied = ref SSet.empty in
+    let add_obligation name loc =
+      if not (SMap.mem name !obligations) then obligations := SMap.add name loc !obligations
+    in
+    let process_inst (inst : Type.insttype) =
+      if Type.Properties.Set.mem inst.Type.own_props !seen then
+        false
+      else begin
+        seen := Type.Properties.Set.add inst.Type.own_props !seen;
+        let own_props = Context.find_props cx inst.Type.own_props in
+        let proto_props = Context.find_props cx inst.Type.proto_props in
+        (* Concrete impls on this ancestor satisfy any abstract
+           obligation from a deeper (further-from-leaf) ancestor.
+           We rely on leaf→root traversal: by the time we add a name
+           to [obligations], any concrete impl above us has already
+           been added to [satisfied]. *)
+        let add_concrete name _ =
+          let (Reason.OrdinaryName name_str) = name in
+          if not (NameUtils.Set.mem name inst.Type.inst_abstract_props) then
+            satisfied := SSet.add name_str !satisfied
+        in
+        NameUtils.Map.iter add_concrete own_props;
+        NameUtils.Map.iter add_concrete proto_props;
+        NameUtils.Set.iter
+          (fun name ->
+            let (Reason.OrdinaryName name_str) = name in
+            if not (SSet.mem name_str !satisfied) then
+              let prop_loc =
+                match NameUtils.Map.find_opt name own_props with
+                | Some p -> Type.Property.first_loc p
+                | None ->
+                  (match NameUtils.Map.find_opt name proto_props with
+                  | Some p -> Type.Property.first_loc p
+                  | None -> None)
+              in
+              let loc = Base.Option.value prop_loc ~default:def_loc in
+              add_obligation name_str loc)
+          inst.Type.inst_abstract_props;
+        true
+      end
+    in
+    let rec walk t =
+      let concretes =
+        Context.with_suppressed_errors cx (fun () ->
+            Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+        )
+      in
+      List.iter walk_one concretes
+    and walk_one t =
+      match t with
+      | Type.ThisInstanceT (_, inst_t, _, _)
+      | Type.DefT (_, Type.InstanceT inst_t) ->
+        if process_inst inst_t.Type.inst then walk inst_t.Type.super
+      | Type.IntersectionT (_, rep) -> List.iter walk_one (Type.InterRep.members rep)
+      (* Union supers are not a real Flow construct here — a class
+         can't [extends (A | B)] — and the previous implementation
+         walked branches with shared [satisfied] state, letting a
+         concrete impl in one branch silently discharge an abstract
+         obligation declared only in another. We don't model the
+         correct per-branch semantics; fall through and skip.
+         If union supers ever become reachable, implement per-branch
+         [satisfied] with [intersect across branches] semantics. *)
+      | _ -> ()
+    in
+    walk super;
+    (* Emit one error per unimplemented obligation. *)
+    SMap.iter
+      (fun name member_def_loc ->
+        if (not (SSet.mem name own_concrete_names)) && not (SSet.mem name !satisfied) then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EAbstractClass
+               {
+                 kind =
+                   Flow_intermediate_error_types.AbstractMemberNotImplemented
+                     { class_name; member_name = name; member_def_loc };
+                 loc = class_loc;
+               }
+            ))
+      !obligations
+
+  (* For each abstract member inherited via [super], verify that [x]
+     implements it. Members [x] itself re-declared as abstract do not
+     satisfy the obligation (those names live in [x.instance.abstract_members]).
+     Skipped entirely when [x] is itself abstract — an abstract subclass may
+     leave obligations open for its own concrete subclasses. Also skipped
+     when the experimental flag is off: [inst_abstract_props] is guaranteed
+     empty everywhere, so the walk would always find no obligations — pure
+     wasted work on every non-abstract class in every Flow root. *)
+  let check_abstract_obligations cx def_reason x =
+    if (not (Context.abstract_classes cx)) || x.Types.abstract then
+      ()
+    else
+      (* Set of names [x] re-declares as abstract; these do not implement
+         any inherited obligation. *)
+      let own_abstract = x.instance.Types.abstract_members in
+      (* Names of [x]'s own concrete instance members (fields, methods,
+         getters, setters, proto fields). These satisfy obligations. *)
+      let own_concrete_names =
+        let s = x.instance in
+        let add_keys m acc = SMap.fold (fun k _ acc -> SSet.add k acc) m acc in
+        SSet.empty
+        |> add_keys s.Types.fields
+        |> add_keys s.Types.proto_fields
+        |> add_keys s.Types.methods
+        |> add_keys s.Types.getters
+        |> add_keys s.Types.setters
+        |> fun s -> SSet.diff s own_abstract
+      in
+      let (super, _) = supertype cx x in
+      let class_name = x.Types.class_name in
+      let class_loc = x.Types.class_loc in
+      let def_loc = Reason.loc_of_reason def_reason in
+      Context.add_post_inference_validation_callback
+        cx
+        (post_inference_check_abstract_obligations
+           cx
+           ~super
+           ~class_name
+           ~class_loc
+           ~def_loc
+           ~own_concrete_names
+        )
+
   let check_signature_compatibility cx def_reason x =
     check_super cx def_reason x;
     check_implements cx def_reason x;
-    check_methods cx def_reason x
+    check_methods cx def_reason x;
+    check_abstract_obligations cx def_reason x
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)

@@ -239,6 +239,8 @@ type ('loc, 'a) class_sig =
       proto_props: ('loc, 'a) obj_value_prop smap;
       own_props: ('loc, 'a) obj_value_prop smap;
       dict: 'a obj_annot_dict option;
+      abstract: bool;
+      abstract_props: SSet.t;
     }
 [@@deriving iter, map, show { with_path = false }]
 
@@ -259,6 +261,8 @@ type ('loc, 'a) declare_class_sig =
       constructs: 'a list;
       dict: 'a obj_annot_dict option;
       static_dict: 'a obj_annot_dict option;
+      abstract: bool;
+      abstract_props: SSet.t;
     }
 [@@deriving iter, map, show { with_path = false }]
 
@@ -270,6 +274,12 @@ type ('loc, 'a) interface_sig =
       calls: 'a list;
       constructs: 'a list;
       dict: 'a obj_annot_dict option;
+      (* True only for the inline interface lowered from
+         [abstract new (...) => T]. Regular [interface], inline object types,
+         and declare classes desugared to interfaces all set this to false.
+         Read at [Type_sig_merge.merge_interface] to set [inst_abstract]
+         so the abstract bit survives cross-module type-sig roundtripping. *)
+      abstract: bool;
     }
 [@@deriving iter, map, show { with_path = false }]
 

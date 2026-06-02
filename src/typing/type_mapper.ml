@@ -483,6 +483,8 @@ class virtual ['a] t =
         class_private_methods;
         class_private_static_methods;
         inst_react_dro;
+        inst_abstract;
+        inst_abstract_props;
       } =
         i
       in
@@ -537,6 +539,8 @@ class virtual ['a] t =
           class_private_methods = class_private_methods';
           class_private_static_methods = class_private_static_methods';
           inst_react_dro;
+          inst_abstract;
+          inst_abstract_props;
         }
 
     method instance_type cx map_cx t =

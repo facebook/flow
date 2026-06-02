@@ -2893,6 +2893,18 @@ struct
           ) ->
           let reason_o = replace_desc_reason RConstructorVoidReturn reason in
           let annot_loc = loc_of_reason reason_op in
+          (* Reject [new C(...)] where [C] is an abstract class. We do not
+             short-circuit — let the constructor call proceed so downstream
+             typing still produces sensible results. *)
+          if Flow_js_utils.is_class_abstract cx this then
+            add_output
+              cx
+              (Error_message.EAbstractClass
+                 {
+                   kind = Flow_intermediate_error_types.AbstractClassInstantiation;
+                   loc = annot_loc;
+                 }
+              );
           (* early error if type args passed to non-polymorphic class *)
           Base.Option.iter targs ~f:(fun _ ->
               add_output
@@ -2957,10 +2969,19 @@ struct
            sig is the [inst_construct_t] slot plus anything inherited via
            [extends]; [collect_construct_ts] collects both in
            derived-first order. *)
-        | ( (DefT (reason_l, InstanceT _) as l),
+        | ( (DefT (reason_l, InstanceT { inst = { inst_abstract; _ }; _ }) as l),
             ConstructorT
               { use_op; reason = reason_op; targs; args; tout = t; return_hint; specialized_ctor }
           ) ->
+          if inst_abstract then
+            add_output
+              cx
+              (Error_message.EAbstractClass
+                 {
+                   kind = Flow_intermediate_error_types.AbstractClassInstantiation;
+                   loc = loc_of_reason reason_op;
+                 }
+              );
           (match combine_construct_ts (collect_construct_ts cx l) with
           | Some construct_t ->
             let ret =
@@ -4158,6 +4179,7 @@ struct
                         inst_construct_t;
                         inst_kind = InterfaceKind _;
                         inst_dict;
+                        inst_abstract = upper_inst_abstract;
                         _;
                       };
                     _;
@@ -4169,6 +4191,7 @@ struct
             cx
             trace
             ~use_op
+            ~upper_inst_abstract
             t
             reason_inst
             (own_props, proto_props, inst_call_t, inst_construct_t, inst_dict);
@@ -4975,6 +4998,7 @@ struct
                             inst_construct_t;
                             inst_kind;
                             inst_dict;
+                            inst_abstract = upper_inst_abstract;
                             _;
                           };
                         _;
@@ -5017,6 +5041,7 @@ struct
             cx
             trace
             ~use_op
+            ~upper_inst_abstract
             l
             reason_inst
             (own_props, proto_props, inst_call_t, inst_construct_t, inst_dict);
@@ -5775,6 +5800,8 @@ struct
         class_private_methods = _;
         class_private_static_fields = _;
         class_private_static_methods = _;
+        inst_abstract = _;
+        inst_abstract_props = _;
       } =
     any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
     match inst_kind with
@@ -6055,6 +6082,7 @@ struct
       cx
       trace
       ~use_op
+      ?(upper_inst_abstract = false)
       lower
       reason_struct
       (own_props_id, proto_props_id, call_id, construct_id, inst_dict) =
@@ -6095,6 +6123,7 @@ struct
         cx
         trace
         ~use_op
+        ~upper_inst_abstract
         lower
         reason_struct
         (own_props_id, proto_props_id, call_id, construct_id, inst_dict)
@@ -6103,6 +6132,7 @@ struct
       cx
       trace
       ~use_op
+      ?(upper_inst_abstract = false)
       lower
       reason_struct
       (own_props_id, proto_props_id, call_id, construct_id, inst_dict) =
@@ -6311,6 +6341,18 @@ struct
               type-check time, just verbose in [ty_normalizer] output.
               Deduping would need structural equality on funtypes and isn't
               worth the extra machinery here. *)
+           (* Detect abstract-vs-non-abstract assignment: lower carries an
+              abstract bit (either an abstract class via [ClassT] or an
+              [abstract new () => T] interface) and upper does not. *)
+           if (not upper_inst_abstract) && Flow_js_utils.is_class_abstract cx lower then
+             add_output
+               cx
+               (Error_message.EAbstractClass
+                  {
+                    kind = Flow_intermediate_error_types.AbstractConstructorAssignedToNonAbstract;
+                    loc = loc_of_reason reason_struct;
+                  }
+               );
            let rec dispatch_lower lower =
              match drop_resolved cx lower with
              (* Unwrap wrapping types and re-dispatch so the InstanceT /

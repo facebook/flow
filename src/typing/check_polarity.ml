@@ -89,6 +89,8 @@ end = struct
         class_private_static_fields = _;
         class_private_methods;
         class_private_static_methods = _;
+        inst_abstract = _;
+        inst_abstract_props = _;
       } =
         inst
       in

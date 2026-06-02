@@ -68,7 +68,7 @@ module type S = sig
     id_loc:ALoc.t option -> func_sig:func_sig -> ?set_asts:set_asts -> ?set_type:set_type -> t -> t
 
   (** Add field to signature. *)
-  val add_field : static:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
+  val add_field : static:bool -> ?abstract:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 
   (** Add indexer to signature. *)
   val add_indexer : static:bool -> Type.dicttype -> t -> t
@@ -80,7 +80,7 @@ module type S = sig
   val add_name_field : t -> t
 
   (** Add proto field to signature. *)
-  val add_proto_field : string -> ALoc.t -> Polarity.t -> field -> t -> t
+  val add_proto_field : ?abstract:bool -> string -> ALoc.t -> Polarity.t -> field -> t -> t
 
   (** Add private field to signature. *)
   val add_private_field : string -> ALoc.t -> Polarity.t -> field -> static:bool -> t -> t
@@ -112,6 +112,7 @@ module type S = sig
       overwrite former ones. *)
   val add_method :
     static:bool ->
+    ?abstract:bool ->
     string ->
     id_loc:ALoc.t ->
     this_write_loc:ALoc.t option ->
@@ -128,6 +129,7 @@ module type S = sig
       of a single overloaded method. *)
   val append_method :
     static:bool ->
+    ?abstract:bool ->
     string ->
     id_loc:ALoc.t ->
     this_write_loc:ALoc.t option ->
@@ -144,6 +146,7 @@ module type S = sig
   (** Add getter to signature. *)
   val add_getter :
     static:bool ->
+    ?abstract:bool ->
     string ->
     id_loc:ALoc.t ->
     this_write_loc:ALoc.t option ->
@@ -156,6 +159,7 @@ module type S = sig
   (** Add setter to signature. *)
   val add_setter :
     static:bool ->
+    ?abstract:bool ->
     string ->
     id_loc:ALoc.t ->
     this_write_loc:ALoc.t option ->
