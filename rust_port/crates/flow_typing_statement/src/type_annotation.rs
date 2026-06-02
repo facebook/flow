@@ -3399,7 +3399,7 @@ fn convert_inner<'a>(
                 // Flow has no notion of abstract classes; flag `abstract new (...) => T`
                 // the same way an interface body's `abstract m(): T` is flagged in
                 // [add_interface_properties].
-                if *abstract_ && !cx.metadata().frozen.abstract_classes {
+                if *abstract_ && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(
@@ -3459,7 +3459,7 @@ fn convert_inner<'a>(
                 );
                 let construct_id = cx.make_call_prop(ctor_t);
                 let iface_t = class_sig::thistype(cx, &iface_sig);
-                let mark_abstract = *abstract_ && cx.abstract_classes();
+                let mark_abstract = *abstract_ && cx.tslib_syntax();
                 let with_construct = {
                     use std::rc::Rc;
 
@@ -4268,7 +4268,7 @@ fn convert_object<'a>(
                 let variance = &prop.variance;
                 let method = prop.method;
                 let abstract_ = prop.abstract_;
-                if abstract_ && !cx.metadata().frozen.abstract_classes {
+                if abstract_ && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -6623,8 +6623,8 @@ fn add_interface_properties<'a>(
                     );
                     prop_asts.push(error_prop);
                 } else {
-                    let abstract_on = np.abstract_ && cx.abstract_classes();
-                    if np.abstract_ && !cx.metadata().frozen.abstract_classes {
+                    let abstract_on = np.abstract_ && cx.tslib_syntax();
+                    if np.abstract_ && !cx.tslib_syntax() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -8633,7 +8633,7 @@ pub fn mk_declare_class_sig<'a>(
         );
         // All classes have a static "name" property.
         class_sig::add_name_field(&mut iface_sig);
-        let abstract_on = decl.abstract_ && cx.abstract_classes();
+        let abstract_on = decl.abstract_ && cx.tslib_syntax();
         if abstract_on {
             iface_sig.abstract_ = true;
         }

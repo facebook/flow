@@ -65,8 +65,6 @@ val libs : config -> (string option * string) list
 val enabled_rollouts : config -> string SMap.t
 
 (* options *)
-val abstract_classes : config -> bool
-
 val all : config -> bool option
 
 val assert_operator : config -> Options.AssertOperator.t

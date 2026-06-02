@@ -30,7 +30,6 @@ pub struct TypeSigOptions {
     pub locs_to_dirtify: Vec<Loc>,
     pub is_ts_file: bool,
     pub tslib_syntax: bool,
-    pub abstract_classes: bool,
 }
 
 impl TypeSigOptions {
@@ -77,7 +76,6 @@ impl TypeSigOptions {
             for_builtins: false,
             is_ts_file: flow_common::files::has_ts_ext(file),
             tslib_syntax: options.tslib_syntax,
-            abstract_classes: options.abstract_classes,
         }
     }
 
@@ -104,7 +102,6 @@ impl TypeSigOptions {
             locs_to_dirtify: Vec::new(),
             is_ts_file: false,
             tslib_syntax: true,
-            abstract_classes: true,
         }
     }
 }

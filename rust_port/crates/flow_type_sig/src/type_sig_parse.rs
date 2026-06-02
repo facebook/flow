@@ -6368,23 +6368,14 @@ fn annot_with_loc<'arena, 'ast>(
             ..
         } if opts.tslib_syntax => {
             use interface_acc::InterfaceAcc;
-            // Mirror [type_annotation.rs]'s `abstract_classes` gate so the two
-            // pipelines agree on which `abstract new (...) => T` annotations are
-            // accepted. The user-visible error is emitted by type_annotation when
-            // editing the file; here we just refuse to populate the construct
-            // slot so dependency consumers don't observe phantom abstract sigs.
-            if *abstract_ && !opts.abstract_classes {
-                Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc))))
-            } else {
-                let fsig = function_type(false, opts, scope, scopes, tbls, xs, func);
-                let mut acc = InterfaceAcc::empty();
-                acc.append_construct(Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
-                    loc.dupe(),
-                    fsig,
-                ))))));
-                let def = acc.interface_def(*abstract_, vec![]);
-                Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
-            }
+            let fsig = function_type(false, opts, scope, scopes, tbls, xs, func);
+            let mut acc = InterfaceAcc::empty();
+            acc.append_construct(Parsed::Annot(Box::new(ParsedAnnot::FunAnnot(Box::new((
+                loc.dupe(),
+                fsig,
+            ))))));
+            let def = acc.interface_def(*abstract_, vec![]);
+            Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
         }
         TypeInner::ConstructorType { inner: func, .. } => {
             // tslib_syntax off: degrade to Any, matching the TemplateLiteral
@@ -7637,7 +7628,7 @@ fn declare_class_props<'arena, 'ast>(
         // wire that up. Filter [static] OUT of the abstract obligation set so
         // a `declare abstract class { static abstract foo }` does not falsely
         // require subclasses to provide an INSTANCE foo.
-        let is_abstract = p.abstract_ && opts.abstract_classes && !p.static_;
+        let is_abstract = p.abstract_ && opts.tslib_syntax && !p.static_;
         // Skip private properties entirely
         if matches!(
             &p.ts_accessibility,
@@ -10443,7 +10434,7 @@ fn class_def<'arena: 'ast, 'ast>(
         ..
     } = c;
 
-    let abstract_ = *abstract_ && opts.abstract_classes;
+    let abstract_ = *abstract_ && opts.tslib_syntax;
     let mut xs = tparam_stack::TParamStack::new();
     let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
     xs.insert(FlowSmolStr::new_inline("this"));
@@ -10716,7 +10707,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 annot: (fn_loc, f),
                 ts_accessibility,
                 ..
-            }) if opts.abstract_classes => {
+            }) if opts.tslib_syntax => {
                 if (opts.munge
                     && flow_parser_utils::signature_utils::is_munged_property_string(&id.name))
                     || is_ts_private(ts_accessibility)
@@ -10731,7 +10722,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 acc.add_abstract_name(name);
             }
             class::BodyElement::AbstractMethod(_) => {
-                // Reached when [abstract_classes] is off OR when the key is
+                // Reached when [tslib_syntax] is off OR when the key is
                 // non-Identifier (computed / string-literal / number-literal).
                 // Match the precedent for regular Method/Property with computed
                 // keys above (silent drop): the type-sig pipeline doesn't carry
@@ -10746,7 +10737,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 ts_accessibility,
                 variance,
                 ..
-            }) if opts.abstract_classes => {
+            }) if opts.tslib_syntax => {
                 if (opts.munge
                     && flow_parser_utils::signature_utils::is_munged_property_string(&id.name))
                     || is_ts_private(ts_accessibility)
@@ -11190,7 +11181,7 @@ fn declare_class_def<'arena, 'ast>(
         abstract_,
         ..
     } = c;
-    let abstract_ = *abstract_ && opts.abstract_classes;
+    let abstract_ = *abstract_ && opts.tslib_syntax;
     let mut xs = tparam_stack::TParamStack::new();
     let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
     xs.insert(FlowSmolStr::new_inline("this"));

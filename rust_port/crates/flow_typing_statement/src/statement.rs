@@ -4878,7 +4878,7 @@ pub fn declare_class<'a>(
     let id = &decl.id;
     let name = &id.name;
     let abstract_ = decl.abstract_;
-    if abstract_ && !cx.abstract_classes() {
+    if abstract_ && !cx.tslib_syntax() {
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -6457,7 +6457,7 @@ fn super_<'a>(
 // EAbstractClass.AbstractSuperCall. Walking the full chain is required
 // because the immediate super may be an abstract subclass that doesn't
 // re-declare [name] but inherits an abstract decl from a grandparent.
-// Gated on [Context.abstract_classes]: with the flag off,
+// Gated on [Context.tslib_syntax]: with the flag off,
 // [inst_abstract_props] is guaranteed empty everywhere, so this walk
 // would run on every super-access in every Flow root and always find
 // nothing.
@@ -6467,7 +6467,7 @@ fn check_super_abstract<'a>(
     name: &Name,
     super_loc: ALoc,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    if !cx.abstract_classes() {
+    if !cx.tslib_syntax() {
         return Ok(());
     }
     let name_str = name.as_smol_str().dupe();
@@ -16001,7 +16001,7 @@ pub fn mk_class_sig<'a>(
                     )
                 };
                 if abstract_ {
-                    if !cx.abstract_classes() {
+                    if !cx.tslib_syntax() {
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -17439,7 +17439,7 @@ pub fn mk_class_sig<'a>(
                         }
                         BodyElement::AbstractMethod(abs_meth) => {
                             let loc = &abs_meth.loc;
-                            if !cx.abstract_classes() {
+                            if !cx.tslib_syntax() {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
@@ -17617,7 +17617,7 @@ pub fn mk_class_sig<'a>(
                         }
                         BodyElement::AbstractProperty(abs_prop) => {
                             let loc = &abs_prop.loc;
-                            if !cx.abstract_classes() {
+                            if !cx.tslib_syntax() {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {

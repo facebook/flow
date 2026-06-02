@@ -1469,8 +1469,8 @@ let make_options
   File_key.set_flowlib_root (File_path.to_string flowlib_dir);
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
-    Options.opt_abstract_classes = FlowConfig.abstract_classes flowconfig;
-    opt_all = options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
+    Options.opt_all =
+      options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
     opt_assert_operator = FlowConfig.assert_operator flowconfig;
     opt_autoimports =
       (not options_flags.no_autoimports)

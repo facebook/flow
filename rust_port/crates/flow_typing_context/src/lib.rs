@@ -152,7 +152,6 @@ pub struct FrozenMetadata {
     pub slow_to_check_logging: SlowToCheckLogging,
     pub verbose: Option<Arc<Verbose>>,
 
-    pub abstract_classes: bool,
     pub assert_operator: AssertOperator,
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
@@ -218,7 +217,6 @@ impl Default for FrozenMetadata {
             include_suppressions: false,
             slow_to_check_logging: SlowToCheckLogging::default(),
             verbose: None,
-            abstract_classes: false,
             assert_operator: AssertOperator::Disabled,
             automatic_require_default: false,
             babel_loose_array_spread: false,
@@ -625,7 +623,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             verbose: options.verbose.dupe(),
             slow_to_check_logging: options.slow_to_check_logging,
 
-            abstract_classes: options.abstract_classes,
             automatic_require_default: options.automatic_require_default,
             babel_loose_array_spread: options.babel_loose_array_spread,
             casting_syntax: options.casting_syntax,
@@ -761,7 +758,6 @@ pub fn docblock_overrides(
         let frozen = Rc::make_mut(&mut metadata.frozen);
         frozen.ts_syntax = true;
         frozen.tslib_syntax = true;
-        frozen.abstract_classes = true;
         frozen.ts_utility_syntax = true;
     }
 
@@ -996,10 +992,6 @@ impl<'cx> Context<'cx> {
 
     pub fn metadata(&self) -> &Metadata {
         &self.0.metadata
-    }
-
-    pub fn abstract_classes(&self) -> bool {
-        self.0.metadata.frozen.abstract_classes
     }
 
     pub fn babel_loose_array_spread(&self) -> bool {

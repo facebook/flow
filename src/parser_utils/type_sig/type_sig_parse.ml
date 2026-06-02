@@ -3222,19 +3222,11 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Symbol _ -> Annot (Symbol loc)
     | T.UniqueSymbol _ -> Annot (UniqueSymbol loc)
     | T.ConstructorType { T.ConstructorType.abstract_; func } when opts.tslib_syntax ->
-      (* Mirror [type_annotation.ml]'s `abstract_classes` gate so the two
-         pipelines agree on which `abstract new (...) => T` annotations are
-         accepted. The user-visible error is emitted by type_annotation when
-         editing the file; here we just refuse to populate the construct
-         slot so dependency consumers don't observe phantom abstract sigs. *)
-      if abstract_ && not opts.abstract_classes then
-        Annot (Any loc)
-      else
-        let fsig = function_type opts scope tbls xs func in
-        let acc = InterfaceAcc.empty in
-        let acc = InterfaceAcc.append_construct (Annot (FunAnnot (loc, fsig))) acc in
-        let def = InterfaceAcc.interface_def ~abstract:abstract_ [] acc in
-        Annot (InlineInterface (loc, def))
+      let fsig = function_type opts scope tbls xs func in
+      let acc = InterfaceAcc.empty in
+      let acc = InterfaceAcc.append_construct (Annot (FunAnnot (loc, fsig))) acc in
+      let def = InterfaceAcc.interface_def ~abstract:abstract_ [] acc in
+      Annot (InlineInterface (loc, def))
     | T.ConstructorType { T.ConstructorType.func; _ } ->
       (* tslib_syntax off: degrade to Any, matching the TemplateLiteral
          pattern above. type_annotation surfaces the user-facing error. *)
@@ -4070,7 +4062,7 @@ and declare_class_props =
        wire that up. Filter [static] OUT of the abstract obligation set so
        a `declare abstract class { static abstract foo }` does not falsely
        require subclasses to provide an INSTANCE foo. *)
-    let is_abstract = abstract && opts.abstract_classes && not static in
+    let is_abstract = abstract && opts.tslib_syntax && not static in
     (* Skip private properties entirely *)
     match ts_accessibility with
     | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> acc
@@ -5871,7 +5863,7 @@ and class_def =
                 comments = _;
               }
             )
-          when opts.abstract_classes ->
+          when opts.tslib_syntax ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
           else if is_ts_private ts_accessibility then
@@ -5884,7 +5876,7 @@ and class_def =
             |> Acc.add_method ~static:false name id_loc fn_loc ~async:false ~generator:false def
             |> Acc.add_abstract_name name
         | C.Body.AbstractMethod _ ->
-          (* Reached when [abstract_classes] is off OR when the key is
+          (* Reached when [tslib_syntax] is off OR when the key is
              non-Identifier (computed / string-literal / number-literal).
              Match the precedent for regular Method/Property with computed
              keys above (silent drop): the type-sig pipeline doesn't carry
@@ -5904,7 +5896,7 @@ and class_def =
                 comments = _;
               }
             )
-          when opts.abstract_classes ->
+          when opts.tslib_syntax ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
           else if is_ts_private ts_accessibility then
@@ -5955,7 +5947,7 @@ and class_def =
     } =
       decl
     in
-    let abstract = abstract && opts.abstract_classes in
+    let abstract = abstract && opts.tslib_syntax in
     let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
     let extends = mk_extends opts scope tbls xs extends in
@@ -6212,7 +6204,7 @@ let declare_class_def =
     } =
       decl
     in
-    let abstract = abstract && opts.abstract_classes in
+    let abstract = abstract && opts.tslib_syntax in
     let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
     let extends = mk_extends opts scope tbls xs id extends in

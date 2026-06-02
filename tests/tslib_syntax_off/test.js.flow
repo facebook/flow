@@ -137,3 +137,16 @@ declare class DeclareOverrideTest extends Base {
 
 // satisfies expression
 1 satisfies number; // ERROR
+
+// Abstract classes / methods
+abstract class AbstractFoo { // ERROR
+  abstract getName(): string; // ERROR
+
+  concreteMethod(): void {}
+}
+
+declare abstract class AbstractBar { // ERROR
+  abstract getName(): string; // ERROR
+
+  meth(): void;
+}

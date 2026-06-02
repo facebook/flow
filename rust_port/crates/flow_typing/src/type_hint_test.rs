@@ -286,7 +286,6 @@ mod tests {
                 locs_to_dirtify: vec![],
                 is_ts_file: false,
                 tslib_syntax: true,
-                abstract_classes: true,
             };
             let (_, master_cx) = merge::merge_lib_files(
                 &flow_common::flow_projects::ProjectsOptions::default(),

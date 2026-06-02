@@ -81,7 +81,6 @@ module SignatureVerification = struct
         locs_to_dirtify = [];
         is_ts_file = Files.has_ts_ext file;
         tslib_syntax = Options.tslib_syntax options;
-        abstract_classes = Options.abstract_classes options;
       }
     in
     let (sig_errors, locs, _) =

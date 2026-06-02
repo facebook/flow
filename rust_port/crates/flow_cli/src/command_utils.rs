@@ -2004,7 +2004,6 @@ pub(super) fn make_options(
         strict_mode,
         options:
             flow_config::opts::Opts {
-                abstract_classes,
                 all,
                 autoimports,
                 autoimports_min_characters,
@@ -2652,7 +2651,6 @@ pub(super) fn make_options(
             _ => saved_state_persist_export_index,
         };
     Options {
-        abstract_classes,
         all,
         assert_operator,
         autoimports,

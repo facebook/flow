@@ -57,7 +57,6 @@ fn default_sig_options() -> TypeSigOptions {
         locs_to_dirtify: vec![],
         is_ts_file: false,
         tslib_syntax: false,
-        abstract_classes: false,
     }
 }
 

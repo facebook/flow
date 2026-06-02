@@ -365,5 +365,47 @@ Error --------------------------------------------------------------------------
         ^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:142:1
 
-Found 45 errors
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+        v------------------------------------
+   142| abstract class AbstractFoo { // ERROR
+   143|   abstract getName(): string; // ERROR
+   144|
+   145|   concreteMethod(): void {}
+   146| }
+        ^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:143:3
+
+Flow does not support `abstract` methods. [unsupported-syntax]
+
+   143|   abstract getName(): string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:148:1
+
+Flow does not support `abstract` classes. [unsupported-syntax]
+
+        v--------------------------------------------
+   148| declare abstract class AbstractBar { // ERROR
+   149|   abstract getName(): string; // ERROR
+   150|
+   151|   meth(): void;
+   152| }
+        ^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:149:3
+
+Flow does not support `abstract` methods. [unsupported-syntax]
+
+   149|   abstract getName(): string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 49 errors

@@ -24,7 +24,6 @@ let metadata =
     verbose =
       Some Verbose.{ indent = 2; depth = 10; enabled_during_flowlib = false; focused_files = None };
     slow_to_check_logging = Slow_to_check_logging.default;
-    abstract_classes = false;
     allow_variance_keywords = true;
     deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];
@@ -197,7 +196,6 @@ end = struct
         locs_to_dirtify = [];
         is_ts_file = false;
         tslib_syntax = true;
-        abstract_classes = true;
       }
     in
     let (_, master_cx) =

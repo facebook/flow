@@ -1783,7 +1783,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
            the same way an interface body's `abstract m(): T` is flagged in
            [add_interface_properties]. *)
         let () =
-          if abstract_ && not (Context.abstract_classes env.cx) then
+          if abstract_ && not (Context.tslib_syntax env.cx) then
             Flow_js_utils.add_output
               env.cx
               (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc })
@@ -1815,7 +1815,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         let ctor_t = Func_type_sig.methodtype env.cx None (Type.dummy_this loc) fsig in
         let construct_id = Context.make_call_prop env.cx ctor_t in
         let iface_t = Class_type_sig.thistype env.cx iface_sig in
-        let mark_abstract = abstract_ && Context.abstract_classes env.cx in
+        let mark_abstract = abstract_ && Context.tslib_syntax env.cx in
         let with_construct =
           let open Type in
           match iface_t with
@@ -2179,7 +2179,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
        abstract;
        _;
       } ->
-        if abstract && not (Context.abstract_classes env.cx) then
+        if abstract && not (Context.tslib_syntax env.cx) then
           Flow_js_utils.add_output
             env.cx
             (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
@@ -3485,8 +3485,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   :: rev_prop_asts
                 )
               else
-                let abstract_on = abstract && Context.abstract_classes env.cx in
-                if abstract && not (Context.abstract_classes env.cx) then
+                let abstract_on = abstract && Context.tslib_syntax env.cx in
+                if abstract && not (Context.tslib_syntax env.cx) then
                   Flow_js_utils.add_output
                     env.cx
                     (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
@@ -4594,7 +4594,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       (* All classes have a static "name" property. *)
       let iface_sig = Class_type_sig.add_name_field iface_sig in
-      let abstract_on = abstract && Context.abstract_classes cx in
+      let abstract_on = abstract && Context.tslib_syntax cx in
       let iface_sig =
         if abstract_on then
           { iface_sig with Class_type_sig_types.abstract = true }

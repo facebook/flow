@@ -2689,7 +2689,7 @@ module Make
       } =
         decl
       in
-      if abstract && not (Context.abstract_classes cx) then
+      if abstract && not (Context.tslib_syntax cx) then
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc });
@@ -3578,12 +3578,12 @@ module Make
      EAbstractClass.AbstractSuperCall. Walking the full chain is required
      because the immediate super may be an abstract subclass that doesn't
      re-declare [name] but inherits an abstract decl from a grandparent.
-     Gated on [Context.abstract_classes]: with the flag off,
+     Gated on [Context.tslib_syntax]: with the flag off,
      [inst_abstract_props] is guaranteed empty everywhere, so this walk
      would run on every super-access in every Flow root and always find
      nothing. *)
   and check_super_abstract cx super_t name super_loc =
-    if not (Context.abstract_classes cx) then
+    if not (Context.tslib_syntax cx) then
       ()
     else
       let (OrdinaryName name_str) = name in
@@ -8683,7 +8683,7 @@ module Make
         in
         let class_sig =
           if abstract then
-            if not (Context.abstract_classes cx) then begin
+            if not (Context.tslib_syntax cx) then begin
               Flow_js_utils.add_output
                 cx
                 (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc = class_loc });
@@ -9515,7 +9515,7 @@ module Make
                   public_seen_names
                 )
               | Body.AbstractMethod (loc, abs_meth) as elem ->
-                if not (Context.abstract_classes cx) then (
+                if not (Context.tslib_syntax cx) then (
                   Flow_js_utils.add_output
                     cx
                     (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
@@ -9635,7 +9635,7 @@ module Make
                       public_seen_names
                     ))
               | Body.AbstractProperty (loc, abs_prop) as elem ->
-                if not (Context.abstract_classes cx) then (
+                if not (Context.tslib_syntax cx) then (
                   Flow_js_utils.add_output
                     cx
                     (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });

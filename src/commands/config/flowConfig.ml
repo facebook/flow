@@ -44,7 +44,6 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
-    abstract_classes: bool;
     all: bool option;
     assert_operator: Options.AssertOperator.t;
     autoimports: bool option;
@@ -214,7 +213,6 @@ module Opts = struct
 
   let default_options =
     {
-      abstract_classes = false;
       all = None;
       assert_operator = Options.AssertOperator.Disabled;
       autoimports = None;
@@ -1124,9 +1122,6 @@ module Opts = struct
                 "`exact_by_default=false` has been deprecated. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) for details on how to migrate to `exact_by_default=true` (the default since 2023), and our [docs on objects](https://flow.org/en/docs/types/objects/)."
         )
       );
-      ( "experimental.abstract_classes",
-        boolean (fun opts v -> Ok { opts with abstract_classes = v })
-      );
       ("experimental.assert_operator", assert_operator_parser);
       ( "experimental.casting_syntax.only_support_as.excludes",
         string
@@ -2013,8 +2008,6 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
-
-let abstract_classes c = c.options.Opts.abstract_classes
 
 let all c = c.options.Opts.all
 

@@ -1750,7 +1750,7 @@ fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
-    if !cx.abstract_classes() || x.abstract_ {
+    if !cx.tslib_syntax() || x.abstract_ {
         return;
     }
     // Set of names [x] re-declares as abstract; these do not implement

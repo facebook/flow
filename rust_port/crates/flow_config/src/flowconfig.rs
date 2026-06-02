@@ -69,7 +69,6 @@ pub mod opts {
 
     #[derive(Debug, Clone)]
     pub struct Opts {
-        pub abstract_classes: bool,
         pub all: Option<bool>,
         pub autoimports: Option<bool>,
         pub autoimports_min_characters: Option<u32>,
@@ -233,7 +232,6 @@ pub mod opts {
             .collect();
 
         Opts {
-            abstract_classes: false,
             all: None,
             autoimports: None,
             autoimports_min_characters: None,
@@ -2156,7 +2154,6 @@ pub mod opts {
             "estimate_recheck_time",
             "saved_state_restart_on_reinit",
             "exact_by_default",
-            "experimental.abstract_classes",
             "experimental.assert_operator",
             "experimental.casting_syntax.only_support_as.excludes",
             "experimental.async_component_syntax",
@@ -2388,14 +2385,6 @@ pub mod opts {
                                     .to_string(),
                             )
                         }
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.abstract_classes" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.abstract_classes = v;
-                        Ok(())
                     },
                     values,
                     config,

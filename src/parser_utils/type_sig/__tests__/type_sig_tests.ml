@@ -222,7 +222,6 @@ let sig_options
     ?(for_builtins = false)
     ?(locs_to_dirtify = [])
     ?(tslib_syntax = false)
-    ?(abstract_classes = false)
     () =
   {
     Type_sig_options.munge;
@@ -242,7 +241,6 @@ let sig_options
     locs_to_dirtify;
     is_ts_file = false;
     tslib_syntax;
-    abstract_classes;
   }
 
 let parse_and_pack_module ~parse_options ~strict sig_opts contents =

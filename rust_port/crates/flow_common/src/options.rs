@@ -163,7 +163,6 @@ pub struct LogSaving {
 
 #[derive(Debug, Clone, Default)]
 pub struct Options {
-    pub abstract_classes: bool,
     pub all: bool,
     pub assert_operator: AssertOperator,
     pub autoimports: bool,

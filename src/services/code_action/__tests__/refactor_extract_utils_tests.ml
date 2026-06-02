@@ -31,7 +31,6 @@ let stub_metadata ~root ~checked =
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
-    abstract_classes = false;
     allow_variance_keywords = true;
     deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];

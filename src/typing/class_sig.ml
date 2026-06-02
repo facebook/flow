@@ -1078,7 +1078,7 @@ module Make
      empty everywhere, so the walk would always find no obligations — pure
      wasted work on every non-abstract class in every Flow root. *)
   let check_abstract_obligations cx def_reason x =
-    if (not (Context.abstract_classes cx)) || x.Types.abstract then
+    if (not (Context.tslib_syntax cx)) || x.Types.abstract then
       ()
     else
       (* Set of names [x] re-declares as abstract; these do not implement

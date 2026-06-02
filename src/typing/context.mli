@@ -83,7 +83,6 @@ type metadata = {
   strict_local: bool;
   verbose: Verbose.t option;
   (* global *)
-  abstract_classes: bool;
   assert_operator: Options.AssertOperator.t;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
@@ -432,8 +431,6 @@ val typing_mode : t -> typing_mode
 val node_cache : t -> Node_cache.t
 
 val pid_prefix : t -> string
-
-val abstract_classes : t -> bool
 
 val automatic_require_default : t -> bool
 
