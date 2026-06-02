@@ -43,7 +43,7 @@ Type: `boolean`
 Set this to `true` to check that array spread syntax is only used with arrays,
 not arbitrary iterables (such as `Map` or `Set`). This is useful if you
 transform your code with Babel in
-[loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose)
+[loose mode](https://babeljs.io/docs/babel-plugin-transform-spread)
 which makes this non-spec-compliant assumption at runtime.
 
 For example:
@@ -535,9 +535,8 @@ The default value is `false`.
 Type: `boolean`
 
 Set this to `true` to have Flow treat underscore-prefixed class properties and
-methods as private. This should be used in conjunction with
-[`jstransform`'s ES6 class transform](https://github.com/facebook/jstransform/blob/master/visitors/es6-class-visitors.js),
-which enforces the same privacy at runtime.
+methods as private. Use in conjunction with any transformer that enforces
+underscore-prefixed-private at runtime (e.g. a Babel plugin).
 
 The default value is `false`.
 
@@ -837,14 +836,6 @@ relay_integration.excludes=<PROJECT_ROOT>/dirA
 relay_integration.excludes=<PROJECT_ROOT>/dirB
 ```
 
-### traces {#toc-traces}
-
-Type: `integer`
-
-Enables traces on all error output (showing additional details about the flow of
-types through the system), to the depth specified. This can be very expensive,
-so is disabled by default.
-
 ### use_unknown_in_catch_variables {#toc-use-unknown-in-catch-variables}
 
 Type: `boolean`
@@ -863,50 +854,3 @@ in the above example, if the option is `true`, `catch` will be typed as
 :::info TypeScript comparison
 TypeScript's `useUnknownInCatchVariables` and Flow's `use_unknown_in_catch_variables` are direct equivalents. See [Config options aligned with TypeScript](../flow-vs-typescript.md#toc-shared-options) for the full comparison.
 :::
-
-### log.file {#toc-log-file}
-
-Type: `string`
-
-The path to the log file (defaults to `/tmp/flow/<escaped root path>.log`).
-
-### sharedmemory.dirs {#toc-sharedmemory-dirs}
-
-Type: `string`
-
-This affects Linux only.
-
-Flow's shared memory lives in a memory mapped file. On more modern versions of
-Linux (3.17+), there is a system call `memfd_create` which allows Flow to create
-the file anonymously and only in memory. However, in older kernels, Flow needs
-to create a file on the file system. Ideally this file lives on a memory-backed
-tmpfs. This option lets you decide where that file is created.
-
-By default this option is set to `/dev/shm` and `/tmp`
-
-> **Note:** You can specify `sharedmemory.dirs` multiple times.
-
-### sharedmemory.minimum_available {#toc-sharedmemory-minimum-available}
-
-Type: `unsigned integer`
-
-This affects Linux only.
-
-As explained in the [`sharedmemory.dirs`](#toc-sharedmemory-dirs)
-option's description, Flow needs to create a file on a filesystem for older
-kernels. `sharedmemory.dirs` specifies a list of locations where the shared
-memory file can be created. For each location, Flow will check to make sure the
-filesystem has enough space for the shared memory file. If Flow will likely run
-out of space, it skips that location and tries the next. This option lets you
-configure the minimum amount of space needed on a filesystem for shared memory.
-
-By default it is 536870912 (2^29 bytes, which is half a gigabyte).
-
-### temp_dir {#toc-temp-dir}
-
-Type: `string`
-
-Tell Flow which directory to use as a temp directory. Can be overridden with the
-command line flag `--temp-dir`.
-
-The default value is `/tmp/flow`.

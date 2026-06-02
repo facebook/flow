@@ -152,7 +152,7 @@ Runtime cost: The same as described under `.cast` above.
 #### .members {#toc-members}
 Type: `members(): Iterator<TEnum>`
 
-The `members` method returns an [iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators#iterators) (that is iterable) of all the enum members.
+The `members` method returns an [iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_generators#iterators) (that is iterable) of all the enum members.
 
 ```js
 const buttons = [];

@@ -28,7 +28,7 @@ square("2"); // Error!
 
 First you'll need to setup a compiler to strip away Flow types. You can
 choose between [Babel](https://babeljs.io/) and
-[flow-remove-types](https://github.com/facebook/flow/tree/master/packages/flow-remove-types).
+[flow-remove-types](https://github.com/facebook/flow/tree/main/packages/flow-remove-types).
 
 <Tabs
   defaultValue="babel"
@@ -85,7 +85,7 @@ You can add this to your `package.json` scripts easily, alongside your `"devDepe
 </TabItem>
 <TabItem value="flow-remove-types">
 
-[flow-remove-types](https://github.com/facebook/flow/tree/master/packages/flow-remove-types) is a small
+[flow-remove-types](https://github.com/facebook/flow/tree/main/packages/flow-remove-types) is a small
 CLI tool for stripping Flow type annotations from files. It's a lighter-weight
 alternative to Babel for projects that don't need everything Babel provides.
 
@@ -274,8 +274,26 @@ The first time this is run, the [Flow background process](#toc-run-the-flow-back
 
 For the [code above](#toc-write-flow-code), running `flow` will yield:
 
-```sh
-3:12-3:12: Cannot return `x` because number is incompatible with string. [incompatible-type]
+```
+Error ------------------------------------------------------------------- example.js:4:12
+
+Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   example.js:4:12
+   4|     return x; // Error
+                 ^
+
+References:
+   example.js:2:18
+   2| function foo(x: ?number): string {
+                       ^^^^^^ [1]
+   example.js:2:27
+   2| function foo(x: ?number): string {
+                                ^^^^^^ [2]
+
+
+
+Found 1 error
 ```
 
 ## See Also {#toc-see-also}

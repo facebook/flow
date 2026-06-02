@@ -10,7 +10,7 @@ default, nothing is ignored.
 
 Things to keep in mind:
 
-1. These are [OCaml regular   expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
+1. These are [OCaml regular   expressions](https://v2.ocaml.org/api/Str.html#TYPEregexp).
 2. These regular expressions match against absolute paths. They probably should
    start with `.*`
 3. Ignores are processed AFTER includes. If you both include and ignore a file

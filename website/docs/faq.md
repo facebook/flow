@@ -263,7 +263,7 @@ export const add = (a: number): number => a + 1;
 
 To see how you can annotate exported React components, check out our docs on [HOCs](./react/hoc.md#toc-exporting-wrapped-components).
 
-There are other cases where this happens, and they might be harder to understand. You'll get an error like `Missing type annotation for U` For instance, you wrote this code:
+There are other cases where this happens, and they might be harder to understand. You'll get an error like `Cannot build a typed interface for this module... Cannot determine the type of this call expression. Please provide an annotation`. For instance, you wrote this code:
 
 ```js flow-check
 const array = ['a', 'b']

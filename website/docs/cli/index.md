@@ -57,11 +57,14 @@ Default values if unspecified:
 
 Status command options:
   --color              Display terminal output in color. never, always, auto (default: auto)
+  --flowconfig-name    Set the name of the flow configuration file. (default: .flowconfig)
   --from               Specify who is calling this CLI command (used by logging)
   --help               This list of options
   --include-warnings   Include warnings in the error output (warnings are excluded by default)
   --json               Output results in JSON format
   --json-version       The version of the JSON format (defaults to 1)
+  --lazy-mode          If true, only check changed files
+  --list-files         List files with errors
   --max-warnings       Warnings above this number will cause a nonzero exit code (implies
                        --include-warnings)
   --no-auto-start      If the server is not running, do not start it; just exit
@@ -75,6 +78,8 @@ Status command options:
   --temp-dir           Directory in which to store temp files (default: FLOW_TEMP_DIR, or
                        /tmp/flow/)
   --timeout            Maximum time to wait, in seconds
+  --unicode            Display terminal output with unicode decoration. never, always, auto
+                       (default: auto)
   --version            Print version number and exit
 ```
 

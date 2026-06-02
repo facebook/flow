@@ -4,7 +4,7 @@ slug: /tools/flow-remove-types
 description: "How to use flow-remove-types, a lightweight CLI tool for stripping Flow type annotations without Babel."
 ---
 
-[`flow-remove-types`](https://github.com/facebook/flow/tree/master/packages/flow-remove-types) is a small
+[`flow-remove-types`](https://github.com/facebook/flow/tree/main/packages/flow-remove-types) is a small
 CLI tool for stripping Flow type annotations from files. It's a lighter-weight
 alternative to Babel for projects that don't need everything Babel provides.
 

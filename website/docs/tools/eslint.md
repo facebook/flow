@@ -8,6 +8,8 @@ ESLint is a static analysis tool which can help you quickly find and
 fix bugs and stylistic errors in your code. The rules ESLint provide
 complement the checks provided by Flow's type system.
 
+> This page documents the legacy `.eslintrc` configuration style. ESLint 9+ defaults to [flat config](https://eslint.org/docs/latest/use/configure/migration-guide) (`eslint.config.js`); if you are on a modern ESLint, see the migration guide. The flat-config equivalent for `--ext .js,.jsx` is `files: ['**/*.{js,jsx}']` inside a config object.
+
 You can quick-start setup ESLint, install `hermes-eslint` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
@@ -80,7 +82,7 @@ Below are just a few examples that might be useful:
   and [`eslint-plugin-react-hooks`](https://www.npmjs.com/package/eslint-plugin-react-hooks)
 - Jest testing: [`eslint-plugin-jest`](https://www.npmjs.com/package/eslint-plugin-jest)
 - Import/export conventions : [`eslint-plugin-import`](https://www.npmjs.com/package/eslint-plugin-import)
-- NodeJS best practices: [`eslint-plugin-node`](https://www.npmjs.com/package/eslint-plugin-node)
+- NodeJS best practices: [`eslint-plugin-n`](https://www.npmjs.com/package/eslint-plugin-n)
 - ESLint comment restrictions: [`eslint-plugin-eslint-comments`](https://www.npmjs.com/package/eslint-plugin-eslint-comments)
 
 Every plugin that is out there includes documentation on the various configurations and rules they offer.

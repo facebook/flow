@@ -429,4 +429,5 @@ You can explicitly ignore the promise with the `void` operator (e.g., `void foo(
 
 - [Flowlint Comments](./flowlint-comments.md) — controlling lint severity within a file using comments
 - [`.flowconfig [lints]`](../config/lints.md) — configuring lint severities project-wide
+- [Strict ES6 Import/Export Lints](./strict-import-export-lints.md) — additional lints that catch unsafe ES6 import/export patterns
 - [Flow Strict](../strict/index.md) — stricter type checking that enables additional lint-like rules
