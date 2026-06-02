@@ -18,7 +18,7 @@ fn spec() -> command_spec::Spec {
     let exe_name = command_utils::exe_name();
     let spec = command_spec::Spec::new(
         "lsp",
-        "Acts as a server for the Language Server Protocol over stdin/stdout [experimental]",
+        "Acts as a server for the Language Server Protocol over stdin/stdout",
         command_spec::Visibility::Public,
         format!("Usage: {exe_name} lsp\n\nRuns a server for the Language Server Protocol\n"),
     );

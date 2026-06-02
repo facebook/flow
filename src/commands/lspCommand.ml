@@ -14,7 +14,7 @@ open CommandUtils
 let spec =
   {
     CommandSpec.name = "lsp";
-    doc = "Acts as a server for the Language Server Protocol over stdin/stdout [experimental]";
+    doc = "Acts as a server for the Language Server Protocol over stdin/stdout";
     visibility = CommandSpec.Public;
     usage =
       Printf.sprintf

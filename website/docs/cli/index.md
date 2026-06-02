@@ -44,7 +44,7 @@ Valid values for COMMAND:
   graph           Outputs dependency graphs of flow repositories
   init            Initializes a directory to be used as a flow root directory
   ls              Lists files visible to Flow
-  lsp             Acts as a server for the Language Server Protocol over stdin/stdout [experimental]
+  lsp             Acts as a server for the Language Server Protocol over stdin/stdout
   server          Runs a Flow server in the foreground
   start           Starts a Flow server
   status          (default) Shows current Flow errors by asking the Flow server
