@@ -319,7 +319,7 @@ module.exports = suite(
                       'keyword',
                       {
                         ac_type: 'Acid',
-                        completion: 'const',
+                        completion: 'component',
                         index: 8,
                         session_requests: 1,
                         token: 'AUTO332',
@@ -331,8 +331,43 @@ module.exports = suite(
                   },
                   insertTextFormat: 1,
                   kind: 14,
-                  label: 'const',
+                  label: 'component',
                   sortText: '00000000000000000008',
+                  textEdit: {
+                    newText: 'component',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 10,
+                      },
+                      start: {
+                        character: 15,
+                        line: 10,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
+                        completion: 'const',
+                        index: 9,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'const',
+                  sortText: '00000000000000000009',
                   textEdit: {
                     newText: 'const',
                     range: {
@@ -355,7 +390,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'continue',
-                        index: 9,
+                        index: 10,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -367,7 +402,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'continue',
-                  sortText: '00000000000000000009',
+                  sortText: '00000000000000000010',
                   textEdit: {
                     newText: 'continue',
                     range: {
@@ -390,7 +425,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'debugger',
-                        index: 10,
+                        index: 11,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -402,7 +437,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'debugger',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000011',
                   textEdit: {
                     newText: 'debugger',
                     range: {
@@ -425,7 +460,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'declare',
-                        index: 11,
+                        index: 12,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -437,7 +472,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'declare',
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000012',
                   textEdit: {
                     newText: 'declare',
                     range: {
@@ -460,7 +495,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'default',
-                        index: 12,
+                        index: 13,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -472,7 +507,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'default',
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000013',
                   textEdit: {
                     newText: 'default',
                     range: {
@@ -495,7 +530,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'delete',
-                        index: 13,
+                        index: 14,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -507,7 +542,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'delete',
-                  sortText: '00000000000000000013',
+                  sortText: '00000000000000000014',
                   textEdit: {
                     newText: 'delete',
                     range: {
@@ -530,7 +565,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'do',
-                        index: 14,
+                        index: 15,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -542,7 +577,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'do',
-                  sortText: '00000000000000000014',
+                  sortText: '00000000000000000015',
                   textEdit: {
                     newText: 'do',
                     range: {
@@ -565,7 +600,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'else',
-                        index: 15,
+                        index: 16,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -577,7 +612,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'else',
-                  sortText: '00000000000000000015',
+                  sortText: '00000000000000000016',
                   textEdit: {
                     newText: 'else',
                     range: {
@@ -600,7 +635,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'enum',
-                        index: 16,
+                        index: 17,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -612,7 +647,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'enum',
-                  sortText: '00000000000000000016',
+                  sortText: '00000000000000000017',
                   textEdit: {
                     newText: 'enum',
                     range: {
@@ -635,7 +670,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'export',
-                        index: 17,
+                        index: 18,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -647,7 +682,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'export',
-                  sortText: '00000000000000000017',
+                  sortText: '00000000000000000018',
                   textEdit: {
                     newText: 'export',
                     range: {
@@ -670,7 +705,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'extends',
-                        index: 18,
+                        index: 19,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -682,7 +717,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'extends',
-                  sortText: '00000000000000000018',
+                  sortText: '00000000000000000019',
                   textEdit: {
                     newText: 'extends',
                     range: {
@@ -705,7 +740,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'finally',
-                        index: 19,
+                        index: 20,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -717,7 +752,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'finally',
-                  sortText: '00000000000000000019',
+                  sortText: '00000000000000000020',
                   textEdit: {
                     newText: 'finally',
                     range: {
@@ -740,7 +775,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'for',
-                        index: 20,
+                        index: 21,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -752,7 +787,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'for',
-                  sortText: '00000000000000000020',
+                  sortText: '00000000000000000021',
                   textEdit: {
                     newText: 'for',
                     range: {
@@ -775,7 +810,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'fred',
-                        index: 21,
+                        index: 22,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -793,7 +828,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'fred',
-                  sortText: '00000000000000000021',
+                  sortText: '00000000000000000022',
                   textEdit: {
                     newText: 'fred',
                     range: {
@@ -816,7 +851,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'function',
-                        index: 22,
+                        index: 23,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -828,7 +863,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'function',
-                  sortText: '00000000000000000022',
+                  sortText: '00000000000000000023',
                   textEdit: {
                     newText: 'function',
                     range: {
@@ -850,8 +885,43 @@ module.exports = suite(
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'hook',
+                        index: 24,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'hook',
+                  sortText: '00000000000000000024',
+                  textEdit: {
+                    newText: 'hook',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 10,
+                      },
+                      start: {
+                        character: 15,
+                        line: 10,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'if',
-                        index: 23,
+                        index: 25,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -863,7 +933,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'if',
-                  sortText: '00000000000000000023',
+                  sortText: '00000000000000000025',
                   textEdit: {
                     newText: 'if',
                     range: {
@@ -886,7 +956,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'implements',
-                        index: 24,
+                        index: 26,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -898,7 +968,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'implements',
-                  sortText: '00000000000000000024',
+                  sortText: '00000000000000000026',
                   textEdit: {
                     newText: 'implements',
                     range: {
@@ -921,7 +991,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'import',
-                        index: 25,
+                        index: 27,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -933,7 +1003,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'import',
-                  sortText: '00000000000000000025',
+                  sortText: '00000000000000000027',
                   textEdit: {
                     newText: 'import',
                     range: {
@@ -956,7 +1026,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'interface',
-                        index: 26,
+                        index: 28,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -968,7 +1038,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'interface',
-                  sortText: '00000000000000000026',
+                  sortText: '00000000000000000028',
                   textEdit: {
                     newText: 'interface',
                     range: {
@@ -991,7 +1061,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'let',
-                        index: 27,
+                        index: 29,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1003,7 +1073,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'let',
-                  sortText: '00000000000000000027',
+                  sortText: '00000000000000000029',
                   textEdit: {
                     newText: 'let',
                     range: {
@@ -1025,8 +1095,43 @@ module.exports = suite(
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'match',
+                        index: 30,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'match',
+                  sortText: '00000000000000000030',
+                  textEdit: {
+                    newText: 'match',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 10,
+                      },
+                      start: {
+                        character: 15,
+                        line: 10,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'new',
-                        index: 28,
+                        index: 31,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1038,7 +1143,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'new',
-                  sortText: '00000000000000000028',
+                  sortText: '00000000000000000031',
                   textEdit: {
                     newText: 'new',
                     range: {
@@ -1061,7 +1166,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'opaque',
-                        index: 29,
+                        index: 32,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1073,7 +1178,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'opaque',
-                  sortText: '00000000000000000029',
+                  sortText: '00000000000000000032',
                   textEdit: {
                     newText: 'opaque',
                     range: {
@@ -1096,7 +1201,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'return',
-                        index: 30,
+                        index: 33,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1108,7 +1213,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'return',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000033',
                   textEdit: {
                     newText: 'return',
                     range: {
@@ -1131,7 +1236,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'static',
-                        index: 31,
+                        index: 34,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1143,7 +1248,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'static',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000034',
                   textEdit: {
                     newText: 'static',
                     range: {
@@ -1166,7 +1271,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'switch',
-                        index: 32,
+                        index: 35,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1178,7 +1283,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'switch',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000035',
                   textEdit: {
                     newText: 'switch',
                     range: {
@@ -1201,7 +1306,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'this',
-                        index: 33,
+                        index: 36,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1214,7 +1319,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 6,
                   label: 'this',
-                  sortText: '00000000000000000033',
+                  sortText: '00000000000000000036',
                   textEdit: {
                     newText: 'this',
                     range: {
@@ -1237,7 +1342,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'throw',
-                        index: 34,
+                        index: 37,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1249,7 +1354,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'throw',
-                  sortText: '00000000000000000034',
+                  sortText: '00000000000000000037',
                   textEdit: {
                     newText: 'throw',
                     range: {
@@ -1272,7 +1377,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'try',
-                        index: 35,
+                        index: 38,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1284,7 +1389,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'try',
-                  sortText: '00000000000000000035',
+                  sortText: '00000000000000000038',
                   textEdit: {
                     newText: 'try',
                     range: {
@@ -1307,7 +1412,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'type',
-                        index: 36,
+                        index: 39,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1319,7 +1424,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'type',
-                  sortText: '00000000000000000036',
+                  sortText: '00000000000000000039',
                   textEdit: {
                     newText: 'type',
                     range: {
@@ -1342,7 +1447,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'typeof',
-                        index: 37,
+                        index: 40,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1354,7 +1459,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'typeof',
-                  sortText: '00000000000000000037',
+                  sortText: '00000000000000000040',
                   textEdit: {
                     newText: 'typeof',
                     range: {
@@ -1377,7 +1482,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'var',
-                        index: 38,
+                        index: 41,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1389,7 +1494,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'var',
-                  sortText: '00000000000000000038',
+                  sortText: '00000000000000000041',
                   textEdit: {
                     newText: 'var',
                     range: {
@@ -1412,7 +1517,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'void',
-                        index: 39,
+                        index: 42,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1424,7 +1529,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'void',
-                  sortText: '00000000000000000039',
+                  sortText: '00000000000000000042',
                   textEdit: {
                     newText: 'void',
                     range: {
@@ -1447,7 +1552,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'while',
-                        index: 40,
+                        index: 43,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1459,7 +1564,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'while',
-                  sortText: '00000000000000000040',
+                  sortText: '00000000000000000043',
                   textEdit: {
                     newText: 'while',
                     range: {
@@ -1482,7 +1587,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'x',
-                        index: 41,
+                        index: 44,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1495,7 +1600,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 12,
                   label: 'x',
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000044',
                   textEdit: {
                     newText: 'x',
                     range: {
@@ -1518,7 +1623,7 @@ module.exports = suite(
                       {
                         ac_type: 'Acid',
                         completion: 'yield',
-                        index: 42,
+                        index: 45,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -1530,7 +1635,7 @@ module.exports = suite(
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'yield',
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000045',
                   textEdit: {
                     newText: 'yield',
                     range: {
@@ -2331,7 +2436,7 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
-                        completion: 'const',
+                        completion: 'component',
                         index: 9,
                         session_requests: 1,
                         token: 'AUTO332',
@@ -2343,8 +2448,43 @@ b.te
                   },
                   insertTextFormat: 1,
                   kind: 14,
-                  label: 'const',
+                  label: 'component',
                   sortText: '00000000000000000009',
+                  textEdit: {
+                    newText: 'component',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 13,
+                      },
+                      start: {
+                        character: 15,
+                        line: 13,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
+                        completion: 'const',
+                        index: 10,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'const',
+                  sortText: '00000000000000000010',
                   textEdit: {
                     newText: 'const',
                     range: {
@@ -2367,7 +2507,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'continue',
-                        index: 10,
+                        index: 11,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2379,7 +2519,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'continue',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000011',
                   textEdit: {
                     newText: 'continue',
                     range: {
@@ -2402,7 +2542,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'debugger',
-                        index: 11,
+                        index: 12,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2414,7 +2554,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'debugger',
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000012',
                   textEdit: {
                     newText: 'debugger',
                     range: {
@@ -2437,7 +2577,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'declare',
-                        index: 12,
+                        index: 13,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2449,7 +2589,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'declare',
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000013',
                   textEdit: {
                     newText: 'declare',
                     range: {
@@ -2472,7 +2612,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'default',
-                        index: 13,
+                        index: 14,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2484,7 +2624,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'default',
-                  sortText: '00000000000000000013',
+                  sortText: '00000000000000000014',
                   textEdit: {
                     newText: 'default',
                     range: {
@@ -2507,7 +2647,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'delete',
-                        index: 14,
+                        index: 15,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2519,7 +2659,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'delete',
-                  sortText: '00000000000000000014',
+                  sortText: '00000000000000000015',
                   textEdit: {
                     newText: 'delete',
                     range: {
@@ -2542,7 +2682,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'do',
-                        index: 15,
+                        index: 16,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2554,7 +2694,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'do',
-                  sortText: '00000000000000000015',
+                  sortText: '00000000000000000016',
                   textEdit: {
                     newText: 'do',
                     range: {
@@ -2577,7 +2717,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'else',
-                        index: 16,
+                        index: 17,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2589,7 +2729,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'else',
-                  sortText: '00000000000000000016',
+                  sortText: '00000000000000000017',
                   textEdit: {
                     newText: 'else',
                     range: {
@@ -2612,7 +2752,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'enum',
-                        index: 17,
+                        index: 18,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2624,7 +2764,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'enum',
-                  sortText: '00000000000000000017',
+                  sortText: '00000000000000000018',
                   textEdit: {
                     newText: 'enum',
                     range: {
@@ -2647,7 +2787,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'export',
-                        index: 18,
+                        index: 19,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2659,7 +2799,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'export',
-                  sortText: '00000000000000000018',
+                  sortText: '00000000000000000019',
                   textEdit: {
                     newText: 'export',
                     range: {
@@ -2682,7 +2822,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'extends',
-                        index: 19,
+                        index: 20,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2694,7 +2834,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'extends',
-                  sortText: '00000000000000000019',
+                  sortText: '00000000000000000020',
                   textEdit: {
                     newText: 'extends',
                     range: {
@@ -2717,7 +2857,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'finally',
-                        index: 20,
+                        index: 21,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2729,7 +2869,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'finally',
-                  sortText: '00000000000000000020',
+                  sortText: '00000000000000000021',
                   textEdit: {
                     newText: 'finally',
                     range: {
@@ -2752,7 +2892,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'foo',
-                        index: 21,
+                        index: 22,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2765,7 +2905,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'foo',
-                  sortText: '00000000000000000021',
+                  sortText: '00000000000000000022',
                   textEdit: {
                     newText: 'foo',
                     range: {
@@ -2788,7 +2928,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'for',
-                        index: 22,
+                        index: 23,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2800,7 +2940,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'for',
-                  sortText: '00000000000000000022',
+                  sortText: '00000000000000000023',
                   textEdit: {
                     newText: 'for',
                     range: {
@@ -2823,7 +2963,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'function',
-                        index: 23,
+                        index: 24,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2835,7 +2975,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'function',
-                  sortText: '00000000000000000023',
+                  sortText: '00000000000000000024',
                   textEdit: {
                     newText: 'function',
                     range: {
@@ -2857,8 +2997,43 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'hook',
+                        index: 25,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'hook',
+                  sortText: '00000000000000000025',
+                  textEdit: {
+                    newText: 'hook',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 13,
+                      },
+                      start: {
+                        character: 15,
+                        line: 13,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'if',
-                        index: 24,
+                        index: 26,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2870,7 +3045,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'if',
-                  sortText: '00000000000000000024',
+                  sortText: '00000000000000000026',
                   textEdit: {
                     newText: 'if',
                     range: {
@@ -2893,7 +3068,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'implements',
-                        index: 25,
+                        index: 27,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2905,7 +3080,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'implements',
-                  sortText: '00000000000000000025',
+                  sortText: '00000000000000000027',
                   textEdit: {
                     newText: 'implements',
                     range: {
@@ -2928,7 +3103,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'import',
-                        index: 26,
+                        index: 28,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2940,7 +3115,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'import',
-                  sortText: '00000000000000000026',
+                  sortText: '00000000000000000028',
                   textEdit: {
                     newText: 'import',
                     range: {
@@ -2963,7 +3138,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'interface',
-                        index: 27,
+                        index: 29,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -2975,7 +3150,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'interface',
-                  sortText: '00000000000000000027',
+                  sortText: '00000000000000000029',
                   textEdit: {
                     newText: 'interface',
                     range: {
@@ -2998,7 +3173,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'let',
-                        index: 28,
+                        index: 30,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3010,7 +3185,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'let',
-                  sortText: '00000000000000000028',
+                  sortText: '00000000000000000030',
                   textEdit: {
                     newText: 'let',
                     range: {
@@ -3032,8 +3207,43 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'match',
+                        index: 31,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'match',
+                  sortText: '00000000000000000031',
+                  textEdit: {
+                    newText: 'match',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 13,
+                      },
+                      start: {
+                        character: 15,
+                        line: 13,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'new',
-                        index: 29,
+                        index: 32,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3045,7 +3255,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'new',
-                  sortText: '00000000000000000029',
+                  sortText: '00000000000000000032',
                   textEdit: {
                     newText: 'new',
                     range: {
@@ -3068,7 +3278,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'opaque',
-                        index: 30,
+                        index: 33,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3080,7 +3290,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'opaque',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000033',
                   textEdit: {
                     newText: 'opaque',
                     range: {
@@ -3103,7 +3313,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'return',
-                        index: 31,
+                        index: 34,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3115,7 +3325,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'return',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000034',
                   textEdit: {
                     newText: 'return',
                     range: {
@@ -3138,7 +3348,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'static',
-                        index: 32,
+                        index: 35,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3150,7 +3360,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'static',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000035',
                   textEdit: {
                     newText: 'static',
                     range: {
@@ -3173,7 +3383,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'switch',
-                        index: 33,
+                        index: 36,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3185,7 +3395,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'switch',
-                  sortText: '00000000000000000033',
+                  sortText: '00000000000000000036',
                   textEdit: {
                     newText: 'switch',
                     range: {
@@ -3208,7 +3418,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'this',
-                        index: 34,
+                        index: 37,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3221,7 +3431,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 6,
                   label: 'this',
-                  sortText: '00000000000000000034',
+                  sortText: '00000000000000000037',
                   textEdit: {
                     newText: 'this',
                     range: {
@@ -3244,7 +3454,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'throw',
-                        index: 35,
+                        index: 38,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3256,7 +3466,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'throw',
-                  sortText: '00000000000000000035',
+                  sortText: '00000000000000000038',
                   textEdit: {
                     newText: 'throw',
                     range: {
@@ -3279,7 +3489,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'try',
-                        index: 36,
+                        index: 39,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3291,7 +3501,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'try',
-                  sortText: '00000000000000000036',
+                  sortText: '00000000000000000039',
                   textEdit: {
                     newText: 'try',
                     range: {
@@ -3314,7 +3524,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'type',
-                        index: 37,
+                        index: 40,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3326,7 +3536,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'type',
-                  sortText: '00000000000000000037',
+                  sortText: '00000000000000000040',
                   textEdit: {
                     newText: 'type',
                     range: {
@@ -3349,7 +3559,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'typeof',
-                        index: 38,
+                        index: 41,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3361,7 +3571,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'typeof',
-                  sortText: '00000000000000000038',
+                  sortText: '00000000000000000041',
                   textEdit: {
                     newText: 'typeof',
                     range: {
@@ -3384,7 +3594,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'var',
-                        index: 39,
+                        index: 42,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3396,7 +3606,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'var',
-                  sortText: '00000000000000000039',
+                  sortText: '00000000000000000042',
                   textEdit: {
                     newText: 'var',
                     range: {
@@ -3419,7 +3629,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'void',
-                        index: 40,
+                        index: 43,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3431,7 +3641,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'void',
-                  sortText: '00000000000000000040',
+                  sortText: '00000000000000000043',
                   textEdit: {
                     newText: 'void',
                     range: {
@@ -3454,7 +3664,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'while',
-                        index: 41,
+                        index: 44,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3466,7 +3676,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'while',
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000044',
                   textEdit: {
                     newText: 'while',
                     range: {
@@ -3489,7 +3699,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'x',
-                        index: 42,
+                        index: 45,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3502,7 +3712,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 12,
                   label: 'x',
-                  sortText: '00000000000000000042',
+                  sortText: '00000000000000000045',
                   textEdit: {
                     newText: 'x',
                     range: {
@@ -3525,7 +3735,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'yield',
-                        index: 43,
+                        index: 46,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3537,7 +3747,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'yield',
-                  sortText: '00000000000000000043',
+                  sortText: '00000000000000000046',
                   textEdit: {
                     newText: 'yield',
                     range: {
@@ -3844,7 +4054,7 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
-                        completion: 'const',
+                        completion: 'component',
                         index: 7,
                         session_requests: 1,
                         token: 'AUTO332',
@@ -3856,8 +4066,43 @@ b.te
                   },
                   insertTextFormat: 1,
                   kind: 14,
-                  label: 'const',
+                  label: 'component',
                   sortText: '00000000000000000007',
+                  textEdit: {
+                    newText: 'component',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 9,
+                      },
+                      start: {
+                        character: 15,
+                        line: 9,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
+                        completion: 'const',
+                        index: 8,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'const',
+                  sortText: '00000000000000000008',
                   textEdit: {
                     newText: 'const',
                     range: {
@@ -3880,7 +4125,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'continue',
-                        index: 8,
+                        index: 9,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3892,7 +4137,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'continue',
-                  sortText: '00000000000000000008',
+                  sortText: '00000000000000000009',
                   textEdit: {
                     newText: 'continue',
                     range: {
@@ -3915,7 +4160,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'debugger',
-                        index: 9,
+                        index: 10,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3927,7 +4172,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'debugger',
-                  sortText: '00000000000000000009',
+                  sortText: '00000000000000000010',
                   textEdit: {
                     newText: 'debugger',
                     range: {
@@ -3950,7 +4195,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'declare',
-                        index: 10,
+                        index: 11,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3962,7 +4207,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'declare',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000011',
                   textEdit: {
                     newText: 'declare',
                     range: {
@@ -3985,7 +4230,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'default',
-                        index: 11,
+                        index: 12,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -3997,7 +4242,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'default',
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000012',
                   textEdit: {
                     newText: 'default',
                     range: {
@@ -4020,7 +4265,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'delete',
-                        index: 12,
+                        index: 13,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4032,7 +4277,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'delete',
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000013',
                   textEdit: {
                     newText: 'delete',
                     range: {
@@ -4055,7 +4300,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'do',
-                        index: 13,
+                        index: 14,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4067,7 +4312,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'do',
-                  sortText: '00000000000000000013',
+                  sortText: '00000000000000000014',
                   textEdit: {
                     newText: 'do',
                     range: {
@@ -4090,7 +4335,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'else',
-                        index: 14,
+                        index: 15,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4102,7 +4347,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'else',
-                  sortText: '00000000000000000014',
+                  sortText: '00000000000000000015',
                   textEdit: {
                     newText: 'else',
                     range: {
@@ -4125,7 +4370,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'enum',
-                        index: 15,
+                        index: 16,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4137,7 +4382,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'enum',
-                  sortText: '00000000000000000015',
+                  sortText: '00000000000000000016',
                   textEdit: {
                     newText: 'enum',
                     range: {
@@ -4160,7 +4405,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'export',
-                        index: 16,
+                        index: 17,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4172,7 +4417,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'export',
-                  sortText: '00000000000000000016',
+                  sortText: '00000000000000000017',
                   textEdit: {
                     newText: 'export',
                     range: {
@@ -4195,7 +4440,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'extends',
-                        index: 17,
+                        index: 18,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4207,7 +4452,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'extends',
-                  sortText: '00000000000000000017',
+                  sortText: '00000000000000000018',
                   textEdit: {
                     newText: 'extends',
                     range: {
@@ -4230,7 +4475,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'finally',
-                        index: 18,
+                        index: 19,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4242,7 +4487,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'finally',
-                  sortText: '00000000000000000018',
+                  sortText: '00000000000000000019',
                   textEdit: {
                     newText: 'finally',
                     range: {
@@ -4265,7 +4510,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'foo',
-                        index: 19,
+                        index: 20,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4278,7 +4523,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'foo',
-                  sortText: '00000000000000000019',
+                  sortText: '00000000000000000020',
                   textEdit: {
                     newText: 'foo',
                     range: {
@@ -4301,7 +4546,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'for',
-                        index: 20,
+                        index: 21,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4313,7 +4558,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'for',
-                  sortText: '00000000000000000020',
+                  sortText: '00000000000000000021',
                   textEdit: {
                     newText: 'for',
                     range: {
@@ -4336,7 +4581,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'function',
-                        index: 21,
+                        index: 22,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4348,7 +4593,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'function',
-                  sortText: '00000000000000000021',
+                  sortText: '00000000000000000022',
                   textEdit: {
                     newText: 'function',
                     range: {
@@ -4370,8 +4615,43 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'hook',
+                        index: 23,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'hook',
+                  sortText: '00000000000000000023',
+                  textEdit: {
+                    newText: 'hook',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 9,
+                      },
+                      start: {
+                        character: 15,
+                        line: 9,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'if',
-                        index: 22,
+                        index: 24,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4383,7 +4663,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'if',
-                  sortText: '00000000000000000022',
+                  sortText: '00000000000000000024',
                   textEdit: {
                     newText: 'if',
                     range: {
@@ -4406,7 +4686,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'implements',
-                        index: 23,
+                        index: 25,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4418,7 +4698,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'implements',
-                  sortText: '00000000000000000023',
+                  sortText: '00000000000000000025',
                   textEdit: {
                     newText: 'implements',
                     range: {
@@ -4441,7 +4721,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'import',
-                        index: 24,
+                        index: 26,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4453,7 +4733,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'import',
-                  sortText: '00000000000000000024',
+                  sortText: '00000000000000000026',
                   textEdit: {
                     newText: 'import',
                     range: {
@@ -4476,7 +4756,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'interface',
-                        index: 25,
+                        index: 27,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4488,7 +4768,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'interface',
-                  sortText: '00000000000000000025',
+                  sortText: '00000000000000000027',
                   textEdit: {
                     newText: 'interface',
                     range: {
@@ -4511,7 +4791,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'let',
-                        index: 26,
+                        index: 28,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4523,7 +4803,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'let',
-                  sortText: '00000000000000000026',
+                  sortText: '00000000000000000028',
                   textEdit: {
                     newText: 'let',
                     range: {
@@ -4545,8 +4825,43 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
+                        completion: 'match',
+                        index: 29,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'match',
+                  sortText: '00000000000000000029',
+                  textEdit: {
+                    newText: 'match',
+                    range: {
+                      end: {
+                        character: 15,
+                        line: 9,
+                      },
+                      start: {
+                        character: 15,
+                        line: 9,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
                         completion: 'new',
-                        index: 27,
+                        index: 30,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4558,7 +4873,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'new',
-                  sortText: '00000000000000000027',
+                  sortText: '00000000000000000030',
                   textEdit: {
                     newText: 'new',
                     range: {
@@ -4581,7 +4896,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'opaque',
-                        index: 28,
+                        index: 31,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4593,7 +4908,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'opaque',
-                  sortText: '00000000000000000028',
+                  sortText: '00000000000000000031',
                   textEdit: {
                     newText: 'opaque',
                     range: {
@@ -4616,7 +4931,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'return',
-                        index: 29,
+                        index: 32,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4628,7 +4943,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'return',
-                  sortText: '00000000000000000029',
+                  sortText: '00000000000000000032',
                   textEdit: {
                     newText: 'return',
                     range: {
@@ -4651,7 +4966,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'static',
-                        index: 30,
+                        index: 33,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4663,7 +4978,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'static',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000033',
                   textEdit: {
                     newText: 'static',
                     range: {
@@ -4686,7 +5001,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'switch',
-                        index: 31,
+                        index: 34,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4698,7 +5013,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'switch',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000034',
                   textEdit: {
                     newText: 'switch',
                     range: {
@@ -4721,7 +5036,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'this',
-                        index: 32,
+                        index: 35,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4734,7 +5049,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 6,
                   label: 'this',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000035',
                   textEdit: {
                     newText: 'this',
                     range: {
@@ -4757,7 +5072,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'throw',
-                        index: 33,
+                        index: 36,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4769,7 +5084,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'throw',
-                  sortText: '00000000000000000033',
+                  sortText: '00000000000000000036',
                   textEdit: {
                     newText: 'throw',
                     range: {
@@ -4792,7 +5107,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'try',
-                        index: 34,
+                        index: 37,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4804,7 +5119,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'try',
-                  sortText: '00000000000000000034',
+                  sortText: '00000000000000000037',
                   textEdit: {
                     newText: 'try',
                     range: {
@@ -4827,7 +5142,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'type',
-                        index: 35,
+                        index: 38,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4839,7 +5154,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'type',
-                  sortText: '00000000000000000035',
+                  sortText: '00000000000000000038',
                   textEdit: {
                     newText: 'type',
                     range: {
@@ -4862,7 +5177,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'typeof',
-                        index: 36,
+                        index: 39,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4874,7 +5189,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'typeof',
-                  sortText: '00000000000000000036',
+                  sortText: '00000000000000000039',
                   textEdit: {
                     newText: 'typeof',
                     range: {
@@ -4897,7 +5212,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'var',
-                        index: 37,
+                        index: 40,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4909,7 +5224,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'var',
-                  sortText: '00000000000000000037',
+                  sortText: '00000000000000000040',
                   textEdit: {
                     newText: 'var',
                     range: {
@@ -4932,7 +5247,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'void',
-                        index: 38,
+                        index: 41,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4944,7 +5259,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'void',
-                  sortText: '00000000000000000038',
+                  sortText: '00000000000000000041',
                   textEdit: {
                     newText: 'void',
                     range: {
@@ -4967,7 +5282,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'while',
-                        index: 39,
+                        index: 42,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -4979,7 +5294,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'while',
-                  sortText: '00000000000000000039',
+                  sortText: '00000000000000000042',
                   textEdit: {
                     newText: 'while',
                     range: {
@@ -5002,7 +5317,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'x',
-                        index: 40,
+                        index: 43,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5015,7 +5330,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 12,
                   label: 'x',
-                  sortText: '00000000000000000040',
+                  sortText: '00000000000000000043',
                   textEdit: {
                     newText: 'x',
                     range: {
@@ -5038,7 +5353,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'yield',
-                        index: 41,
+                        index: 44,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5050,7 +5365,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'yield',
-                  sortText: '00000000000000000041',
+                  sortText: '00000000000000000044',
                   textEdit: {
                     newText: 'yield',
                     range: {
@@ -5500,7 +5815,7 @@ b.te
                       'keyword',
                       {
                         ac_type: 'Acid',
-                        completion: 'new',
+                        completion: 'match',
                         index: 8,
                         session_requests: 1,
                         token: 'AUTO332',
@@ -5512,8 +5827,43 @@ b.te
                   },
                   insertTextFormat: 1,
                   kind: 14,
-                  label: 'new',
+                  label: 'match',
                   sortText: '00000000000000000008',
+                  textEdit: {
+                    newText: 'match',
+                    range: {
+                      end: {
+                        character: 1,
+                        line: 11,
+                      },
+                      start: {
+                        character: 1,
+                        line: 11,
+                      },
+                    },
+                  },
+                },
+                {
+                  command: {
+                    arguments: [
+                      'textDocument/completion',
+                      'keyword',
+                      {
+                        ac_type: 'Acid',
+                        completion: 'new',
+                        index: 9,
+                        session_requests: 1,
+                        token: 'AUTO332',
+                        typed_length: 0,
+                      },
+                    ],
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    title: '',
+                  },
+                  insertTextFormat: 1,
+                  kind: 14,
+                  label: 'new',
+                  sortText: '00000000000000000009',
                   textEdit: {
                     newText: 'new',
                     range: {
@@ -5536,7 +5886,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'React',
-                        index: 9,
+                        index: 10,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5549,7 +5899,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 9,
                   label: 'React',
-                  sortText: '00000000000000000009',
+                  sortText: '00000000000000000010',
                   textEdit: {
                     newText: 'React',
                     range: {
@@ -5572,7 +5922,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'typeof',
-                        index: 10,
+                        index: 11,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5584,7 +5934,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'typeof',
-                  sortText: '00000000000000000010',
+                  sortText: '00000000000000000011',
                   textEdit: {
                     newText: 'typeof',
                     range: {
@@ -5607,7 +5957,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'void',
-                        index: 11,
+                        index: 12,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5619,7 +5969,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'void',
-                  sortText: '00000000000000000011',
+                  sortText: '00000000000000000012',
                   textEdit: {
                     newText: 'void',
                     range: {
@@ -5642,7 +5992,7 @@ b.te
                       {
                         ac_type: 'Acid',
                         completion: 'yield',
-                        index: 12,
+                        index: 13,
                         session_requests: 1,
                         token: 'AUTO332',
                         typed_length: 0,
@@ -5654,7 +6004,7 @@ b.te
                   insertTextFormat: 1,
                   kind: 14,
                   label: 'yield',
-                  sortText: '00000000000000000012',
+                  sortText: '00000000000000000013',
                   textEdit: {
                     newText: 'yield',
                     range: {

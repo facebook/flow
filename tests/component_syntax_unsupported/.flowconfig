@@ -1,3 +1,4 @@
 [options]
 all=true
+component_syntax=false
 no_flowlib=false

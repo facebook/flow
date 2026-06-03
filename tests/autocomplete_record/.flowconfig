@@ -1,3 +1,5 @@
 [options]
 all=true
 experimental.records=true
+component_syntax=false
+pattern_matching=false

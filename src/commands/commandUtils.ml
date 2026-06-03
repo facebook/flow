@@ -1523,7 +1523,7 @@ let make_options
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_jest_integration = FlowConfig.jest_integration flowconfig;
     opt_enable_pattern_matching =
-      Base.Option.value ~default:false (FlowConfig.pattern_matching flowconfig);
+      Base.Option.value ~default:true (FlowConfig.pattern_matching flowconfig);
     opt_enable_records = Base.Option.value ~default:false (FlowConfig.records flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enable_custom_error = FlowConfig.enable_custom_error flowconfig;

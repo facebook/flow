@@ -243,13 +243,13 @@ pub mod opts {
             casting_syntax: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
             channel_mode: None,
-            component_syntax: false,
+            component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
             dev_only_refinement_info_as_errors: false,
             emoji: None,
             enable_const_params: None,
-            enums: false,
+            enums: true,
             estimate_recheck_time: None,
             saved_state_restart_on_reinit: false,
             facebook_fbs: None,
@@ -1084,6 +1084,9 @@ pub mod opts {
                         ReactRule::DeepReadOnlyHookReturns,
                         ReactRule::RulesOfHooks,
                     ];
+                } else {
+                    opts.component_syntax = false;
+                    opts.react_rules = Vec::new();
                 }
                 Ok(())
             },

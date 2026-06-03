@@ -2209,7 +2209,7 @@ pub(super) fn make_options(
         None => options::ChannelMode::Pipe,
     };
     let enable_const_params = enable_const_params.unwrap_or(false);
-    let enable_pattern_matching = pattern_matching.unwrap_or(false);
+    let enable_pattern_matching = pattern_matching.unwrap_or(true);
     let enable_records = records.unwrap_or(false);
     let estimate_recheck_time = estimate_recheck_time_override
         .or(estimate_recheck_time)
