@@ -111,6 +111,7 @@ type t =
   | OptionalChainNew
   | OptionalChainTemplate
   | OptionalMethodCannotBeAbstract
+  | OverrideOnConstructor
   | ParameterAfterRestParameter
   | PrivateDelete
   | PrivateNotInClass
@@ -405,6 +406,7 @@ module PP = struct
     | OptionalChainNew -> "An optional chain may not be used in a `new` expression."
     | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
     | OptionalMethodCannotBeAbstract -> "Optional methods can't be abstract."
+    | OverrideOnConstructor -> "'override' modifier cannot appear on a constructor declaration"
     | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
     | PrivateDelete -> "Private fields may not be deleted."
     | PrivateNotInClass -> "Private fields can only be referenced from within a class."

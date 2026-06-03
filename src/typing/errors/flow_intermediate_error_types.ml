@@ -196,6 +196,23 @@ type 'loc abstract_error_kind =
   | AbstractSuperCall of { member_name: string }
   | AbstractConstructorAssignedToNonAbstract
 
+type 'loc override_error_kind =
+  | OverrideWithoutExtends of {
+      class_name: string option;
+      member_name: string;
+    }
+  | OverrideOfNonInheritedMember of {
+      class_name: string option;
+      base_class_name: string option;
+      member_name: string;
+    }
+  | ImplicitOverrideMissingModifier of {
+      class_name: string option;
+      base_class_name: string option;
+      member_name: string;
+      inherited_def_loc: 'loc;
+    }
+
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
@@ -1183,6 +1200,7 @@ type 'loc message =
   | MessageAbstractClass
   | MessageAbstractMethod
   | MessageAbstract of 'loc abstract_error_kind
+  | MessageOverride of 'loc override_error_kind
   | MessageTSUndefinedType
   | MessageTupleElementNotReadable of {
       reason: 'loc virtual_reason;

@@ -129,6 +129,7 @@ use crate::intermediate_error_types::MessageTupleIndexOutOfBoundData;
 use crate::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use crate::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use crate::intermediate_error_types::ObjKind;
+use crate::intermediate_error_types::OverrideErrorKind;
 use crate::intermediate_error_types::PrimitiveKind;
 use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use crate::intermediate_error_types::StrictComparisonInfo;
@@ -2130,6 +2131,22 @@ pub struct EAbstractClassData<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct EOverrideData<L: Dupe> {
+    pub kind: OverrideErrorKind<L>,
+    pub loc: L,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EVarianceKeywordData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub kind: VarianceKeywordKind,
     pub loc: L,
@@ -2801,6 +2818,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ETSSyntax(Box<ETSSyntaxData<L>>),
 
     EAbstractClass(Box<EAbstractClassData<L>>),
+
+    EOverride(Box<EOverrideData<L>>),
 
     EVarianceKeyword(Box<EVarianceKeywordData<L>>),
 
@@ -4963,6 +4982,39 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 EAbstractClass(Box::new(EAbstractClassData { kind, loc: f(loc) }))
             }
 
+            EOverride(box EOverrideData { kind, loc }) => {
+                let kind = match kind {
+                    OverrideErrorKind::OverrideWithoutExtends {
+                        class_name,
+                        member_name,
+                    } => OverrideErrorKind::OverrideWithoutExtends {
+                        class_name,
+                        member_name,
+                    },
+                    OverrideErrorKind::OverrideOfNonInheritedMember {
+                        class_name,
+                        base_class_name,
+                        member_name,
+                    } => OverrideErrorKind::OverrideOfNonInheritedMember {
+                        class_name,
+                        base_class_name,
+                        member_name,
+                    },
+                    OverrideErrorKind::ImplicitOverrideMissingModifier {
+                        class_name,
+                        base_class_name,
+                        member_name,
+                        inherited_def_loc,
+                    } => OverrideErrorKind::ImplicitOverrideMissingModifier {
+                        class_name,
+                        base_class_name,
+                        member_name,
+                        inherited_def_loc: f(inherited_def_loc),
+                    },
+                };
+                EOverride(Box::new(EOverrideData { kind, loc: f(loc) }))
+            }
+
             EVarianceKeyword(box EVarianceKeywordData { kind, loc }) => {
                 EVarianceKeyword(Box::new(EVarianceKeywordData { kind, loc: f(loc) }))
             }
@@ -5852,6 +5904,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnsafeObjectAssign(loc)
             | Self::ETSSyntax(box ETSSyntaxData { kind: _, loc })
             | Self::EAbstractClass(box EAbstractClassData { kind: _, loc })
+            | Self::EOverride(box EOverrideData { kind: _, loc })
             | Self::EVarianceKeyword(box EVarianceKeywordData { kind: _, loc }) => Some(loc.dupe()),
 
             Self::EInvalidTypeof(box (loc, _)) => Some(loc.dupe()),
@@ -9053,6 +9106,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageAbstract(kind))
             }
 
+            ErrorMessage::EOverride(box EOverrideData { kind, .. }) => {
+                use crate::intermediate_error_types::Message;
+                Normal(Message::MessageOverride(kind))
+            }
+
             ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { kind, .. }) => {
                 use crate::intermediate_error_types::Message;
                 use crate::intermediate_error_types::VarianceSigilKind;
@@ -9761,6 +9819,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
             ErrorMessage::ETSSyntax(box ETSSyntaxData { .. }) => Some(UnsupportedSyntax),
             ErrorMessage::EAbstractClass(box EAbstractClassData { .. }) => Some(InvalidAbstract),
+            ErrorMessage::EOverride(box EOverrideData { .. }) => Some(InvalidOverride),
             ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { .. }) => {
                 Some(UnsupportedSyntax)
             }

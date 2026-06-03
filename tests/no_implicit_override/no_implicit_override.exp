@@ -1,0 +1,77 @@
+Error ----------------------------------------------------------------------------------- abstract_concrete_impl.js:13:3
+
+Member `conc` must have an `override` modifier because it overrides a member [1] in the base class `Base`.
+[invalid-override]
+
+   abstract_concrete_impl.js:13:3
+   13|   conc(): void {} // ERROR: implicit override of `Base.conc` needs `override`
+         ^^^^
+
+References:
+   abstract_concrete_impl.js:8:3
+    8|   conc(): void {}
+         ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- implicit_override_errors.js:12:3
+
+Member `greet` must have an `override` modifier because it overrides a member [1] in the base class `Base`.
+[invalid-override]
+
+   implicit_override_errors.js:12:3
+   12|   greet(): string { // ERROR: implicit override of `Base.greet` needs `override`
+         ^^^^^
+
+References:
+   implicit_override_errors.js:5:3
+    5|   greet(): string {
+         ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- implicit_override_errors.js:15:3
+
+Member `name` must have an `override` modifier because it overrides a member [1] in the base class `Base`.
+[invalid-override]
+
+   implicit_override_errors.js:15:3
+   15|   name: string = "sub"; // ERROR: implicit override of `Base.name` needs `override`
+         ^^^^
+
+References:
+   implicit_override_errors.js:8:3
+    8|   name: string = "base";
+         ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- static_implicit.js:10:10
+
+Member `s` must have an `override` modifier because it overrides a member [1] in the base class `Base`.
+[invalid-override]
+
+   static_implicit.js:10:10
+   10|   static s(): void {} // ERROR: implicit override of `Base.s` needs `override`
+                ^
+
+References:
+   static_implicit.js:5:10
+    5|   static s(): void {}
+                ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- static_implicit.js:11:10
+
+Member `count` must have an `override` modifier because it overrides a member [1] in the base class `Base`.
+[invalid-override]
+
+   static_implicit.js:11:10
+   11|   static count: number = 1; // ERROR: implicit override of `Base.count` needs `override`
+                ^^^^^
+
+References:
+   static_implicit.js:6:10
+    6|   static count: number = 0;
+                ^^^^^ [1]
+
+
+
+Found 5 errors

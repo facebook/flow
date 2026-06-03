@@ -782,6 +782,10 @@ and 'loc t' =
       kind: 'loc abstract_error_kind;
       loc: 'loc;
     }
+  | EOverride of {
+      kind: 'loc override_error_kind;
+      loc: 'loc;
+    }
   | EVarianceKeyword of {
       kind:
         [ `Writeonly | `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ];
@@ -1912,6 +1916,19 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | AbstractConstructorAssignedToNonAbstract -> AbstractConstructorAssignedToNonAbstract
     in
     EAbstractClass { kind; loc = f loc }
+  | EOverride { kind; loc } ->
+    let kind =
+      match kind with
+      | OverrideWithoutExtends { class_name; member_name } ->
+        OverrideWithoutExtends { class_name; member_name }
+      | OverrideOfNonInheritedMember { class_name; base_class_name; member_name } ->
+        OverrideOfNonInheritedMember { class_name; base_class_name; member_name }
+      | ImplicitOverrideMissingModifier
+          { class_name; base_class_name; member_name; inherited_def_loc } ->
+        ImplicitOverrideMissingModifier
+          { class_name; base_class_name; member_name; inherited_def_loc = f inherited_def_loc }
+    in
+    EOverride { kind; loc = f loc }
   | EVarianceKeyword { kind; loc } -> EVarianceKeyword { kind; loc = f loc }
   | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
     EInvalidBinaryArith
@@ -2392,6 +2409,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidCatchParameterAnnotation _
   | ETSSyntax _
   | EAbstractClass _
+  | EOverride _
   | EVarianceKeyword _
   | EInvalidBinaryArith _
   | EInvalidMappedType _
@@ -2609,6 +2627,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidTemplateLiteralType { loc; _ }
   | ETSSyntax { loc; _ }
   | EAbstractClass { loc; _ }
+  | EOverride { loc; _ }
   | EVarianceKeyword { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
   | EReferenceInDefault (_, _, loc)
@@ -3862,6 +3881,7 @@ let friendly_message_of_msg = function
     | DeprecatedTypeParamColon -> Normal MessageDeprecatedTypeParamColonBound
   end
   | EAbstractClass { kind; _ } -> Normal (MessageAbstract kind)
+  | EOverride { kind; _ } -> Normal (MessageOverride kind)
   | EVarianceKeyword { kind = `Writeonly; _ } -> Normal MessageVarianceKeywordWriteonly
   | EVarianceKeyword { kind = (`Plus _ | `Minus _) as sigil; _ } ->
     Normal (MessageDeprecatedVarianceSigil sigil)
@@ -4354,6 +4374,7 @@ let error_code_of_message err : error_code option =
   end
   | ETSSyntax _ -> Some UnsupportedSyntax
   | EAbstractClass _ -> Some InvalidAbstract
+  | EOverride _ -> Some InvalidOverride
   | EVarianceKeyword _ -> Some UnsupportedSyntax
   | EInvalidTypeCastSyntax _ -> Some InvalidTypeCastSyntax
   | EMissingPlatformSupportWithAvailablePlatforms _ -> Some MissingPlatformSupport

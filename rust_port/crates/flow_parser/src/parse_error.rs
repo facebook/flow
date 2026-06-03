@@ -173,6 +173,7 @@ pub enum ParseError {
     OptionalChainNew,
     OptionalChainTemplate,
     OptionalMethodCannotBeAbstract,
+    OverrideOnConstructor,
     ParameterAfterRestParameter,
     PrivateDelete,
     PrivateNotInClass,
@@ -727,6 +728,12 @@ impl fmt::Display for ParseError {
             }
             Self::OptionalMethodCannotBeAbstract => {
                 write!(f, "Optional methods can't be abstract.")
+            }
+            Self::OverrideOnConstructor => {
+                write!(
+                    f,
+                    "'override' modifier cannot appear on a constructor declaration"
+                )
             }
             Self::ParameterAfterRestParameter => {
                 write!(

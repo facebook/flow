@@ -124,6 +124,7 @@ module Opts = struct
     multi_platform_extensions: string list;
     munge_underscores: bool;
     no_flowlib: bool;
+    no_implicit_override: bool;
     no_unchecked_indexed_access: bool;
     node_modules_errors: bool;
     node_main_fields: string list;
@@ -293,6 +294,7 @@ module Opts = struct
       multi_platform_extensions = [];
       munge_underscores = false;
       no_flowlib = false;
+      no_implicit_override = false;
       no_unchecked_indexed_access = false;
       node_modules_errors = false;
       node_main_fields = ["main"];
@@ -1207,6 +1209,7 @@ module Opts = struct
       ( "experimental.multi_platform.extension_group_mapping",
         multi_platform_extension_group_mapping_parser
       );
+      ("no_implicit_override", boolean (fun opts v -> Ok { opts with no_implicit_override = v }));
       ( "experimental.opaque_type_new_bound_syntax",
         boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
       );
@@ -2176,6 +2179,8 @@ let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 let munge_underscores c = c.options.Opts.munge_underscores
 
 let no_flowlib c = c.options.Opts.no_flowlib
+
+let no_implicit_override c = c.options.Opts.no_implicit_override
 
 let no_unchecked_indexed_access c = c.options.Opts.no_unchecked_indexed_access
 

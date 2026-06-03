@@ -48,6 +48,7 @@ module Make
         constructs = [];
         dict = None;
         abstract_members = SSet.empty;
+        override_members = SMap.empty;
       }
     in
     let constructor = [] in
@@ -67,6 +68,7 @@ module Make
       static;
       instance;
       abstract = false;
+      is_declare = false;
     }
 
   let structural x =
@@ -91,16 +93,49 @@ module Make
     else
       f s.instance
 
-  let add_private_field name loc polarity field =
-    map_sig (fun s ->
-        { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields }
+  (* Track [override]-marked members per-side. Unlike [abstract_members],
+     this is tracked on BOTH instance and static sides — override checks
+     fire independently per side (a static [override] can't satisfy an
+     instance-only base member, and vice versa). The recorded [loc] is the
+     member's def loc, used as the primary loc for the late-pass
+     [EOverride] errors.
+
+     Per-side dispatch happens at the call site via [map_sig], so [s] is
+     already the per-side signature — no [~static] argument needed. *)
+  let update_override_members ~override name loc s =
+    if not override then
+      s.override_members
+    else
+      SMap.add name loc s.override_members
+
+  (* Private members (ES [#name]) live in a separate namespace from public
+     members. Key [override_members] under the prefixed name (e.g. ["#foo"])
+     so it can't collide with a public inherited [foo] when the not-inherited
+     check does [SMap.mem]. (The inherited walk reads only public
+     own_props/proto_props, so a prefixed key correctly fails the membership
+     check.) *)
+  let private_member_key name = "#" ^ name
+
+  let add_private_field ?(override = false) name loc polarity field ~static =
+    map_sig ~static (fun s ->
+        {
+          s with
+          private_fields = SMap.add name (Some loc, polarity, field) s.private_fields;
+          override_members = update_override_members ~override (private_member_key name) loc s;
+        }
     )
 
-  let add_private_method ~static name ~id_loc ~this_write_loc ~func_sig ~set_asts ~set_type x =
+  let add_private_method
+      ~static ?(override = false) name ~id_loc ~this_write_loc ~func_sig ~set_asts ~set_type x =
     let func_info = { id_loc = Some id_loc; this_write_loc; func_sig; set_asts; set_type } in
     map_sig
       ~static
-      (fun s -> { s with private_methods = SMap.add name func_info s.private_methods })
+      (fun s ->
+        {
+          s with
+          private_methods = SMap.add name func_info s.private_methods;
+          override_members = update_override_members ~override (private_member_key name) id_loc s;
+        })
       x
 
   let public_fields_of_signature ~static s =
@@ -153,17 +188,21 @@ module Make
      handle (`abstract x; x = 0;` inside one class) is parser-blocked as a
      duplicate member.
 
-     Name-only granularity matches TS: [abstract get x] + [abstract set x]
-     collapse to a single obligation "x", and a subclass that implements
-     either half satisfies it. (TS2515 fires only when a subclass omits
-     both halves.) *)
+     Name-only granularity: [abstract get x] + [abstract set x] collapse
+     to a single obligation "x", and a subclass that implements either
+     half satisfies it. (An error fires only when the subclass omits both
+     halves.) *)
   let update_abstract_members ~abstract ~static name s =
     if static || not abstract then
       s.abstract_members
     else
       SSet.add name s.abstract_members
 
-  let add_field' ?(abstract = false) ~static name fld x =
+  (* [override_loc]: [Some loc] means the member is [override]-marked with
+     its def loc; [None] means it isn't. Folding the bool and the loc into
+     a single param prevents the [override = true, override_loc = None]
+     inconsistency where the override flag would be silently dropped. *)
+  let add_field' ?(abstract = false) ~static ?override_loc name fld x =
     let flat = static || structural x in
     map_sig
       ~static
@@ -196,11 +235,21 @@ module Make
               s.setters
             );
           abstract_members = update_abstract_members ~abstract ~static name s;
+          override_members =
+            (match override_loc with
+            | Some loc -> SMap.add name loc s.override_members
+            | None -> s.override_members);
         })
       x
 
-  let add_field ~static ?(abstract = false) name loc polarity field x =
-    add_field' ~abstract ~static name (Some loc, polarity, field) x
+  let add_field ~static ?(abstract = false) ?(override = false) name loc polarity field x =
+    let override_loc =
+      if override then
+        Some loc
+      else
+        None
+    in
+    add_field' ~abstract ~static ?override_loc name (Some loc, polarity, field) x
 
   let add_indexer ~static dict x = map_sig ~static (fun s -> { s with dict = Some dict }) x
 
@@ -211,7 +260,7 @@ module Make
     let t = Type.StrModuleT.why r in
     add_field' ~static:true "name" (None, Polarity.Neutral, Annot t) x
 
-  let add_proto_field ?(abstract = false) name loc polarity field x =
+  let add_proto_field ?(abstract = false) ?(override = false) name loc polarity field x =
     map_sig
       ~static:false
       (fun s ->
@@ -222,12 +271,14 @@ module Make
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
           abstract_members = update_abstract_members ~abstract ~static:false name s;
+          override_members = update_override_members ~override name loc s;
         })
       x
 
   let add_method
       ~static
       ?(abstract = false)
+      ?(override = false)
       name
       ~id_loc
       ~this_write_loc
@@ -253,6 +304,7 @@ module Make
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
           abstract_members = update_abstract_members ~abstract ~static name s;
+          override_members = update_override_members ~override name id_loc s;
         })
       x
 
@@ -262,6 +314,7 @@ module Make
   let append_method
       ~static
       ?(abstract = false)
+      ?(override = false)
       name
       ~id_loc
       ~this_write_loc
@@ -290,6 +343,7 @@ module Make
           getters = SMap.remove name s.getters;
           setters = SMap.remove name s.setters;
           abstract_members = update_abstract_members ~abstract ~static name s;
+          override_members = update_override_members ~override name id_loc s;
         })
       x
 
@@ -303,6 +357,7 @@ module Make
   let add_getter
       ~static
       ?(abstract = false)
+      ?(override = false)
       name
       ~id_loc
       ~this_write_loc
@@ -327,12 +382,14 @@ module Make
           methods = SMap.remove name s.methods;
           getters = SMap.add name func_info s.getters;
           abstract_members = update_abstract_members ~abstract ~static name s;
+          override_members = update_override_members ~override name id_loc s;
         })
       x
 
   let add_setter
       ~static
       ?(abstract = false)
+      ?(override = false)
       name
       ~id_loc
       ~this_write_loc
@@ -357,6 +414,7 @@ module Make
           methods = SMap.remove name s.methods;
           setters = SMap.add name func_info s.setters;
           abstract_members = update_abstract_members ~abstract ~static name s;
+          override_members = update_override_members ~override name id_loc s;
         })
       x
 
@@ -1112,11 +1170,391 @@ module Make
            ~own_concrete_names
         )
 
+  (* Determine whether the resolved [super] type carries a real [extends]
+     clause. The "no real super" forms — [null] / [ObjProtoT] / [FunProtoT]
+     / [MixedT] — mean the class either has no [extends] at all or extends
+     a sentinel placeholder. In any of those cases [override] on a member
+     is nonsensical (no member to inherit from).
+
+     Wrappers ([AnnotT], [OpaqueT], [UnionT], [TypeAppT], [EvalT], [OpenT]
+     tvars, ...) are concretized first so that, e.g., [extends OpaqueAlias]
+     where the alias resolves to [ObjProtoT] is correctly classified as
+     "no real extends" instead of leaking into the not-inherited check's
+     "not declared in the base class" branch. *)
+  let super_has_real_extends cx t =
+    let rec check t =
+      match t with
+      | Type.NullProtoT _
+      | Type.ObjProtoT _
+      | Type.FunProtoT _
+      | Type.DefT (_, Type.NullT)
+      | Type.DefT (_, Type.MixedT _) ->
+        false
+      | Type.IntersectionT (_, rep) -> List.exists check (Type.InterRep.members rep)
+      | _ -> true
+    in
+    let concretes =
+      Context.with_suppressed_errors cx (fun () ->
+          Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+      )
+    in
+    List.exists check concretes
+
+  (* Best-effort extraction of a class name from an inst's reason — used
+     to populate [base_class_name] in override error messages. Falls back
+     to [None] if the reason isn't a recognized class-named shape. *)
+  let class_name_of_inst_reason r =
+    match Reason.desc_of_reason r with
+    | Reason.RType (Reason.OrdinaryName n) -> Some n
+    | Reason.RStatics (Reason.RType (Reason.OrdinaryName n)) -> Some n
+    | _ -> None
+
+  (* Per-side inherited-walk state. [locs] / [owners] are populated for
+     both sides; [name_abstract] is meaningful only on the instance side
+     (the static side leaves it empty since [abstract_members] is
+     instance-only). *)
+  type inherited_side_state = {
+    mutable locs: ALoc.t SMap.t;
+    mutable owners: string option SMap.t;
+    mutable name_abstract: bool SMap.t;
+  }
+
+  let mk_inherited_side_state () =
+    { locs = SMap.empty; owners = SMap.empty; name_abstract = SMap.empty }
+
+  (* Walk the super chain ONCE and populate BOTH instance- and static-side
+     inherited tables in parallel. Each ancestor [InstanceT] contributes:
+     - instance: [own_props] + [proto_props] (public namespace; private
+       members live in separate slots that are not crossed here);
+     - static: the [static] slot, concretized through wrappers
+       ([AnnotT], [EvalT], [OpenT], [IntersectionT], ...) before reading
+       the prop map. Without that concretization, cross-module inheritance
+       (which commonly wraps the static slot in [AnnotT]) would silently
+       drop the ancestor's static members.
+     First-write wins for both sides — closest ancestor's loc/owner/
+     abstract bit is recorded. Returns the per-side state plus the
+     immediate-super's class name (for [base_class_name] in errors). *)
+  let collect_inherited_members_both_sides cx ~super =
+    let seen = ref Type.Properties.Set.empty in
+    let instance_state = mk_inherited_side_state () in
+    let static_state = mk_inherited_side_state () in
+    let immediate_super_name = ref None in
+    let first_inst = ref true in
+    let add_member state ~inst_name ~is_abstract name loc_opt =
+      if not (SMap.mem name state.locs) then begin
+        let loc = Base.Option.value loc_opt ~default:ALoc.none in
+        state.locs <- SMap.add name loc state.locs;
+        state.owners <- SMap.add name inst_name state.owners;
+        state.name_abstract <- SMap.add name is_abstract state.name_abstract
+      end
+    in
+    let process_inst (instance_t : Type.instance_t) (inst_reason : Reason.reason) =
+      let inst = instance_t.Type.inst in
+      if Type.Properties.Set.mem inst.Type.own_props !seen then
+        false
+      else begin
+        seen := Type.Properties.Set.add inst.Type.own_props !seen;
+        let inst_name = class_name_of_inst_reason inst_reason in
+        if !first_inst then begin
+          immediate_super_name := inst_name;
+          first_inst := false
+        end;
+        let own_props = Context.find_props cx inst.Type.own_props in
+        let proto_props = Context.find_props cx inst.Type.proto_props in
+        let visit_instance props =
+          NameUtils.Map.iter
+            (fun name p ->
+              let (Reason.OrdinaryName name_str) = name in
+              let is_abstract = NameUtils.Set.mem name inst.Type.inst_abstract_props in
+              add_member instance_state ~inst_name ~is_abstract name_str (Type.Property.first_loc p))
+            props
+        in
+        visit_instance own_props;
+        visit_instance proto_props;
+        let rec visit_static_concrete t =
+          match t with
+          | Type.DefT (_, Type.ObjT { Type.props_tmap; _ }) ->
+            let static_props = Context.find_props cx props_tmap in
+            NameUtils.Map.iter
+              (fun name p ->
+                let (Reason.OrdinaryName name_str) = name in
+                (* Static members can't be abstract in our model. *)
+                add_member
+                  static_state
+                  ~inst_name
+                  ~is_abstract:false
+                  name_str
+                  (Type.Property.first_loc p))
+              static_props
+          | Type.IntersectionT (_, rep) ->
+            List.iter visit_static_concrete (Type.InterRep.members rep)
+          | _ -> ()
+        in
+        let static_concretes =
+          Context.with_suppressed_errors cx (fun () ->
+              Flow_js.possible_concrete_types_for_inspection
+                cx
+                (TypeUtil.reason_of_t instance_t.Type.static)
+                instance_t.Type.static
+          )
+        in
+        List.iter visit_static_concrete static_concretes;
+        true
+      end
+    in
+    let rec walk t =
+      let concretes =
+        Context.with_suppressed_errors cx (fun () ->
+            Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+        )
+      in
+      List.iter walk_one concretes
+    and walk_one t =
+      match t with
+      | Type.ThisInstanceT (r, instance_t, _, _)
+      | Type.DefT (r, Type.InstanceT instance_t) ->
+        if process_inst instance_t r then walk instance_t.Type.super
+      | Type.IntersectionT (_, rep) -> List.iter walk_one (Type.InterRep.members rep)
+      | _ -> ()
+    in
+    walk super;
+    (instance_state, static_state, !immediate_super_name)
+
+  (* Run the three override-check sub-checks for one side (instance OR
+     static):
+     - no-extends check: every [override] member is rejected if the class
+       has no real super class to inherit from.
+     - not-inherited check: every [override] member's name must exist
+       somewhere in the inherited set.
+     - implicit-override check (NIO): every concrete own member that
+       shadows an inherited member must carry the [override] modifier.
+
+     The no-extends check, when it fires, is mutually exclusive with the
+     other two (they assume a real super chain to walk).
+
+     Arguments:
+     [own_concrete_names]: names of [x]'s own concrete same-side members.
+     [override_members]: names of [x]'s same-side members declared [override],
+       mapped to their def locs.
+     [super]: the same-side super type, used by the no-extends check.
+     [inherited_state]: precomputed inherited members for this side (already
+       walked once for both sides; see [collect_inherited_members_both_sides]).
+     [immediate_super_name]: name of the closest super class (for
+       [base_class_name] in [OverrideOfNonInheritedMember]).
+     [skip_implicit_check]: when true, the implicit-override check is
+       skipped. *)
+  let check_override_side
+      cx
+      ~class_name
+      ~own_concrete_names
+      ~override_members
+      ~super
+      ~inherited_state
+      ~immediate_super_name
+      ~skip_implicit_check =
+    let { locs = inherited_locs; owners = inherited_owners; name_abstract } = inherited_state in
+    (* No-extends check. If [super] has no real extends clause and there
+       are [override] members, emit [OverrideWithoutExtends] for each and
+       skip the other checks for this side (they assume a real super). *)
+    if (not (super_has_real_extends cx super)) && not (SMap.is_empty override_members) then
+      SMap.iter
+        (fun member_name loc ->
+          if member_name = "constructor" then
+            ()
+          else
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EOverride
+                 {
+                   kind =
+                     Flow_intermediate_error_types.OverrideWithoutExtends
+                       { class_name; member_name };
+                   loc;
+                 }
+              ))
+        override_members
+    else begin
+      (* Not-inherited check. Every [override] name must exist somewhere
+         in the inherited set. *)
+      SMap.iter
+        (fun member_name loc ->
+          if member_name = "constructor" then
+            ()
+          else if not (SMap.mem member_name inherited_locs) then
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EOverride
+                 {
+                   kind =
+                     Flow_intermediate_error_types.OverrideOfNonInheritedMember
+                       { class_name; base_class_name = immediate_super_name; member_name };
+                   loc;
+                 }
+              ))
+        override_members;
+      (* Implicit-override check (NIO). Every concrete own same-side member
+         that shadows an inherited member must carry the [override]
+         modifier — unless the shallowest inherited decl is abstract from
+         x's perspective. *)
+      if not skip_implicit_check then
+        SMap.iter
+          (fun member_name own_loc_opt ->
+            if member_name = "constructor" then
+              ()
+            else if SMap.mem member_name override_members then
+              ()
+            else
+              match SMap.find_opt member_name inherited_locs with
+              | None -> ()
+              | Some inherited_def_loc ->
+                let is_abstract =
+                  Base.Option.value (SMap.find_opt member_name name_abstract) ~default:false
+                in
+                if is_abstract then
+                  ()
+                else begin
+                  (* The implicit-override check fires at the subclass
+                     member that should have had [override]. If
+                     [own_loc_opt] is [None] the member was auto-injected
+                     by the class machinery (e.g. the synthetic static
+                     [name] field), not user-authored — there's nothing
+                     for the user to mark [override] on, so skip emission
+                     entirely. (A previous both-locs-have-no-source
+                     filter mis-fired when the inherited side had a real
+                     loc, e.g. [class MyErr extends Error] under NIO.) *)
+                  match own_loc_opt with
+                  | None -> ()
+                  | Some loc ->
+                    (* [inherited_owners] maps name -> string option (the
+                       owner class's name, if it has one). [SMap.find_opt]
+                       wraps that in another option, so flatten with
+                       [Option.join]. *)
+                    let base_class_name =
+                      Base.Option.join (SMap.find_opt member_name inherited_owners)
+                    in
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.EOverride
+                         {
+                           kind =
+                             Flow_intermediate_error_types.ImplicitOverrideMissingModifier
+                               { class_name; base_class_name; member_name; inherited_def_loc };
+                           loc;
+                         }
+                      )
+                end)
+          own_concrete_names
+    end
+
+  (* Verify [override] members and (under [no_implicit_override]) implicit
+     overrides. Mirrors [check_abstract_obligations]'s shape: gated on
+     [tslib_syntax], registered as a post-inference callback so super
+     resolution has completed, and walks both instance AND static sides
+     (unlike abstract, which is instance-only).
+
+     Skipped entirely for structural sigs ([interface], inline
+     [interface { ... }], inline construct sigs) — those forms have no
+     [override] modifier syntax (rejected at type-annotation time), so
+     [override_members] is always empty AND there's no way for a user to
+     satisfy the implicit-override check. *)
+  let check_override_obligations cx _def_reason x =
+    if (not (Context.tslib_syntax cx)) || structural x then
+      ()
+    else
+      let instance_override = x.instance.Types.override_members in
+      let static_override = x.static.Types.override_members in
+      (* The implicit-override check is skipped if [no_implicit_override]
+         is off, OR if the class is ambient. Ambient has two prongs:
+         1. file/scope ambient via [under_declaration_context];
+         2. in-file [declare class] via the [is_declare] flag set in
+            [Type_annotation.mk_declare_class_sig]. *)
+      let skip_implicit_check =
+        (not (Context.no_implicit_override cx))
+        || Context.under_declaration_context cx
+        || x.Types.is_declare
+      in
+      (* Short-circuit only when there's nothing for any check to do: no
+         [override] modifiers anywhere AND the implicit-override check
+         is skipped. *)
+      if SMap.is_empty instance_override && SMap.is_empty static_override && skip_implicit_check
+      then
+        ()
+      else
+        let class_name = x.Types.class_name in
+        (* The implicit-override check is the only consumer of
+           [own_concrete_names_*]; building them when
+           [skip_implicit_check = true] is pure waste (two [SMap.fold]s
+           per class allocating a fresh map that no one reads). Build
+           only when the implicit-override check will run.
+           [add_fields]/[add_funcs]/[add_methods] each insert a
+           [name -> ALoc.t option] entry; the loc is used as the primary
+           loc for the [ImplicitOverrideMissingModifier] error. Abstract
+           members are subtracted because the implicit-override check is
+           about CONCRETE overrides — an [abstract foo()] shadowing a
+           concrete [foo()] is the abstract-obligation check's domain,
+           not this one. *)
+        let own_concrete_names_of s =
+          if skip_implicit_check then
+            SMap.empty
+          else
+            let add_fields m acc = SMap.fold (fun k (loc, _, _) acc -> SMap.add k loc acc) m acc in
+            let add_funcs m acc =
+              SMap.fold (fun k (info : Types.func_info) acc -> SMap.add k info.id_loc acc) m acc
+            in
+            let add_methods m acc =
+              (* [methods] is [func_info Nel.t SMap.t]; take head's id_loc. *)
+              SMap.fold
+                (fun k (infos : Types.func_info Nel.t) acc ->
+                  let (info, _) = infos in
+                  SMap.add k info.Types.id_loc acc)
+                m
+                acc
+            in
+            SMap.empty
+            |> add_fields s.Types.fields
+            |> add_fields s.Types.proto_fields
+            |> add_methods s.Types.methods
+            |> add_funcs s.Types.getters
+            |> add_funcs s.Types.setters
+            |> SMap.filter (fun k _ -> not (SSet.mem k s.Types.abstract_members))
+        in
+        let own_concrete_instance = own_concrete_names_of x.instance in
+        let own_concrete_static = own_concrete_names_of x.static in
+        let (super, _static_proto) = supertype cx x in
+        Context.add_post_inference_validation_callback cx (fun () ->
+            (* One super-chain walk feeds both sides — each ancestor's
+               static slot lives on the same [InstanceT] we're already
+               visiting. Halves the [possible_concrete_types_for_inspection]
+               work versus the prior two-walk shape. *)
+            let (instance_inherited, static_inherited, immediate_super_name) =
+              collect_inherited_members_both_sides cx ~super
+            in
+            check_override_side
+              cx
+              ~class_name
+              ~own_concrete_names:own_concrete_instance
+              ~override_members:instance_override
+              ~super
+              ~inherited_state:instance_inherited
+              ~immediate_super_name
+              ~skip_implicit_check;
+            check_override_side
+              cx
+              ~class_name
+              ~own_concrete_names:own_concrete_static
+              ~override_members:static_override
+              ~super
+              ~inherited_state:static_inherited
+              ~immediate_super_name
+              ~skip_implicit_check
+        )
+
   let check_signature_compatibility cx def_reason x =
     check_super cx def_reason x;
     check_implements cx def_reason x;
     check_methods cx def_reason x;
-    check_abstract_obligations cx def_reason x
+    check_abstract_obligations cx def_reason x;
+    check_override_obligations cx def_reason x
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)

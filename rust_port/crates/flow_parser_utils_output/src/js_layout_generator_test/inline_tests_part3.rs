@@ -257,12 +257,12 @@ fn class_override() {
     assert_statement_string(
         false,
         None,
-        "abstract class a extends b{override abstract a():void;}",
+        "abstract class a extends b{abstract override a():void;}",
     );
     assert_statement_string(
         false,
         None,
-        "abstract class a extends b{override abstract a:string;}",
+        "abstract class a extends b{abstract override a:string;}",
     );
 }
 

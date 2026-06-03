@@ -4992,6 +4992,56 @@ let to_printable_error :
           text " constructor type.";
         ]
     end
+    | MessageOverride kind -> begin
+      match kind with
+      | OverrideWithoutExtends { class_name; member_name } ->
+        let containing =
+          match class_name with
+          | Some n -> [text " its containing class "; code n; text " doesn't"]
+          | None -> [text " its containing class doesn't"]
+        in
+        [
+          text "Member ";
+          code member_name;
+          text " can't have an ";
+          code "override";
+          text " modifier because";
+        ]
+        @ containing
+        @ [text " extend another class."]
+      | OverrideOfNonInheritedMember { class_name = _; base_class_name; member_name } ->
+        let base =
+          match base_class_name with
+          | Some n -> [text " the base class "; code n; text "."]
+          | None -> [text " the base class."]
+        in
+        [
+          text "Member ";
+          code member_name;
+          text " can't have an ";
+          code "override";
+          text " modifier because it isn't declared in";
+        ]
+        @ base
+      | ImplicitOverrideMissingModifier
+          { class_name = _; base_class_name; member_name; inherited_def_loc } ->
+        let base =
+          match base_class_name with
+          | Some n -> [text " the base class "; code n]
+          | None -> [text " the base class"]
+        in
+        [
+          text "Member ";
+          code member_name;
+          text " must have an ";
+          code "override";
+          text " modifier because it overrides ";
+          hardcoded_string_desc_ref "a member" inherited_def_loc;
+          text " in";
+        ]
+        @ base
+        @ [text "."]
+    end
     | MessageTSVarianceIn ->
       [
         text "The equivalent of TypeScript's ";

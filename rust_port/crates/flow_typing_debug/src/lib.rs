@@ -77,6 +77,7 @@ use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::ENegativeTypeGuardConsistencyData;
 use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
 use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
+use flow_typing_errors::error_message::EOverrideData;
 use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
 use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::EPrimitiveAsInterfaceData;
@@ -3770,6 +3771,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EAbstractClass(box EAbstractClassData { loc, .. }) => {
             format!("EAbstractClass ({})", string_of_aloc(None, loc))
+        }
+        ErrorMessage::EOverride(box EOverrideData { loc, .. }) => {
+            format!("EOverride ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EVarianceKeyword(box EVarianceKeywordData { loc, .. }) => {
             format!("EVarianceKeyword ({})", string_of_aloc(None, loc))

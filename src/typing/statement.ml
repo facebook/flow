@@ -8987,6 +8987,7 @@ module Make
                   | Method.Method when private_ ->
                     Class_stmt_sig.add_private_method
                       ~static
+                      ~override
                       name
                       ~id_loc
                       ~this_write_loc:(Some func_loc)
@@ -8995,6 +8996,7 @@ module Make
                   | Method.Method ->
                     Class_stmt_sig.add_method
                       ~static
+                      ~override
                       name
                       ~id_loc
                       ~this_write_loc:(Some func_loc)
@@ -9003,6 +9005,7 @@ module Make
                   | Method.Get ->
                     Class_stmt_sig.add_getter
                       ~static
+                      ~override
                       name
                       ~id_loc
                       ~this_write_loc:(Some func_loc)
@@ -9011,6 +9014,7 @@ module Make
                   | Method.Set ->
                     Class_stmt_sig.add_setter
                       ~static
+                      ~override
                       name
                       ~id_loc
                       ~this_write_loc:(Some func_loc)
@@ -9031,42 +9035,48 @@ module Make
                 failwith "Internal Error: Found non-private field with private name"
               | Body.Method
                   ( method_loc,
-                    {
-                      Method.key =
-                        Ast.Expression.Object.Property.PrivateName
-                          (id_loc, ({ Ast.PrivateName.name; comments = _ } as id));
-                      value = (func_loc, func);
-                      kind;
-                      static;
-                      override;
-                      ts_accessibility;
-                      decorators;
-                      comments;
-                    }
-                  ) ->
+                    ( {
+                        Method.key =
+                          Ast.Expression.Object.Property.PrivateName
+                            (id_loc, ({ Ast.PrivateName.name; comments = _ } as id));
+                        value = (func_loc, func);
+                        kind;
+                        static;
+                        override;
+                        ts_accessibility;
+                        decorators;
+                        comments;
+                      } as _method_node
+                    )
+                  ) as elem ->
                 check_ts_accessibility ts_accessibility;
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_:true
-                  ~static
-                  ~override
-                  ~ts_accessibility
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key:(fun _ ->
-                    Ast.Expression.Object.Property.PrivateName (id_loc, id)
-                )
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  add_method_sig_and_element
+                    ~method_loc
+                    ~name
+                    ~id_loc
+                    ~func_loc
+                    ~func
+                    ~kind
+                    ~private_:true
+                    ~static
+                    ~override
+                    ~ts_accessibility
+                    ~decorators
+                    ~comments
+                    ~get_typed_method_key:(fun _ ->
+                      Ast.Expression.Object.Property.PrivateName (id_loc, id)
+                  )
               | Body.Method
                   ( method_loc,
                     {
@@ -9081,30 +9091,35 @@ module Make
                       decorators;
                       comments;
                     }
-                  ) ->
+                  ) as elem ->
                 check_ts_accessibility ts_accessibility;
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_:false
-                  ~static
-                  ~override
-                  ~ts_accessibility
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key:(fun func_t ->
-                    Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id)
-                )
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  add_method_sig_and_element
+                    ~method_loc
+                    ~name
+                    ~id_loc
+                    ~func_loc
+                    ~func
+                    ~kind
+                    ~private_:false
+                    ~static
+                    ~override
+                    ~ts_accessibility
+                    ~decorators
+                    ~comments
+                    ~get_typed_method_key:(fun func_t ->
+                      Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id)
+                  )
               (* fields *)
               | Body.PrivateField
                   ( loc,
@@ -9120,58 +9135,70 @@ module Make
                       decorators;
                       comments;
                     }
-                  ) ->
+                  ) as elem ->
                 check_ts_accessibility ts_accessibility;
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                if optional && not (Context.tslib_syntax cx) then
-                  Flow.add_output
-                    cx
-                    (Error_message.EUnsupportedSyntax
-                       (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
-                    );
-                let reason = mk_reason (RPrivateProperty name) loc in
-                let polarity = Anno.polarity cx ~on:`Property variance in
-                let decorators =
-                  Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
-                in
-                let (field, annot_t, annot_ast, get_value) =
-                  mk_field cx ~suppress_missing_annot:false tparams_map_with_this reason annot value
-                in
-                let get_element () =
-                  Body.PrivateField
-                    ( (loc, annot_t),
-                      {
-                        PrivateField.key;
-                        annot = annot_ast;
-                        value = get_value ();
-                        static;
-                        override;
-                        optional;
-                        variance;
-                        ts_accessibility;
-                        decorators;
-                        comments;
-                      }
-                    )
-                in
-                let public_seen_names' =
-                  check_duplicate_name
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                     public_seen_names
-                    id_loc
-                    name
-                    ~static
-                    ~private_:true
-                    Class_Member_Field
-                in
-                ( Class_stmt_sig.add_private_field ~static name id_loc polarity field c,
-                  get_element :: rev_elements,
-                  public_seen_names'
-                )
+                  )
+                end else begin
+                  if optional && not (Context.tslib_syntax cx) then
+                    Flow.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
+                      );
+                  let reason = mk_reason (RPrivateProperty name) loc in
+                  let polarity = Anno.polarity cx ~on:`Property variance in
+                  let decorators =
+                    Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
+                  in
+                  let (field, annot_t, annot_ast, get_value) =
+                    mk_field
+                      cx
+                      ~suppress_missing_annot:false
+                      tparams_map_with_this
+                      reason
+                      annot
+                      value
+                  in
+                  let get_element () =
+                    Body.PrivateField
+                      ( (loc, annot_t),
+                        {
+                          PrivateField.key;
+                          annot = annot_ast;
+                          value = get_value ();
+                          static;
+                          override;
+                          optional;
+                          variance;
+                          ts_accessibility;
+                          decorators;
+                          comments;
+                        }
+                      )
+                  in
+                  let public_seen_names' =
+                    check_duplicate_name
+                      public_seen_names
+                      id_loc
+                      name
+                      ~static
+                      ~private_:true
+                      Class_Member_Field
+                  in
+                  ( Class_stmt_sig.add_private_field ~override ~static name id_loc polarity field c,
+                    get_element :: rev_elements,
+                    public_seen_names'
+                  )
+                end
               | Body.Property
                   ( loc,
                     {
@@ -9188,67 +9215,74 @@ module Make
                       decorators;
                       comments;
                     }
-                  ) ->
+                  ) as elem ->
                 check_ts_accessibility ts_accessibility;
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                if optional && not (Context.tslib_syntax cx) then
-                  Flow.add_output
-                    cx
-                    (Error_message.EUnsupportedSyntax
-                       (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
-                    );
-                let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
-                let polarity = Anno.polarity cx ~on:`Property variance in
-                let decorators =
-                  Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
-                in
-                let suppress_missing_annot =
-                  match ts_accessibility with
-                  | Some
-                      (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ })
-                    ->
-                    Context.under_declaration_context cx
-                  | _ -> false
-                in
-                let (field, annot_t, annot, get_value) =
-                  mk_field cx ~suppress_missing_annot tparams_map_with_this reason annot value
-                in
-                let get_element () =
-                  Body.Property
-                    ( (loc, annot_t),
-                      {
-                        Property.key =
-                          Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
-                        annot;
-                        value = get_value ();
-                        static;
-                        override;
-                        optional;
-                        variance;
-                        ts_accessibility;
-                        decorators;
-                        comments;
-                      }
-                    )
-                in
-                let public_seen_names' =
-                  check_duplicate_name
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                     public_seen_names
-                    id_loc
-                    name
-                    ~static
-                    ~private_:false
-                    Class_Member_Field
-                in
-                ( Class_stmt_sig.add_field ~static name id_loc polarity field c,
-                  get_element :: rev_elements,
-                  public_seen_names'
-                )
+                  )
+                end else begin
+                  if optional && not (Context.tslib_syntax cx) then
+                    Flow.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
+                      );
+                  let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
+                  let polarity = Anno.polarity cx ~on:`Property variance in
+                  let decorators =
+                    Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
+                  in
+                  let suppress_missing_annot =
+                    match ts_accessibility with
+                    | Some
+                        ( _,
+                          { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }
+                        ) ->
+                      Context.under_declaration_context cx
+                    | _ -> false
+                  in
+                  let (field, annot_t, annot, get_value) =
+                    mk_field cx ~suppress_missing_annot tparams_map_with_this reason annot value
+                  in
+                  let get_element () =
+                    Body.Property
+                      ( (loc, annot_t),
+                        {
+                          Property.key =
+                            Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), id);
+                          annot;
+                          value = get_value ();
+                          static;
+                          override;
+                          optional;
+                          variance;
+                          ts_accessibility;
+                          decorators;
+                          comments;
+                        }
+                      )
+                  in
+                  let public_seen_names' =
+                    check_duplicate_name
+                      public_seen_names
+                      id_loc
+                      name
+                      ~static
+                      ~private_:false
+                      Class_Member_Field
+                  in
+                  ( Class_stmt_sig.add_field ~override ~static name id_loc polarity field c,
+                    get_element :: rev_elements,
+                    public_seen_names'
+                  )
+                end
               (* literal LHS *)
               | ( Body.Method
                     ( loc,
@@ -9294,37 +9328,47 @@ module Make
                       decorators;
                       comments;
                     }
-                  )
+                  ) as elem
                 when Flow_ast_utils.well_known_symbol_name expr <> None ->
                 check_ts_accessibility ts_accessibility;
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (method_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
-                let id_loc = fst expr in
-                add_method_sig_and_element
-                  ~method_loc
-                  ~name
-                  ~id_loc
-                  ~func_loc
-                  ~func
-                  ~kind
-                  ~private_:false
-                  ~static
-                  ~override
-                  ~ts_accessibility
-                  ~decorators
-                  ~comments
-                  ~get_typed_method_key:(fun _func_t ->
-                    let typed_expr = expression cx expr in
-                    Ast.Expression.Object.Property.Computed
-                      ( computed_loc,
-                        { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
-                      )
-                )
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
+                  let id_loc = fst expr in
+                  (* [override] on a well-known-symbol key collects under the
+                     symbol's string name (e.g. "@@iterator") — the inherited
+                     walk will naturally find nothing for that name, so the
+                     not-inherited check fires. Computed-key behavior in v1
+                     is best-effort. *)
+                  add_method_sig_and_element
+                    ~method_loc
+                    ~name
+                    ~id_loc
+                    ~func_loc
+                    ~func
+                    ~kind
+                    ~private_:false
+                    ~static
+                    ~override
+                    ~ts_accessibility
+                    ~decorators
+                    ~comments
+                    ~get_typed_method_key:(fun _func_t ->
+                      let typed_expr = expression cx expr in
+                      Ast.Expression.Object.Property.Computed
+                        ( computed_loc,
+                          { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
+                        )
+                  )
               (* computed LHS *)
               | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
                 | Body.Property
@@ -9364,146 +9408,156 @@ module Make
                         comments;
                       } as _decl_method
                     )
-                  )
+                  ) as elem
                 when Context.under_declaration_context cx ->
-                if override then
+                if override && not (Context.tslib_syntax cx) then begin
                   Flow.add_output
                     cx
                     (Error_message.EUnsupportedSyntax
                        (elem_loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
                     );
-                let meth_kind =
-                  match kind with
-                  | Method.Constructor -> Anno.ConstructorKind
-                  | Method.Get -> Anno.GetterKind
-                  | Method.Set -> Anno.SetterKind
-                  | Method.Method -> Anno.MethodKind { static }
-                in
-                let (func_sig, typed_func) =
-                  mk_declare_method_func_sig ~meth_kind func_annot_loc func_annot
-                in
-                if optional then
-                  let func_t =
-                    Func_stmt_sig.methodtype
-                      cx
-                      None
-                      (Type.implicit_mixed_this func_sig.Func_stmt_sig_types.reason)
-                      func_sig
-                  in
-                  let optional_t = TypeUtil.optional func_t in
-                  let c =
-                    Class_stmt_sig.add_field
-                      ~static
-                      name
-                      id_loc
-                      Polarity.Neutral
-                      (Annot optional_t)
-                      c
-                  in
-                  let public_seen_names' =
-                    check_duplicate_name
-                      public_seen_names
-                      id_loc
-                      name
-                      ~static
-                      ~private_:false
-                      Class_Member_Field
-                  in
-                  let get_element () =
-                    Body.DeclareMethod
-                      ( (elem_loc, optional_t),
-                        {
-                          DeclareMethod.kind;
-                          key = Ast.Expression.Object.Property.Identifier ((id_loc, optional_t), id);
-                          annot =
-                            (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
-                          static;
-                          override;
-                          optional;
-                          comments;
-                        }
-                      )
-                  in
-                  (c, get_element :: rev_elements, public_seen_names')
-                else
-                  let func_t_ref : Type.t option ref = ref None in
-                  let set_type t = func_t_ref := Some t in
-                  let get_element () =
-                    let func_t = Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc) in
-                    Body.DeclareMethod
-                      ( (elem_loc, func_t),
-                        {
-                          DeclareMethod.kind;
-                          key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
-                          annot =
-                            (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
-                          static;
-                          override;
-                          optional;
-                          comments;
-                        }
-                      )
-                  in
-                  (match kind with
-                  | Method.Get
-                  | Method.Set ->
-                    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters elem_loc)
-                  | _ -> ());
-                  let c =
+                  ( c,
+                    (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                    public_seen_names
+                  )
+                end else
+                  let meth_kind =
                     match kind with
-                    | Method.Constructor ->
-                      Class_stmt_sig.append_constructor_replacing_default
-                        ~id_loc:(Some id_loc)
-                        ~func_sig
-                        ~set_type
-                        c
-                    | Method.Method ->
-                      Class_stmt_sig.append_method
+                    | Method.Constructor -> Anno.ConstructorKind
+                    | Method.Get -> Anno.GetterKind
+                    | Method.Set -> Anno.SetterKind
+                    | Method.Method -> Anno.MethodKind { static }
+                  in
+                  let (func_sig, typed_func) =
+                    mk_declare_method_func_sig ~meth_kind func_annot_loc func_annot
+                  in
+                  if optional then
+                    let func_t =
+                      Func_stmt_sig.methodtype
+                        cx
+                        None
+                        (Type.implicit_mixed_this func_sig.Func_stmt_sig_types.reason)
+                        func_sig
+                    in
+                    let optional_t = TypeUtil.optional func_t in
+                    let c =
+                      Class_stmt_sig.add_field
+                        ~override
                         ~static
                         name
-                        ~id_loc
-                        ~this_write_loc:None
-                        ~func_sig
-                        ~set_type
+                        id_loc
+                        Polarity.Neutral
+                        (Annot optional_t)
                         c
-                    | Method.Get ->
-                      Class_stmt_sig.add_getter
-                        ~static
+                    in
+                    let public_seen_names' =
+                      check_duplicate_name
+                        public_seen_names
+                        id_loc
                         name
-                        ~id_loc
-                        ~this_write_loc:None
-                        ~func_sig
-                        ~set_type
-                        c
+                        ~static
+                        ~private_:false
+                        Class_Member_Field
+                    in
+                    let get_element () =
+                      Body.DeclareMethod
+                        ( (elem_loc, optional_t),
+                          {
+                            DeclareMethod.kind;
+                            key =
+                              Ast.Expression.Object.Property.Identifier ((id_loc, optional_t), id);
+                            annot =
+                              (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
+                            static;
+                            override;
+                            optional;
+                            comments;
+                          }
+                        )
+                    in
+                    (c, get_element :: rev_elements, public_seen_names')
+                  else
+                    let func_t_ref : Type.t option ref = ref None in
+                    let set_type t = func_t_ref := Some t in
+                    let get_element () =
+                      let func_t = Base.Option.value !func_t_ref ~default:(EmptyT.at id_loc) in
+                      Body.DeclareMethod
+                        ( (elem_loc, func_t),
+                          {
+                            DeclareMethod.kind;
+                            key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
+                            annot =
+                              (annot_loc, ((func_annot_loc, func_t), Ast.Type.Function typed_func));
+                            static;
+                            override;
+                            optional;
+                            comments;
+                          }
+                        )
+                    in
+                    (match kind with
+                    | Method.Get
                     | Method.Set ->
-                      Class_stmt_sig.add_setter
-                        ~static
-                        name
-                        ~id_loc
-                        ~this_write_loc:None
-                        ~func_sig
-                        ~set_type
-                        c
-                  in
-                  (* For overloaded methods, only flag the first occurrence so
-                     N overloads don't produce N-1 duplicate-name errors. *)
-                  let public_seen_names' =
-                    match class_member_kind_of_method_kind kind with
-                    | None -> public_seen_names
-                    | Some Class_Member_Method
-                      when SMap.find_opt
-                             name
-                             ( if static then
-                               public_seen_names.static_names
-                             else
-                               public_seen_names.instance_names
-                             )
-                           = Some Class_Member_Method ->
-                      public_seen_names
-                    | Some k ->
-                      check_duplicate_name public_seen_names id_loc name ~static ~private_:false k
-                  in
-                  (c, get_element :: rev_elements, public_seen_names')
+                      Flow_js.add_output cx (Error_message.EUnsafeGettersSetters elem_loc)
+                    | _ -> ());
+                    let c =
+                      match kind with
+                      | Method.Constructor ->
+                        Class_stmt_sig.append_constructor_replacing_default
+                          ~id_loc:(Some id_loc)
+                          ~func_sig
+                          ~set_type
+                          c
+                      | Method.Method ->
+                        Class_stmt_sig.append_method
+                          ~static
+                          ~override
+                          name
+                          ~id_loc
+                          ~this_write_loc:None
+                          ~func_sig
+                          ~set_type
+                          c
+                      | Method.Get ->
+                        Class_stmt_sig.add_getter
+                          ~static
+                          ~override
+                          name
+                          ~id_loc
+                          ~this_write_loc:None
+                          ~func_sig
+                          ~set_type
+                          c
+                      | Method.Set ->
+                        Class_stmt_sig.add_setter
+                          ~static
+                          ~override
+                          name
+                          ~id_loc
+                          ~this_write_loc:None
+                          ~func_sig
+                          ~set_type
+                          c
+                    in
+                    (* For overloaded methods, only flag the first occurrence so
+                       N overloads don't produce N-1 duplicate-name errors. *)
+                    let public_seen_names' =
+                      match class_member_kind_of_method_kind kind with
+                      | None -> public_seen_names
+                      | Some Class_Member_Method
+                        when SMap.find_opt
+                               name
+                               ( if static then
+                                 public_seen_names.static_names
+                               else
+                                 public_seen_names.instance_names
+                               )
+                             = Some Class_Member_Method ->
+                        public_seen_names
+                      | Some k ->
+                        check_duplicate_name public_seen_names id_loc name ~static ~private_:false k
+                    in
+                    (c, get_element :: rev_elements, public_seen_names')
               | Body.DeclareMethod (loc, _) as elem ->
                 Flow.add_output
                   cx
@@ -9560,12 +9614,10 @@ module Make
                     abs_meth
                   in
                   check_ts_accessibility ts_accessibility;
-                  if override then
-                    Flow.add_output
-                      cx
-                      (Error_message.EUnsupportedSyntax
-                         (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
-                      );
+                  (* This branch only runs when [Context.tslib_syntax cx] is
+                     true (see the [not (Context.tslib_syntax cx)] guard above
+                     that error-mappers the element). Under the gate, [override]
+                     is a real modifier; thread it through the adder below. *)
                   (match key with
                   | Ast.Expression.Object.Property.Identifier
                       (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
@@ -9595,6 +9647,7 @@ module Make
                       Class_stmt_sig.add_method
                         ~static:false
                         ~abstract:true
+                        ~override
                         name
                         ~id_loc
                         ~this_write_loc:None
@@ -9678,12 +9731,10 @@ module Make
                     abs_prop
                   in
                   check_ts_accessibility ts_accessibility;
-                  if override then
-                    Flow.add_output
-                      cx
-                      (Error_message.EUnsupportedSyntax
-                         (loc, Flow_intermediate_error_types.(TSLibSyntax OverrideModifier))
-                      );
+                  (* This branch only runs when [Context.tslib_syntax cx] is
+                     true (see the gate-off branch above that error-mappers
+                     the element). Under the gate, [override] is a real
+                     modifier; thread it through the adder below. *)
                   (match key with
                   | Ast.Expression.Object.Property.Identifier
                       (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
@@ -9713,6 +9764,7 @@ module Make
                       Class_stmt_sig.add_field
                         ~static:false
                         ~abstract:true
+                        ~override
                         name
                         id_loc
                         polarity

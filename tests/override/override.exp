@@ -1,0 +1,290 @@
+Error --------------------------------------------------------------------------------------- abstract_override.js:19:21
+
+Member `missingMethod` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   19|   abstract override missingMethod(): void; // ERROR: not declared in `Base`
+                           ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------- abstract_override.js:24:21
+
+Member `foo` can't have an `override` modifier because its containing class `NoExtends` doesn't extend another class.
+[invalid-override]
+
+   24|   abstract override foo(): void; // ERROR: class has no `extends` clause
+                           ^^^
+
+
+Error --------------------------------------------------------------------------- abstract_override_wrong_order.js:10:21
+
+Unexpected identifier, expected the token `(` [ParseError]
+
+   10|   override abstract foo(): void; // PARSE ERROR: wrong modifier order
+                           ^^^
+
+
+Error --------------------------------------------------------------------------------------- accessor_half_pair.js:19:7
+
+Cannot extend `Base` [1] with `Sub` because property `x` is read-only in `Sub` [2] but write-only in `Base` [1].
+[incompatible-variance]
+
+   accessor_half_pair.js:19:7
+   19| class Sub extends Base {
+             ^^^ [2]
+
+References:
+   accessor_half_pair.js:19:19
+   19| class Sub extends Base {
+                         ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- accessor_half_pair.js:19:7
+
+Cannot extend `Base` [1] with `Sub` because property `y` is write-only in `Sub` [2] but read-only in `Base` [1].
+[incompatible-variance]
+
+   accessor_half_pair.js:19:7
+   19| class Sub extends Base {
+             ^^^ [2]
+
+References:
+   accessor_half_pair.js:19:19
+   19| class Sub extends Base {
+                         ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- class_expression.js:14:12
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   14|   override missing(): void {} // ERROR: not declared in `Base`
+                  ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- constructor_override.js:8:3
+
+'override' modifier cannot appear on a constructor declaration [ParseError]
+
+   8|   override constructor() { // ERROR: `override` cannot appear on a constructor
+        ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- cross_module_basic.js:12:12
+
+Member `purr` can't have an `override` modifier because it isn't declared in the base class `Animal`. [invalid-override]
+
+   12|   override purr(): void {} // ERROR: `purr` is not declared in `Animal`
+                  ^^^^
+
+
+Error ------------------------------------------------------------------------------------- cross_module_static.js:11:19
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Counter`.
+[invalid-override]
+
+   11|   static override missing(): void {} // ERROR: no such static on Counter
+                         ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:14:12
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   14|   override missing(): void; // ERROR: not declared in `Base`
+                  ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:18:12
+
+Member `foo` can't have an `override` modifier because its containing class `NoExtendsDecl` doesn't extend another
+class. [invalid-override]
+
+   18|   override foo(): void; // ERROR: class has no `extends` clause
+                  ^^^
+
+
+Error ---------------------------------------------------------------------------------- extends_and_implements.js:14:12
+
+Member `fromIface` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   14|   override fromIface(): void {} // ERROR: only on the `I` interface, not in `extends` chain
+                  ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- extends_any.js:7:12
+
+Member `foo` can't have an `override` modifier because it isn't declared in the base class. [invalid-override]
+
+   7|   override foo(): void {} // ERROR: `super` is `any`; no inherited name found
+                 ^^^
+
+
+Error ------------------------------------------------------------------------------------------ field_override.js:10:12
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   10|   override missing: number = 0; // ERROR: `missing` is not declared in `Base`
+                  ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- implements_only.js:10:12
+
+Member `greet` can't have an `override` modifier because its containing class `Greeter` doesn't extend another class.
+[invalid-override]
+
+   10|   override greet(): string { // ERROR: class has no `extends` clause
+                  ^^^^^
+
+
+Error ------------------------------------------------------------------------------------ inheritance_override.js:11:17
+
+Cannot extend `A` [1] with `B` because in property `m` > the first parameter: string [2] is incompatible with
+number [3]. [incompatible-type]
+
+   inheritance_override.js:11:17
+   11|   override m(x: string): void {} // ERROR: narrowing parameter type
+                       ^^^^^^ [2]
+
+References:
+   inheritance_override.js:10:17
+   10| class B extends A {
+                       ^ [1]
+   inheritance_override.js:7:17
+    7|   m(x: string | number): void {}
+                       ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ missing_in_base.js:6:12
+
+Member `show` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
+
+   6|   override show(): void {} // ERROR: `show` is not declared in `Base`
+                 ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- no_extends.js:2:12
+
+Member `foo` can't have an `override` modifier because its containing class `Lonely` doesn't extend another class.
+[invalid-override]
+
+   2|   override foo(): void {} // ERROR: class has no `extends` clause
+                 ^^^
+
+
+Error --------------------------------------------------------------------------------------- private_collision.js:11:12
+
+Member `#foo` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
+
+   11|   override #foo(): void {} // ERROR: `#foo` is a separate identity from Base's public `foo`
+                  ^^^^
+
+
+Error ---------------------------------------------------------------------------------------- private_override.js:13:12
+
+Member `#foo` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
+
+   13|   override #foo(): void {} // ERROR: `#foo` is a separate identity from Base's `#foo`
+                  ^^^^
+
+
+Error ------------------------------------------------------------------------------------------- shape_mismatch.js:24:7
+
+Cannot extend `Base` [1] with `B` because property `f` is read-only in `B` [2] but writable in `Base` [1].
+[incompatible-variance]
+
+   shape_mismatch.js:24:7
+   24| class B extends Base {
+             ^ [2]
+
+References:
+   shape_mismatch.js:24:17
+   24| class B extends Base {
+                       ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- shape_mismatch.js:25:3
+
+Cannot extend `Base` [1] with `B` because in property `f`: function [2] is incompatible with number [3].
+[incompatible-type]
+
+   shape_mismatch.js:25:3
+         v------------------------------
+   25|   override f(): number { // ERROR
+   26|     return 0;
+   27|   }
+         ^ [2]
+
+References:
+   shape_mismatch.js:24:17
+   24| class B extends Base {
+                       ^^^^ [1]
+   shape_mismatch.js:9:6
+    9|   f: number = 0;
+            ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- shape_mismatch.js:37:7
+
+Cannot extend `Base` [1] with `D` because property `f` is read-only in `D` [2] but writable in `Base` [1].
+[incompatible-variance]
+
+   shape_mismatch.js:37:7
+   37| class D extends Base {
+             ^ [2]
+
+References:
+   shape_mismatch.js:37:17
+   37| class D extends Base {
+                       ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------- static_accessor_override.js:24:23
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   24|   static override get missing(): number { // ERROR: not declared in `Base`
+                             ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------- static_accessor_override.js:30:23
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   30|   static override set missing(v: number) {} // ERROR: not declared in `Base`
+                             ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- static_override.js:14:19
+
+Member `missing` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   14|   static override missing(): void {} // ERROR: not declared in `Base`
+                         ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- static_override.js:18:12
+
+Member `s` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
+
+   18|   override s(): void {} // ERROR: instance side has no `s`
+                  ^
+
+
+Error ----------------------------------------------------------------------------------------- static_override.js:22:19
+
+Member `i` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
+
+   22|   static override i(): void {} // ERROR: static side has no `i`
+                         ^
+
+
+
+Found 28 errors

@@ -1614,6 +1614,7 @@ let make_options
     opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+    opt_no_implicit_override = FlowConfig.no_implicit_override flowconfig;
     opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
     opt_node_modules_errors = FlowConfig.node_modules_errors flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;

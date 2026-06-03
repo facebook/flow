@@ -242,6 +242,13 @@ module Class = struct
          were declared with the [abstract] modifier. Source of truth for which
          names contribute to [insttype.inst_abstract_props]. *)
       abstract_members: SSet.t;
+      (* Names of members in this signature declared with the [override]
+         modifier, mapped to the member's def loc. Tracked per-side
+         (instance/static) — override checks fire independently per side.
+         The loc is used as the primary loc for the
+         [ImplicitOverrideMissingModifier] error (which fires at the
+         member that should have had the modifier). *)
+      override_members: ALoc.t SMap.t;
     }
 
     type t = {
@@ -259,6 +266,11 @@ module Class = struct
       (* Whether the class declaration carried the [abstract] class modifier.
          Propagated to [insttype.inst_abstract]. *)
       abstract: bool;
+      (* Whether the sig was built from a [declare class] form. Used to skip
+         the implicit-override (no_implicit_override) check, since ambient
+         declarations don't have implementation bodies and shouldn't be
+         required to carry the [override] modifier. *)
+      is_declare: bool;
     }
   end
 
@@ -344,6 +356,13 @@ module Class = struct
          were declared with the [abstract] modifier. Source of truth for which
          names contribute to [insttype.inst_abstract_props]. *)
       abstract_members: SSet.t;
+      (* Names of members in this signature declared with the [override]
+         modifier, mapped to the member's def loc. Tracked per-side
+         (instance/static) — override checks fire independently per side.
+         The loc is used as the primary loc for the
+         [ImplicitOverrideMissingModifier] error (which fires at the
+         member that should have had the modifier). *)
+      override_members: ALoc.t SMap.t;
     }
 
     type t = {
@@ -361,6 +380,11 @@ module Class = struct
       (* Whether the class declaration carried the [abstract] class modifier.
          Propagated to [insttype.inst_abstract]. *)
       abstract: bool;
+      (* Whether the sig was built from a [declare class] form. Used to skip
+         the implicit-override (no_implicit_override) check, since ambient
+         declarations don't have implementation bodies and shouldn't be
+         required to carry the [override] modifier. *)
+      is_declare: bool;
     }
   end
 end

@@ -183,6 +183,7 @@ pub struct FrozenMetadata {
     pub instance_t_objkit_fix: bool,
     pub max_workers: i32,
     pub missing_module_generators: Arc<[(Regex, String)]>,
+    pub no_implicit_override: bool,
     pub no_unchecked_indexed_access: bool,
     pub opaque_type_new_bound_syntax: bool,
     pub projects_options: Arc<ProjectsOptions>,
@@ -248,6 +249,7 @@ impl Default for FrozenMetadata {
             instance_t_objkit_fix: false,
             max_workers: 0,
             missing_module_generators: Arc::from([]),
+            no_implicit_override: false,
             no_unchecked_indexed_access: false,
             opaque_type_new_bound_syntax: false,
             projects_options: Arc::new(ProjectsOptions::default()),
@@ -658,6 +660,7 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             ignore_non_literal_requires: options.ignore_non_literal_requires,
             max_workers: options.max_workers,
             missing_module_generators: options.missing_module_generators.dupe(),
+            no_implicit_override: options.no_implicit_override,
             no_unchecked_indexed_access: options.no_unchecked_indexed_access,
             opaque_type_new_bound_syntax: options.opaque_type_new_bound_syntax,
             projects_options: options.projects_options.dupe(),
@@ -1802,6 +1805,10 @@ impl<'cx> Context<'cx> {
 
     pub fn missing_module_generators(&self) -> &[(Regex, String)] {
         &self.0.metadata.frozen.missing_module_generators
+    }
+
+    pub fn no_implicit_override(&self) -> bool {
+        self.0.metadata.frozen.no_implicit_override
     }
 
     pub fn no_unchecked_indexed_access(&self) -> bool {

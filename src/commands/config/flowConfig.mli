@@ -229,6 +229,8 @@ val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
 
+val no_implicit_override : config -> bool
+
 val no_unchecked_indexed_access : config -> bool
 
 val node_modules_errors : config -> bool

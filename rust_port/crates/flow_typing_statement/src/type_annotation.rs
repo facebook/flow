@@ -6499,7 +6499,20 @@ fn add_interface_properties<'a>(
                 prop_asts.push(error_prop);
             }
             Property::NormalProperty(np) => {
-                if np.override_ {
+                // The [override] modifier is only meaningful on classes /
+                // [declare class]. For pure object-type / interface bodies
+                // (the [`Interface] case) it has no TS-aligned semantics, so
+                // keep rejecting it unconditionally. For [`DeclareClass]
+                // under the [tslib_syntax] gate, thread it through to the
+                // same per-side [override_members] tracking that regular
+                // classes use; [check_override_obligations] will fire any
+                // errors. With the gate off, fall back to the
+                // [EUnsupportedSyntax] rejection (matches what regular
+                // classes do via [statement.rs]).
+                let override_on_declare_class = np.override_
+                    && obj_kind == intermediate_error_types::ObjKind::DeclareClass
+                    && cx.tslib_syntax();
+                if np.override_ && !override_on_declare_class {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -6686,6 +6699,7 @@ fn add_interface_properties<'a>(
                         if np.proto {
                             class_sig::add_proto_field(
                                 abstract_on,
+                                override_on_declare_class,
                                 name,
                                 id_loc,
                                 polarity,
@@ -6697,6 +6711,7 @@ fn add_interface_properties<'a>(
                             class_sig::add_field(
                                 np.static_,
                                 abstract_on,
+                                override_on_declare_class,
                                 name,
                                 id_loc,
                                 polarity,
@@ -6818,6 +6833,7 @@ fn add_interface_properties<'a>(
                                                 class_sig::append_method(
                                                     np.static_,
                                                     abstract_on,
+                                                    override_on_declare_class,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     None,
@@ -7174,6 +7190,7 @@ fn add_interface_properties<'a>(
                                                     class_sig::append_method(
                                                         np.static_,
                                                         abstract_on,
+                                                        override_on_declare_class,
                                                         name.dupe(),
                                                         key_loc.dupe(),
                                                         None,
@@ -7345,6 +7362,7 @@ fn add_interface_properties<'a>(
                                         class_sig::add_getter(
                                             np.static_,
                                             abstract_on,
+                                            override_on_declare_class,
                                             name.dupe(),
                                             key_loc.dupe(),
                                             None,
@@ -7421,6 +7439,7 @@ fn add_interface_properties<'a>(
                                         class_sig::add_setter(
                                             np.static_,
                                             abstract_on,
+                                            override_on_declare_class,
                                             name.dupe(),
                                             key_loc.dupe(),
                                             None,
@@ -8667,6 +8686,10 @@ pub fn mk_declare_class_sig<'a>(
             let ctor_reason = reason.replace_desc(reason::VirtualReasonDesc::RDefaultConstructor);
             class_sig::add_default_constructor(ctor_reason, &mut iface_sig);
         }
+        // Flag this sig as built from a [declare class] form so the
+        // implicit-override check is skipped for it (ambient declarations
+        // don't need to redeclare the [override] modifier).
+        iface_sig.is_declare = true;
 
         let (t_internal, t, (own_props, proto_props)) =
             class_sig::classtype(cx, true, type_::InstanceKind::ClassKind, &iface_sig);

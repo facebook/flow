@@ -1,0 +1,5 @@
+[options]
+all=true
+no_flowlib=false
+experimental.tslib_syntax=true
+no_implicit_override=true

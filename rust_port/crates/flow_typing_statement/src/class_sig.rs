@@ -25,10 +25,13 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::loc_sig::LocSig;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EAbstractClassData;
+use flow_typing_errors::error_message::EOverrideData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::AbstractErrorKind;
+use flow_typing_errors::intermediate_error_types::OverrideErrorKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
@@ -69,6 +72,7 @@ pub fn empty<C: ConfigTypes>(
             constructs: Vec::new(),
             dict: None,
             abstract_members: std::collections::BTreeSet::new(),
+            override_members: BTreeMap::new(),
         }
     };
     let constructor = Vec::new();
@@ -90,6 +94,7 @@ pub fn empty<C: ConfigTypes>(
         static_,
         instance,
         abstract_: false,
+        is_declare: false,
     }
 }
 
@@ -133,7 +138,42 @@ fn with_sig<C: ConfigTypes, R>(
     }
 }
 
+// Track [override]-marked members per-side. Unlike [abstract_members],
+// this is tracked on BOTH instance and static sides — override checks
+// fire independently per side (a static [override] can't satisfy an
+// instance-only base member, and vice versa). The recorded [loc] is the
+// member's def loc, used as the primary loc for the late-pass
+// [EOverride] errors.
+//
+// Per-side dispatch happens at the call site via [map_sig], so [s] is
+// already the per-side signature — no [~static] argument needed.
+fn update_override_members<C: ConfigTypes>(
+    override_: bool,
+    name: &FlowSmolStr,
+    loc: ALoc,
+    s: &class_types::Signature<C>,
+) -> BTreeMap<FlowSmolStr, ALoc> {
+    if !override_ {
+        s.override_members.clone()
+    } else {
+        let mut m = s.override_members.clone();
+        m.insert(name.dupe(), loc);
+        m
+    }
+}
+
+// Private members (ES [#name]) live in a separate namespace from public
+// members. Key [override_members] under the prefixed name (e.g. ["#foo"])
+// so it can't collide with a public inherited [foo] when the not-inherited
+// check does [SMap.mem]. (The inherited walk reads only public
+// own_props/proto_props, so a prefixed key correctly fails the membership
+// check.)
+fn private_member_key(name: &str) -> FlowSmolStr {
+    FlowSmolStr::new(format!("#{}", name))
+}
+
 pub fn add_private_field<C: ConfigTypes>(
+    override_: bool,
     name: FlowSmolStr,
     loc: ALoc,
     polarity: Polarity,
@@ -144,7 +184,10 @@ pub fn add_private_field<C: ConfigTypes>(
     map_sig(
         static_,
         |s| {
+            let new_override_members =
+                update_override_members(override_, &private_member_key(&name), loc.dupe(), s);
             s.private_fields.insert(name, (Some(loc), polarity, field));
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -152,6 +195,7 @@ pub fn add_private_field<C: ConfigTypes>(
 
 pub fn add_private_method<C: ConfigTypes>(
     static_: bool,
+    override_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -161,7 +205,7 @@ pub fn add_private_method<C: ConfigTypes>(
     x: &mut class_types::Class<C>,
 ) {
     let func_info = class_types::FuncInfo {
-        id_loc: Some(id_loc),
+        id_loc: Some(id_loc.dupe()),
         this_write_loc,
         func_sig: func_sig_,
         set_asts,
@@ -170,7 +214,10 @@ pub fn add_private_method<C: ConfigTypes>(
     map_sig(
         static_,
         |s| {
+            let new_override_members =
+                update_override_members(override_, &private_member_key(&name), id_loc, s);
             s.private_methods.insert(name, func_info);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -283,9 +330,14 @@ fn update_abstract_members<C: ConfigTypes>(
     }
 }
 
+// [override_loc]: [Some loc] means the member is [override]-marked with
+// its def loc; [None] means it isn't. Folding the bool and the loc into
+// a single param prevents the [override = true, override_loc = None]
+// inconsistency where the override flag would be silently dropped.
 fn add_field_inner<C: ConfigTypes>(
     abstract_: bool,
     static_: bool,
+    override_loc: Option<ALoc>,
     name: FlowSmolStr,
     fld: class_types::FieldPrime<C>,
     x: &mut class_types::Class<C>,
@@ -303,6 +355,9 @@ fn add_field_inner<C: ConfigTypes>(
             }
             let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
             s.abstract_members = new_abstract_members;
+            if let Some(loc) = override_loc {
+                s.override_members.insert(name.dupe(), loc);
+            }
         },
         x,
     );
@@ -311,13 +366,22 @@ fn add_field_inner<C: ConfigTypes>(
 pub fn add_field<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     loc: ALoc,
     polarity: Polarity,
     field: class_types::Field<C>,
     x: &mut class_types::Class<C>,
 ) {
-    add_field_inner(abstract_, static_, name, (Some(loc), polarity, field), x);
+    let override_loc = if override_ { Some(loc.dupe()) } else { None };
+    add_field_inner(
+        abstract_,
+        static_,
+        override_loc,
+        name,
+        (Some(loc), polarity, field),
+        x,
+    );
 }
 
 pub fn add_indexer<C: ConfigTypes>(static_: bool, dict: DictType, x: &mut class_types::Class<C>) {
@@ -344,6 +408,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
     add_field_inner(
         false,
         true,
+        None,
         FlowSmolStr::new("name"),
         (None, Polarity::Neutral, class_types::Field::Annot(t)),
         x,
@@ -352,6 +417,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
 
 pub fn add_proto_field<C: ConfigTypes>(
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     loc: ALoc,
     polarity: Polarity,
@@ -362,12 +428,14 @@ pub fn add_proto_field<C: ConfigTypes>(
         false,
         |s| {
             s.proto_fields
-                .insert(name.dupe(), (Some(loc), polarity, field));
+                .insert(name.dupe(), (Some(loc.dupe()), polarity, field));
             s.methods.remove(&name);
             s.getters.remove(&name);
             s.setters.remove(&name);
             let new_abstract_members = update_abstract_members(abstract_, false, &name, s);
             s.abstract_members = new_abstract_members;
+            let new_override_members = update_override_members(override_, &name, loc, s);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -376,6 +444,7 @@ pub fn add_proto_field<C: ConfigTypes>(
 pub fn add_method<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -388,7 +457,7 @@ pub fn add_method<C: ConfigTypes>(
     let set_asts = set_asts.unwrap_or_else(|| Rc::new(|_| {}));
     let set_type = set_type.unwrap_or_else(|| Rc::new(|_| {}));
     let func_info = class_types::FuncInfo {
-        id_loc: Some(id_loc),
+        id_loc: Some(id_loc.dupe()),
         this_write_loc,
         func_sig: func_sig_,
         set_asts,
@@ -406,6 +475,8 @@ pub fn add_method<C: ConfigTypes>(
             s.setters.remove(&name);
             let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
             s.abstract_members = new_abstract_members;
+            let new_override_members = update_override_members(override_, &name, id_loc, s);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -417,6 +488,7 @@ pub fn add_method<C: ConfigTypes>(
 pub fn append_method<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -429,7 +501,7 @@ pub fn append_method<C: ConfigTypes>(
     let set_asts = set_asts.unwrap_or_else(|| Rc::new(|_| {}));
     let set_type = set_type.unwrap_or_else(|| Rc::new(|_| {}));
     let func_info = class_types::FuncInfo {
-        id_loc: Some(id_loc),
+        id_loc: Some(id_loc.dupe()),
         this_write_loc,
         func_sig: func_sig_,
         set_asts,
@@ -454,6 +526,8 @@ pub fn append_method<C: ConfigTypes>(
             s.setters.remove(&name);
             let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
             s.abstract_members = new_abstract_members;
+            let new_override_members = update_override_members(override_, &name, id_loc, s);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -485,6 +559,7 @@ pub fn append_construct<C: ConfigTypes>(t: Type, x: &mut class_types::Class<C>) 
 pub fn add_getter<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -497,7 +572,7 @@ pub fn add_getter<C: ConfigTypes>(
     let set_asts = set_asts.unwrap_or_else(|| Rc::new(|_| {}));
     let set_type = set_type.unwrap_or_else(|| Rc::new(|_| {}));
     let func_info = class_types::FuncInfo {
-        id_loc: Some(id_loc),
+        id_loc: Some(id_loc.dupe()),
         this_write_loc,
         func_sig: func_sig_,
         set_asts,
@@ -514,6 +589,8 @@ pub fn add_getter<C: ConfigTypes>(
             s.getters.insert(name.dupe(), func_info);
             let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
             s.abstract_members = new_abstract_members;
+            let new_override_members = update_override_members(override_, &name, id_loc, s);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -522,6 +599,7 @@ pub fn add_getter<C: ConfigTypes>(
 pub fn add_setter<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
+    override_: bool,
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
@@ -534,7 +612,7 @@ pub fn add_setter<C: ConfigTypes>(
     let set_asts = set_asts.unwrap_or_else(|| Rc::new(|_| {}));
     let set_type = set_type.unwrap_or_else(|| Rc::new(|_| {}));
     let func_info = class_types::FuncInfo {
-        id_loc: Some(id_loc),
+        id_loc: Some(id_loc.dupe()),
         this_write_loc,
         func_sig: func_sig_,
         set_asts,
@@ -551,6 +629,8 @@ pub fn add_setter<C: ConfigTypes>(
             s.setters.insert(name.dupe(), func_info);
             let new_abstract_members = update_abstract_members(abstract_, static_, &name, s);
             s.abstract_members = new_abstract_members;
+            let new_override_members = update_override_members(override_, &name, id_loc, s);
+            s.override_members = new_override_members;
         },
         x,
     );
@@ -1785,6 +1865,508 @@ fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
     }));
 }
 
+// Determine whether the resolved [super] type carries a real [extends]
+// clause. The "no real super" forms — [null] / [ObjProtoT] / [FunProtoT]
+// / [MixedT] — mean the class either has no [extends] at all or extends
+// a sentinel placeholder. In any of those cases [override] on a member
+// is nonsensical (no member to inherit from).
+//
+// Wrappers ([AnnotT], [OpaqueT], [UnionT], [TypeAppT], [EvalT], [OpenT]
+// tvars, ...) are concretized first so that, e.g., [extends OpaqueAlias]
+// where the alias resolves to [ObjProtoT] is correctly classified as
+// "no real extends" instead of leaking into the not-inherited check's
+// "not declared in the base class" branch.
+fn super_has_real_extends<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+    fn check(t: &Type) -> bool {
+        match t.deref() {
+            TypeInner::NullProtoT(_) | TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) => false,
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                DefTInner::NullT | DefTInner::MixedT(_) => false,
+                _ => true,
+            },
+            TypeInner::IntersectionT(_, rep) => rep.members_iter().any(check),
+            _ => true,
+        }
+    }
+    let concretes = cx
+        .with_suppressed_errors(|| {
+            FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
+        })
+        .unwrap_or_default();
+    concretes.iter().any(check)
+}
+
+// Best-effort extraction of a class name from an inst's reason — used
+// to populate [base_class_name] in override error messages. Falls back
+// to [None] if the reason isn't a recognized class-named shape.
+fn class_name_of_inst_reason(r: &Reason) -> Option<FlowSmolStr> {
+    match &r.desc {
+        VirtualReasonDesc::RType(n) => Some(n.as_smol_str().dupe()),
+        VirtualReasonDesc::RStatics(inner) => match inner.as_ref() {
+            VirtualReasonDesc::RType(n) => Some(n.as_smol_str().dupe()),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+// Per-side inherited-walk state. [locs] / [owners] are populated for
+// both sides; [name_abstract] is meaningful only on the instance side
+// (the static side leaves it empty since [abstract_members] is
+// instance-only).
+struct InheritedSideState {
+    locs: BTreeMap<FlowSmolStr, ALoc>,
+    owners: BTreeMap<FlowSmolStr, Option<FlowSmolStr>>,
+    name_abstract: BTreeMap<FlowSmolStr, bool>,
+}
+
+fn mk_inherited_side_state() -> InheritedSideState {
+    InheritedSideState {
+        locs: BTreeMap::new(),
+        owners: BTreeMap::new(),
+        name_abstract: BTreeMap::new(),
+    }
+}
+
+// Walk the super chain ONCE and populate BOTH instance- and static-side
+// inherited tables in parallel. Each ancestor [InstanceT] contributes:
+// - instance: [own_props] + [proto_props] (public namespace; private
+//   members live in separate slots that are not crossed here);
+// - static: the [static] slot, concretized through wrappers
+//   ([AnnotT], [EvalT], [OpenT], [IntersectionT], ...) before reading
+//   the prop map. Without that concretization, cross-module inheritance
+//   (which commonly wraps the static slot in [AnnotT]) would silently
+//   drop the ancestor's static members.
+// First-write wins for both sides — closest ancestor's loc/owner/
+// abstract bit is recorded. Returns the per-side state plus the
+// immediate-super's class name (for [base_class_name] in errors).
+fn collect_inherited_members_both_sides<'cx>(
+    cx: &Context<'cx>,
+    super_: &Type,
+) -> Result<
+    (InheritedSideState, InheritedSideState, Option<FlowSmolStr>),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let seen: RefCell<BTreeSet<properties::Id>> = RefCell::new(BTreeSet::new());
+    let instance_state: RefCell<InheritedSideState> = RefCell::new(mk_inherited_side_state());
+    let static_state: RefCell<InheritedSideState> = RefCell::new(mk_inherited_side_state());
+    let immediate_super_name: RefCell<Option<FlowSmolStr>> = RefCell::new(None);
+    let first_inst: RefCell<bool> = RefCell::new(true);
+    let add_member = |state: &RefCell<InheritedSideState>,
+                      inst_name: &Option<FlowSmolStr>,
+                      is_abstract: bool,
+                      name: &str,
+                      loc_opt: Option<ALoc>| {
+        let mut s = state.borrow_mut();
+        if !s.locs.contains_key(name) {
+            let loc = loc_opt.unwrap_or_else(ALoc::none);
+            let name_smol = FlowSmolStr::new(name);
+            s.locs.insert(name_smol.dupe(), loc);
+            s.owners.insert(name_smol.dupe(), inst_name.clone());
+            s.name_abstract.insert(name_smol, is_abstract);
+        }
+    };
+    let process_inst = |instance_t: &InstanceT, inst_reason: &Reason| -> bool {
+        let inst = &instance_t.inst;
+        if seen.borrow().contains(&inst.own_props) {
+            false
+        } else {
+            seen.borrow_mut().insert(inst.own_props.dupe());
+            let inst_name = class_name_of_inst_reason(inst_reason);
+            if *first_inst.borrow() {
+                *immediate_super_name.borrow_mut() = inst_name.clone();
+                *first_inst.borrow_mut() = false;
+            }
+            let own_props = cx.find_props(inst.own_props.dupe());
+            let proto_props = cx.find_props(inst.proto_props.dupe());
+            let visit_instance = |props: &properties::PropertiesMap| {
+                for (name, p) in props.iter() {
+                    let name_str = name.as_str();
+                    let is_abstract = inst.inst_abstract_props.contains(name);
+                    add_member(
+                        &instance_state,
+                        &inst_name,
+                        is_abstract,
+                        name_str,
+                        property::first_loc(p),
+                    );
+                }
+            };
+            visit_instance(&own_props);
+            visit_instance(&proto_props);
+            fn visit_static_concrete<'cx>(
+                cx: &Context<'cx>,
+                static_state: &RefCell<InheritedSideState>,
+                add_member: &dyn Fn(
+                    &RefCell<InheritedSideState>,
+                    &Option<FlowSmolStr>,
+                    bool,
+                    &str,
+                    Option<ALoc>,
+                ),
+                inst_name: &Option<FlowSmolStr>,
+                t: &Type,
+            ) {
+                match t.deref() {
+                    TypeInner::DefT(_, def_t) => match def_t.deref() {
+                        DefTInner::ObjT(obj) => {
+                            let static_props = cx.find_props(obj.props_tmap.dupe());
+                            for (name, p) in static_props.iter() {
+                                let name_str = name.as_str();
+                                // Static members can't be abstract in our model.
+                                add_member(
+                                    static_state,
+                                    inst_name,
+                                    false,
+                                    name_str,
+                                    property::first_loc(p),
+                                );
+                            }
+                        }
+                        _ => {}
+                    },
+                    TypeInner::IntersectionT(_, rep) => {
+                        for m in rep.members_iter() {
+                            visit_static_concrete(cx, static_state, add_member, inst_name, m);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            let static_concretes = cx
+                .with_suppressed_errors(|| {
+                    FlowJs::possible_concrete_types_for_inspection(
+                        cx,
+                        type_util::reason_of_t(&instance_t.static_),
+                        &instance_t.static_,
+                    )
+                })
+                .unwrap_or_default();
+            for c in &static_concretes {
+                visit_static_concrete(cx, &static_state, &add_member, &inst_name, c);
+            }
+            true
+        }
+    };
+    fn walk<'cx>(
+        cx: &Context<'cx>,
+        process_inst: &dyn Fn(&InstanceT, &Reason) -> bool,
+        t: &Type,
+    ) -> Result<(), FlowJsException> {
+        let concretes = cx.with_suppressed_errors(|| {
+            FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
+        })?;
+        for c in &concretes {
+            walk_one(cx, process_inst, c)?;
+        }
+        Ok(())
+    }
+    fn walk_one<'cx>(
+        cx: &Context<'cx>,
+        process_inst: &dyn Fn(&InstanceT, &Reason) -> bool,
+        t: &Type,
+    ) -> Result<(), FlowJsException> {
+        match t.deref() {
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                let r = type_util::reason_of_t(t);
+                if process_inst(instance, r) {
+                    walk(cx, process_inst, &instance.super_)?;
+                }
+            }
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
+                DefTInner::InstanceT(inst_t) => {
+                    let r = type_util::reason_of_t(t);
+                    if process_inst(inst_t, r) {
+                        walk(cx, process_inst, &inst_t.super_)?;
+                    }
+                }
+                _ => {}
+            },
+            TypeInner::IntersectionT(_, rep) => {
+                for m in rep.members_iter() {
+                    walk_one(cx, process_inst, m)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+    let pi: &dyn Fn(&InstanceT, &Reason) -> bool = &process_inst;
+    let walk_result = walk(cx, pi, super_);
+    match walk_result {
+        Ok(()) => {}
+        Err(FlowJsException::WorkerCanceled(c)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+        }
+        Err(FlowJsException::TimedOut(t)) => {
+            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+        }
+        Err(_) => {}
+    }
+    Ok((
+        instance_state.into_inner(),
+        static_state.into_inner(),
+        immediate_super_name.into_inner(),
+    ))
+}
+
+// Run the three override-check sub-checks for one side (instance OR
+// static):
+// - no-extends check: every [override] member is rejected if the class
+//   has no real super class to inherit from.
+// - not-inherited check: every [override] member's name must exist
+//   somewhere in the inherited set.
+// - implicit-override check (NIO): every concrete own member that
+//   shadows an inherited member must carry the [override] modifier.
+//
+// The no-extends check, when it fires, is mutually exclusive with the
+// other two (they assume a real super chain to walk).
+//
+// Arguments:
+// [own_concrete_names]: names of [x]'s own concrete same-side members.
+// [override_members]: names of [x]'s same-side members declared [override],
+//   mapped to their def locs.
+// [super]: the same-side super type, used by the no-extends check.
+// [inherited_state]: precomputed inherited members for this side (already
+//   walked once for both sides; see [collect_inherited_members_both_sides]).
+// [immediate_super_name]: name of the closest super class (for
+//   [base_class_name] in [OverrideOfNonInheritedMember]).
+// [skip_implicit_check]: when true, the implicit-override check is
+//   skipped.
+#[allow(clippy::too_many_arguments)]
+fn check_override_side<'cx>(
+    cx: &Context<'cx>,
+    class_name: &Option<FlowSmolStr>,
+    own_concrete_names: &BTreeMap<FlowSmolStr, Option<ALoc>>,
+    override_members: &BTreeMap<FlowSmolStr, ALoc>,
+    super_: &Type,
+    inherited_state: &InheritedSideState,
+    immediate_super_name: &Option<FlowSmolStr>,
+    skip_implicit_check: bool,
+) {
+    let InheritedSideState {
+        locs: inherited_locs,
+        owners: inherited_owners,
+        name_abstract,
+    } = inherited_state;
+    // No-extends check. If [super] has no real extends clause and there
+    // are [override] members, emit [OverrideWithoutExtends] for each and
+    // skip the other checks for this side (they assume a real super).
+    if !super_has_real_extends(cx, super_) && !override_members.is_empty() {
+        for (member_name, loc) in override_members.iter() {
+            if member_name.as_str() == "constructor" {
+                continue;
+            }
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EOverride(Box::new(EOverrideData {
+                    kind: OverrideErrorKind::OverrideWithoutExtends {
+                        class_name: class_name.clone(),
+                        member_name: member_name.dupe(),
+                    },
+                    loc: loc.dupe(),
+                })),
+            );
+        }
+    } else {
+        // Not-inherited check. Every [override] name must exist somewhere
+        // in the inherited set.
+        for (member_name, loc) in override_members.iter() {
+            if member_name.as_str() == "constructor" {
+                continue;
+            }
+            if !inherited_locs.contains_key(member_name) {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EOverride(Box::new(EOverrideData {
+                        kind: OverrideErrorKind::OverrideOfNonInheritedMember {
+                            class_name: class_name.clone(),
+                            base_class_name: immediate_super_name.clone(),
+                            member_name: member_name.dupe(),
+                        },
+                        loc: loc.dupe(),
+                    })),
+                );
+            }
+        }
+        // Implicit-override check (NIO). Every concrete own same-side member
+        // that shadows an inherited member must carry the [override]
+        // modifier — unless the shallowest inherited decl is abstract from
+        // x's perspective.
+        if !skip_implicit_check {
+            for (member_name, own_loc_opt) in own_concrete_names.iter() {
+                if member_name.as_str() == "constructor" {
+                    continue;
+                }
+                if override_members.contains_key(member_name) {
+                    continue;
+                }
+                match inherited_locs.get(member_name) {
+                    None => {}
+                    Some(inherited_def_loc) => {
+                        let is_abstract = name_abstract.get(member_name).copied().unwrap_or(false);
+                        if is_abstract {
+                            continue;
+                        }
+                        // The implicit-override check fires at the subclass
+                        // member that should have had [override]. If
+                        // [own_loc_opt] is [None] the member was auto-injected
+                        // by the class machinery (e.g. the synthetic static
+                        // [name] field), not user-authored — there's nothing
+                        // for the user to mark [override] on, so skip emission
+                        // entirely. (A previous both-locs-have-no-source
+                        // filter mis-fired when the inherited side had a real
+                        // loc, e.g. [class MyErr extends Error] under NIO.)
+                        match own_loc_opt {
+                            None => {}
+                            Some(loc) => {
+                                // [inherited_owners] maps name -> string option (the
+                                // owner class's name, if it has one). [SMap.find_opt]
+                                // wraps that in another option, so flatten with
+                                // [Option.join].
+                                let base_class_name =
+                                    inherited_owners.get(member_name).cloned().flatten();
+                                flow_js_utils::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EOverride(Box::new(EOverrideData {
+                                        kind: OverrideErrorKind::ImplicitOverrideMissingModifier {
+                                            class_name: class_name.clone(),
+                                            base_class_name,
+                                            member_name: member_name.dupe(),
+                                            inherited_def_loc: inherited_def_loc.dupe(),
+                                        },
+                                        loc: loc.dupe(),
+                                    })),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Verify [override] members and (under [no_implicit_override]) implicit
+// overrides. Mirrors [check_abstract_obligations]'s shape: gated on
+// [tslib_syntax], registered as a post-inference callback so super
+// resolution has completed, and walks both instance AND static sides
+// (unlike abstract, which is instance-only).
+//
+// Skipped entirely for structural sigs ([interface], inline
+// [interface { ... }], inline construct sigs) — those forms have no
+// [override] modifier syntax (rejected at type-annotation time), so
+// [override_members] is always empty AND there's no way for a user to
+// satisfy the implicit-override check.
+fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
+    cx: &Context<'cx>,
+    _def_reason: Reason,
+    x: &class_types::Class<C>,
+) {
+    if !cx.tslib_syntax() || structural(x) {
+        return;
+    }
+    let instance_override = x.instance.override_members.clone();
+    let static_override = x.static_.override_members.clone();
+    // The implicit-override check is skipped if [no_implicit_override]
+    // is off, OR if the class is ambient. Ambient has two prongs:
+    // 1. file/scope ambient via [under_declaration_context];
+    // 2. in-file [declare class] via the [is_declare] flag set in
+    //    [mk_declare_class_sig] in type_annotation.rs.
+    let skip_implicit_check =
+        !cx.no_implicit_override() || cx.under_declaration_context() || x.is_declare;
+    // Short-circuit only when there's nothing for any check to do: no
+    // [override] modifiers anywhere AND the implicit-override check
+    // is skipped.
+    if instance_override.is_empty() && static_override.is_empty() && skip_implicit_check {
+        return;
+    }
+    let class_name = x.class_name.clone();
+    // The implicit-override check is the only consumer of
+    // [own_concrete_names_*]; building them when
+    // [skip_implicit_check = true] is pure waste (two [SMap.fold]s
+    // per class allocating a fresh map that no one reads). Build
+    // only when the implicit-override check will run.
+    // [add_fields]/[add_funcs]/[add_methods] each insert a
+    // [name -> ALoc.t option] entry; the loc is used as the primary
+    // loc for the [ImplicitOverrideMissingModifier] error. Abstract
+    // members are subtracted because the implicit-override check is
+    // about CONCRETE overrides — an [abstract foo()] shadowing a
+    // concrete [foo()] is the abstract-obligation check's domain,
+    // not this one.
+    let own_concrete_names_of =
+        |s: &class_types::Signature<C>| -> BTreeMap<FlowSmolStr, Option<ALoc>> {
+            if skip_implicit_check {
+                BTreeMap::new()
+            } else {
+                let add_fields =
+                    |m: &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>>,
+                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
+                        for (k, (loc, _, _)) in m.iter() {
+                            acc.insert(k.dupe(), loc.clone());
+                        }
+                    };
+                let add_funcs =
+                    |m: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
+                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
+                        for (k, info) in m.iter() {
+                            acc.insert(k.dupe(), info.id_loc.clone());
+                        }
+                    };
+                let add_methods =
+                    |m: &BTreeMap<FlowSmolStr, vec1::Vec1<class_types::FuncInfo<C>>>,
+                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
+                        // [methods] is [func_info Nel.t SMap.t]; take head's id_loc.
+                        for (k, infos) in m.iter() {
+                            let info = infos.first();
+                            acc.insert(k.dupe(), info.id_loc.clone());
+                        }
+                    };
+                let mut acc: BTreeMap<FlowSmolStr, Option<ALoc>> = BTreeMap::new();
+                add_fields(&s.fields, &mut acc);
+                add_fields(&s.proto_fields, &mut acc);
+                add_methods(&s.methods, &mut acc);
+                add_funcs(&s.getters, &mut acc);
+                add_funcs(&s.setters, &mut acc);
+                acc.into_iter()
+                    .filter(|(k, _)| !s.abstract_members.contains(k))
+                    .collect()
+            }
+        };
+    let own_concrete_instance = own_concrete_names_of(&x.instance);
+    let own_concrete_static = own_concrete_names_of(&x.static_);
+    let (super_, _static_proto) = supertype(cx, x);
+    cx.add_post_inference_validation_callback(Box::new(move |cx: &Context<'cx>| {
+        // One super-chain walk feeds both sides — each ancestor's
+        // static slot lives on the same [InstanceT] we're already
+        // visiting. Halves the [possible_concrete_types_for_inspection]
+        // work versus the prior two-walk shape.
+        let (instance_inherited, static_inherited, immediate_super_name) =
+            collect_inherited_members_both_sides(cx, &super_)?;
+        check_override_side(
+            cx,
+            &class_name,
+            &own_concrete_instance,
+            &instance_override,
+            &super_,
+            &instance_inherited,
+            &immediate_super_name,
+            skip_implicit_check,
+        );
+        check_override_side(
+            cx,
+            &class_name,
+            &own_concrete_static,
+            &static_override,
+            &super_,
+            &static_inherited,
+            &immediate_super_name,
+            skip_implicit_check,
+        );
+        Ok(())
+    }));
+}
+
 pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     def_reason: Reason,
@@ -1793,7 +2375,8 @@ pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     check_super(cx, def_reason.dupe(), x);
     check_implements(cx, def_reason.dupe(), x);
     check_methods(cx, def_reason.dupe(), x);
-    check_abstract_obligations(cx, def_reason, x);
+    check_abstract_obligations(cx, def_reason.dupe(), x);
+    check_override_obligations(cx, def_reason, x);
 }
 
 // TODO: Ideally we should check polarity for all class types, but this flag is
