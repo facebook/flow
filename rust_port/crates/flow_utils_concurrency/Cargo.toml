@@ -13,8 +13,8 @@ equivalent = "1.0.2"
 flow_aloc = { path = "../flow_aloc" }
 flow_common_utils = { path = "../flow_common_utils" }
 itertools = "0.14.0"
-lock_free_hashtable = "0.1.2"
-starlark_map = "0.13.0"
+lock_free_hashtable = "0.1.4"
+starlark_map = "0.13"
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))'.dependencies]
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
