@@ -920,7 +920,13 @@ fn json_truncate(
     match json {
         serde_json::Value::String(s) => {
             if s.len() > max_string_length {
-                serde_json::Value::String(s[..max_string_length].to_string())
+                let truncate_to = s
+                    .char_indices()
+                    .map(|(idx, _)| idx)
+                    .take_while(|idx| *idx <= max_string_length)
+                    .last()
+                    .unwrap_or(0);
+                serde_json::Value::String(s[..truncate_to].to_string())
             } else {
                 json.clone()
             }
@@ -4016,5 +4022,61 @@ fn main_handle_error(
             }
             state
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text_with_multibyte_char_crossing_limit() -> String {
+        let mut text = "a".repeat(255);
+        text.push('█');
+        text.push_str(" trailing text");
+        text
+    }
+
+    #[test]
+    fn json_truncate_does_not_split_multibyte_chars() {
+        let json = serde_json::Value::String(text_with_multibyte_char_crossing_limit());
+
+        let truncated = json_truncate(&json, 256, 4);
+
+        assert_eq!(truncated, serde_json::Value::String("a".repeat(255)));
+    }
+
+    #[test]
+    fn json_truncate_keeps_exact_char_boundary() {
+        let mut text = "a".repeat(256);
+        text.push('█');
+        let json = serde_json::Value::String(text);
+
+        let truncated = json_truncate(&json, 256, 4);
+
+        assert_eq!(truncated, serde_json::Value::String("a".repeat(256)));
+    }
+
+    #[test]
+    fn json_truncate_does_not_split_nested_lsp_text() {
+        let json = serde_json::json!({
+            "jsonrpc": "2.0",
+            "method": "textDocument/didOpen",
+            "params": {
+                "textDocument": {
+                    "languageId": "javascript",
+                    "text": text_with_multibyte_char_crossing_limit(),
+                    "uri": "file:///tmp/example.js",
+                    "version": 1,
+                },
+            },
+        });
+
+        let truncated = json_truncate(&json, 256, 4);
+
+        let text = truncated
+            .pointer("/params/textDocument/text")
+            .and_then(serde_json::Value::as_str)
+            .expect("truncated JSON should keep the nested LSP text field");
+        assert_eq!(text, "a".repeat(255));
     }
 }
