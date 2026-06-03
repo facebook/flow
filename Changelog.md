@@ -1,3 +1,12 @@
+### 0.317.0
+
+New Features:
+* Allow `-?` (optionality removal) in mapped types.
+* Adds support for utility types `ConstructorParameters` and `InstanceType`
+
+Misc:
+* The `.flowconfig` options `component_syntax`, `enums`, and `pattern_matching` now default to `true`. To keep the previous behavior, set the corresponding option to `=false` in your `.flowconfig`.
+
 ### 0.316.0
 
 Likely to cause new Flow errors:
