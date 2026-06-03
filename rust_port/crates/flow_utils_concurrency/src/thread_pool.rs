@@ -66,6 +66,30 @@ pub fn init_thread_pool(threads: ThreadCount) {
     *THREADS.lock() = threads;
 }
 
+fn logical_parallelism() -> NonZeroUsize {
+    #[cfg(target_arch = "wasm32")]
+    {
+        NonZeroUsize::new(1).expect("1 should be non-zero")
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::thread::available_parallelism()
+            .unwrap_or_else(|_| NonZeroUsize::new(1).expect("1 should be non-zero"))
+    }
+}
+
+/// Return the physical core count for sizing CPU worker pools.
+pub fn physical_parallelism() -> NonZeroUsize {
+    #[cfg(target_arch = "wasm32")]
+    {
+        logical_parallelism()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        NonZeroUsize::new(num_cpus::get_physical()).unwrap_or_else(logical_parallelism)
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ThreadPool(Option<rayon::ThreadPool>);
 
@@ -99,10 +123,13 @@ impl ThreadPool {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let stack_size = Self::stack_size();
-            let mut builder = rayon::ThreadPoolBuilder::new().stack_size(stack_size);
-            if let ThreadCount::NumThreads(threads) = count {
-                builder = builder.num_threads(threads.get());
-            }
+            let threads = match count {
+                ThreadCount::AllThreads => physical_parallelism(),
+                ThreadCount::NumThreads(threads) => threads,
+            };
+            let builder = rayon::ThreadPoolBuilder::new()
+                .stack_size(stack_size)
+                .num_threads(threads.get());
             let pool = builder.build().expect("To be able to build a thread pool");
             // Only print the message once
             debug!(

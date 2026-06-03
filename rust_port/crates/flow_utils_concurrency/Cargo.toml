@@ -21,5 +21,6 @@ nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 human_bytes = "0.4.3"
+num_cpus = "1.16"
 rayon = "1.11.0"
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }

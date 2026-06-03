@@ -39,6 +39,7 @@ use flow_server_env::server_prot;
 use flow_server_env::server_status;
 use flow_server_monitor::FlowServerMonitorOptions;
 use flow_server_utils::file_input::FileInput;
+use flow_utils_concurrency::thread_pool::physical_parallelism;
 use regex::Regex;
 
 use crate::command_spec;
@@ -2377,24 +2378,27 @@ pub(super) fn make_options(
         single_quotes: format_single_quotes.unwrap_or(false),
     };
 
-    let available = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(1);
+    let physical_cores = physical_parallelism().get();
     // Priority: CLI --max-workers > server.max_workers.full_check (non-lazy only)
-    // > server.max_workers > system default (nbr_procs).
-    // The result is capped at nbr_procs.
+    // > server.max_workers > system default (physical cores).
+    // The result is capped at physical cores.
     let config_max_workers = if !lazy_mode {
         max_workers_full_check.or(max_workers)
     } else {
         max_workers
     };
-    let max_workers = max_workers_override.unwrap_or_else(|| {
-        std::env::var("FLOW_MAX_WORKERS")
-            .ok()
-            .and_then(|s| s.parse::<usize>().ok())
-            .unwrap_or_else(|| config_max_workers.map(|w| w as usize).unwrap_or(available))
-            as i32
-    });
+    let max_workers = max_workers_override
+        .unwrap_or_else(|| {
+            std::env::var("FLOW_MAX_WORKERS")
+                .ok()
+                .and_then(|s| s.parse::<usize>().ok())
+                .unwrap_or_else(|| {
+                    config_max_workers
+                        .map(|w| w as usize)
+                        .unwrap_or(physical_cores)
+                }) as i32
+        })
+        .min(physical_cores as i32);
 
     let log_file = std::path::PathBuf::from(flow_server_files::server_files_js::log_file(
         &flowconfig_name,
