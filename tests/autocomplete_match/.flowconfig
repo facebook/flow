@@ -1,3 +1,4 @@
 [options]
 all=true
 experimental.pattern_matching=true
+component_syntax=false

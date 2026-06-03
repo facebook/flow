@@ -227,14 +227,14 @@ module Opts = struct
       channel_mode = None;
       async_component_syntax = false;
       async_component_syntax_includes = [];
-      component_syntax = false;
+      component_syntax = true;
       deprecated_utilities = SMap.empty;
       deprecated_utilities_excludes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
       enable_custom_error = false;
-      enums = false;
+      enums = true;
       estimate_recheck_time = None;
       saved_state_restart_on_reinit = false;
       facebook_fbs = None;
@@ -674,7 +674,7 @@ module Opts = struct
                 ];
             }
         else
-          Ok opts
+          Ok { opts with component_syntax = false; react_rules = [] }
     )
 
   let hook_compatibility_includes_parser =
