@@ -69,6 +69,7 @@ type error_code =
   | IncompatibleVariance
   | InternalType
   | InvalidAbstract
+  | InvalidOverride
   | InvalidCatchParameterAnnotation
   | InvalidCompare
   | InvalidComputedProp
@@ -288,6 +289,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleVariance -> "incompatible-variance"
   | InternalType -> "internal-type"
   | InvalidAbstract -> "invalid-abstract"
+  | InvalidOverride -> "invalid-override"
   | InvalidCatchParameterAnnotation -> "invalid-catch-parameter-annotation"
   | InvalidCompare -> "invalid-compare"
   | InvalidComputedProp -> "invalid-computed-prop"

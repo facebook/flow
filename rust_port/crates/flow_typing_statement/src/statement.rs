@@ -16199,6 +16199,7 @@ pub fn mk_class_sig<'a>(
                             if private_ {
                                 class_sig::add_private_method(
                                     static_,
+                                    override_,
                                     name.dupe(),
                                     id_loc.dupe(),
                                     Some(func_loc.dupe()),
@@ -16211,6 +16212,7 @@ pub fn mk_class_sig<'a>(
                                 class_sig::add_method(
                                     static_,
                                     false,
+                                    override_,
                                     name.dupe(),
                                     id_loc.dupe(),
                                     Some(func_loc.dupe()),
@@ -16235,6 +16237,7 @@ pub fn mk_class_sig<'a>(
                             class_sig::add_getter(
                                 static_,
                                 false,
+                                override_,
                                 name.dupe(),
                                 id_loc.dupe(),
                                 Some(func_loc.dupe()),
@@ -16258,6 +16261,7 @@ pub fn mk_class_sig<'a>(
                             class_sig::add_setter(
                                 static_,
                                 false,
+                                override_,
                                 name.dupe(),
                                 id_loc.dupe(),
                                 Some(func_loc.dupe()),
@@ -16569,7 +16573,7 @@ pub fn mk_class_sig<'a>(
                                     let method_comments = &method.comments;
 
                                     check_ts_accessibility(cx, ts_accessibility);
-                                    if override_ {
+                                    if override_ && !cx.tslib_syntax() {
                                         flow_js::add_output_non_speculating(
                                             cx,
                                             ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -16579,6 +16583,15 @@ pub fn mk_class_sig<'a>(
                                                 ),
                                             ))),
                                         );
+                                        let elem_c = elem.clone();
+                                        rev_elements.push(Box::new(move |_cx| {
+                                            let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                &elem_c,
+                                            );
+                                            Ok(v)
+                                        }));
+                                        continue;
                                     }
                                     let id_loc_c = id_loc.dupe();
                                     let pn_c = private_name.clone();
@@ -16623,7 +16636,7 @@ pub fn mk_class_sig<'a>(
                                     let method_comments = &method.comments;
 
                                     check_ts_accessibility(cx, ts_accessibility);
-                                    if override_ {
+                                    if override_ && !cx.tslib_syntax() {
                                         flow_js::add_output_non_speculating(
                                             cx,
                                             ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -16633,6 +16646,15 @@ pub fn mk_class_sig<'a>(
                                                 ),
                                             ))),
                                         );
+                                        let elem_c = elem.clone();
+                                        rev_elements.push(Box::new(move |_cx| {
+                                            let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                &elem_c,
+                                            );
+                                            Ok(v)
+                                        }));
+                                        continue;
                                     }
 
                                     let id_loc_c = id_loc.dupe();
@@ -16706,7 +16728,7 @@ pub fn mk_class_sig<'a>(
                                         let computed_comments = &computed_key.comments;
 
                                         check_ts_accessibility(cx, ts_accessibility);
-                                        if override_ {
+                                        if override_ && !cx.tslib_syntax() {
                                             flow_js::add_output_non_speculating(
                                                 cx,
                                                 ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -16716,6 +16738,15 @@ pub fn mk_class_sig<'a>(
                                                     ),
                                                 ))),
                                             );
+                                            let elem_c = elem.clone();
+                                            rev_elements.push(Box::new(move |_cx| {
+                                                let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                    &mut typed_ast_utils::ErrorMapper,
+                                                    &elem_c,
+                                                );
+                                                Ok(v)
+                                            }));
+                                            continue;
                                         }
 
                                         let computed_loc_c = computed_loc.dupe();
@@ -16799,7 +16830,7 @@ pub fn mk_class_sig<'a>(
                                 let prop_comments = &prop.comments;
 
                                 check_ts_accessibility(cx, ts_accessibility);
-                                if override_ {
+                                if override_ && !cx.tslib_syntax() {
                                     flow_js::add_output_non_speculating(
                                         cx,
                                         ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -16809,6 +16840,15 @@ pub fn mk_class_sig<'a>(
                                             ),
                                         ))),
                                     );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        Ok(v)
+                                    }));
+                                    continue;
                                 }
                                 if optional && !cx.tslib_syntax() {
                                     flow_js::add_output_non_speculating(
@@ -16901,6 +16941,7 @@ pub fn mk_class_sig<'a>(
                                 class_sig::add_field(
                                     static_,
                                     false,
+                                    override_,
                                     name.dupe(),
                                     id_loc.dupe(),
                                     polarity,
@@ -16965,7 +17006,7 @@ pub fn mk_class_sig<'a>(
                             let field_comments = &pf.comments;
 
                             check_ts_accessibility(cx, ts_accessibility);
-                            if override_ {
+                            if override_ && !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
                                     cx,
                                     ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -16975,6 +17016,15 @@ pub fn mk_class_sig<'a>(
                                         ),
                                     ))),
                                 );
+                                let elem_c = elem.clone();
+                                rev_elements.push(Box::new(move |_cx| {
+                                    let Ok(v) = polymorphic_ast_mapper::class_element(
+                                        &mut typed_ast_utils::ErrorMapper,
+                                        &elem_c,
+                                    );
+                                    Ok(v)
+                                }));
+                                continue;
                             }
                             if optional && !cx.tslib_syntax() {
                                 flow_js::add_output_non_speculating(
@@ -17057,6 +17107,7 @@ pub fn mk_class_sig<'a>(
                                 ClassMemberKind::ClassMemberField,
                             );
                             class_sig::add_private_field(
+                                override_,
                                 name.dupe(),
                                 id_loc.dupe(),
                                 polarity,
@@ -17109,7 +17160,7 @@ pub fn mk_class_sig<'a>(
                             match (id_loc_and_id, func_annot_match) {
                                 (Some((id_loc, id)), Some((func_annot_loc, func_annot))) => {
                                     let name = id.name.dupe();
-                                    if override_ {
+                                    if override_ && !cx.tslib_syntax() {
                                         flow_js::add_output_non_speculating(
                                             cx,
                                             ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -17119,6 +17170,15 @@ pub fn mk_class_sig<'a>(
                                                 ),
                                             ))),
                                         );
+                                        let elem_c = elem.clone();
+                                        rev_elements.push(Box::new(move |_cx| {
+                                            let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                &elem_c,
+                                            );
+                                            Ok(v)
+                                        }));
+                                        continue;
                                     }
                                     let meth_kind = match kind {
                                         ast::class::MethodKind::Constructor => {
@@ -17158,6 +17218,7 @@ pub fn mk_class_sig<'a>(
                                         class_sig::add_field(
                                             static_,
                                             false,
+                                            override_,
                                             name.dupe(),
                                             id_loc.dupe(),
                                             flow_common::polarity::Polarity::Neutral,
@@ -17324,6 +17385,7 @@ pub fn mk_class_sig<'a>(
                                                 class_sig::append_method(
                                                     static_,
                                                     false,
+                                                    override_,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     None,
@@ -17337,6 +17399,7 @@ pub fn mk_class_sig<'a>(
                                                 class_sig::add_getter(
                                                     static_,
                                                     false,
+                                                    override_,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     None,
@@ -17350,6 +17413,7 @@ pub fn mk_class_sig<'a>(
                                                 class_sig::add_setter(
                                                     static_,
                                                     false,
+                                                    override_,
                                                     name.dupe(),
                                                     id_loc.dupe(),
                                                     None,
@@ -17491,17 +17555,10 @@ pub fn mk_class_sig<'a>(
                                 let ts_accessibility = &abs_meth.ts_accessibility;
                                 let comments = &abs_meth.comments;
                                 check_ts_accessibility(cx, ts_accessibility);
-                                if override_ {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                                            loc.dupe(),
-                                            UnsupportedSyntax::TSLibSyntax(
-                                                TsLibSyntaxKind::OverrideModifier,
-                                            ),
-                                        ))),
-                                    );
-                                }
+                                // This branch only runs when [Context.tslib_syntax cx] is
+                                // true (see the [not (Context.tslib_syntax cx)] guard above
+                                // that error-mappers the element). Under the gate, [override]
+                                // is a real modifier; thread it through the adder below.
                                 match key {
                                     ast::expression::object::Key::Identifier(id) => {
                                         let id_loc = &id.loc;
@@ -17537,6 +17594,7 @@ pub fn mk_class_sig<'a>(
                                         class_sig::add_method(
                                             false,
                                             true,
+                                            override_,
                                             name.dupe(),
                                             id_loc.dupe(),
                                             None,
@@ -17666,17 +17724,10 @@ pub fn mk_class_sig<'a>(
                                 let variance = &abs_prop.variance;
                                 let comments = &abs_prop.comments;
                                 check_ts_accessibility(cx, ts_accessibility);
-                                if override_ {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                                            loc.dupe(),
-                                            UnsupportedSyntax::TSLibSyntax(
-                                                TsLibSyntaxKind::OverrideModifier,
-                                            ),
-                                        ))),
-                                    );
-                                }
+                                // This branch only runs when [Context.tslib_syntax cx] is
+                                // true (see the gate-off branch above that error-mappers
+                                // the element). Under the gate, [override] is a real
+                                // modifier; thread it through the adder below.
                                 match key {
                                     ast::expression::object::Key::Identifier(id) => {
                                         let id_loc = &id.loc;
@@ -17713,6 +17764,7 @@ pub fn mk_class_sig<'a>(
                                         class_sig::add_field(
                                             false,
                                             true,
+                                            override_,
                                             name.dupe(),
                                             id_loc.dupe(),
                                             polarity,
@@ -18641,6 +18693,7 @@ pub fn mk_record_sig<'a>(
                                         class_sig::add_method(
                                             static_,
                                             false,
+                                            false,
                                             name,
                                             method_id_loc,
                                             Some(func_loc),
@@ -18718,6 +18771,7 @@ pub fn mk_record_sig<'a>(
                             class_sig::add_field(
                                 false,
                                 false,
+                                false,
                                 name,
                                 key_loc,
                                 Polarity::Positive,
@@ -18778,6 +18832,7 @@ pub fn mk_record_sig<'a>(
                             );
                             class_sig::add_field(
                                 true,
+                                false,
                                 false,
                                 name,
                                 key_loc,

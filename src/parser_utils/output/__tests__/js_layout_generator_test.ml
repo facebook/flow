@@ -1708,8 +1708,8 @@ let tests =
            assert_statement_string ~ctxt "class a extends b{override get a(){return 1}}";
            assert_statement_string ~ctxt "class a extends b{override set a(v){}}";
            (* override with abstract *)
-           assert_statement_string ~ctxt "abstract class a extends b{override abstract a():void;}";
-           assert_statement_string ~ctxt "abstract class a extends b{override abstract a:string;}"
+           assert_statement_string ~ctxt "abstract class a extends b{abstract override a():void;}";
+           assert_statement_string ~ctxt "abstract class a extends b{abstract override a:string;}"
          );
          ( "declare_class_override" >:: fun ctxt ->
            (* override methods *)

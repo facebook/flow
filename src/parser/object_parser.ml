@@ -1142,6 +1142,16 @@ module Object
         if kind = Ast.Class.Method.Constructor then
           error env Parse_error.ConstructorCannotBeOptional;
         if abstract then error env Parse_error.OptionalMethodCannotBeAbstract;
+        (* `override constructor?()` is rejected for the same reason
+           `override constructor()` is in the non-T_PLING branch below.
+           Strip the modifier so the rest of the class still type-checks. *)
+        let override =
+          if override && kind = Ast.Class.Method.Constructor then (
+            error_at env (start_loc, Parse_error.OverrideOnConstructor);
+            false
+          ) else
+            override
+        in
         let (sig_loc, (tparams, params, return)) =
           with_loc
             (fun env ->
@@ -1236,6 +1246,16 @@ module Object
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
         let kind = method_kind_of_key env ~static ~async ~generator key in
+        (* `override constructor()` is a parse error. Recover by dropping
+           the `override` modifier so the rest of the class still
+           type-checks. *)
+        let override =
+          if override && kind = Ast.Class.Method.Constructor then (
+            error_at env (start_loc, Parse_error.OverrideOnConstructor);
+            false
+          ) else
+            override
+        in
         let env =
           match kind with
           | Ast.Class.Method.Constructor -> env |> with_allow_super Super_prop_or_call
@@ -1485,23 +1505,9 @@ module Object
         ) else
           []
       in
-      (* Parse override modifier — after static, before abstract *)
-      let override =
-        match Peek.token env with
-        | T_IDENTIFIER { raw = "override"; _ } when Peek.ith_is_object_key ~i:1 ~is_class:true env
-          ->
-          true
-        | _ -> false
-      in
-      let leading_override =
-        if override then (
-          let leading = Peek.comments env in
-          Eat.token env;
-          leading
-        ) else
-          []
-      in
-      (* Parse abstract modifier *)
+      (* Parse `abstract` then `override`. The reverse order is rejected
+         at parse time as an unexpected identifier — locking in a single
+         canonical order while `override` has no users to migrate. *)
       let abstract =
         match Peek.token env with
         | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_is_object_key ~i:1 ~is_class:true env
@@ -1511,6 +1517,21 @@ module Object
       in
       let leading_abstract =
         if abstract then (
+          let leading = Peek.comments env in
+          Eat.token env;
+          leading
+        ) else
+          []
+      in
+      let override =
+        match Peek.token env with
+        | T_IDENTIFIER { raw = "override"; _ } when Peek.ith_is_object_key ~i:1 ~is_class:true env
+          ->
+          true
+        | _ -> false
+      in
+      let leading_override =
+        if override then (
           let leading = Peek.comments env in
           Eat.token env;
           leading

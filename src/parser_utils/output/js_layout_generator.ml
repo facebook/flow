@@ -2570,13 +2570,13 @@ and class_abstract_method
         (fuse
            [
              ts_accessibility;
+             Atom "abstract";
+             space;
              ( if override then
                fuse [Atom "override"; space]
              else
                Empty
              );
-             Atom "abstract";
-             space;
              s_key;
              type_function ~opts ~sep:(Atom ":") annot_loc func;
            ]
@@ -2613,13 +2613,13 @@ and class_abstract_property
         (fuse
            [
              ts_accessibility;
+             Atom "abstract";
+             space;
              ( if override then
                fuse [Atom "override"; space]
              else
                Empty
              );
-             Atom "abstract";
-             space;
              option variance variance_;
              s_key;
              hint (type_annotation ~opts) annot;

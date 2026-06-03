@@ -309,6 +309,13 @@ pub mod class {
         /// were declared with the `abstract` modifier. Source of truth for
         /// which names contribute to `insttype.inst_abstract_props`.
         pub abstract_members: std::collections::BTreeSet<FlowSmolStr>,
+        /// Names of members in this signature declared with the [override]
+        /// modifier, mapped to the member's def loc. Tracked per-side
+        /// (instance/static) — override checks fire independently per side.
+        /// The loc is used as the primary loc for the
+        /// [ImplicitOverrideMissingModifier] error (which fires at the
+        /// member that should have had the modifier).
+        pub override_members: BTreeMap<FlowSmolStr, ALoc>,
     }
 
     impl<C: ConfigTypes> Clone for Signature<C> {
@@ -326,6 +333,7 @@ pub mod class {
                 constructs: self.constructs.clone(),
                 dict: self.dict.clone(),
                 abstract_members: self.abstract_members.clone(),
+                override_members: self.override_members.clone(),
             }
         }
     }
@@ -344,6 +352,11 @@ pub mod class {
         /// Whether the class declaration carried the `abstract` class modifier.
         /// Propagated to `insttype.inst_abstract`.
         pub abstract_: bool,
+        /// Whether the sig was built from a [declare class] form. Used to skip
+        /// the implicit-override (no_implicit_override) check, since ambient
+        /// declarations don't have implementation bodies and shouldn't be
+        /// required to carry the [override] modifier.
+        pub is_declare: bool,
     }
 
     impl<C: ConfigTypes> Clone for Class<C> {
@@ -359,6 +372,7 @@ pub mod class {
                 static_: self.static_.clone(),
                 instance: self.instance.clone(),
                 abstract_: self.abstract_,
+                is_declare: self.is_declare,
             }
         }
     }

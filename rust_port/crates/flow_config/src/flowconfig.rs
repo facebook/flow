@@ -156,6 +156,7 @@ pub mod opts {
             Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
         pub munge_underscores: bool,
         pub no_flowlib: bool,
+        pub no_implicit_override: bool,
         pub no_unchecked_indexed_access: bool,
         pub node_modules_errors: bool,
         pub node_main_fields: Vec<String>,
@@ -315,6 +316,7 @@ pub mod opts {
             multi_platform_ambient_supports_platform_project_overrides: Vec::new(),
             munge_underscores: false,
             no_flowlib: false,
+            no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
             node_main_fields: vec!["main".to_owned()],
@@ -2248,6 +2250,7 @@ pub mod opts {
             "munge_underscores",
             "name",
             "no_flowlib",
+            "no_implicit_override",
             "no_unchecked_indexed_access",
             "node_modules_errors",
             "pattern_matching",
@@ -2849,6 +2852,14 @@ pub mod opts {
                 "no_flowlib" => Some(parse_boolean(
                     |opts, v| {
                         opts.no_flowlib = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
+                "no_implicit_override" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.no_implicit_override = v;
                         Ok(())
                     },
                     values,

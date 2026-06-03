@@ -4,6 +4,6 @@ class Base {
 }
 
 class Derived extends Base {
-  override foo(): void {} // ERROR - support to come later
-  override bar: string = "x"; // ERROR - support to come later
+  override foo(): void {} // OK
+  override bar: string = "x"; // OK
 }

@@ -1673,6 +1673,15 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             if abstract_ {
                 env.error(ParseError::OptionalMethodCannotBeAbstract)?;
             }
+            // `override constructor?()` is rejected for the same reason
+            // `override constructor()` is in the non-T_PLING branch below.
+            // Strip the modifier so the rest of the class still type-checks.
+            let override_ = if override_ && kind == class::MethodKind::Constructor {
+                env.error_at(start_loc.dupe(), ParseError::OverrideOnConstructor)?;
+                false
+            } else {
+                override_
+            };
             let (sig_loc, (tparams, params, return_annot)) = with_loc(None, env, |env| {
                 let mut tparams = type_parser::parse_type_params(env)?;
                 comment_attachment::type_params_remove_trailing(env, tparams.as_mut());
@@ -1761,6 +1770,15 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         }
 
         let kind = method_kind_of_key(env, static_, async_, generator, &key)?;
+        // `override constructor()` is a parse error. Recover by dropping
+        // the `override` modifier so the rest of the class still
+        // type-checks.
+        let override_ = if override_ && kind == class::MethodKind::Constructor {
+            env.error_at(start_loc.dupe(), ParseError::OverrideOnConstructor)?;
+            false
+        } else {
+            override_
+        };
         let allow_super = match kind {
             class::MethodKind::Constructor => AllowedSuper::SuperPropOrCall,
             _ => AllowedSuper::SuperProp,
@@ -2058,12 +2076,14 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         Vec::new()
     };
 
-    // Parse override modifier -- after static, before abstract
-    let override_ = matches!(
+    // Parse `abstract` then `override`. The reverse order is rejected
+    // at parse time as an unexpected identifier — locking in a single
+    // canonical order while `override` has no users to migrate.
+    let abstract_ = matches!(
         peek::token(env),
-        TokenKind::TIdentifier { raw, .. } if raw == "override"
+        TokenKind::TIdentifier { raw, .. } if raw == "abstract"
     ) && peek::current_token_is_followed_by_object_key(env, true);
-    let leading_override = if override_ {
+    let leading_abstract = if abstract_ {
         let leading = peek::comments(env);
         eat::token(env)?;
         leading
@@ -2071,12 +2091,11 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         Vec::new()
     };
 
-    // Parse abstract modifier
-    let abstract_ = matches!(
+    let override_ = matches!(
         peek::token(env),
-        TokenKind::TIdentifier { raw, .. } if raw == "abstract"
+        TokenKind::TIdentifier { raw, .. } if raw == "override"
     ) && peek::current_token_is_followed_by_object_key(env, true);
-    let leading_abstract = if abstract_ {
+    let leading_override = if override_ {
         let leading = peek::comments(env);
         eat::token(env)?;
         leading

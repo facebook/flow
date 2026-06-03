@@ -1300,22 +1300,6 @@ References:
                        ^^^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------------- override.js:7:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   7|   override foo(): void {} // ERROR - support to come later
-        ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------------------------------- override.js:8:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   8|   override bar: string = "x"; // ERROR - support to come later
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------- private_class_field.js:8:3
 
 Cannot get `x.private` because property `private` is missing in `C` [1]. [prop-missing]
@@ -1754,4 +1738,4 @@ References:
 
 
 
-Found 121 errors
+Found 119 errors

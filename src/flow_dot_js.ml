@@ -136,6 +136,7 @@ let stub_metadata ~root ~checked =
     instance_t_objkit_fix = false;
     max_workers = 0;
     missing_module_generators = [];
+    no_implicit_override = false;
     no_unchecked_indexed_access = false;
     opaque_type_new_bound_syntax = true;
     projects_options = Flow_projects.default_options;

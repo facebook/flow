@@ -8329,6 +8329,77 @@ where
                     ]),
                 }
             }
+            MessageOverride(kind) => {
+                use crate::intermediate_error_types::OverrideErrorKind::*;
+                match kind {
+                    OverrideWithoutExtends {
+                        class_name,
+                        member_name,
+                    } => {
+                        let containing = match class_name {
+                            Some(n) => {
+                                vec![text(" its containing class "), code(n), text(" doesn't")]
+                            }
+                            None => vec![text(" its containing class doesn't")],
+                        };
+                        let mut parts = vec![
+                            text("Member "),
+                            code(member_name),
+                            text(" can't have an "),
+                            code("override"),
+                            text(" modifier because"),
+                        ];
+                        parts.extend(containing);
+                        parts.push(text(" extend another class."));
+                        friendly::Message(parts)
+                    }
+                    OverrideOfNonInheritedMember {
+                        class_name: _,
+                        base_class_name,
+                        member_name,
+                    } => {
+                        let base = match base_class_name {
+                            Some(n) => vec![text(" the base class "), code(n), text(".")],
+                            None => vec![text(" the base class.")],
+                        };
+                        let mut parts = vec![
+                            text("Member "),
+                            code(member_name),
+                            text(" can't have an "),
+                            code("override"),
+                            text(" modifier because it isn't declared in"),
+                        ];
+                        parts.extend(base);
+                        friendly::Message(parts)
+                    }
+                    ImplicitOverrideMissingModifier {
+                        class_name: _,
+                        base_class_name,
+                        member_name,
+                        inherited_def_loc,
+                    } => {
+                        let base = match base_class_name {
+                            Some(n) => vec![text(" the base class "), code(n)],
+                            None => vec![text(" the base class")],
+                        };
+                        let mut parts = vec![
+                            text("Member "),
+                            code(member_name),
+                            text(" must have an "),
+                            code("override"),
+                            text(" modifier because it overrides "),
+                            friendly::hardcoded_string_desc_ref(
+                                "a member",
+                                loc_of_aloc(inherited_def_loc),
+                            ),
+                            text(" in"),
+                        ];
+                        parts.extend(base);
+                        parts.push(text("."));
+                        friendly::Message(parts)
+                    }
+                }
+            }
             MessageTSVarianceIn => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("in"),

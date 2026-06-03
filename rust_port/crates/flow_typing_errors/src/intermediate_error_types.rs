@@ -431,6 +431,35 @@ pub enum AbstractErrorKind<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum OverrideErrorKind<L: Dupe> {
+    OverrideWithoutExtends {
+        class_name: Option<FlowSmolStr>,
+        member_name: FlowSmolStr,
+    },
+    OverrideOfNonInheritedMember {
+        class_name: Option<FlowSmolStr>,
+        base_class_name: Option<FlowSmolStr>,
+        member_name: FlowSmolStr,
+    },
+    ImplicitOverrideMissingModifier {
+        class_name: Option<FlowSmolStr>,
+        base_class_name: Option<FlowSmolStr>,
+        member_name: FlowSmolStr,
+        inherited_def_loc: L,
+    },
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum InvalidRenderTypeKind<L: Dupe> {
     InvalidRendersNullVoidFalse,
     InvalidRendersIterable,
@@ -2235,6 +2264,7 @@ pub enum Message<L: Dupe> {
     MessageAbstractClass,
     MessageAbstractMethod,
     MessageAbstract(AbstractErrorKind<L>),
+    MessageOverride(OverrideErrorKind<L>),
     MessageTSUndefinedType,
 
     MessageTupleElementNotReadable(Box<MessageTupleElementNotReadableData<L>>),

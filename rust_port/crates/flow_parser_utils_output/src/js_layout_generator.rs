@@ -7375,13 +7375,13 @@ fn class_abstract_method(
         abs_meth.comments.as_ref(),
         with_semicolon(fuse(vec![
             ts_accessibility,
+            atom("abstract"),
+            space(),
             if abs_meth.override_ {
                 fuse(vec![atom("override"), space()])
             } else {
                 LayoutNode::empty()
             },
-            atom("abstract"),
-            space(),
             s_key,
             type_function(opts, atom(":"), &abs_meth.annot.0, &abs_meth.annot.1),
         ])),
@@ -7410,13 +7410,13 @@ fn class_abstract_property(
         abs_prop.comments.as_ref(),
         with_semicolon(fuse(vec![
             ts_accessibility,
+            atom("abstract"),
+            space(),
             if abs_prop.override_ {
                 fuse(vec![atom("override"), space()])
             } else {
                 LayoutNode::empty()
             },
-            atom("abstract"),
-            space(),
             option_layout(variance, abs_prop.variance.as_ref()),
             s_key,
             hint(|a| type_annotation(opts, false, a), &abs_prop.annot),

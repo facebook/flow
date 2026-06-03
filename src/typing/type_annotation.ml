@@ -3393,7 +3393,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     } as prop
                   )
                 ) ->
-              if override then
+              (* The [override] modifier is only meaningful on classes /
+                 [declare class]. For pure object-type / interface bodies
+                 (the [`Interface] case) it has no TS-aligned semantics, so
+                 keep rejecting it unconditionally. For [`DeclareClass]
+                 under the [tslib_syntax] gate, thread it through to the
+                 same per-side [override_members] tracking that regular
+                 classes use; [check_override_obligations] will fire any
+                 errors. With the gate off, fall back to the
+                 [EUnsupportedSyntax] rejection (matches what regular
+                 classes do via [statement.ml]). *)
+              let override_on_declare_class =
+                override && obj_kind = `DeclareClass && Context.tslib_syntax env.cx
+              in
+              if override && not override_on_declare_class then
                 Flow_js_utils.add_output
                   env.cx
                   (Error_message.EUnsupportedSyntax
@@ -3522,6 +3535,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   if proto then
                     Class_type_sig.add_proto_field
                       ~abstract:abstract_on
+                      ~override:override_on_declare_class
                       name
                       id_loc
                       polarity
@@ -3532,6 +3546,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     Class_type_sig.add_field
                       ~static
                       ~abstract:abstract_on
+                      ~override:override_on_declare_class
                       name
                       id_loc
                       polarity
@@ -3639,6 +3654,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         ( Class_type_sig.append_method
                             ~static
                             ~abstract:abstract_on
+                            ~override:override_on_declare_class
                             name
                             ~id_loc
                             ~this_write_loc
@@ -3816,6 +3832,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                                 Class_type_sig.append_method
                                   ~static
                                   ~abstract:abstract_on
+                                  ~override:override_on_declare_class
                                   name
                                   ~id_loc:key_loc
                                   ~this_write_loc
@@ -3886,6 +3903,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         ( Class_type_sig.add_getter
                             ~static
                             ~abstract:abstract_on
+                            ~override:override_on_declare_class
                             name
                             ~id_loc:key_loc
                             ~this_write_loc:None
@@ -3921,6 +3939,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         ( Class_type_sig.add_setter
                             ~static
                             ~abstract:abstract_on
+                            ~override:override_on_declare_class
                             name
                             ~id_loc:key_loc
                             ~this_write_loc:None
@@ -4601,6 +4620,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         else
           iface_sig
       in
+      (* Flag this sig as built from a [declare class] form so the
+         implicit-override check is skipped for it (ambient declarations
+         don't need to redeclare the [override] modifier). *)
+      let iface_sig = { iface_sig with Class_type_sig_types.is_declare = true } in
       let (iface_sig, properties) =
         let tparams_map_with_this =
           Subst_name.Map.add (Subst_name.Name "this") this_t env.tparams_map
