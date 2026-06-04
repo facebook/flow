@@ -109,7 +109,7 @@ Check out the [the full docs on using enums](./using-enums.md) to learn more.
 
 To enable Flow Enums in your project:
 
-1. In your `.flowconfig`, under the `[options]` heading, add `enums=true`.
+1. Enabled by default since Flow v0.317. Before that, add `enums=true` in your `.flowconfig` under the `[options]` heading.
 2. Add the Babel transform [babel-plugin-transform-flow-enums](https://www.npmjs.com/package/babel-plugin-transform-flow-enums) to your dev dependencies and Babel config. It converts enum declarations into calls to the runtime.
 3. Add the runtime package [flow-enums-runtime](https://www.npmjs.com/package/flow-enums-runtime) to your production dependencies.
 

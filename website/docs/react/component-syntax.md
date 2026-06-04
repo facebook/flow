@@ -236,7 +236,7 @@ type CompType = GenericCompModule['default']; // Declaration works, but CompType
 
 ## Enable Component Syntax {#toc-enable-component-syntax}
 
-In your `.flowconfig`, under the `[options]` heading, add `component_syntax=true`.
+Enabled by default since Flow v0.317. Before that, add `component_syntax=true` in your `.flowconfig` under the `[options]` heading.
 
 ## See Also {#toc-see-also}
 
