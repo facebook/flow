@@ -11,10 +11,16 @@
     position: relative;
 }
 
+/* The Try playground is always light (its Monaco syntax theme is fixed at
+   load), so these colors are unconditional — the same in both site light/dark
+   modes. The tab bar is a mid-tone slate that bridges the dark navbar above and
+   the light editor below, giving a step-down transition rather than a hard
+   dark→white edge. */
 .toolbar {
     display: flex;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
+    background: #454e5a;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
 }
 
@@ -24,7 +30,19 @@
     height: calc(100vh - var(--ifm-navbar-height) - 40px);
     z-index: 10;
     background-color: white;
+    /* Dark text on the white config panel, pinned so it stays readable in dark
+       site mode (the playground doesn't follow the theme toggle). color-scheme
+       keeps the native checkboxes, selects, and scrollbar light to match the
+       white panel — otherwise the page's dark color-scheme renders them dark. */
+    color: #1c1e21;
+    color-scheme: light;
     overflow: auto;
+}
+
+/* The config "[docs]" links use the light deep-gold rather than the dark-mode
+   brand yellow, which is too low-contrast on the white panel. */
+.tryEditorConfig a {
+    color: #8a6300;
 }
 
 .tryEditorConfig table {
@@ -95,6 +113,10 @@
     font-size: 12px;
     background: #f7f7f7;
     border-left: 1px solid #ddd;
+    /* Dark text on the light results surface, pinned so errors/JSON/AST stay
+       readable in dark site mode. The results-side tab bar reasserts its own
+       light text via .toolbar above. */
+    color: #1c1e21;
 }
 
 .resultBody {
@@ -102,6 +124,13 @@
     flex: 1;
     height: calc(100vh - var(--ifm-navbar-height) - 40px);
     overflow: auto;
+    padding: 14px 16px;
+    margin-bottom: 0;
+    /* Errors/JSON render in a <pre>, which Infima paints with a theme-dependent
+       background; pin it to the light results surface so it doesn't flip with
+       the site toggle. Keep the scrollbar light to match. */
+    background: #f7f7f7;
+    color-scheme: light;
 }
 
 .tabs {
@@ -112,10 +141,15 @@
 }
 
 .tab {
-    border-right: 1px solid #ddd;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     font-weight: bold;
     padding: 7px 15px;
+}
+
+.tab:hover {
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .version {
@@ -132,9 +166,18 @@
 }
 
 .selectedTab {
-    background: white;
-    border-bottom: 2px solid #404040;
+    /* The active tab lifts into the editor's light surface, connecting the
+       mid-tone bar to the panel below it; a yellow underline marks it. */
+    background: #fff;
+    color: #1c1e21;
+    border-bottom: 2px solid var(--flow-yellow);
     margin-bottom: -1px; /* cover up container bottom border */
+}
+
+/* Keep the active tab's dark text on hover — the generic .tab:hover lightens
+   text for the slate bar, but on the white active tab that would be invisible. */
+.selectedTab:hover {
+    color: #1c1e21;
 }
 
 .loader {
@@ -167,9 +210,15 @@
     animation-delay: -160ms;
 }
 
-.resultBody {
-    padding: 7px 10px;
-    margin-bottom: 0;
+/* The AST tree (react-json-view) gets its own block scroll container rather
+   than the flex .resultBody: a flex item recomputes its width as nodes expand
+   and collapse, which drives a ResizeObserver feedback loop. A fixed-height
+   block with overflow scroll keeps the container size stable. */
+.astBody {
+    height: calc(100vh - var(--ifm-navbar-height) - 40px);
+    overflow: auto;
+    padding: 14px 16px;
+    color-scheme: light;
 }
 
 .errors ul {

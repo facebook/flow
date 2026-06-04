@@ -103,10 +103,18 @@ module.exports = async () => {
           },
       prism: {
         theme: require('prism-react-renderer').themes.github,
+        // Dark code blocks matching the landing page, which renders its
+        // flow-check blocks with vsDark (see landing/Showcase.js). In dark mode
+        // Docusaurus uses darkTheme, so the whole site now shares one code look.
+        darkTheme: require('prism-react-renderer').themes.vsDark,
       },
       colorMode: {
-        defaultMode: 'light',
-        disableSwitch: true,
+        // Dark by default to match the redesigned (dark) landing page. The
+        // toggle is enabled so readers can switch to the light theme; we don't
+        // follow the OS preference so the dark default is what everyone sees
+        // first. (The Try playground stays light in both modes — see TryFlow.)
+        defaultMode: 'dark',
+        disableSwitch: false,
         respectPrefersColorScheme: false,
       },
       navbar: {

@@ -336,6 +336,8 @@ export default component TryFlow(
               hover: {enabled: true, above: false},
               scrollBeyondLastLine: false,
               overviewRulerBorder: false,
+              // Breathing room between the tab bar and the first line of code.
+              padding: {top: 12},
             }}
           />
         </div>

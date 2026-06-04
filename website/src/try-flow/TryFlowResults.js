@@ -210,19 +210,21 @@ export default component TryFlowResults(
         (typeof ast === 'string' ? (
           <pre className={styles.resultBody}>{ast}</pre>
         ) : (
-          <ReactJson
-            src={ast}
-            indentWidth={2}
-            quotesOnKeys={false}
-            displayDataTypes={false}
-            enableClipboard={false}
-            shouldCollapse={field => {
-              if (cursorPosition == null) {
-                return false;
-              }
-              return shouldCollapse(cursorPosition, field.src);
-            }}
-          />
+          <div className={styles.astBody}>
+            <ReactJson
+              src={ast}
+              indentWidth={2}
+              quotesOnKeys={false}
+              displayDataTypes={false}
+              enableClipboard={false}
+              shouldCollapse={field => {
+                if (cursorPosition == null) {
+                  return false;
+                }
+                return shouldCollapse(cursorPosition, field.src);
+              }}
+            />
+          </div>
         ))}
     </div>
   );

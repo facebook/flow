@@ -66,8 +66,242 @@ code {
   border: none;
 }
 
-[data-theme='dark'] {
+/* ── Dark mode (site default) ── */
+/* The site renders dark by default to match the redesigned landing page. These
+   variables steer Infima's dark theme toward the landing's brand grays, and use
+   the true brand yellow for links/accents — legible on dark, where the deep gold
+   used on light pages would be too dark. The selector matches Infima's own
+   `html[data-theme='dark']` specificity so these overrides actually win. */
+html[data-theme='dark'] {
+  /* A soft brand gray, lighter than Infima's near-black (#1b1b1d). The muted
+     rgba(255,255,255,0.55) labels measure ~5:1 on the lightest part of the
+     gradient (top #2d343a), clearing WCAG AA. */
+  --ifm-background-color: #2a313a;
+  --ifm-background-surface-color: #353d46;
+
+  --ifm-color-primary: #e8bd36;
+  --ifm-color-primary-dark: #e3b51d;
+  --ifm-color-primary-darker: #d7aa17;
+  --ifm-color-primary-darkest: #b18c13;
+  --ifm-color-primary-light: #ecc750;
+  --ifm-color-primary-lighter: #efce65;
+  --ifm-color-primary-lightest: #f3da8c;
+  --ifm-link-color: var(--flow-yellow);
+  --ifm-link-hover-color: #f0c94a;
+
   --ifm-code-background: rgba(255, 255, 255, 0.1);
+  --ifm-toc-border-color: rgba(255, 255, 255, 0.1);
+  --ifm-table-border-color: rgba(255, 255, 255, 0.12);
+  --ifm-table-stripe-background: rgba(255, 255, 255, 0.03);
+  --ifm-blockquote-border-left-color: rgba(255, 255, 255, 0.15);
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+
+  /* DocSearch paints the selected/recent result with --docsearch-highlight-color
+     and white text on top. Left at the bright brand yellow (the dark primary)
+     that's white-on-yellow and unreadable, so pin it to the deeper gold where
+     white text stays legible. */
+  --docsearch-highlight-color: #8a6300;
+}
+
+/* Top-to-bottom gradient on the docs/blog surface, matching the landing page's
+   hero gradient (#2d343a → #232930) so docs share the homepage's tone and ramp.
+   Painted on .main-wrapper — the content-height element between the navbar and
+   the footer — so it bottoms out at exactly #232930, the footer color, right
+   where the footer begins: the gradient flows straight into the footer with no
+   tonal step. (Painting it on <html> with a fixed attachment instead made the
+   seam depend on scroll position, so the footer met a lighter mid-gradient tone
+   — a visible jump.) The body, doc content, and both sidebars are transparent,
+   so it shows through as one surface. Scoped to plugin-docs/plugin-blog, leaving
+   the landing and Try pages alone. */
+html[data-theme='dark'].plugin-docs .main-wrapper,
+html[data-theme='dark'].plugin-blog .main-wrapper {
+  background: linear-gradient(180deg, #2d343a 0%, #232930 100%);
+}
+
+/* Drop the main sidebar's right divider so the surface reads as one continuous
+   gradient, the way the landing page has no internal seams. (The TOC's left
+   divider is removed theme-agnostically earlier in the stack, alongside its
+   "On this page" label.) */
+html[data-theme='dark'] .theme-doc-sidebar-container {
+  border-right: none;
+}
+
+/* With the TOC's left divider gone (above), dim its links so the secondary
+   column reads as clearly secondary, with the active entry in brand yellow. The
+   "On this page" eyebrow label that gives this column its identity is added
+   theme-agnostically earlier in the stack. */
+html[data-theme='dark'] .table-of-contents__link {
+  color: rgba(255, 255, 255, 0.55);
+}
+html[data-theme='dark'] .table-of-contents__link:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+html[data-theme='dark'] .table-of-contents__link--active {
+  color: var(--flow-yellow);
+}
+
+/* The page's main title stays in the readable light heading color rather than
+   the brand yellow — with yellow already on links, the TOC, and the sidebar, a
+   yellow h1 made the page read as too yellow. Section headings (h2/h3) already
+   use this color, so the whole heading hierarchy is now one consistent tone. */
+html[data-theme='dark'] .theme-doc-markdown > header > h1 {
+  color: var(--ifm-heading-color);
+}
+
+/* Blog post titles on a single post page: the light heading color rather than
+   yellow, same reasoning as the doc title above (so the page isn't dominated by
+   yellow). Covers the h1 of a normal post and the h2 link of a Medium-backed
+   post on its own page. The blog index re-yellows its list titles just below. */
+html[data-theme='dark'].plugin-blog article header h1,
+html[data-theme='dark'].plugin-blog article header h1 a,
+html[data-theme='dark'].plugin-blog article header h2 a {
+  color: var(--ifm-heading-color);
+}
+
+/* Blog index: list-item titles read as yellow links like the rest of the UI,
+   overriding the white-title rule above (which is .plugin-blog-scoped and so
+   also matches the index). Same specificity, so this later rule wins. Scoped to
+   .blog-list-page so single post pages keep their white title. */
+html[data-theme='dark'].blog-list-page article header h2 a {
+  color: var(--flow-yellow);
+}
+html[data-theme='dark'].blog-list-page article header h2 a:hover {
+  color: #f0c94a;
+}
+
+/* Code blocks get the landing page's chrome: a hairline border, rounded
+   corners, and a soft drop shadow so they read as raised panels on the
+   gradient rather than flat insets. Scoped to docs/blog so it doesn't clobber
+   the landing page's own (nearly identical) code-block border rule. Covers both
+   regular code blocks and FlowCheckCodeBlock, whose root is also a
+   `codeBlockContainer`. The background is retinted from vsDark's near-black
+   #1e1e1e to a brand-flavored dark (#1f2630) so blocks read as part of the
+   dark-gray surface family rather than flat black. */
+html[data-theme='dark'].plugin-docs [class*='codeBlockContainer'],
+html[data-theme='dark'].plugin-blog [class*='codeBlockContainer'] {
+  --prism-background-color: #1f2630;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+/* FlowCheckCodeBlock paints the vsDark background inline on its <pre>, so the
+   var above doesn't reach it — override it directly. */
+html[data-theme='dark'].plugin-docs [class*='codeBlockContainer'] pre,
+html[data-theme='dark'].plugin-blog [class*='codeBlockContainer'] pre {
+  background-color: #1f2630 !important;
+}
+
+/* Now that docs render dark, the navbar no longer sits over white content, so
+   drop its base to a more transparent 0.7 for a lighter, glassier bar that lets
+   more of the blurred content show through. (The 0.92 in the navbar commit
+   existed only to keep it dark over the old white docs pages; navbar text still
+   measures >7:1 at 0.7 because the base tint is dark.) Targets ::before, where
+   the base commit moved the frosted fill + blur, so the more-transparent tint
+   sits on the same layer as the blur (keeping the bar glassy on every viewport,
+   mobile included). */
+html[data-theme='dark'] .navbar::before {
+  background: radial-gradient(
+      ellipse 480px 120px at max(1.5rem, calc(50% - 604px)) -40%,
+      rgba(232, 189, 54, 0.1),
+      transparent 70%
+    ),
+    rgba(40, 46, 52, 0.7);
+}
+
+/* Mobile drawer top bar: logo on the left, the toggle + close grouped at the
+   right. Pushing the logo with margin-right: auto leaves a single auto gap, so
+   the right group stays anchored whether or not the toggle is present (it's
+   hidden on the landing/Try pages via NavbarThemeToggle). The toggle keeps a
+   small gap before the close via its own margin-right--md class. (Zero Infima's
+   default margin-left:auto on the close so there's only one auto margin —
+   otherwise the two would split the space and park the toggle in the middle.) */
+.navbar-sidebar__brand .navbar__brand {
+  margin-right: auto;
+}
+.navbar-sidebar__brand > .navbar-sidebar__close {
+  margin-left: 0;
+}
+
+/* The desktop color-mode toggle (in the right nav group) is hidden on mobile,
+   where the drawer's own toggle takes over. This replaces Docusaurus's default
+   colorModeToggle style, which the swizzled NavbarContent no longer applies. */
+@media (max-width: 996px) {
+  .navbar__items--right .flow-theme-toggle {
+    display: none;
+  }
+}
+
+/* Space the desktop toggle from the social icon (X) that follows it, so it
+   doesn't sit flush against it. */
+.navbar__items--right .flow-theme-toggle {
+  margin-right: 0.75rem;
+}
+
+/* The Algolia search button defaults to a near-black fill that reads as a hard
+   block on the glassy navbar. Give it a translucent fill + hairline so it sits
+   on the bar like the other navbar chrome. */
+html[data-theme='dark'] .navbar .DocSearch-Button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+html[data-theme='dark'] .navbar .DocSearch-Button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+/* Prose link underline: yellow tint on dark (the base rule uses deep gold,
+   which would disappear against the dark surface). */
+[data-theme='dark'] .markdown a:not(.hash-link):not(.card) {
+  text-decoration-color: rgba(232, 189, 54, 0.4);
+}
+[data-theme='dark'] .markdown a:not(.hash-link):not(.card):hover {
+  text-decoration-color: rgba(232, 189, 54, 0.8);
+}
+
+/* Blog index title / "Read more" underline: yellow tint on dark, mirroring the
+   prose-link override above (the base rule's deep gold would vanish on dark).
+   .blog-list-page sits on <html> alongside data-theme, so these are compounded
+   on one element (html[data-theme='dark'].blog-list-page), not a descendant
+   combinator — matching the .plugin-blog rules elsewhere in this file. */
+html[data-theme='dark'].blog-list-page h2[itemprop='headline'] a,
+html[data-theme='dark'].blog-list-page footer a[aria-label^='Read more'] {
+  text-decoration-color: rgba(232, 189, 54, 0.4);
+}
+html[data-theme='dark'].blog-list-page h2[itemprop='headline'] a:hover,
+html[data-theme='dark'].blog-list-page footer a[aria-label^='Read more']:hover {
+  text-decoration-color: rgba(232, 189, 54, 0.8);
+}
+
+/* Sidebar on dark: light section headers, a light hover fill, and a yellow
+   active pill/text (the light-mode rule used a dark text color that would
+   vanish on the dark surface). The top-level labels match the nested links'
+   brightness (0.85, ~9:1 on the gradient) rather than sitting dimmer — their
+   uppercase + bold treatment already marks them as section headers, so they
+   don't need to be quieter in tone too. */
+[data-theme='dark']
+  .theme-doc-sidebar-menu
+  > .theme-doc-sidebar-item-category
+  > .menu__list-item-collapsible
+  > .menu__link,
+[data-theme='dark']
+  .theme-doc-sidebar-menu
+  > .theme-doc-sidebar-item-link
+  > .menu__link {
+  color: rgba(255, 255, 255, 0.85);
+}
+[data-theme='dark'] .theme-doc-sidebar-menu .menu__link:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme='dark']
+  .theme-doc-sidebar-menu
+  .menu__link--active:not(.menu__link--sublist) {
+  color: var(--flow-yellow);
+  background-color: rgba(232, 189, 54, 0.14);
+}
+[data-theme='dark']
+  .theme-doc-sidebar-menu
+  .menu__link--active:not(.menu__link--sublist):hover {
+  background-color: rgba(232, 189, 54, 0.2);
 }
 
 .docusaurus-highlight-code-line {
@@ -213,7 +447,8 @@ code {
    tone the landing hero settles toward) rather than a near-black slab. It sits
    one step darker than the page bottom (#2d343a), so it reads as a subtly
    anchored bookend, with a thin grey line as the divider. More vertical padding
-   gives the link columns room to breathe. */
+   gives the link columns room to breathe. The footer is dark in both themes, so
+   these values are shared (no dark-mode override needed). */
 .footer.footer--dark {
   background: #232930;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -228,7 +463,8 @@ code {
   letter-spacing: 0.06em;
   font-size: 0.72rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
+  /* 0.55 clears WCAG AA (4.5:1) on the dark footer; 0.45 measured 4.26:1. */
+  color: rgba(255, 255, 255, 0.55);
   margin-bottom: 1rem;
 }
 
@@ -279,6 +515,20 @@ code {
 
 .navbar__brand, .navbar__logo {
   height: 100%;
+}
+
+/* The navbar is always dark, but Docusaurus tints the color-mode toggle icon
+   for the *active* theme — so in light mode it renders dark-on-dark and
+   disappears. Force it light (and yellow on hover) in both modes. */
+.navbar [class*='toggleButton_'] {
+  color: rgba(255, 255, 255, 0.7);
+}
+.navbar [class*='toggleButton_']:hover {
+  color: var(--flow-yellow);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.navbar [class*='toggleButton_'] svg {
+  fill: currentColor;
 }
 
 /* Version pill: a small rounded badge showing the current Flow release,
@@ -584,8 +834,7 @@ code {
    #232930 the Hero darkens down to, so the page darkens monotonically — Hero
    #2d343a → #232930, then a steady #232930 through the showcase and straight
    into the #232930 footer, with the footer's grey line as the only divider.
-   (Previously this lightened back to #2d343a, creating a tonal "valley" before
-   the darker footer.) */
+   The landing is dark in both themes, so this is shared (no dark override). */
 .landing-below-hero {
   background: #232930;
 }

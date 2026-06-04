@@ -118,3 +118,24 @@
   color: var(--ifm-color-emphasis-600);
   line-height: 1.5;
 }
+
+/* Dark mode: the light card chrome above (white hero fill, black hairline
+   borders) disappears on the dark surface. Give the cards a faint raised fill
+   and light hairline borders so their structure reads again, matching the
+   raised-panel look used for code blocks. */
+[data-theme='dark'] .heroCard {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .heroCard:hover,
+[data-theme='dark'] .card:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+/* heroTitle was pinned to the dark gray brand color, invisible on dark. */
+[data-theme='dark'] .heroTitle {
+  color: var(--ifm-heading-color);
+}

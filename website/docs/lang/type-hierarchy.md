@@ -115,7 +115,7 @@ click any-func "../../types/functions"
 click some-func "../../types/functions"
 click some-func2 "../../types/functions"
 
-classDef default fill:#eee, stroke:#000, stroke-width:1px
+classDef default fill:#eee, stroke:#000, stroke-width:1px, color:#000
 ```
 
 Click on a node to go to the documentation for that type.
