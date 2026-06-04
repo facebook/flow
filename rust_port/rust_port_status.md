@@ -2419,6 +2419,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `filter_errors` → `filter_errors()`
       - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
       - [x] `full_check_for_init` → `full_check_for_init()`
+      - [x] `focus_check_for_init` → `focus_check_for_init()`
       - [x] `recheck` → `recheck()`
       - [x] `libdef_check_for_lazy_init` → `libdef_check_for_lazy_init()`
       - [x] `include_dependencies_and_dependents`
@@ -2431,7 +2432,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `init_libs`
       - [x] `filter_out_node_modules`
       - [x] `unfocused_files_to_infer`
-      - [x] `focused_files_to_infer`
       - [x] `files_to_infer`
       - [x] `restart_if_faster_than_recheck`
       - [x] `recheck_parse_and_update_dependency_info`

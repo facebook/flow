@@ -669,21 +669,6 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
         )
   )
 
-(** Given a set of focused files and a dependency graph, calculates the recursive dependents and
-    returns a CheckedSet containing both the focused and dependent files. *)
-let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_graph focused =
-  let roots =
-    Pure_dep_graph_operations.calc_all_dependents
-      ~sig_dependency_graph
-      ~implementation_dependency_graph
-      focused
-  in
-  (* [roots] is the set of all focused files and all dependent files.
-     CheckedSet will ignore the focused files in [dependents] since they are
-     also passed via [focused] and duplicates take the highest priority. *)
-  let dependents = roots in
-  CheckedSet.add ~focused ~dependents CheckedSet.empty
-
 let filter_out_node_modules ~options =
   if Options.node_modules_errors options then
     Fun.id
@@ -722,33 +707,15 @@ let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
 
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
-let files_to_infer ~options ~profiling ~dependency_info ~focus_targets ~parsed =
+let files_to_infer ~options ~profiling ~parsed =
   with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
-      match focus_targets with
-      | None ->
-        let to_infer =
-          unfocused_files_to_infer
-            ~options
-            ~input_focused:parsed
-            ~input_dependencies:FilenameSet.empty
-        in
-        Lwt.return to_infer
-      | Some input_focused ->
-        let implementation_dependency_graph =
-          Dependency_info.implementation_dependency_graph dependency_info
-        in
-        let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
-        (* Only focus files that parsed successfully. Parsed files are also
-         * necessarily checked because we only parse checked files, so this also
-         * serves to filter the input to checked files. *)
-        let input_focused = FilenameSet.inter input_focused parsed in
-        let to_infer =
-          focused_files_to_infer
-            ~implementation_dependency_graph
-            ~sig_dependency_graph
-            input_focused
-        in
-        Lwt.return to_infer
+      let to_infer =
+        unfocused_files_to_infer
+          ~options
+          ~input_focused:parsed
+          ~input_dependencies:FilenameSet.empty
+      in
+      Lwt.return to_infer
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge =
@@ -2815,10 +2782,10 @@ let recheck
       with
       | Recheck_too_slow -> reinit_or_restart ~reason:"recheck_too_slow"
 
-let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
+let check_files_for_init ~profiling ~options ~workers ~parsed ~message env =
   let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in
   with_transaction message (fun transaction reader ->
-      let%lwt input = files_to_infer ~options ~focus_targets ~profiling ~parsed ~dependency_info in
+      let%lwt input = files_to_infer ~options ~profiling ~parsed in
       let all_dependent_files = FilenameSet.empty in
       let implementation_dependency_graph =
         Dependency_info.implementation_dependency_graph dependency_info
@@ -2911,21 +2878,39 @@ let libdef_check_for_lazy_init ~profiling ~options ~workers env =
       env.ServerEnv.all_unordered_libs
       FilenameSet.empty
   in
-  check_files_for_init
-    ~profiling
-    ~options
-    ~workers
-    ~focus_targets:None
-    ~parsed
-    ~message:"lazy init check"
-    env
+  check_files_for_init ~profiling ~options ~workers ~parsed ~message:"lazy init check" env
 
-let full_check_for_init ~profiling ~options ~workers ?focus_targets env =
+let focus_check_for_init ~profiling ~options ~workers ~focus_targets env =
+  let%lwt (env, first_internal_error) =
+    libdef_check_for_lazy_init ~profiling ~options ~workers env
+  in
+  let files_to_force = CheckedSet.add ~focused:focus_targets CheckedSet.empty in
+  let will_be_checked_files = ref files_to_force in
+  let should_print_summary = Options.should_profile options in
+  let%lwt (focus_profiling, (_, _, _, env)) =
+    Profiling_js.with_profiling_lwt ~label:"FocusRecheck" ~should_print_summary (fun p ->
+        recheck
+          ~profiling:p
+          ~options
+          ~workers
+          ~updates:CheckedSet.empty
+          ~find_ref_request:FindRefsTypes.empty_request
+          ~files_to_force
+          ~incompatible_lib_change:false
+          ~changed_mergebase:None
+          ~missed_changes:false
+          ~will_be_checked_files
+          env
+    )
+  in
+  Profiling_js.merge ~from:focus_profiling ~into:profiling;
+  Lwt.return (env, first_internal_error)
+
+let full_check_for_init ~profiling ~options ~workers env =
   check_files_for_init
     ~profiling
     ~options
     ~workers
-    ~focus_targets
     ~parsed:env.ServerEnv.files
     ~message:"full check"
     env

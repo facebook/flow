@@ -60,7 +60,15 @@ val full_check_for_init :
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  ?focus_targets:FilenameSet.t ->
+  ServerEnv.env ->
+  (ServerEnv.env * string option) Lwt.t
+
+(* targeted recheck of focus_targets and their dependents, for focus-check init *)
+val focus_check_for_init :
+  profiling:Profiling_js.running ->
+  options:Options.t ->
+  workers:MultiWorkerLwt.worker list option ->
+  focus_targets:FilenameSet.t ->
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 

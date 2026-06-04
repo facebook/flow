@@ -78,9 +78,12 @@ let init ~profiling ?focus_targets genv =
     if not libs_ok then
       Lwt.return (env, None)
     else if Options.lazy_mode options then
-      Types_js.libdef_check_for_lazy_init ~profiling ~workers ~options env
+      match focus_targets with
+      | None -> Types_js.libdef_check_for_lazy_init ~profiling ~workers ~options env
+      | Some focus_targets ->
+        Types_js.focus_check_for_init ~profiling ~workers ~options ~focus_targets env
     else
-      Types_js.full_check_for_init ~profiling ~workers ?focus_targets ~options env
+      Types_js.full_check_for_init ~profiling ~workers ~options env
   in
   sample_init_memory profiling;
 

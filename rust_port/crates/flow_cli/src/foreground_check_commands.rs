@@ -369,7 +369,7 @@ mod focus_check_command {
             flowconfig_name,
             flowconfig_hash,
             flowconfig,
-            Some(flow_config::LazyMode::NonLazy),
+            Some(flow_config::LazyMode::Lazy),
             root.clone(),
             options_flags.clone(),
             saved_state_options_flags,

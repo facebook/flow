@@ -250,7 +250,7 @@ module FocusCheckCommand = struct
         (Server_files_js.config_file flowconfig_name root)
     in
     let ({ Options.opt_verbose; _ } as options) =
-      let lazy_mode = Some FlowConfig.Non_lazy in
+      let lazy_mode = Some FlowConfig.Lazy in
       make_options
         ~flowconfig_name
         ~flowconfig_hash

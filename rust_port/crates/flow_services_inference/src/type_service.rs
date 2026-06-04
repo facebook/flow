@@ -1200,22 +1200,6 @@ fn init_libs(
     })
 }
 
-pub(crate) fn focused_files_to_infer(
-    implementation_dependency_graph: &Graph<FileKey>,
-    sig_dependency_graph: &Graph<FileKey>,
-    focused: FlowOrdSet<FileKey>,
-) -> CheckedSet {
-    let roots = pure_dep_graph_operations::calc_all_dependents(
-        sig_dependency_graph,
-        implementation_dependency_graph,
-        &focused,
-    );
-    let dependents = roots;
-    let mut checked_set = CheckedSet::empty();
-    checked_set.add(Some(focused), Some(dependents), None);
-    checked_set
-}
-
 fn filter_out_node_modules(options: &Options, files: &FlowOrdSet<FileKey>) -> FlowOrdSet<FileKey> {
     if options.node_modules_errors {
         return files.dupe();
@@ -1244,25 +1228,9 @@ pub(crate) fn unfocused_files_to_infer(
     checked_set
 }
 
-pub(crate) fn files_to_infer(
-    options: &Options,
-    focus_targets: Option<FlowOrdSet<FileKey>>,
-    parsed: FlowOrdSet<FileKey>,
-    dependency_info: &DependencyInfo,
-) -> CheckedSet {
-    with_memory_timer(options, "FilesToInfer", || match focus_targets {
-        None => unfocused_files_to_infer(options, &parsed, FlowOrdSet::new()),
-        Some(input_focused) => {
-            let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
-            let sig_dependency_graph = dependency_info.sig_dependency_graph();
-            let input_focused =
-                FlowOrdSet::from(input_focused.into_inner().intersection(parsed.into_inner()));
-            focused_files_to_infer(
-                implementation_dependency_graph,
-                sig_dependency_graph,
-                input_focused,
-            )
-        }
+pub(crate) fn files_to_infer(options: &Options, parsed: FlowOrdSet<FileKey>) -> CheckedSet {
+    with_memory_timer(options, "FilesToInfer", || {
+        unfocused_files_to_infer(options, &parsed, FlowOrdSet::new())
     })
 }
 
@@ -3523,9 +3491,19 @@ pub fn init(
     let (env, first_internal_error): (Env, Option<String>) = if !libs_ok {
         (env, None)
     } else if options.lazy_mode {
-        libdef_check_for_lazy_init(options, pool, shared_mem, env)?
+        match focus_targets {
+            None => libdef_check_for_lazy_init(options, pool, shared_mem, env)?,
+            Some(focus_targets) => focus_check_for_init(
+                options,
+                pool,
+                shared_mem,
+                focus_targets,
+                &node_modules_containers,
+                env,
+            )?,
+        }
     } else {
-        full_check_for_init(options, pool, shared_mem, focus_targets, env)?
+        full_check_for_init(options, pool, shared_mem, env)?
     };
 
     Ok((env, node_modules_containers, first_internal_error))
@@ -3841,7 +3819,6 @@ pub fn check_files_for_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
-    focus_targets: Option<FlowOrdSet<FileKey>>,
     parsed: FlowOrdSet<FileKey>,
     message: &str,
     env: Env,
@@ -3863,7 +3840,7 @@ pub fn check_files_for_init(
             exports,
         } = env;
 
-        let to_infer = files_to_infer(options, focus_targets, parsed, &dependency_info);
+        let to_infer = files_to_infer(options, parsed);
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
         let sig_dependency_graph = dependency_info.sig_dependency_graph();
         let (to_merge, to_check, components, recheck_set) = include_dependencies_and_dependents(
@@ -4025,34 +4002,49 @@ pub fn libdef_check_for_lazy_init(
         .iter()
         .map(|n| FileKey::lib_file_of_absolute(n))
         .collect();
-    check_files_for_init(
-        options,
+    check_files_for_init(options, pool, shared_mem, parsed, "lazy init check", env)
+}
+
+pub fn focus_check_for_init(
+    options: &Arc<Options>,
+    pool: &ThreadPool,
+    shared_mem: &Arc<SharedMem>,
+    focus_targets: FlowOrdSet<FileKey>,
+    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
+    env: Env,
+) -> Result<(Env, Option<String>), RecheckError> {
+    let (env, first_internal_error) = libdef_check_for_lazy_init(options, pool, shared_mem, env)?;
+    let files_to_force = {
+        let mut checked_set = CheckedSet::empty();
+        checked_set.add(Some(focus_targets), None, None);
+        checked_set
+    };
+    let mut will_be_checked_files = files_to_force.dupe();
+    let (_, _, _, env) = recheck(
         pool,
         shared_mem,
+        options,
+        &CheckedSet::empty(),
+        &flow_services_references::find_refs_types::empty_request(),
+        files_to_force,
+        false,
         None,
-        parsed,
-        "lazy init check",
+        false,
+        node_modules_containers,
+        &mut will_be_checked_files,
         env,
-    )
+    )?;
+    Ok((env, first_internal_error))
 }
 
 pub fn full_check_for_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
-    focus_targets: Option<FlowOrdSet<FileKey>>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let parsed = env.files.dupe();
-    check_files_for_init(
-        options,
-        pool,
-        shared_mem,
-        focus_targets,
-        parsed,
-        "full check",
-        env,
-    )
+    check_files_for_init(options, pool, shared_mem, parsed, "full check", env)
 }
 
 pub fn check_once(
@@ -4072,12 +4064,25 @@ pub fn check_once(
     // fetch function contributes a `FetchSavedState` child profile.
     with_timer(&options, "FetchSavedState", || {});
 
-    let (env, libs_ok, _node_modules_containers) =
+    let (env, libs_ok, node_modules_containers) =
         init_from_scratch(&options, pool, shared_mem, root);
     let env = if libs_ok {
-        let (env, _first_internal_error) =
-            full_check_for_init(&options, pool, shared_mem, focus_targets, env)
-                .expect("Unexpected file changes during full check");
+        let (env, _first_internal_error) = if options.lazy_mode {
+            match focus_targets {
+                None => libdef_check_for_lazy_init(&options, pool, shared_mem, env),
+                Some(focus_targets) => focus_check_for_init(
+                    &options,
+                    pool,
+                    shared_mem,
+                    focus_targets,
+                    &node_modules_containers,
+                    env,
+                ),
+            }
+        } else {
+            full_check_for_init(&options, pool, shared_mem, env)
+        }
+        .expect("Unexpected file changes during full check");
         env
     } else {
         env
