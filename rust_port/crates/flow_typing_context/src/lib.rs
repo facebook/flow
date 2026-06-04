@@ -2672,7 +2672,15 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn has_prop(&self, id: type_::properties::Id, x: &flow_common::reason::Name) -> bool {
-        self.find_props(id).contains_key(x)
+        self.0
+            .ccx
+            .sig_cx
+            .borrow()
+            .property_maps
+            .get(&id)
+            .ok_or(PropsNotFound(id))
+            .unwrap()
+            .contains_key(x)
     }
 
     pub fn get_prop(
@@ -2680,7 +2688,16 @@ impl<'cx> Context<'cx> {
         id: type_::properties::Id,
         x: &flow_common::reason::Name,
     ) -> Option<type_::Property> {
-        self.find_props(id).get(x).duped()
+        self.0
+            .ccx
+            .sig_cx
+            .borrow()
+            .property_maps
+            .get(&id)
+            .ok_or(PropsNotFound(id))
+            .unwrap()
+            .get(x)
+            .duped()
     }
 
     // constructors
@@ -2752,6 +2769,33 @@ impl<'cx> Context<'cx> {
             panic!("find_constraints: TvarNotFound({}) in file {:?}", e.0, file,)
         });
         (id, c.clone())
+    }
+
+    pub fn find_constraints_pair(
+        &self,
+        id1: i32,
+        id2: i32,
+    ) -> (
+        (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
+        (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
+    ) {
+        let graph = self.graph();
+        let mut graph = graph.borrow_mut();
+        let file = self.file();
+        let (root_id1, c1) = graph.find_constraints(id1).unwrap_or_else(|e| {
+            panic!(
+                "find_constraints_pair: TvarNotFound({}) in file {:?}",
+                e.0, file,
+            )
+        });
+        let c1 = c1.clone();
+        let (root_id2, c2) = graph.find_constraints(id2).unwrap_or_else(|e| {
+            panic!(
+                "find_constraints_pair: TvarNotFound({}) in file {:?}",
+                e.0, file,
+            )
+        });
+        ((root_id1, c1), (root_id2, c2.clone()))
     }
 
     /// Mutate the constraints of a tvar's root in-place, avoiding the

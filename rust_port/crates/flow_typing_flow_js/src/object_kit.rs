@@ -693,10 +693,7 @@ pub fn run<'cx>(
             } = slice;
             // TODO(jmbrown): Add polarity information to props
             let polarity = Polarity::Neutral;
-            let pmap: properties::PropertiesMap = props
-                .iter()
-                .map(|(name, prop)| (name.dupe(), property::with_polarity(prop, polarity)))
-                .collect();
+            let pmap = props.ident_map(|prop| property::with_polarity(prop, polarity));
             let new_flags = Flags {
                 obj_kind: obj_type::map_dict(
                     |mut dict| {
@@ -819,12 +816,8 @@ pub fn run<'cx>(
                     } = defaults_slice;
                     let defaults_dict = obj_type::get_dict_opt(&defaults_flags.obj_kind);
                     //  Merge our props and default props.
-                    let mut merged_props: properties::PropertiesMap = defaults_props
-                        .iter()
-                        .map(|(key, prop)| {
-                            (key.dupe(), property::with_polarity(prop, prop_polarity))
-                        })
-                        .collect();
+                    let mut merged_props = defaults_props
+                        .ident_map(|prop| property::with_polarity(prop, prop_polarity));
                     let mut merge_key = |key: &Name| -> Result<(), FlowJsException> {
                         let p1 = config_prop(key);
                         let p2 = slice_utils::get_prop(

@@ -286,8 +286,8 @@ fn __flow_impl<'cx>(
                 tvar1.id() as i32,
                 Type::new(TypeInner::OpenT(tvar2.dupe())),
             );
-            let (id1, constraints1) = cx.find_constraints(tvar1.id() as i32);
-            let (id2, constraints2) = cx.find_constraints(tvar2.id() as i32);
+            let ((id1, constraints1), (id2, constraints2)) =
+                cx.find_constraints_pair(tvar1.id() as i32, tvar2.id() as i32);
             match (constraints1, constraints2) {
                 (
                     constraint::Constraints::Unresolved(bounds1),

@@ -3982,7 +3982,7 @@ pub fn rec_sub_t<'cx>(
         // slices, but that approach behaves in nonobvious ways. TODO why?
         (TypeInner::IntersectionT(_, _), TypeInner::DefT(r, ud))
             if let DefTInner::ObjT(obj) = ud.deref()
-                && cx.find_props(obj.props_tmap.dupe()).iter().count() > 1
+                && cx.find_props(obj.props_tmap.dupe()).len() > 1
                 && obj.flags.obj_kind != ObjKind::Exact =>
         {
             if cx.is_verbose() {

@@ -198,8 +198,8 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
             if {
                 let id1 = tvar1.id() as i32;
                 let id2 = tvar2.id() as i32;
-                let (root_id1, _) = cx.find_constraints(id1);
-                let (root_id2, _) = cx.find_constraints(id2);
+                let root_id1 = cx.find_root_id(id1);
+                let root_id2 = cx.find_root_id(id2);
                 root_id1 == root_id2
             } =>
         {

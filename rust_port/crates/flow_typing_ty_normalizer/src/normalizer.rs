@@ -1243,7 +1243,7 @@ mod type_converter {
         match t.deref() {
             TypeInner::OpenT(tvar) => {
                 let id_ = tvar.id() as i32;
-                let (root_id, _) = env.genv.cx.find_constraints(id_);
+                let root_id = env.genv.cx.find_root_id(id_);
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,
@@ -4724,7 +4724,7 @@ mod expand_members {
         match t.deref() {
             TypeInner::OpenT(tvar) => {
                 let id_ = tvar.id() as i32;
-                let (root_id, _) = env.genv.cx.find_constraints(id_);
+                let root_id = env.genv.cx.find_root_id(id_);
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,
@@ -5203,7 +5203,7 @@ mod expand_literal_union {
         match t.deref() {
             TypeInner::OpenT(tvar) => {
                 let id_ = tvar.id() as i32;
-                let (root_id, _) = env.genv.cx.find_constraints(id_);
+                let root_id = env.genv.cx.find_root_id(id_);
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,

@@ -891,9 +891,13 @@ fn mk_check_file(
         drop(ast_ref);
         let coverage = file_coverage(&cx, &typed_ast);
         let errors = cx.errors();
-        let tolerable_error_set =
-            inference_utils::set_of_file_sig_tolerable_errors(file.dupe(), &tolerable_errors);
-        let errors = errors.union(&tolerable_error_set);
+        let errors = if tolerable_errors.is_empty() {
+            errors
+        } else {
+            let tolerable_error_set =
+                inference_utils::set_of_file_sig_tolerable_errors(file.dupe(), &tolerable_errors);
+            errors.union(&tolerable_error_set)
+        };
         let mut suppressions = cx.take_error_suppressions();
         let severity_cover = cx.severity_cover().dupe();
         let include_suppressions = cx.include_suppressions();

@@ -7,7 +7,6 @@
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -558,15 +557,12 @@ fn spread2<'cx>(
         }
     };
     let props: Result<properties::PropertiesMap, Box<ErrorMessage<ALoc>>> = {
-        let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
         let mut result: BTreeMap<Name, Property> = BTreeMap::new();
-        for x in all_keys.into_iter().rev() {
-            let p1 = props1.get(&x);
-            let p2 = props2.get(&x);
+        for (x, p1, p2) in props1.iter_union_rev(props2) {
             let merged = match (p1, p2) {
                 (None, None) => None,
                 (_, Some(p2)) if *inline2 => Some(p2.dupe()),
-                (Some(p1), Some(p2)) => Some(merge_props(&x, p1, p2)),
+                (Some(p1), Some(p2)) => Some(merge_props(x, p1, p2)),
                 (Some(p1), None) => {
                     if exact2 || *inline2 {
                         Some(p1.dupe())
@@ -576,7 +572,7 @@ fn spread2<'cx>(
                                 spread_reason: reason.dupe(),
                                 object1_reason: r1.dupe(),
                                 object2_reason: r2.dupe(),
-                                propname: x,
+                                propname: x.dupe(),
                                 error_kind:
                                     intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
                                 use_op: use_op.dupe(),
@@ -619,7 +615,7 @@ fn spread2<'cx>(
                                     spread_reason: reason.dupe(),
                                     object1_reason: r2.dupe(),
                                     object2_reason: inexact_reason,
-                                    propname: x,
+                                    propname: x.dupe(),
                                     error_kind,
                                     use_op: use_op.dupe(),
                                 })),
@@ -630,7 +626,7 @@ fn spread2<'cx>(
                 }
             };
             if let Some(prop) = merged {
-                result.insert(x, prop);
+                result.insert(x.dupe(), prop);
             }
         }
         Ok(result.into())
@@ -808,9 +804,10 @@ pub fn spread_mk_object<'cx>(
     let props_map: properties::PropertiesMap = props
         .iter()
         .map(|(k, p)| {
-            let new_p = property::with_polarity(
-                &property::map_t(|t| mk_dro(t.dupe()), p),
+            let new_p = property::map_t_with_polarity(
+                p,
                 Polarity::object_literal_polarity(positive_polarity),
+                |t| mk_dro(t.dupe()),
             );
             (k.dupe(), new_p)
         })
@@ -1197,11 +1194,8 @@ pub fn object_rest<'cx, A>(
      -> Result<Type, FlowJsException> {
         let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
         let dict2 = obj_type::get_dict_opt(&flags2.obj_kind);
-        let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
         let mut props = properties::PropertiesMap::new();
-        for k in &all_keys {
-            let p1 = props1.get(k);
-            let p2 = props2.get(k);
+        for (k, p1, p2) in props1.iter_union(props2) {
             let gp1 = get_prop(r1, p1, dict1);
             let gp2 = get_prop(r2, p2, dict2);
             let gp1 = gp1.as_deref();
@@ -1271,10 +1265,9 @@ pub fn object_rest<'cx, A>(
                             // programs then {||}.
                             // The DP type for p must be a subtype of the P type for p.
                             subt_check(unknown_use(), cx, (p2_t, p1_t))?;
-                            Some(property::with_polarity(
-                                &property::map_t(|t| optional(t.dupe()), p1),
-                                Polarity::Positive,
-                            ))
+                            Some(property::map_t_with_polarity(p1, Polarity::Positive, |t| {
+                                optional(t.dupe())
+                            }))
                         }
                     }
                 }
@@ -1515,10 +1508,7 @@ pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object:
                                    reachable_targs,
                                }: &object::Slice|
      -> Type {
-        let props_map: properties::PropertiesMap = props
-            .iter()
-            .map(|(k, p)| (k.dupe(), property::with_polarity(p, polarity)))
-            .collect();
+        let props_map = props.ident_map(|p| property::with_polarity(p, polarity));
         let flags = Flags {
             obj_kind: obj_type::map_dict(
                 |mut dict| {
@@ -1599,8 +1589,10 @@ pub fn object_update_optionality<'cx>(
             .map(|(k, p)| {
                 // Methods pass through optionality unchanged. Fields get the type wrapped
                 // or unwrapped per `kind`, plus the frozen-overridden polarity.
-                let new_p = property::with_polarity(
-                    &property::map_field_t(p, |t| match (t.deref(), kind) {
+                let new_p = property::map_field_t_with_polarity(
+                    p,
+                    polarity_for(property::polarity(p)),
+                    |t| match (t.deref(), kind) {
                         (TypeInner::OptionalT { .. }, ObjectUpdateOptionalityKind::Partial) => {
                             t.dupe()
                         }
@@ -1616,8 +1608,7 @@ pub fn object_update_optionality<'cx>(
                             ObjectUpdateOptionalityKind::Required,
                         ) => type_.dupe(),
                         (_, ObjectUpdateOptionalityKind::Required) => t.dupe(),
-                    }),
-                    polarity_for(property::polarity(p)),
+                    },
                 );
                 (k.dupe(), new_p)
             })
@@ -1750,10 +1741,7 @@ pub fn intersect2<'cx>(
         )
     };
     let mut props = properties::PropertiesMap::new();
-    let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
-    for k in all_keys {
-        let p1 = props1.get(&k);
-        let p2 = props2.get(&k);
+    for (k, p1, p2) in props1.iter_union(props2) {
         let result = match (p1, p2) {
             (None, None) => None,
             (Some(p1), Some(p2)) => Some(merge_props(p1, p2)),
@@ -1767,7 +1755,7 @@ pub fn intersect2<'cx>(
             },
         };
         if let Some(prop) = result {
-            props.insert(k, prop);
+            props.insert(k.dupe(), prop);
         }
     }
     let dict = match (dict1, dict2) {

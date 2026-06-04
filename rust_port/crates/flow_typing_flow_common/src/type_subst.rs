@@ -250,8 +250,7 @@ fn fvs_of_map<'cx>(
     acc
 }
 
-fn union_ident_map_and_dedup<'cx, F>(
-    cx: &Context<'cx>,
+fn union_ident_map_and_dedup<F>(
     mut f: F,
     t: Type,
     r: &Reason,
@@ -260,19 +259,23 @@ fn union_ident_map_and_dedup<'cx, F>(
 where
     F: FnMut(Type) -> Type,
 {
-    fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>) -> Vec<Type> {
-        ts.into_iter().flat_map(|t| flatten(cx, t)).collect()
-    }
-
-    fn flatten<'cx>(cx: &Context<'cx>, t: Type) -> Vec<Type> {
+    fn flatten_into(t: Type, seen: &mut BTreeSet<Type>, out: &mut Vec<Type>) {
         match t.deref() {
-            TypeInner::UnionT(_, rep) => union_flatten(cx, rep.members_iter().map(|t| t.dupe())),
+            TypeInner::UnionT(_, rep) => {
+                for t in rep.members_iter() {
+                    flatten_into(t.dupe(), seen, out);
+                }
+            }
             TypeInner::MaybeT(r, inner_t) => {
                 let null_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::NullT)));
                 let void_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT)));
-                let mut result = vec![null_t, void_t];
-                result.extend(flatten(cx, inner_t.dupe()));
-                result
+                if seen.insert(null_t.dupe()) {
+                    out.push(null_t);
+                }
+                if seen.insert(void_t.dupe()) {
+                    out.push(void_t);
+                }
+                flatten_into(inner_t.dupe(), seen, out);
             }
             TypeInner::OptionalT {
                 reason,
@@ -281,37 +284,42 @@ where
             } => {
                 let void_t =
                     flow_typing_type::type_::void::why_with_use_desc(*use_desc, reason.dupe());
-                let mut result = vec![void_t];
-                result.extend(flatten(cx, type_.dupe()));
-                result
+                if seen.insert(void_t.dupe()) {
+                    out.push(void_t);
+                }
+                flatten_into(type_.dupe(), seen, out);
             }
-            _ => vec![t],
+            _ => {
+                if seen.insert(t.dupe()) {
+                    out.push(t);
+                }
+            }
         }
     }
 
-    let members: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
-    let t0 = members[0].dupe();
-    let t1 = members[1].dupe();
-    let ts: Rc<[Type]> = members[2..].iter().map(|t| t.dupe()).collect();
-
-    let t0_ = f(t0.dupe());
-    let t1_ = f(t1.dupe());
-    let ts_ = list_utils::ident_map(|t_elem| f(t_elem.dupe()), Type::ptr_eq, ts.dupe());
-    if t0.ptr_eq(&t0_) && t1.ptr_eq(&t1_) && Rc::ptr_eq(&ts, &ts_) {
-        t
-    } else {
-        let mut all_ts = vec![t0_, t1_];
-        all_ts.extend(ts_.iter().map(|t| t.dupe()));
-        let flattened = union_flatten(cx, all_ts);
-        let mut acc: Vec<Type> = Vec::new();
-        let mut seen = BTreeSet::new();
-        for t_item in flattened {
-            if seen.insert(t_item.dupe()) {
-                acc.push(t_item);
-            }
+    let mut mapped_members: Option<Vec<Type>> = None;
+    for (i, member) in rep.members_iter().enumerate() {
+        let mapped = f(member.dupe());
+        if let Some(mapped_members) = mapped_members.as_mut() {
+            mapped_members.push(mapped);
+        } else if !member.ptr_eq(&mapped) {
+            let mut members = Vec::with_capacity(rep.members_iter().size_hint().0);
+            members.extend(rep.members_iter().take(i).map(Dupe::dupe));
+            members.push(mapped);
+            mapped_members = Some(members);
         }
-        union_of_ts(r.dupe(), acc, None)
     }
+
+    let Some(mapped_members) = mapped_members else {
+        return t;
+    };
+
+    let mut acc: Vec<Type> = Vec::new();
+    let mut seen = BTreeSet::new();
+    for t_item in mapped_members {
+        flatten_into(t_item, &mut seen, &mut acc);
+    }
+    union_of_ts(r.dupe(), acc, None)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -624,11 +632,11 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 {
                     let prev_change_id = self.change_id;
                     self.change_id = false;
-                    let mut xs_new: Vec<TypeParam> = Vec::new();
+                    let mut xs_new: Option<Vec<TypeParam>> = None;
                     let mut current_map = map.dupe();
                     let mut changed = false;
 
-                    for typeparam in xs.iter() {
+                    for (i, typeparam) in xs.iter().enumerate() {
                         let bound = self.type_(
                             cx,
                             &(
@@ -665,21 +673,42 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                             self.avoid_capture(cx, current_map, typeparam.name.dupe());
                         current_map = new_map;
                         let bound_changed = !typeparam.bound.ptr_eq(&bound);
+                        let name_changed = name != typeparam.name;
                         let default_changed = match (&typeparam.default, &default) {
                             (None, None) => false,
                             (Some(a), Some(b)) => !a.ptr_eq(b),
                             _ => true,
                         };
                         changed = changed || bound_changed || default_changed;
-                        xs_new.push(TypeParam::new(TypeParamInner {
-                            reason: typeparam.reason.dupe(),
-                            name,
-                            bound,
-                            polarity: typeparam.polarity,
-                            default,
-                            is_this: typeparam.is_this,
-                            is_const: typeparam.is_const,
-                        }));
+                        let tparam_changed = name_changed || bound_changed || default_changed;
+                        if let Some(xs_new) = xs_new.as_mut() {
+                            if tparam_changed {
+                                xs_new.push(TypeParam::new(TypeParamInner {
+                                    reason: typeparam.reason.dupe(),
+                                    name,
+                                    bound,
+                                    polarity: typeparam.polarity,
+                                    default,
+                                    is_this: typeparam.is_this,
+                                    is_const: typeparam.is_const,
+                                }));
+                            } else {
+                                xs_new.push(typeparam.dupe());
+                            }
+                        } else if tparam_changed {
+                            let mut new_xs = Vec::with_capacity(xs.len());
+                            new_xs.extend(xs[..i].iter().map(Dupe::dupe));
+                            new_xs.push(TypeParam::new(TypeParamInner {
+                                reason: typeparam.reason.dupe(),
+                                name,
+                                bound,
+                                polarity: typeparam.polarity,
+                                default,
+                                is_this: typeparam.is_this,
+                                is_const: typeparam.is_const,
+                            }));
+                            xs_new = Some(new_xs);
+                        }
                     }
 
                     let inner_prime = self.type_(
@@ -699,7 +728,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                             reason.dupe(),
                             DefT::new(DefTInner::PolyT(Box::new(PolyTData {
                                 tparams_loc: tparams_loc.dupe(),
-                                tparams: xs_new.into(),
+                                tparams: xs_new.map_or_else(|| xs.dupe(), Into::into),
                                 t_out: inner_prime,
                                 id: new_id,
                             }))),
@@ -801,7 +830,6 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 }
             }
             TypeInner::UnionT(r, urep) => union_ident_map_and_dedup(
-                cx,
                 |t_elem| self.type_(cx, map_cx, t_elem),
                 t.dupe(),
                 r,

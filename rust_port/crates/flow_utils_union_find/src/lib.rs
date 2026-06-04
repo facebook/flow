@@ -99,14 +99,18 @@ impl<C> Graph<C> {
 
     pub fn insert_fresh(&mut self, id: Ident, node: Node<C>) {
         let index = u32::try_from(self.nodes.len()).expect("graph should fit in u32 dense indices");
-        let old_index = self.indices.insert(id, index);
-        debug_assert!(old_index.is_none(), "fresh graph id should be new");
-        if let Some(old_index) = old_index {
-            self.indices.insert(id, old_index);
-            self.nodes[old_index as usize] = node;
+        if cfg!(debug_assertions) {
+            let old_index = self.indices.insert(id, index);
+            debug_assert!(old_index.is_none(), "fresh graph id should be new");
+            if let Some(old_index) = old_index {
+                self.indices.insert(id, old_index);
+                self.nodes[old_index as usize] = node;
+                return;
+            }
         } else {
-            self.nodes.push(node);
+            self.indices.insert(id, index);
         }
+        self.nodes.push(node);
     }
 
     pub fn get(&self, id: &Ident) -> Option<&Node<C>> {
@@ -125,14 +129,8 @@ impl<C> Graph<C> {
     }
 
     pub fn find_root(&mut self, id: Ident) -> Result<(Ident, &mut Root<C>), TvarNotFound> {
-        // First, find the root id without holding any borrows
-        let root_id = self.find_root_id_inner(id)?;
-
-        // Single mutable lookup to return the root
-        let node = self
-            .get_mut(&root_id)
-            .expect("root id should exist after find_root_id_inner");
-        match node {
+        let (root_id, root_index) = self.find_root_id_and_index_inner(id)?;
+        match &mut self.nodes[root_index] {
             Node::Root(root) => Ok((root_id, root)),
             _ => unreachable!(),
         }
@@ -141,17 +139,22 @@ impl<C> Graph<C> {
     /// Find the root id and perform path compression, without returning a mutable reference.
     /// This avoids the double-lookup problem in find_root.
     fn find_root_id_inner(&mut self, id: Ident) -> Result<Ident, TvarNotFound> {
+        self.find_root_id_and_index_inner(id)
+            .map(|(root_id, _)| root_id)
+    }
+
+    fn find_root_id_and_index_inner(&mut self, id: Ident) -> Result<(Ident, usize), TvarNotFound> {
         let index = self.node_index(&id).ok_or(TvarNotFound(id))?;
         let Node::Goto { parent } = &self.nodes[index] else {
-            return Ok(id);
+            return Ok((id, index));
         };
         let parent_id = *parent;
-        let root_id = self.find_root_id_inner(parent_id)?;
+        let (root_id, root_index) = self.find_root_id_and_index_inner(parent_id)?;
         // Path compression: point directly to root
         if let Node::Goto { parent } = &mut self.nodes[index] {
             *parent = root_id;
         }
-        Ok(root_id)
+        Ok((root_id, root_index))
     }
 
     pub fn find_root_id(&mut self, id: Ident) -> Result<Ident, TvarNotFound> {

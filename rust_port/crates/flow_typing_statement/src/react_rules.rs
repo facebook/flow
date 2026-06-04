@@ -90,7 +90,7 @@ pub fn check_ref_use<'a>(
                     && *kind == RefInRenderKind::Access =>
             {
                 let props = cx.find_props(obj.props_tmap.dupe());
-                if props.iter().count() == 1 {
+                if props.len() == 1 {
                     // Catch only cases that look like { current: T }
                     vec![ErrorMessage::EReactRefInRender {
                         usage: var_reason.dupe(),

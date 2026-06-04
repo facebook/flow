@@ -6482,6 +6482,100 @@ pub mod property {
             _ => p.dupe(),
         }
     }
+
+    /// Map the underlying type and override field polarity in one pass.
+    /// Method/Get/Set/GetSet have no field polarity, so only their types are mapped.
+    pub fn map_t_with_polarity<F>(p: &Property, polarity: Polarity, mut f: F) -> Property
+    where
+        F: FnMut(&Type) -> Type,
+    {
+        match p.deref() {
+            PropertyInner::Field(fd) => {
+                let type_prime = f(&fd.type_);
+                if fd.type_.ptr_eq(&type_prime) && fd.polarity == polarity {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
+                        type_: type_prime,
+                        polarity,
+                    })))
+                }
+            }
+            PropertyInner::Get { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Get {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
+            PropertyInner::Set { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Set {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
+            PropertyInner::GetSet(gs) => {
+                let get_type_prime = f(&gs.get_type);
+                let set_type_prime = f(&gs.set_type);
+                if gs.get_type.ptr_eq(&get_type_prime) && gs.set_type.ptr_eq(&set_type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::GetSet(Box::new(GetSetData {
+                        get_key_loc: gs.get_key_loc.dupe(),
+                        get_type: get_type_prime,
+                        set_key_loc: gs.set_key_loc.dupe(),
+                        set_type: set_type_prime,
+                    })))
+                }
+            }
+            PropertyInner::Method { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if type_.ptr_eq(&type_prime) {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Method {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    })
+                }
+            }
+        }
+    }
+
+    /// Map the underlying type of a Field and override its polarity in one pass.
+    /// Method/Get/Set/GetSet are returned unchanged.
+    pub fn map_field_t_with_polarity<F>(p: &Property, polarity: Polarity, f: F) -> Property
+    where
+        F: FnOnce(&Type) -> Type,
+    {
+        match p.deref() {
+            PropertyInner::Field(fd) => {
+                let type_prime = f(&fd.type_);
+                if fd.type_.ptr_eq(&type_prime) && fd.polarity == polarity {
+                    p.dupe()
+                } else {
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: fd.preferred_def_locs.clone(),
+                        key_loc: fd.key_loc.dupe(),
+                        type_: type_prime,
+                        polarity,
+                    })))
+                }
+            }
+            _ => p.dupe(),
+        }
+    }
 }
 
 pub mod properties {
@@ -6543,6 +6637,10 @@ pub mod properties {
             self.0.is_empty()
         }
 
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
         pub fn ptr_eq(&self, other: &Self) -> bool {
             Rc::ptr_eq(&self.0, &other.0)
         }
@@ -6568,6 +6666,84 @@ pub mod properties {
 
         pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&Name, &Property)> {
             self.0.iter()
+        }
+
+        pub fn iter_union<'a>(
+            &'a self,
+            other: &'a Self,
+        ) -> impl Iterator<Item = (&'a Name, Option<&'a Property>, Option<&'a Property>)> {
+            let mut iter1 = self.0.iter().peekable();
+            let mut iter2 = other.0.iter().peekable();
+            std::iter::from_fn(move || {
+                match (
+                    iter1.peek().map(|(name, _)| *name),
+                    iter2.peek().map(|(name, _)| *name),
+                ) {
+                    (None, None) => None,
+                    (Some(_), None) => {
+                        let (name, prop) = iter1.next().unwrap();
+                        Some((name, Some(prop), None))
+                    }
+                    (None, Some(_)) => {
+                        let (name, prop) = iter2.next().unwrap();
+                        Some((name, None, Some(prop)))
+                    }
+                    (Some(name1), Some(name2)) => match name1.cmp(name2) {
+                        std::cmp::Ordering::Less => {
+                            let (name, prop) = iter1.next().unwrap();
+                            Some((name, Some(prop), None))
+                        }
+                        std::cmp::Ordering::Greater => {
+                            let (name, prop) = iter2.next().unwrap();
+                            Some((name, None, Some(prop)))
+                        }
+                        std::cmp::Ordering::Equal => {
+                            let (name, prop1) = iter1.next().unwrap();
+                            let (_, prop2) = iter2.next().unwrap();
+                            Some((name, Some(prop1), Some(prop2)))
+                        }
+                    },
+                }
+            })
+        }
+
+        pub fn iter_union_rev<'a>(
+            &'a self,
+            other: &'a Self,
+        ) -> impl Iterator<Item = (&'a Name, Option<&'a Property>, Option<&'a Property>)> {
+            let mut iter1 = self.0.iter().rev().peekable();
+            let mut iter2 = other.0.iter().rev().peekable();
+            std::iter::from_fn(move || {
+                match (
+                    iter1.peek().map(|(name, _)| *name),
+                    iter2.peek().map(|(name, _)| *name),
+                ) {
+                    (None, None) => None,
+                    (Some(_), None) => {
+                        let (name, prop) = iter1.next().unwrap();
+                        Some((name, Some(prop), None))
+                    }
+                    (None, Some(_)) => {
+                        let (name, prop) = iter2.next().unwrap();
+                        Some((name, None, Some(prop)))
+                    }
+                    (Some(name1), Some(name2)) => match name1.cmp(name2) {
+                        std::cmp::Ordering::Greater => {
+                            let (name, prop) = iter1.next().unwrap();
+                            Some((name, Some(prop), None))
+                        }
+                        std::cmp::Ordering::Less => {
+                            let (name, prop) = iter2.next().unwrap();
+                            Some((name, None, Some(prop)))
+                        }
+                        std::cmp::Ordering::Equal => {
+                            let (name, prop1) = iter1.next().unwrap();
+                            let (_, prop2) = iter2.next().unwrap();
+                            Some((name, Some(prop1), Some(prop2)))
+                        }
+                    },
+                }
+            })
         }
 
         pub fn ident_map<F>(&self, mut f: F) -> Self

@@ -444,6 +444,10 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
 pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
     use super::flow_error::error_of_msg;
 
+    if original_errors.len() <= 1 {
+        return original_errors;
+    }
+
     ///  Unification produces two errors. One for both sides. For example,
     /// `{p: number} ~> {p: string}` errors on both `number ~> string` and
     /// `string ~> number`. Showing both errors to our user is often redundant.
