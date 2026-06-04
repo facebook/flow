@@ -407,7 +407,7 @@ mod focus_check_command {
         let _init_id = flow_common_utils::random_id::short_string();
         let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
         // initialize loggers before doing too much, especially anything that might exit
-        flow_logging_utils::init_loggers(&options, None);
+        flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
 
         // do this after loggers are initialized, so we can complain properly
         let expanded_filenames =

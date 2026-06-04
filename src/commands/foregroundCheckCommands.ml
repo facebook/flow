@@ -289,7 +289,7 @@ module FocusCheckCommand = struct
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
-    LoggingUtils.init_loggers ~options ();
+    LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();
 
     (* do this after loggers are initialized, so we can complain properly *)
     let file_options = Options.file_options options in
