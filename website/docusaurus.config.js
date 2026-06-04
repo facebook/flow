@@ -123,7 +123,10 @@ module.exports = async () => {
           },
           {
             to: 'en/docs/',
-            activeBasePath: 'en/docs',
+            // getting-started lives under en/docs but has its own nav item, so
+            // exclude it here — otherwise both "Getting Started" and "Docs"
+            // light up as active on the getting-started page.
+            activeBaseRegex: '^/en/docs/(?!getting-started)',
             label: 'Docs',
             position: 'left',
           },
@@ -150,8 +153,8 @@ module.exports = async () => {
             className: 'navbar__version-pill',
           },
           {
-            href: 'https://twitter.com/flowtype',
-            'aria-label': 'Twitter',
+            href: 'https://x.com/flowtype',
+            'aria-label': 'X',
             position: 'right',
             className: 'navbar__icon twitter__link',
           },
@@ -184,8 +187,8 @@ module.exports = async () => {
             title: 'Community',
             items: [
               {
-                label: 'Twitter',
-                href: 'https://twitter.com/flowtype',
+                label: 'X',
+                href: 'https://x.com/flowtype',
               },
               {
                 label: 'Discord',

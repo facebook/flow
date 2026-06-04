@@ -13,15 +13,37 @@
  * work well for content-centric websites.
  */
 
+/* ── Accent color: ONE brand hue, two lightnesses chosen by surface contrast ──
+   The accent is a single warm hue (~43°), rendered at two lightness levels
+   depending on what it sits on. DO NOT unify these to one value — they differ
+   on purpose, because each only has enough contrast on its own surface:
+     • LIGHT surfaces (docs content, sidebar, TOC) → deep gold #705000
+       (~7.4:1 on white, WCAG AAA; the bright yellow would be ~1.6:1 — illegible).
+     • DARK surfaces (navbar, footer, landing — and the whole site in dark mode)
+       → bright brand yellow #e8bd36 (~8:1 on the dark grey; the deep gold would
+       be ~1.9:1 — fails).
+   So the footer/navbar/landing links are intentionally bright yellow, not the
+   docs' deep gold; "fixing" them to match the docs gold would break contrast.
+   It's keyed to the surface, not the site mode: in light mode the docs are light
+   (gold) while the footer/navbar/landing are still dark (yellow); in dark mode
+   everything is dark, so the dark-mode commit flips the docs accent to yellow
+   too and the whole site is uniformly yellow. */
+
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #dc2319;
-  --ifm-color-primary-dark: #dc2319;
-  --ifm-color-primary-darker: #dc2319;
-  --ifm-color-primary-darkest: #dc2319;
-  --ifm-color-primary-light: #dc2319;
-  --ifm-color-primary-lighter: #dc2319;
-  --ifm-color-primary-lightest: #dc2319;
+  /* Deep gold accent (light surfaces): a darkened member of the Flow yellow
+     family that stays legible as link/accent text on white (#705000 is ~7.4:1,
+     WCAG AAA), unlike the brand yellow itself which is far too light on white.
+     This replaces Infima's leftover red as the primary, so links, breadcrumbs,
+     tab and TOC active states, buttons, and pagination all pick up the brand
+     gold. Error UI keeps its own --flow-red below — red still means "error". */
+  --ifm-color-primary: #705000;
+  --ifm-color-primary-dark: #614500;
+  --ifm-color-primary-darker: #523a00;
+  --ifm-color-primary-darkest: #423000;
+  --ifm-color-primary-light: #855f00;
+  --ifm-color-primary-lighter: #946a00;
+  --ifm-color-primary-lightest: #a87900;
   --ifm-navbar-height: 3.5rem;
   --ifm-navbar-padding-vertical: 0;
   --ifm-code-font-size: 95%;
@@ -55,15 +77,159 @@ code {
   padding: 0 var(--ifm-pre-padding);
 }
 
-.navbar {
-  background-color: #2d343a;
+/* Code blocks get a raised-card treatment — a hairline border, rounded corners,
+   and a soft drop shadow — echoing the landing page's code chrome, adapted to
+   light colors. Scoped to docs/blog so the landing keeps its own code styling;
+   dark mode overrides the border/shadow for the dark surface later in the stack.
+   Covers regular code blocks and FlowCheckCodeBlock (both `codeBlockContainer`).
+   overflow: hidden clips the inner <pre>'s square background to the rounded
+   corners — without it the background pokes over the border at the corners, so
+   the border looks like it's missing there. (Theme-agnostic, so it fixes both
+   modes; the dark rule only overrides colors.) */
+.plugin-docs [class*='codeBlockContainer'],
+.plugin-blog [class*='codeBlockContainer'] {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Site-wide: align the dark footer with the navbar's color (--flow-gray-darkest)
-   so every page is framed top and bottom with the same dark chrome, instead of
-   Infima's generic dark default. */
+/* Phone widths: code blocks wrap instead of forcing a horizontal scroll, with a
+   slightly smaller font so more fits per row before anything wraps. white-space
+   is set on the line container (and inherited downward), which reaches both
+   standard Prism blocks (token-line spans) and FlowCheckCodeBlock (its
+   table-cell line content). This covers every code block on the site — docs,
+   blog, and the landing showcase. The flow-check error squiggles are absolutely
+   positioned by character column and would drift once a line wraps, so they're
+   hidden here; the red gutter bar and the error message still mark and explain
+   the error. */
+@media (max-width: 600px) {
+  [class*='codeBlockContainer'] pre {
+    font-size: 0.8125rem;
+  }
+  [class*='codeBlockContainer'] [class*='codeBlockLines'] {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  /* Hanging indent on flow-check code lines: text-indent pulls the first row
+     back to the normal code start while padding-left pushes wrapped rows in, so
+     a continuation reads as part of the line above rather than a new statement.
+     Targets the per-line content cell (not the row), so the line-number gutter
+     stays aligned where numbers are shown. */
+  [class*='codeBlockContainer'] [class*='codeBlockLineContent'] {
+    padding-left: 1.5em;
+    text-indent: -1.5em;
+  }
+  [class*='flowErrorHighlight'] {
+    display: none;
+  }
+}
+
+/* Prose links pick up the homepage's subtle-underline treatment: a persistent
+   faint gold underline that strengthens on hover, so links are identifiable
+   without relying on color alone. Scoped to markdown body content so it doesn't
+   reach nav chrome (navbar, sidebar, breadcrumbs, pagination cards) or heading
+   anchor links. The deep-gold link color itself comes from --ifm-color-primary.
+   The docs landing cards (DocsLandingPage) suppress their own underline via
+   text-decoration: none, so they need no exclusion here. */
+.markdown a:not(.hash-link) {
+  text-decoration: underline;
+  text-decoration-color: rgba(112, 80, 0, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.markdown a:not(.hash-link):hover {
+  text-decoration-color: rgba(112, 80, 0, 0.8);
+}
+
+/* Blog index: the post-title and "Read more" links sit outside .markdown, so
+   the prose rule above doesn't reach them. Give them the same persistent subtle
+   gold underline (strengthening on hover) so every gold link on the index shares
+   one affordance. Scoped to .blog-list-page so blog post pages — where the title
+   is the page h1, not a link — are untouched. (Dark mode tints these yellow
+   later in the stack, mirroring the prose-link override.) */
+.blog-list-page h2[itemprop='headline'] a,
+.blog-list-page footer a[aria-label^='Read more'] {
+  text-decoration: underline;
+  text-decoration-color: rgba(112, 80, 0, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.blog-list-page h2[itemprop='headline'] a:hover,
+.blog-list-page footer a[aria-label^='Read more']:hover {
+  text-decoration-color: rgba(112, 80, 0, 0.8);
+}
+
+/* The trailing breadcrumb is the current page, so Docusaurus renders it as a
+   non-clickable span. Don't color it like the (gold) interactive crumbs —
+   use the plain text color so it doesn't read as a dead link. The parent
+   crumbs stay gold and clickable. */
+.breadcrumbs__item--active .breadcrumbs__link {
+  color: var(--ifm-font-color-base);
+  background: transparent;
+}
+
+/* Frosted-glass bar: a mostly-opaque dark base over a blurred backdrop, with a
+   faint warm glow near the logo echoing the hero's radial. The base alpha is
+   kept high (0.92) so the bar stays convincingly dark even over white docs
+   pages — at lower opacity the blurred white content washed it out to a pale
+   gray — while still letting a soft blur of the content read through underneath.
+   The hairline replaces Infima's heavy drop-shadow, so the bar reads as thin
+   modern chrome layered on the page rather than a solid slab. The navbar is
+   already sticky via Infima's `navbar--fixed-top`, which is what lets the
+   backdrop blur engage on scroll.
+
+   The frosted fill + blur live on a ::before pseudo-element rather than on
+   .navbar itself. An element with backdrop-filter becomes the containing block
+   for its position: fixed descendants — and the mobile menu drawer
+   (.navbar-sidebar) and its backdrop are exactly that, so putting the filter on
+   .navbar would clamp them to the bar's height (the open menu then gets occluded
+   by the page). Painting it on ::before keeps the blur on every viewport,
+   including mobile, while leaving .navbar a normal containing block so the
+   drawer spans the full screen. */
+.navbar {
+  background: transparent;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.navbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+      ellipse 480px 120px at 80px -40%,
+      rgba(232, 189, 54, 0.1),
+      transparent 70%
+    ),
+    rgba(40, 46, 52, 0.92);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+}
+
+/* Footer: a dark-grey bookend in the brand's grey family (#232930, the same
+   tone the landing hero settles toward) rather than a near-black slab. It sits
+   one step darker than the page bottom (#2d343a), so it reads as a subtly
+   anchored bookend, with a thin grey line as the divider. More vertical padding
+   gives the link columns room to breathe. */
 .footer.footer--dark {
-  --ifm-footer-background-color: var(--flow-gray-darkest);
+  background: #232930;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 3.5rem;
+  padding-bottom: 3rem;
+}
+
+/* Column headers as quiet uppercase micro-labels, matching the sidebar's
+   section-header treatment. */
+.footer .footer__title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 1rem;
 }
 
 /* Site-wide: the "Copyright © …  Built with Docusaurus." line shouldn't compete
@@ -73,8 +239,42 @@ code {
   opacity: 0.7;
 }
 
+/* Footer links: Flow yellow, with the landing page's persistent subtle
+   underline that strengthens on hover. */
+.footer .footer__link-item {
+  color: var(--flow-yellow);
+  text-decoration: underline;
+  text-decoration-color: rgba(232, 189, 54, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.footer .footer__link-item:hover {
+  color: #f0c94a;
+  text-decoration-color: rgba(232, 189, 54, 0.7);
+}
+
 .navbar .navbar__link, .navbar .navbar__toggle, .navbar .menu__link, .navbar .navbar-sidebar__back {
   color: rgba(255, 255, 255, 0.7);
+}
+
+/* Navbar text links sit in rounded pills that fill softly and shift to Flow
+   yellow on hover, matching the landing page's link treatment; the active link
+   keeps a persistent soft-yellow pill for wayfinding. Excludes the icon links
+   (X/GitHub) and the version pill, which are also navbar__link but carry their
+   own hover treatment — the pill fill rendered as a lopsided box behind them. */
+.navbar .navbar__link:not(.navbar__icon):not(.navbar__version-pill) {
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  transition: color 0.15s, background-color 0.15s;
+}
+.navbar .navbar__link:not(.navbar__icon):not(.navbar__version-pill):hover {
+  color: var(--flow-yellow);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+.navbar .navbar__link--active {
+  color: var(--flow-yellow);
+  background-color: rgba(232, 189, 54, 0.12);
 }
 
 .navbar__brand, .navbar__logo {
@@ -129,6 +329,35 @@ code {
   border-left: none;
 }
 
+/* Active TOC entry: a gold left accent bar (plus the gold text Docusaurus
+   already applies), so the current section is obvious rather than a subtle
+   color-only swap. The bar is an absolutely positioned pseudo-element sitting in
+   the left gutter, so it has no effect on the link's text width or wrapping —
+   left padding/border made long entries wrap, and bold text reflowed them too.
+   The bar uses --ifm-color-primary (deep gold in light, brand yellow in dark);
+   dark mode sets the active text color. */
+.table-of-contents__link--active {
+  position: relative;
+}
+.table-of-contents__link--active::before {
+  content: '';
+  position: absolute;
+  left: -0.55rem;
+  top: 0.15em;
+  bottom: 0.15em;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ifm-color-primary);
+}
+
+/* Give the doc content horizontal breathing room from the sidebars — a little
+   on the left (main sidebar) and more on the right so it isn't crowded against
+   the secondary (TOC) column. Applies in both themes. */
+[class*='docItemContainer'] {
+  padding-left: 1rem;
+  padding-right: 2rem;
+}
+
 .navbar .navbar__icon {
   padding: 0px;
   padding-right: 1rem;
@@ -148,16 +377,29 @@ code {
 }
 
 .navbar .twitter__link:before {
-  background: url(/img/icon-twitter.svg);
+  /* X (formerly Twitter) mark. The glyph is near-square and fills its viewBox
+     edge-to-edge, so contain + center fits it into the 21×20 icon box without
+     the horizontal stretch a default background-size would cause. */
+  background: url(/img/icon-x.svg);
   background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
 }
 .navbar .github__link:before {
   background: url(/img/icon-github.svg);
   background-repeat: no-repeat;
 }
 
+/* Slightly frosted drawer: a mostly-opaque dark base over a blurred backdrop, so
+   a soft blur of the page content reads through behind the menu. The alpha is
+   kept high (0.85) so the light menu text stays legible even over a light docs
+   page. Putting backdrop-filter on the drawer itself is safe: unlike the navbar
+   case, the drawer's own children aren't position: fixed, so it only blurs the
+   page behind it without becoming a containing block that clips anything. */
 .navbar-sidebar {
-  background-color: #2d343a;
+  background-color: rgba(45, 52, 58, 0.85);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
 }
 
 .navbar-sidebar .navbar__icon {
@@ -168,6 +410,30 @@ code {
 }
 .navbar-sidebar .navbar__icon:active {
   opacity: 1;
+}
+
+/* Drawer footer row: the trailing utility items — version pill, X, GitHub (and
+   the light/dark toggle the dark-theme commit adds on top) — would otherwise
+   each take a full-width line. Lay them out as one small horizontal row instead.
+   They're the last items in the menu list, so making just their list items
+   inline-flex flows them onto a single line beneath the stacked text links;
+   :has() targets exactly those items and leaves the text links stacked. */
+.navbar-sidebar .menu__list-item:has(> .navbar__version-pill),
+.navbar-sidebar .menu__list-item:has(> .navbar__icon) {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  vertical-align: middle;
+  margin-top: 0.75rem;
+}
+
+/* The version pill defaults to a full-width menu link in the drawer; shrink it
+   to fit its label (the widest real value is around "v0.317") so it reads as a
+   small pill in the row rather than a stretched bar. */
+.navbar-sidebar .navbar__version-pill {
+  display: inline-flex;
+  width: auto;
+  margin: 0 0.35rem 0 0;
 }
 
 /* Doc sidebar links rendered inside the dark navbar-sidebar need light text
@@ -199,6 +465,18 @@ code {
 .navbar-sidebar__back:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
+
+/* The drawer's close (X) button picks up the brand yellow on hover/press, like
+   the navbar links and other interactive chrome. The X is drawn as an SVG with
+   a `stroke` presentation attribute, so the hover color has to set `stroke` on
+   the inner <g> (a plain `color` change wouldn't reach it). */
+.navbar-sidebar__close svg g {
+  transition: stroke 0.15s;
+}
+.navbar-sidebar__close:hover svg g,
+.navbar-sidebar__close:active svg g {
+  stroke: var(--flow-yellow);
+}
 .navbar-sidebar .menu__list .menu__list {
   border-left-color: rgba(255, 255, 255, 0.1);
 }
@@ -213,39 +491,72 @@ code {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* ── Sidebar hierarchy improvements ── */
+/* ── Sidebar: modern 2026 treatment ── */
 
-/* Top-level items: separator between sections */
+/* All sidebar links get a rounded hit-area and a smooth hover fill — the base
+   the hover and active states build on. */
+.theme-doc-sidebar-menu .menu__link {
+  border-radius: 8px;
+  transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+.theme-doc-sidebar-menu .menu__link:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Active page: a deep-gold rounded pill with bold deep-gold text — the same
+   accent the rest of the UI uses (links, breadcrumbs, TOC), so the whole
+   interface shares one color. No left bar here: a straight bar reads awkwardly
+   against the pill's rounded corners, and the rounded pill already carries the
+   selection (the TOC, which has no pill, uses the bar instead). The
+   higher-specificity selector overrides Infima's active rule. (Dark mode
+   overrides the colors later in the stack for the dark surface.) */
+.theme-doc-sidebar-menu .menu__link--active:not(.menu__link--sublist) {
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+  background-color: rgba(112, 80, 0, 0.12);
+}
+.theme-doc-sidebar-menu .menu__link--active:not(.menu__link--sublist):hover {
+  background-color: rgba(112, 80, 0, 0.16);
+}
+
+/* Top-level sections: breathing room instead of hairline rules for a lighter,
+   more modern rhythm. */
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-category,
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link {
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  margin-top: 0.35rem;
 }
 .theme-doc-sidebar-menu > :first-child {
-  border-top: none;
-}
-
-/* Make top-level category labels stand out — padding on the link for better hover/click */
-.theme-doc-sidebar-menu > .theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link,
-.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link > .menu__link {
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--flow-gray-darker);
-  padding-top: 0.70rem;
-  padding-bottom: 0.70rem;
-}
-
-/* Remove default margin between top-level list items */
-.theme-doc-sidebar-menu > .menu__list-item:not(:first-child) {
   margin-top: 0;
 }
 
-/* Increase indentation for nested items */
+/* Top-level category labels read as uppercase section headers. */
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link,
+.theme-doc-sidebar-menu > .theme-doc-sidebar-item-link > .menu__link {
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--flow-gray-darker);
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+/* A top-level doc link that is the active page (e.g. "Flow for TypeScript
+   Users") must keep the gold active color — the grey label color above ties on
+   specificity and would otherwise win by source order, leaving it grey. */
+.theme-doc-sidebar-menu
+  > .theme-doc-sidebar-item-link
+  > .menu__link--active {
+  color: var(--ifm-color-primary);
+}
+
+/* Nested items show hierarchy through indentation alone. The old vertical guide
+   line is dropped: its straight edge clashed with the rounded hover/active pills
+   sitting right beside it, and dropping it matches the hairline-free, airier
+   treatment used at the top level. */
 .menu__list .menu__list {
-  padding-left: 1rem;
-  border-left: 1px solid rgba(0, 0, 0, 0.07);
-  margin-left: 0.5rem;
+  padding-left: 0.75rem;
+  margin-left: 0.6rem;
 }
 
 /* Landing page (src/pages/index.mdx) — one continuous dark gradient under
@@ -262,18 +573,21 @@ code {
    between them, has the actual page content height, and is a plain div
    so it paints exactly its own box without canvas-propagation quirks.
 
-   <html> is kept on a solid #232930 so rubber-band scroll past the page
-   edge doesn't flash white. */
+   <html> is kept on a solid base color so rubber-band scroll past the page
+   edge doesn't flash white. It matches the showcase/footer tone (#232930) so
+   the bottom of the page reads as one tone behind the footer's grey line. */
 .landing-wrapper {
   background: #232930;
 }
 
-/* Gradient lives on a div wrapping just the Showcase rows + CTAStrip
-   (see src/pages/index.mdx). Its top sits exactly at the Hero's bottom,
-   so the 0% stop color (#232930, matching the Hero's linear end) makes
-   the seam invisible. Continues darkening to the CTA. */
+/* The showcase rows + CTAStrip (see src/pages/index.mdx) sit on the same
+   #232930 the Hero darkens down to, so the page darkens monotonically — Hero
+   #2d343a → #232930, then a steady #232930 through the showcase and straight
+   into the #232930 footer, with the footer's grey line as the only divider.
+   (Previously this lightened back to #2d343a, creating a tonal "valley" before
+   the darker footer.) */
 .landing-below-hero {
-  background: linear-gradient(180deg, #232930 0%, #0d1115 100%);
+  background: #232930;
 }
 
 /* Landing-wide inline `code` styling — one canonical pill across prose,

@@ -19,16 +19,17 @@
   align-items: center;
   gap: 1.25rem;
   padding: 1.5rem 2rem;
-  background: #f8f8f8;
+  background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-left: 4px solid var(--accent, var(--flow-yellow));
   border-radius: 8px;
   color: inherit;
   text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.15s;
 }
 .heroCard:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 22px rgba(0, 0, 0, 0.16);
   color: inherit;
 }
 
@@ -73,15 +74,17 @@
   display: flex;
   flex-direction: column;
   padding: 1.25rem;
+  background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   text-decoration: none !important;
   color: inherit;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 14px rgba(0, 0, 0, 0.07);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .card:hover {
   border-color: var(--accent, var(--flow-yellow));
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 18px rgba(0, 0, 0, 0.15);
   color: inherit;
 }
 

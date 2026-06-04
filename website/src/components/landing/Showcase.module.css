@@ -204,11 +204,28 @@
   .rowReverse .textCol {
     order: 0;
   }
+  /* In the single-column layout, both items share one track. A grid item
+     defaults to min-width: auto, so the code's long lines set a min-content
+     floor that widens that track past the viewport — dragging the prose off
+     the right edge and letting the code escape its own overflow. min-width: 0
+     pins the track to the available width so the prose wraps and the code
+     scrolls (or wraps, below 600px) within its own box. Scoped to this layout
+     only: the desktop two-column grid still lets the code track grow to fit its
+     longest line, so it doesn't gain a horizontal scrollbar. */
+  .textCol,
+  .codeCol {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 768px) {
+  /* Tighter vertical rhythm on phones: at desktop the sections sit side-by-side
+     and 3rem of breathing room reads as deliberate, but stacked in a single
+     column that same gap becomes ~88px of dead air between showcases. Scale it
+     down so the spacing stays proportional to the much narrower viewport while
+     still clearly separating one showcase from the next. */
   .section {
-    padding: 2.75rem 0;
+    padding: 2rem 0;
   }
   .heading {
     font-size: 1.55rem;
