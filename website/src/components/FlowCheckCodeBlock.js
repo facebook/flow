@@ -8,7 +8,13 @@
  */
 
 import * as React from 'react';
-import {useState, useEffect, useRef, type MixedElement} from 'react';
+import {
+  useState,
+  useEffect,
+  useRef,
+  useContext,
+  type MixedElement,
+} from 'react';
 import clsx from 'clsx';
 import {Highlight} from 'prism-react-renderer';
 import copy from 'copy-text-to-clipboard';
@@ -16,6 +22,8 @@ import {usePrismTheme} from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
+import {CodeThemeContext} from './landing/CodeThemeContext';
+import {CodeErrorPlacementContext} from './landing/CodeErrorPlacementContext';
 
 type FlowErrorMessage = {
   startLine: number,
@@ -112,11 +120,23 @@ function getHighlightRangesOnLine(
   return mergeRanges(ranges);
 }
 
+type FlowMeta = {
+  errors: Array<FlowError>,
+  options?: {firstErrorOnly?: boolean},
+};
+
 export default component FlowCheckCodeBlock(
   children: string,
   metastring: string,
 ) {
-  const flowErrors: Array<FlowError> = JSON.parse(metastring || '[]');
+  const parsedMeta: FlowMeta = JSON.parse(
+    metastring || '{"errors":[],"options":{}}',
+  );
+  const allFlowErrors: Array<FlowError> = parsedMeta.errors;
+  const flowErrors: Array<FlowError> =
+    parsedMeta.options?.firstErrorOnly === true
+      ? allFlowErrors.slice(0, 1)
+      : allFlowErrors;
   const {prism} = useThemeConfig();
   const [showCopied, setShowCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -133,7 +153,11 @@ export default component FlowCheckCodeBlock(
   }, []);
 
   const button = useRef<React.ElementRef<'button'> | null>(null);
-  const prismTheme = usePrismTheme();
+  const defaultPrismTheme = usePrismTheme();
+  const overrideTheme = useContext(CodeThemeContext);
+  const prismTheme = overrideTheme ?? defaultPrismTheme;
+  const errorPlacement = useContext(CodeErrorPlacementContext);
+  const showInlineErrors = errorPlacement !== 'end';
   // In case interleaved Markdown (e.g. when using CodeBlock as standalone component).
 
   const content = Array.isArray(children) ? children.join('') : children;
@@ -225,7 +249,7 @@ export default component FlowCheckCodeBlock(
                           ))}
                         </span>
                       </span>
-                      {hasError && (
+                      {hasError && showInlineErrors && (
                         <>
                           <span className={styles.inlineErrorSpacer} />
                           {/* $FlowFixMe[incompatible-use] lineErrors may be undefined */}
@@ -258,6 +282,31 @@ export default component FlowCheckCodeBlock(
                 })}
               </code>
             </pre>
+
+            {!showInlineErrors &&
+              (() => {
+                // Mirror the inline path's filter: only render errors that
+                // actually have a primary location.
+                const footerErrors = flowErrors
+                  .map(error => ({error, primaryMsg: error.messages[0]}))
+                  .filter(({primaryMsg}) => primaryMsg != null);
+                if (footerErrors.length === 0) return null;
+                return (
+                  <div className={styles.errorFooter}>
+                    {footerErrors.map(({error}, errorIdx) => {
+                      const primaryMessage =
+                        error.fullDescription.split('\n')[0];
+                      return (
+                        <div key={errorIdx} className={styles.footerError}>
+                          <span className={styles.footerErrorBody}>
+                            {formatErrorMessage(primaryMessage, null)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
             <button
               ref={button}

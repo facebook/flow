@@ -1,0 +1,127 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+.hero {
+  position: relative;
+  /* The radial's X center is pinned to the offset logo in the left gutter,
+     so it doesn't drift with viewport width. The gutter mark's right edge is
+     at the container's outer-left edge (50% - 550px, since .container is
+     max-width: 1100px centered) and it's ~108px wide, so its center is at
+     ~calc(50% - 604px). max(1.5rem, …) clamps the glow to the left padding on
+     narrower screens, where the mark sits inline near the same spot. */
+  background: radial-gradient(
+      ellipse 900px 520px at max(1.5rem, calc(50% - 604px)) -10%,
+      rgba(232, 189, 54, 0.15),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #2d343a 0%, #232930 100%);
+  color: white;
+  padding: 6rem 0 3.5rem;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* The mark only appears when there's room to hang it in the left gutter (see
+   the min-width: 1400px block). Below that it's hidden — the navbar already
+   carries the logo — so the heading, subtitle, and CTAs sit at the container's
+   left edge, aligned with the rest of the page, with no vertical cost. */
+.logoMark {
+  display: none;
+}
+
+.title {
+  margin: 0 0 1.25rem 0;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: white;
+}
+
+/* Subtle yellow→amber gradient echoing the logo mark's warm palette. Falls
+   back to the flat brand yellow where background-clip: text isn't supported. */
+.titleAccent {
+  color: var(--flow-yellow);
+  background: linear-gradient(180deg, #ffd64a 0%, #f3a738 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* The three CTAs, left-aligned with the heading and subtitle. */
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 2.5rem;
+}
+
+/* Subtler shadow than the CTAStrip's primary button — the Hero sits on top
+   of the dark gradient where a heavier shadow would muddy the gradient
+   edge. */
+.buttonPrimary {
+  composes: buttonPrimary from './Buttons.module.css';
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 8px 24px rgba(232, 189, 54, 0.15);
+}
+.buttonPrimary:hover,
+.buttonPrimary:focus {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 10px 28px rgba(232, 189, 54, 0.22);
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 4rem 0 3.5rem;
+  }
+  .title {
+    font-size: 2.1rem;
+  }
+  .subtitle {
+    font-size: 1.05rem;
+  }
+  .ctaRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 992px) {
+  .title {
+    font-size: 3.5rem;
+  }
+}
+
+/* Wide enough for a left gutter: show the mark and hang it beside the heading,
+   out of flow. right: 100% puts its right edge at the container's outer-left
+   edge, so the container's 1.5rem padding becomes the gap before the heading. */
+@media (min-width: 1400px) {
+  .logoMark {
+    display: block;
+    position: absolute;
+    right: 100%;
+    top: 0;
+    height: 112px;
+    width: auto;
+    opacity: 0.9;
+  }
+}

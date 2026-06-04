@@ -6,9 +6,11 @@
 
 # Snapshot test for website flow-check code blocks.
 #
-# Extracts every ```flow-check block from website/docs/, writes each as a
-# separate file into a temp Flow root, runs a single `flow check`, and
-# compares the per-doc snapshots under website/tests/snapshots/.
+# Extracts every ```flow-check block from website/docs/ (*.md) and
+# website/src/pages/ (*.mdx), writes each as a separate file into a temp Flow
+# root, runs a single `flow check`, and compares the per-doc snapshots under
+# website/tests/snapshots/. Pages snapshots live under pages/ to avoid
+# colliding with doc paths.
 #
 # Usage:
 #   ./website/tests/check_flow_examples.sh FLOW_BINARY          # run test
@@ -45,6 +47,7 @@ else
 fi
 
 DOCS_DIR="$WEBSITE_DIR/docs"
+PAGES_DIR="$WEBSITE_DIR/src/pages"
 SNAPSHOT_DIR="$SCRIPT_DIR/snapshots"
 
 # Resolve FLOW to absolute path. If it doesn't contain a slash, look it up via
@@ -84,51 +87,70 @@ GENERATED_DIR="$WORK_DIR/generated_snapshots"
 mkdir -p "$GENERATED_DIR"
 
 # --- Extract blocks, run flow once, render per-doc snapshots ---
-python3 - "$FLOW" "$DOCS_DIR" "$WORK_DIR" "$GENERATED_DIR" << 'PYTHON_SCRIPT'
+python3 - "$FLOW" "$DOCS_DIR" "$PAGES_DIR" "$WORK_DIR" "$GENERATED_DIR" << 'PYTHON_SCRIPT'
 import os, re, subprocess, sys
 
 FLOW_BIN = sys.argv[1]
 DOCS_DIR = sys.argv[2]
-WORK_DIR = sys.argv[3]
-GENERATED_DIR = sys.argv[4]
+PAGES_DIR = sys.argv[3]
+WORK_DIR = sys.argv[4]
+GENERATED_DIR = sys.argv[5]
 
 SNIPPETS_DIR = os.path.join(WORK_DIR, 'snippets')
 os.makedirs(SNIPPETS_DIR, exist_ok=True)
 
-# 1. Collect doc files containing flow-check blocks (sorted for determinism).
+# Source roots to scan. Each tuple is:
+#   (root_dir, accepted_extensions, snapshot_prefix)
+# The snapshot prefix keeps page snapshots from colliding with doc paths.
+SOURCES = [
+    (DOCS_DIR, ('.md',), ''),
+    (PAGES_DIR, ('.mdx',), 'pages'),
+]
+
+# 1. Collect doc/page files containing flow-check blocks (sorted for
+#    determinism). doc_files is a list of (filepath, display_rel_path) where
+#    display_rel_path is what appears in snapshot output and on disk.
 doc_files = []
-for root, dirs, files in os.walk(DOCS_DIR):
-    dirs.sort()
-    for f in sorted(files):
-        if not f.endswith('.md'):
-            continue
-        path = os.path.join(root, f)
-        with open(path) as fh:
-            if 'flow-check' in fh.read():
-                doc_files.append(path)
-doc_files.sort()
+for root_dir, exts, prefix in SOURCES:
+    if not os.path.isdir(root_dir):
+        continue
+    for root, dirs, files in os.walk(root_dir):
+        dirs.sort()
+        for f in sorted(files):
+            if not f.endswith(exts):
+                continue
+            path = os.path.join(root, f)
+            with open(path) as fh:
+                if 'flow-check' in fh.read():
+                    rel = os.path.relpath(path, root_dir)
+                    display = os.path.join(prefix, rel) if prefix else rel
+                    doc_files.append((path, display))
+doc_files.sort(key=lambda pair: pair[1])
 
 # 2. Extract blocks and write each as its own file in WORK_DIR/snippets/.
-#    Map: rel_doc_path -> [(block_idx, snippet_filename, code)]
-BLOCK_RE = re.compile(r'```(?:js|jsx)\s+flow-check\s*\n(.*?)```', re.DOTALL)
+#    Map: display_rel_path -> [(block_idx, snippet_filename, code)]
+BLOCK_RE = re.compile(
+    r'```(?:js|jsx)\s+flow-check\b([^\n]*)\n(.*?)```', re.DOTALL
+)
 blocks_by_doc = {}
-for filepath in doc_files:
+for filepath, rel_path in doc_files:
     with open(filepath) as f:
         content = f.read()
-    rel_path = os.path.relpath(filepath, DOCS_DIR)
     matches = list(BLOCK_RE.finditer(content))
     if not matches:
         continue
-    safe = re.sub(r'[^a-zA-Z0-9]', '_', rel_path[:-3])  # strip .md
+    stem = os.path.splitext(rel_path)[0]
+    safe = re.sub(r'[^a-zA-Z0-9]', '_', stem)
     blocks_by_doc[rel_path] = []
     for i, m in enumerate(matches):
         idx = i + 1
-        code = m.group(1)
+        opts = set(m.group(1).split())
+        code = m.group(2)
         snippet_name = f'{safe}__{idx:03d}.js'
         with open(os.path.join(SNIPPETS_DIR, snippet_name), 'w') as f:
             f.write('// @flow\n')
             f.write(code)
-        blocks_by_doc[rel_path].append((idx, snippet_name, code))
+        blocks_by_doc[rel_path].append((idx, snippet_name, code, opts))
 
 # 3. Start server (with snippets already on disk so the initial check covers
 #    everything) and pull all errors in one shot.
@@ -170,7 +192,7 @@ block_count = 0
 
 for rel_path in sorted(blocks_by_doc):
     out_lines = []
-    for idx, snippet_name, code in blocks_by_doc[rel_path]:
+    for idx, snippet_name, code, opts in blocks_by_doc[rel_path]:
         block_count += 1
         chunks = errors_by_snippet.get(snippet_name, [])
         # Normalize: rewrite snippet paths to "-" so the snapshot is stable
@@ -196,7 +218,14 @@ for rel_path in sorted(blocks_by_doc):
             for em in ERROR_LINE_RE.finditer(chunk):
                 error_line_nos.add(int(em.group(1)))
 
-        for line_no in error_line_nos:
+        # `first-error` blocks only render the first error in the UI, so we
+        # only require the first error line to carry an annotation.
+        required_lines = (
+            {min(error_line_nos)}
+            if 'first-error' in opts and error_line_nos
+            else error_line_nos
+        )
+        for line_no in required_lines:
             if 0 < line_no <= len(source_lines):
                 src_line = source_lines[line_no - 1]
                 if not HAS_ERROR_ANNOTATION.search(src_line):
@@ -218,8 +247,9 @@ for rel_path in sorted(blocks_by_doc):
                     f"has // error but no error reported: {src_line.strip()}"
                 )
 
-    # Write per-doc snapshot (path mirrors the doc path, .md -> .exp).
-    snap_rel = rel_path[:-3] + '.exp'
+    # Write per-doc snapshot (path mirrors the doc/page path, with the
+    # source extension swapped for .exp).
+    snap_rel = os.path.splitext(rel_path)[0] + '.exp'
     snap_path = os.path.join(GENERATED_DIR, snap_rel)
     os.makedirs(os.path.dirname(snap_path), exist_ok=True)
     with open(snap_path, 'w') as f:

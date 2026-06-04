@@ -7,31 +7,45 @@
  * @format
  */
 
-import getFlowErrors from './initialized-flow-provider.mjs';
+import getFlowMeta from './initialized-flow-provider.mjs';
 
 /*:: type UnwrapPromise<T> = T extends Promise<infer V> ? V : T */
 
-const transformNode = async (node /*: any */) => [
+const parseOptions = (rest /*: string */) /*: {[string]: boolean} */ => {
+  const options /*: {[string]: boolean} */ = {};
+  for (const tok of rest.split(/\s+/).filter(Boolean)) {
+    if (tok === 'first-error') options.firstErrorOnly = true;
+  }
+  return options;
+};
+
+const matchNode = (node /*: any */) /*: {[string]: boolean} | null */ => {
+  if (node.type !== 'code') return null;
+  const meta = node.meta || '';
+  if (meta === 'flow-check') return {};
+  const m = /^flow-check\s+(.+)$/.exec(meta);
+  return m == null ? null : parseOptions(m[1]);
+};
+
+const transformNode = async (
+  node /*: any */,
+  options /*: {[string]: boolean} */,
+) => [
   {
     type: 'code',
     lang: 'flow',
-    meta: await getFlowErrors(node.value),
+    meta: await getFlowMeta(node.value, options),
     value: node.value,
   },
 ];
 
-const matchNode = (node /*: any */) =>
-  node.type === 'code' && node.meta === 'flow-check';
-
 export default () /*: any */ => {
-  let transformed = false;
-  let alreadyImported = false;
   const transformer = async (
     node /*: any */,
   ) /*: Promise<UnwrapPromise<ReturnType<typeof transformNode>> | null> */ => {
-    if (matchNode(node)) {
-      transformed = true;
-      return transformNode(node);
+    const options = matchNode(node);
+    if (options != null) {
+      return transformNode(node, options);
     }
     if (Array.isArray(node.children)) {
       let index = 0;

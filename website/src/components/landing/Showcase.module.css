@@ -1,0 +1,216 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+.section {
+  padding: 3rem 0;
+}
+
+/* Rows are transparent — the page-wide linear gradient on
+   .landing-below-hero (custom.css) is the single source of background. */
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Text column (eyebrow + heading + prose) beside the code column. The heading
+   sits directly above its own prose, and align-items: center balances any
+   height difference between the columns top-and-bottom instead of leaving a
+   dead gap under the shorter one. */
+.row {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+
+/* Reversed rows put the code on the left and the text on the right; the wider
+   track stays with the code so its lines don't wrap. */
+.rowReverse {
+  grid-template-columns: 3fr 2fr;
+}
+.rowReverse .codeCol {
+  order: 1;
+}
+.rowReverse .textCol {
+  order: 2;
+}
+
+.eyebrow {
+  margin-bottom: 0.65rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--flow-yellow);
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: white;
+}
+
+.body {
+  margin-top: 1.25rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.body p {
+  margin: 0 0 1.35rem 0;
+}
+
+.body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Inline links in body prose — yellow on dark, with a persistent subtle
+   underline so they're identifiable without relying on color alone; it
+   strengthens on hover. Overrides Infima's --ifm-color-primary (#dc2319 red)
+   which would clash on dark. */
+.body a {
+  color: var(--flow-yellow);
+  text-decoration: underline;
+  text-decoration-color: rgba(232, 189, 54, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.body a:hover {
+  text-decoration-color: rgba(232, 189, 54, 0.7);
+}
+
+/* Trailing "→" affordance: inline-block lifts it out of the link's text
+   decoration so the underline stops at the last word instead of running under
+   the arrow. margin-left stands in for the space removed from the link text. */
+.body a :global(.ctaArrow) {
+  display: inline-block;
+  margin-left: 0.3em;
+}
+
+/* Inline `code` inside a link — keep the pill chrome but tint it yellow so it
+   matches the link color while still reading as code. `display: inline-block`
+   makes the pill atomic so the parent link's hover underline skips around it
+   instead of striking through the pill. `line-height: 1` keeps the inline-
+   block box from inheriting the parent prose line-height (1.65), which would
+   otherwise paint the pill ~50% taller than its inline siblings. */
+.body a > code {
+  background: rgba(232, 189, 54, 0.1);
+  border-color: rgba(232, 189, 54, 0.25);
+  color: inherit;
+  display: inline-block;
+  line-height: 1;
+}
+
+.codeCol pre {
+  margin-bottom: 0;
+}
+
+/* Code blocks: dark theme (vsDark via CodeThemeContext) with a slightly
+   inset bg + outer shadow for depth on the dark page. */
+.codeCol [class*='codeBlockContainer'] {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* Landing-only customizations of FlowCheckCodeBlock's chrome: hide line
+   numbers and tone the error UI down so red doesn't compete with brand
+   yellow. The hashed CSS-module class names are matched via substring; the
+   actual rules live in src/components/FlowCheckCodeBlock.module.css. */
+
+/* Hide the line-number text, and shrink the line-number column to just the
+   width of its 3px red gutter marker. Same for the inline-error row's gutter
+   cell so error rows line up with code rows. */
+.codeCol [class*='lineNumberText'] {
+  display: none;
+}
+.codeCol [class*='codeBlockLineNumber'],
+.codeCol [class*='inlineErrorGutter'] {
+  width: 0.6em;
+  padding-right: 0.5em;
+}
+
+/* Drop the red wash behind inline error rows — the 3px left bar already
+   signals "this is an error". */
+.codeCol [class*='inlineErrorRow'] {
+  background: transparent;
+}
+
+/* Neutral text for the error message; the red bar carries the signal. */
+.codeCol [class*='inlineErrorContent'] {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Neutralize the error-code pill — was red-on-red, which competed with the
+   brand yellow. */
+.codeCol [class*='errorCodeBadge'] {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Inline code inside an error message — drop the bold (the pill chrome
+   already distinguishes it from surrounding text), but slightly brighten the
+   pill so it still pulls the eye to the named identifiers. */
+.codeCol [class*='errorHighlightedCode'] {
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Error footer (end-placement, landing only): give it more presence
+   than the docs default. Stronger band tint, brighter top border, and
+   a bigger font size so the error reads with the same weight as the
+   surrounding prose instead of fading into chrome. */
+.codeCol [class*='errorFooter'] {
+  font-size: 0.95em;
+  background: rgba(255, 255, 255, 0.04);
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 992px) {
+  .heading {
+    font-size: 2rem;
+  }
+}
+
+/* At/below 1024px the 2fr text column gets too narrow (heading and prose wrap
+   awkwardly) and the wider code column starts to overflow, so collapse to a
+   single column — text above code — well before phone widths. */
+@media (max-width: 1024px) {
+  .row,
+  .rowReverse {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .rowReverse .codeCol {
+    order: 0;
+  }
+  .rowReverse .textCol {
+    order: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 2.75rem 0;
+  }
+  .heading {
+    font-size: 1.55rem;
+  }
+}

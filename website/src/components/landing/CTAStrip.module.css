@@ -1,0 +1,73 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+/* No background — sits on the page-wide gradient from .landing-wrapper
+   (custom.css). The yellow .rule above the heading is the only visual
+   separator from the showcase row above. */
+.strip {
+  padding: 5rem 0 5.5rem;
+  text-align: center;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.rule {
+  width: 48px;
+  height: 3px;
+  margin: 0 auto 1.5rem;
+  background: var(--flow-yellow);
+  border-radius: 2px;
+}
+
+.heading {
+  margin: 0 0 2rem 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: white;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Bolder shadow than the Hero's primary button — the CTAStrip sits on a
+   flat dark surface where the extra elevation helps anchor the closing
+   action. */
+.buttonPrimary {
+  composes: buttonPrimary from './Buttons.module.css';
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 8px 28px rgba(232, 189, 54, 0.22);
+}
+.buttonPrimary:hover,
+.buttonPrimary:focus {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 10px 32px rgba(232, 189, 54, 0.32);
+}
+
+.footnote {
+  margin: 0;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+@media (max-width: 768px) {
+  .strip {
+    padding: 3.5rem 0 4rem;
+  }
+  .heading {
+    font-size: 1.5rem;
+  }
+}

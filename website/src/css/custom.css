@@ -59,6 +59,20 @@ code {
   background-color: #2d343a;
 }
 
+/* Site-wide: align the dark footer with the navbar's color (--flow-gray-darkest)
+   so every page is framed top and bottom with the same dark chrome, instead of
+   Infima's generic dark default. */
+.footer.footer--dark {
+  --ifm-footer-background-color: var(--flow-gray-darkest);
+}
+
+/* Site-wide: the "Copyright © …  Built with Docusaurus." line shouldn't compete
+   visually with the link columns above it. */
+.footer .footer__copyright {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
 .navbar .navbar__link, .navbar .navbar__toggle, .navbar .menu__link, .navbar .navbar-sidebar__back {
   color: rgba(255, 255, 255, 0.7);
 }
@@ -188,6 +202,80 @@ code {
   padding-left: 1rem;
   border-left: 1px solid rgba(0, 0, 0, 0.07);
   margin-left: 0.5rem;
+}
+
+/* Landing page (src/pages/index.mdx) — one continuous dark gradient under
+   the whole page. The Hero has its own opaque gradient sitting on top;
+   the Showcase rows and CTAStrip are transparent and let this gradient
+   show through, so the section boundaries don't introduce any seam.
+
+   The gradient is painted on the .main-wrapper div (a descendant of
+   .landing-wrapper html), NOT on .landing-wrapper itself. <html> is the
+   root element so its background is propagated to the entire canvas, but
+   Layout forces html height to 100vh — gradients on the root then tile
+   or get sampled per-viewport, creating bands as you scroll. <main> was
+   tried too but the container box was misbehaving. .main-wrapper sits
+   between them, has the actual page content height, and is a plain div
+   so it paints exactly its own box without canvas-propagation quirks.
+
+   <html> is kept on a solid #232930 so rubber-band scroll past the page
+   edge doesn't flash white. */
+.landing-wrapper {
+  background: #232930;
+}
+
+/* Gradient lives on a div wrapping just the Showcase rows + CTAStrip
+   (see src/pages/index.mdx). Its top sits exactly at the Hero's bottom,
+   so the 0% stop color (#232930, matching the Hero's linear end) makes
+   the seam invisible. Continues darkening to the CTA. */
+.landing-below-hero {
+  background: linear-gradient(180deg, #232930 0%, #0d1115 100%);
+}
+
+/* Landing-wide inline `code` styling — one canonical pill across prose,
+   headings, and error messages. Without this, prose code (0.95rem from
+   Infima's --ifm-code-font-size: 95%) and error-footer code (0.95 of 0.85em
+   ≈ 0.81em) ended up visibly different sizes. The 0.9em scales relative
+   to surrounding text, so code in a heading reads as a heading-sized
+   accent, code in body reads as body-sized, and they all use the same
+   chrome. `:not(pre) > code` excludes Prism tokens inside actual code
+   blocks. */
+.landing-wrapper :not(pre) > code {
+  font-size: 0.9em;
+  font-family: var(--ifm-font-family-monospace);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f3f5;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.05em 0.4em;
+  border-radius: 4px;
+  /* Common monospace fonts (Menlo, Consolas) sit visually lower than the
+     surrounding sans-serif at the same baseline. Lift slightly so text
+     baselines align. */
+  vertical-align: 0.03em;
+}
+
+/* Docusaurus's MDXPage wraps content in
+   `<main class="container container--fluid margin-vert--lg">
+      <div class="row">
+        <div class="col col--8"> ... </div>`
+   which on the landing adds: a 2rem top/bottom margin (margin-vert--lg
+   declares it with !important, so we need !important to beat it), a 1rem
+   horizontal padding from `.container`, negative-margin gutters from `.row`,
+   and a 2/3-width constraint from `.col--8` that pinches the page on wide
+   screens. Reset all four so the landing's own Hero/Showcase/CTAStrip
+   sections control width and spacing end-to-end. */
+.landing-wrapper main.container.margin-vert--lg {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+.landing-wrapper main.container.margin-vert--lg > .row {
+  margin: 0;
+}
+.landing-wrapper main.container.margin-vert--lg > .row > .col {
+  flex: 0 0 100%;
+  max-width: 100%;
+  padding: 0;
 }
 
 .rounded {

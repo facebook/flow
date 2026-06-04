@@ -1,0 +1,163 @@
+---
+title: "Flow: A Typed Dialect of JavaScript — JS Static Type Checker"
+description: "Flow is a typed dialect of JavaScript — a static type system plus first-class language constructs, built for safety and scale."
+hide_table_of_contents: true
+wrapperClassName: "landing-wrapper"
+---
+
+import {Hero, Showcase, ShowcaseText, ShowcaseCode, CTAStrip} from '@site/src/components/landing';
+
+<Hero />
+
+<div className="landing-below-hero">
+
+<Showcase
+  eyebrow="01 — Familiar"
+  heading="Familiar syntax"
+  align="left">
+
+<ShowcaseText>
+
+Is it Flow or TypeScript? You can't tell. Flow has `keyof`, `readonly` props, `unknown`, indexed access types `T[K]`, and `extends` generic bounds. Plus conditional types, mapped types, and type guards. [More TS-compatible syntax<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript#toc-transfer-cleanly)
+
+</ShowcaseText>
+
+<ShowcaseCode>
+
+```js flow-check
+type User = {
+  readonly name: string,
+  readonly age: number,
+  readonly metadata: unknown,
+};
+function get<K extends keyof User>(user: User, key: K): User[K] {
+  return user[key];
+}
+declare const user: User;
+const age: number = get(user, 'age');
+```
+
+</ShowcaseCode>
+
+</Showcase>
+
+<Showcase
+  eyebrow="02 — React"
+  heading="First-class React"
+  align="right">
+
+<ShowcaseText>
+
+`component` and `renders` are built into Flow's syntax. Props are named parameters, typed inline with defaults, so there's no props object to annotate or destructure. Only components that render `Header` can flow into a `renders Header` prop: design-system composition rules become type errors instead of bugs caught in review. [More on `component` and `renders`<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/react/component-syntax)
+
+</ShowcaseText>
+
+<ShowcaseCode>
+
+```js flow-check
+import * as React from 'react';
+
+component Header(text: string = "Title") { return <h1>{text}</h1> }
+component Footer() { return <footer /> }
+
+component Layout(header: renders Header) {
+  return <div>{header}</div>;
+}
+
+<Layout header={<Header />} />; // OK
+<Layout header={<Footer />} />; // ERROR: doesn't render Header
+```
+
+</ShowcaseCode>
+
+</Showcase>
+
+<Showcase
+  eyebrow="03 — Match"
+  heading={<>Pattern matching with <code>match</code></>}
+  align="left">
+
+<ShowcaseText>
+
+`match` is both an expression (shown here) and a statement: a safer `switch` with no fall-through. It's exhaustively checked, with structural patterns that destructure as they match. Forget a case, like `'remove'`, and `match` flags it and tells you what to add. [More on `match`<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/match)
+
+</ShowcaseText>
+
+<ShowcaseCode>
+
+```js flow-check
+type Action = {type: 'add', text: string}
+            | {type: 'toggle', id: string}
+            | {type: 'remove', id: string};
+declare const action: Action;
+
+const description = match (action) { // ERROR: 'remove' missing
+  {type: 'add', const text} => `Add: ${text}`,
+  {type: 'toggle', const id} => `Toggle ${id}`,
+};
+```
+
+</ShowcaseCode>
+
+</Showcase>
+
+<Showcase
+  eyebrow="04 — Objects"
+  heading="Exact objects by default"
+  align="right">
+
+<ShowcaseText>
+
+Object types in Flow are exact by default. TypeScript only catches extras on direct object-literal assignment, so `sample: "free"` slips through once the object goes through a variable. Flow catches it at the assignment, before the crash. [More on object exactness<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/types/objects)
+
+</ShowcaseText>
+
+<ShowcaseCode>
+
+```js flow-check first-error
+type Prices = {apple: number, banana: number};
+const items = {apple: 1.5, banana: 0.5, sample: "free"};
+
+const prices: Prices = items; // ERROR: extra property `sample`
+
+Object.values(prices).map(price =>
+  `${price.toFixed(2)}`, // Runtime crash! `toFixed` on "free"
+);
+```
+
+</ShowcaseCode>
+
+</Showcase>
+
+<Showcase
+  eyebrow="05 — Safety"
+  heading="Safety by default"
+  align="left">
+
+<ShowcaseText>
+
+Extracting a method from a class instance loses its `this` binding. TypeScript lets the extraction through; `tick()` then crashes inside `increment` because `this` is undefined. Flow rejects the extraction. [More differences from TypeScript<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript)
+
+</ShowcaseText>
+
+<ShowcaseCode>
+
+```js flow-check
+class Counter {
+  count: number = 0;
+  increment(): number {
+    return ++this.count;
+  }
+}
+const counter = new Counter();
+const tick = counter.increment; // ERROR: unsafe method extraction
+tick(); // Runtime crash! Invalid `this` inside `increment`
+```
+
+</ShowcaseCode>
+
+</Showcase>
+
+<CTAStrip />
+
+</div>

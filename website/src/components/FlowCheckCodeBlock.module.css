@@ -194,3 +194,39 @@
   font-family: inherit;
   font-weight: 600;
 }
+
+/* Error footer block (when CodeErrorPlacementContext is 'end'). Sits below
+   the <pre>, inside the same codeBlockContainer so it shares the rounded
+   corners. Each error is a row with a 3px red left bar, a `line N` ref, and
+   the formatted message. */
+.errorFooter {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem var(--ifm-pre-padding);
+  font-size: 0.85em;
+  line-height: 1.5;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.footerError {
+  position: relative;
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.footerError::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 3px;
+  background-color: #d5382f;
+  border-radius: 0 2px 2px 0;
+}
+
+.footerErrorBody {
+  min-width: 0;
+}

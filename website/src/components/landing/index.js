@@ -7,11 +7,6 @@
  * @format
  */
 
-type _Foo = string extends number ? string : number;
-
-type Obj = {a: string};
-type _Bar = {+[K in keyof Obj]: Obj[K]};
-
-function foo(x: mixed): x is string {
-  return typeof x === 'string';
-}
+export {default as Hero} from './Hero';
+export {default as Showcase, ShowcaseText, ShowcaseCode} from './Showcase';
+export {default as CTAStrip} from './CTAStrip';

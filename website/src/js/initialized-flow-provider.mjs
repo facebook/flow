@@ -24,14 +24,15 @@ async function checkContents(input /*: string */) {
   return JSON.parse(json);
 }
 
-export default async function getFlowErrors(
+export default async function getFlowMeta(
   code /*: string */,
+  options /*: {[string]: boolean} */ = {},
 ) /*: Promise<string> */ {
   if (process.env.NO_INLINE_FLOW_ERRORS) {
-    return '[]';
+    return JSON.stringify({errors: [], options});
   }
-  return JSON.stringify(
-    (await checkContents(code)).errors.map(({message, error_codes}) => {
+  const errors = (await checkContents(code)).errors.map(
+    ({message, error_codes}) => {
       const errorCode = (error_codes && error_codes[0]) || null;
       let fullDescription = message.map(({descr}) => descr).join(' ');
 
@@ -55,6 +56,7 @@ export default async function getFlowErrors(
         fullDescription,
         errorCode,
       };
-    }),
+    },
   );
+  return JSON.stringify({errors, options});
 }

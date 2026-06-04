@@ -1,0 +1,37 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+/* Pre-reveal: shifted down and transparent. No transition here so applying it
+   is instant (no animated "hide"); only the reveal animates. Compositor-only
+   properties (opacity, transform) keep it cheap. */
+.hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  will-change: opacity, transform;
+}
+
+/* Revealed: settle into place with a quick, confident ease-out. */
+.shown {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+
+/* Respect a user's reduced-motion preference: no movement, always visible.
+   Belt-and-suspenders with the JS guard, in case state ever flips. */
+@media (prefers-reduced-motion: reduce) {
+  .hidden,
+  .shown {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

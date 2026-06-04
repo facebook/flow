@@ -1,0 +1,93 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------------- -:12:17
+
+Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:12:17
+   12| <Layout header={<Footer />} />; // ERROR: doesn't render Header
+                       ^^^^^^^^^^ [1]
+
+References:
+   -:7:26
+    7| component Layout(header: renders Header) {
+                                ^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 3 ===
+Error -------------------------------------------------------------------------------- -:7:21
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'remove', id: _}`
+to match object type [1]. [match-not-exhaustive]
+
+   -:7:21
+   7| const description = match (action) { // ERROR: 'remove' missing
+                          ^^^^^
+
+References:
+   -:5:23
+   5| declare const action: Action;
+                            ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 4 ===
+Error -------------------------------------------------------------------------------- -:5:24
+
+Cannot assign `items` to `prices` because property `sample` is extra in object literal [1] but missing in `Prices` [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   -:5:24
+   5| const prices: Prices = items; // ERROR: extra property `sample`
+                             ^^^^^
+
+References:
+   -:3:15
+   3| const items = {apple: 1.5, banana: 0.5, sample: "free"};
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   -:5:15
+   5| const prices: Prices = items; // ERROR: extra property `sample`
+                    ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------------- -:8:12
+
+Cannot call `price.toFixed` because property `toFixed` is missing in `unknown` [1]. [incompatible-use]
+
+   -:8:12
+   8|   `${price.toFixed(2)}`, // Runtime crash! `toFixed` on "free"
+                 ^^^^^^^
+
+References:
+   -:7:1
+   7| Object.values(prices).map(price =>
+      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 5 ===
+Error -------------------------------------------------------------------------------- -:9:22
+
+Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   -:9:22
+   9| const tick = counter.increment; // ERROR: unsafe method extraction
+                           ^^^^^^^^^ [1]
+
+References:
+   -:4:3
+        v--------------------
+   4|   increment(): number {
+   5|     return ++this.count;
+   6|   }
+        ^ [2]
+
+
+Found 1 error

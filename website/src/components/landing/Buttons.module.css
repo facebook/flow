@@ -1,0 +1,71 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+/* Shared landing-button chrome used by Hero and CTAStrip. The only
+   per-location difference is the primary button's drop-shadow (which is
+   tuned more boldly in the CTAStrip than in the Hero), so .buttonPrimary
+   here intentionally sets no box-shadow — callers compose this class and
+   layer the shadow themselves. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.8rem 1.35rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s,
+    box-shadow 0.15s, transform 0.15s;
+}
+.button:hover,
+.button:focus {
+  text-decoration: none;
+}
+
+.buttonPrimary {
+  background: var(--flow-yellow);
+  color: var(--flow-gray-darkest);
+}
+.buttonPrimary:hover,
+.buttonPrimary:focus {
+  background: #f0c947;
+  color: var(--flow-gray-darkest);
+}
+
+.buttonSecondary {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.buttonSecondary:hover,
+.buttonSecondary:focus {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.arrow {
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: transform 0.15s;
+}
+.buttonPrimary:hover .arrow,
+.buttonPrimary:focus .arrow {
+  transform: translateX(2px);
+}
+
+@media (max-width: 768px) {
+  .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
