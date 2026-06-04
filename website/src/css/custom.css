@@ -106,6 +106,29 @@ code {
   display: none;
 }
 
+/* An "On this page" eyebrow above the desktop table of contents, giving the
+   secondary sidebar a clear label and identity. Uses an adaptive emphasis color
+   so it reads in both light and dark themes. Scoped to the desktop TOC so the
+   mobile collapsible (which has its own label) is untouched. */
+.theme-doc-toc-desktop .table-of-contents::before {
+  content: 'On this page';
+  display: block;
+  padding-left: var(--ifm-toc-padding-horizontal);
+  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* With the "On this page" label giving the TOC its own identity, drop its left
+   divider in both themes so it reads as a clean secondary column rather than a
+   bordered-off rail. */
+.table-of-contents {
+  border-left: none;
+}
+
 .navbar .navbar__icon {
   padding: 0px;
   padding-right: 1rem;
