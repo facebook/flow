@@ -4,7 +4,23 @@ slug: /flow-vs-typescript
 description: "Flow vs. TypeScript: how object exactness, variance defaults, `as` casts, type guards, and Flow's `component`/`hook`/`renders` syntax differ from TypeScript."
 ---
 
-Flow and TypeScript share most of the same syntax, much of the same vocabulary, and a large set of overlapping concepts (conditional types, mapped types, type guards, `keyof`, `as const`, `unknown`, `Readonly`). The convergence is largely intentional: Flow's syntax has shifted to align with TypeScript's over the past several years. If you know TypeScript, your intuition will get you most of the way through a Flow program.
+Flow and TypeScript share most of the same syntax, much of the same vocabulary, and a large set of overlapping concepts (conditional types, mapped types, type guards, `keyof`, `as const`, `unknown`, `Readonly`). Flow's syntax has shifted to align with TypeScript's over the past several years. If you know TypeScript, your intuition will get you most of the way through a Flow program.
+
+Is this Flow or TypeScript? You can't tell.
+```js flow-check
+type User = {
+  readonly name: string,
+  readonly age: number,
+  readonly metadata: unknown,
+};
+
+function get<K extends keyof User>(user: User, key: K): User[K] {
+  return user[key];
+}
+
+declare const user: User;
+const age: number = get(user, 'age');
+```
 
 Where the two diverge, the divergence is usually a deliberate Flow choice in favor of stronger static guarantees. Flow rejects a number of patterns that TypeScript accepts but that can throw at runtime, silently corrupt values, or cause logic bugs. Flow also ships several features with no built-in TypeScript counterpart, covered in [Flow-only concepts](#toc-flow-only) below. The most prominent is React: Flow has its own first-class [`component`](./react/component-syntax.md), [`hook`](./react/hook-syntax.md), and [`renders`](./react/render-types.md) syntax.
 
@@ -42,22 +58,6 @@ Two more syntax forms match TypeScript directly even though the underlying seman
 - [Array](#toc-variance-arrays) shorthand `T[]` (in addition to `Array<T>`).
 - [Variance keywords](#toc-variance-keywords): `readonly` on properties and `in` / `out` on type parameters.
 
-Combining several of these features, the function below type-checks identically in both languages:
-
-```js flow-check
-type User = {
-  readonly name: string,
-  readonly age: number,
-};
-
-function get<K extends keyof User>(user: User, key: K): User[K] {
-  return user[key];
-}
-
-declare const user: User;
-const age: number = get(user, 'age');
-```
-
 ## Shared concepts, different rules {#toc-shared-concepts-different-rules}
 
 This section is where Flow most often surprises a reader coming from TypeScript. Both languages have these concepts (objects, classes, variance, refinement, generics, module exports, suppressions), but Flow's rules diverge in ways that might not be apparent by reading the code.
@@ -65,8 +65,8 @@ This section is where Flow most often surprises a reader coming from TypeScript.
 In most subsections the syntax is the same but the semantics differ: code that's accepted by TypeScript but rejected by Flow as wrong, unsound, or unsafe - often throwing at runtime, silently corrupting values, or causing logic bugs. The rest are renamed spellings, validations Flow adds at module boundaries, or a different suppression form. The subsection headers tell you which case applies.
 
 - [Objects, classes, and interfaces](#toc-shape-rules) - exact objects, nominal classes, asymmetric class/object/interface subtyping
-- [Type spellings](#toc-type-spellings) - `void` vs `undefined`, `?T`, `empty`, `unknown`
 - [Variance](#toc-variance) - `readonly`, `writeonly`, `in`, and `out`
+- [Type spellings](#toc-type-spellings) - `void` vs `undefined`, `?T`, `empty`, `unknown`
 - [Refinement and module-level validation](#toc-validation) - validated type-guard bodies, refinement invalidation, module-boundary annotations
 - [Explicit type controls](#toc-explicit-controls) - `as` casts, error suppressions, and type argument omission
 
@@ -191,7 +191,7 @@ The standard fix when you hit this in Flow is to switch the parameter type from 
 
 A further consequence of the kind distinction: object types don't allow `this` (Flow rejects `this` in object literals with `[object-this-reference]`), so they describe plain data, not `this`-aware behavior. This is why [`implements`/`extends`](#toc-implements-extends-rhs) needs a class or interface and why [method extraction](#toc-method-unbinding) is safe on object types but not on class instances.
 
-One more note: TypeScript's structural treatment of classes is *almost* total: `const c: C = {x: 1}` type-checks in TS even though `c` is annotated as a class instance. TS has a handful of nominal carve-outs on top of the structural default: ECMAScript `#private` fields, the `private` / `protected` access modifiers (both of which block assignability across distinct declarations), and `unique symbol` - but they're exceptions to an otherwise structural model. Flow's class nominalism is total: no nominal opt-in is *required* because the class identity itself is the nominal channel. This is why Flow's class/object error fires far more often than a TS user would expect.
+One more note: TypeScript's structural treatment of classes is *almost* total: `const c: C = {x: 1}` type-checks in TS even though `c` is annotated as a class instance. TS has a handful of nominal carve-outs on top of the structural default: ECMAScript `#private` fields, the `private` / `protected` access modifiers (both of which block assignability across distinct declarations), and `unique symbol` - but they're exceptions to an otherwise structural model. Flow's class nominalism is total: no nominal opt-in is *required* because the class identity itself is the nominal channel. This is why Flow's class/object error is a frequent surprise for TS users.
 
 #### `implements` and `extends` clauses must name an interface or class {#toc-implements-extends-rhs}
 
@@ -218,7 +218,7 @@ interface I extends ObjType { // ERROR: [incompatible-use]
 
 TypeScript treats `string` / `number` / `boolean` as structurally assignable to any interface or object type they satisfy: the primitive is checked against the members of its corresponding boxed prototype (`String.prototype` / `Number.prototype` / `Boolean.prototype`), so a `string` satisfies any interface whose members exist on `String.prototype` (e.g. `{length: number}`, `Iterable<string>`). No runtime boxing is implied: the compatibility is purely at the type level. Flow does not perform that check in `.js` files: a primitive flowing into an interface errors with `[incompatible-type]` ("Cannot use string as a subtype of interface"), and a primitive flowing into an object type errors with the generic `[incompatible-type]` code.
 
-The runtime consequence is usually a logic bug. `Iterable<string>` is satisfied by both `Array<string>` and `string`: TS accepts the latter, so a caller can silently pass a bare string where a list of strings was intended. A `for...of` loop then yields characters instead of items - rarely what anyone actually meant.
+The runtime consequence is usually a logic bug. `Iterable<string>` is satisfied by both `Array<string>` and `string`: TS accepts the latter, so a caller can silently pass a bare string where a list of strings was intended. A `for...of` loop then yields characters instead of items.
 
 ```ts
 // TypeScript:
@@ -374,52 +374,6 @@ const fullName: [string, string | void, string] = ["Ada", ...middle, "Lovelace"]
 
 The Flow rewrite is to branch explicitly on whether the optional element is present and assemble each shape on its own arm.
 
-### Type spellings {#toc-type-spellings}
-
-How Flow spells absent or nullable types and the top and bottom of the type hierarchy. These are name-only divergences: same concepts, different spellings.
-
-| Concept | TypeScript | Flow | Note |
-|---|---|---|---|
-| Type inhabited only by `undefined` | `undefined` | `void` | Flow has no separate `undefined` type. ([details](#toc-void-vs-undefined)) |
-| "No useful value" return marker | `void` | `void` | Same name; Flow has *only* `void` (see above). |
-| Nullable value (`T \| null \| undefined`) | `T \| null \| undefined` | [`?T`](./types/maybe.md) (shorthand for `T \| null \| void`) | `T \| void` alone lacks `null`. |
-| Bottom type | `never` | [`empty`](./types/empty.md) | `never` is the natural TS reach when Flow expects `empty`. |
-| Top type | `unknown` | [`unknown`](./types/unknown.md) | Same name. |
-
-See [type hierarchy](./lang/type-hierarchy.md) for where these sit relative to the rest of Flow's types.
-
-#### `void` vs `undefined` {#toc-void-vs-undefined}
-
-`undefined` as an annotation is a hard error in Flow:
-
-```js flow-check
-// Flow:
-function f(): undefined { // ERROR: [unsupported-syntax]
-  return undefined;
-}
-```
-
-```js flow-check
-// Flow:
-function f(): void {
-  return undefined; // OK - `undefined` is the value inhabiting `void`
-}
-```
-
-This comes up most often when a TS-shaped function signature gets typed in Flow verbatim, and on TS utility-typed code (`Exclude<T, undefined>`, `T extends undefined ? ...`) where the `undefined` literal type appears inside a generic. Standard Flow forms: `undefined` → `void` for annotations; `T | undefined` → `?T` if `null` is also intended (most JS APIs) or `T | void` if only the absent case is intended.
-
-A related TS quirk worth flagging: TypeScript's `() => undefined` and `() => void` are assignably asymmetric (`undefined` returns satisfy `void` slots but not vice versa). Flow has no equivalent since there's only `void`.
-
-A parameter type that includes `void` (whether spelled `T | void`, `?T`, or `T | null | void`) makes the argument implicitly optional, so callers can omit it entirely. This differs from TypeScript, where `(x: T | undefined)` still requires the call site to pass `undefined`.
-
-```js flow-check
-// Flow:
-function f(x: ?number) {}
-f(null);      // OK
-f(undefined); // OK
-f();          // OK - `?T` includes `void`, which makes the arg optional
-```
-
 ### Variance {#toc-variance}
 
 Flow's variance defaults are stricter than TypeScript's. The subsections below cover the keyword syntax for opting in or out and the positions where the defaults diverge.
@@ -442,7 +396,7 @@ Flow's variance defaults are stricter than TypeScript's. The subsections below c
 - **Invariant:** neither direction; the position can't soundly widen or narrow. The required default whenever a slot is both read *and* written (e.g., a mutable `{x: T}`), since covariance breaks writes and contravariance breaks reads.
 - **Bivariant:** both directions accepted. Usually unsound; TypeScript permits it in a few places (notably method parameters). Flow never uses bivariance.
 
-Flow defaults each position to the strictest sound choice; TypeScript defaults to looser ones at several positions, which is the entire reason this section exists.
+Flow defaults each position to the strictest sound choice; TypeScript defaults to looser ones at several positions.
 :::
 
 #### Variance keywords (`readonly` / `writeonly`, `in` / `out`) {#toc-variance-keywords}
@@ -462,7 +416,7 @@ type Box<out T> = {
 
 This subsection is about the *syntax*; for the much more important *semantic* divergence in how variance is enforced at each position, see the next subsection. See the [variance docs](./lang/variance.md) for full mechanics.
 
-Each subsection below is a place where Flow picks the stricter sound default and TypeScript picks the looser one. Together they are the largest single cluster of TypeScript code that type-checks but relies on weaker static guarantees - every example accepts a program that can throw at runtime or silently corrupt values.
+Each subsection below is a place where Flow picks the stricter sound default and TypeScript picks the looser one. Together they are a large cluster of TypeScript code that type-checks but relies on weaker static guarantees - every example accepts a program that can throw at runtime or silently corrupt values.
 
 #### Mutable object properties are invariant in Flow, covariant in TS {#toc-variance-mutable-props}
 
@@ -676,6 +630,52 @@ class Builder {
 
 The rewrite when you hit this is to name the class explicitly in the input/field position (`other: Builder`, `parent: Builder | null`) and accept the loss of the subclass type at that slot, or to make the field `readonly` so the position becomes covariant.
 
+### Type spellings {#toc-type-spellings}
+
+How Flow spells absent or nullable types and the top and bottom of the type hierarchy. These are name-only divergences: same concepts, different spellings.
+
+| Concept | TypeScript | Flow | Note |
+|---|---|---|---|
+| Type inhabited only by `undefined` | `undefined` | `void` | Flow has no separate `undefined` type. ([details](#toc-void-vs-undefined)) |
+| "No useful value" return marker | `void` | `void` | Same name; Flow has *only* `void` (see above). |
+| Nullable value (`T \| null \| undefined`) | `T \| null \| undefined` | [`?T`](./types/maybe.md) (shorthand for `T \| null \| void`) | `T \| void` alone lacks `null`. |
+| Bottom type | `never` | [`empty`](./types/empty.md) | `never` is the natural TS reach when Flow expects `empty`. |
+| Top type | `unknown` | [`unknown`](./types/unknown.md) | Same name. |
+
+See [type hierarchy](./lang/type-hierarchy.md) for where these sit relative to the rest of Flow's types.
+
+#### `void` vs `undefined` {#toc-void-vs-undefined}
+
+`undefined` as an annotation is a hard error in Flow:
+
+```js flow-check
+// Flow:
+function f(): undefined { // ERROR: [unsupported-syntax]
+  return undefined;
+}
+```
+
+```js flow-check
+// Flow:
+function f(): void {
+  return undefined; // OK - `undefined` is the value inhabiting `void`
+}
+```
+
+This comes up most often when a TS-shaped function signature gets typed in Flow verbatim, and on TS utility-typed code (`Exclude<T, undefined>`, `T extends undefined ? ...`) where the `undefined` literal type appears inside a generic. Standard Flow forms: `undefined` → `void` for annotations; `T | undefined` → `?T` if `null` is also intended (most JS APIs) or `T | void` if only the absent case is intended.
+
+A related TS quirk worth flagging: TypeScript's `() => undefined` and `() => void` are assignably asymmetric (`undefined` returns satisfy `void` slots but not vice versa). Flow has no equivalent since there's only `void`.
+
+A parameter type that includes `void` (whether spelled `T | void`, `?T`, or `T | null | void`) makes the argument implicitly optional, so callers can omit it entirely. This differs from TypeScript, where `(x: T | undefined)` still requires the call site to pass `undefined`.
+
+```js flow-check
+// Flow:
+function f(x: ?number) {}
+f(null);      // OK
+f(undefined); // OK
+f();          // OK - `?T` includes `void`, which makes the arg optional
+```
+
 ### Refinement and module-level validation {#toc-validation}
 
 How Flow validates the body of type guards, when refinements are invalidated by intervening code, and the validation Flow performs at module boundaries (annotation requirements and the value/type seam).
@@ -823,7 +823,7 @@ Three places where TypeScript accepts a looser surface spelling and Flow require
 
 #### `as` casts are safer in Flow {#toc-as-casts}
 
-Flow's `as` only widens or asserts (e.g. `42 as number`, `42 as 42`), and rejects unsafe downcasts at the type level - `{id: 1} as {id: number, name: string}` is a Flow error, not a cast. TypeScript's `as` accepts any cast where the two types are assignable in *either* direction, which lets it silently approve unsafe downcasts. The same TypeScript line type-checks even though the cast invents a `name: string` property that doesn't exist at runtime, and accessing it then crashes at runtime. This permissiveness is the single biggest source of "TS code that looks like it should work in Flow but doesn't."
+Flow's `as` only widens or asserts (e.g. `42 as number`, `42 as 42`), and rejects unsafe downcasts at the type level - `{id: 1} as {id: number, name: string}` is a Flow error, not a cast. TypeScript's `as` accepts any cast where the two types are assignable in *either* direction, which lets it silently approve unsafe downcasts. The same TypeScript line type-checks even though the cast invents a `name: string` property that doesn't exist at runtime, and accessing it then crashes at runtime.
 
 ```ts
 // TypeScript:
@@ -1245,10 +1245,6 @@ A handful of [utility types](./types/utilities.md) have no TypeScript counterpar
 
 - [`Class<T>`](./types/utilities.md#toc-class) - the type of the class constructor for an instance type `T`. No TS native form; the usual TS encoding is `new (...args: any[]) => T` or `typeof T` for a specific class.
 - [`Values<T>`](./types/utilities.md#toc-values) - the union of value types of `T`'s properties. TS spelling is the indexed access `T[keyof T]`.
-- [`$KeyMirror<O>`](./types/utilities.md#toc-keymirror) - an object type whose property values are string-literal types mirroring their keys. No TS native form.
-- [`$Exports<'mod'>`](./types/utilities.md#toc-exports) - the type of a module's exports given a path string. TS's nearest equivalent is `typeof import('mod')`, with a different shape.
-- [`StringPrefix<P>` / `StringSuffix<S>`](./types/utilities.md#toc-string-prefix-suffix) - strings constrained to a literal prefix or suffix. The TS equivalent is template literal types (`` `${P}${string}` `` / `` `${string}${S}` ``), which Flow does not yet have (see [Coming soon](#toc-coming-soon)).
-- [`$Exact<T>`](./types/utilities.md#toc-exact) - promotes an inexact object type to exact. Discouraged in new code; object types are exact by default, so this is only useful when wrapping an inexact alias.
 
 ### Flow-only syntactic forms {#toc-flow-only-syntax}
 
@@ -1428,15 +1424,14 @@ The following TypeScript features have type-checking support implemented in Flow
 
 - Template literal types - e.g. `` `${'a' | 'b'}-${'x' | 'y'}` ``.
 - Mapped type modifiers - variance removal `-readonly` and `as` key remapping.
+- Abstract classes and methods.
+- `override` on class members.
 - Constructor types - `type Ctor = new (x: number) => R`.
 - `satisfies` expression - validates an expression against a type without widening the inferred type.
 - Inline `import()` type expression - `type A = import('./m').A`.
 - `import X = require('foo')` and `export = X` - CommonJS-style import and export bindings.
 
 Planned:
-
-- Abstract classes and methods.
-- `override` on class members.
 - Support for symbol-keyed property accesses at the type level. The `unique symbol` syntax parses today, but the type system doesn't yet model symbol keys as distinct nominal keys.
 
 ## Syntax convergence with TypeScript {#toc-convergence}

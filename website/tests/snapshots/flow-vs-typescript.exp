@@ -250,24 +250,6 @@ References:
 Found 1 error
 
 === block 14 ===
-Error ------------------------------------------------------------------------- -:3:15
-
-The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
-types. [unsupported-syntax]
-
-   3| function f(): undefined { // ERROR: [unsupported-syntax]
-                    ^^^^^^^^^
-
-
-Found 1 error
-
-=== block 15 ===
-No errors!
-
-=== block 16 ===
-No errors!
-
-=== block 17 ===
 Error ------------------------------------------------------------------------- -:4:10
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -285,7 +267,7 @@ References:
 
 Found 1 error
 
-=== block 18 ===
+=== block 15 ===
 Error ------------------------------------------------------------------------- -:7:10
 
 Cannot call `markFree` with `item` bound to `p` because in property `price`: `number` [1] is not exactly the same as
@@ -317,10 +299,10 @@ References:
 
 Found 1 error
 
-=== block 19 ===
+=== block 16 ===
 No errors!
 
-=== block 20 ===
+=== block 17 ===
 Error -------------------------------------------------------------------------- -:7:3
 
 Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
@@ -341,10 +323,10 @@ References:
 
 Found 1 error
 
-=== block 21 ===
+=== block 18 ===
 No errors!
 
-=== block 22 ===
+=== block 19 ===
 Error ------------------------------------------------------------------------- -:7:13
 
 Cannot call `appendError` with `errors` bound to `es` because in array element: `string` [1] is not exactly the same as
@@ -376,10 +358,10 @@ References:
 
 Found 1 error
 
-=== block 23 ===
+=== block 20 ===
 No errors!
 
-=== block 24 ===
+=== block 21 ===
 Error -------------------------------------------------------------------------- -:9:7
 
 Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: string [2] is incompatible with
@@ -403,7 +385,7 @@ References:
 
 Found 1 error
 
-=== block 25 ===
+=== block 22 ===
 Error ------------------------------------------------------------------------ -:10:13
 
 Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
@@ -455,7 +437,7 @@ References:
 
 Found 2 errors
 
-=== block 26 ===
+=== block 23 ===
 Error ------------------------------------------------------------------------- -:6:20
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
@@ -486,6 +468,24 @@ References:
 
 
 Found 2 errors
+
+=== block 24 ===
+Error ------------------------------------------------------------------------- -:3:15
+
+The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
+types. [unsupported-syntax]
+
+   3| function f(): undefined { // ERROR: [unsupported-syntax]
+                    ^^^^^^^^^
+
+
+Found 1 error
+
+=== block 25 ===
+No errors!
+
+=== block 26 ===
+No errors!
 
 === block 27 ===
 Error ------------------------------------------------------------------------- -:5:10

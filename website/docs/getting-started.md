@@ -1,18 +1,15 @@
 ---
 title: Getting Started
 slug: /getting-started
-description: Never used a type system before or just new to Flow? Let's get you up and running in a few minutes.
+description: Get up and running with Flow, a typed dialect of JavaScript, in a few minutes. Set up a compiler, install flow-bin, and start catching errors with static types.
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Flow is a static type checker for your JavaScript code. It helps you code faster,
-smarter, more confidently, and at a bigger scale.
-
-Flow checks your code for errors through **static type annotations**. These
-_types_ allow you to tell Flow how you want your code to work, and Flow will
-make sure it does work that way.
+Flow is a typed dialect of JavaScript. It checks your code for errors through
+static type annotations. These _types_ allow you to tell Flow how you want your
+code to work, and Flow will make sure it does work that way.
 
 ```js flow-check
 function square(n: number): number {
@@ -21,6 +18,13 @@ function square(n: number): number {
 
 square("2"); // Error!
 ```
+
+If you already know TypeScript, Flow's syntax will look [familiar](./flow-vs-typescript.md):
+it shares `keyof`, `readonly` properties, `unknown`, indexed access types `T[K]`,
+conditional types, mapped types, and type guards. On top of that common ground,
+Flow adds first-class language constructs of its own, such as
+[`component`](./react/component-syntax.md) syntax for React and
+[`match`](./match/index.md) for pattern matching.
 
 ## Installation {#toc-installation}
 
