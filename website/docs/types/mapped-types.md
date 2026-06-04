@@ -119,27 +119,43 @@ undefined as MaybeMapped; // OK
 
 ## Property Modifiers {#toc-property-modifiers}
 
-You can also add `readonly` or `writeonly` variance modifiers and the optionality modifier `?` in mapped types:
+### Adding variance and optionality {#toc-adding-variance-and-optionality}
+
+You can add `readonly` or `writeonly` variance modifiers and the optionality modifier `?` in mapped types:
 ```js flow-check
 type O = {foo: number, bar: string}
 type ReadOnlyPartialO = {readonly [key in keyof O]?: O[key]}; // = {readonly foo?: number, readonly bar?: string};
 ```
 
-When no variance nor optionality modifiers are provided and the mapped type is distributive,
-the variance and optionality are determined by the input object:
+### Removing optionality with `-?` {#toc-removing-optionality}
+
+The `?` modifier makes every property optional. Prefixing it with `-` does the opposite: `-?` removes optionality, turning every optional property into a required one. This works like the [`Required<T>`](./utilities.md#toc-required) utility type.
+
 ```js flow-check
-type O = {readonly foo: number, bar?: string};
-type Mapped = {[key in keyof O]: O[key]}; // = {readonly foo: number, bar?: string}
+type O = {foo: number, bar?: string};
+type RequiredO = {[key in keyof O]-?: O[key]}; // = {foo: number, bar: string}
+({foo: 1}) as RequiredO; // ERROR: bar is now required
 ```
 
-Otherwise, the properties are read-write and required when no property modifiers are present:
+`-?` only clears the optionality of properties that were optional in the source. It does not strip `void` or `undefined` from a value type that was already required:
 ```js flow-check
-type Union = 'foo' | 'bar' | 'baz';
-type MappedType = {[key in Union]: number};
-// = {foo: number, bar: number, baz: number};
+type T = {a: string | void};
+type Mapped = {[K in keyof T]-?: T[K]};
+declare const m: Mapped;
+m.a as string | void; // OK: `a` was not optional, so its value type is unchanged
+m.a as string; // ERROR: void is still part of the value type
 ```
 
-> NOTE: Flow does not yet support `+readonly`/`-readonly` variance modifiers.
+`-?` also works on tuple inputs, where it makes elements no longer optional:
+```js flow-check
+type Tuple = [a: string, b?: number, c?: boolean];
+type AllRequired = {[K in keyof Tuple]-?: Tuple[K]};
+(['']) as AllRequired; // ERROR: elements 1 and 2 are now required
+declare const t: AllRequired;
+t as [string, number, boolean]; // OK
+```
+
+> Note: Flow does not yet support `+readonly`/`-readonly` variance modifiers. They are [coming soon](../flow-vs-typescript.md#toc-coming-soon).
 
 ## Mapped Type on Arrays {#toc-mapped-type-on-arrays}
 

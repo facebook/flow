@@ -44,12 +44,62 @@ No errors!
 No errors!
 
 === block 11 ===
-No errors!
+Error -------------------------------------------------------------------------- -:4:2
+
+Cannot cast object literal to `RequiredO` because property `bar` is missing in object literal [1] but exists in mapped
+type [2]. [incompatible-type]
+
+   -:4:2
+   4| ({foo: 1}) as RequiredO; // ERROR: bar is now required
+       ^^^^^^^^ [1]
+
+References:
+   -:4:15
+   4| ({foo: 1}) as RequiredO; // ERROR: bar is now required
+                    ^^^^^^^^^ [2]
+
+
+Found 1 error
 
 === block 12 ===
-No errors!
+Error -------------------------------------------------------------------------- -:6:1
+
+Cannot cast `m.a` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   -:6:1
+   6| m.a as string; // ERROR: void is still part of the value type
+      ^^^
+
+References:
+   -:3:34
+   3| type Mapped = {[K in keyof T]-?: T[K]};
+                                       ^^^^ [1]
+   -:6:8
+   6| m.a as string; // ERROR: void is still part of the value type
+             ^^^^^^ [2]
+
+
+Found 1 error
 
 === block 13 ===
+Error -------------------------------------------------------------------------- -:4:2
+
+Cannot cast array literal to `AllRequired` because array literal [1] has 1 element but array type [2] has 3 elements.
+[invalid-tuple-arity]
+
+   -:4:2
+   4| (['']) as AllRequired; // ERROR: elements 1 and 2 are now required
+       ^^^^ [1]
+
+References:
+   -:4:11
+   4| (['']) as AllRequired; // ERROR: elements 1 and 2 are now required
+                ^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 14 ===
 Error -------------------------------------------------------------------------- -:6:1
 
 Cannot cast empty string to indexed access because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -86,7 +136,7 @@ Cannot assign `true` to `mapped[0]` because tuple element at index `0` [1] label
 
 Found 3 errors
 
-=== block 14 ===
+=== block 15 ===
 Error ------------------------------------------------------------------------- -:4:21
 
 Mapped Types do not yet support variance annotations on array inputs. [invalid-mapped-type]
