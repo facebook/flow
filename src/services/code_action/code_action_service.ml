@@ -1599,10 +1599,7 @@ let ast_transforms_of_error
       in
       [
         {
-          title =
-            Utils_js.spf
-              "Make `%s` readonly"
-              (Ty_printer.string_of_t_single_line ~ts_syntax:true upper_ty);
+          title = Utils_js.spf "Make `%s` readonly" (Ty_printer.string_of_t_single_line upper_ty);
           diagnostic_title = "fix_invariant_subtyping_error_with_readonly_conversion";
           transform;
           target_loc = upper_loc;

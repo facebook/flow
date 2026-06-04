@@ -818,11 +818,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
-Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Either make `Array<{readonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -844,11 +844,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
-Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -871,10 +871,10 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{+p: A, ...}` [2]. [incompatible-type]
+`{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Either make `Array<{p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -896,11 +896,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
-Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
-`{+p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
+`{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -923,10 +923,10 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{-p: A, ...}` [2]. [incompatible-type]
+`{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Either make `Array<{p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -948,11 +948,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
 
-Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
-`{-p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
+`{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Either make `Array<{readonly p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1832,11 +1832,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:207:18
 
-Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Either make `Array<{readonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1858,11 +1858,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:209:18
 
-Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
 `{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
+- Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1885,10 +1885,10 @@ References:
 Error ------------------------------------------------------------------------------------------- test_keyword.js:210:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{+p: A, ...}` [2]. [incompatible-type]
+`{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Either make `Array<{p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1910,11 +1910,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:214:18
 
-Cannot cast `[...]` to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
-`{+p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
+`{readonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
+- Either make `Array<{writeonly p: A, ...}>` [3] and `Array<{readonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1937,10 +1937,10 @@ References:
 Error ------------------------------------------------------------------------------------------- test_keyword.js:215:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
-`{-p: A, ...}` [2]. [incompatible-type]
+`{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Either make `Array<{p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -1962,11 +1962,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- test_keyword.js:216:18
 
-Cannot cast `[...]` to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
-`{-p: A, ...}` [2]. [incompatible-type]
+Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
+`{writeonly p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
+- Either make `Array<{readonly p: A, ...}>` [3] and `Array<{writeonly p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 

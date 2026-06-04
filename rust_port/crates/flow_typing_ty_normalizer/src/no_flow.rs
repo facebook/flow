@@ -192,10 +192,7 @@ pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String 
     match from_type(&genv, t) {
         Err(e) => format!("<Error {}>", e.kind),
         Ok(elt) => {
-            let opts = flow_common_ty::ty_printer::PrinterOptions {
-                ts_syntax: cx.ts_syntax(),
-                ..Default::default()
-            };
+            let opts = flow_common_ty::ty_printer::PrinterOptions::default();
             flow_common_ty::ty_printer::string_of_elt_single_line(&elt, &opts)
         }
     }

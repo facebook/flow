@@ -529,9 +529,15 @@ let eval_hint_tests =
     "obj_rest_from_dict_neutral_polarity"
     >:: mk_eval_hint_test ~expected:"{[string]: number}" "{[string]: number}" [Decomp_ObjSpread];
     "obj_rest_from_dict_positive_polarity"
-    >:: mk_eval_hint_test ~expected:"{+[string]: number}" "{+[string]: number}" [Decomp_ObjSpread];
+    >:: mk_eval_hint_test
+          ~expected:"{readonly [string]: number}"
+          "{+[string]: number}"
+          [Decomp_ObjSpread];
     "obj_rest_from_dict_negative_polarity"
-    >:: mk_eval_hint_test ~expected:"{-[string]: number}" "{-[string]: number}" [Decomp_ObjSpread];
+    >:: mk_eval_hint_test
+          ~expected:"{writeonly [string]: number}"
+          "{-[string]: number}"
+          [Decomp_ObjSpread];
     "method_name_from_instance"
     >:: mk_eval_hint_test ~expected:"() => string" "string" [Decomp_MethodName "toString"];
     "method_name_from_object"
@@ -622,7 +628,8 @@ let eval_hint_tests =
           [Decomp_CallSuper];
     "jsx_props_of_class_component"
     >:: mk_eval_hint_test_with_type_setup
-          ~expected:"{+bar: string, +foo: number, +ref?: RefSetter<MyComponent>}"
+          ~expected:
+            "{readonly bar: string, readonly foo: number, readonly ref?: RefSetter<MyComponent>}"
           "import * as React from 'react'; class MyComponent extends React.Component<{bar: string, foo: number}> {}; MyComponent"
           [Decomp_JsxProps];
     "jsx_props_of_function_component"
@@ -632,7 +639,7 @@ let eval_hint_tests =
           [Decomp_JsxProps];
     "jsx_props_of_abstract_component"
     >:: mk_eval_hint_test
-          ~expected:"{+bar: string, +foo: number, +ref: RefSetter<mixed>}"
+          ~expected:"{readonly bar: string, readonly foo: number, readonly ref: RefSetter<unknown>}"
           "component(ref: React.RefSetter<mixed>, bar: string, foo: number) "
           [Decomp_JsxProps];
     "jsx_props_select"

@@ -107,17 +107,33 @@ fn builtin_from_string(name: &str, targs: Option<AstTypeArgs>) -> AstType {
     mk_generic_type(id_from_string(name), targs)
 }
 
-fn variance_(p: Polarity) -> Option<ast::Variance<Loc>> {
+fn property_variance(p: Polarity) -> Option<ast::Variance<Loc>> {
     match p {
         Polarity::Neutral => None,
         Polarity::Positive => Some(ast::Variance {
             loc: LOC_NONE,
-            kind: ast::VarianceKind::Plus,
+            kind: ast::VarianceKind::Readonly,
             comments: None,
         }),
         Polarity::Negative => Some(ast::Variance {
             loc: LOC_NONE,
-            kind: ast::VarianceKind::Minus,
+            kind: ast::VarianceKind::Writeonly,
+            comments: None,
+        }),
+    }
+}
+
+fn type_param_variance(p: Polarity) -> Option<ast::Variance<Loc>> {
+    match p {
+        Polarity::Neutral => None,
+        Polarity::Positive => Some(ast::Variance {
+            loc: LOC_NONE,
+            kind: ast::VarianceKind::Out,
+            comments: None,
+        }),
+        Polarity::Negative => Some(ast::Variance {
+            loc: LOC_NONE,
+            kind: ast::VarianceKind::In,
             comments: None,
         }),
     }
@@ -248,6 +264,16 @@ impl Serializer {
             Ty::Tup { elements, inexact } => self.tuple(elements, *inexact),
             Ty::Union(from_bounds, _, _, _) => self.union(t, *from_bounds),
             Ty::Inter(t0, t1, rest) => self.intersection(t0, t1, rest),
+            Ty::Utility(crate::ty::Utility::Keys(t)) => {
+                let argument = self.type_(t);
+                ast::types::Type::new(TypeInner::Keyof {
+                    loc: LOC_NONE,
+                    inner: Arc::new(ast::types::Keyof {
+                        argument,
+                        comments: None,
+                    }),
+                })
+            }
             Ty::Utility(u) => self.utility(u),
             Ty::IndexedAccess {
                 _object,
@@ -694,7 +720,7 @@ impl Serializer {
                     method: false,
                     abstract_: false,
                     override_: false,
-                    variance: variance_(*polarity),
+                    variance: property_variance(*polarity),
                     ts_accessibility: None,
                     init: None,
                     comments: None,
@@ -772,7 +798,7 @@ impl Serializer {
             key,
             value,
             static_: false,
-            variance: variance_(d.dict_polarity),
+            variance: property_variance(d.dict_polarity),
             optional: false,
             comments: None,
         }
@@ -836,9 +862,9 @@ impl Serializer {
             }
         };
         let (variance, variance_op) = match flags.variance {
-            MappedTypeVariance::OverrideVariance(pol) => (variance_(pol), None),
+            MappedTypeVariance::OverrideVariance(pol) => (property_variance(pol), None),
             MappedTypeVariance::RemoveVariance(pol) => (
-                variance_(pol),
+                property_variance(pol),
                 Some(ast::types::object::MappedTypeVarianceOp::Remove),
             ),
             MappedTypeVariance::KeepVariance => (None, None),
@@ -900,7 +926,7 @@ impl Serializer {
                         element: ast::types::tuple::LabeledElement {
                             name: id_from_string(n),
                             annot,
-                            variance: variance_(*polarity),
+                            variance: property_variance(*polarity),
                             optional: *optional,
                         },
                     },
@@ -910,7 +936,7 @@ impl Serializer {
                         optional: *optional,
                     },
                     _ => {
-                        // No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
+                        // No label, but has polarity - e.g. `Readonly<[string, number]>`
                         // We must make up a name.
                         let name = format!("element_{}", i);
                         ast::types::tuple::Element::LabeledElement {
@@ -918,7 +944,7 @@ impl Serializer {
                             element: ast::types::tuple::LabeledElement {
                                 name: id_from_string(&name),
                                 annot,
-                                variance: variance_(*polarity),
+                                variance: property_variance(*polarity),
                                 optional: *optional,
                             },
                         }
@@ -959,8 +985,8 @@ impl Serializer {
                 Some(b) => ast::types::AnnotationOrHint::Available(b),
                 None => ast::types::AnnotationOrHint::Missing(LOC_NONE),
             },
-            bound_kind: ast::types::type_param::BoundKind::Colon,
-            variance: variance_(tp.tp_polarity),
+            bound_kind: ast::types::type_param::BoundKind::Extends,
+            variance: type_param_variance(tp.tp_polarity),
             default,
             const_: None,
         }

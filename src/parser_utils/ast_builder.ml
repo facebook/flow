@@ -735,7 +735,7 @@ module Statements = struct
                     {
                       Flow_ast.Type.Generic.id =
                         Flow_ast.Type.Generic.Identifier.Unqualified
-                          (Identifiers.identifier "$ReadOnly");
+                          (Identifiers.identifier "Readonly");
                       targs =
                         Some
                           (Types.type_args

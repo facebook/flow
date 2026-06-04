@@ -76,42 +76,6 @@
         }
       },
       {
-        "command": {
-          "arguments": [
-            "textDocument/completion",
-            "builtin type",
-            {
-              "ac_type": "Actype",
-              "completion": "$NonMaybeType",
-              "index": 2,
-              "session_requests": 1,
-              "token": "TAUTO332",
-              "typed_length": 1
-            }
-          ],
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "title": ""
-        },
-        "detail": "$NonMaybeType",
-        "insertTextFormat": 1,
-        "kind": 3,
-        "label": "$NonMaybeType",
-        "sortText": "00000000000000000002",
-        "textEdit": {
-          "newText": "$NonMaybeType",
-          "range": {
-            "end": {
-              "character": 13,
-              "line": 2
-            },
-            "start": {
-              "character": 12,
-              "line": 2
-            }
-          }
-        }
-      },
-      {
         "additionalTextEdits": [
           {
             "newText": "import type { T } from \"./types\";\n\n",
@@ -134,7 +98,7 @@
             {
               "ac_type": "Actype",
               "completion": "T",
-              "index": 3,
+              "index": 2,
               "session_requests": 1,
               "token": "TAUTO332",
               "typed_length": 1
@@ -147,7 +111,7 @@
         "insertTextFormat": 1,
         "kind": 6,
         "label": "T",
-        "sortText": "00000000000000000003",
+        "sortText": "00000000000000000002",
         "textEdit": {
           "newText": "T",
           "range": {
@@ -170,7 +134,7 @@
             {
               "ac_type": "Actype",
               "completion": "TaggedTemplateLiteralArray",
-              "index": 4,
+              "index": 3,
               "session_requests": 1,
               "token": "TAUTO332",
               "typed_length": 1
@@ -183,7 +147,7 @@
         "insertTextFormat": 1,
         "kind": 6,
         "label": "TaggedTemplateLiteralArray",
-        "sortText": "00000000000000000004",
+        "sortText": "00000000000000000003",
         "textEdit": {
           "newText": "TaggedTemplateLiteralArray",
           "range": {
@@ -221,7 +185,7 @@
             {
               "ac_type": "Actype",
               "completion": "Toodle",
-              "index": 5,
+              "index": 4,
               "session_requests": 1,
               "token": "TAUTO332",
               "typed_length": 1
@@ -234,7 +198,7 @@
         "insertTextFormat": 1,
         "kind": 6,
         "label": "Toodle",
-        "sortText": "00000000000000000005",
+        "sortText": "00000000000000000004",
         "textEdit": {
           "newText": "Toodle",
           "range": {

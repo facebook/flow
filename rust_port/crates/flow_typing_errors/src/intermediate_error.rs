@@ -3808,10 +3808,7 @@ where
                 let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
                 let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
                     &ty,
-                    &flow_common_ty::ty_printer::PrinterOptions {
-                        ts_syntax: true,
-                        ..Default::default()
-                    },
+                    &flow_common_ty::ty_printer::PrinterOptions::default(),
                 );
                 let ty_str = if ty_str.len() > 100 {
                     format!("{}...", &ty_str[..100])

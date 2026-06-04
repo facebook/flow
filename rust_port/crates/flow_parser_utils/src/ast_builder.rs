@@ -1917,8 +1917,7 @@ pub mod statements {
                         loc: Loc::none(),
                         inner: Arc::new(at::Generic {
                             id: at::generic::Identifier::Unqualified(identifiers::identifier(
-                                None,
-                                "$ReadOnly",
+                                None, "Readonly",
                             )),
                             targs: Some(super::types::type_args(
                                 None,

@@ -1171,7 +1171,7 @@ Flags: --pretty --expand-json-output
         "type":{"name":"Value","provenance":{"kind":"Remote","loc":"rtype-c.js:3:15-19"}},
         "typeArgs":[{"kind":"Top"}]
       },
-      "type":"Value<mixed>"
+      "type":"Value<unknown>"
     }
   }
 }
@@ -2357,7 +2357,7 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
         "type":{"name":"Value","provenance":{"kind":"Remote","loc":"rtype-c.js:3:15-19"}},
         "typeArgs":[{"kind":"Top"}]
       },
-      "type":"Value<mixed>"
+      "type":"Value<unknown>"
     }
   }
 }

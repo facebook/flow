@@ -292,31 +292,27 @@ module Sorting = struct
       ( "idempotence" >:: fun ctxt ->
         assert_equal
           ~ctxt
-          ~printer:(Ty_printer.string_of_t ~ts_syntax:false)
+          ~printer:Ty_printer.string_of_t
           (simplify_base t0)
           (simplify_base (simplify_base t0));
         assert_equal
           ~ctxt
-          ~printer:(Ty_printer.string_of_t ~ts_syntax:false)
+          ~printer:Ty_printer.string_of_t
           (simplify_base t6)
           (simplify_base (simplify_base (simplify_base t6)));
         assert_equal
           ~ctxt
-          ~printer:(Ty_printer.string_of_t ~ts_syntax:false)
+          ~printer:Ty_printer.string_of_t
           (simplify_sort t4)
           (simplify_sort (simplify_sort t4));
         assert_equal
           ~ctxt
-          ~printer:(Ty_printer.string_of_t ~ts_syntax:false)
+          ~printer:Ty_printer.string_of_t
           (simplify_sort t6)
           (simplify_sort (simplify_sort (simplify_sort t6)))
       );
       ( "sorting" >:: fun ctxt ->
-        assert_equal
-          ~ctxt
-          ~printer:(Ty_printer.string_of_t ~ts_syntax:false)
-          t6_sorted
-          (simplify_sort t6)
+        assert_equal ~ctxt ~printer:Ty_printer.string_of_t t6_sorted (simplify_sort t6)
       );
       ( "union/intersection" >:: fun ctxt ->
         let t_in =

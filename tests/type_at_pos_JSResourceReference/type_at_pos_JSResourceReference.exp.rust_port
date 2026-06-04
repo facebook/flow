@@ -1,6 +1,6 @@
 main.js:7:13
 Flags:
-type SurfaceEntryPoint<TRoute: Route<>> = Readonly<
+type SurfaceEntryPoint<TRoute extends Route<>> = Readonly<
   {
     getComponent: () => JSResourceReference<Module<TRoute>>,
     getNavigationOptions: () => number,
@@ -9,9 +9,9 @@ type SurfaceEntryPoint<TRoute: Route<>> = Readonly<
   },
 >
 = {
-  +getComponent: () => JSResourceReference<Module<TRoute>>,
-  +getNavigationOptions: () => number,
-  +getRoute: () => Class<TRoute>,
+  readonly getComponent: () => JSResourceReference<Module<TRoute>>,
+  readonly getNavigationOptions: () => number,
+  readonly getRoute: () => Class<TRoute>,
   ...
 }
 

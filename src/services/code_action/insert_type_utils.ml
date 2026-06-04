@@ -661,10 +661,10 @@ let is_point loc = Loc.(loc.start = loc._end)
 (* Given a GraphQL file foo.graphql.js exporting a type
  *
  *   export type Foo = {|
- *     +f?: {|
- *       +g: {|
- *         +h: ?$ReadOnlyArray<{|
- *           +i: {||}
+ *     readonly f?: {|
+ *       readonly g: {|
+ *         readonly h: ?ReadonlyArray<{|
+ *           readonly i: {||}
  *         |}>
  *       |};
  *     |}
@@ -673,11 +673,11 @@ let is_point loc = Loc.(loc.start = loc._end)
  * [extract_graphql_fragment cx file_sig typed_ast tgt_aloc] returns the type of
  * the AST node at location [tgt_aloc] expressed in terms of an exported type alias:
  *
- *   $NonMaybeType<Foo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]>
+ *   NonNullable<Foo?.["f"]?.["g"]?.["h"]?.[0]?.["i"]>
  *
  * Note that the solution falls back to optional index chaining as soon as the first
  * optional type or property is encountered. In that case, we prefix the resulting
- * type with `$NonMaybeType`.
+ * type with `NonNullable`.
  *)
 module GraphQL : sig
   val extract_graphql_fragment :
@@ -1213,7 +1213,7 @@ class type_normalization_hardcoded_fixes_mapper
 module MakeHardcodedFixes (Extra : BASE_STATS) = struct
   module Acc = Acc (Extra)
 
-  (* Converts types like 'Array<T> | Array<S> | R' to '$ReadOnlyArray<T | S> | R'
+  (* Converts types like 'Array<T> | Array<S> | R' to 'ReadonlyArray<T | S> | R'
    * In certain kinds of codemods this has shown to cause fewer [ambiguous-speculation]
    * errros. *)
   let array_simplification t =

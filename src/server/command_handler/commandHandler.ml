@@ -735,16 +735,7 @@ let get_def_of_check_result ~reader ~profiling ?file_content ~check_result ~purp
   )
 
 let infer_type_to_response
-    ~reader
-    ~json
-    ~expanded
-    ~ts_syntax
-    ~strip_root
-    loc
-    refining_locs
-    refinement_invalidated
-    documentation
-    tys =
+    ~reader ~json ~expanded ~strip_root loc refining_locs refinement_invalidated documentation tys =
   let module Ty_debug = Ty_debug.Make (struct
     let aloc_to_loc = Some (Parsing_heaps.Reader.loc_of_aloc ~reader)
   end) in
@@ -752,9 +743,7 @@ let infer_type_to_response
     if json then
       let open Hh_json in
       let type_json t =
-        let json_obj =
-          [("type", JSON_String (Ty_printer.string_of_elt_single_line ~ts_syntax t))]
-        in
+        let json_obj = [("type", JSON_String (Ty_printer.string_of_elt_single_line t))] in
         let json_obj =
           if expanded then
             ("expanded", Ty_debug.json_of_elt ~strip_root t) :: json_obj
@@ -774,7 +763,7 @@ let infer_type_to_response
     else
       ServerProt.Response.InferType.Friendly
         (Base.Option.map tys ~f:(fun r ->
-             let (type_str, refs) = Ty_printer.string_of_type_at_pos_result ~ts_syntax r in
+             let (type_str, refs) = Ty_printer.string_of_type_at_pos_result r in
              { ServerProt.Response.InferType.type_str; refs }
          )
         )
@@ -933,7 +922,6 @@ let infer_type
             ~reader
             ~json
             ~expanded
-            ~ts_syntax:(Options.ts_syntax options)
             ~strip_root
             loc
             refining_locs
@@ -1047,9 +1035,7 @@ let inlay_hint
             in
             let tys =
               Base.Option.map tys ~f:(fun r ->
-                  let (type_str, refs) =
-                    Ty_printer.string_of_type_at_pos_result ~ts_syntax:(Options.ts_syntax options) r
-                  in
+                  let (type_str, refs) = Ty_printer.string_of_type_at_pos_result r in
                   { ServerProt.Response.InferType.type_str; refs }
               )
             in

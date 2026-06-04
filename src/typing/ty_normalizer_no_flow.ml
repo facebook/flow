@@ -61,7 +61,7 @@ let debug_string_of_t cx t =
   let genv = mk_default_genv cx in
   match from_type genv t with
   | Error (e, _) -> Utils_js.spf "<Error %s>" (Ty_normalizer.error_kind_to_string e)
-  | Ok elt -> Ty_printer.string_of_elt_single_line ~ts_syntax:(Context.ts_syntax cx) elt
+  | Ok elt -> Ty_printer.string_of_elt_single_line elt
 
 let type_to_desc_for_errors ~genv t =
   let desc = TypeUtil.desc_of_t t in

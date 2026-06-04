@@ -52,7 +52,7 @@ where
 
 Found exact match 'ConstrainedGeneric' defined at react.js:105:11,105:28 with type
 ```
-component ConstrainedGeneric<T: {id: string, label: string}>(
+component ConstrainedGeneric<T extends {id: string, label: string}>(
   items: Array<T>,
   selected?: T
 )
@@ -90,7 +90,11 @@ where
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
 component UserProfile(
-  ...{...UserCardProps, +className: string, +showActions?: boolean}
+  ...{
+    ...UserCardProps,
+    readonly className: string,
+    readonly showActions?: boolean
+  }
 )
 ```
 where
@@ -169,7 +173,7 @@ where
 
 Found exact match 'ConstrainedGeneric' defined at react.js:105:1,105:98 with type
 ```
-component ConstrainedGeneric<T: {id: string, label: string}>(
+component ConstrainedGeneric<T extends {id: string, label: string}>(
   items: Array<T>,
   selected?: T
 )
@@ -228,7 +232,11 @@ where
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
 component UserProfile(
-  ...{...UserCardProps, +className: string, +showActions?: boolean}
+  ...{
+    ...UserCardProps,
+    readonly className: string,
+    readonly showActions?: boolean
+  }
 )
 ```
 where
@@ -661,19 +669,19 @@ where
 
 
 === Mapped Types ===
-Found exact match 'MakeReadonly' defined at complex_types.js:119:6,119:17 with type `type MakeReadonly<T: {...}> = {+[K in keyof T]: T[K]}` 
+Found exact match 'MakeReadonly' defined at complex_types.js:119:6,119:17 with type `type MakeReadonly<T extends {...}> = {readonly [K in keyof T]: T[K]}` 
 where
 'MakeReadonly' is defined at complex_types.js:119:6-17
 
-Found exact match 'MakeOptional' defined at complex_types.js:120:6,120:17 with type `type MakeOptional<T: {...}> = {[K in keyof T]?: T[K]}` 
+Found exact match 'MakeOptional' defined at complex_types.js:120:6,120:17 with type `type MakeOptional<T extends {...}> = {[K in keyof T]?: T[K]}` 
 where
 'MakeOptional' is defined at complex_types.js:120:6-17
 
-Found exact match 'Methodify' defined at complex_types.js:121:6,121:14 with type `type Methodify<T: {...}> = {[K in keyof T]: () => T[K]}` 
+Found exact match 'Methodify' defined at complex_types.js:121:6,121:14 with type `type Methodify<T extends {...}> = {[K in keyof T]: () => T[K]}` 
 where
 'Methodify' is defined at complex_types.js:121:6-14
 
-Found exact match 'Validators' defined at complex_types.js:210:6,210:15 with type `type Validators<T: {...}> = {[K in keyof T]: (value: T[K]) => boolean}` 
+Found exact match 'Validators' defined at complex_types.js:210:6,210:15 with type `type Validators<T extends {...}> = {[K in keyof T]: (value: T[K]) => boolean}` 
 where
 'Validators' is defined at complex_types.js:210:6-15
 

@@ -71,10 +71,7 @@ fn normalize_type(
             let loc_of_aloc = |aloc: &ALoc| shared_mem.loc_of_aloc(aloc);
             let refs: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
             let refs_some = Some(refs);
-            let opts = PrinterOptions {
-                ts_syntax: false,
-                ..Default::default()
-            };
+            let opts = PrinterOptions::default();
             let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<Loc>(
                 &elt,
                 &None::<Elt<ALoc>>,

@@ -1,100 +1,100 @@
 export_const.js:3:14
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 export_const.js:3:14,3:17
 
 export_const.js:5:14
 Flags:
-{+f: {g: string}}
+{readonly f: {g: string}}
 export_const.js:5:14,5:17
 
 export_const.js:7:14
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 export_const.js:7:14,7:17
 
 export_const.js:9:14
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 export_const.js:9:14,9:17
 
 export_const.js:11:14
 Flags:
-{+a: "a", +b: "b", +c: {d: string}, +e: "e"}
+{readonly a: "a", readonly b: "b", readonly c: {d: string}, readonly e: "e"}
 export_const.js:11:14,11:17
 
 export_const.js:13:14
 Flags:
-{prop: {+f: "a"}}
+{prop: {readonly f: "a"}}
 export_const.js:13:14,13:17
 
 export_const.js:16:14
 Flags:
-{+f: string}
+{readonly f: string}
 export_const.js:16:14,16:17
 
 export_const.js:18:14
 Flags:
-{+f: 1, +g: 1, +h: 1}
+{readonly f: 1, readonly g: 1, readonly h: 1}
 export_const.js:18:14,18:17
 
 export_const.js:20:14
 Flags:
-{+f: -1}
+{readonly f: -1}
 export_const.js:20:14,20:17
 
 file.js:4:5
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 file.js:4:5,4:8
 
 file.js:6:5
 Flags:
-{+f: {g: string}}
+{readonly f: {g: string}}
 file.js:6:5,6:8
 
 file.js:8:5
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 file.js:8:5,8:8
 
 file.js:10:5
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 file.js:10:5,10:8
 
 file.js:12:5
 Flags:
-{+a: "a", +b: "b", +c: {d: string}, +e: "e"}
+{readonly a: "a", readonly b: "b", readonly c: {d: string}, readonly e: "e"}
 file.js:12:5,12:8
 
 file.js:14:5
 Flags:
-{prop: {+f: "a"}}
+{prop: {readonly f: "a"}}
 file.js:14:5,14:8
 
 file.js:18:8
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 file.js:18:8,18:17
 
 file.js:21:8
 Flags:
-{+f: "a"}
+{readonly f: "a"}
 file.js:21:8,21:20
 
 file.js:24:5
 Flags:
-{+f: string}
+{readonly f: string}
 file.js:24:5,24:8
 
 file.js:26:5
 Flags:
-{+f: 1, +g: 1, +h: 1}
+{readonly f: 1, readonly g: 1, readonly h: 1}
 file.js:26:5,26:8
 
 file.js:28:5
 Flags:
-{+f: -1}
+{readonly f: -1}
 file.js:28:5,28:8
 

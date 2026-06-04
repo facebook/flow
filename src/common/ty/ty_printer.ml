@@ -35,16 +35,21 @@ let property_key_quotes_needed x =
   let regexp = Str.regexp "^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" in
   not (Str.string_match regexp x 0)
 
-let variance_ = function
-  | Positive -> Atom "+"
-  | Negative -> Atom "-"
+let property_variance = function
+  | Positive -> fuse [Atom "readonly"; space]
+  | Negative -> fuse [Atom "writeonly"; space]
+  | Neutral -> Empty
+
+let type_param_variance = function
+  | Positive -> fuse [Atom "out"; space]
+  | Negative -> fuse [Atom "in"; space]
   | Neutral -> Empty
 
 (*************************)
 (* Main Transformation   *)
 (*************************)
 
-let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~ts_syntax elt =
+let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) elt =
   let size = ref size in
   let local_name_of_symbol symbol =
     let { sym_name = name; sym_provenance = provenance; _ } = symbol in
@@ -83,7 +88,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     match t with
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
-    | Top -> Atom "mixed"
+    | Top -> Atom "unknown"
     | Bot _ -> Atom "empty"
     | Void -> Atom "void"
     | Null -> Atom "null"
@@ -128,7 +133,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
                * element. If the name is missing, add a default name "_". *)
               id_nodes (spf "_%d" idx)
           in
-          fuse ((variance_ polarity :: name) @ [type_ ~depth t])
+          fuse ((property_variance polarity :: name) @ [type_ ~depth t])
         | (_, TupleSpread { name; t }) ->
           fuse
             [
@@ -397,7 +402,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
           | Field { t; polarity; optional } ->
             fuse
               [
-                variance_ polarity;
+                property_variance polarity;
                 to_key (Reason.display_string_of_name key);
                 ( if optional then
                   Atom "?"
@@ -457,9 +462,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
           in
           let variance_token =
             match variance with
-            | OverrideVariance pol -> variance_ pol
+            | OverrideVariance pol -> property_variance pol
             | RemoveVariance Positive -> fuse [Atom "-"; Atom "readonly "]
-            | RemoveVariance Negative
+            | RemoveVariance Negative -> fuse [Atom "-"; Atom "writeonly "]
             | RemoveVariance Neutral
             | KeepVariance ->
               Empty
@@ -500,7 +505,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   and type_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
     fuse
       [
-        variance_ dict_polarity;
+        property_variance dict_polarity;
         Atom "[";
         begin
           match dict_name with
@@ -587,7 +592,6 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         [base; space; list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ",") ~trailing:false member_atoms]
   and utility ~depth u =
     match u with
-    | ReadOnly (Tup _ as t) when ts_syntax -> fuse [Atom "readonly"; space; type_ ~depth t]
     | Keys t -> fuse [Atom "keyof"; space; type_with_parens ~depth t]
     | _ ->
       let ctor = Ty.string_of_utility_ctor u in
@@ -607,16 +611,16 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
         else
           Empty
         );
-        variance_ tp_polarity;
+        type_param_variance tp_polarity;
         Atom tp_name;
-        option ~f:(type_annotation ~depth) tp_bound;
+        option ~f:(type_param_bound ~depth) tp_bound;
         begin
           match tp_default with
           | Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
           | None -> Empty
         end;
       ]
-  and type_annotation ~depth t = fuse [Atom ":"; pretty_space; type_ ~depth t] in
+  and type_param_bound ~depth t = fuse [space; Atom "extends"; space; type_ ~depth t] in
 
   let class_decl ~depth s typeParameters =
     fuse
@@ -728,11 +732,9 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
   | Type t -> type_ ~depth:0 t
   | Decl d -> decl ~depth:0 d
 
-let layout_of_type_at_pos_types
-    ~prefer_single_quotes ?size ?with_comments ~ts_syntax (unevaluated, evaluated) =
-  let layout_unevaluated =
-    layout_of_elt ~prefer_single_quotes ?size ?with_comments ~ts_syntax unevaluated
-  in
+let layout_of_type_at_pos_types ~prefer_single_quotes ?size ?with_comments (unevaluated, evaluated)
+    =
+  let layout_unevaluated = layout_of_elt ~prefer_single_quotes ?size ?with_comments unevaluated in
   match (unevaluated, evaluated) with
   | (_, None) -> layout_unevaluated
   | (unevaluated, Some evaluated) when Ty_utils.elt_equal unevaluated evaluated ->
@@ -744,7 +746,7 @@ let layout_of_type_at_pos_types
         | Decl (TypeAliasDecl { type_ = Some t; _ }) -> Type t
         | x -> x
       in
-      layout_of_elt ~prefer_single_quotes ?size ?with_comments ~ts_syntax evaluated
+      layout_of_elt ~prefer_single_quotes ?size ?with_comments evaluated
     in
     fuse [layout_unevaluated; hardline; Atom "="; space; layout_evaluated]
 
@@ -769,28 +771,22 @@ let print_single_line node =
 
 let print_pretty node = Pretty_printer.print ~skip_endline:true node
 
-let string_of_elt ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (elt : Ty.elt)
-    : string =
-  layout_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax elt
-  |> print_pretty
-  |> Source.contents
+let string_of_elt ?(prefer_single_quotes = false) ?(with_comments = true) (elt : Ty.elt) : string =
+  layout_of_elt ~prefer_single_quotes ~with_comments elt |> print_pretty |> Source.contents
 
-let string_of_elt_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (elt : Ty.elt) =
-  layout_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax elt
-  |> print_single_line
-  |> Source.contents
+let string_of_elt_single_line ?(prefer_single_quotes = false) ?(with_comments = true) (elt : Ty.elt)
+    =
+  layout_of_elt ~prefer_single_quotes ~with_comments elt |> print_single_line |> Source.contents
 
-let string_of_t ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (ty : Ty.t) =
-  string_of_elt ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Type ty)
+let string_of_t ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) =
+  string_of_elt ~prefer_single_quotes ~with_comments (Ty.Type ty)
 
-let string_of_t_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (ty : Ty.t) =
-  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Type ty)
+let string_of_t_single_line ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments (Ty.Type ty)
 
-let string_of_decl_single_line
-    ?(prefer_single_quotes = false) ?(with_comments = true) ~ts_syntax (d : Ty.decl) =
-  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~ts_syntax (Ty.Decl d)
+let string_of_decl_single_line ?(prefer_single_quotes = false) ?(with_comments = true) (d : Ty.decl)
+    =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments (Ty.Decl d)
 
 let string_of_symbol_set syms =
   LocSymbolSet.elements syms
@@ -806,13 +802,10 @@ let string_of_symbol_set syms =
      )
 
 let string_of_type_at_pos_result
-    ?(prefer_single_quotes = false)
-    ?(with_comments = true)
-    ~ts_syntax
-    { Ty.unevaluated; evaluated; refs } =
+    ?(prefer_single_quotes = false) ?(with_comments = true) { Ty.unevaluated; evaluated; refs } =
   let type_str =
     (unevaluated, evaluated)
-    |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments ~ts_syntax
+    |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments
     |> print_pretty
     |> Source.contents
   in

@@ -467,42 +467,6 @@
             }
           }
         }
-      },
-      {
-        "command": {
-          "arguments": [
-            "textDocument/completion",
-            "builtin type",
-            {
-              "ac_type": "Actype",
-              "completion": "$NonMaybeType",
-              "index": 10,
-              "session_requests": 1,
-              "token": "TAUTO332",
-              "typed_length": 1
-            }
-          ],
-          "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-          "title": ""
-        },
-        "detail": "$NonMaybeType",
-        "insertTextFormat": 1,
-        "kind": 3,
-        "label": "$NonMaybeType",
-        "sortText": "00000000000000000010",
-        "textEdit": {
-          "newText": "$NonMaybeType",
-          "range": {
-            "end": {
-              "character": 13,
-              "line": 2
-            },
-            "start": {
-              "character": 12,
-              "line": 2
-            }
-          }
-        }
       }
     ]
   }

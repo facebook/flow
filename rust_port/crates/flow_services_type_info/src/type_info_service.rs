@@ -184,11 +184,7 @@ pub fn type_at_pos<'a>(
             (json_data, loc, None)
         }
         QueryResult::Success(loc, tys) => {
-            let ts_syntax = cx.ts_syntax();
-            let opts = PrinterOptions {
-                ts_syntax,
-                ..Default::default()
-            };
+            let opts = PrinterOptions::default();
             let json_data = vec![];
             let json_data = json_data_of_result("SUCCESS", json_data);
             let json_data = json_data_of_loc(&loc, json_data);
@@ -313,11 +309,7 @@ pub fn dump_types<'a>(
     match for_tool {
         Some(depth) => query_types::dump_types_for_tool(cx, typed_ast, depth),
         None => {
-            let ts_syntax = cx.ts_syntax();
-            let opts = PrinterOptions {
-                ts_syntax,
-                ..Default::default()
-            };
+            let opts = PrinterOptions::default();
             let printer = |elt: &flow_common_ty::ty::ALocElt| -> String {
                 ty_printer::string_of_elt_single_line(elt, &opts)
             };

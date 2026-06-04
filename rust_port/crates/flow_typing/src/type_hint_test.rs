@@ -912,7 +912,7 @@ mod tests {
     #[test]
     fn obj_rest_from_dict_positive_polarity() {
         mk_eval_hint_test(
-            "{+[string]: number}",
+            "{readonly [string]: number}",
             "{+[string]: number}",
             vec![DecompObjSpread],
         );
@@ -921,7 +921,7 @@ mod tests {
     #[test]
     fn obj_rest_from_dict_negative_polarity() {
         mk_eval_hint_test(
-            "{-[string]: number}",
+            "{writeonly [string]: number}",
             "{-[string]: number}",
             vec![DecompObjSpread],
         );
@@ -1071,7 +1071,7 @@ mod tests {
     #[test]
     fn jsx_props_of_class_component() {
         mk_eval_hint_test_with_type_setup(
-            "{+bar: string, +foo: number, +ref?: RefSetter<MyComponent>}",
+            "{readonly bar: string, readonly foo: number, readonly ref?: RefSetter<MyComponent>}",
             "import * as React from 'react'; class MyComponent extends React.Component<{bar: string, foo: number}> {}; MyComponent",
             vec![DecompJsxProps],
         );
@@ -1089,7 +1089,7 @@ mod tests {
     #[test]
     fn jsx_props_of_abstract_component() {
         mk_eval_hint_test(
-            "{+bar: string, +foo: number, +ref: RefSetter<mixed>}",
+            "{readonly bar: string, readonly foo: number, readonly ref: RefSetter<unknown>}",
             "component(ref: React.RefSetter<mixed>, bar: string, foo: number) ",
             vec![DecompJsxProps],
         );

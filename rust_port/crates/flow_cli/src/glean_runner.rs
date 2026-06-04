@@ -1683,10 +1683,7 @@ fn declaration_infos<'a, 'cx>(
         imported_names.dupe(),
     );
     let docs_and_spans = documentation_fullspan_map::create(ast, Some(file));
-    let printer_opts = ty_printer::PrinterOptions {
-        ts_syntax: cx.ts_syntax(),
-        ..Default::default()
-    };
+    let printer_opts = ty_printer::PrinterOptions::default();
     let mut var_infos = Vec::new();
     let mut member_infos = Vec::new();
     let mut type_infos = Vec::new();

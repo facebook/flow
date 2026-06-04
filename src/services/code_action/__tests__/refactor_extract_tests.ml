@@ -1144,7 +1144,7 @@ function test<T>(world: T): any {
   const name = "Flow";
   return <NewComponent world={world} name={name} />;
 }
-function NewComponent<T>({world, name}: $ReadOnly<{ world: T, name: string }>) {
+function NewComponent<T>({world, name}: Readonly<{ world: T, name: string }>) {
   return <div>Hello {world}, I am {name}.</div>;
 }
             |}

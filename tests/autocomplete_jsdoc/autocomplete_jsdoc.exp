@@ -1913,12 +1913,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R",
+  "detail":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => R",
   "insertTextFormat":1,
   "kind":3,
   "label":"apply",
   "labelDetails":{
-    "detail":": <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R"
+    "detail":": <T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => ..."
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -1999,12 +1999,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R",
+  "detail":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) => R",
   "insertTextFormat":1,
   "kind":3,
   "label":"call",
   "labelDetails":{
-    "detail":": <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R"
+    "detail":": <T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) =..."
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -3962,35 +3962,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Actype",
-        "completion":"mixed",
-        "index":21,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"mixed",
-  "insertTextFormat":1,
-  "kind":6,
-  "label":"mixed",
-  "sortText":"00000000000000000200",
-  "textEdit":{
-    "newText":"mixed",
-    "range":{"end":{"character":5,"line":18},"start":{"character":5,"line":18}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Actype",
         "completion":"null",
-        "index":22,
+        "index":21,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4017,7 +3990,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"number",
-        "index":23,
+        "index":22,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4044,7 +4017,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"string",
-        "index":24,
+        "index":23,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4071,7 +4044,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"symbol",
-        "index":25,
+        "index":24,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4098,7 +4071,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"true",
-        "index":26,
+        "index":25,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4125,7 +4098,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"unknown",
-        "index":27,
+        "index":26,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4152,7 +4125,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"void",
-        "index":28,
+        "index":27,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4179,7 +4152,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"$Exact",
-        "index":29,
+        "index":28,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4206,7 +4179,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"$Exports",
-        "index":30,
+        "index":29,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4233,7 +4206,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"$KeyMirror",
-        "index":31,
+        "index":30,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4259,116 +4232,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Actype",
-        "completion":"$Keys",
-        "index":32,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Keys",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Keys",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Keys",
-    "range":{"end":{"character":5,"line":18},"start":{"character":5,"line":18}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Actype",
-        "completion":"$NonMaybeType",
-        "index":33,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$NonMaybeType",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$NonMaybeType",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$NonMaybeType",
-    "range":{"end":{"character":5,"line":18},"start":{"character":5,"line":18}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Actype",
-        "completion":"$ReadOnly",
-        "index":34,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$ReadOnly",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$ReadOnly",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$ReadOnly",
-    "range":{"end":{"character":5,"line":18},"start":{"character":5,"line":18}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Actype",
-        "completion":"$Values",
-        "index":35,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Values",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Values",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Values",
-    "range":{"end":{"character":5,"line":18},"start":{"character":5,"line":18}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Actype",
         "completion":"Capitalize",
-        "index":36,
+        "index":31,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4395,7 +4260,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Class",
-        "index":37,
+        "index":32,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4422,7 +4287,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"keyof",
-        "index":38,
+        "index":33,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4449,7 +4314,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Lowercase",
-        "index":39,
+        "index":34,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4476,7 +4341,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"NonNullable",
-        "index":40,
+        "index":35,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4503,7 +4368,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Partial",
-        "index":41,
+        "index":36,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4530,7 +4395,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Readonly",
-        "index":42,
+        "index":37,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4557,7 +4422,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Required",
-        "index":43,
+        "index":38,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4584,7 +4449,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"StringPrefix",
-        "index":44,
+        "index":39,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4611,7 +4476,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"StringSuffix",
-        "index":45,
+        "index":40,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4638,7 +4503,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Uncapitalize",
-        "index":46,
+        "index":41,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4665,7 +4530,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Uppercase",
-        "index":47,
+        "index":42,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -4692,7 +4557,7 @@ Flags: --lsp
       {
         "ac_type":"Actype",
         "completion":"Values",
-        "index":48,
+        "index":43,
         "session_requests":null,
         "token":null,
         "typed_length":null

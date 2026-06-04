@@ -1649,7 +1649,7 @@ let to_printable_error :
     match desc with
     | Ok ty ->
       let ty = Ty_utils.simplify_type ~merge_kinds:true ty in
-      let ty_str = Ty_printer.string_of_t_single_line ~ts_syntax:true ty in
+      let ty_str = Ty_printer.string_of_t_single_line ty in
       let ty_str =
         if Base.String.length ty_str > 100 then
           String.sub ty_str 0 100 ^ "..."

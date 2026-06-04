@@ -43,10 +43,10 @@ module.exports = suite(
               activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: mixed): void',
+                  label: '(x: unknown): void',
                   parameters: [
                     {
-                      label: 'x: mixed',
+                      label: 'x: unknown',
                     },
                   ],
                 },
@@ -72,10 +72,10 @@ module.exports = suite(
               activeSignature: 0,
               signatures: [
                 {
-                  label: '(x: mixed): void',
+                  label: '(x: unknown): void',
                   parameters: [
                     {
-                      label: 'x: mixed',
+                      label: 'x: unknown',
                     },
                   ],
                 },

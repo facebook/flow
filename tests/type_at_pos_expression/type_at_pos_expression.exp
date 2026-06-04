@@ -547,7 +547,7 @@ object-resolution.js:5:2 = {
   "path":"object-resolution.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"{+p: number}"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"{readonly p: number}"}}
 }
 object-resolution.js:10:2 = {
   "end":4,
@@ -922,12 +922,12 @@ object.js:35:1 = {
 }
 object.js:37:7
 Flags:
-{+A: "a", +B: "b"}
+{readonly A: "a", readonly B: "b"}
 object.js:37:7,37:19
 
 object.js:40:7
 Flags:
-{+A: "a", +B: {C: string}}
+{readonly A: "a", readonly B: {C: string}}
 object.js:40:7,40:19
 
 object.js:43:5

@@ -34,10 +34,15 @@ let builtin_from_string ?targs x =
   let x = id_from_string x in
   mk_generic_type x targs
 
-let variance_ = function
+let property_variance = function
   | Neutral -> None
-  | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Plus; comments = None })
-  | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Minus; comments = None })
+  | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Readonly; comments = None })
+  | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Writeonly; comments = None })
+
+let type_param_variance = function
+  | Neutral -> None
+  | Positive -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.Out; comments = None })
+  | Negative -> Some (Loc.none, { Ast.Variance.kind = Ast.Variance.In; comments = None })
 
 let qualified2 x1 x2 =
   let open T.Typeof.Target in
@@ -91,20 +96,20 @@ let type_ =
                       {
                         T.Tuple.LabeledElement.name = id_from_string name;
                         annot;
-                        variance = variance_ polarity;
+                        variance = property_variance polarity;
                         optional;
                       }
                   | (None, Neutral) ->
                     T.Tuple.UnlabeledElement { T.Tuple.UnlabeledElement.annot; optional }
                   | _ ->
-                    (* No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
+                    (* No label, but has polarity - e.g. `Readonly<[string, number]>`
                        We must make up a name. *)
                     let name = id_from_string (Printf.sprintf "element_%d" i) in
                     T.Tuple.LabeledElement
                       {
                         T.Tuple.LabeledElement.name;
                         annot;
-                        variance = variance_ polarity;
+                        variance = property_variance polarity;
                         optional;
                       }
                 in
@@ -119,6 +124,9 @@ let type_ =
       (Loc.none, T.Tuple { T.Tuple.elements = els; inexact; comments = None })
     | Union (from_bounds, t0, t1, ts) as t -> union t (from_bounds, t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
+    | Utility (Keys t) ->
+      let argument = type_ t in
+      just (T.Keyof { T.Keyof.argument; comments = None })
     | Utility s -> utility s
     | IndexedAccess { _object; index; optional } ->
       let _object = type_ _object in
@@ -388,7 +396,7 @@ let type_ =
           _method = false;
           abstract = false;
           override = false;
-          variance = variance_ polarity;
+          variance = property_variance polarity;
           ts_accessibility = None;
           init = None;
           comments = None;
@@ -450,7 +458,7 @@ let type_ =
       key;
       value;
       static = false;
-      variance = variance_ d.dict_polarity;
+      variance = property_variance d.dict_polarity;
       optional = false;
       comments = None;
     }
@@ -482,8 +490,8 @@ let type_ =
     in
     let (variance, variance_op) =
       match mapped_variance with
-      | Ty.OverrideVariance pol -> (variance_ pol, None)
-      | Ty.RemoveVariance pol -> (variance_ pol, Some Flow_ast.Type.Object.MappedType.Remove)
+      | Ty.OverrideVariance pol -> (property_variance pol, None)
+      | Ty.RemoveVariance pol -> (property_variance pol, Some Flow_ast.Type.Object.MappedType.Remove)
       | Ty.KeepVariance -> (None, None)
     in
     ( Loc.none,
@@ -517,8 +525,8 @@ let type_ =
           (match bound with
           | Some t -> T.Available t
           | None -> T.Missing Loc.none);
-        bound_kind = T.TypeParam.Colon;
-        variance = variance_ tp.tp_polarity;
+        bound_kind = T.TypeParam.Extends;
+        variance = type_param_variance tp.tp_polarity;
         default;
         const = None;
       }

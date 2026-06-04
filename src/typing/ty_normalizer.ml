@@ -1124,7 +1124,7 @@ module Make (I : INPUT) : S = struct
           RRestArrayLit _
         )
       | (T.TupleAT { elements = elements'; inexact; _ }, _) ->
-        (* Heuristic to use $ReadOnly<> instead of repeating the polarity symbol
+        (* Heuristic to use Readonly<> instead of repeating the polarity keyword
          * and a made up label in each element. *)
         let readonly =
           Base.List.for_all

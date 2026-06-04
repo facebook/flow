@@ -1,7 +1,9 @@
 dro.js:2:9 = (compareFn?: (a: number, b: number) => number) => Array<number>
 dro.js:2:9,2:12
 lazy_ref.js:14:9 = {
-  default: component(...{...empty, +ref?: RefSetter<{moo(x: string): void}>}) renders null
+  default: component(
+    ...{...empty, readonly ref?: RefSetter<{moo(x: string): void}>}
+  ) renders null
 }
 = {default: component(...empty) renders null}
 
@@ -9,7 +11,11 @@ lazy_ref.js:14:9 = {
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
-  {+default: (x: Props) => ExactReactElement_DEPRECATED<(x: Props) => Node>},
+  {
+    readonly default: (x: Props) => ExactReactElement_DEPRECATED<
+      (x: Props) => Node,
+    >
+  },
 >
 
 'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
@@ -90,7 +96,7 @@ react_component.js:31:7 = {
           }
         ]
       },
-      "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
+      "type":"component Fragment<Renders extends React$Node = void>(children?: Renders) renders Renders"
     },
     "unevaluated":{
       "expanded":{
@@ -127,7 +133,7 @@ react_component.js:31:7 = {
           }
         ]
       },
-      "type":"component Fragment<Renders: React$Node = void>(children?: Renders) renders Renders"
+      "type":"component Fragment<Renders extends React$Node = void>(children?: Renders) renders Renders"
     }
   }
 }

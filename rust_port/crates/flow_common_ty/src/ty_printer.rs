@@ -135,10 +135,28 @@ fn identifier(name: &Name) -> LayoutNode {
     LayoutNode::atom(name.to_string())
 }
 
-fn variance(p: Polarity) -> LayoutNode {
+fn property_variance(p: Polarity) -> LayoutNode {
     match p {
-        Polarity::Positive => LayoutNode::atom("+".to_string()),
-        Polarity::Negative => LayoutNode::atom("-".to_string()),
+        Polarity::Positive => layout::fuse(vec![
+            LayoutNode::atom("readonly".to_string()),
+            layout::space(),
+        ]),
+        Polarity::Negative => layout::fuse(vec![
+            LayoutNode::atom("writeonly".to_string()),
+            layout::space(),
+        ]),
+        Polarity::Neutral => LayoutNode::empty(),
+    }
+}
+
+fn type_param_variance(p: Polarity) -> LayoutNode {
+    match p {
+        Polarity::Positive => {
+            layout::fuse(vec![LayoutNode::atom("out".to_string()), layout::space()])
+        }
+        Polarity::Negative => {
+            layout::fuse(vec![LayoutNode::atom("in".to_string()), layout::space()])
+        }
         Polarity::Neutral => LayoutNode::empty(),
     }
 }
@@ -221,7 +239,7 @@ fn type_impl<L: Dupe>(
             LayoutNode::atom(name.to_string())
         }
         Ty::Any(kind) => any(opts, depth, kind),
-        Ty::Top => LayoutNode::atom("mixed".to_string()),
+        Ty::Top => LayoutNode::atom("unknown".to_string()),
         Ty::Bot(_) => LayoutNode::atom("empty".to_string()),
         Ty::Void => LayoutNode::atom("void".to_string()),
         Ty::Null => LayoutNode::atom("null".to_string()),
@@ -608,7 +626,7 @@ fn type_param<L: Dupe>(
     };
 
     let bound = match &param.tp_bound {
-        Some(t) => type_annotation(opts, depth, t.as_ref(), size),
+        Some(t) => type_param_bound(opts, depth, t.as_ref(), size),
         _ => LayoutNode::empty(),
     };
 
@@ -624,21 +642,22 @@ fn type_param<L: Dupe>(
 
     layout::fuse(vec![
         const_prefix,
-        variance(param.tp_polarity),
+        type_param_variance(param.tp_polarity),
         LayoutNode::atom(param.tp_name.to_string()),
         bound,
         default,
     ])
 }
 
-fn type_annotation<L: Dupe>(
+fn type_param_bound<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
     size: &mut usize,
 ) -> LayoutNode {
     layout::fuse(vec![
-        LayoutNode::atom(":".to_string()),
+        layout::pretty_space(),
+        LayoutNode::atom("extends".to_string()),
         layout::pretty_space(),
         type_(opts, depth, t, size),
     ])
@@ -714,7 +733,7 @@ fn type_object_property<L: Dupe>(
                 polarity,
                 optional,
             } => layout::fuse(vec![
-                variance(*polarity),
+                property_variance(*polarity),
                 to_key(name),
                 if *optional {
                     LayoutNode::atom("?".to_string())
@@ -778,7 +797,7 @@ fn type_object_property<L: Dupe>(
                 MappedTypeOptionalFlag::KeepOptionality => LayoutNode::empty(),
             };
             let variance_token = match flags.variance {
-                MappedTypeVariance::OverrideVariance(pol) => variance(pol),
+                MappedTypeVariance::OverrideVariance(pol) => property_variance(pol),
                 MappedTypeVariance::RemoveVariance(Polarity::Positive) => layout::fuse(vec![
                     LayoutNode::atom("-".to_string()),
                     LayoutNode::atom("readonly ".to_string()),
@@ -835,7 +854,7 @@ fn type_dict<L: Dupe>(
     };
 
     layout::fuse(vec![
-        variance(dict.dict_polarity),
+        property_variance(dict.dict_polarity),
         LayoutNode::atom("[".to_string()),
         name_part,
         type_(opts, depth, dict.dict_key.as_ref(), size),
@@ -1038,7 +1057,7 @@ fn tuple_element<L: Dupe>(
                 (None, _, _) => id_nodes(&format!("_{}", idx)),
             };
 
-            let mut nodes = vec![variance(*polarity)];
+            let mut nodes = vec![property_variance(*polarity)];
             nodes.extend(name_nodes);
             nodes.push(type_(opts, depth, t.as_ref(), size));
             layout::fuse(nodes)
@@ -1071,25 +1090,6 @@ fn utility<L: Dupe>(
     use crate::ty::types_of_utility;
 
     match u {
-        Utility::ReadOnly(t) if opts.ts_syntax => {
-            if matches!(t.as_ref(), Ty::Tup { .. }) {
-                layout::fuse(vec![
-                    LayoutNode::atom("readonly".to_string()),
-                    layout::space(),
-                    type_(opts, depth, t.as_ref(), size),
-                ])
-            } else {
-                let ctor = string_of_utility_ctor(u);
-                let ts = types_of_utility(u);
-                type_reference(
-                    opts,
-                    depth,
-                    identifier(&Name::new(ctor)),
-                    ts.as_deref(),
-                    size,
-                )
-            }
-        }
         Utility::Keys(t) => layout::fuse(vec![
             LayoutNode::atom("keyof".to_string()),
             layout::space(),
@@ -1578,7 +1578,6 @@ pub struct PrinterOptions {
     pub prefer_single_quotes: bool,
     pub size: usize,
     pub with_comments: bool,
-    pub ts_syntax: bool,
 }
 
 impl Default for PrinterOptions {
@@ -1587,7 +1586,6 @@ impl Default for PrinterOptions {
             prefer_single_quotes: false,
             size: 5000,
             with_comments: true,
-            ts_syntax: false,
         }
     }
 }

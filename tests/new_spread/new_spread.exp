@@ -445,11 +445,11 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:1
 
-Cannot cast `o1` to object type because in property `p`: `mixed` [1] is not exactly the same as `void | T` [2].
+Cannot cast `o1` to object type because in property `p`: `unknown` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: mixed, ...}` [3] and `{p?: T, ...}` [4] exactly the same
+- Either make `{p: unknown, ...}` [3] and `{p?: T, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -491,11 +491,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:12:1
 
-Cannot cast `o2` to object type because in the indexer property: `mixed` [1] is not exactly the same as `T` [2].
+Cannot cast `o2` to object type because in the indexer property: `unknown` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either make `{[string]: mixed}` [3] and `{[string]: T}` [4] exactly the same
+- Either make `{[string]: unknown}` [3] and `{[string]: T}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -538,11 +538,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:18:1
 
-Cannot cast `o3` to object type because in property `p`: `mixed` [1] is not exactly the same as `T` [2].
+Cannot cast `o3` to object type because in property `p`: `unknown` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
-- Either make `{p: mixed, ...}` [1] and `{p: T, ...}` [3] exactly the same
+- Either make `{p: unknown, ...}` [1] and `{p: T, ...}` [3] exactly the same
 - Or make property `p` in object type [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 

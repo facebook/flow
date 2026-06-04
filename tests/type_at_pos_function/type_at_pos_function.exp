@@ -421,7 +421,7 @@ function-poly-5.js:3:10 = {
   "start":10,
   "types":{
     "evaluated":null,
-    "unevaluated":{"type":"<T: number | string>(x: T) => number"}
+    "unevaluated":{"type":"<T extends number | string>(x: T) => number"}
   }
 }
 function-poly-6.js:7:6 = {

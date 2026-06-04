@@ -1567,7 +1567,6 @@ fn get_def_of_check_result(
 fn infer_type_to_response(
     json: bool,
     expanded: bool,
-    ts_syntax: bool,
     strip_root: Option<&std::path::Path>,
     loc: flow_parser::loc::Loc,
     refining_locs: Vec<flow_parser::loc::Loc>,
@@ -1580,11 +1579,8 @@ fn infer_type_to_response(
     loc_of_aloc: &dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc,
 ) -> server_prot::response::infer_type::T {
     let converter = flow_common_ty::ty_debug::AlocToLocFn::new(loc_of_aloc);
+    let printer_opts = flow_common_ty::ty_printer::PrinterOptions::default();
     let tys = if json {
-        let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
-            ts_syntax,
-            ..Default::default()
-        };
         // The "expanded" field carries `Hh_json` output that may contain duplicate
         // keys (`json_of_utility` adds a second `"kind"` to the outer wrapper).
         // `serde_json::Map` deduplicates, so we use `Box<RawValue>` for that field
@@ -1630,10 +1626,6 @@ fn infer_type_to_response(
         };
         server_prot::response::infer_type::Payload::Json(json_string)
     } else {
-        let printer_opts = flow_common_ty::ty_printer::PrinterOptions {
-            ts_syntax,
-            ..Default::default()
-        };
         server_prot::response::infer_type::Payload::Friendly(tys.map(|r| {
             let (type_str, refs) = flow_common_ty::ty_printer::string_of_type_at_pos_result(
                 &r.unevaluated,
@@ -1831,7 +1823,6 @@ fn infer_type(
                     let response = infer_type_to_response(
                         json,
                         expanded,
-                        options.ts_syntax,
                         strip_root.as_deref(),
                         loc,
                         refining_locs,
@@ -2033,10 +2024,7 @@ fn inlay_hint(
                                     &r.unevaluated,
                                     &r.evaluated,
                                     &r.refs,
-                                    &flow_common_ty::ty_printer::PrinterOptions {
-                                        ts_syntax: options.ts_syntax,
-                                        ..Default::default()
-                                    },
+                                    &flow_common_ty::ty_printer::PrinterOptions::default(),
                                 );
                             server_prot::response::infer_type::FriendlyResponse { type_str, refs }
                         });

@@ -66,13 +66,13 @@ Flags: --pretty
     {"name":"bar","type":"string"},
     {
       "name":"apply",
-      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R"
+      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
     {
       "name":"call",
-      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R"
+      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) => R"
     },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
@@ -332,7 +332,7 @@ Flags: --pretty
     {"name":"atob","type":"(encodedString: string) => string"},
     {
       "name":"Atomics",
-      "type":"{+[key: $SymbolToStringTag]: \"Atomics\", add(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, and(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, compareExchange(typedArray: $SharedIntegerTypedArray, index: number, expectedValue: number, replacementValue: number): number, exchange(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, isLockFree(size: number): boolean, load(typedArray: $SharedIntegerTypedArray, index: number): number, notify(typedArray: Int32Array, index: number, count: number): number, or(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, store(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, sub(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, wait(typedArray: Int32Array, index: number, value: number, timeout?: number): \"ok\" | \"not-equal\" | \"timed-out\", xor(typedArray: $SharedIntegerTypedArray, index: number, value: number): number}"
+      "type":"{readonly [key: $SymbolToStringTag]: \"Atomics\", add(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, and(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, compareExchange(typedArray: $SharedIntegerTypedArray, index: number, expectedValue: number, replacementValue: number): number, exchange(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, isLockFree(size: number): boolean, load(typedArray: $SharedIntegerTypedArray, index: number): number, notify(typedArray: Int32Array, index: number, count: number): number, or(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, store(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, sub(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, wait(typedArray: Int32Array, index: number, value: number, timeout?: number): \"ok\" | \"not-equal\" | \"timed-out\", xor(typedArray: $SharedIntegerTypedArray, index: number, value: number): number}"
     },
     {"name":"BigInt","type":"typeof BigInt"},
     {"name":"BigInt64Array","type":"typeof BigInt64Array"},
@@ -344,7 +344,7 @@ Flags: --pretty
     {"name":"clearTimeout","type":"(timeoutId: ?TimeoutID) => void"},
     {
       "name":"console",
-      "type":"{_exception(...data: Array<any>): void, assert(condition: mixed, ...data: Array<any>): void, clear(): void, count(label?: string): void, countReset(label?: string): void, debug(...data: Array<any>): void, dir(...data: Array<any>): void, dirxml(...data: Array<any>): void, error(...data: Array<any>): void, group(...data: Array<any>): void, groupCollapsed(...data: Array<any>): void, groupEnd(): void, info(...data: Array<any>): void, log(...data: Array<any>): void, profile(name?: string): void, profileEnd(name?: string): void, table(tabularData: {[key: string]: any} | Array<{[key: string]: any}> | Array<Array<any>>): void, time(label?: string): void, timeEnd(label: string): void, timeLog(label?: string, ...data: Array<any>): void, timeStamp(label?: string): void, trace(...data: Array<any>): void, warn(...data: Array<any>): void, ...}"
+      "type":"{_exception(...data: Array<any>): void, assert(condition: unknown, ...data: Array<any>): void, clear(): void, count(label?: string): void, countReset(label?: string): void, debug(...data: Array<any>): void, dir(...data: Array<any>): void, dirxml(...data: Array<any>): void, error(...data: Array<any>): void, group(...data: Array<any>): void, groupCollapsed(...data: Array<any>): void, groupEnd(): void, info(...data: Array<any>): void, log(...data: Array<any>): void, profile(name?: string): void, profileEnd(name?: string): void, table(tabularData: {[key: string]: any} | Array<{[key: string]: any}> | Array<Array<any>>): void, time(label?: string): void, timeEnd(label: string): void, timeLog(label?: string, ...data: Array<any>): void, timeStamp(label?: string): void, trace(...data: Array<any>): void, warn(...data: Array<any>): void, ...}"
     },
     {"name":"DataView","type":"typeof DataView"},
     {"name":"Date","type":"typeof Date"},
@@ -355,7 +355,7 @@ Flags: --pretty
     {"name":"Error","type":"typeof Error"},
     {"name":"escape","type":"(str: string) => string"},
     {"name":"EvalError","type":"typeof EvalError"},
-    {"name":"exports","type":"{-[key: string]: mixed}"},
+    {"name":"exports","type":"{writeonly [key: string]: unknown}"},
     {"name":"FinalizationRegistry","type":"typeof FinalizationRegistry"},
     {"name":"Float16Array","type":"typeof Float16Array"},
     {"name":"Float32Array","type":"typeof Float32Array"},
@@ -367,12 +367,12 @@ Flags: --pretty
     {"name":"Int16Array","type":"typeof Int16Array"},
     {"name":"Int32Array","type":"typeof Int32Array"},
     {"name":"Int8Array","type":"typeof Int8Array"},
-    {"name":"isFinite","type":"(number: mixed) => boolean"},
-    {"name":"isNaN","type":"(number: mixed) => boolean"},
+    {"name":"isFinite","type":"(number: unknown) => boolean"},
+    {"name":"isNaN","type":"(number: unknown) => boolean"},
     {"name":"Iterator","type":"typeof Iterator"},
     {
       "name":"JSON",
-      "type":"{+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)}"
+      "type":"{readonly parse: (text: string, reviver?: (key: any, value: any) => any) => any, readonly stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<unknown>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: unknown, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)}"
     },
     {"name":"Map","type":"typeof Map"},
     {
@@ -386,13 +386,13 @@ Flags: --pretty
     {"name":"NaN","type":"number"},
     {"name":"Number","type":"typeof Number"},
     {"name":"Object","type":"typeof Object"},
-    {"name":"parseFloat","type":"(string: mixed) => number"},
-    {"name":"parseInt","type":"(string: mixed, radix?: number) => number"},
+    {"name":"parseFloat","type":"(string: unknown) => number"},
+    {"name":"parseInt","type":"(string: unknown, radix?: number) => number"},
     {"name":"Promise","type":"typeof Promise"},
     {"name":"Proxy","type":"typeof Proxy"},
     {
       "name":"queueMicrotask",
-      "type":"<TArguments: ReadonlyArray<mixed>>(callback: (...args: TArguments) => mixed) => void"
+      "type":"<TArguments extends ReadonlyArray<unknown>>(callback: (...args: TArguments) => unknown) => void"
     },
     {"name":"RangeError","type":"typeof RangeError"},
     {"name":"ReferenceError","type":"typeof ReferenceError"},
@@ -408,11 +408,11 @@ Flags: --pretty
     {"name":"Set","type":"typeof Set"},
     {
       "name":"setInterval",
-      "type":"<TArguments: Array<mixed>>(callback: (...args: TArguments) => mixed, ms?: number, ...args: TArguments) => IntervalID"
+      "type":"<TArguments extends Array<unknown>>(callback: (...args: TArguments) => unknown, ms?: number, ...args: TArguments) => IntervalID"
     },
     {
       "name":"setTimeout",
-      "type":"<TArguments: Array<mixed>>(callback: (...args: TArguments) => mixed, ms?: number, ...args: TArguments) => TimeoutID"
+      "type":"<TArguments extends Array<unknown>>(callback: (...args: TArguments) => unknown, ms?: number, ...args: TArguments) => TimeoutID"
     },
     {"name":"SharedArrayBuffer","type":"typeof SharedArrayBuffer"},
     {"name":"String","type":"typeof String"},

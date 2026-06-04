@@ -656,7 +656,7 @@ fn convert_type_to_readonly_form_code_actions(
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if include_rewrite_refactors(only) {
-        match convert_type_to_readonly_form::convert(options.ts_utility_syntax, ast, loc) {
+        match convert_type_to_readonly_form::convert(true, ast, loc) {
             None => vec![],
             Some((ast_prime, conversion_kind)) => {
                 let diff = flow_ast_differ::program(ast, &ast_prime);
@@ -1148,10 +1148,7 @@ pub fn ast_transforms_of_error(
                             .map(|(ast, _kind)| ast)
                     },
                 );
-                let opts = PrinterOptions {
-                    ts_syntax: true,
-                    ..PrinterOptions::default()
-                };
+                let opts = PrinterOptions::default();
                 vec![AstTransformOfError {
                     title: format!(
                         "Make `{}` readonly",

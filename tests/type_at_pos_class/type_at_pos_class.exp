@@ -11,7 +11,7 @@ annot_t.js:9:23 = {
   "path":"annot_t.js",
   "reasons":[],
   "start":22,
-  "types":{"evaluated":null,"unevaluated":{"type":"class KeyedSeq<K, +V>"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"class KeyedSeq<K, out V>"}}
 }
 class-0.js:3:7 = {
   "end":7,
@@ -71,7 +71,7 @@ class-0.js:12:5 = {
   "path":"class-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<mixed>"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"Class<unknown>"}}
 }
 class-0.js:21:5 = {
   "end":5,
@@ -281,7 +281,7 @@ class-bound.js:4:6 = {
   "path":"class-bound.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type C<T: R<any>> = Class<T>"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"type C<T extends R<any>> = Class<T>"}}
 }
 class-getters-setters.js:6:7 = {
   "end":7,
@@ -326,7 +326,7 @@ class-poly-0.js:5:7 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"class A<X: Base>"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"class A<X extends Base>"}}
 }
 class-poly-0.js:5:9 = {
   "end":9,
@@ -356,7 +356,7 @@ class-poly-0.js:10:33 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":33,
-  "types":{"evaluated":null,"unevaluated":{"type":"class A<X: Base>"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"class A<X extends Base>"}}
 }
 class-poly-0.js:12:7 = {
   "end":9,

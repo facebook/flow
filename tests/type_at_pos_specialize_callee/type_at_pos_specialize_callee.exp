@@ -276,15 +276,15 @@ At file.js:195:21
 file.js:195:21,195:28
 
 At file.js:201:5
-() => mixed
+() => unknown
 file.js:201:5,201:7
 
 At file.js:207:4
-mixed
+unknown
 file.js:207:3,207:7
 
 At file.js:218:5
-(x: string, y: mixed) => void
+(x: string, y: unknown) => void
 file.js:218:3,218:5
 
 At file.js:227:14
@@ -318,6 +318,6 @@ any (explicit)
 file.js:256:18,256:19
 
 At file.js:259:14
-mixed
+unknown
 file.js:259:18,259:19
 

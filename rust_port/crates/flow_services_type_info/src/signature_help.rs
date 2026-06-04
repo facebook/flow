@@ -63,20 +63,18 @@ fn parameter_name(is_opt: bool, name: &Option<FlowSmolStr>) -> String {
     format!("{}{}", name_str, opt)
 }
 
-fn string_of_ty<L: Dupe>(ts_syntax: bool, t: &Ty<L>) -> String {
+fn string_of_ty<L: Dupe>(t: &Ty<L>) -> String {
     let opts = PrinterOptions {
-        ts_syntax,
         with_comments: false,
         ..Default::default()
     };
     ty_printer::string_of_t_single_line(t, &opts)
 }
 
-fn string_of_return_t<L: Dupe>(ts_syntax: bool, return_t: &ReturnT<L>) -> String {
+fn string_of_return_t<L: Dupe>(return_t: &ReturnT<L>) -> String {
     match return_t {
         ReturnT::ReturnType(t) => {
             let opts = PrinterOptions {
-                ts_syntax,
                 with_comments: false,
                 ..Default::default()
             };
@@ -85,7 +83,6 @@ fn string_of_return_t<L: Dupe>(ts_syntax: bool, return_t: &ReturnT<L>) -> String
         ReturnT::TypeGuard(implies, x, t) => {
             let impl_str = if *implies { "implies " } else { "" };
             let opts = PrinterOptions {
-                ts_syntax,
                 with_comments: false,
                 ..Default::default()
             };
@@ -135,7 +132,6 @@ fn documentation_of_param_infos(name: &str, param_infos: &param::T) -> String {
 
 pub fn func_details<L: Dupe>(
     jsdoc: &Option<Jsdoc>,
-    ts_syntax: bool,
     params: &[(Option<FlowSmolStr>, Arc<Ty<L>>, FunParam)],
     rest_param: &Option<(Option<FlowSmolStr>, Arc<Ty<L>>)>,
     return_t: &ReturnT<L>,
@@ -155,7 +151,7 @@ pub fn func_details<L: Dupe>(
         .iter()
         .map(|(n, t, fp)| {
             let param_name = parameter_name(fp.prm_optional, n);
-            let param_ty = string_of_ty(ts_syntax, t);
+            let param_ty = string_of_ty(t);
             let param_documentation = documentation_of_param(n);
             FuncParamResult {
                 param_name,
@@ -202,13 +198,13 @@ pub fn func_details<L: Dupe>(
                     .into_iter()
                     .map(|(param_name, t)| FuncParamResult {
                         param_name,
-                        param_ty: string_of_ty(ts_syntax, t),
+                        param_ty: string_of_ty(t),
                         param_documentation: param_documentation.clone(),
                     })
                     .collect::<Vec<_>>(),
                 None => {
                     let param_name = format!("...{}", parameter_name(false, rest_param_name));
-                    let param_ty = string_of_ty(ts_syntax, t);
+                    let param_ty = string_of_ty(t);
                     vec![FuncParamResult {
                         param_name,
                         param_ty,
@@ -219,7 +215,7 @@ pub fn func_details<L: Dupe>(
             param_tys.extend(rest);
         }
     }
-    let return_ty = string_of_return_t(ts_syntax, return_t);
+    let return_ty = string_of_return_t(return_t);
     let func_documentation = jsdoc
         .as_ref()
         .and_then(find_documentation::documentation_of_jsdoc);
@@ -807,7 +803,6 @@ pub fn find_signatures<'a>(
                         Ok(flow_common_ty::ty::Elt::Type(ty)) => match ty.as_ref() {
                             Ty::Fun(fun) => Some(func_details(
                                 jsdoc,
-                                cx.ts_syntax(),
                                 &fun.fun_params,
                                 &fun.fun_rest_param,
                                 &fun.fun_return,
@@ -893,7 +888,7 @@ pub fn find_signatures<'a>(
                 .filter_map(|(t, optional)| {
                     match flow_typing::ty_normalizer_flow::from_type(&genv, t) {
                         Ok(flow_common_ty::ty::Elt::Type(ty)) => {
-                            let ty_str = string_of_ty(cx.ts_syntax(), ty.as_ref());
+                            let ty_str = string_of_ty(ty.as_ref());
                             let loc = loc_of_aloc(type_util::loc_of_t(t));
                             let jsdoc = find_documentation::jsdoc_of_getdef_loc(
                                 ast,

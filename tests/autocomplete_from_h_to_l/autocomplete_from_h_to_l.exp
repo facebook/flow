@@ -595,35 +595,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"mixed",
-        "index":15,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"mixed",
-  "insertTextFormat":1,
-  "kind":6,
-  "label":"mixed",
-  "sortText":"00000000000000000200",
-  "textEdit":{
-    "newText":"mixed",
-    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
         "completion":"null",
-        "index":16,
+        "index":15,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -650,7 +623,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"number",
-        "index":17,
+        "index":16,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -677,7 +650,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"string",
-        "index":18,
+        "index":17,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -704,7 +677,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"symbol",
-        "index":19,
+        "index":18,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -731,7 +704,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"true",
-        "index":20,
+        "index":19,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -758,7 +731,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"unknown",
-        "index":21,
+        "index":20,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -785,7 +758,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"void",
-        "index":22,
+        "index":21,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -812,7 +785,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$Exact",
-        "index":23,
+        "index":22,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -839,7 +812,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$Exports",
-        "index":24,
+        "index":23,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -866,7 +839,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$KeyMirror",
-        "index":25,
+        "index":24,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -892,116 +865,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"$Keys",
-        "index":26,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Keys",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Keys",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Keys",
-    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$NonMaybeType",
-        "index":27,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$NonMaybeType",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$NonMaybeType",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$NonMaybeType",
-    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$ReadOnly",
-        "index":28,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$ReadOnly",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$ReadOnly",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$ReadOnly",
-    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$Values",
-        "index":29,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Values",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Values",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Values",
-    "range":{"end":{"character":11,"line":7},"start":{"character":11,"line":7}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
         "completion":"Capitalize",
-        "index":30,
+        "index":25,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1028,7 +893,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Class",
-        "index":31,
+        "index":26,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1055,7 +920,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"keyof",
-        "index":32,
+        "index":27,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1082,7 +947,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Lowercase",
-        "index":33,
+        "index":28,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1109,7 +974,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"NonNullable",
-        "index":34,
+        "index":29,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1136,7 +1001,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Partial",
-        "index":35,
+        "index":30,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1163,7 +1028,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Readonly",
-        "index":36,
+        "index":31,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1190,7 +1055,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Required",
-        "index":37,
+        "index":32,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1217,7 +1082,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringPrefix",
-        "index":38,
+        "index":33,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1244,7 +1109,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringSuffix",
-        "index":39,
+        "index":34,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1271,7 +1136,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Uncapitalize",
-        "index":40,
+        "index":35,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1298,7 +1163,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Uppercase",
-        "index":41,
+        "index":36,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1325,7 +1190,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Values",
-        "index":42,
+        "index":37,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1902,35 +1767,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"mixed",
-        "index":15,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"mixed",
-  "insertTextFormat":1,
-  "kind":6,
-  "label":"mixed",
-  "sortText":"00000000000000000200",
-  "textEdit":{
-    "newText":"mixed",
-    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
         "completion":"null",
-        "index":16,
+        "index":15,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1957,7 +1795,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"number",
-        "index":17,
+        "index":16,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -1984,7 +1822,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"string",
-        "index":18,
+        "index":17,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2011,7 +1849,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"symbol",
-        "index":19,
+        "index":18,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2038,7 +1876,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"true",
-        "index":20,
+        "index":19,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2065,7 +1903,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"unknown",
-        "index":21,
+        "index":20,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2092,7 +1930,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"void",
-        "index":22,
+        "index":21,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2119,7 +1957,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$Exact",
-        "index":23,
+        "index":22,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2146,7 +1984,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$Exports",
-        "index":24,
+        "index":23,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2173,7 +2011,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"$KeyMirror",
-        "index":25,
+        "index":24,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2199,116 +2037,8 @@ Flags: --lsp
       "builtin type",
       {
         "ac_type":"Acmem",
-        "completion":"$Keys",
-        "index":26,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Keys",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Keys",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Keys",
-    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$NonMaybeType",
-        "index":27,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$NonMaybeType",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$NonMaybeType",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$NonMaybeType",
-    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$ReadOnly",
-        "index":28,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$ReadOnly",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$ReadOnly",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$ReadOnly",
-    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
-        "completion":"$Values",
-        "index":29,
-        "session_requests":null,
-        "token":null,
-        "typed_length":null
-      }
-    ],
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "title":""
-  },
-  "detail":"$Values",
-  "insertTextFormat":1,
-  "kind":3,
-  "label":"$Values",
-  "sortText":"00000000000000000300",
-  "textEdit":{
-    "newText":"$Values",
-    "range":{"end":{"character":13,"line":6},"start":{"character":13,"line":6}}
-  }
-}
-{
-  "command":{
-    "arguments":[
-      "textDocument/completion",
-      "builtin type",
-      {
-        "ac_type":"Acmem",
         "completion":"Capitalize",
-        "index":30,
+        "index":25,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2335,7 +2065,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Class",
-        "index":31,
+        "index":26,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2362,7 +2092,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"keyof",
-        "index":32,
+        "index":27,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2389,7 +2119,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Lowercase",
-        "index":33,
+        "index":28,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2416,7 +2146,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"NonNullable",
-        "index":34,
+        "index":29,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2443,7 +2173,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Partial",
-        "index":35,
+        "index":30,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2470,7 +2200,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Readonly",
-        "index":36,
+        "index":31,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2497,7 +2227,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Required",
-        "index":37,
+        "index":32,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2524,7 +2254,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringPrefix",
-        "index":38,
+        "index":33,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2551,7 +2281,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"StringSuffix",
-        "index":39,
+        "index":34,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2578,7 +2308,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Uncapitalize",
-        "index":40,
+        "index":35,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2605,7 +2335,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Uppercase",
-        "index":41,
+        "index":36,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2632,7 +2362,7 @@ Flags: --lsp
       {
         "ac_type":"Acmem",
         "completion":"Values",
-        "index":42,
+        "index":37,
         "session_requests":null,
         "token":null,
         "typed_length":null
@@ -2728,7 +2458,7 @@ Flags: --pretty
     {"name":"?.entries","type":"void | (() => Iterator<[number, T]>)"},
     {
       "name":"?.every",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.fill",
@@ -2736,32 +2466,32 @@ Flags: --pretty
     },
     {
       "name":"?.filter",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => Array<T>)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>)"
     },
     {
       "name":"?.find",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => T | void)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findIndex",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number)"
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => T | void)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findLastIndex",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => number)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
     },
-    {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
+    {"name":"?.flat","type":"void | ((depth: number) => Array<unknown>)"},
     {
       "name":"?.flatMap",
       "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => void)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void)"
     },
     {
       "name":"?.includes",
@@ -2797,7 +2527,7 @@ Flags: --pretty
     {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
     {
       "name":"?.some",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.sort",
@@ -2840,37 +2570,37 @@ Flags: --pretty
     {"name":"entries","type":"() => Iterator<[number, T]>"},
     {
       "name":"every",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
     {"name":"fill","type":"(value: T, begin?: number, end?: number) => Array<T>"},
     {
       "name":"filter",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => Array<T>"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>"
     },
     {
       "name":"find",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => T | void"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findIndex",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number"
     },
     {
       "name":"findLast",
-      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => T | void"
+      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findLastIndex",
-      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => number"
+      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
     },
-    {"name":"flat","type":"(depth: number) => Array<mixed>"},
+    {"name":"flat","type":"(depth: number) => Array<unknown>"},
     {
       "name":"flatMap",
       "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => void"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void"
     },
     {
       "name":"includes",
@@ -2903,7 +2633,7 @@ Flags: --pretty
     {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
     {
       "name":"some",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
     {"name":"sort","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {

@@ -7,7 +7,6 @@
 
 val func_details :
   jsdoc:Jsdoc.t option ->
-  ts_syntax:bool ->
   (string option * Ty.t * Ty.fun_param) Base.List.t ->
   (string option * Ty.t) option ->
   Ty.return_t ->

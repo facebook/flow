@@ -727,7 +727,7 @@ let declaration_infos
       match elt_result with
       | Error _ -> (var_infos, member_infos, type_infos)
       | Ok elt ->
-        let type_ = Ty_printer.string_of_elt ~ts_syntax:(Context.ts_syntax cx) elt in
+        let type_ = Ty_printer.string_of_elt elt in
         (match kind with
         | `Declaration ->
           let declaration = Declaration.{ name; loc } in

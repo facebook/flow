@@ -880,11 +880,11 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:3
 
 Cannot cast `mapped` to object type because properties `bar` and `foo` of object type [1] are not exactly the same as
-those of `{bar: empty, +baz: empty, foo: empty}` [2]. [incompatible-type]
+those of `{bar: empty, readonly baz: empty, foo: empty}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
+- Either make object type [3] and `{bar: empty, readonly baz: empty, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -962,11 +962,11 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
 Error --------------------------------------------------------------------------------------------------- import.js:47:3
 
 Cannot cast `mapped` to object type because properties `bar` and `foo` of object type [1] are not exactly the same as
-those of `{bar: empty, +baz: empty, foo: empty}` [2]. [incompatible-type]
+those of `{bar: empty, readonly baz: empty, foo: empty}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
-- Either make object type [3] and `{bar: empty, +baz: empty, foo: empty}` [2] exactly the same
+- Either make object type [3] and `{bar: empty, readonly baz: empty, foo: empty}` [2] exactly the same
 - Or make properties `bar` and `foo` in object type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 

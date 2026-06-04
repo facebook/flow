@@ -568,9 +568,7 @@ let infer_type filename content line col js_config_object :
         | FailureUnparseable (loc, _, _) ->
           (loc, Error "Unparseable", refining_locs, refinement_invalidated)
         | Success (loc, result) ->
-          let (result, _) =
-            Ty_printer.string_of_type_at_pos_result ~ts_syntax:(Context.ts_syntax cx) result
-          in
+          let (result, _) = Ty_printer.string_of_type_at_pos_result result in
           (loc, Ok result, refining_locs, refinement_invalidated)
       end
 
@@ -662,7 +660,7 @@ let dump_types js_file js_content js_config_object =
       )
     in
     let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
-    let printer = Ty_printer.string_of_elt_single_line ~ts_syntax:(Context.ts_syntax cx) in
+    let printer = Ty_printer.string_of_elt_single_line in
     let types =
       Query_types.dump_types
         ~printer

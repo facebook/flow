@@ -1,31 +1,31 @@
 file.js:5:14
 Flags:
-{+f: 1, m(): void}
+{readonly f: 1, m(): void}
 file.js:5:14,5:17
 
 file.js:7:14
 Flags:
-{+f: 1, m(): void}
+{readonly f: 1, m(): void}
 file.js:7:14,7:17
 
 file.js:9:14
 Flags:
-{+f: {p: number}}
+{readonly f: {p: number}}
 file.js:9:14,9:17
 
 file.js:11:14
 Flags:
-{+f: {+g: 1}}
+{readonly f: {readonly g: 1}}
 file.js:11:14,11:17
 
 file.js:13:14
 Flags:
-{+p: number}
+{readonly p: number}
 file.js:13:14,13:17
 
 file.js:15:14
 Flags:
-{+[string]: string}
+{readonly [string]: string}
 file.js:15:14,15:17
 
 file.js:17:14
@@ -35,22 +35,22 @@ file.js:17:14,17:17
 
 file.js:24:14
 Flags:
-readonly [1, 2, 3]
+Readonly<[1, 2, 3]>
 file.js:24:14,24:17
 
 file.js:26:14
 Flags:
-readonly [number]
+Readonly<[number]>
 file.js:26:14,26:17
 
 file.js:28:7
 Flags:
-readonly [1, 2, 3]
+Readonly<[1, 2, 3]>
 file.js:28:7,28:10
 
 file.js:30:7
 Flags:
-readonly [1, 2, 3]
+Readonly<[1, 2, 3]>
 file.js:30:7,30:10
 
 file.js:32:7
@@ -60,47 +60,47 @@ file.js:32:7,32:10
 
 file.js:34:14
 Flags:
-readonly [{+f: 1}]
+Readonly<[{readonly f: 1}]>
 file.js:34:14,34:17
 
 file.js:36:7
 Flags:
-readonly [1, 2, 3]
+Readonly<[1, 2, 3]>
 file.js:36:7,36:10
 
 file.js:38:14
 Flags:
-readonly []
+Readonly<[]>
 file.js:38:14,38:17
 
 import.js:2:5
 Flags:
-{+f: 1, m(): void}
+{readonly f: 1, m(): void}
 import.js:2:5,2:8
 
 import.js:4:5
 Flags:
-{+f: 1, m(): void}
+{readonly f: 1, m(): void}
 import.js:4:5,4:8
 
 import.js:6:5
 Flags:
-{+f: {p: number}}
+{readonly f: {p: number}}
 import.js:6:5,6:8
 
 import.js:8:5
 Flags:
-{+f: {+g: 1}}
+{readonly f: {readonly g: 1}}
 import.js:8:5,8:8
 
 import.js:10:5
 Flags:
-{+p: number}
+{readonly p: number}
 import.js:10:5,10:8
 
 import.js:12:5
 Flags:
-{+[string]: string}
+{readonly [string]: string}
 import.js:12:5,12:8
 
 import.js:14:5
@@ -110,21 +110,21 @@ import.js:14:5,14:8
 
 import.js:16:5
 Flags:
-readonly [1, 2, 3]
+Readonly<[1, 2, 3]>
 import.js:16:5,16:8
 
 import.js:18:5
 Flags:
-readonly [number]
+Readonly<[number]>
 import.js:18:5,18:8
 
 import.js:20:5
 Flags:
-readonly [{+f: 1}]
+Readonly<[{readonly f: 1}]>
 import.js:20:5,20:8
 
 import.js:22:5
 Flags:
-readonly []
+Readonly<[]>
 import.js:22:5,22:8
 

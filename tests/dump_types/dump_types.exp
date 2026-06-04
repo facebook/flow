@@ -57,7 +57,7 @@
     "path":"test.js",
     "reasons":[],
     "start":11,
-    "type":"mixed"
+    "type":"unknown"
   },
   {
     "end":17,
@@ -72,7 +72,7 @@
     "path":"test.js",
     "reasons":[],
     "start":11,
-    "type":"mixed"
+    "type":"unknown"
   },
   {
     "end":29,
@@ -327,7 +327,7 @@
     "path":"test.js",
     "reasons":[],
     "start":10,
-    "type":"(f: (?any | string) => mixed) => void"
+    "type":"(f: (?any | string) => unknown) => void"
   },
   {
     "end":33,
@@ -342,7 +342,7 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"(?any | string) => mixed"
+    "type":"(?any | string) => unknown"
   },
   {
     "end":77,
@@ -357,7 +357,7 @@
     "path":"test.js",
     "reasons":[],
     "start":33,
-    "type":"(?any | string) => mixed"
+    "type":"(?any | string) => unknown"
   },
   {
     "end":77,
@@ -372,7 +372,7 @@
     "path":"test.js",
     "reasons":[],
     "start":36,
-    "type":"(?any | string) => mixed"
+    "type":"(?any | string) => unknown"
   },
   {
     "end":39,
@@ -492,7 +492,7 @@
     "path":"test.js",
     "reasons":[],
     "start":71,
-    "type":"mixed"
+    "type":"unknown"
   },
   {
     "end":78,
@@ -522,7 +522,7 @@
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"(f: (?any | string) => mixed) => void"
+    "type":"(f: (?any | string) => unknown) => void"
   },
   {
     "end":22,
@@ -537,7 +537,7 @@
     "path":"test.js",
     "reasons":[],
     "start":1,
-    "type":"(f: (?any | string) => mixed) => void"
+    "type":"(f: (?any | string) => unknown) => void"
   },
   {
     "end":63,
@@ -1335,7 +1335,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":5,
-    "type":"(obj: mixed) => boolean"
+    "type":"(obj: unknown) => boolean"
   },
   {
     "end":24,
@@ -1365,7 +1365,7 @@
     "path":"predicates.js",
     "reasons":[],
     "start":11,
-    "type":"(obj: mixed) => boolean"
+    "type":"(obj: unknown) => boolean"
   },
   {
     "end":19,
