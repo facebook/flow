@@ -1937,9 +1937,6 @@ pub fn commit_modules(
                 haste_module.set_provider(None);
             }
             (None, Some(p)) => {
-                if debug {
-                    eprintln!("initial provider {} -> {}", name, p.as_str());
-                }
                 haste_module.set_provider(Some(p.dupe()));
             }
             (Some(old_p), Some(new_p)) => {

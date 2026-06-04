@@ -1380,7 +1380,6 @@ let commit_modules ~workers ~options dirty_modules =
       (* When can this happen? Either m pointed to a file that used to
          provide m and changed or got deleted (causing m to be in
          old_modules), or m didn't have a provider before. *)
-      if debug then prerr_endlinef "initial provider %s -> %s" name (Parsing_heaps.read_file_name p);
       Heap.entity_advance provider_ent (Some p);
       (unchanged, errmap)
     | (Some old_p, Some new_p) ->
