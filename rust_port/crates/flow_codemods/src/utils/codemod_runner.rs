@@ -1124,13 +1124,13 @@ where
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
-        let (env, _libs_ok, _node_modules_containers) =
-            flow_services_inference::type_service::init_from_scratch(
-                &options_arc,
-                pool,
-                shared_mem,
-                root,
-            );
+        // let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
+        let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
+            &options_arc,
+            pool,
+            shared_mem,
+            root,
+        );
         let file_options = &options.file_options;
         let all_unordered_libs: BTreeSet<String> = env
             .all_unordered_libs
@@ -1172,7 +1172,8 @@ where
         updates.add(Some(focused_set), None, None);
         let find_ref_request = flow_services_references::find_refs_types::empty_request();
         let files_to_force = flow_common_utils::checked_set::CheckedSet::empty();
-        let node_modules_containers = Arc::new(std::sync::RwLock::new(BTreeMap::new()));
+        // let%lwt (_, _, _, env) =
+        //   Types_js.recheck
         let mut will_be_checked_files = flow_common_utils::checked_set::CheckedSet::empty();
         let recheck_result = flow_services_inference::type_service::recheck(
             pool,
@@ -1184,7 +1185,6 @@ where
             false,
             None,  // changed_mergebase
             false, // missed_changes
-            &node_modules_containers,
             &mut will_be_checked_files,
             _env,
         );
@@ -1363,13 +1363,12 @@ where
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
-        let (env, _libs_ok, _node_modules_containers) =
-            flow_services_inference::type_service::init_from_scratch(
-                &options_arc,
-                pool,
-                shared_mem,
-                root,
-            );
+        let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
+            &options_arc,
+            pool,
+            shared_mem,
+            root,
+        );
         let file_options = &options.file_options;
         let all = options.all;
         let all_unordered_libs: BTreeSet<String> = env

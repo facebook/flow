@@ -106,9 +106,5 @@ pub fn make_genv(
         options,
         workers,
         shared_mem,
-        node_modules_containers: Arc::new(std::collections::BTreeMap::new()),
-        live_node_modules_containers: Some(Arc::new(std::sync::RwLock::new(
-            std::collections::BTreeMap::new(),
-        ))),
     }
 }

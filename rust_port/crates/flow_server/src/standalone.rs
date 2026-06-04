@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::net::TcpListener;
 use std::panic::AssertUnwindSafe;
@@ -14,7 +13,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
-use std::sync::RwLock;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
@@ -24,7 +22,6 @@ use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_utils::checked_set::CheckedSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::file_key::FileKey;
 use flow_server_command_handler::command_handler;
@@ -272,10 +269,6 @@ impl FlowServer {
         let init_socket_path = socket_path.clone();
         let init_serial_workloads_allowed = serial_workloads_allowed.clone();
 
-        let node_modules_containers: Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
-            Arc::new(RwLock::new(BTreeMap::new()));
-        let nmc = node_modules_containers.clone();
-        let init_nmc_ref = nmc.clone();
         let init_pids_path = pids_path.clone();
 
         std::thread::Builder::new()
@@ -291,7 +284,7 @@ impl FlowServer {
                                 .expect("pool_workers should be positive"),
                         ),
                     );
-                    let (mut env, init_nmc, _first_internal_error) =
+                    let (mut env, _first_internal_error) =
                         match type_service::init(&init_options, &pool, &init_shared_mem, None) {
                             Ok(result) => result,
                             Err(error) => panic!("init failed: {:?}", error),
@@ -325,11 +318,6 @@ impl FlowServer {
                     flow_server_env::monitor_rpc::status_update(server_status::Event::FinishingUp);
 
                     {
-                        let mut nmc_guard = nmc.write().unwrap();
-                        *nmc_guard = init_nmc.read().unwrap().clone();
-                    }
-
-                    {
                         let (lock, cvar) = &*init_state;
                         let mut server_state = lock.lock().unwrap();
                         env.connections = persistent_connection::all_clients();
@@ -355,7 +343,6 @@ impl FlowServer {
                         &init_options,
                         &init_shared_mem,
                         init_pool_workers,
-                        &init_nmc_ref,
                         &init_serial_workloads_allowed,
                         &init_pids_path,
                         &init_lock_path,
@@ -382,7 +369,6 @@ impl FlowServer {
         let workload_state = state.clone();
         let workload_options = self.options.dupe();
         let workload_shared_mem = self.shared_mem.dupe();
-        let workload_nmc = node_modules_containers.clone();
         let workload_serial_workloads_allowed = serial_workloads_allowed.clone();
         std::thread::Builder::new()
             .stack_size(SERVER_THREAD_STACK_SIZE)
@@ -391,7 +377,6 @@ impl FlowServer {
                     &workload_state,
                     &workload_options,
                     &workload_shared_mem,
-                    &workload_nmc,
                     &workload_serial_workloads_allowed,
                 );
             })
@@ -417,7 +402,6 @@ impl FlowServer {
                     let pids_path = pids_path.clone();
                     let lock_path = lock_path.clone();
                     let socket_path = socket_path.clone();
-                    let nmc = node_modules_containers.clone();
                     std::thread::Builder::new()
                         .stack_size(CONNECTION_THREAD_STACK_SIZE)
                         .spawn(move || {
@@ -431,7 +415,6 @@ impl FlowServer {
                                 &pids_path,
                                 &lock_path,
                                 &socket_path,
-                                &nmc,
                             );
                         })
                         .expect("failed to spawn connection thread");
@@ -452,7 +435,6 @@ fn process_persistent_workloads(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     _options: &Arc<Options>,
     _shared_mem: &Arc<SharedMem>,
-    _node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     serial_workloads_allowed: &Arc<AtomicBool>,
 ) -> ! {
     loop {
@@ -616,7 +598,6 @@ fn do_rechecks(
     options: &Arc<Options>,
     shared_mem: &Arc<SharedMem>,
     pool_workers: usize,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) -> RecheckOutcome {
     let pool = ThreadPool::with_thread_count(
         flow_utils_concurrency::thread_pool::ThreadCount::NumThreads(
@@ -720,7 +701,6 @@ fn do_rechecks(
             incompatible_lib_change,
             changed_mergebase,
             missed_changes,
-            node_modules_containers,
             &mut will_be_checked_files,
             env,
         );
@@ -803,7 +783,6 @@ fn do_rechecks(
                         &updates,
                         &find_ref_request.def_info,
                         CheckedSet::empty(),
-                        node_modules_containers,
                         old_env.clone(),
                     )
                     .unwrap_or(old_env);
@@ -827,7 +806,6 @@ fn process_pending_rechecks(
     options: &Arc<Options>,
     shared_mem: &Arc<SharedMem>,
     pool_workers: usize,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     serial_workloads_allowed: &Arc<AtomicBool>,
     pids_path: &str,
     lock_path: &str,
@@ -867,13 +845,7 @@ fn process_pending_rechecks(
             let server_state = lock.lock().unwrap();
             if server_state.env.is_some() {
                 drop(server_state);
-                do_rechecks(
-                    state,
-                    options,
-                    shared_mem,
-                    pool_workers,
-                    node_modules_containers,
-                )
+                do_rechecks(state, options, shared_mem, pool_workers)
             } else {
                 RecheckOutcome::Ok
             }
@@ -968,7 +940,6 @@ fn handle_persistent_request(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Options,
     shared_mem: &Arc<SharedMem>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     expected_client_id: flow_server_env::lsp_prot::ClientId,
     request: ServerRequest,
 ) -> (ServerResponse, bool) {
@@ -997,8 +968,6 @@ fn handle_persistent_request(
                 options: Arc::new(options.clone()),
                 workers: None,
                 shared_mem: shared_mem.dupe(),
-                node_modules_containers: Arc::new(node_modules_containers.read().unwrap().clone()),
-                live_node_modules_containers: Some(node_modules_containers.clone()),
             });
             command_handler::enqueue_persistent(&genv, client_id, request);
             (ServerResponse::PersistentAck, false)
@@ -1053,7 +1022,6 @@ fn handle_connection(
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) {
     let _ = stream.set_read_timeout(Some(std::time::Duration::from_secs(
         INITIAL_CONNECTION_READ_TIMEOUT_SECS,
@@ -1140,14 +1108,8 @@ fn handle_connection(
                     return;
                 }
             };
-            let (response, should_close) = handle_persistent_request(
-                state,
-                options,
-                shared_mem,
-                node_modules_containers,
-                client_id,
-                request,
-            );
+            let (response, should_close) =
+                handle_persistent_request(state, options, shared_mem, client_id, request);
             if let Err(e) = server_socket_rpc::send_message(&mut stream, &response) {
                 eprintln!("Error sending response: {}", e);
                 remove_persistent_client(state, client_id);
@@ -1165,8 +1127,6 @@ fn handle_connection(
                 options: Arc::new(options.clone()),
                 workers: None,
                 shared_mem: shared_mem.dupe(),
-                node_modules_containers: Arc::new(node_modules_containers.read().unwrap().clone()),
-                live_node_modules_containers: Some(node_modules_containers.clone()),
             };
             let command = command.into_server_command();
             loop {
@@ -1333,7 +1293,7 @@ fn handle_connection(
                 .unwrap();
 
             if let Some(ref env) = server_state.env {
-                handle_save_state(env, options, shared_mem, node_modules_containers, out)
+                handle_save_state(env, options, shared_mem, out)
             } else {
                 ServerResponse::Error {
                     message: "Server not initialized".to_string(),
@@ -1368,7 +1328,6 @@ fn handle_connection(
                     env,
                     options,
                     shared_mem,
-                    node_modules_containers,
                     input.clone(),
                     verbose.clone().map(flow_common::verbose::Verbose::from),
                     force,
@@ -1570,7 +1529,6 @@ fn handle_save_state(
     env: &flow_server_env::server_env::Env,
     options: &Options,
     shared_mem: &Arc<SharedMem>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     out: SaveStateOut,
 ) -> ServerResponse {
     let path = match out {
@@ -1598,16 +1556,14 @@ fn handle_save_state(
             };
         }
     }
-    let node_modules_containers = node_modules_containers.read().unwrap();
-    let result =
-        match flow_saved_state::save(&path, shared_mem, env, options, &node_modules_containers) {
-            Ok(()) => Ok(format!("Created saved-state file `{}`", path.display())),
-            Err(reason) => Err(format!(
-                "Failed to create saved-state file `{}`:\n{}",
-                path.display(),
-                reason
-            )),
-        };
+    let result = match flow_saved_state::save(&path, shared_mem, env, options) {
+        Ok(()) => Ok(format!("Created saved-state file `{}`", path.display())),
+        Err(reason) => Err(format!(
+            "Failed to create saved-state file `{}`:\n{}",
+            path.display(),
+            reason
+        )),
+    };
     ServerResponse::SaveState { result }
 }
 
@@ -1615,7 +1571,6 @@ fn handle_check_contents(
     env: &flow_server_env::server_env::Env,
     options: &Options,
     shared_mem: &Arc<SharedMem>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     input: server_socket_rpc::FileInput,
     verbose: Option<flow_common::verbose::Verbose>,
     force: bool,
@@ -1681,14 +1636,12 @@ fn handle_check_contents(
     let result = if !intermediate_result.1.is_empty() {
         Err(TypeContentsError::Errors(intermediate_result.1))
     } else {
-        let node_modules_containers = node_modules_containers.read().unwrap();
         flow_services_inference::type_contents::type_parse_artifacts(
             &options,
             shared_mem.dupe(),
             env.master_cx.clone(),
             file_key.dupe(),
             intermediate_result,
-            &node_modules_containers,
         )
     };
     if matches!(result, Err(TypeContentsError::CheckedDependenciesCanceled)) {

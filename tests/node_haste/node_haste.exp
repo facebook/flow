@@ -1,3 +1,19 @@
+status:
+Error ------------------------------------------------------------------------------------------- foo/bar/client.js:5:27
+
+Cannot resolve module `annotation`. [cannot-resolve-module]
+
+   5| var unreachable = require('annotation');
+                                ^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+find-module resolves excluded node package in haste mode:
+node_modules/qux/docblock.js
+
+check-contents resolves excluded node package in haste mode:
 Error ------------------------------------------------------------------------------------------- foo/bar/client.js:5:27
 
 Cannot resolve module `annotation`. [cannot-resolve-module]

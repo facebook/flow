@@ -278,6 +278,31 @@ module.exports = suite(
           ['window/showStatus'],
         ),
     ]),
+    test('live diagnostics resolve node_modules in haste mode', [
+      addFiles('nodeModulesConsumer.js', 'node_modules/foo/index.js'),
+      lspStartAndConnect(),
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/nodeModulesConsumer.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+
+import foo from 'foo';
+
+foo as string;`,
+        },
+      })
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics',
+          '{Cannot cast',
+        )
+        .verifyAllLSPMessagesInStep(
+          [['textDocument/publishDiagnostics', '{Cannot cast']],
+          ['window/showStatus'],
+        ),
+    ]).flowConfig('_flowconfig_haste_node_modules'),
     test('live non-parse diagnostics with unchecked dependencies', [
       addFile('dependency.js'),
       lspStartAndConnect(),

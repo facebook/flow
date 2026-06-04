@@ -14,6 +14,7 @@ use std::sync::LazyLock;
 use std::sync::Mutex;
 
 use dupe::Dupe;
+use flow_common::files;
 use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
 use flow_common::sys_utils::normalize_filename_dir_sep;
@@ -199,21 +200,10 @@ fn type_parse_artifacts_with_cache(
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
 ) -> (FileArtifactsResult<'static>, Option<bool>) {
     match type_parse_artifacts_cache {
         None => {
-            let result = type_parse_artifacts(
-                options,
-                shared_mem,
-                master_cx,
-                file,
-                artifacts(),
-                node_modules_containers,
-            );
+            let result = type_parse_artifacts(options, shared_mem, master_cx, file, artifacts());
             (result, None)
         }
         Some(cache) => {
@@ -228,7 +218,6 @@ fn type_parse_artifacts_with_cache(
                         master_cx,
                         file_for_result,
                         artifacts(),
-                        node_modules_containers,
                     )
                 },
             );
@@ -963,10 +952,6 @@ fn type_parse_artifacts_for_ac_with_cache(
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
     ),
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
 ) -> (AcArtifactsResult<'static>, Option<bool>) {
     let file_for_result = file.dupe();
     let type_parse_artifacts = || match artifacts() {
@@ -990,7 +975,6 @@ fn type_parse_artifacts_for_ac_with_cache(
                 ast.dupe(),
                 requires,
                 file_sig.dupe(),
-                node_modules_containers,
             ) {
                 Ok(Ok(v)) => v,
                 Ok(Err(_)) | Err(_) => {
@@ -1021,10 +1005,6 @@ fn autocomplete_on_parsed(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: Option<lsp_prot::ClientId>,
     filename: &flow_parser::file_key::FileKey,
     contents: &str,
@@ -1074,7 +1054,6 @@ fn autocomplete_on_parsed(
         filename.dupe(),
         contents.clone(),
         parse_result,
-        node_modules_containers,
     );
     let checked_dependencies_canceled = matches!(
         file_artifacts_result,
@@ -1218,10 +1197,6 @@ fn autofix_errors_cli(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     include_best_effort_fix: bool,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
@@ -1260,7 +1235,6 @@ fn autofix_errors_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         loc_of_aloc,
         get_ast_from_shared_mem,
         &module_system_info,
@@ -1276,10 +1250,6 @@ fn autofix_imports_cli(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
     let file_key = file_key_of_file_input(options, env, input);
@@ -1291,7 +1261,6 @@ fn autofix_imports_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         &loc_of_aloc,
         &module_system_info,
         &file_key,
@@ -1304,10 +1273,6 @@ fn suggest_imports_cli(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> server_prot::response::SuggestImportsResponse {
     let file_key = file_key_of_file_input(options, env, input);
@@ -1319,7 +1284,6 @@ fn suggest_imports_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         &loc_of_aloc,
         &module_system_info,
         &file_key,
@@ -1334,10 +1298,6 @@ fn autocomplete(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: Option<lsp_prot::ClientId>,
     input: &FileInput,
     trigger_character: Option<&str>,
@@ -1369,7 +1329,6 @@ fn autocomplete(
                 options,
                 env,
                 shared_mem,
-                node_modules_containers,
                 client_id,
                 &filename,
                 &contents,
@@ -1397,10 +1356,6 @@ fn errors_of_file(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     force: bool,
     file_input: &FileInput,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
 ) -> Result<(ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet), ErrorsOfFileError> {
     let mut options = options.clone();
     options.all = options.all || force;
@@ -1419,7 +1374,6 @@ fn errors_of_file(
                     env.master_cx.clone(),
                     file_key.clone(),
                     intermediate_result,
-                    node_modules_containers,
                 )
             };
             if matches!(result, Err(TypeContentsError::CheckedDependenciesCanceled)) {
@@ -1443,19 +1397,8 @@ fn check_file(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     force: bool,
     file_input: &FileInput,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
 ) -> Result<server_prot::response::StatusResponse, WorkloadCanceled> {
-    match errors_of_file(
-        options,
-        env,
-        shared_mem.clone(),
-        force,
-        file_input,
-        node_modules_containers,
-    ) {
+    match errors_of_file(options, env, shared_mem.clone(), force, file_input) {
         Err(ErrorsOfFileError::NotCovered) => {
             Ok(server_prot::response::StatusResponse::NOT_COVERED)
         }
@@ -1695,10 +1638,6 @@ fn infer_type(
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::infer_type_options::T,
     include_refinement_info: bool,
 ) -> Result<
@@ -1752,7 +1691,6 @@ fn infer_type(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 parse_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(parse_errors) => {
@@ -1846,10 +1784,6 @@ fn type_of_name(
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::type_of_name_options::T,
 ) -> Result<Vec<server_prot::response::InferTypeOfNameResponse>, WorkloadCanceled> {
     let server_prot::type_of_name_options::T {
@@ -1875,7 +1809,6 @@ fn type_of_name(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 parse_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(parse_errors) => {
@@ -1922,10 +1855,6 @@ fn inlay_hint(
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::inlay_hint_options::T,
 ) -> Result<
     (
@@ -1960,7 +1889,6 @@ fn inlay_hint(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 parse_result,
-                node_modules_containers,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
                 (Err(parse_errors), did_hit_cache) => (
@@ -2048,10 +1976,6 @@ fn insert_type(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     file_input: &FileInput,
     target: &flow_parser::loc::Loc,
     omit_targ_defaults: bool,
@@ -2091,7 +2015,6 @@ fn insert_type(
         env.master_cx.clone(),
         file_key,
         intermediate_result,
-        node_modules_containers,
     );
     match &file_artifacts_result {
         Ok((parse_artifacts, typecheck_artifacts)) => {
@@ -2129,10 +2052,6 @@ fn autofix_exports(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixExportsResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
@@ -2175,7 +2094,6 @@ fn autofix_exports(
         env.master_cx.clone(),
         file_key.clone(),
         intermediate_result,
-        node_modules_containers,
     );
     match &file_artifacts_result {
         Ok((parse_artifacts, typecheck_artifacts)) => {
@@ -2216,10 +2134,6 @@ fn autofix_missing_local_annot(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixMissingLocalAnnotResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
@@ -2256,7 +2170,6 @@ fn autofix_missing_local_annot(
         env.master_cx.clone(),
         file_key,
         intermediate_result,
-        node_modules_containers,
     );
     let file_artifacts = match file_artifacts_result {
         Ok(x) => x,
@@ -2368,10 +2281,6 @@ fn dump_types(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     file_input: &FileInput,
@@ -2388,7 +2297,6 @@ fn dump_types(
         env.master_cx.clone(),
         file_key,
         intermediate_result,
-        node_modules_containers,
     );
     let (parse_artifacts, typecheck_artifacts) = match file_artifacts_result {
         Ok(x) => x,
@@ -2413,10 +2321,6 @@ fn coverage(
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     file_key: &flow_parser::file_key::FileKey,
     content: &str,
     force: bool,
@@ -2437,7 +2341,6 @@ fn coverage(
         env.master_cx.clone(),
         file_key.clone(),
         intermediate_result,
-        node_modules_containers,
     );
     let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
     let extra_data = serde_json::Value::Object(json_props.into_iter().collect());
@@ -2599,10 +2502,6 @@ fn get_cycle(
 fn find_module(
     options: &Options,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     moduleref: &str,
     filename: &str,
 ) -> server_prot::response::FindModuleResponse {
@@ -2610,10 +2509,12 @@ fn find_module(
     let mut phantom_acc = flow_services_module::PhantomAcc::default();
     let import_specifier =
         flow_common::flow_import_specifier::FlowImportSpecifier::userland(moduleref.into());
+    // ~node_modules_containers:!Files.node_modules_containers
+    let node_modules_containers = files::node_modules_containers.read().unwrap();
     let resolved_module = flow_services_module::imported_module(
         options,
         &shared_mem,
-        node_modules_containers,
+        &node_modules_containers,
         &file,
         Some(&mut phantom_acc),
         &import_specifier,
@@ -2640,10 +2541,6 @@ fn get_def(
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     file_input: &FileInput,
     line: u32,
     col: u32,
@@ -2679,7 +2576,6 @@ fn get_def(
                 env.master_cx.clone(),
                 file_key.clone(),
                 intermediate_result,
-                node_modules_containers,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
                 (Err(parse_errors), did_hit_cache) => (
@@ -2759,13 +2655,11 @@ fn save_state(
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
-    let node_modules_containers = genv.node_modules_containers_snapshot();
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
         &genv.shared_mem,
         env,
         &genv.options,
-        node_modules_containers.as_ref(),
     )
     .map(|_| saved_state_filename.to_string())
     .map_err(|reason| reason.to_string())
@@ -2840,10 +2734,6 @@ fn handle_apply_code_action(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     action: &server_prot::code_action::T,
     file_input: &FileInput,
 ) -> EphemeralParallelizableResult {
@@ -2856,7 +2746,6 @@ fn handle_apply_code_action(
                     options,
                     env,
                     shared_mem.clone(),
-                    node_modules_containers,
                     *include_best_effort_fix,
                     file_input,
                 )
@@ -2867,30 +2756,16 @@ fn handle_apply_code_action(
             ))
         }
         server_prot::code_action::T::SourceAddMissingImports => {
-            let result: Result<_, String> = try_with(|| {
-                autofix_imports_cli(
-                    options,
-                    env,
-                    shared_mem.clone(),
-                    node_modules_containers,
-                    file_input,
-                )
-            });
+            let result: Result<_, String> =
+                try_with(|| autofix_imports_cli(options, env, shared_mem.clone(), file_input));
             Ok((
                 server_prot::response::Response::APPLY_CODE_ACTION(result),
                 None,
             ))
         }
         server_prot::code_action::T::SuggestImports => {
-            let result = try_with(|| {
-                suggest_imports_cli(
-                    options,
-                    env,
-                    shared_mem.clone(),
-                    node_modules_containers,
-                    file_input,
-                )
-            });
+            let result =
+                try_with(|| suggest_imports_cli(options, env, shared_mem.clone(), file_input));
             Ok((
                 server_prot::response::Response::SUGGEST_IMPORTS(result),
                 None,
@@ -2903,10 +2778,6 @@ fn handle_autocomplete(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
     trigger_character: Option<&str>,
     cursor: (i32, i32),
@@ -2918,7 +2789,6 @@ fn handle_autocomplete(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         None,
         input,
         trigger_character,
@@ -2938,13 +2808,9 @@ fn handle_autofix_exports(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_exports(options, env, shared_mem, node_modules_containers, input)?;
+    let result = autofix_exports(options, env, shared_mem, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
@@ -2955,14 +2821,9 @@ fn handle_autofix_missing_local_annot(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result =
-        autofix_missing_local_annot(options, env, shared_mem, node_modules_containers, input)?;
+    let result = autofix_missing_local_annot(options, env, shared_mem, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
@@ -2975,19 +2836,8 @@ fn handle_check_file(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     force: bool,
     input: &FileInput,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
 ) -> EphemeralParallelizableResult {
-    let response = check_file(
-        options,
-        env,
-        shared_mem,
-        force,
-        input,
-        node_modules_containers,
-    )?;
+    let response = check_file(options, env, shared_mem, force, input)?;
     Ok((server_prot::response::Response::CHECK_FILE(response), None))
 }
 
@@ -2995,10 +2845,6 @@ fn handle_coverage(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
     force: bool,
 ) -> EphemeralParallelizableResult {
@@ -3012,7 +2858,6 @@ fn handle_coverage(
             env,
             None,
             shared_mem.clone(),
-            node_modules_containers,
             &file_key,
             &file_contents,
             force,
@@ -3050,10 +2895,6 @@ fn handle_dump_types(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     input: &FileInput,
@@ -3062,7 +2903,6 @@ fn handle_dump_types(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         evaluate_type_destructors,
         for_tool,
         input,
@@ -3073,20 +2913,10 @@ fn handle_dump_types(
 fn handle_find_module(
     options: &Options,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     moduleref: &str,
     filename: &str,
 ) -> EphemeralParallelizableResult {
-    let response = find_module(
-        options,
-        shared_mem,
-        node_modules_containers,
-        moduleref,
-        filename,
-    );
+    let response = find_module(options, shared_mem, moduleref, filename);
     Ok((server_prot::response::Response::FIND_MODULE(response), None))
 }
 
@@ -3113,24 +2943,11 @@ fn handle_get_def(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &FileInput,
     line: u32,
     col: u32,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = get_def(
-        options,
-        env,
-        None,
-        shared_mem,
-        node_modules_containers,
-        input,
-        line,
-        col,
-    )?;
+    let (result, json_data) = get_def(options, env, None, shared_mem, input, line, col)?;
     Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
@@ -3152,21 +2969,9 @@ fn handle_infer_type(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = infer_type(
-        options,
-        env,
-        None,
-        shared_mem.clone(),
-        node_modules_containers,
-        input,
-        true,
-    )?;
+    let (result, json_data) = infer_type(options, env, None, shared_mem.clone(), input, true)?;
     Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
@@ -3177,24 +2982,13 @@ fn handle_type_of_name(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::type_of_name_options::T,
 ) -> EphemeralParallelizableResult {
     let (result, json_data): (
         Vec<server_prot::response::InferTypeOfNameResponse>,
         Option<lsp_prot::Json>,
     ) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        type_of_name(
-            options,
-            env,
-            None,
-            shared_mem,
-            node_modules_containers,
-            input,
-        )
+        type_of_name(options, env, None, shared_mem, input)
     })) {
         Ok(result) => (result?, None),
         Err(_exn) => {
@@ -3218,20 +3012,9 @@ fn handle_inlay_hint(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::inlay_hint_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = inlay_hint(
-        options,
-        env,
-        None,
-        shared_mem.clone(),
-        node_modules_containers,
-        input,
-    )?;
+    let (result, json_data) = inlay_hint(options, env, None, shared_mem.clone(), input)?;
     Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
@@ -3242,10 +3025,6 @@ fn handle_llm_context(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     input: &server_prot::llm_context_options::T,
 ) -> EphemeralParallelizableResult {
     let server_prot::llm_context_options::T {
@@ -3273,7 +3052,6 @@ fn handle_llm_context(
                 env.master_cx.clone(),
                 file_key.clone(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_) => None,
@@ -3334,10 +3112,6 @@ fn handle_insert_type(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     file_input: &FileInput,
     target: &flow_parser::loc::Loc,
     omit_targ_defaults: bool,
@@ -3347,7 +3121,6 @@ fn handle_insert_type(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         file_input,
         target,
         omit_targ_defaults,
@@ -3397,21 +3170,12 @@ pub fn handle_ephemeral_command_for_standalone(
 ) -> EphemeralParallelizableResult {
     let options = &*genv.options;
     let shared_mem = genv.shared_mem.dupe();
-    let node_modules_containers = genv.node_modules_containers_snapshot();
-    let node_modules_containers = node_modules_containers.as_ref();
     match command {
         server_prot::request::Command::APPLY_CODE_ACTION {
             input,
             action,
             wait_for_recheck: _,
-        } => handle_apply_code_action(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            &action,
-            &input,
-        ),
+        } => handle_apply_code_action(options, env, shared_mem, &action, &input),
         server_prot::request::Command::AUTOCOMPLETE {
             input,
             cursor,
@@ -3424,7 +3188,6 @@ pub fn handle_ephemeral_command_for_standalone(
             options,
             env,
             shared_mem,
-            node_modules_containers,
             &input,
             trigger_character.as_deref(),
             cursor,
@@ -3436,18 +3199,12 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_exports(options, env, shared_mem, node_modules_containers, &input),
+        } => handle_autofix_exports(options, env, shared_mem, &input),
         server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT {
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_missing_local_annot(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            &input,
-        ),
+        } => handle_autofix_missing_local_annot(options, env, shared_mem, &input),
         server_prot::request::Command::CHECK_FILE {
             input,
             verbose: _,
@@ -3457,27 +3214,13 @@ pub fn handle_ephemeral_command_for_standalone(
         } => {
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
-            handle_check_file(
-                &options,
-                env,
-                shared_mem,
-                force,
-                &input,
-                node_modules_containers,
-            )
+            handle_check_file(&options, env, shared_mem, force, &input)
         }
         server_prot::request::Command::COVERAGE {
             input,
             force,
             wait_for_recheck: _,
-        } => handle_coverage(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            &input,
-            force,
-        ),
+        } => handle_coverage(options, env, shared_mem, &input, force),
         server_prot::request::Command::BATCH_COVERAGE {
             batch,
             wait_for_recheck: _,
@@ -3498,7 +3241,6 @@ pub fn handle_ephemeral_command_for_standalone(
             options,
             env,
             shared_mem,
-            node_modules_containers,
             if evaluate_type_destructors {
                 flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode::EvaluateAll
             } else {
@@ -3511,13 +3253,7 @@ pub fn handle_ephemeral_command_for_standalone(
             moduleref,
             filename,
             wait_for_recheck: _,
-        } => handle_find_module(
-            options,
-            shared_mem,
-            node_modules_containers,
-            &moduleref,
-            &filename,
-        ),
+        } => handle_find_module(options, shared_mem, &moduleref, &filename),
         server_prot::request::Command::FORCE_RECHECK {
             files,
             focus,
@@ -3534,15 +3270,7 @@ pub fn handle_ephemeral_command_for_standalone(
             line,
             r#char,
             wait_for_recheck: _,
-        } => handle_get_def(
-            options,
-            env,
-            shared_mem,
-            node_modules_containers,
-            &input,
-            line as u32,
-            r#char as u32,
-        ),
+        } => handle_get_def(options, env, shared_mem, &input, line as u32, r#char as u32),
         server_prot::request::Command::GRAPH_DEP_GRAPH {
             root,
             strip_root,
@@ -3550,13 +3278,13 @@ pub fn handle_ephemeral_command_for_standalone(
             types_only,
         } => handle_graph_dep_graph(env, &root, strip_root, &outfile, types_only),
         server_prot::request::Command::INFER_TYPE(input) => {
-            handle_infer_type(options, env, shared_mem, node_modules_containers, &input)
+            handle_infer_type(options, env, shared_mem, &input)
         }
         server_prot::request::Command::INLAY_HINT(input) => {
-            handle_inlay_hint(options, env, shared_mem, node_modules_containers, &input)
+            handle_inlay_hint(options, env, shared_mem, &input)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {
-            handle_type_of_name(options, env, shared_mem, node_modules_containers, &input)
+            handle_type_of_name(options, env, shared_mem, &input)
         }
         server_prot::request::Command::INSERT_TYPE {
             input,
@@ -3569,7 +3297,6 @@ pub fn handle_ephemeral_command_for_standalone(
             options,
             env,
             shared_mem,
-            node_modules_containers,
             &input,
             &target,
             omit_targ_defaults,
@@ -3605,7 +3332,7 @@ pub fn handle_ephemeral_command_for_standalone(
             handle_status(&options, env, &shared_mem)
         }
         server_prot::request::Command::LLM_CONTEXT(input) => {
-            handle_llm_context(options, env, shared_mem, node_modules_containers, &input)
+            handle_llm_context(options, env, shared_mem, &input)
         }
     }
 }
@@ -3642,10 +3369,6 @@ fn find_code_actions(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     params: &lsp_types::CodeActionParams,
 ) -> (
@@ -3677,7 +3400,6 @@ fn find_code_actions(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_) => (Ok(vec![]), None),
@@ -3777,10 +3499,6 @@ fn add_missing_imports(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     text_document: &lsp_types::TextDocumentIdentifier,
 ) -> Result<Vec<lsp_types::TextEdit>, String> {
@@ -3800,7 +3518,6 @@ fn add_missing_imports(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_) => Ok(vec![]),
@@ -4124,15 +3841,9 @@ fn run_command_in_serial(
                 flow_hh_logger::info!(
                     "Command successfully canceled. Running a recheck before restarting the command"
                 );
-                let node_modules_containers_arc = std::sync::Arc::new(std::sync::RwLock::new(
-                    (*genv.node_modules_containers_snapshot()).clone(),
-                ));
-                let (_recheck_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
-                    genv,
-                    env,
-                    &genv.shared_mem,
-                    &node_modules_containers_arc,
-                );
+                // let%lwt (recheck_profiling, env) = Rechecker.recheck_loop genv env in
+                let (_recheck_profiling, new_env) =
+                    flow_server_rechecker::rechecker::recheck_loop(genv, env, &genv.shared_mem);
                 env = new_env;
                 flow_hh_logger::info!("Now restarting the command");
                 continue;
@@ -4775,10 +4486,6 @@ fn handle_persistent_get_def(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::GotoDefinitionParams,
@@ -4800,7 +4507,6 @@ fn handle_persistent_get_def(
         env,
         type_parse_artifacts_cache.as_ref(),
         shared_mem,
-        node_modules_containers,
         &file_input,
         line,
         col,
@@ -4856,10 +4562,6 @@ fn handle_persistent_infer_type(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::HoverParams,
@@ -4897,7 +4599,6 @@ fn handle_persistent_infer_type(
         env,
         type_parse_artifacts_cache.as_ref(),
         shared_mem.clone(),
-        node_modules_containers,
         &input,
         include_refinement_info,
     )?;
@@ -5031,23 +4732,12 @@ fn handle_persistent_code_action_request(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::CodeActionParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (result, extra_data) = find_code_actions(
-        options,
-        env,
-        shared_mem,
-        node_modules_containers,
-        client_id,
-        params,
-    );
+    let (result, extra_data) = find_code_actions(options, env, shared_mem, client_id, params);
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(code_actions) => {
@@ -5063,10 +4753,6 @@ fn handle_persistent_autocomplete_lsp(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::CompletionParams,
@@ -5118,7 +4804,6 @@ fn handle_persistent_autocomplete_lsp(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         Some(client_id),
         file_input,
         trigger_character,
@@ -5195,10 +4880,6 @@ fn handle_persistent_signaturehelp_lsp(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::SignatureHelpParams,
@@ -5237,7 +4918,6 @@ fn handle_persistent_signaturehelp_lsp(
                 env.master_cx.clone(),
                 path.dupe(),
                 intermediate_result,
-                node_modules_containers,
             );
             let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
             let metadata = with_data(
@@ -5408,10 +5088,6 @@ fn get_file_artifacts(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     pos: &lsp_types::TextDocumentPositionParams,
     file_input: Option<&FileInput>,
@@ -5441,7 +5117,6 @@ fn get_file_artifacts(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_parse_errors) => {
@@ -5516,10 +5191,6 @@ fn map_local_find_references_results<T>(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     f: &dyn Fn(&flow_services_references::find_refs_types::SingleRef) -> Option<T>,
     text_doc_position: &lsp_types::TextDocumentPositionParams,
@@ -5529,7 +5200,6 @@ fn map_local_find_references_results<T>(
         options,
         env,
         shared_mem.clone(),
-        node_modules_containers,
         client_id,
         text_doc_position,
         file_input,
@@ -5573,10 +5243,6 @@ fn handle_global_find_references(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     metadata: lsp_prot::Metadata,
@@ -5589,7 +5255,6 @@ fn handle_global_find_references(
         options,
         env,
         shared_mem.clone(),
-        node_modules_containers,
         client_id,
         text_doc_position,
         None,
@@ -5761,10 +5426,6 @@ fn handle_persistent_find_references(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::ReferenceParams,
@@ -5803,7 +5464,6 @@ fn handle_persistent_find_references(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         client_id,
         id,
         metadata,
@@ -5818,10 +5478,6 @@ fn handle_persistent_document_highlight(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::DocumentHighlightParams,
@@ -5842,7 +5498,6 @@ fn handle_persistent_document_highlight(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         client_id,
         &ref_to_highlight,
         &params.text_document_position_params,
@@ -5863,25 +5518,14 @@ fn handle_persistent_prepare_rename(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::TextDocumentPositionParams,
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
-        options,
-        env,
-        shared_mem,
-        node_modules_containers,
-        client_id,
-        params,
-        file_input,
-    );
+    let (file_artifacts_opt, extra_parse_data) =
+        get_file_artifacts(options, env, shared_mem, client_id, params, file_input);
     match file_artifacts_opt {
         Err(reason) => {
             let metadata = with_data(
@@ -5917,10 +5561,6 @@ fn handle_persistent_rename(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::RenameParams,
@@ -5998,7 +5638,6 @@ fn handle_persistent_rename(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         client_id,
         id,
         metadata,
@@ -6013,10 +5652,6 @@ fn handle_persistent_coverage(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::type_coverage::Params,
@@ -6064,7 +5699,6 @@ fn handle_persistent_coverage(
                 env,
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem,
-                node_modules_containers,
                 &file_key,
                 &file_contents,
                 force,
@@ -6142,10 +5776,6 @@ fn handle_persistent_llm_context(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::llm_context::Params,
@@ -6186,7 +5816,6 @@ fn handle_persistent_llm_context(
                 env.master_cx.clone(),
                 file_key.clone(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_) => None,
@@ -6289,23 +5918,12 @@ fn handle_persistent_add_missing_imports_command(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     text_document: &lsp_types::TextDocumentIdentifier,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let edits = add_missing_imports(
-        options,
-        env,
-        shared_mem,
-        node_modules_containers,
-        client_id,
-        text_document,
-    );
+    let edits = add_missing_imports(options, env, shared_mem, client_id, text_document);
     match edits {
         Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
         Ok(ref e) if e.is_empty() => {
@@ -6449,10 +6067,6 @@ fn prepare_document_paste(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     params: &lsp::document_paste::PrepareParams,
 ) -> (
@@ -6480,7 +6094,6 @@ fn prepare_document_paste(
                 env.master_cx.clone(),
                 file_key.dupe(),
                 intermediate_result,
-                node_modules_containers,
             );
             match file_artifacts_result {
                 Err(_parse_errors) => (
@@ -6598,23 +6211,12 @@ fn handle_persistent_prepare_document_paste(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::document_paste::PrepareParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (imports, extra_data) = prepare_document_paste(
-        options,
-        env,
-        shared_mem,
-        node_modules_containers,
-        client_id,
-        params,
-    );
+    let (imports, extra_data) = prepare_document_paste(options, env, shared_mem, client_id, params);
     let metadata = with_data(extra_data, metadata);
     let imports_lsp: Vec<lsp::document_paste::ImportItem> = imports
         .into_iter()
@@ -6851,10 +6453,6 @@ fn live_diagnostics_of_uri(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     uri: &str,
     metadata: lsp_prot::Metadata,
@@ -6921,7 +6519,6 @@ fn live_diagnostics_of_uri(
                                 env.master_cx.clone(),
                                 file_key.dupe(),
                                 intermediate_result,
-                                node_modules_containers,
                             );
                         let (live_errors, live_warnings) =
                             printable_errors_of_file_artifacts_result(
@@ -7020,10 +6617,6 @@ fn handle_live_errors_request(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     uri: &str,
     metadata: lsp_prot::Metadata,
@@ -7032,15 +6625,7 @@ fn handle_live_errors_request(
         return live_errors_canceled_response(uri, metadata);
     }
 
-    let ret = match live_diagnostics_of_uri(
-        options,
-        env,
-        shared_mem,
-        node_modules_containers,
-        client_id,
-        uri,
-        metadata,
-    ) {
+    let ret = match live_diagnostics_of_uri(options, env, shared_mem, client_id, uri, metadata) {
         (Err((e, _file_input)), metadata) => {
             (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
         }
@@ -7064,10 +6649,6 @@ fn handle_persistent_text_document_diagnostics_lsp(
     options: &Options,
     env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &std::collections::BTreeMap<
-        flow_data_structure_wrapper::smol_str::FlowSmolStr,
-        std::collections::BTreeSet<flow_data_structure_wrapper::smol_str::FlowSmolStr>,
-    >,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::text_document_diagnostics::Params,
@@ -7078,7 +6659,6 @@ fn handle_persistent_text_document_diagnostics_lsp(
         options,
         env,
         shared_mem.clone(),
-        node_modules_containers,
         client_id,
         uri.as_str(),
         metadata,
@@ -7092,14 +6672,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
             LspResult::TextDocumentDiagnosticsResult(live_diagnostics),
         ),
         Err((_failure, file_input)) => {
-            match errors_of_file(
-                options,
-                env,
-                shared_mem,
-                false,
-                &file_input,
-                node_modules_containers,
-            ) {
+            match errors_of_file(options, env, shared_mem, false, &file_input) {
                 Err(_) => LspMessage::ResponseMessage(
                     id,
                     LspResult::TextDocumentDiagnosticsResult(vec![]),
@@ -7140,7 +6713,7 @@ fn mk_parallelizable_persistent(
 }
 
 fn get_persistent_handler(
-    genv: &server_env::Genv,
+    genv: &Arc<server_env::Genv>,
     client_id: lsp_prot::ClientId,
     request: &lsp_prot::RequestWithMetadata,
 ) -> PersistentCommandHandler {
@@ -7280,7 +6853,6 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7288,7 +6860,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7312,7 +6883,6 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7320,7 +6890,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7340,7 +6909,6 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7348,7 +6916,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7369,7 +6936,6 @@ fn get_persistent_handler(
                 file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7377,7 +6943,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7401,7 +6966,6 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7409,7 +6973,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7429,7 +6992,6 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = Arc::new(options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7437,7 +6999,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7460,7 +7021,6 @@ fn get_persistent_handler(
             );
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7468,7 +7028,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7488,13 +7047,11 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_find_references(
                     &options_arc,
                     env,
                     shared_mem,
-                    &node_modules_containers,
                     client_id,
                     id,
                     &params,
@@ -7513,7 +7070,6 @@ fn get_persistent_handler(
             let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7521,7 +7077,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7541,13 +7096,11 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let options_arc = Arc::new(genv.options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_rename(
                     &options_arc,
                     env,
                     shared_mem,
-                    &node_modules_containers,
                     client_id,
                     id,
                     &params,
@@ -7589,7 +7142,6 @@ fn get_persistent_handler(
                 file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7597,7 +7149,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7665,7 +7216,6 @@ fn get_persistent_handler(
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
                             let shared_mem = genv.shared_mem.clone();
-                            let node_modules_containers = genv.node_modules_containers_snapshot();
                             mk_parallelizable_persistent(
                                 options,
                                 Box::new(move |env| {
@@ -7673,7 +7223,6 @@ fn get_persistent_handler(
                                         &options_arc,
                                         env,
                                         shared_mem,
-                                        &node_modules_containers,
                                         client_id,
                                         id,
                                         &text_document,
@@ -7755,7 +7304,6 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7763,7 +7311,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7849,7 +7396,6 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
@@ -7858,7 +7404,6 @@ fn get_persistent_handler(
                         &options_for_closure,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         id,
                         &params,
@@ -7903,7 +7448,6 @@ fn get_persistent_handler(
             live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
             let shared_mem = genv.shared_mem.clone();
-            let node_modules_containers = genv.node_modules_containers_snapshot();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
@@ -7911,7 +7455,6 @@ fn get_persistent_handler(
                         &options_arc,
                         env,
                         shared_mem,
-                        &node_modules_containers,
                         client_id,
                         &uri,
                         metadata,
@@ -8104,16 +7647,12 @@ fn mk_nonparallelizable_persistent_workload(
                         flow_hh_logger::info!(
                             "Command successfully canceled. Running a recheck before restarting the command"
                         );
-                        let node_modules_containers_arc =
-                            std::sync::Arc::new(std::sync::RwLock::new(
-                                (*genv_for_handler.node_modules_containers_snapshot()).clone(),
-                            ));
+                        // let%lwt (recheck_profiling, env) = Rechecker.recheck_loop genv env in
                         let (_recheck_profiling, new_env) =
                             flow_server_rechecker::rechecker::recheck_loop(
                                 &genv_for_handler,
                                 env,
                                 &genv_for_handler.shared_mem,
-                                &node_modules_containers_arc,
                             );
                         env = new_env;
                         flow_hh_logger::info!("Now restarting the command");

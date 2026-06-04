@@ -9,7 +9,6 @@ use std::cell::Cell;
 use std::cell::LazyCell;
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -20,6 +19,7 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
+use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
@@ -945,7 +945,6 @@ pub fn check_contents_context(
     ast: Arc<ast::Program<Loc, Loc>>,
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<
     (Context<'static>, ast::Program<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
@@ -961,21 +960,27 @@ pub fn check_contents_context(
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>))
     };
-    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = file_sig
-        .require_loc_map()
-        .into_keys()
-        .map(|mref| {
-            let result = flow_services_module::imported_module(
+    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = {
+        let node_modules_containers = files::node_modules_containers.read().unwrap();
+        let f = |mref: &FlowImportSpecifier| {
+            flow_services_module::imported_module(
                 &options,
                 &shared_mem,
-                node_modules_containers,
+                &node_modules_containers,
                 &file,
                 None,
-                &mref,
-            );
-            (mref, ResolvedModule::from_result(result))
-        })
-        .collect();
+                mref,
+            )
+        };
+        file_sig
+            .require_loc_map()
+            .into_keys()
+            .map(|mref| {
+                let result = f(&mref);
+                (mref, ResolvedModule::from_result(result))
+            })
+            .collect()
+    };
     let check_service::CheckFileAndCompEnv {
         mut make_cx,
         mut check_file,
@@ -1014,7 +1019,6 @@ pub fn compute_env_of_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<Context<'static>, flow_utils_concurrency::job_error::JobError> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
@@ -1027,21 +1031,32 @@ pub fn compute_env_of_contents(
         })
             as Box<dyn FnOnce() -> Rc<ALocTable>>))
     };
-    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = file_sig
-        .require_loc_map()
-        .into_keys()
-        .map(|mref| {
-            let result = flow_services_module::imported_module(
+    // let resolved_modules =
+    let resolved_modules: Vec<(FlowImportSpecifier, ResolvedModule)> = {
+        // let node_modules_containers = !Files.node_modules_containers in
+        let node_modules_containers = files::node_modules_containers.read().unwrap();
+        // let f mref =
+        let f = |mref: &FlowImportSpecifier| {
+            // Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
+            flow_services_module::imported_module(
                 &options,
                 &shared_mem,
-                node_modules_containers,
+                &node_modules_containers,
                 &file,
                 None,
-                &mref,
-            );
-            (mref, ResolvedModule::from_result(result))
-        })
-        .collect();
+                mref,
+            )
+        };
+        // Flow_import_specifier.Map.mapi (fun mref _locs -> f mref) (File_sig.require_loc_map file_sig)
+        file_sig
+            .require_loc_map()
+            .into_keys()
+            .map(|mref| {
+                let result = f(&mref);
+                (mref, ResolvedModule::from_result(result))
+            })
+            .collect()
+    };
     let check_service::CheckFileAndCompEnv {
         mut make_cx,
         check_file: _,

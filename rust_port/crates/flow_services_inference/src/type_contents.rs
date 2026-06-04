@@ -12,6 +12,7 @@ use std::time::Instant;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -264,7 +265,6 @@ fn unchecked_dependencies(
     shared_mem: &SharedMem,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
-    node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> FlowOrdSet<FileKey> {
     fn unchecked_dependency(
         shared_mem: &SharedMem,
@@ -278,12 +278,14 @@ fn unchecked_dependencies(
         }
     }
 
+    // let node_modules_containers = !Files.node_modules_containers in
+    let node_modules_containers = files::node_modules_containers.read().unwrap();
     requires.iter().fold(
         FlowOrdSet::new(),
         |mut acc, r| match flow_services_module::imported_module(
             options,
             shared_mem,
-            node_modules_containers,
+            &node_modules_containers,
             file,
             None,
             r,
@@ -310,10 +312,8 @@ fn ensure_checked_dependencies(
     shared_mem: &SharedMem,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
-    node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<(), CheckedDependenciesCanceled> {
-    let unchecked_deps =
-        unchecked_dependencies(options, shared_mem, file, requires, node_modules_containers);
+    let unchecked_deps = unchecked_dependencies(options, shared_mem, file, requires);
     if !unchecked_deps.is_empty() {
         let n = unchecked_deps.len();
         flow_hh_logger::info!("Canceling command due to {} unchecked dependencies", n);
@@ -345,19 +345,12 @@ pub fn check_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
-    node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<
     Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
 > {
     with_timer(options, "MergeContents", || {
-        if let Err(e) = ensure_checked_dependencies(
-            options,
-            &shared_mem,
-            &filename,
-            requires,
-            node_modules_containers,
-        ) {
+        if let Err(e) = ensure_checked_dependencies(options, &shared_mem, &filename, requires) {
             return Ok(Err(e));
         }
         Ok(Ok(merge_service::check_contents_context(
@@ -368,7 +361,6 @@ pub fn check_contents(
             ast,
             docblock,
             file_sig,
-            node_modules_containers,
         )?))
     })
 }
@@ -383,20 +375,13 @@ pub fn compute_env_of_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
-    node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<
     Result<Context<'static>, CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
 > {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
-            if let Err(e) = ensure_checked_dependencies(
-                options,
-                &shared_mem,
-                &filename,
-                requires,
-                node_modules_containers,
-            ) {
+            if let Err(e) = ensure_checked_dependencies(options, &shared_mem, &filename, requires) {
                 return Ok(Err(e));
             }
             Ok(Ok(merge_service::compute_env_of_contents(
@@ -407,7 +392,6 @@ pub fn compute_env_of_contents(
                 ast,
                 docblock,
                 file_sig,
-                node_modules_containers,
             )?))
         })
     })
@@ -420,7 +404,6 @@ pub fn type_parse_artifacts(
     master_cx: Arc<MasterContext>,
     filename: FileKey,
     intermediate_result: (Option<ParseArtifacts>, ErrorSet),
-    node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<FileArtifacts<'static>, TypeContentsError> {
     match intermediate_result {
         (Some(parse_artifacts), _errs) => {
@@ -446,7 +429,6 @@ pub fn type_parse_artifacts(
                             ast.dupe(),
                             &requires,
                             file_sig.dupe(),
-                            node_modules_containers,
                         )
                     })
                 })

@@ -1277,7 +1277,6 @@ dependencies = [
  "flow_common_tarjan",
  "flow_common_ty",
  "flow_common_utils",
- "flow_data_structure_wrapper",
  "flow_event_logger",
  "flow_heap",
  "flow_hh_logger",

@@ -5,16 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::RwLock;
 
 use flow_common::files;
 use flow_common::files::FileOptions;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -230,7 +227,6 @@ fn get_ls_files(
     all: bool,
     options: Arc<FileOptions>,
     all_unordered_libs: Arc<BTreeSet<String>>,
-    node_modules_containers: &RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
     imaginary: bool,
     file_or_dir: Option<&str>,
 ) -> Box<dyn FnMut() -> Vec<String>> {
@@ -245,7 +241,6 @@ fn get_ls_files(
                 options,
                 false,
                 all_unordered_libs,
-                node_modules_containers,
                 |chunk| {
                     for p in chunk {
                         all_files.push(p.to_string_lossy().to_string());
@@ -273,7 +268,6 @@ fn get_ls_files(
                 options,
                 false,
                 all_unordered_libs,
-                node_modules_containers,
                 |chunk| {
                     for p in chunk {
                         all_files.push(p.to_string_lossy().to_string());
@@ -440,8 +434,6 @@ fn main_impl(args: &arg_spec::Values) {
     // `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
     // we pass in ~libs:SSet.empty, which means we won't filter out any lib files
     let empty_libs: Arc<BTreeSet<String>> = Arc::new(BTreeSet::new());
-    let node_modules_containers: RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>> =
-        RwLock::new(BTreeMap::new());
 
     let mut next_files: Box<dyn FnMut() -> Vec<String>> = if files_or_dirs.is_empty() {
         get_ls_files(
@@ -449,7 +441,6 @@ fn main_impl(args: &arg_spec::Values) {
             all,
             Arc::clone(&options),
             empty_libs.clone(),
-            &node_modules_containers,
             imaginary,
             None,
         )
@@ -462,7 +453,6 @@ fn main_impl(args: &arg_spec::Values) {
                     all,
                     Arc::clone(&options),
                     empty_libs.clone(),
-                    &node_modules_containers,
                     imaginary,
                     Some(f),
                 )

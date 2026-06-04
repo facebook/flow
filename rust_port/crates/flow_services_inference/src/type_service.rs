@@ -12,7 +12,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::time::Instant;
 
 use crossbeam::channel;
@@ -302,11 +301,13 @@ fn resolve_requires_impl(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     parsed: &FlowOrdSet<FileKey>,
     cancelable: bool,
 ) -> Result<(), RecheckError> {
     with_memory_timer(options, "ResolveRequires", || {
+        // let node_modules_containers = !Files.node_modules_containers in
+        let node_modules_containers =
+            Arc::new(files::node_modules_containers.read().unwrap().clone());
         if cancelable {
             check_recheck_canceled()?;
         }
@@ -319,7 +320,6 @@ fn resolve_requires_impl(
         );
         let options_clone = options.dupe();
         let shared_mem_clone = shared_mem.dupe();
-        let node_modules_containers = node_modules_containers.dupe();
         flow_utils_concurrency::map_reduce::iter(pool, next, move |batch| {
             for file in batch {
                 if cancelable && worker_cancel::should_cancel() {
@@ -346,35 +346,19 @@ fn resolve_requires(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     parsed: &FlowOrdSet<FileKey>,
 ) {
-    resolve_requires_impl(
-        pool,
-        shared_mem,
-        options,
-        node_modules_containers,
-        parsed,
-        false,
-    )
-    .expect("non-recheck resolve requires should not be canceled");
+    resolve_requires_impl(pool, shared_mem, options, parsed, false)
+        .expect("non-recheck resolve requires should not be canceled");
 }
 
 fn resolve_requires_for_recheck(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     parsed: &FlowOrdSet<FileKey>,
 ) -> Result<(), RecheckError> {
-    resolve_requires_impl(
-        pool,
-        shared_mem,
-        options,
-        node_modules_containers,
-        parsed,
-        true,
-    )
+    resolve_requires_impl(pool, shared_mem, options, parsed, true)
 }
 
 fn error_set_of_internal_error(
@@ -1334,7 +1318,6 @@ pub(crate) mod recheck {
         updates: &CheckedSet,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
-        node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         mut env: Env,
     ) -> Result<(Env, IntermediateValues), RecheckError> {
         check_recheck_canceled()?;
@@ -1531,13 +1514,7 @@ pub(crate) mod recheck {
             |UnexpectedFileChanges(changed_files)| handle_unexpected_file_changes(changed_files),
         )?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
-        resolve_requires_for_recheck(
-            pool,
-            shared_mem,
-            options,
-            node_modules_containers,
-            &parsed_set_for_resolve,
-        )?;
+        resolve_requires_for_recheck(pool, shared_mem, options, &parsed_set_for_resolve)?;
         check_recheck_canceled()?;
 
         flow_hh_logger::info!("Recalculating dependency graph");
@@ -1894,7 +1871,6 @@ pub(crate) mod recheck {
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
-        node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         updates: &CheckedSet,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         files_to_force: CheckedSet,
@@ -1919,7 +1895,6 @@ pub(crate) mod recheck {
             updates,
             def_info,
             files_to_force,
-            node_modules_containers,
             env,
         )?;
         let for_find_all_refs = match def_info {
@@ -1946,7 +1921,6 @@ pub(crate) mod recheck {
         updates: &CheckedSet,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
-        node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
         env: Env,
     ) -> Result<Env, RecheckError> {
         let (env, intermediate_values) = recheck_parse_and_update_dependency_info(
@@ -1956,7 +1930,6 @@ pub(crate) mod recheck {
             updates,
             def_info,
             files_to_force,
-            node_modules_containers,
             env,
         )?;
         let IntermediateValues {
@@ -2003,7 +1976,6 @@ pub(crate) fn recheck_impl(
     find_ref_request: &flow_services_references::find_refs_types::Request,
     files_to_force: CheckedSet,
     changed_mergebase: Option<bool>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
 ) -> Result<
@@ -2022,7 +1994,6 @@ pub(crate) fn recheck_impl(
                 pool,
                 shared_mem,
                 options,
-                node_modules_containers,
                 updates,
                 find_ref_request,
                 files_to_force,
@@ -2158,7 +2129,6 @@ pub fn parse_and_update_dependency_info(
     updates: &CheckedSet,
     def_info: &DefInfo,
     files_to_force: CheckedSet,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     env: Env,
 ) -> Result<Env, RecheckError> {
     recheck::parse_and_update_dependency_info(
@@ -2168,7 +2138,6 @@ pub fn parse_and_update_dependency_info(
         updates,
         def_info,
         files_to_force,
-        node_modules_containers,
         env,
     )
 }
@@ -2178,7 +2147,6 @@ pub fn make_next_files(
     file_options: Arc<FileOptions>,
     include_libdef: bool,
     all_unordered_libs: Arc<BTreeSet<String>>,
-    node_modules_containers: &RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
     mut send_chunked: impl FnMut(Vec<FileKey>),
 ) {
     let file_opts_for_convert = file_options.dupe();
@@ -2191,7 +2159,6 @@ pub fn make_next_files(
         file_options,
         include_libdef,
         all_unordered_libs,
-        node_modules_containers,
         |chunk: Vec<PathBuf>| {
             let files: Vec<FileKey> = chunk
                 .into_iter()
@@ -2646,7 +2613,6 @@ fn init_with_initial_state(
     package_json_files: FlowOrdSet<FileKey>,
     dirty_modules: BTreeSet<Modulename>,
     local_errors: BTreeMap<FileKey, ErrorSet>,
-    node_modules_containers: Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) -> (Env, bool) {
     // We actually parse and typecheck the libraries, even though we're loading from saved state.
     // We'd need to check them anyway, as soon as any file is checked, since we don't track
@@ -2720,13 +2686,7 @@ fn init_with_initial_state(
         saved_duplicate_providers,
         dirty_modules,
     );
-    resolve_requires(
-        pool,
-        shared_mem,
-        options,
-        &node_modules_containers,
-        &additional_parsed,
-    );
+    resolve_requires(pool, shared_mem, options, &additional_parsed);
     let dependency_info = {
         let dependency_info = restore_dependency_info();
         let mut missing_files = BTreeMap::new();
@@ -2868,11 +2828,7 @@ pub fn init_from_legacy_saved_state(
     saved_state: flow_saved_state::SavedStateData,
     updates: &CheckedSet,
     env: Option<&Env>,
-) -> (
-    Env,
-    bool,
-    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-) {
+) -> (Env, bool) {
     let flow_saved_state::SavedStateData {
         parsed_heaps,
         unparsed_heaps,
@@ -2885,7 +2841,8 @@ pub fn init_from_legacy_saved_state(
     } = saved_state;
     flow_hh_logger::info!("Restoring heaps");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
-    let node_modules_containers = Arc::new(RwLock::new(saved_node_modules_containers));
+    // Files.node_modules_containers := node_modules_containers;
+    *files::node_modules_containers.write().unwrap() = saved_node_modules_containers;
     let mut parsed = FlowOrdSet::new();
     let mut unparsed = FlowOrdSet::new();
     let mut package_json_files = FlowOrdSet::new();
@@ -2945,9 +2902,8 @@ pub fn init_from_legacy_saved_state(
         package_json_files,
         dirty_modules,
         local_errors,
-        node_modules_containers.dupe(),
     );
-    (env, libs_ok, node_modules_containers)
+    (env, libs_ok)
 }
 
 pub fn init_from_direct_saved_state(
@@ -2957,11 +2913,7 @@ pub fn init_from_direct_saved_state(
     saved_state: flow_saved_state::SavedStateEnvData,
     updates: &CheckedSet,
     env: Option<&Env>,
-) -> (
-    Env,
-    bool,
-    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-) {
+) -> (Env, bool) {
     let flow_saved_state::SavedStateEnvData {
         parsed_files,
         unparsed_files,
@@ -2982,7 +2934,8 @@ pub fn init_from_direct_saved_state(
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
     // 2. Compute dirty modules by querying the already-populated heap
     // 3. Optionally verify file hashes
-    let node_modules_containers = Arc::new(RwLock::new(saved_node_modules_containers));
+    // Files.node_modules_containers := node_modules_containers;
+    *files::node_modules_containers.write().unwrap() = saved_node_modules_containers;
     let parsed = parsed_files.into_iter().collect::<FlowOrdSet<_>>();
     let unparsed = unparsed_files.into_iter().collect::<FlowOrdSet<_>>();
     let package_json_files = saved_package_json_files
@@ -3031,9 +2984,8 @@ pub fn init_from_direct_saved_state(
         package_json_files,
         dirty_modules,
         local_errors,
-        node_modules_containers.dupe(),
     );
-    (env, libs_ok, node_modules_containers)
+    (env, libs_ok)
 }
 
 pub fn init_from_saved_state(
@@ -3043,11 +2995,7 @@ pub fn init_from_saved_state(
     saved_state: LoadedSavedState,
     updates: &CheckedSet,
     env: Option<&Env>,
-) -> (
-    Env,
-    bool,
-    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-) {
+) -> (Env, bool) {
     let result = match saved_state {
         LoadedSavedState::Legacy_saved_state(data) => {
             init_from_legacy_saved_state(pool, shared_mem, options, data, updates, env)
@@ -3066,7 +3014,6 @@ pub fn handle_updates_since_saved_state(
     options: &Arc<Options>,
     libs_ok: bool,
     updates: &CheckedSet,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     env: Env,
 ) -> Env {
     let should_force_recheck = options.saved_state_force_recheck;
@@ -3094,7 +3041,6 @@ pub fn handle_updates_since_saved_state(
             &find_ref_request,
             files_to_force,
             None,
-            node_modules_containers,
             &mut will_be_checked_files,
             env,
         )
@@ -3116,7 +3062,6 @@ pub fn handle_updates_since_saved_state(
                     &updated_files,
                     &DefInfo::NoDefinition(None),
                     CheckedSet::empty(),
-                    node_modules_containers,
                     env.clone(),
                 )
             }) {
@@ -3143,11 +3088,7 @@ pub fn init_from_scratch(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     root: &Path,
-) -> (
-    Env,
-    bool,                                                      /* libs_ok */
-    Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>, /* node_modules_containers */
-) {
+) -> (Env, bool /* libs_ok */) {
     with_transaction("init", |_transaction| {
         let (ordered_libs, all_unordered_libs) =
             files::ordered_and_unordered_lib_paths(&options.file_options);
@@ -3161,25 +3102,14 @@ pub fn init_from_scratch(
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
 
-        let node_modules_containers: Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
-            Arc::new(RwLock::new(BTreeMap::new()));
-
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);
 
-        let node_modules_containers_for_thread = node_modules_containers.clone();
         let all_libs_for_thread = all_unordered_libs.clone();
         let handle = std::thread::spawn(move || {
-            make_next_files(
-                &root_buf,
-                file_opts,
-                true,
-                all_libs_for_thread,
-                &node_modules_containers_for_thread,
-                |files| {
-                    sender.send(files).unwrap();
-                },
-            );
+            make_next_files(&root_buf, file_opts, true, all_libs_for_thread, |files| {
+                sender.send(files).unwrap();
+            });
             drop(sender);
         });
         flow_hh_logger::info!("Parsing");
@@ -3263,13 +3193,7 @@ pub fn init_from_scratch(
             dirty_modules_ordered,
         );
 
-        resolve_requires(
-            pool,
-            shared_mem,
-            options,
-            &node_modules_containers,
-            &parsed_set,
-        );
+        resolve_requires(pool, shared_mem, options, &parsed_set);
 
         monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
@@ -3340,7 +3264,7 @@ pub fn init_from_scratch(
 
         shared_mem.commit_entities();
 
-        (env, libs_ok, node_modules_containers)
+        (env, libs_ok)
     })
 }
 
@@ -3452,31 +3376,16 @@ pub fn init(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     focus_targets: Option<FlowOrdSet<FileKey>>,
-) -> Result<
-    (
-        Env,
-        Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
-        Option<String>,
-    ),
-    RecheckError,
-> {
+) -> Result<(Env, Option<String>), RecheckError> {
     let start_time = Instant::now();
-    let (env, libs_ok, node_modules_containers) = match load_saved_state(pool, shared_mem, options)
-    {
+    let (env, libs_ok) = match load_saved_state(pool, shared_mem, options) {
         Ok((saved_state, updates)) => {
             // We loaded a saved state successfully! We are awesome!
-            let (env, libs_ok, node_modules_containers) =
+            let (env, libs_ok) =
                 init_from_saved_state(pool, shared_mem, options, saved_state, &updates, None);
-            let env = handle_updates_since_saved_state(
-                pool,
-                shared_mem,
-                options,
-                libs_ok,
-                &updates,
-                &node_modules_containers,
-                env,
-            );
-            (env, libs_ok, node_modules_containers)
+            let env =
+                handle_updates_since_saved_state(pool, shared_mem, options, libs_ok, &updates, env);
+            (env, libs_ok)
         }
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
@@ -3493,20 +3402,15 @@ pub fn init(
     } else if options.lazy_mode {
         match focus_targets {
             None => libdef_check_for_lazy_init(options, pool, shared_mem, env)?,
-            Some(focus_targets) => focus_check_for_init(
-                options,
-                pool,
-                shared_mem,
-                focus_targets,
-                &node_modules_containers,
-                env,
-            )?,
+            Some(focus_targets) => {
+                focus_check_for_init(options, pool, shared_mem, focus_targets, env)?
+            }
         }
     } else {
         full_check_for_init(options, pool, shared_mem, env)?
     };
 
-    Ok((env, node_modules_containers, first_internal_error))
+    Ok((env, first_internal_error))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -3514,7 +3418,6 @@ pub fn reinit(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     allow_fallback: bool,
     reason: &str,
     updates: &CheckedSet,
@@ -3549,7 +3452,7 @@ pub fn reinit(
     };
     // We loaded a saved state successfully! We are awesome!
     flow_hh_logger::info!("Reinitializing from saved state");
-    let (env, _libs_ok, new_node_modules_containers) = init_from_saved_state(
+    let (env, _libs_ok) = init_from_saved_state(
         pool,
         shared_mem,
         options,
@@ -3557,7 +3460,6 @@ pub fn reinit(
         &updates_since_saved_state,
         Some(&env),
     );
-    *node_modules_containers.write().unwrap() = new_node_modules_containers.read().unwrap().clone();
 
     let updates_since_saved_state = if !options.lazy_mode || options.saved_state_force_recheck {
         updates_since_saved_state
@@ -3601,7 +3503,6 @@ pub fn reinit_full_check(
     options: &Arc<Options>,
     updates: &CheckedSet,
     files_to_force: CheckedSet,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
 ) -> Result<
@@ -3630,7 +3531,6 @@ pub fn reinit_full_check(
                 env.package_json_files.dupe(),
                 BTreeSet::new(),
                 env.errors.local_errors.clone(),
-                node_modules_containers.dupe(),
             ))
         })
         .unwrap();
@@ -3674,7 +3574,6 @@ pub fn recheck(
     incompatible_lib_change: bool,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
 ) -> Result<
@@ -3699,7 +3598,6 @@ pub fn recheck(
                 options,
                 updates,
                 files_to_force,
-                node_modules_containers,
                 will_be_checked_files,
                 env,
             )
@@ -3712,7 +3610,6 @@ pub fn recheck(
                 find_ref_request,
                 files_to_force,
                 changed_mergebase,
-                node_modules_containers,
                 will_be_checked_files,
                 env,
             )
@@ -3731,7 +3628,6 @@ pub fn recheck(
                 pool,
                 shared_mem,
                 options,
-                node_modules_containers,
                 false,
                 reason,
                 updates,
@@ -3753,7 +3649,6 @@ pub fn recheck(
                 pool,
                 shared_mem,
                 options,
-                node_modules_containers,
                 true,
                 "libdef_change_with_mergebase_change",
                 updates,
@@ -3772,7 +3667,6 @@ pub fn recheck(
                         options,
                         updates,
                         files_to_force,
-                        node_modules_containers,
                         will_be_checked_files,
                         env,
                     )
@@ -3796,7 +3690,6 @@ pub fn recheck(
                 find_ref_request,
                 files_to_force,
                 changed_mergebase,
-                node_modules_containers,
                 will_be_checked_files,
                 env,
             ) {
@@ -4010,7 +3903,6 @@ pub fn focus_check_for_init(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     focus_targets: FlowOrdSet<FileKey>,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let (env, first_internal_error) = libdef_check_for_lazy_init(options, pool, shared_mem, env)?;
@@ -4030,7 +3922,6 @@ pub fn focus_check_for_init(
         false,
         None,
         false,
-        node_modules_containers,
         &mut will_be_checked_files,
         env,
     )?;
@@ -4065,20 +3956,14 @@ pub fn check_once(
     // fetch function contributes a `FetchSavedState` child profile.
     with_timer(&options, "FetchSavedState", || {});
 
-    let (env, libs_ok, node_modules_containers) =
-        init_from_scratch(&options, pool, shared_mem, root);
+    let (env, libs_ok) = init_from_scratch(&options, pool, shared_mem, root);
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {
                 None => libdef_check_for_lazy_init(&options, pool, shared_mem, env),
-                Some(focus_targets) => focus_check_for_init(
-                    &options,
-                    pool,
-                    shared_mem,
-                    focus_targets,
-                    &node_modules_containers,
-                    env,
-                ),
+                Some(focus_targets) => {
+                    focus_check_for_init(&options, pool, shared_mem, focus_targets, env)
+                }
             }
         } else {
             full_check_for_init(&options, pool, shared_mem, env)

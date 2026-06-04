@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -17,7 +16,6 @@ use std::time::Instant;
 use dupe::Dupe;
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_server_env::error_collator;
 use flow_server_env::lsp_prot;
@@ -227,7 +225,6 @@ fn recheck(
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
     updates: CheckedSet,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) -> Result<(ProfilingFinished, server_env::Env), type_service::RecheckError> {
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
@@ -259,7 +256,6 @@ fn recheck(
         incompatible_lib_change,
         changed_mergebase,
         missed_changes,
-        node_modules_containers,
         will_be_checked_files,
         env,
     );
@@ -409,7 +405,6 @@ pub(crate) fn recheck_single(
     genv: &server_env::Genv,
     env: server_env::Env,
     shared_mem: &SharedMem,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) -> RecheckOutcome {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
@@ -516,7 +511,6 @@ pub(crate) fn recheck_single(
             missed_changes,
             &mut will_be_checked_files_for_recheck,
             files_to_recheck_set,
-            node_modules_containers,
         ) {
             Ok((profiling, env)) => {
                 stop_parallelizable_workloads_for_recheck.stop();
@@ -554,13 +548,7 @@ pub(crate) fn recheck_single(
             );
             let _done: bool = shared_mem.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
-            recheck_single(
-                recheck_count + 1,
-                genv,
-                env_for_cancel,
-                shared_mem,
-                node_modules_containers,
-            )
+            recheck_single(recheck_count + 1, genv, env_for_cancel, shared_mem)
         },
     )
 }
@@ -571,14 +559,13 @@ pub fn recheck_loop(
     genv: &server_env::Genv,
     env: server_env::Env,
     shared_mem: &SharedMem,
-    node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
 ) -> (Vec<ProfilingFinished>, server_env::Env) {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     let mut env = env;
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, env, shared_mem, node_modules_containers);
+        let recheck_result = recheck_single(1, genv, env, shared_mem);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };

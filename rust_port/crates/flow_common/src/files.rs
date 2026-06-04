@@ -15,6 +15,7 @@ use std::hash::Hasher;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::LazyLock;
 use std::sync::Mutex;
 use std::sync::OnceLock;
 use std::sync::RwLock;
@@ -124,6 +125,19 @@ impl Default for FileOptions {
         }
     }
 }
+
+// (* During node module resolution, we need to look for node_modules/ directories
+//  * as we walk up the path. But checking each directory for them would be expensive.
+//  * So instead we memorize which directories contain node_modules/ directories.
+//  *
+//  * This is complicated by the node_resolver_dirnames option, which means
+//  * node_modules/ directories might go by other names. So we need to keep track
+//  * of which directories contain node_modules/ directories and which aliases we've
+//  * seen *)
+// let node_modules_containers = ref SMap.empty
+#[allow(non_upper_case_globals)]
+pub static node_modules_containers: LazyLock<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
+    LazyLock::new(|| RwLock::new(BTreeMap::new()));
 
 pub const GLOBAL_FILE_NAME: &str = "(global)";
 pub const FLOW_EXT: &str = ".flow";
@@ -817,7 +831,6 @@ pub fn make_next_files(
     options: Arc<FileOptions>,
     include_libdef: bool,
     all_unordered_libs: Arc<BTreeSet<String>>,
-    node_modules_containers: &RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
     mut send_chunked: impl FnMut(Vec<PathBuf>),
 ) {
     fn wanted_filter(
@@ -877,6 +890,9 @@ pub fn make_next_files(
             && realpath_filter(options, path, all, include_libdef, all_unordered_libs)
     }
 
+    // let node_module_filter = is_node_module options in
+    let node_module_filter = |file: &str| is_node_module(&options, file);
+
     let starting_point_paths = {
         let mut starting_point_paths: Vec<PathBuf> = if include_libdef {
             all_unordered_libs.iter().map(PathBuf::from).collect()
@@ -895,21 +911,6 @@ pub fn make_next_files(
     let mut chunk = Vec::new();
     let mut symlink_ancestor_cache = HashMap::new();
     for starting_point_path in starting_point_paths {
-        if is_node_module(&options, &starting_point_path.to_string_lossy()) {
-            let dirname = starting_point_path
-                .parent()
-                .map(|p| p.to_string_lossy().to_string())
-                .unwrap_or_default();
-            let basename = starting_point_path
-                .file_name()
-                .map(|s| s.to_string_lossy().to_string())
-                .unwrap_or_default();
-            let mut containers = node_modules_containers.write().unwrap();
-            containers
-                .entry(FlowSmolStr::new(&dirname))
-                .or_default()
-                .insert(FlowSmolStr::new(&basename));
-        }
         let duped_options = options.dupe();
         let duped_all_unordered_libs = all_unordered_libs.dupe();
         for entry in jwalk::WalkDir::new(starting_point_path)
@@ -936,7 +937,14 @@ pub fn make_next_files(
             if entry.file_type().is_dir() {
                 let path = entry.path();
                 let path_str = path.to_string_lossy();
-                if is_node_module(&options, &path_str) {
+                if node_module_filter(path_str.as_ref()) {
+                    // if node_module_filter file then
+                    //   node_modules_containers :=
+                    //     SMap.add
+                    //       ~combine:SSet.union
+                    //       (Filename.dirname file)
+                    //       (file |> Filename.basename |> SSet.singleton)
+                    //       !node_modules_containers;
                     let dirname = Path::new(&*path_str)
                         .parent()
                         .map(|p| p.to_string_lossy().to_string())

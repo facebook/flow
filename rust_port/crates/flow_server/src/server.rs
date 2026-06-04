@@ -5,10 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::time::Duration;
 
 use flow_cgroup as cgroup;
@@ -20,7 +18,6 @@ use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_exit_status::FlowExitStatus;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib;
 use flow_parser::ast::Program;
 use flow_parser::file_key;
@@ -39,7 +36,6 @@ use flow_typing_errors::intermediate_error::to_printable_error;
 use crate::server_daemon;
 use crate::server_env_build;
 
-type NodeModulesContainers = Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>;
 pub type CheckOnceSuppressedErrors = Vec<(PrintableError<Loc>, BTreeSet<Loc>)>;
 pub type CheckOnceCollatedErrors<'a> = (
     &'a ConcreteLocPrintableErrorSet,
@@ -178,7 +174,7 @@ fn init(
     profiling: &ProfilingRunning,
     focus_targets: Option<FlowOrdSet<FileKey>>,
     genv: &Genv,
-) -> Result<(Env, NodeModulesContainers, Option<String>), RecheckError> {
+) -> Result<(Env, Option<String>), RecheckError> {
     // write binary path and version to server log
     flow_hh_logger::info!(
         "executable={}",
@@ -209,17 +205,16 @@ fn init(
 
     extract_flowlibs_or_exit(options);
 
-    let (env, node_modules_containers, first_internal_error) =
-        flow_services_inference::type_service::init(
-            options,
-            workers,
-            &genv.shared_mem,
-            focus_targets,
-        )?;
+    let (env, first_internal_error) = flow_services_inference::type_service::init(
+        options,
+        workers,
+        &genv.shared_mem,
+        focus_targets,
+    )?;
 
     sample_init_memory(profiling, &genv.shared_mem);
     flow_event_logger::sharedmem_init_done(genv.shared_mem.heap_size() as u64);
-    Ok((env, node_modules_containers, first_internal_error))
+    Ok((env, first_internal_error))
 }
 
 async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
@@ -293,12 +288,7 @@ async fn gc_loop(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) {
     }
 }
 
-fn serve(
-    _genv: &Genv,
-    mut _env: Env,
-    shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
-    node_modules_containers: &NodeModulesContainers,
-) {
+fn serve(_genv: &Genv, mut _env: Env, shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -340,12 +330,8 @@ fn serve(
             }
         });
 
-        let (_profiling, new_env) = flow_server_rechecker::rechecker::recheck_loop(
-            _genv,
-            _env,
-            shared_mem,
-            node_modules_containers,
-        );
+        let (_profiling, new_env) =
+            flow_server_rechecker::rechecker::recheck_loop(_genv, _env, shared_mem);
         _env = new_env;
 
         let next_workload = server_monitor_listener_state::pop_next_workload();
@@ -524,17 +510,9 @@ fn run(
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         init(profiling, None, &genv_arc)
     });
-    let (env, node_modules_containers, first_internal_error) = match init_result {
+    let (env, first_internal_error) = match init_result {
         Ok(result) => result,
         Err(error) => exit_on_recheck_error(error),
-    };
-    let node_modules_containers = match &genv_arc.live_node_modules_containers {
-        Some(live_node_modules_containers) => {
-            *live_node_modules_containers.write().unwrap() =
-                node_modules_containers.read().unwrap().clone();
-            live_node_modules_containers.clone()
-        }
-        None => node_modules_containers,
     };
     let init_duration = profiling.get_profiling_duration();
 
@@ -563,12 +541,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(
-        &genv_arc,
-        env,
-        &genv_arc.shared_mem,
-        &node_modules_containers,
-    );
+    serve(&genv_arc, env, &genv_arc.shared_mem);
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
@@ -645,8 +618,7 @@ where
     let should_print_summary = options.profile;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
-        let (env, _node_modules_containers, first_internal_error) =
-            init(profiling, focus_targets, &genv)?;
+        let (env, first_internal_error) = init(profiling, focus_targets, &genv)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
         let lazy_stats = flow_server_rechecker::rechecker::get_lazy_stats(&options, &env);
         let lazy_msg = if lazy_stats.lazy_mode {

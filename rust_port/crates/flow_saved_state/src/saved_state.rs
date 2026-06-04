@@ -360,15 +360,18 @@ fn collect_non_flowlib_libs(env: &Env, options: &Options) -> BTreeSet<FlowSmolSt
         .collect()
 }
 
-fn collect_node_modules_containers(
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    options: &Options,
-) -> BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>> {
+fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>> {
+    // let collect_node_modules_containers root =
+    //   SMap.fold
+    //     (fun key value acc -> SMap.add (normalize_path root key) value acc)
+    //     !Files.node_modules_containers
+    //     SMap.empty
+    let node_modules_containers = files::node_modules_containers.read().unwrap();
     node_modules_containers
         .iter()
         .map(|(key, value)| {
             (
-                FlowSmolStr::new(files::relative_path(options.root.as_path(), key.as_str())),
+                FlowSmolStr::new(files::relative_path(root, key.as_str())),
                 value.clone(),
             )
         })
@@ -461,7 +464,6 @@ fn collect_saved_state_data(
     shared_mem: &Arc<SharedMem>,
     env: &Env,
     options: &Options,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> SavedStateData {
     flow_hh_logger::info!("Collecting data for saved state");
     let parsed_heaps = env
@@ -501,6 +503,25 @@ fn collect_saved_state_data(
             )
         })
         .collect();
+    // let node_modules_containers =
+    //   SMap.fold
+    //     (fun key value acc -> SMap.add (normalize_path t key) value acc)
+    //     !Files.node_modules_containers
+    //     SMap.empty
+    // in
+    let node_modules_containers = {
+        let node_modules_containers = files::node_modules_containers.read().unwrap();
+        node_modules_containers
+            .iter()
+            .map(|(key, value)| {
+                (
+                    FlowSmolStr::new(files::relative_path(options.root.as_path(), key.as_str())),
+                    value.clone(),
+                )
+            })
+            .collect()
+    };
+    let dependency_graph = collect_dependency_graph(&env.dependency_info);
     let export_index = if options.saved_state_persist_export_index {
         env.exports
             .as_ref()
@@ -517,18 +538,16 @@ fn collect_saved_state_data(
         // state will extract and typecheck its own builtin flowlibs
         non_flowlib_libs: collect_non_flowlib_libs(env, options),
         local_errors: env.errors.local_errors.clone(),
-        node_modules_containers: collect_node_modules_containers(node_modules_containers, options),
-        dependency_graph: collect_dependency_graph(&env.dependency_info),
+        node_modules_containers,
+        dependency_graph,
         export_index,
     }
 }
 
-fn collect_saved_state_env_data(
-    env: &Env,
-    options: &Options,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> SavedStateEnvData {
+fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvData {
     flow_hh_logger::info!("Collecting env data for saved state");
+    // let root = Options.root options |> File_path.to_string in
+    let root = options.root.as_path();
     let duplicate_providers = env
         .errors
         .duplicate_providers
@@ -550,6 +569,8 @@ fn collect_saved_state_env_data(
     } else {
         None
     };
+    // let node_modules_containers = collect_node_modules_containers root in
+    let node_modules_containers = collect_node_modules_containers(root);
     SavedStateEnvData {
         flowconfig_hash: options.flowconfig_hash.dupe(),
         parsed_files: env
@@ -567,7 +588,7 @@ fn collect_saved_state_env_data(
         package_json_files: env.package_json_files.iter().cloned().collect(),
         non_flowlib_libs: collect_non_flowlib_libs(env, options),
         local_errors: env.errors.local_errors.clone(),
-        node_modules_containers: collect_node_modules_containers(node_modules_containers, options),
+        node_modules_containers,
         dependency_info: env.dependency_info.clone(),
         duplicate_providers,
         export_index,
@@ -578,10 +599,9 @@ fn collect_direct_data(
     shared_mem: &Arc<SharedMem>,
     env: &Env,
     options: &Options,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> SerializedSavedStateEnvData {
-    let legacy = collect_saved_state_data(shared_mem, env, options, node_modules_containers);
-    let saved_state_env_data = collect_saved_state_env_data(env, options, node_modules_containers);
+    let legacy = collect_saved_state_data(shared_mem, env, options);
+    let saved_state_env_data = collect_saved_state_env_data(env, options);
     SerializedSavedStateEnvData {
         flowconfig_hash: legacy.flowconfig_hash,
         parsed_files: saved_state_env_data.parsed_files,
@@ -629,22 +649,15 @@ pub fn save(
     shared_mem: &Arc<SharedMem>,
     env: &Env,
     options: &Options,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) -> Result<(), InvalidReason> {
     flow_hh_logger::info!("Saving heap to saved-state file");
     let loaded = if options.saved_state_direct_serialization {
         SerializedLoadedSavedState::Direct_saved_state(collect_direct_data(
-            shared_mem,
-            env,
-            options,
-            node_modules_containers,
+            shared_mem, env, options,
         ))
     } else {
         SerializedLoadedSavedState::Legacy_saved_state(collect_saved_state_data(
-            shared_mem,
-            env,
-            options,
-            node_modules_containers,
+            shared_mem, env, options,
         ))
     };
     let result = write_loaded_state(path, &loaded);
@@ -658,19 +671,24 @@ fn denormalize_paths(
     node_modules_containers: &mut BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) {
     // Raw string paths still need the root prepended
+    // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
+    // let prepend_root path = Files.absolute_path root path in
+    let prepend_root = |path: &str| files::absolute_path(root, path);
+    // let non_flowlib_libs = SSet.map prepend_root non_flowlib_libs in
     *non_flowlib_libs = non_flowlib_libs
         .iter()
-        .map(|path| FlowSmolStr::new(files::absolute_path(root, path.as_str())))
+        .map(|path| FlowSmolStr::new(prepend_root(path.as_str())))
         .collect();
+    // let node_modules_containers =
+    //   SMap.fold
+    //     (fun key value acc -> SMap.add (prepend_root key) value acc)
+    //     node_modules_containers
+    //     SMap.empty
+    // in
     *node_modules_containers = node_modules_containers
         .iter()
-        .map(|(key, value)| {
-            (
-                FlowSmolStr::new(files::absolute_path(root, key.as_str())),
-                value.clone(),
-            )
-        })
+        .map(|(key, value)| (FlowSmolStr::new(prepend_root(key.as_str())), value.clone()))
         .collect();
 }
 

@@ -3101,7 +3101,6 @@ fn with_type_checked_file<T>(
     options: &Options,
     env: &Env,
     shared_mem: Arc<SharedMem>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     file_key: &FileKey,
     file_content: &str,
     f: &dyn Fn(
@@ -3125,7 +3124,6 @@ fn with_type_checked_file<T>(
                 env.master_cx.dupe(),
                 file_key.clone(),
                 intermediate_result,
-                node_modules_containers,
             )
         }
     };
@@ -3144,7 +3142,6 @@ pub fn autofix_errors_cli(
     options: &Options,
     env: &Env,
     shared_mem: Arc<SharedMem>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
     get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     module_system_info: &LspModuleSystemInfo,
@@ -3165,7 +3162,6 @@ pub fn autofix_errors_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         file_key,
         file_content,
         &|cx: &Context,
@@ -3260,7 +3256,6 @@ pub fn autofix_imports_cli(
     options: &Options,
     env: &Env,
     shared_mem: Arc<SharedMem>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
     file_key: &FileKey,
@@ -3274,7 +3269,6 @@ pub fn autofix_imports_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         file_key,
         file_content,
         &|cx: &Context,
@@ -3299,7 +3293,6 @@ pub fn suggest_imports_cli(
     options: &Options,
     env: &Env,
     shared_mem: Arc<SharedMem>,
-    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
     file_key: &FileKey,
@@ -3314,7 +3307,6 @@ pub fn suggest_imports_cli(
         options,
         env,
         shared_mem,
-        node_modules_containers,
         file_key,
         file_content,
         &|cx: &Context,

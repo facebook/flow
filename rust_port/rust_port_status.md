@@ -804,7 +804,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] `multi_platform` → pub field on `FileOptions`
     - [x] `multi_platform_extension_group_mapping` → pub field on `FileOptions`
     - [x] `multi_platform_extensions` → pub field on `FileOptions`
-    - [x] `node_modules_containers` → parameter passing (intentional Rust idiom)
+    - [x] `node_modules_containers` → `Files.node_modules_containers` global ref/static
     - [x] `ordered_and_unordered_lib_paths`
     - [x] `parent_dir_name` → `PARENT_DIR_NAME` lazy_static
     - [x] `untyped` → pub field on `FileOptions`

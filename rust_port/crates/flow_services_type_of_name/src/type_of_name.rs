@@ -640,14 +640,12 @@ fn resolve_name_from_index(
     }?;
     let contents = format!("/* @flow */ {}", contents_body);
     let parse_result = type_contents::parse_contents(options, &contents, &file_key);
-    let empty_node_modules_containers = BTreeMap::new();
     match type_contents::type_parse_artifacts(
         options,
         reader.dupe(),
         env.master_cx.dupe(),
         file_key.dupe(),
         parse_result,
-        &empty_node_modules_containers,
     ) {
         Err(_errors) => Err("Parse or typing errors on index".to_string()),
         Ok(check_result) => {

@@ -16,7 +16,6 @@ flow_common_modulename = { path = "../flow_common_modulename" }
 flow_common_tarjan = { path = "../flow_common_tarjan" }
 flow_common_ty = { path = "../flow_common_ty" }
 flow_common_utils = { path = "../flow_common_utils" }
-flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_event_logger = { path = "../flow_event_logger" }
 flow_heap = { path = "../flow_heap" }
 flow_hh_logger = { path = "../flow_hh_logger" }

@@ -7,7 +7,6 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::sync::RwLock;
 
 use dupe::Dupe;
 use flow_common::bitset::Bitset;
@@ -1846,14 +1845,13 @@ pub fn choose_provider(
 pub fn add_parsed_resolved_requires(
     options: &Options,
     shared_mem: &SharedMem,
-    node_modules_containers: &RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     file: &FileKey,
 ) -> Result<(), String> {
     use flow_heap::entity::Dependency;
     use flow_heap::entity::ResolvedModule;
     use flow_heap::entity::ResolvedRequires;
 
-    let node_modules_containers = node_modules_containers.read().unwrap();
     let requires = shared_mem.get_requires_unsafe(file);
 
     let phantom_acc_map = std::collections::BTreeMap::new();
@@ -1865,7 +1863,7 @@ pub fn add_parsed_resolved_requires(
             match imported_module(
                 options,
                 shared_mem,
-                &node_modules_containers,
+                node_modules_containers,
                 file,
                 Some(&mut phantom_acc),
                 import_specifier,
