@@ -14,7 +14,9 @@ val check_once :
        Flow_errors_utils.ConcreteLocPrintableErrorSet.t
      * (* warnings *)
      (Loc.t Flow_errors_utils.printable_error * Loc_collections.LocSet.t) list ->
-    (* suppressed errors *) Profiling_js.finished ->
+    (* suppressed errors *)
+    lazy_msg:string option ->
+    Profiling_js.finished ->
     unit (* print errors *)
     ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->

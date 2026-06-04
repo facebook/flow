@@ -47,6 +47,7 @@ fn format_errors<'a>(
         &'a ConcreteLocPrintableErrorSet,
         &'a [(PrintableError<Loc>, BTreeSet<Loc>)],
     ),
+    lazy_msg: Option<String>,
 ) -> Box<dyn FnOnce(Option<serde_json::Value>) + 'a> {
     let include_warnings = client_include_warnings || options.include_warnings;
     let empty = ConcreteLocPrintableErrorSet::empty();
@@ -110,8 +111,16 @@ fn format_errors<'a>(
                 });
             let stdout = std::io::stdout();
             let mut out = std::io::BufWriter::new(stdout.lock());
-            cli_output::print_errors(&mut out, flags, &None, strip_root, &errors, warnings, None)
-                .expect("failed to write errors");
+            cli_output::print_errors(
+                &mut out,
+                flags,
+                &None,
+                strip_root,
+                &errors,
+                warnings,
+                lazy_msg.as_deref(),
+            )
+            .expect("failed to write errors");
             use std::io::Write;
             out.flush().expect("failed to flush errors");
             Box::new(move |_profiling| ())
@@ -208,7 +217,7 @@ fn check_main(
             .expect("max_workers should be positive"),
     ));
     let profiling = flow_profiling::profiling_js::Running::new("Init");
-    let (errors, warnings, suppressed_errors) =
+    let (errors, warnings, suppressed_errors, lazy_msg) =
         flow_profiling::profiling_js::with_current(&profiling, || {
             flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
                 let result = type_service::check_once(
@@ -230,6 +239,7 @@ fn check_main(
                 offset_kind,
                 &options,
                 (&errors, &warnings, &suppressed_errors),
+                lazy_msg,
             )
         })
     });
@@ -443,7 +453,7 @@ mod focus_check_command {
                 .expect("max_workers should be positive"),
         ));
         let profiling = flow_profiling::profiling_js::Running::new("Init");
-        let (errors, warnings, suppressed_errors) =
+        let (errors, warnings, suppressed_errors, lazy_msg) =
             flow_profiling::profiling_js::with_current(&profiling, || {
                 flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
                     let result = type_service::check_once(
@@ -465,6 +475,8 @@ mod focus_check_command {
                     offset_kind,
                     &options,
                     (&errors, &warnings, &suppressed_errors),
+                    // ~lazy_msg
+                    lazy_msg,
                 )
             })
         });

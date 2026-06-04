@@ -418,6 +418,33 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
           let%lwt (env, first_internal_error) = program_init profiling in
           let (errors, warnings, suppressed_errors) = ErrorCollator.get env in
+          let lazy_stats = Rechecker.get_lazy_stats ~options env in
+          let lazy_msg =
+            if lazy_stats.ServerProt.Response.lazy_mode then
+              let checked_source =
+                lazy_stats.ServerProt.Response.checked_files
+                - lazy_stats.ServerProt.Response.checked_libdef_files
+              in
+              let total_source =
+                lazy_stats.ServerProt.Response.total_files
+                - lazy_stats.ServerProt.Response.total_libdef_files
+              in
+              let libdef_msg =
+                Printf.sprintf
+                  " (+ %d/%d libdefs)"
+                  lazy_stats.ServerProt.Response.checked_libdef_files
+                  lazy_stats.ServerProt.Response.total_libdef_files
+              in
+              Some
+                (Printf.sprintf
+                   "Checked %d/%d source files%s."
+                   checked_source
+                   total_source
+                   libdef_msg
+                )
+            else
+              None
+          in
           let%lwt print_errors =
             Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
                 let to_printable =
@@ -438,7 +465,7 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
                     []
                 in
                 let collated_errors = (errors, warnings, suppressed_errors) in
-                Lwt.return (format_errors collated_errors)
+                Lwt.return (format_errors collated_errors ~lazy_msg)
             )
           in
           Lwt.return (print_errors, errors, warnings, first_internal_error)

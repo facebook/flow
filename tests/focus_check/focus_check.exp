@@ -148,6 +148,8 @@ Unexpected end of input [ParseError]
 
 Found 3 errors
 
+Checked 2/6 source files (+ 1/1 libdefs).
+
 Focused check on dependency.js (expect errors in dependency.js + main.js, but NOT dependent.js):
 Error ------------------------------------------------------------------------------------------------ dependency.js:3:1
 
@@ -191,6 +193,8 @@ Unexpected end of input [ParseError]
 
 Found 3 errors
 
+Checked 2/6 source files (+ 1/1 libdefs).
+
 Focused check on dependent.js (expect errors in dependent.js only, no dependents):
 Error ------------------------------------------------------------------------------------------------- dependent.js:5:1
 
@@ -220,6 +224,8 @@ Unexpected end of input [ParseError]
 
 Found 2 errors
 
+Checked 1/6 source files (+ 1/1 libdefs).
+
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
@@ -245,6 +251,8 @@ References:
 
 
 Found 2 errors
+
+Checked 1/6 source files (+ 1/1 libdefs).
 
 Focused check on a file and a directory:
 Error ------------------------------------------------------------------------------------------------ dir/test2.foo:4:5
@@ -285,6 +293,8 @@ References:
 
 
 Found 3 errors
+
+Checked 2/6 source files (+ 1/1 libdefs).
 
 Focused check on files specified in list.txt:
 Error ------------------------------------------------------------------------------------------------ dependency.js:3:1
@@ -360,6 +370,8 @@ Unexpected end of input [ParseError]
 
 Found 5 errors
 
+Checked 4/6 source files (+ 1/1 libdefs).
+
 Focused check guessing root by looking at first file:
 Error --------------------------------------------------------------------------- other_root/other_root_dependent.js:5:1
 
@@ -395,6 +407,8 @@ References:
 
 Found 2 errors
 
+Checked 2/2 source files (+ 1/1 libdefs).
+
 Focused check with explicit root:
 Error ------------------------------------------------------------------------------- other_root/other_root_file.js:3:17
 
@@ -421,6 +435,8 @@ Unexpected end of input [ParseError]
 
 Found 2 errors
 
+Checked 1/6 source files (+ 1/1 libdefs).
+
 Focused check with syntax error:
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
@@ -432,5 +448,7 @@ Unexpected end of input [ParseError]
 
 
 Found 1 error
+
+Checked 0/6 source files (+ 1/1 libdefs).
 
 Done!

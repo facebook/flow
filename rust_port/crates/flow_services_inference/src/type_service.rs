@@ -4057,6 +4057,7 @@ pub fn check_once(
     ConcreteLocPrintableErrorSet,
     ConcreteLocPrintableErrorSet,
     Vec<(PrintableError<Loc>, BTreeSet<Loc>)>,
+    Option<String>, /* lazy_msg */
 ) {
     let total_start = Instant::now();
 
@@ -4093,6 +4094,41 @@ pub fn check_once(
         eprintln!("Total:              {:6.2}s", total_time.as_secs_f64());
     }
 
+    let lazy_msg = if options.lazy_mode {
+        let (focused_count, checked_libdef_files) =
+            env.checked_files
+                .focused()
+                .iter()
+                .fold((0i32, 0i32), |(total, libs), f| {
+                    if f.is_lib_file() {
+                        (total + 1, libs + 1)
+                    } else {
+                        (total + 1, libs)
+                    }
+                });
+        let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
+        let (total_files, total_libdef_files) =
+            env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
+                if f.is_lib_file() {
+                    (total + 1, libs + 1)
+                } else {
+                    (total + 1, libs)
+                }
+            });
+        let checked_source = checked_files - checked_libdef_files;
+        let total_source = total_files - total_libdef_files;
+        let libdef_msg = format!(
+            " (+ {}/{} libdefs)",
+            checked_libdef_files, total_libdef_files
+        );
+        Some(format!(
+            "Checked {}/{} source files{}.",
+            checked_source, total_source, libdef_msg
+        ))
+    } else {
+        None
+    };
+
     let (errors, warnings, suppressed_errors) = error_collator::get(&env);
     let strip_root = if options.strip_root {
         Some(options.root.as_path())
@@ -4119,7 +4155,7 @@ pub fn check_once(
     } else {
         vec![]
     };
-    (errors, warnings, suppressed_errors)
+    (errors, warnings, suppressed_errors, lazy_msg)
 }
 
 pub fn debug_determine_what_to_recheck(

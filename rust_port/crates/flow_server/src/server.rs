@@ -45,6 +45,7 @@ pub type CheckOnceCollatedErrors<'a> = (
     &'a ConcreteLocPrintableErrorSet,
     &'a ConcreteLocPrintableErrorSet,
     CheckOnceSuppressedErrors,
+    Option<String>, /* lazy_msg */
 );
 pub type CheckOncePrintErrors<'a> = Box<dyn FnOnce(&ProfilingFinished) + 'a>;
 
@@ -647,6 +648,21 @@ where
         let (env, _node_modules_containers, first_internal_error) =
             init(profiling, focus_targets, &genv)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
+        let lazy_stats = flow_server_rechecker::rechecker::get_lazy_stats(&options, &env);
+        let lazy_msg = if lazy_stats.lazy_mode {
+            let checked_source = lazy_stats.checked_files - lazy_stats.checked_libdef_files;
+            let total_source = lazy_stats.total_files - lazy_stats.total_libdef_files;
+            let libdef_msg = format!(
+                " (+ {}/{} libdefs)",
+                lazy_stats.checked_libdef_files, lazy_stats.total_libdef_files
+            );
+            Some(format!(
+                "Checked {}/{} source files{}.",
+                checked_source, total_source, libdef_msg
+            ))
+        } else {
+            None
+        };
 
         let print_errors = profiling.with_timer("FormatErrors", || {
             let shared_mem = &genv.shared_mem;
@@ -672,7 +688,7 @@ where
             } else {
                 vec![]
             };
-            let collated_errors = (&errors, &warnings, suppressed_errors);
+            let collated_errors = (&errors, &warnings, suppressed_errors, lazy_msg);
             format_errors(collated_errors)
         });
         Ok((print_errors, errors, warnings, first_internal_error))

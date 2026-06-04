@@ -17,7 +17,12 @@ type printer =
 
 (* helper - print errors. used in check-and-die runs *)
 let format_errors
-    ~printer ~client_include_warnings ~offset_kind options (errors, warnings, suppressed_errors) =
+    ~printer
+    ~client_include_warnings
+    ~offset_kind
+    options
+    (errors, warnings, suppressed_errors)
+    ~lazy_msg =
   let include_warnings = client_include_warnings || Options.should_include_warnings options in
   let warnings =
     if include_warnings then
@@ -72,7 +77,7 @@ let format_errors
           ~strip_root
           ~errors
           ~warnings
-          ~lazy_msg:None
+          ~lazy_msg
           ()
       in
       (fun _profiling -> ())

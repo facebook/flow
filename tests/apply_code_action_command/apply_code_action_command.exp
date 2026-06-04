@@ -6,6 +6,8 @@ import OtherModule from "./OtherModule";
 OtherModule;
 > Confirm no errors
 Found 0 errors
+
+Checked 1/7 source files (+ 1/1 libdefs).
 > apply-code-action 'source.addMissingImports' tmp/multi.js
 // @flow
 
@@ -15,6 +17,8 @@ OtherModule;
 OtherModule;
 > Confirm no errors
 Found 0 errors
+
+Checked 1/7 source files (+ 1/1 libdefs).
 > apply-code-action suggestImports tmp/suggest_imports.js
 {
   "OtherModule":[
