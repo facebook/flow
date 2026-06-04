@@ -125,13 +125,6 @@ const SECTIONS = [
     hero: true,
   },
   {
-    title: 'FAQ',
-    href: '/en/docs/faq',
-    description: 'Have a question about using Flow? Check here first!',
-    icon: icons.help,
-    color: '#9cd732',
-  },
-  {
     title: 'Flow for TypeScript Users',
     href: '/en/docs/flow-vs-typescript',
     description:
@@ -178,6 +171,13 @@ const SECTIONS = [
       '.flowconfig options, CLI commands, Flow Strict, and library definitions.',
     icon: icons.book,
     color: '#bd93f9',
+  },
+  {
+    title: 'FAQ',
+    href: '/en/docs/faq',
+    description: 'Have a question about using Flow? Check here first!',
+    icon: icons.help,
+    color: '#9cd732',
   },
 ];
 

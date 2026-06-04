@@ -23,11 +23,6 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'faq',
-      label: 'FAQ',
-    },
-    {
-      type: 'doc',
       id: 'flow-vs-typescript',
       label: 'Flow for TypeScript Users',
     },
@@ -210,6 +205,11 @@ module.exports = {
           label: 'Glossary',
         },
       ],
+    },
+    {
+      type: 'doc',
+      id: 'faq',
+      label: 'FAQ',
     },
   ],
 };
