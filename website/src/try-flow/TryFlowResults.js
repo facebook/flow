@@ -162,7 +162,7 @@ export default component TryFlowResults(
           <select value={flowVersion} onChange={changeFlowVersion}>
             {flowVersions.map(version => (
               <option key={version} value={version}>
-                {version}
+                {version.replace('master', 'main')}
               </option>
             ))}
           </select>
