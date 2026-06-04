@@ -18,16 +18,20 @@
    dark→white edge. */
 .toolbar {
     display: flex;
-    background: #454e5a;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-    color: rgba(255, 255, 255, 0.7);
+    align-items: center;
+    height: var(--tf-toolbar-h);
+    box-sizing: border-box;
+    flex-shrink: 0;
+    background: var(--tf-bar);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    color: var(--tf-text-on-bar);
     font-size: 14px;
 }
 
 .tryEditorConfig {
     position: absolute;
     width: 100%;
-    height: calc(100vh - var(--ifm-navbar-height) - 40px);
+    height: var(--tf-editor-h);
     z-index: 10;
     background-color: white;
     /* Dark text on the white config panel, pinned so it stays readable in dark
@@ -42,7 +46,61 @@
 /* The config "[docs]" links use the light deep-gold rather than the dark-mode
    brand yellow, which is too low-contrast on the white panel. */
 .tryEditorConfig a {
-    color: #8a6300;
+    color: var(--tf-accent);
+}
+
+/* Boolean options render as toggle switches instead of native checkboxes. */
+.tryEditorConfig input[type='checkbox'] {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 34px;
+    height: 20px;
+    margin: 0;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    vertical-align: middle;
+    transition: background-color 0.15s;
+}
+.tryEditorConfig input[type='checkbox']::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s;
+}
+.tryEditorConfig input[type='checkbox']:checked {
+    background: var(--tf-accent);
+}
+.tryEditorConfig input[type='checkbox']:checked::before {
+    transform: translateX(14px);
+}
+.tryEditorConfig input[type='checkbox']:focus-visible,
+.tryEditorConfig select:focus-visible {
+    outline: 2px solid var(--tf-accent);
+    outline-offset: 2px;
+}
+
+/* Custom select for enum options, to match the toggles. */
+.tryEditorConfig select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 4px 26px 4px 10px;
+    border: 1px solid var(--tf-hairline);
+    border-radius: var(--tf-radius-sm);
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M3 4.5 6 7.5 9 4.5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    color: var(--tf-text);
+    font: inherit;
+    cursor: pointer;
 }
 
 .tryEditorConfig table {
@@ -56,15 +114,25 @@
 }
 
 .tryEditorConfig td {
-    border-top: none;
-    border-left: none;
-    border-right: none;
+    border: none;
+}
+
+/* No row borders or zebra striping; the option rows read as a clean list. */
+.tryEditorConfig tr,
+.tryEditorConfig tr:nth-child(2n) {
+    border: none;
+    background-color: transparent;
 }
 
 .tryEditorConfig h3 {
     margin-bottom: 0;
     margin-top: 5px;
     margin-bottom: 5px;
+    /* Headings normally take Infima's --ifm-heading-color, which is light in a
+       dark site theme (e.g. embedded in staticdocs) and would vanish on this
+       always-white panel. Pin it to the panel's dark text so it never inherits
+       an ambient theme color. */
+    color: var(--tf-text);
 }
 
 .tryEditorConfigInputCell {
@@ -83,25 +151,98 @@
     font-weight: bold;
 }
 
+/* Phone widths: drop the shared two-column table grid so the controls don't all
+   line up in one column (a wide enum select otherwise forces the column wide and
+   squeezes the labels). Each row becomes its own flex row: the control on the
+   left sized to its own content, its label text right beside it. Rows are
+   independent, so a wide control only widens its own row. */
+@media (max-width: 600px) {
+    .tryEditorConfig {
+        font-size: 14.5px;
+    }
+    .tryEditorConfig table,
+    .tryEditorConfig tbody {
+        display: block;
+        width: auto;
+    }
+    .tryEditorConfig tr {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .tryEditorConfig td {
+        display: block;
+    }
+    .tryEditorConfigInputCell {
+        flex: none;
+        text-align: left;
+    }
+    .tryEditorConfigLabelCell {
+        flex: 1;
+        width: auto;
+    }
+}
+
 .resetBanner {
     display: flex;
-    margin-left: auto;
-    margin-right: 10px;
-    justify-content: flex-end;
-    gap: 10px;
     align-items: center;
+    gap: 8px;
+}
+
+/* Phone widths: drop the "Recover from last saved state?" banner and its
+   Recover/Ignore buttons. The slate bar has no room for it next to the tabs at
+   this width. */
+@media (max-width: 600px) {
+    .resetBanner {
+        display: none;
+    }
 }
 
 .tryEditor {
     display: flex;
     flex: 1;
     height: calc(100vh - var(--ifm-navbar-height));
+
+    /* Playground design tokens. The Try playground is always light, so these are
+       unconditional; a future dark-aware pass can override them under a selector. */
+    --tf-bar: #454e5a;
+    --tf-bar-track: rgba(0, 0, 0, 0.22);
+    --tf-text-on-bar: rgba(255, 255, 255, 0.72);
+    --tf-surface: #ffffff;
+    --tf-surface-muted: #f7f8fa;
+    --tf-hairline: rgba(0, 0, 0, 0.1);
+    --tf-text: #1c1e21;
+    --tf-text-muted: rgba(0, 0, 0, 0.55);
+    --tf-accent: #8a6300;
+    --tf-danger: #e5534b;
+    --tf-radius: 10px;
+    --tf-radius-sm: 7px;
+    --tf-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.06);
+    /* Single source of truth for the tab-bar height: the toolbar is pinned to
+       it, the editor/results bodies subtract it, and the body divider starts at
+       it, so the divider can't poke into the bar and the bodies can't overflow. */
+    --tf-toolbar-h: 52px;
+    /* Height of one pane's body (the pane minus its tab bar). The narrow-screen
+       media query halves it when the two panes stack vertically. */
+    --tf-editor-h: calc(
+        100vh - var(--ifm-navbar-height) - var(--tf-toolbar-h)
+    );
+    /* Editor/results split ratio, set inline from the draggable splitter. */
+    --tf-split: 0.5;
 }
 
 .code,
 .results {
-    flex: 1;
-    width: 50%;
+    flex-basis: 0;
+    flex-shrink: 1;
+    min-width: 0;
+    min-height: 0;
+}
+.code {
+    flex-grow: var(--tf-split);
+}
+.results {
+    flex-grow: calc(1 - var(--tf-split));
 }
 
 .code {
@@ -112,17 +253,85 @@
     position: relative;
     font-size: 12px;
     background: #f7f7f7;
-    border-left: 1px solid #ddd;
     /* Dark text on the light results surface, pinned so errors/JSON/AST stay
        readable in dark site mode. The results-side tab bar reasserts its own
        light text via .toolbar above. */
     color: #1c1e21;
 }
 
+/* Draggable splitter between the panes. The hit area spans the full height
+   (so it can be grabbed anywhere), but the visible divider line is drawn only
+   below the tab bars, so the two slate bars still read as one continuous bar. */
+.splitter {
+    position: relative;
+    flex: 0 0 1px;
+    cursor: col-resize;
+    z-index: 2;
+    /* Slate fill so the splitter's top section blends into the two tab bars
+       (continuous bar, no gap); the divider line below is drawn by ::before. */
+    background: var(--tf-bar);
+}
+/* The 1px divider line, drawn only below the tab bars. */
+.splitter::before {
+    content: '';
+    position: absolute;
+    top: var(--tf-toolbar-h);
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: #ddd;
+    transition: background-color 0.15s;
+}
+/* A wider transparent grab zone so the 1px line is still easy to drag. */
+.splitter::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -4px;
+    width: 9px;
+}
+.splitter:hover::before,
+.splitter:active::before,
+.splitter:focus-visible::before {
+    background: var(--tf-accent);
+}
+/* The 1px line is too thin to show a normal ring, so the divider itself thickens
+   and brightens on keyboard focus. */
+.splitter:focus-visible {
+    outline: none;
+}
+.splitter:focus-visible::before {
+    width: 3px;
+}
+
+/* Narrow screens: stack the panes vertically, halve each body's height so both
+   fit below the navbar, and hide the (horizontal-only) splitter. */
+@media (max-width: 768px) {
+    .tryEditor {
+        flex-direction: column;
+        --tf-editor-h: calc(
+            (100vh - var(--ifm-navbar-height)) / 2 - var(--tf-toolbar-h)
+        );
+    }
+    .code,
+    .results {
+        flex: 1 1 0;
+        min-height: 0;
+        width: auto;
+    }
+    .splitter {
+        display: none;
+    }
+    .results {
+        border-top: 1px solid #ddd;
+    }
+}
+
 .resultBody {
     display: flex;
     flex: 1;
-    height: calc(100vh - var(--ifm-navbar-height) - 40px);
+    height: var(--tf-editor-h);
     overflow: auto;
     padding: 14px 16px;
     margin-bottom: 0;
@@ -133,23 +342,41 @@
     color-scheme: light;
 }
 
+/* Tabs render as a segmented control: a rounded inset track on the slate bar
+   with each tab a pill segment, and the active segment a raised light pill. */
 .tabs {
     display: flex;
     list-style: none;
-    margin: 0;
-    padding: 0;
+    margin: 6px 8px;
+    padding: 3px;
+    gap: 2px;
+    background: var(--tf-bar-track);
+    border-radius: var(--tf-radius-sm);
 }
 
 .tab {
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Reset native <button> chrome; the segment is styled entirely below. */
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: transparent;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    border-radius: calc(var(--tf-radius-sm) - 3px);
+    color: var(--tf-text-on-bar);
     cursor: pointer;
-    font-weight: bold;
-    padding: 7px 15px;
+    font-weight: 600;
+    padding: 5px 13px;
+    transition: background-color 0.15s, color 0.15s;
 }
 
 .tab:hover {
-    color: rgba(255, 255, 255, 0.95);
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .version {
@@ -165,49 +392,140 @@
     color: red;
 }
 
-.selectedTab {
-    /* The active tab lifts into the editor's light surface, connecting the
-       mid-tone bar to the panel below it; a yellow underline marks it. */
-    background: #fff;
-    color: #1c1e21;
-    border-bottom: 2px solid var(--flow-yellow);
-    margin-bottom: -1px; /* cover up container bottom border */
+.selectedTab,
+.selectedTab:hover {
+    /* The active segment is a raised light pill. */
+    background: var(--tf-surface);
+    color: var(--tf-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-/* Keep the active tab's dark text on hover — the generic .tab:hover lightens
-   text for the slate bar, but on the white active tab that would be invisible. */
-.selectedTab:hover {
-    color: #1c1e21;
+/* Error-count badge on the Errors tab. */
+.tabBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--tf-danger);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Fixed-width slot for the Errors indicator so the tab width doesn't shift
+   between the check and a single-digit count badge (both occupy 18px). */
+.errorIndicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+}
+
+/* Tab icons inherit the tab's text color (light on the bar, dark when active). */
+.tab svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+}
+
+/* Buttons on the slate bar (copy code, copy link, recover, ignore): matching
+   pills. */
+.toolbarButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--tf-radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--tf-text-on-bar);
+    font: inherit;
+    font-size: 13px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.toolbarButton:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+/* Phone widths: drop the "Copy all" button. The slate bar is tight at this
+   width (tabs + version dropdown), and "Copy all" doesn't fit; each card still
+   has its own copy button. */
+@media (max-width: 600px) {
+    .copyAll {
+        display: none;
+    }
+}
+.toolbarButton svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Right-aligned cluster of toolbar actions (recover/ignore + copy buttons). */
+.toolbarActions {
+    margin-left: auto;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Version dropdown: a pill on the slate bar, the same shape as the config's
+   custom select but themed for the dark bar (translucent fill, light chevron). */
+.version select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 4px 26px 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--tf-radius-sm);
+    background-color: rgba(255, 255, 255, 0.08);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c8ccd0' d='M3 4.5 6 7.5 9 4.5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    color: var(--tf-text-on-bar);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.version select:hover {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+/* Focus-visible rings. Elements on the slate bar use the brand yellow (visible
+   on the dark bar); the white config controls use the deep gold. */
+.tab:focus-visible,
+.toolbarButton:focus-visible,
+.version select:focus-visible {
+    outline: 2px solid var(--flow-yellow);
+    outline-offset: 2px;
 }
 
 .loader {
     display: flex;
     justify-content: center;
-    margin-top: 10px;
+    padding: 16px;
 }
 
-@keyframes sk-bouncedelay {0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--tf-hairline);
+    border-top-color: var(--tf-accent);
+    border-radius: 50%;
+    animation: tf-spin 0.7s linear infinite;
 }
 
-.loader > div {
-    width: 14px;
-    height: 14px;
-    background-color: #ccc;
-    border-radius: 100%;
-    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
-}
-
-.loader > .bounce1 {
-    animation-delay: -320ms;
-}
-
-.loader > .bounce2 {
-    animation-delay: -160ms;
+@keyframes tf-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* The AST tree (react-json-view) gets its own block scroll container rather
@@ -215,7 +533,7 @@
    and collapse, which drives a ResizeObserver feedback loop. A fixed-height
    block with overflow scroll keeps the container size stable. */
 .astBody {
-    height: calc(100vh - var(--ifm-navbar-height) - 40px);
+    height: var(--tf-editor-h);
     overflow: auto;
     padding: 14px 16px;
     color-scheme: light;
@@ -227,10 +545,91 @@
     padding: 0;
 }
 
-.errors  li + li {
+/* Each top-level error is a raised card with a danger-colored left accent.
+   Clicking the card jumps to the error's location in the editor. */
+.errors > ul > li {
+    position: relative;
+    cursor: pointer;
+    background: var(--tf-surface);
+    border: 1px solid var(--tf-hairline);
+    border-left: 3px solid var(--tf-danger);
+    border-radius: var(--tf-radius-sm);
+    padding: 10px 12px;
+    box-shadow: var(--tf-shadow);
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+}
+/* Hover emphasizes the card: it lifts slightly with a stronger shadow. Keep the
+   left border red (the border-color shorthand would otherwise grey it out). */
+.errors > ul > li:hover {
+    border-color: rgba(0, 0, 0, 0.12);
+    border-left-color: var(--tf-danger);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08), 0 10px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* Transparent full-card overlay button: makes the whole card a single
+   keyboard-focusable jump target. It sits beneath the copy button (which raises
+   itself with z-index) so that button stays independently clickable. */
+.errorCardJump {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+.errorCardJump:focus-visible {
+    outline: 2px solid var(--tf-danger);
+    outline-offset: -2px;
+    border-radius: var(--tf-radius-sm);
+}
+
+/* Card header: an error-code chip on the left, a copy button (on hover) right. */
+.errorCardHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.errorCode {
+    font-family: var(--ifm-font-family-monospace);
+    font-size: 11px;
+    color: var(--tf-text-muted);
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--tf-hairline);
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+.errorCopy {
+    /* Raise above the .errorCardJump overlay so the copy button stays clickable
+       and keyboard-focusable as a sibling, not nested inside the jump target. */
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+    opacity: 0;
+    border: 1px solid var(--tf-hairline);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--tf-text-muted);
+    font: inherit;
+    font-size: 11px;
+    padding: 1px 8px;
+    cursor: pointer;
+    transition: opacity 0.15s, color 0.15s;
+}
+.errors > ul > li:hover .errorCopy,
+.errorCopy:focus-visible,
+.errorCopied {
+    opacity: 1;
+}
+.errorCopy:hover {
+    color: var(--tf-text);
+}
+
+.errors > ul > li + li {
     margin-top: 10px;
-    padding-top: 10px;
-    border-top: solid #eee 1px;
 }
 
 .errors li ul li,
@@ -239,6 +638,57 @@
     padding-left: 20px;
     margin: inherit;
     border: none;
+    background: none;
+    box-shadow: none;
+}
+
+/* Phone widths: wrap long error text instead of forcing a horizontal scroll,
+   matching how the site's code blocks wrap at this same breakpoint. The cards
+   render in a <pre>, which defaults to white-space: pre (no wrap), so long
+   source-context lines and long error messages overflow the viewport. pre-wrap
+   plus overflow-wrap (both inherited down to the message divs/spans) lets them
+   break to fit. The caret arrow under a wrapped context line no longer aligns,
+   the same trade-off the code blocks make by hiding their squiggles when they
+   wrap. */
+@media (max-width: 600px) {
+    .errors {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+}
+
+/* Empty state shown when there are no errors. Sits near the top, where the eye
+   scans for the first error, rather than vertically centered in the pane. */
+.noErrors {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--tf-text-muted);
+    font-size: 14px;
+}
+
+.noErrorsCheck {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(46, 160, 67, 0.15);
+    color: #2ea043;
+    font-weight: 700;
+}
+.noErrorsCheck svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Generic empty state for the JSON and AST tabs (plain muted text, no icon). */
+.emptyState {
+    padding: 16px;
+    color: var(--tf-text-muted);
+    font-size: 14px;
 }
 
 .msgHighlight,

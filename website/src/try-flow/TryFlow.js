@@ -23,18 +23,22 @@ import {
   setSignatureHelpFunction,
 } from './configured-monaco';
 import FlowJsServices from './flow-services';
+import copyText from './clipboard';
 import createTokensProvider from './tokens-theme-provider';
 import flowLanguageConfiguration from './flow-configuration.json';
 
 const TRY_FLOW_LAST_CONTENT_STORAGE_KEY = 'tryFlowLastContent';
-const DEFAULT_FLOW_PROGRAM = `
-function foo(x: ?number): string {
-  if (x) {
-    return x; // Error: number is not a string
-    // Fix: return String(x);
-  }
-  return "default string";
+const DEFAULT_FLOW_PROGRAM = `type User = {
+  readonly name: string,
+  readonly age: number,
+};
+
+function get<K extends keyof User>(user: User, key: K): User[K] {
+  return user[key];
 }
+
+declare const user: User;
+const age: number = get(user, 'name'); // Fix - update to: get(user, 'age')
 `;
 
 type InitialStateFromHash = {
@@ -99,6 +103,77 @@ const REFINED_VALUE_DECORATION_OPTIONS = {
   inlineClassName: styles.refinedValueDecoration,
 };
 
+component CodeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <polyline points="16 18 22 12 16 6" />
+      <polyline points="8 6 2 12 8 18" />
+    </svg>
+  );
+}
+
+component ConfigIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <line x1="21" x2="14" y1="4" y2="4" />
+      <line x1="10" x2="3" y1="4" y2="4" />
+      <line x1="21" x2="12" y1="12" y2="12" />
+      <line x1="8" x2="3" y1="12" y2="12" />
+      <line x1="21" x2="16" y1="20" y2="20" />
+      <line x1="12" x2="3" y1="20" y2="20" />
+      <line x1="14" x2="14" y1="2" y2="6" />
+      <line x1="8" x2="8" y1="10" y2="14" />
+      <line x1="16" x2="16" y1="18" y2="22" />
+    </svg>
+  );
+}
+
+component CopyLinkIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+component CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
 export default component TryFlow(
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
@@ -113,6 +188,8 @@ export default component TryFlow(
     initialState.version || defaultFlowVersion,
   );
   const editorRef = useRef(null);
+  const tryEditorRef = useRef<HTMLDivElement | null>(null);
+  const [splitRatio, setSplitRatio] = useState(0.5);
   const previousDecorationsRef = useRef(null);
   const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
@@ -124,6 +201,7 @@ export default component TryFlow(
   const [activeToolbarTab, setActiveToolbarTab] = useState(
     'code' as 'code' | 'config',
   );
+  const [copied, setCopied] = useState(null as ?('link' | 'code'));
 
   useEffect(() => {
     let cancelled = false;
@@ -170,6 +248,76 @@ export default component TryFlow(
           existing,
       );
     }
+  }
+
+  function copyToClipboard(kind: 'link' | 'code', text: string) {
+    // Only show the "Copied!" confirmation if the write actually succeeds.
+    // copyText falls back to execCommand where the async Clipboard API is
+    // unavailable or blocked (insecure context, unfocused doc, embedded iframe).
+    copyText(text).then(ok => {
+      if (!ok) return;
+      setCopied(kind);
+      setTimeout(() => setCopied(null), 1500);
+    });
+  }
+
+  function onSplitterDown(e: SyntheticMouseEvent<>) {
+    e.preventDefault();
+    const container = tryEditorRef.current;
+    if (container == null) return;
+    const body = document.body;
+    const onMove = (ev: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      const ratio = (ev.clientX - rect.left) / rect.width;
+      setSplitRatio(Math.min(0.8, Math.max(0.2, ratio)));
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      if (body != null) {
+        body.style.cursor = '';
+        body.style.userSelect = '';
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    if (body != null) {
+      body.style.cursor = 'col-resize';
+      body.style.userSelect = 'none';
+    }
+  }
+
+  // Keyboard control for the splitter: arrows nudge the ratio, Home/End jump to
+  // the min/max, matching the 0.2–0.8 clamp used by the mouse drag.
+  function onSplitterKey(e: SyntheticKeyboardEvent<>) {
+    const step = 0.02;
+    let next;
+    switch (e.key) {
+      case 'ArrowLeft':
+        next = splitRatio - step;
+        break;
+      case 'ArrowRight':
+        next = splitRatio + step;
+        break;
+      case 'Home':
+        next = 0.2;
+        break;
+      case 'End':
+        next = 0.8;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    setSplitRatio(Math.min(0.8, Math.max(0.2, next)));
+  }
+
+  function revealError(line: number, column: number) {
+    const editor = editorRef.current;
+    if (editor == null) return;
+    editor.revealLineInCenter(line);
+    editor.setPosition({lineNumber: line, column});
+    editor.focus();
   }
 
   function semanticDecorations(flowService: FlowJsServices, model: any) {
@@ -282,37 +430,73 @@ export default component TryFlow(
   }
 
   return (
-    <div className={styles.tryEditor}>
+    <div
+      className={styles.tryEditor}
+      ref={tryEditorRef}
+      style={{'--tf-split': splitRatio} as $FlowFixMe}>
       <div className={styles.code}>
         <div className={styles.editorContainer}>
           <div className={styles.toolbar}>
-            <ul className={styles.tabs}>
-              <li
+            <div className={styles.tabs}>
+              <button
+                type="button"
                 className={clsx(
                   styles.tab,
                   activeToolbarTab === 'code' && styles.selectedTab,
                 )}
+                aria-pressed={activeToolbarTab === 'code'}
                 onClick={() => setActiveToolbarTab('code')}>
+                <CodeIcon />
                 Code
-              </li>
-              <li
+              </button>
+              <button
+                type="button"
                 className={clsx(
                   styles.tab,
                   activeToolbarTab === 'config' && styles.selectedTab,
                 )}
+                aria-pressed={activeToolbarTab === 'config'}
                 onClick={() => setActiveToolbarTab('config')}>
+                <ConfigIcon />
                 Config
-              </li>
-            </ul>
-            {initialStateFromStorage && (
-              <div className={styles.resetBanner}>
-                <span>Recover from last saved state?</span>
-                <button onClick={resetFromStorage}>Recover</button>
-                <button onClick={() => setInitialStateFromStorage(null)}>
-                  Ignore
-                </button>
-              </div>
-            )}
+              </button>
+            </div>
+            <div className={styles.toolbarActions}>
+              {initialStateFromStorage && (
+                <div className={styles.resetBanner}>
+                  <span>Recover from last saved state?</span>
+                  <button
+                    className={styles.toolbarButton}
+                    onClick={resetFromStorage}>
+                    Recover
+                  </button>
+                  <button
+                    className={styles.toolbarButton}
+                    onClick={() => setInitialStateFromStorage(null)}>
+                    Ignore
+                  </button>
+                </div>
+              )}
+              <button
+                className={styles.toolbarButton}
+                onClick={() =>
+                  copyToClipboard(
+                    'code',
+                    monaco.editor.getModels()[0]?.getValue() ?? '',
+                  )
+                }
+                title="Copy the code">
+                <CopyIcon />
+                {copied === 'code' ? 'Copied!' : 'Copy code'}
+              </button>
+              <button
+                className={styles.toolbarButton}
+                onClick={() => copyToClipboard('link', window.location.href)}
+                title="Copy a shareable link to this code">
+                <CopyLinkIcon />
+                {copied === 'link' ? 'Copied!' : 'Copy link'}
+              </button>
+            </div>
           </div>
           <div
             style={{display: activeToolbarTab === 'config' ? 'block' : 'none'}}
@@ -328,7 +512,7 @@ export default component TryFlow(
             defaultValue={initialState.code}
             defaultLanguage="flow"
             theme="vs-light"
-            height="calc(100vh - var(--ifm-navbar-height) - 40px)"
+            height="var(--tf-editor-h)"
             onChange={forceRecheck}
             onMount={onMount}
             options={{
@@ -342,6 +526,18 @@ export default component TryFlow(
           />
         </div>
       </div>
+      <div
+        className={styles.splitter}
+        role="separator"
+        tabIndex={0}
+        aria-label="Resize editor and results panes"
+        aria-orientation="vertical"
+        aria-valuemin={20}
+        aria-valuemax={80}
+        aria-valuenow={Math.round(splitRatio * 100)}
+        onMouseDown={onSplitterDown}
+        onKeyDown={onSplitterKey}
+      />
       <TryFlowResults
         flowVersion={flowVersion}
         flowVersions={flowVersions}
@@ -349,6 +545,7 @@ export default component TryFlow(
         loading={loading}
         errors={errors}
         internalError={internalError}
+        onErrorSelect={revealError}
         cursorPosition={
           cursorPosition != null
             ? {

@@ -29,6 +29,7 @@ declare type FlowJsError = {
   level: string,
   message: $ReadOnlyArray<FlowJsErrorMessage>,
   extra: $ReadOnlyArray<FlowJsErrorMessageInformation>,
+  error_codes?: ReadonlyArray<string>,
 };
 
 declare type FlowJsParseOptions = {

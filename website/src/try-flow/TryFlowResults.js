@@ -14,6 +14,84 @@ import {useState, type MixedElement} from 'react';
 import ReactJson from 'react-json-view';
 import clsx from 'clsx';
 import styles from './TryFlow.module.css';
+import copyText from './clipboard';
+
+component CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+component JsonIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1" />
+      <path d="M16 21h1a2 2 0 0 0 2-2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" />
+    </svg>
+  );
+}
+
+component AstIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <circle cx="12" cy="5" r="2" />
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="18" cy="19" r="2" />
+      <path d="M12 7v3M12 10H6v7M12 10h6v7" />
+    </svg>
+  );
+}
+
+component CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
+// Plain-text rendering of all errors, for the "Copy all" button.
+function errorsToText(errors: $ReadOnlyArray<FlowJsError>): string {
+  return errors
+    .map(error => {
+      const loc = error.message[0]?.loc;
+      const prefix =
+        loc != null ? `${loc.start.line}:${loc.start.column} ` : '';
+      return prefix + error.message.map(m => m.descr).join(' ');
+    })
+    .join('\n\n');
+}
 
 component ErrorMessage(msg: FlowJsErrorMessage) {
   if (msg.loc && msg.context != null) {
@@ -115,8 +193,32 @@ export default component TryFlowResults(
   internalError: string,
   cursorPosition: ?Position,
   ast: interface {} | string,
+  onErrorSelect: (line: number, column: number) => void,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+  const [copiedAll, setCopiedAll] = useState(false);
+  // Index of the error card whose "Copy" button is currently showing "Copied!".
+  const [copiedError, setCopiedError] = useState(null as ?number);
+  function copyAll() {
+    // Only show the "Copied!" confirmation if the write actually succeeds.
+    // copyText falls back to execCommand where the async Clipboard API is
+    // unavailable or blocked (insecure context, unfocused doc, embedded iframe).
+    copyText(errorsToText(errors)).then(ok => {
+      if (!ok) return;
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 1500);
+    });
+  }
+  function copyError(index: number, text: string) {
+    copyText(text).then(ok => {
+      if (!ok) return;
+      setCopiedError(index);
+      setTimeout(
+        () => setCopiedError(current => (current === index ? null : current)),
+        1500,
+      );
+    });
+  }
   const latestReleaseVersion = flowVersions.find(
     version => version !== 'master' && version !== 'master (rust port)',
   );
@@ -128,33 +230,57 @@ export default component TryFlowResults(
   return (
     <div className={styles.results}>
       <div className={styles.toolbar}>
-        <ul className={styles.tabs}>
-          <li
+        <div className={styles.tabs}>
+          <button
+            type="button"
             className={clsx(
               styles.tab,
               activeToolbarTab === 'errors' && styles.selectedTab,
             )}
+            aria-pressed={activeToolbarTab === 'errors'}
             onClick={() => setActiveToolbarTab('errors')}>
+            <span className={styles.errorIndicator}>
+              {errors.length === 0 ? (
+                <CheckIcon />
+              ) : (
+                <span className={styles.tabBadge}>{errors.length}</span>
+              )}
+            </span>
             Errors
-          </li>
-          <li
+          </button>
+          <button
+            type="button"
             className={clsx(
               styles.tab,
               activeToolbarTab === 'json' && styles.selectedTab,
             )}
+            aria-pressed={activeToolbarTab === 'json'}
             onClick={() => setActiveToolbarTab('json')}>
+            <JsonIcon />
             JSON
-          </li>
-          <li
+          </button>
+          <button
+            type="button"
             className={clsx(
               styles.tab,
               activeToolbarTab === 'ast' && styles.selectedTab,
             )}
+            aria-pressed={activeToolbarTab === 'ast'}
             onClick={() => setActiveToolbarTab('ast')}>
+            <AstIcon />
             AST
-          </li>
-        </ul>
+          </button>
+        </div>
         <div className={styles.version}>
+          {activeToolbarTab === 'errors' && errors.length > 0 && (
+            <button
+              className={clsx(styles.toolbarButton, styles.copyAll)}
+              onClick={copyAll}
+              title="Copy all errors">
+              <CopyIcon />
+              {copiedAll ? 'Copied!' : 'Copy all'}
+            </button>
+          )}
           {isOldFlowVersion ? (
             <span className={styles.versionWarning}>old version selected</span>
           ) : null}
@@ -169,46 +295,93 @@ export default component TryFlowResults(
         </div>
       </div>
       {loading && (
-        <div>
-          <div className={styles.loader}>
-            <div className={styles.bounce1}></div>
-            <div className={styles.bounce2}></div>
-            <div></div>
-          </div>
+        <div className={styles.loader}>
+          <div className={styles.spinner} />
         </div>
       )}
-      {!loading && activeToolbarTab === 'errors' && (
-        <pre className={clsx(styles.resultBody, styles.errors)}>
-          <ul>
-            {internalError ? (
+      {!loading &&
+        activeToolbarTab === 'errors' &&
+        (internalError ? (
+          <pre className={clsx(styles.resultBody, styles.errors)}>
+            <ul>
               <li>TryFlow encountered an internal error: {internalError}</li>
-            ) : errors.length === 0 ? (
-              <li>No errors!</li>
-            ) : (
-              errors.map((error, i) => (
-                <li key={i}>
-                  {error.message.map((msg, i) => (
-                    <ErrorMessage key={i} msg={msg} />
-                  ))}
-                  {error.extra &&
-                    error.extra.map((info, i) => (
-                      <ErrorMessageExtra key={i} info={info} />
+            </ul>
+          </pre>
+        ) : errors.length === 0 ? (
+          <div className={styles.noErrors}>
+            <span className={styles.noErrorsCheck}>
+              <CheckIcon />
+            </span>
+            No errors
+          </div>
+        ) : (
+          <pre className={clsx(styles.resultBody, styles.errors)}>
+            <ul>
+              {errors.map((error, i) => {
+                const code = Array.isArray(error.error_codes)
+                  ? error.error_codes[0]
+                  : null;
+                const loc = error.message[0]?.loc;
+                const text = error.message.map(m => m.descr).join(' ');
+                return (
+                  <li key={i}>
+                    {/* A stretched overlay button turns the whole card into one
+                        keyboard-focusable jump target. Keeping it a sibling of
+                        the copy button (rather than wrapping the card) avoids
+                        nesting interactive elements. */}
+                    {loc != null && (
+                      <button
+                        type="button"
+                        className={styles.errorCardJump}
+                        aria-label={`Go to error at line ${loc.start.line}, column ${loc.start.column}`}
+                        onClick={() =>
+                          onErrorSelect(loc.start.line, loc.start.column)
+                        }
+                      />
+                    )}
+                    <div className={styles.errorCardHeader}>
+                      {code != null && (
+                        <span className={styles.errorCode}>{code}</span>
+                      )}
+                      <button
+                        type="button"
+                        className={clsx(
+                          styles.errorCopy,
+                          copiedError === i && styles.errorCopied,
+                        )}
+                        title="Copy this error"
+                        onClick={() => copyError(i, text)}>
+                        {copiedError === i ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    {error.message.map((msg, j) => (
+                      <ErrorMessage key={j} msg={msg} />
                     ))}
-                </li>
-              ))
-            )}
-          </ul>
-        </pre>
-      )}
-      {!loading && activeToolbarTab === 'json' && (
-        <pre className={styles.resultBody}>
-          {JSON.stringify(errors, null, 2)}
-        </pre>
-      )}
+                    {error.extra &&
+                      error.extra.map((info, j) => (
+                        <ErrorMessageExtra key={j} info={info} />
+                      ))}
+                  </li>
+                );
+              })}
+            </ul>
+          </pre>
+        ))}
+      {!loading &&
+        activeToolbarTab === 'json' &&
+        (errors.length === 0 ? (
+          <div className={styles.emptyState}>No errors to show as JSON.</div>
+        ) : (
+          <pre className={styles.resultBody}>
+            {JSON.stringify(errors, null, 2)}
+          </pre>
+        ))}
       {!loading &&
         activeToolbarTab === 'ast' &&
         (typeof ast === 'string' ? (
           <pre className={styles.resultBody}>{ast}</pre>
+        ) : Object.keys(ast).length === 0 ? (
+          <div className={styles.emptyState}>No AST to show.</div>
         ) : (
           <div className={styles.astBody}>
             <ReactJson
