@@ -146,12 +146,6 @@ module.exports = async () => {
             position: 'right',
             className: 'navbar__icon twitter__link',
           },
-          {
-            href: 'http://stackoverflow.com/questions/tagged/flowtype',
-            'aria-label': 'Stack Overflow',
-            position: 'right',
-            className: 'navbar__icon stackoverflow__link',
-          },
           // Please keep GitHub link to the right for consistency.
           {
             href: 'https://github.com/facebook/flow',

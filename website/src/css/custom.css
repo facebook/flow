@@ -103,10 +103,6 @@ code {
   background: url(/img/icon-twitter.svg);
   background-repeat: no-repeat;
 }
-.navbar .stackoverflow__link:before {
-  background: url(/img/icon-stackoverflow.svg);
-  background-repeat: no-repeat;
-}
 .navbar .github__link:before {
   background: url(/img/icon-github.svg);
   background-repeat: no-repeat;
