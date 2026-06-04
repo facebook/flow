@@ -38,7 +38,41 @@ References:
 Found 1 error
 
 === block 9 ===
-No errors!
+Error --------------------------------------------------------------------------- -:7:1
+
+Cannot cast `1` to `B` because number [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+
+   -:7:1
+   7| 1 as B; // ERROR: number is not false
+      ^ [1]
+
+References:
+   -:7:6
+   7| 1 as B; // ERROR: number is not false
+           ^ [2]
+
+
+Found 1 error
 
 === block 10 ===
+Error -------------------------------------------------------------------------- -:11:1
+
+Cannot cast `1` to `R2` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:11:1
+   11| 1 as R2; // ERROR: number is not string
+       ^ [1]
+
+References:
+   -:11:6
+   11| 1 as R2; // ERROR: number is not string
+            ^^ [2]
+
+
+Found 1 error
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
 No errors!

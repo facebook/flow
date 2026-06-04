@@ -117,6 +117,36 @@ type ReturnType<T extends (...args: ReadonlyArray<empty>) => unknown> =
 1 as ReturnType<string>; // Error
 ```
 
+### Constraining Inferred Types with `extends` {#toc-infer-extends}
+
+An `infer` variable can carry its own constraint, written `infer T extends Bound`. The bound does two things.
+
+It acts as a filter on the candidate type. If the type matched against `infer X` does not satisfy the bound, the `extends` check fails and the conditional type evaluates to its false branch:
+
+```js flow-check
+type ElementIfNumeric<T> = T extends Array<infer X extends number> ? X : false;
+
+type A = ElementIfNumeric<Array<number>>; // evaluates to number
+type B = ElementIfNumeric<Array<string>>; // string violates the bound, so evaluates to false
+1 as A; // OK
+1 as B; // ERROR: number is not false
+```
+
+It also supplies a default. When an `infer` variable is underconstrained, because the matched type never determines it, the variable falls back to its bound rather than to `mixed`:
+
+```js flow-check
+// Without a bound, an underconstrained infer defaults to mixed:
+type Unbounded<T> = T extends null | [infer X] ? X : number;
+type R1 = Unbounded<null>; // X is never matched, so evaluates to mixed
+1 as R1; // OK
+
+// With a bound, it defaults to that bound instead:
+type Bounded<T> = T extends null | [infer X extends string] ? X : number;
+type R2 = Bounded<null>; // X is never matched, so evaluates to string
+'' as R2; // OK
+1 as R2; // ERROR: number is not string
+```
+
 ## Distributive Conditional Types {#toc-distributive-conditional-type}
 
 When a generic conditional type is given a union type as a type argument, the conditional _distributes_ over the union's members. For example, the `TypeOf` example above can distribute over a union:
