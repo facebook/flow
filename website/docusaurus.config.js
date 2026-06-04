@@ -141,6 +141,15 @@ module.exports = async () => {
             position: 'left',
           },
           {
+            href: `https://github.com/facebook/flow/releases/tag/${defaultFlowVersion}`,
+            // `defaultFlowVersion` falls back to 'master' when past releases
+            // aren't included in the build; show it as 'main' to match the
+            // renamed GitHub branch (and the Try Flow version selector).
+            label: defaultFlowVersion.replace('master', 'main'),
+            position: 'right',
+            className: 'navbar__version-pill',
+          },
+          {
             href: 'https://twitter.com/flowtype',
             'aria-label': 'Twitter',
             position: 'right',

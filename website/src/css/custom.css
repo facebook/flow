@@ -81,6 +81,31 @@ code {
   height: 100%;
 }
 
+/* Version pill: a small rounded badge showing the current Flow release,
+   sitting to the left of the Twitter/GitHub icons on the dark navbar. */
+.navbar .navbar__version-pill {
+  align-self: center;
+  margin-right: 1rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+  transition: border-color 0.15s, color 0.15s;
+}
+.navbar .navbar__version-pill:hover {
+  border-color: var(--flow-yellow);
+  color: var(--flow-yellow);
+  text-decoration: none;
+}
+/* Drop the external-link arrow Docusaurus auto-appends to `href` navbar items —
+   it clutters the pill and the badge already reads as a link. */
+.navbar .navbar__version-pill svg {
+  display: none;
+}
+
 .navbar .navbar__icon {
   padding: 0px;
   padding-right: 1rem;
