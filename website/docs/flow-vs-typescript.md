@@ -312,15 +312,15 @@ Flow's typing of value-level spread is also safer. TypeScript types `{...c}` as 
 // TypeScript:
 interface Counter {
   count: number;
-  inc(): number;
+  incr(): number;
 }
 class Impl {
   count = 0;
-  inc(): number { return ++this.count; }
+  incr(): number { return ++this.count; }
 }
 const c: Counter = new Impl();
 const o = {...c};
-o.inc(); // Runtime crash! `inc` is on `Impl.prototype`, not on the spread result
+o.incr(); // Runtime crash! `incr` is on `Impl.prototype`, not on the spread result
 ```
 
 Flow rejects with `[cannot-spread-interface]` because interfaces don't track own-vs-prototype, so the result type can't be sound:
@@ -329,7 +329,7 @@ Flow rejects with `[cannot-spread-interface]` because interfaces don't track own
 // Flow:
 interface Counter {
   count: number;
-  inc(): number;
+  incr(): number;
 }
 declare const c: Counter;
 const o = {...c}; // ERROR: [cannot-spread-interface]
@@ -350,29 +350,29 @@ Flow's two `this`-related rules both head off the same runtime crash: a method b
 // TypeScript:
 class Counter {
   count = 0;
-  increment(): number {
+  incr(): number {
     return ++this.count;
   }
 }
 const counter = new Counter();
-const tick = counter.increment;
+const tick = counter.incr;
 tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
 ```
 
-Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.increment` because property `increment` cannot be unbound from the context where it was defined.") because it tracks the `this` binding on method-shorthand properties of a *class*:
+Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.incr` because property `incr` cannot be unbound from the context where it was defined.") because it tracks the `this` binding on method-shorthand properties of a *class*:
 
 ```js flow-check
 // Flow:
 class Counter {
   count: number = 0;
-  increment(): number {
+  incr(): number {
     return ++this.count;
   }
 }
 const counter = new Counter();
-const tick = counter.increment; // ERROR: [method-unbinding]
+const tick = counter.incr; // ERROR: [method-unbinding]
 const tickFixed = () =>
-  counter.increment(); // OK - arrow captures `this`
+  counter.incr(); // OK - arrow captures `this`
 tickFixed(); // OK
 ```
 
@@ -384,11 +384,11 @@ The Flow rewrite is to wrap with an arrow function that captures `this`, as show
 // TypeScript:
 const counter = {
   count: 0,
-  increment(): number {
+  incr(): number {
     return ++this.count;
   }
 };
-const tick = counter.increment;
+const tick = counter.incr;
 tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
 ```
 
@@ -398,7 +398,7 @@ Flow forbids the construct itself with `[object-this-reference]`, so the unsafe 
 // Flow:
 const counter = {
   count: 0,
-  increment(): number { return ++this.count; } // ERROR: [object-this-reference]
+  incr(): number { return ++this.count; } // ERROR: [object-this-reference]
 };
 ```
 
@@ -408,11 +408,11 @@ The Flow rewrite is to use the name of the object literal binding directly inste
 // Flow:
 const counter = {
   count: 0,
-  increment(): number {
+  incr(): number {
     return ++counter.count;
   } // Use object name directly instead of `this`
 };
-const tick = counter.increment; // Extraction allowed: no `this` in the function
+const tick = counter.incr; // Extraction allowed: no `this` in the function
 tick(); // OK
 ```
 

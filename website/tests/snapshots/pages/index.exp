@@ -2,6 +2,9 @@
 No errors!
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
 Error ------------------------------------------------------------------------------- -:12:17
 
 Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
@@ -19,15 +22,33 @@ References:
 
 Found 1 error
 
-=== block 3 ===
-Error -------------------------------------------------------------------------------- -:7:21
+=== block 4 ===
+Error ------------------------------------------------------------------------------- -:18:17
+
+Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
+[incompatible-type]
+
+   -:18:17
+   18| <Layout header={<Footer />} />; // ERROR
+                       ^^^^^^^^^^ [1]
+
+References:
+   -:11:11
+   11|   header: renders Header,
+                 ^^^^^^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 5 ===
+Error -------------------------------------------------------------------------------- -:7:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'remove', id: _}`
 to match object type [1]. [match-not-exhaustive]
 
-   -:7:21
-   7| const description = match (action) { // ERROR: 'remove' missing
-                          ^^^^^
+   -:7:14
+   7| const desc = match (action) { // ERROR: 'remove' missing
+                   ^^^^^
 
 References:
    -:5:23
@@ -37,7 +58,25 @@ References:
 
 Found 1 error
 
-=== block 4 ===
+=== block 6 ===
+Error -------------------------------------------------------------------------------- -:9:14
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'remove', id: _}`
+to match object type [1]. [match-not-exhaustive]
+
+   -:9:14
+   9| const desc = match (action) { // ERROR
+                   ^^^^^
+
+References:
+   -:6:23
+   6| declare const action: Action;
+                            ^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 7 ===
 Error -------------------------------------------------------------------------------- -:5:24
 
 Cannot assign `items` to `prices` because property `sample` is extra in object literal [1] but missing in `Prices` [2].
@@ -71,23 +110,83 @@ References:
 
 Found 2 errors
 
-=== block 5 ===
+=== block 8 ===
+Error ------------------------------------------------------------------------------- -:13:24
+
+Cannot assign `items` to `prices` because property `sample` is extra in object literal [1] but missing in `Prices` [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   -:13:24
+   13| const prices: Prices = items; // ERROR
+                              ^^^^^
+
+References:
+   -:6:15
+                     v
+    6| const items = {
+    7|   apple: 1.5,
+    8|   banana: 0.5,
+    9|   sample: "free",
+   10| };
+       ^ [1]
+   -:13:15
+   13| const prices: Prices = items; // ERROR
+                     ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:17:12
+
+Cannot call `price.toFixed` because property `toFixed` is missing in `unknown` [1]. [incompatible-use]
+
+   -:17:12
+   17|   `${price.toFixed(2)}` // Runtime crash!
+                  ^^^^^^^
+
+References:
+   -:15:1
+   15| Object.values(prices).map(price =>
+       ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Found 2 errors
+
+=== block 9 ===
 Error -------------------------------------------------------------------------------- -:9:22
 
-Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
+Cannot get `counter.incr` because property `incr` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    -:9:22
-   9| const tick = counter.increment; // ERROR: unsafe method extraction
-                           ^^^^^^^^^ [1]
+   9| const tick = counter.incr; // ERROR: unsafe method extraction
+                           ^^^^ [1]
 
 References:
    -:4:3
-        v--------------------
-   4|   increment(): number {
+        v---------------
+   4|   incr(): number {
    5|     return ++this.count;
    6|   }
         ^ [2]
+
+
+Found 1 error
+
+=== block 10 ===
+Error ------------------------------------------------------------------------------- -:10:22
+
+Cannot get `counter.incr` because property `incr` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   -:10:22
+   10| const tick = counter.incr; // ERROR
+                            ^^^^ [1]
+
+References:
+   -:4:3
+         v---------------
+    4|   incr(): number {
+    5|     return ++this.count;
+    6|   }
+         ^ [2]
 
 
 Found 1 error

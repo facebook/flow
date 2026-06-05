@@ -9,4 +9,5 @@
 
 export {default as Hero} from './Hero';
 export {default as Showcase, ShowcaseText, ShowcaseCode} from './Showcase';
+export {CodeDesktop, CodeMobile} from './ResponsiveCode';
 export {default as CTAStrip} from './CTAStrip';

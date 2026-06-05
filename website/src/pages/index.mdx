@@ -6,7 +6,7 @@ wrapperClassName: "landing-wrapper"
 image: img/og-home.png
 ---
 
-import {Hero, Showcase, ShowcaseText, ShowcaseCode, CTAStrip} from '@site/src/components/landing';
+import {Hero, Showcase, ShowcaseText, ShowcaseCode, CodeDesktop, CodeMobile, CTAStrip} from '@site/src/components/landing';
 
 <Hero />
 
@@ -24,6 +24,7 @@ Is it Flow or TypeScript? You can't tell. Flow has `keyof`, `readonly` props, `u
 </ShowcaseText>
 
 <ShowcaseCode>
+<CodeDesktop>
 
 ```js flow-check
 type User = {
@@ -38,6 +39,26 @@ declare const user: User;
 const age: number = get(user, 'age');
 ```
 
+</CodeDesktop>
+<CodeMobile>
+
+```js flow-check
+type User = {
+  readonly name: string,
+  readonly age: number,
+  readonly metadata: unknown,
+};
+function get<K extends keyof User>(
+  user: User,
+  key: K,
+): User[K] {
+  return user[key];
+}
+declare const user: User;
+const age: number = get(user, 'age');
+```
+
+</CodeMobile>
 </ShowcaseCode>
 
 </Showcase>
@@ -54,6 +75,7 @@ const age: number = get(user, 'age');
 </ShowcaseText>
 
 <ShowcaseCode>
+<CodeDesktop>
 
 ```js flow-check
 import * as React from 'react';
@@ -69,6 +91,30 @@ component Layout(header: renders Header) {
 <Layout header={<Footer />} />; // ERROR: doesn't render Header
 ```
 
+</CodeDesktop>
+<CodeMobile>
+
+```js flow-check
+import * as React from 'react';
+
+component Header(
+  text: string = "Title",
+) {
+  return <h1>{text}</h1>;
+}
+component Footer() {return <footer />}
+component Layout(
+  header: renders Header,
+) {
+  return <div>{header}</div>;
+}
+
+<Layout header={<Header />} />; // OK
+// Doesn't render Header:
+<Layout header={<Footer />} />; // ERROR
+```
+
+</CodeMobile>
 </ShowcaseCode>
 
 </Showcase>
@@ -85,6 +131,7 @@ component Layout(header: renders Header) {
 </ShowcaseText>
 
 <ShowcaseCode>
+<CodeDesktop>
 
 ```js flow-check
 type Action = {type: 'add', text: string}
@@ -92,12 +139,32 @@ type Action = {type: 'add', text: string}
             | {type: 'remove', id: string};
 declare const action: Action;
 
-const description = match (action) { // ERROR: 'remove' missing
+const desc = match (action) { // ERROR: 'remove' missing
   {type: 'add', const text} => `Add: ${text}`,
   {type: 'toggle', const id} => `Toggle ${id}`,
 };
 ```
 
+</CodeDesktop>
+<CodeMobile>
+
+```js flow-check
+type Action =
+  | {type: 'add', text: string}
+  | {type: 'toggle', id: string}
+  | {type: 'remove', id: string};
+declare const action: Action;
+
+// 'remove' missing:
+const desc = match (action) { // ERROR
+  {type: 'add', const text} =>
+    `Add: ${text}`,
+  {type: 'toggle', const id} =>
+    `Toggle ${id}`,
+};
+```
+
+</CodeMobile>
 </ShowcaseCode>
 
 </Showcase>
@@ -114,6 +181,7 @@ Object types in Flow are exact by default. TypeScript only catches extras on dir
 </ShowcaseText>
 
 <ShowcaseCode>
+<CodeDesktop>
 
 ```js flow-check first-error
 type Prices = {apple: number, banana: number};
@@ -126,6 +194,30 @@ Object.values(prices).map(price =>
 );
 ```
 
+</CodeDesktop>
+<CodeMobile>
+
+```js flow-check first-error
+type Prices = {
+  apple: number,
+  banana: number,
+};
+const items = {
+  apple: 1.5,
+  banana: 0.5,
+  sample: "free",
+};
+
+// Extra property `sample`:
+const prices: Prices = items; // ERROR
+
+Object.values(prices).map(price =>
+  // `toFixed` on "free":
+  `${price.toFixed(2)}` // Runtime crash!
+);
+```
+
+</CodeMobile>
 </ShowcaseCode>
 
 </Showcase>
@@ -137,24 +229,43 @@ Object.values(prices).map(price =>
 
 <ShowcaseText>
 
-Extracting a method from a class instance loses its `this` binding. TypeScript lets the extraction through; `tick()` then crashes inside `increment` because `this` is undefined. Flow rejects the extraction. [More differences from TypeScript<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript)
+Pulling `counter.incr` off the instance detaches the method from `counter`, so the later `tick()` runs with `this` undefined and `++this.count` throws. TypeScript types the extracted method as a plain function and waves the call through. Flow rejects the unbound method extraction at the point where `this` is lost. [More safety differences from TypeScript<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript#toc-shared-concepts-different-rules)
 
 </ShowcaseText>
 
 <ShowcaseCode>
+<CodeDesktop>
 
 ```js flow-check
 class Counter {
   count: number = 0;
-  increment(): number {
+  incr(): number {
     return ++this.count;
   }
 }
 const counter = new Counter();
-const tick = counter.increment; // ERROR: unsafe method extraction
-tick(); // Runtime crash! Invalid `this` inside `increment`
+const tick = counter.incr; // ERROR: unsafe method extraction
+tick(); // Runtime crash! Invalid `this` inside `incr`
 ```
 
+</CodeDesktop>
+<CodeMobile>
+
+```js flow-check
+class Counter {
+  count: number = 0;
+  incr(): number {
+    return ++this.count;
+  }
+}
+const counter = new Counter();
+// Unsafe method extraction:
+const tick = counter.incr; // ERROR
+// Invalid `this` inside `incr`:
+tick(); // Runtime crash!
+```
+
+</CodeMobile>
 </ShowcaseCode>
 
 </Showcase>

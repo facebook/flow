@@ -203,17 +203,17 @@ Found 1 error
 === block 10 ===
 Error ------------------------------------------------------------------------ -:10:22
 
-Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
+Cannot get `counter.incr` because property `incr` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
    -:10:22
-   10| const tick = counter.increment; // ERROR: [method-unbinding]
-                            ^^^^^^^^^ [1]
+   10| const tick = counter.incr; // ERROR: [method-unbinding]
+                            ^^^^ [1]
 
 References:
    -:5:3
-         v--------------------
-    5|   increment(): number {
+         v---------------
+    5|   incr(): number {
     6|     return ++this.count;
     7|   }
          ^ [2]
@@ -222,20 +222,20 @@ References:
 Found 1 error
 
 === block 11 ===
-Error ------------------------------------------------------------------------- -:5:34
+Error ------------------------------------------------------------------------- -:5:29
 
-Cannot reference `this` from within method `increment` [1]. For safety, Flow restricts access to `this` inside object
-methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
-object, or rewriting the object as a class. [object-this-reference]
+Cannot reference `this` from within method `incr` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
 
-   -:5:34
-   5|   increment(): number { return ++this.count; } // ERROR: [object-this-reference]
-                                       ^^^^
+   -:5:29
+   5|   incr(): number { return ++this.count; } // ERROR: [object-this-reference]
+                                  ^^^^
 
 References:
    -:5:3
-   5|   increment(): number { return ++this.count; } // ERROR: [object-this-reference]
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   5|   incr(): number { return ++this.count; } // ERROR: [object-this-reference]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Found 1 error
