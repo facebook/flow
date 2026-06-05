@@ -11,4 +11,4 @@ flow_common = { path = "../flow_common" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
-starlark_map = "0.13"
+starlark_map = "0.14.2"
