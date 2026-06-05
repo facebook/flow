@@ -3594,12 +3594,12 @@ flatted@^3.2.9:
 
 flow-bin@^0.313.0:
   version "0.313.0"
-  resolved "https://registry.facebook.net/flow-bin/-/flow-bin-0.313.0.tgz#d2bc31db6395f239b2787d3e427856cc8e2ffd54"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.313.0.tgz#d2bc31db6395f239b2787d3e427856cc8e2ffd54"
   integrity sha512-foqZwKykbfdvEyWI4yIpuJU0I0d06562GogwA+8eRN7Bt/nwqepGLIrZHG6KSTcS79iyAU7ZiQvP8pA90dEhfQ==
 
 flow-enums-runtime@0.0.6, flow-enums-runtime@^0.0.6:
   version "0.0.6"
-  resolved "https://registry.facebook.net/flow-enums-runtime/-/flow-enums-runtime-0.0.6.tgz#5bb0cd1b0a3e471330f4d109039b7eba5cb3e787"
+  resolved "https://registry.yarnpkg.com/flow-enums-runtime/-/flow-enums-runtime-0.0.6.tgz#5bb0cd1b0a3e471330f4d109039b7eba5cb3e787"
   integrity sha512-3PYnM29RFXwvAN6Pc/scUfkI7RwhQ/xqyLUyPNlXUp9S40zI8nup9tUSrTLSVnWGBN38FNiGWbwZOB6uR4OGdw==
 
 foreground-child@^3.1.0:
@@ -5205,7 +5205,7 @@ prelude-ls@^1.2.1:
 
 prettier-plugin-hermes-parser@*, prettier-plugin-hermes-parser@0.31.1:
   version "0.31.1"
-  resolved "https://registry.facebook.net/prettier-plugin-hermes-parser/-/prettier-plugin-hermes-parser-0.31.1.tgz#950f14274ba6d5d39d152cdb25ea67c107b9b467"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-hermes-parser/-/prettier-plugin-hermes-parser-0.31.1.tgz#950f14274ba6d5d39d152cdb25ea67c107b9b467"
   integrity sha512-h98zphVpGyil1qXUP70jmD2SLMqsdah2Ys6Ap/f3zbKXJU5U91mtI+egxyTXtDasIL8Jp9awmUVLkzkyfimUNQ==
 
 prettier@3.6.2:
