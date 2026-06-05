@@ -13,6 +13,12 @@
  * work well for content-centric websites.
  */
 
+/* Self-hosted Geist (Sans + Mono) — Vercel's OFL-licensed type family, built
+   for dev-tool UIs. Sans drives UI/headings, Mono drives all code. These
+   @import rules must precede every style rule below (CSS @import ordering). */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
 /* ── Accent color: ONE brand hue, two lightnesses chosen by surface contrast ──
    The accent is a single warm hue (~43°), rendered at two lightness levels
    depending on what it sits on. DO NOT unify these to one value — they differ
@@ -47,6 +53,13 @@
   --ifm-navbar-height: 3.5rem;
   --ifm-navbar-padding-vertical: 0;
   --ifm-code-font-size: 95%;
+  /* Geist for UI + headings, Geist Mono for code (the site leans on code, so
+     the mono is the most important face). System fonts as graceful fallbacks. */
+  --ifm-font-family-base: 'Geist Variable', system-ui, -apple-system,
+    'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-font-family-monospace: 'Geist Mono Variable', ui-monospace,
+    SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   --flow-yellow: #e8bd36;
   --flow-gray-darker: #384048;
   --flow-gray-darkest: #2d343a;
@@ -64,6 +77,20 @@
 
 code {
   border: none;
+}
+
+/* Geist Mono ships coding ligatures (via contextual alternates) that fuse
+   character pairs into single glyphs — `=>` becomes an arrow, `...` an
+   ellipsis, `!=` a not-equal sign. In documentation the reader needs to see
+   the literal source characters, so turn ligatures off across all code (inline
+   `code`, fenced blocks, and FlowCheckCodeBlock). Inheritance carries this down
+   to the Prism token spans. */
+code,
+pre,
+kbd,
+[class*='codeBlock'] {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
 }
 
 /* ── Dark mode (site default) ── */
@@ -276,8 +303,8 @@ html[data-theme='dark'].blog-list-page footer a[aria-label^='Read more']:hover {
    active pill/text (the light-mode rule used a dark text color that would
    vanish on the dark surface). The top-level labels match the nested links'
    brightness (0.85, ~9:1 on the gradient) rather than sitting dimmer — their
-   uppercase + bold treatment already marks them as section headers, so they
-   don't need to be quieter in tone too. */
+   bold treatment already marks them as section headers, so they don't need to
+   be quieter in tone too. */
 [data-theme='dark']
   .theme-doc-sidebar-menu
   > .theme-doc-sidebar-item-category
@@ -779,13 +806,13 @@ html[data-theme='dark'].blog-list-page footer a[aria-label^='Read more']:hover {
   margin-top: 0;
 }
 
-/* Top-level category labels read as uppercase section headers. */
+/* Top-level category labels read as section headers in normal case, so they
+   stay consistent with the sentence-case link text throughout the rest of the
+   sidebar. Inactive labels keep the regular link weight; the darker color and
+   spacing carry the header emphasis. The active page still gets its bolder
+   weight from the active rule above. */
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link,
 .theme-doc-sidebar-menu > .theme-doc-sidebar-item-link > .menu__link {
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--flow-gray-darker);
   padding-top: 0.6rem;
   padding-bottom: 0.6rem;

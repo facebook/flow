@@ -520,6 +520,10 @@ export default component TryFlow(
               hover: {enabled: true, above: false},
               scrollBeyondLastLine: false,
               overviewRulerBorder: false,
+              // Match the site's code font (Monaco uses its own setting, not the
+              // CSS --ifm-font-family-monospace var).
+              fontFamily:
+                "'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
               // Breathing room between the tab bar and the first line of code.
               padding: {top: 12},
             }}

@@ -162,7 +162,7 @@ module.exports = async () => {
           },
           {
             href: 'https://x.com/flowtype',
-            'aria-label': 'X',
+            'aria-label': 'Flow on X (formerly Twitter)',
             position: 'right',
             className: 'navbar__icon twitter__link',
           },
