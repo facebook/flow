@@ -14,7 +14,10 @@ type User = {
   readonly metadata: unknown,
 };
 
-function get<K extends keyof User>(user: User, key: K): User[K] {
+function get<K extends keyof User>(
+  user: User,
+  key: K,
+): User[K] {
   return user[key];
 }
 
@@ -80,15 +83,15 @@ Flow chose nominal typing here because identity carries real information in thos
 
 How Flow types objects, classes, and interfaces: the exact-by-default object rule, nominal class identity, the asymmetric subtyping rules, primitive-to-interface assignability, type-level spread, the `this`-binding rules for class methods and object literals, and tuple spread.
 
-| Surface | TypeScript | Flow | Details |
-|---|---|---|---|
-| Object types | `{x: number}` allows extra properties except for fresh object-literal excess-property checks. | `{x: number}` is exact by default; use `{x: number, ...}` when extra properties are allowed. | [Object exactness](#toc-object-exactness) |
-| Class / interface / object subtyping | Classes, interfaces, and object types are mostly interchangeable by structure. | Classes are nominal; object types accept only themselves; interfaces can accept all three | [Classes are nominal](#toc-classes-nominal) |
-| `implements` / `extends` arg | Can target object-shaped utility types like `Pick<T, K>` or `Omit<T, K>`. | Must name an interface or class, not an object type alias. | [`implements` and `extends` clauses](#toc-implements-extends-rhs) |
-| Primitives vs interfaces | Primitives satisfy object/interface shapes that exist on the boxed prototype. | Primitives are not subtypes of object types or interfaces. | [Primitives are not subtypes of interfaces or object types](#toc-primitives-interfaces) |
-| Object combination | Intersections are the standard way to combine object types. | Use object type spread (`{...A, ...B}`); intersections, while supported for inexact objects, don't work for exact objects. | [Object spread typing](#toc-type-spread) |
-| `this` bindings | Method extraction unsafely loses `this`; `this` in object literals is allowed. | Class method extraction is rejected; `this` in object literals is banned. | [`this` is bound on class methods and banned in object literals](#toc-method-unbinding) |
-| Tuple spread after an optional element | Allowed; the resulting tuple type doesn't match the runtime layout when the optional element is absent. | Rejected when the source tuple's arity isn't statically fixed. | [Tuple spread after an optional element is banned](#toc-tuple-spread-optional) |
+| Surface | TypeScript | Flow |
+|---|---|---|
+| [Object exactness](#toc-object-exactness) | `{x: number}` allows extra properties except for fresh object-literal excess-property checks. | `{x: number}` is exact by default; use `{x: number, ...}` when extra properties are allowed. |
+| [Class / interface / object subtyping](#toc-classes-nominal) | Classes, interfaces, and object types are mostly interchangeable by structure. | Classes are nominal; object types accept only themselves; interfaces can accept all three |
+| [`implements` / `extends` clauses](#toc-implements-extends-rhs) | Can target object-shaped utility types like `Pick<T, K>` or `Omit<T, K>`. | Must name an interface or class, not an object type alias. |
+| [Primitives vs. interfaces](#toc-primitives-interfaces) | Primitives satisfy object/interface shapes that exist on the boxed prototype. | Primitives are not subtypes of object types or interfaces. |
+| [Object combination](#toc-type-spread) | Intersections are the standard way to combine object types. | Use object type spread (`{...A, ...B}`); intersections, while supported for inexact objects, don't work for exact objects. |
+| [`this` bindings](#toc-method-unbinding) | Method extraction unsafely loses `this`; `this` in object literals is allowed. | Class method extraction is rejected; `this` in object literals is banned. |
+| [Tuple spread after an optional element](#toc-tuple-spread-optional) | Allowed; the resulting tuple type doesn't match the runtime layout when the optional element is absent. | Rejected when the source tuple's arity isn't statically fixed. |
 
 #### Object exactness {#toc-object-exactness}
 
@@ -100,18 +103,34 @@ That distinction matters because it explains why TypeScript code can look like i
 
 ```ts
 // TypeScript:
-type Settings = {volume: number, brightness: number};
-const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
+type Settings = {
+  volume: number,
+  brightness: number,
+};
+const raw = {
+  volume: 0.5,
+  brightness: 0.8,
+  theme: "dark",
+};
 const settings: Settings = raw;
-Object.values(settings).map(v => v.toFixed(2)); // Runtime crash! `Settings` types every value as `number`, so `.toFixed` runs on the `"dark"` string
+Object.values(settings).map(v =>
+  v.toFixed(2), // Runtime crash! `Settings` types every value as `number`, so `.toFixed` runs on the `"dark"` string
+);
 ```
 
 TypeScript accepts this: `raw` is inferred as `{volume: number, brightness: number, theme: string}`, which is structurally a subtype of `{volume: number, brightness: number}` because TS object types are open. The excess-property check does not fire on indirect assignment. Flow rejects the same code:
 
 ```js flow-check
 // Flow:
-type Settings = {volume: number, brightness: number};
-const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
+type Settings = {
+  volume: number,
+  brightness: number,
+};
+const raw = {
+  volume: 0.5,
+  brightness: 0.8,
+  theme: "dark",
+};
 const settings: Settings = raw; // ERROR
 ```
 
@@ -119,8 +138,16 @@ When the extra properties are intentional, the fix is the inexact form - write `
 
 ```js flow-check
 // Flow:
-type Settings = {volume: number, brightness: number, ...};
-const raw = {volume: 0.5, brightness: 0.8, theme: "dark"};
+type Settings = {
+  volume: number,
+  brightness: number,
+  ...
+};
+const raw = {
+  volume: 0.5,
+  brightness: 0.8,
+  theme: "dark",
+};
 const settings: Settings = raw; // OK
 ```
 
@@ -128,10 +155,19 @@ const settings: Settings = raw; // OK
 
 ```ts
 // TypeScript:
-type LogEntry = {id: string, timestamp: string};
-type WithUnixTime = {id: string, timestamp?: number};
+type LogEntry = {
+  id: string,
+  timestamp: string,
+};
+type WithUnixTime = {
+  id: string,
+  timestamp?: number,
+};
 
-const e: LogEntry = {id: 'a', timestamp: '2026-01-15'};
+const e: LogEntry = {
+  id: 'a',
+  timestamp: '2026-01-15',
+};
 const base: {id: string} = e;       // `timestamp` "forgotten"
 const widened: WithUnixTime = base; // `timestamp` re-introduced at a new type
 widened.timestamp?.toFixed(); // Runtime crash! ?. only short-circuits on nullish; the value
@@ -142,8 +178,14 @@ Flow blocks this path in two places: the literal translation fails at the forget
 
 ```js flow-check
 // Flow:
-type LogEntry = {id: string, timestamp: string};
-type WithUnixTime = {id: string, timestamp?: number};
+type LogEntry = {
+  id: string,
+  timestamp: string,
+};
+type WithUnixTime = {
+  id: string,
+  timestamp?: number,
+};
 
 declare const e: LogEntry;
 
@@ -176,8 +218,12 @@ class Foo {
 interface I { a: number }
 type Obj = {a: number, ...};
 
-declare function acceptsInterface(x: I): void;
-declare function acceptsObj(x: Obj): void;
+declare function acceptsInterface(
+  x: I,
+): void;
+declare function acceptsObj(
+  x: Obj,
+): void;
 declare const someI: I;
 
 acceptsInterface(new Foo()); // OK
@@ -222,7 +268,9 @@ The runtime consequence is usually a logic bug. `Iterable<string>` is satisfied 
 
 ```ts
 // TypeScript:
-function logAll(items: Iterable<string>) {
+function logAll(
+  items: Iterable<string>,
+) {
   for (const x of items) console.log(x);
 }
 logAll(["foo", "bar"]); // logs "foo" then "bar"
@@ -234,7 +282,9 @@ TypeScript accepts this via wrapper-promotion: `String.prototype[Symbol.iterator
 
 ```js flow-check
 // Flow:
-function logAll(items: Iterable<string>) {
+function logAll(
+  items: Iterable<string>,
+) {
   for (const x of items) console.log(x);
 }
 const msgs = "foo";
@@ -260,7 +310,10 @@ Flow's typing of value-level spread is also safer. TypeScript types `{...c}` as 
 
 ```ts
 // TypeScript:
-interface Counter { count: number; inc(): number }
+interface Counter {
+  count: number;
+  inc(): number;
+}
 class Impl {
   count = 0;
   inc(): number { return ++this.count; }
@@ -274,7 +327,10 @@ Flow rejects with `[cannot-spread-interface]` because interfaces don't track own
 
 ```js flow-check
 // Flow:
-interface Counter { count: number; inc(): number }
+interface Counter {
+  count: number;
+  inc(): number;
+}
 declare const c: Counter;
 const o = {...c}; // ERROR: [cannot-spread-interface]
 ```
@@ -294,7 +350,9 @@ Flow's two `this`-related rules both head off the same runtime crash: a method b
 // TypeScript:
 class Counter {
   count = 0;
-  increment(): number { return ++this.count; }
+  increment(): number {
+    return ++this.count;
+  }
 }
 const counter = new Counter();
 const tick = counter.increment;
@@ -307,11 +365,14 @@ Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.incr
 // Flow:
 class Counter {
   count: number = 0;
-  increment(): number { return ++this.count; }
+  increment(): number {
+    return ++this.count;
+  }
 }
 const counter = new Counter();
 const tick = counter.increment; // ERROR: [method-unbinding]
-const tickFixed = () => counter.increment(); // OK - arrow captures `this`
+const tickFixed = () =>
+  counter.increment(); // OK - arrow captures `this`
 tickFixed(); // OK
 ```
 
@@ -323,7 +384,9 @@ The Flow rewrite is to wrap with an arrow function that captures `this`, as show
 // TypeScript:
 const counter = {
   count: 0,
-  increment(): number { return ++this.count; }
+  increment(): number {
+    return ++this.count;
+  }
 };
 const tick = counter.increment;
 tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
@@ -345,7 +408,9 @@ The Flow rewrite is to use the name of the object literal binding directly inste
 // Flow:
 const counter = {
   count: 0,
-  increment(): number { return ++counter.count; } // Use object name directly instead of `this`
+  increment(): number {
+    return ++counter.count;
+  } // Use object name directly instead of `this`
 };
 const tick = counter.increment; // Extraction allowed: no `this` in the function
 tick(); // OK
@@ -360,7 +425,11 @@ Spreading a tuple type with optional elements into another tuple is allowed in T
 ```ts
 // TypeScript:
 const middle: [middleName?: string] = [];
-const fullName: [string, string | undefined, string] = ["Ada", ...middle, "Lovelace"];
+const fullName: [
+  string,
+  string | undefined,
+  string,
+] = ["Ada", ...middle, "Lovelace"];
 fullName[2].toUpperCase(); // Runtime crash! `fullName[2]` is undefined, not "Lovelace"
 ```
 
@@ -369,7 +438,11 @@ The TS type is statically known (`fullName` is annotated as `[string, string | u
 ```js flow-check
 // Flow:
 const middle: [middleName?: string] = [];
-const fullName: [string, string | void, string] = ["Ada", ...middle, "Lovelace"]; // ERROR
+const fullName: [
+  string,
+  string | void,
+  string,
+] = ["Ada", ...middle, "Lovelace"]; // ERROR
 ```
 
 The Flow rewrite is to branch explicitly on whether the optional element is present and assemble each shape on its own arm.
@@ -378,15 +451,15 @@ The Flow rewrite is to branch explicitly on whether the optional element is pres
 
 Flow's variance defaults are stricter than TypeScript's. The subsections below cover the keyword syntax for opting in or out and the positions where the defaults diverge.
 
-| Surface | TypeScript | Flow | Details |
-|---|---|---|---|
-| Variance keywords | Uses `readonly` properties and `in` / `out` type parameters; can also spell explicit invariance as `<in out T>`. | Uses `readonly` / `writeonly` properties and `in` / `out` type parameters; default type-parameter variance is invariant. | [Variance keywords](#toc-variance-keywords) |
-| Mutable object properties | Covariant. | Invariant. | [Mutable object properties](#toc-variance-mutable-props) |
-| `readonly` property assignability | `readonly` and mutable properties are assignable in ways that can drop the read-only constraint. | `readonly` cannot be dropped by assigning to a mutable-property type. | [`readonly` properties](#toc-variance-readonly-props) |
-| Mutable arrays | Covariant. | Invariant. | [Mutable arrays](#toc-variance-arrays) |
-| Generic type arguments | Variance is inferred from usage with compatibility-oriented exceptions. | Invariant by default unless declared `out` or `in`. | [Generic type arguments](#toc-variance-generics) |
-| Method parameters | Bivariant for method syntax; function-typed fields are contravariant. | Contravariant. | [Method parameters](#toc-variance-methods) |
-| `this` type positions | Allowed in input and invariant (mutable field) positions. | Restricted to covariant positions (return types and `readonly` fields). | [`this` type positions](#toc-this-variance) |
+| Surface | TypeScript | Flow |
+|---|---|---|
+| [Variance keywords](#toc-variance-keywords) | Uses `readonly` properties and `in` / `out` type parameters; can also spell explicit invariance as `<in out T>`. | Uses `readonly` / `writeonly` properties and `in` / `out` type parameters; default type-parameter variance is invariant. |
+| [Mutable object properties](#toc-variance-mutable-props) | Covariant. | Invariant. |
+| [`readonly` property assignability](#toc-variance-readonly-props) | `readonly` and mutable properties are assignable in ways that can drop the read-only constraint. | `readonly` cannot be dropped by assigning to a mutable-property type. |
+| [Mutable arrays](#toc-variance-arrays) | Covariant. | Invariant. |
+| [Generic type arguments](#toc-variance-generics) | Variance is inferred from usage with compatibility-oriented exceptions. | Invariant by default unless declared `out` or `in`. |
+| [Method parameters](#toc-variance-methods) | Bivariant for method syntax; function-typed fields are contravariant. | Contravariant. |
+| [`this` type positions](#toc-this-variance) | Allowed in input and invariant (mutable field) positions. | Restricted to covariant positions (return types and `readonly` fields). |
 
 :::info Variance - a quick overview.
 *Variance* describes how subtyping flows through a position where a type `T` appears - for example, the property type in `{x: T}`, a function parameter or return type, or a generic argument like `Container<T>`. Given that `Sub` is a subtype of `Super`, that position is:
@@ -424,10 +497,14 @@ Assigning `{price: number}` to `{price: number | string}` widens the slot's read
 
 ```ts
 // TypeScript:
-function markFree(p: {price: number | string}) {
+function markFree(p: {
+  price: number | string,
+}) {
   p.price = "Free!";
 }
-const item: {price: number} = {price: 9.99};
+const item: {price: number} = {
+  price: 9.99,
+};
 markFree(item);
 item.price.toFixed(2); // Runtime crash! `.toFixed` is not a function on `"Free!"`
 ```
@@ -436,10 +513,14 @@ TypeScript allows the call: the property is covariant, so `{price: number}` is t
 
 ```js flow-check
 // Flow:
-function markFree(p: {price: number | string}) {
+function markFree(p: {
+  price: number | string,
+}) {
   p.price = "Free!";
 }
-const item: {price: number} = {price: 9.99};
+const item: {price: number} = {
+  price: 9.99,
+};
 markFree(item); // ERROR: property `price` is invariantly typed
 ```
 
@@ -447,8 +528,12 @@ The fix depends on whether the function genuinely needs to mutate. If it doesn't
 
 ```js flow-check
 // Flow:
-function logPrice(p: Readonly<{price: number | string}>) {}
-const item: {price: number} = {price: 9.99};
+function logPrice(
+  p: Readonly<{price: number | string}>,
+) {}
+const item: {price: number} = {
+  price: 9.99,
+};
 logPrice(item); // OK
 ```
 
@@ -461,7 +546,9 @@ Assigning a `{readonly value: T}` to `{value: T}` would let a caller drop the re
 function f(obj: {value: number}) {
   obj.value = 99; // Silent mutation of a slot the caller annotated `readonly`
 }
-const o: {readonly value: number} = {value: 1};
+const o: {readonly value: number} = {
+  value: 1,
+};
 f(o);
 ```
 
@@ -472,7 +559,9 @@ TypeScript allows the call; the mutation through `f` succeeds at runtime. TypeSc
 function f(obj: {value: number}) {
   obj.value = 99;
 }
-const o: {readonly value: number} = {value: 1};
+const o: {readonly value: number} = {
+  value: 1,
+};
 f(o); // ERROR: [incompatible-variance]
 ```
 
@@ -480,8 +569,12 @@ The fix is to also mark the target read-only (`{readonly value: number}`) - once
 
 ```js flow-check
 // Flow:
-function f(obj: {readonly value: number}) {}
-const o: {readonly value: number} = {value: 1};
+function f(
+  obj: {readonly value: number},
+) {}
+const o: {readonly value: number} = {
+  value: 1,
+};
 f(o); // OK
 ```
 
@@ -491,7 +584,9 @@ Treating `Array<string>` as `Array<string | Error>` lets a `.push(new Error(...)
 
 ```ts
 // TypeScript:
-function appendError(es: Array<string | Error>) {
+function appendError(
+  es: Array<string | Error>,
+) {
   es.push(new Error("oops"));
 }
 const errors: Array<string> = [];
@@ -503,7 +598,9 @@ TypeScript allows the call. The push goes through, and the typed-as-`string` ele
 
 ```js flow-check
 // Flow:
-function appendError(es: Array<string | Error>) {
+function appendError(
+  es: Array<string | Error>,
+) {
   es.push(new Error("oops"));
 }
 const errors: Array<string> = [];
@@ -514,7 +611,9 @@ The fix depends on whether the callee needs to mutate. If it doesn't, switch the
 
 ```js flow-check
 // Flow:
-function logErrors(es: ReadonlyArray<string | Error>) {}
+function logErrors(
+  es: ReadonlyArray<string | Error>,
+) {}
 const errors: Array<string> = [];
 logErrors(errors); // OK
 ```
@@ -527,9 +626,13 @@ Flow defaults generic parameters to invariance and asks the user to opt into co/
 // TypeScript:
 class Box<T> {
   value: T;
-  constructor(value: T) { this.value = value; }
+  constructor(value: T) {
+    this.value = value;
+  }
 }
-function widen(b: Box<number | string>) {
+function widen(
+  b: Box<number | string>,
+) {
   b.value = "oh no";
 }
 const box: Box<number> = new Box(1);
@@ -543,9 +646,13 @@ TypeScript allows the call; `widen` then writes a string into the caller's numbe
 // Flow:
 class Box<T> {
   value: T;
-  constructor(value: T) { this.value = value; }
+  constructor(value: T) {
+    this.value = value;
+  }
 }
-function widen(b: Box<number | string>) {}
+function widen(
+  b: Box<number | string>,
+) {}
 const box: Box<number> = new Box(1);
 widen(box); // ERROR
 ```
@@ -558,14 +665,23 @@ TypeScript's method-parameter variance is bivariant: `{compare(a: string, b: str
 
 ```ts
 // TypeScript:
-type StringComparator = {compare(a: string, b: string): number};
-type Comparator = {compare(a: string | number, b: string | number): number};
+type StringComparator = {
+  compare(a: string, b: string): number,
+};
+type Comparator = {
+  compare(
+    a: string | number,
+    b: string | number,
+  ): number,
+};
 
 function callCompare(c: Comparator) {
   c.compare(1, 2); // Runtime crash! body calls .localeCompare on a number
 }
 const stringComparator: StringComparator = {
-  compare(a, b) { return a.localeCompare(b); }
+  compare(a, b) {
+    return a.localeCompare(b);
+  }
 };
 callCompare(stringComparator);
 ```
@@ -574,12 +690,21 @@ The bivariance hole is invisible at the call site: TS users see no error until r
 
 ```js flow-check
 // Flow:
-type StringComparator = {compare(a: string, b: string): number};
-type Comparator = {compare(a: string | number, b: string | number): number};
+type StringComparator = {
+  compare(a: string, b: string): number,
+};
+type Comparator = {
+  compare(
+    a: string | number,
+    b: string | number,
+  ): number,
+};
 
 function callCompare(c: Comparator) {}
 const stringComparator: StringComparator = {
-  compare(a, b) { return a.localeCompare(b); }
+  compare(a, b) {
+    return a.localeCompare(b);
+  }
 };
 callCompare(stringComparator); // ERROR
 ```
@@ -744,7 +869,9 @@ function localCase(x: ?number) {
   }
 }
 
-function propertyCase(obj: {x: ?number}) {
+function propertyCase(obj: {
+  x: ?number,
+}) {
   if (obj.x != null) {
     sideEffect();            // bare call DROPS the refinement on a property
     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
@@ -765,7 +892,9 @@ The standard fix for the property case is to extract the refined value to a loca
 // Flow:
 declare function sideEffect(): void;
 
-function propertyCaseFixed(obj: {x: ?number}) {
+function propertyCaseFixed(obj: {
+  x: ?number,
+}) {
   const {x} = obj;
   if (x != null) {
     sideEffect();
@@ -790,7 +919,11 @@ export function getUser(id: string) { // [signature-verification-failure]
 }
 
 // OK - annotate the return so the module's typed interface is self-contained.
-export function getUser(id: string): {id: string, name: string, age: number} {
+export function getUser(id: string): {
+  id: string,
+  name: string,
+  age: number,
+} {
   return {id, name: 'Alice', age: 30};
 }
 ```
@@ -814,7 +947,9 @@ export type Foo = {x: number};
 // Flow:
 // consumer.js
 import {Foo} from './mod'; // ERROR: [import-type-as-value]
-import type {Foo as FooType} from './mod'; // OK
+import type {
+  Foo as FooType,
+} from './mod'; // OK
 ```
 
 ### Explicit type controls {#toc-explicit-controls}
@@ -827,7 +962,10 @@ Flow's `as` only widens or asserts (e.g. `42 as number`, `42 as 42`), and reject
 
 ```ts
 // TypeScript:
-const u = {id: 1} as {id: number, name: string};
+const u = {id: 1} as {
+  id: number,
+  name: string,
+};
 u.name.toUpperCase(); // Runtime crash! `u.name` is undefined
 ```
 
@@ -883,7 +1021,10 @@ Flow ships [first-class `component` syntax](./react/component-syntax.md) for dec
 // Flow:
 import * as React from 'react';
 
-component Greeting(name: string, greeting: string = "Hello") {
+component Greeting(
+  name: string,
+  greeting: string = "Hello",
+) {
   return <p>{greeting}, {name}!</p>;
 }
 
@@ -902,7 +1043,10 @@ type GreetingProps = {
   name: string,
   greeting?: string,
 };
-function Greeting({name, greeting = "Hello"}: GreetingProps) {
+function Greeting({
+  name,
+  greeting = "Hello",
+}: GreetingProps) {
   return <p>{greeting}, {name}!</p>;
 }
 
@@ -939,12 +1083,16 @@ Flow tracks hook-ness as part of the function type, which lets it catch violatio
 // Flow:
 import {useState} from 'react';
 
-hook useToggle(initial: boolean): [boolean, () => void] {
+hook useToggle(
+  initial: boolean,
+): [boolean, () => void] {
   const [v, sv] = useState(initial);
   return [v, () => sv(x => !x)];
 }
 
-function callIt(fn: (boolean) => [boolean, () => void]): [boolean, () => void] {
+function callIt(
+  fn: (boolean) => [boolean, () => void],
+): [boolean, () => void] {
   return fn(false);
 }
 
@@ -957,12 +1105,16 @@ TypeScript has no concept of hook-ness; `useToggle` is just a function. The call
 // TypeScript:
 import {useState} from 'react';
 
-function useToggle(initial: boolean): [boolean, () => void] {
+function useToggle(
+  initial: boolean,
+): [boolean, () => void] {
   const [v, sv] = useState(initial);
   return [v, () => sv(x => !x)];
 }
 
-function callIt(fn: (b: boolean) => [boolean, () => void]): [boolean, () => void] {
+function callIt(
+  fn: (b: boolean) => [boolean, () => void],
+): [boolean, () => void] {
   return fn(false);
 }
 
@@ -977,21 +1129,38 @@ callIt(useToggle); // No type error; rule-of-hooks violation surfaces at runtime
 // Flow:
 import * as React from 'react';
 
-component Header(text: string, color: string) {
-  return <div style={{color}}>{text}</div>;
+component Header(
+  text: string,
+  color: string,
+) {
+  return (
+    <div style={{color}}>{text}</div>
+  );
 }
-component MainHeader(text: string) renders Header {
-  return <Header text={text} color="red" />;
+component MainHeader(
+  text: string,
+) renders Header {
+  return (
+    <Header text={text} color="red" />
+  );
 }
 
-component Layout(header: renders Header) {
-  return <div>
-    {header}
-    <section>Content</section>
-  </div>;
+component Layout(
+  header: renders Header,
+) {
+  return (
+    <div>
+      {header}
+      <section>Content</section>
+    </div>
+  );
 }
 
-const ok = <Layout header={<MainHeader text="Flow" />} />;
+const ok = (
+  <Layout
+    header={<MainHeader text="Flow" />}
+  />
+);
 const bad = <Layout header={<footer />} />; // ERROR: `<footer />` does not satisfy `renders Header`
 ```
 
@@ -1001,19 +1170,41 @@ TypeScript has no equivalent. The closest is typing slots as `React.ReactNode`, 
 // TypeScript:
 import * as React from 'react';
 
-function Header({text, color}: {text: string, color: string}) {
-  return <div style={{color}}>{text}</div>;
+function Header({
+  text,
+  color,
+}: {text: string, color: string}) {
+  return (
+    <div style={{color}}>{text}</div>
+  );
 }
-function MainHeader({text}: {text: string}) {
-  return <Header text={text} color="red" />;
+function MainHeader({text}: {
+  text: string,
+}) {
+  return (
+    <Header text={text} color="red" />
+  );
 }
 
-function Layout({header}: {header: React.ReactNode}) {
-  return <div>{header}<section>Content</section></div>;
+function Layout({header}: {
+  header: React.ReactNode,
+}) {
+  return (
+    <div>
+      {header}
+      <section>Content</section>
+    </div>
+  );
 }
 
-const ok = <Layout header={<MainHeader text="TS" />} />;
-const bad = <Layout header={<footer />} />; // No type error
+const ok = (
+  <Layout
+    header={<MainHeader text="TS" />}
+  />
+);
+const bad = (
+  <Layout header={<footer />} />
+); // No type error
 ```
 
 ### `match` expressions and statements {#toc-match}
@@ -1031,12 +1222,18 @@ type Action =
 declare const action: Action;
 
 const description: string = match (action) {
-  {type: 'add', const text} => `Add: ${text}`,
-  {type: 'toggle', const id} => `Toggle ${id}`,
-  {type: 'remove', const id} => `Remove ${id}`,
-  {type: 'filter', mode: 'all'} => 'Show all',
-  {type: 'filter', mode: 'active'} => 'Show active',
-  {type: 'filter', mode: 'done'} => 'Show done',
+  {type: 'add', const text} =>
+    `Add: ${text}`,
+  {type: 'toggle', const id} =>
+    `Toggle ${id}`,
+  {type: 'remove', const id} =>
+    `Remove ${id}`,
+  {type: 'filter', mode: 'all'} =>
+    'Show all',
+  {type: 'filter', mode: 'active'} =>
+    'Show active',
+  {type: 'filter', mode: 'done'} =>
+    'Show done',
 };
 ```
 
@@ -1075,11 +1272,16 @@ type Action =
 declare const action: Action;
 
 const description: string = match (action) { // ERROR: missing `{type: 'filter', mode: 'done'}`
-  {type: 'add', const text} => `Add: ${text}`,
-  {type: 'toggle', const id} => `Toggle ${id}`,
-  {type: 'remove', const id} => `Remove ${id}`,
-  {type: 'filter', mode: 'all'} => 'Show all',
-  {type: 'filter', mode: 'active'} => 'Show active',
+  {type: 'add', const text} =>
+    `Add: ${text}`,
+  {type: 'toggle', const id} =>
+    `Toggle ${id}`,
+  {type: 'remove', const id} =>
+    `Remove ${id}`,
+  {type: 'filter', mode: 'all'} =>
+    'Show all',
+  {type: 'filter', mode: 'active'} =>
+    'Show active',
 };
 ```
 
@@ -1095,8 +1297,12 @@ Flow's opaque types, by contrast, are sealed by the module boundary itself: outs
 // Flow:
 opaque type UserId = number;
 
-declare function makeUserId(n: number): UserId;
-declare function lookupUser(id: UserId): string;
+declare function makeUserId(
+  n: number,
+): UserId;
+declare function lookupUser(
+  id: UserId,
+): string;
 
 const id: UserId = makeUserId(42);
 lookupUser(id); // OK
@@ -1110,8 +1316,12 @@ The view from another file: outside the defining module, the underlying type is 
 ```js flow-check
 // Flow (importer's view, as if `UserId` and functions were imported from another file):
 declare opaque type UserId;
-declare function makeUserId(n: number): UserId;
-declare function lookupUser(id: UserId): string;
+declare function makeUserId(
+  n: number,
+): UserId;
+declare function lookupUser(
+  id: UserId,
+): string;
 
 const id: UserId = makeUserId(42);
 lookupUser(id); // OK
@@ -1124,10 +1334,16 @@ The TypeScript branded types encoding, with the unsafe `as` cast at the bottom:
 ```ts
 // TypeScript:
 declare const brand: unique symbol;
-type UserId = number & {readonly [brand]: 'UserId'};
+type UserId = number & {
+  readonly [brand]: 'UserId',
+};
 
-declare function makeUserId(n: number): UserId;
-declare function lookupUser(id: UserId): string;
+declare function makeUserId(
+  n: number,
+): UserId;
+declare function lookupUser(
+  id: UserId,
+): string;
 
 const id: UserId = makeUserId(42);
 lookupUser(id); // OK
@@ -1174,8 +1390,12 @@ declare const st: Status;
 
 let label: string;
 switch (st) { // ERROR: member `Off` has not been considered
-  case Status.Active: label = 'on'; break;
-  case Status.Paused: label = 'wait'; break;
+  case Status.Active:
+    label = 'on';
+    break;
+  case Status.Paused:
+    label = 'wait';
+    break;
 }
 ```
 
@@ -1189,7 +1409,9 @@ For example, `isPositive(n: ?number)` returns `true` only for positive numbers. 
 
 ```js flow-check
 // Flow:
-function isPositive(n: ?number): implies n is number {
+function isPositive(
+  n: ?number,
+): implies n is number {
   return n != null && n > 0;
 }
 
@@ -1205,11 +1427,16 @@ TypeScript has only two-sided type guards. The else branch always refines the pr
 
 ```ts
 // TypeScript:
-function isPositive(n: number | null | undefined): n is number {
+function isPositive(
+  n: number | null | undefined,
+): n is number {
   return n != null && n > 0;
 }
 
-declare const n: number | null | undefined;
+declare const n:
+  | number
+  | null
+  | undefined;
 if (isPositive(n)) {
   // n: number
 } else {
@@ -1228,12 +1455,17 @@ The example below uses both forms: `import type {Node}` pulls in a type export d
 
 ```js flow-check
 // Flow:
-import type {Node as ReactNode} from 'react';
+import type {
+  Node as ReactNode,
+} from 'react';
 const node: ReactNode = "hello, world";
 
 import typeof {useState} from 'react';
-hook useCounter(useStateNum: useState<number>): number {
-  const [count, setCount] = useStateNum(0);
+hook useCounter(
+  useStateNum: useState<number>,
+): number {
+  const [count, setCount] =
+    useStateNum(0);
   setCount(c => c + 1);
   return count;
 }
@@ -1274,7 +1506,10 @@ With `relay_integration=true`, Flow reads the Relay compiler's emitted artifact 
 
 ```js
 // Flow:
-import {graphql, useFragment} from 'react-relay';
+import {
+  graphql,
+  useFragment,
+} from 'react-relay';
 declare const userRef: MyFragment$key;
 
 const data = useFragment(
@@ -1287,8 +1522,13 @@ TypeScript requires the explicit type parameter and a generated-type import:
 
 ```ts
 // TypeScript:
-import {graphql, useFragment} from 'react-relay';
-import type {MyFragment$key} from './__generated__/MyFragment.graphql';
+import {
+  graphql,
+  useFragment,
+} from 'react-relay';
+import type {
+  MyFragment$key,
+} from './__generated__/MyFragment.graphql';
 declare const userRef: MyFragment$key;
 
 const data = useFragment<MyFragment$key>(
