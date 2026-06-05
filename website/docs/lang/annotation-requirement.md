@@ -422,7 +422,7 @@ console.log(lastSeen);
 The fix is to add a type annotation to the variable:
 
 ```js flow-check
-let lastSeen: mixed; // Works!
+let lastSeen: unknown; // Works!
 function remember<T>(value: T): T {
   lastSeen = value;
   return value;
@@ -446,7 +446,7 @@ console.log(cached);
 As with the previous example, the fix is to annotate the variable:
 
 ```js flow-check
-let cached: mixed = null; // Works!
+let cached: unknown = null; // Works!
 function cache<T>(value: T): T {
   cached = value;
   return value;

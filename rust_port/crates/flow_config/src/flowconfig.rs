@@ -226,6 +226,24 @@ pub mod opts {
         ".webp",
     ];
 
+    fn default_deprecated_utilities() -> BTreeMap<String, Vec<String>> {
+        // The context check treats utility dirs as prefixes; an empty prefix matches every non-lib file.
+        let all_files_prefix = String::new();
+        [
+            "mixed",
+            "$ReadOnlyArray",
+            "$NonMaybeType",
+            "$ReadOnly",
+            "$Keys",
+            "$Values",
+            "$ReadOnlyMap",
+            "$ReadOnlySet",
+        ]
+        .into_iter()
+        .map(|utility| (utility.to_string(), vec![all_files_prefix.clone()]))
+        .collect()
+    }
+
     pub fn default_options() -> Opts {
         let module_resource_exts = MODULE_RESOURCE_EXTS
             .iter()
@@ -365,7 +383,7 @@ pub mod opts {
             ts_utility_syntax: true,
             tslib_syntax: None,
             typescript_library_definition_support: false,
-            deprecated_utilities: BTreeMap::new(),
+            deprecated_utilities: default_deprecated_utilities(),
             deprecated_utilities_excludes: Vec::new(),
             deprecated_colon_extends: Vec::new(),
             deprecated_colon_extends_excludes: Vec::new(),
@@ -2605,13 +2623,7 @@ pub mod opts {
                 )),
                 "experimental.deprecated_utilities" => Some(parse_mapping(
                     |(utility, directory)| Ok((utility, directory)),
-                    |opts, (utility, directory)| {
-                        opts.deprecated_utilities
-                            .entry(utility)
-                            .or_insert_with(Vec::new)
-                            .push(directory);
-                        Ok(())
-                    },
+                    |_opts, (_utility, _directory)| Ok(()),
                     None,
                     true,
                     values,

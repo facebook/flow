@@ -6,5 +6,5 @@ export declare class OptionalImplicitReturn {
 
 // Optional method with `this is X` type guard — only allowed under MethodKind.
 export declare class OptionalTypeGuard {
-  isFoo?(x: mixed): this is OptionalTypeGuard;
+  isFoo?(x: unknown): this is OptionalTypeGuard;
 }

@@ -182,6 +182,23 @@ module Opts = struct
   }
   [@@warning "-69"]
 
+  let default_deprecated_utilities =
+    (* The context check treats utility dirs as prefixes; an empty prefix matches every non-lib file. *)
+    let all_files_prefix = "" in
+    List.fold_left
+      (fun acc utility -> SMap.add utility [all_files_prefix] acc)
+      SMap.empty
+      [
+        "mixed";
+        "$ReadOnlyArray";
+        "$NonMaybeType";
+        "$ReadOnly";
+        "$Keys";
+        "$Values";
+        "$ReadOnlyMap";
+        "$ReadOnlySet";
+      ]
+
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
     (* If the user specified any options that aren't defined, issue a warning *)
     let warnings =
@@ -229,7 +246,7 @@ module Opts = struct
       async_component_syntax = false;
       async_component_syntax_includes = [];
       component_syntax = true;
-      deprecated_utilities = SMap.empty;
+      deprecated_utilities = default_deprecated_utilities;
       deprecated_utilities_excludes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
@@ -1164,19 +1181,7 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
       ( "experimental.deprecated_utilities",
-        mapping
-          ~multiple:true
-          (fun v -> Ok v)
-          (fun opts (utility, directory) ->
-            let updated_map =
-              SMap.update
-                utility
-                (function
-                  | None -> Some [directory]
-                  | Some existing_dirs -> Some (directory :: existing_dirs))
-                opts.deprecated_utilities
-            in
-            Ok { opts with deprecated_utilities = updated_map })
+        mapping ~multiple:true (fun v -> Ok v) (fun opts (_utility, _directory) -> Ok opts)
       );
       ( "experimental.deprecated_utilities.excludes",
         string

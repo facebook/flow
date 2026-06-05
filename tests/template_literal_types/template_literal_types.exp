@@ -1214,8 +1214,8 @@ Error --------------------------------------------------------------------------
 Template literal type placeholder must be a subtype of `string | number | bigint | boolean | null | undefined`.
 [invalid-template-literal-type]
 
-   453| type BadMixed = `${mixed}`; // ERROR: mixed/unknown placeholder
-                        ^^^^^^^^^^
+   453| type BadMixed = `${unknown}`; // ERROR: unknown placeholder
+                        ^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- basic.js:454:19

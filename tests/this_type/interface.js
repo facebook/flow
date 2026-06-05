@@ -195,12 +195,12 @@ ci.zzz; // ERROR: prop-missing at this line
 // neutral polarity by `check_polarity_typeparam`. The `class Bar` block
 // below uses the same shapes to confirm parity with the class side.
 interface WithMethodTparamThis {
-  refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+  refine<Ch extends (arg: this) => unknown>(check: Ch): void; // [incompatible-variance], not [illegal-this]
   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
 }
 
 class WithClassMethodTparamThis {
-  refine<Ch extends (arg: this) => mixed>(check: Ch): void {} // same: [incompatible-variance]
+  refine<Ch extends (arg: this) => unknown>(check: Ch): void {} // same: [incompatible-variance]
   factory<T = this>(): T { return (this: $FlowFixMe); }       // same: [incompatible-variance]
 }
 

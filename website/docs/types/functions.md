@@ -202,7 +202,7 @@ You can also use a special return type to declare that your function refines the
 These are called [type guards](./type-guards.md):
 
 ```js flow-check
-function isString(x: mixed): x is string {
+function isString(x: unknown): x is string {
   return typeof x === 'string';
 }
 ```

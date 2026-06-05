@@ -31,7 +31,7 @@ let tests = [
       y = !y;
     }
   },
-  function (x: (...args: ReadonlyArray<mixed>) => mixed) {
+  function (x: (...args: ReadonlyArray<unknown>) => unknown) {
     !x as false; // ok, functions are always truthy
   },
   function (x: {...}) {

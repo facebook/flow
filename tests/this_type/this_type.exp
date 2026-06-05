@@ -710,14 +710,14 @@ Cannot use `this` [1] in an input/output position because `this` [1] is expected
 [incompatible-variance]
 
    interface.js:198:27
-   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+   198|   refine<Ch extends (arg: this) => unknown>(check: Ch): void; // [incompatible-variance], not [illegal-this]
                                   ^^^^
 
 References:
    interface.js:197:1
         v-------------------------------
    197| interface WithMethodTparamThis {
-   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+   198|   refine<Ch extends (arg: this) => unknown>(check: Ch): void; // [incompatible-variance], not [illegal-this]
    199|   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
    200| }
         ^ [1]
@@ -736,7 +736,7 @@ References:
    interface.js:197:1
         v-------------------------------
    197| interface WithMethodTparamThis {
-   198|   refine<Ch extends (arg: this) => mixed>(check: Ch): void; // [incompatible-variance], not [illegal-this]
+   198|   refine<Ch extends (arg: this) => unknown>(check: Ch): void; // [incompatible-variance], not [illegal-this]
    199|   factory<T = this>(): T;                                   // [incompatible-variance], not [illegal-this]
    200| }
         ^ [1]
@@ -748,7 +748,7 @@ Cannot use `this` [1] in an input/output position because `this` [1] is expected
 [incompatible-variance]
 
    interface.js:203:27
-   203|   refine<Ch extends (arg: this) => mixed>(check: Ch): void {} // same: [incompatible-variance]
+   203|   refine<Ch extends (arg: this) => unknown>(check: Ch): void {} // same: [incompatible-variance]
                                   ^^^^
 
 References:

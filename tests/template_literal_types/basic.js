@@ -450,7 +450,7 @@ type AtLimit = `${SmallSet}${SmallSet}${SmallSet}`;
 type BadObj = `${{a: 1}}`; // ERROR: object placeholder
 type BadFunc = `${() => void}`; // ERROR: function placeholder
 type BadArr = `${Array<string>}`; // ERROR: array placeholder
-type BadMixed = `${mixed}`; // ERROR: mixed/unknown placeholder
+type BadMixed = `${unknown}`; // ERROR: unknown placeholder
 type BadInUnion = `${string | {a: 1}}`; // ERROR: invalid union member
 
 // Soundness: invalid placeholders reached via EvalT. The syntactic walker
