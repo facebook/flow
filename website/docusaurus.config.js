@@ -93,6 +93,11 @@ module.exports = async () => {
       },
     ],
     themeConfig: {
+      // Default Open Graph / Twitter share image for every page. Individual
+      // pages can override via the `image:` frontmatter field (the homepage
+      // does, in src/pages/index.mdx). Path is relative to website/static/.
+      image: 'img/og-share.png',
+      metadata: [{name: 'twitter:card', content: 'summary_large_image'}],
       algolia: process.env.INTERNAL_STATIC_DOCS
         ? undefined
         : {
