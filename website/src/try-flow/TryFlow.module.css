@@ -7,8 +7,25 @@
  * @format
  */
 
+/* Fills the code pane as a flex column (tab bar + editor body) so the editor
+   grows with the pane instead of staying a fixed height. This is what lets the
+   editor expand when the results pane is collapsed on mobile. */
 .editorContainer {
     position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* The Monaco editor fills the space below the tab bar. The editor relayouts on
+   discrete events (see onMount), so during the results-pane collapse animation
+   its canvas briefly lags the growing/shrinking container; overflow:hidden clips
+   that lag instead of letting the canvas spill past the pane. */
+.editorBody {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* The Try playground is always light (its Monaco syntax theme is fixed at
@@ -30,8 +47,12 @@
 
 .tryEditorConfig {
     position: absolute;
-    width: 100%;
-    height: var(--tf-editor-h);
+    /* Fill the area below the tab bar (top) down to the pane bottom, so the
+       config panel grows with the pane just like the editor does. */
+    top: var(--tf-toolbar-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 10;
     background-color: white;
     /* Dark text on the white config panel, pinned so it stays readable in dark
@@ -189,19 +210,41 @@
     gap: 8px;
 }
 
-/* Phone widths: drop the "Recover from last saved state?" banner and its
-   Recover/Ignore buttons. The slate bar has no room for it next to the tabs at
-   this width. */
-@media (max-width: 600px) {
-    .resetBanner {
-        display: none;
-    }
+/* The recover prompt and the Clear button are mutually exclusive and share this
+   slot. Both are stacked in one grid cell and right-aligned, so the slot keeps
+   the width of the wider (recover) group and the Copy buttons to its right don't
+   shift when the two swap; the swap itself cross-fades (see .swapActive below). */
+.swapSlot {
+    display: grid;
+    justify-items: end;
+}
+.swapSlot > * {
+    grid-area: 1 / 1;
+}
+.swapActive {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.18s ease;
+}
+.swapInactive {
+    opacity: 0;
+    /* Stay rendered through the fade-out, then drop from the tab order and the
+       accessibility tree (visibility flips after the opacity transition). */
+    visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0s 0.18s;
 }
 
 .tryEditor {
     display: flex;
     flex: 1;
-    height: calc(100vh - var(--ifm-navbar-height));
+    /* Pull up 1px to sit under the navbar's translucent bottom border
+       (rgba(255,255,255,0.08)). In light site mode that border composites over
+       the white page body and shows as a 1px white line between the dark navbar
+       and the slate tab bar; in dark mode it composites over the dark body and
+       blends in. Covering it with the slate bar removes the seam so light and
+       dark look the same. The +1px on the height keeps the pane bottom flush. */
+    margin-top: -1px;
+    height: calc(100vh - var(--ifm-navbar-height) + 1px);
 
     /* Playground design tokens. The Try playground is always light, so these are
        unconditional; a future dark-aware pass can override them under a selector. */
@@ -238,6 +281,19 @@
     min-width: 0;
     min-height: 0;
 }
+/* Side-by-side layout only: keep the editor pane >=400px and the results pane
+   >=450px when dragging the splitter. The stacking breakpoint below (850px) sits
+   above 400+450+splitter, so both minimums always fit before the panes stack. The
+   mouse/keyboard handlers clamp the ratio to the same minimums; this is the
+   resize-safety floor. */
+@media (min-width: 851px) {
+    .code {
+        min-width: 400px;
+    }
+    .results {
+        min-width: 450px;
+    }
+}
 .code {
     flex-grow: var(--tf-split);
 }
@@ -247,6 +303,14 @@
 
 .code {
     background: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Query container so the toolbar buttons can respond to the editor pane's own
+       width — which changes with the splitter and the stacked layout — rather
+       than the viewport. As the pane narrows, buttons slim down (full label ->
+       short label -> icon only) so they keep fitting instead of being clipped. */
+    container: tf-editor / inline-size;
 }
 
 .results {
@@ -257,6 +321,9 @@
        readable in dark site mode. The results-side tab bar reasserts its own
        light text via .toolbar above. */
     color: #1c1e21;
+    /* Query container so the "Copy errors" button slims to its icon based on the
+       results pane's own width (like the editor pane does for its buttons). */
+    container: tf-results / inline-size;
 }
 
 /* Draggable splitter between the panes. The hit area spans the full height
@@ -306,8 +373,10 @@
 }
 
 /* Narrow screens: stack the panes vertically, halve each body's height so both
-   fit below the navbar, and hide the (horizontal-only) splitter. */
-@media (max-width: 768px) {
+   fit below the navbar, and hide the (horizontal-only) splitter. Breakpoint is
+   above the 400px + 450px per-pane minimums (plus the splitter), so we stack
+   before the side-by-side panes would be forced below their minimum width. */
+@media (max-width: 850px) {
     .tryEditor {
         flex-direction: column;
         --tf-editor-h: calc(
@@ -325,6 +394,72 @@
     }
     .results {
         border-top: 1px solid #ddd;
+        /* Animate the grow/basis change when the pane collapses to its tab bar
+           so the editor expands into the freed space smoothly. */
+        transition: flex-grow 0.25s ease, flex-basis 0.25s ease;
+    }
+    /* Collapsed: shrink the results pane to just its tab bar (the editor's
+       flex:1 grows to fill the rest), and hide every body variant so nothing
+       overflows below the bar. The tab bar gets a pointer cursor as the affordance
+       to re-expand. */
+    .results.collapsed {
+        flex-grow: 0;
+        flex-basis: var(--tf-toolbar-h);
+    }
+    .results.collapsed .toolbar {
+        cursor: pointer;
+    }
+    .results.collapsed .resultBody,
+    .results.collapsed .astBody,
+    .results.collapsed .noErrors,
+    .results.collapsed .emptyState,
+    .results.collapsed .loader {
+        display: none;
+    }
+}
+
+/* Collapse toggle (results pane, stacked layout only — hidden by default, shown
+   in the media query above). The chevron points down when the pane is open and
+   rotates to point up when collapsed. */
+.collapseChevron {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    margin: 0;
+    padding: 4px;
+    border-radius: var(--tf-radius-sm);
+    background: transparent;
+    color: var(--tf-text-on-bar);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.collapseChevron:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+.collapseChevron:focus-visible {
+    outline: 2px solid var(--flow-yellow);
+    outline-offset: 2px;
+}
+.collapseChevron svg {
+    width: 16px;
+    height: 16px;
+    /* Matches the results-pane collapse duration so the chevron and the pane it
+       controls finish together. */
+    transition: transform 0.25s ease;
+}
+.collapsed .collapseChevron svg {
+    transform: rotate(180deg);
+}
+/* The collapse toggle is only meaningful when the panes are stacked. Placed after
+   the base rule above so this show wins over its display:none (media queries add
+   no specificity — source order decides). */
+@media (max-width: 850px) {
+    .collapseChevron {
+        display: inline-flex;
     }
 }
 
@@ -379,7 +514,7 @@
     background-color: rgba(255, 255, 255, 0.08);
 }
 
-.version {
+.resultsActions {
     margin-left: auto;
     display: flex;
     justify-content: flex-end;
@@ -447,23 +582,99 @@
     padding: 4px 10px;
     cursor: pointer;
     transition: background-color 0.15s, color 0.15s;
+    /* Never wrap to a second line (which would make the button grow vertically
+       and overflow the fixed-height bar). When the bar is tight the button
+       shrinks and its label truncates with an ellipsis instead. min-width:0 lets
+       it shrink below its content width inside the flex toolbar. */
+    min-width: 0;
+    white-space: nowrap;
+    /* Consistent height whether the button shows a label or only its icon —
+       otherwise an icon-only button shrinks to the icon's height and reads as a
+       smaller pill than its labeled siblings. */
+    box-sizing: border-box;
+    min-height: 31px;
+}
+
+/* The button's text label. Holds the ellipsis so the icon stays full-size while
+   only the text truncates. */
+.toolbarButtonLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 .toolbarButton:hover {
     background: rgba(255, 255, 255, 0.14);
     color: #fff;
 }
 
-/* Phone widths: drop the "Copy all" button. The slate bar is tight at this
-   width (tabs + version dropdown), and "Copy all" doesn't fit; each card still
-   has its own copy button. */
-@media (max-width: 600px) {
-    .copyAll {
+/* When the results pane is narrow, "Copy errors" collapses to just its icon
+   (keyed to the results pane's own width). Each error card still has its own copy
+   button, so the action isn't lost. */
+@container tf-results (max-width: 500px) {
+    .iconOnly .toolbarButtonLabel {
+        display: none;
+    }
+}
+
+/* First slim step as the editor pane narrows: the recover prompt drops to
+   "Recover last saved" -> "Recover" and hides Ignore (typing dismisses the prompt
+   anyway). Keyed to the pane's own width via the container query above. */
+@container tf-editor (max-width: 720px) {
+    .labelExtra {
+        display: none;
+    }
+    .phoneHidden {
+        display: none;
+    }
+}
+
+/* Final slim step: when the pane is narrow, Clear / Recover / Copy code collapse
+   to just their icon. Copy link keeps its label as the primary sharing action.
+   Same 500px pane threshold as "Copy errors" on the results pane. */
+@container tf-editor (max-width: 500px) {
+    .iconOnly .toolbarButtonLabel {
+        display: none;
+    }
+}
+
+/* Very narrow panes — only reachable when stacked, since side-by-side panes keep
+   their minimum widths (editor 400px, results 450px). On phones the toolbars run
+   out of room even for icons, so drop whole buttons by priority. Thresholds are
+   calibrated so everything fits down to a 375px floor (narrower isn't supported).
+   The order is driven by what physically fits: the results tabs are wider than
+   the editor's, so the version selector goes before the editor's Clear/Copy code. */
+
+/* Results pane below 450px (all phones): hide "Copy errors" — each error card
+   still has its own copy button. 449.98 (not 450) so it never triggers at the
+   side-by-side results min of exactly 450px. */
+@container tf-results (max-width: 449.98px) {
+    .copyErrors {
+        display: none;
+    }
+}
+
+/* Results pane <=410px: also drop the version selector (a real version is
+   preselected; the tabs and collapse chevron stay). */
+@container tf-results (max-width: 410px) {
+    .resultsActions select,
+    .versionWarning {
+        display: none;
+    }
+}
+
+/* Editor pane <=380px: drop the Clear/recover slot and Copy code; keep the
+   Code/Config tabs and Copy link (the primary sharing action). */
+@container tf-editor (max-width: 380px) {
+    .swapSlot,
+    .copyCode {
         display: none;
     }
 }
 .toolbarButton svg {
     width: 14px;
     height: 14px;
+    flex: none;
 }
 
 /* Right-aligned cluster of toolbar actions (recover/ignore + copy buttons). */
@@ -477,7 +688,7 @@
 
 /* Version dropdown: a pill on the slate bar, the same shape as the config's
    custom select but themed for the dark bar (translucent fill, light chevron). */
-.version select {
+.resultsActions select {
     appearance: none;
     -webkit-appearance: none;
     padding: 4px 26px 4px 10px;
@@ -492,8 +703,14 @@
     font-size: 13px;
     cursor: pointer;
     transition: background-color 0.15s, color 0.15s;
+    /* Cap the width so a long development-only label ("main (rust port)") can't
+       push the toolbar wide. A real release like "v0.317.0" fits comfortably and
+       is what's selected in ~all cases; the rare long dev label just truncates,
+       which is fine. */
+    max-width: 92px;
+    text-overflow: ellipsis;
 }
-.version select:hover {
+.resultsActions select:hover {
     background-color: rgba(255, 255, 255, 0.14);
     color: #fff;
 }
@@ -502,7 +719,7 @@
    on the dark bar); the white config controls use the deep gold. */
 .tab:focus-visible,
 .toolbarButton:focus-visible,
-.version select:focus-visible {
+.resultsActions select:focus-visible {
     outline: 2px solid var(--flow-yellow);
     outline-offset: 2px;
 }
@@ -525,6 +742,51 @@
 @keyframes tf-spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Shown while the playground's code chunk (Monaco + Flow services) is still
+   loading, in place of a bare "Loading..." text flash. Fills the playground
+   area and centers a spinner; the colors are self-contained (the --tf-* tokens
+   live on .tryEditor, which isn't mounted yet). */
+.suspenseLoader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - var(--ifm-navbar-height));
+    background: #fff;
+}
+.suspenseSpinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #8a6300;
+    border-radius: 50%;
+    animation: tf-spin 0.7s linear infinite;
+}
+
+/* Reduced motion: collapse the results pane near-instantly — a tiny non-zero
+   duration (rather than `none`) keeps the transitionend that drives the editor
+   relayout — and swap the spinners' rotation for a gentle opacity pulse, which
+   doesn't trigger vestibular motion the way spinning does. */
+@media (prefers-reduced-motion: reduce) {
+    .results {
+        transition-duration: 0.01ms;
+    }
+    /* The chevron rotation is part of the same collapse gesture, so flatten it
+       too (it's the transform/rotation kind of motion this block targets). */
+    .collapseChevron svg {
+        transition-duration: 0.01ms;
+    }
+    .spinner,
+    .suspenseSpinner {
+        animation: tf-pulse 1.2s ease-in-out infinite;
+    }
+}
+
+@keyframes tf-pulse {
+    50% {
+        opacity: 0.4;
     }
 }
 

@@ -37,6 +37,10 @@ declare module '@docusaurus/useBaseUrl' {
   declare module.exports: any;
 }
 
+declare module '@docusaurus/router' {
+  declare module.exports: any;
+}
+
 declare module '@docusaurus/useDocusaurusContext' {
   declare module.exports: any;
 }
@@ -78,6 +82,38 @@ declare module '@theme/MDXContent' {
 }
 
 declare module '@theme/Navbar' {
+  declare module.exports: any;
+}
+
+declare module '@theme/NavbarItem' {
+  declare module.exports: any;
+}
+
+declare module '@theme/SearchBar' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Navbar/Logo' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Navbar/Search' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Navbar/ColorModeToggle' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Navbar/MobileSidebar/Toggle' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Icon/Close' {
+  declare module.exports: any;
+}
+
+declare module '@site/src/components/NavbarThemeToggle' {
   declare module.exports: any;
 }
 

@@ -81,6 +81,23 @@ component CopyIcon() {
   );
 }
 
+// Chevron points down when the pane is open; CSS rotates it 180° (to point up)
+// when collapsed.
+component ChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 // Plain-text rendering of all errors, for the "Copy all" button.
 function errorsToText(errors: $ReadOnlyArray<FlowJsError>): string {
   return errors
@@ -196,6 +213,11 @@ export default component TryFlowResults(
   onErrorSelect: (line: number, column: number) => void,
 ) {
   const [activeToolbarTab, setActiveToolbarTab] = useState('errors');
+  // On narrow screens the panes stack vertically and the results pane can be
+  // collapsed down to just its tab bar, giving the editor more room. Clicking
+  // the active tab collapses it; clicking anywhere on the tab bar expands it.
+  // Collapsing is a no-op in the side-by-side desktop layout.
+  const [collapsed, setCollapsed] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
   // Index of the error card whose "Copy" button is currently showing "Copied!".
   const [copiedError, setCopiedError] = useState(null as ?number);
@@ -219,6 +241,32 @@ export default component TryFlowResults(
       );
     });
   }
+  // The collapse interaction only applies to the stacked (narrow-screen) layout.
+  function isStacked(): boolean {
+    // Keep this breakpoint in sync with the stacking @media query in
+    // TryFlow.module.css.
+    return (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 850px)').matches
+    );
+  }
+  // Tab click handler. Callers stopPropagation so a click here doesn't also hit
+  // the tab bar's expand handler below.
+  function selectTab(tab: string) {
+    if (collapsed) {
+      // Collapsed: any tab click both selects that tab and re-expands.
+      setActiveToolbarTab(tab);
+      setCollapsed(false);
+    } else if (activeToolbarTab === tab) {
+      // Clicking the already-active tab collapses (stacked layout only).
+      if (isStacked()) {
+        setCollapsed(true);
+      }
+    } else {
+      setActiveToolbarTab(tab);
+    }
+  }
+
   const latestReleaseVersion = flowVersions.find(
     version => version !== 'master' && version !== 'master (rust port)',
   );
@@ -228,8 +276,16 @@ export default component TryFlowResults(
     flowVersion !== latestReleaseVersion;
 
   return (
-    <div className={styles.results}>
-      <div className={styles.toolbar}>
+    <div className={clsx(styles.results, collapsed && styles.collapsed)}>
+      {/* Clicking the tab bar (anywhere not handled by a tab button) re-expands a
+          collapsed results pane. */}
+      <div
+        className={styles.toolbar}
+        onClick={() => {
+          if (collapsed) {
+            setCollapsed(false);
+          }
+        }}>
         <div className={styles.tabs}>
           <button
             type="button"
@@ -238,7 +294,10 @@ export default component TryFlowResults(
               activeToolbarTab === 'errors' && styles.selectedTab,
             )}
             aria-pressed={activeToolbarTab === 'errors'}
-            onClick={() => setActiveToolbarTab('errors')}>
+            onClick={e => {
+              e.stopPropagation();
+              selectTab('errors');
+            }}>
             <span className={styles.errorIndicator}>
               {errors.length === 0 ? (
                 <CheckIcon />
@@ -255,7 +314,10 @@ export default component TryFlowResults(
               activeToolbarTab === 'json' && styles.selectedTab,
             )}
             aria-pressed={activeToolbarTab === 'json'}
-            onClick={() => setActiveToolbarTab('json')}>
+            onClick={e => {
+              e.stopPropagation();
+              selectTab('json');
+            }}>
             <JsonIcon />
             JSON
           </button>
@@ -266,19 +328,28 @@ export default component TryFlowResults(
               activeToolbarTab === 'ast' && styles.selectedTab,
             )}
             aria-pressed={activeToolbarTab === 'ast'}
-            onClick={() => setActiveToolbarTab('ast')}>
+            onClick={e => {
+              e.stopPropagation();
+              selectTab('ast');
+            }}>
             <AstIcon />
             AST
           </button>
         </div>
-        <div className={styles.version}>
+        <div className={styles.resultsActions}>
           {activeToolbarTab === 'errors' && errors.length > 0 && (
             <button
-              className={clsx(styles.toolbarButton, styles.copyAll)}
+              className={clsx(
+                styles.toolbarButton,
+                styles.iconOnly,
+                styles.copyErrors,
+              )}
               onClick={copyAll}
               title="Copy all errors">
               <CopyIcon />
-              {copiedAll ? 'Copied!' : 'Copy all'}
+              <span className={styles.toolbarButtonLabel}>
+                {copiedAll ? 'Copied!' : 'Copy errors'}
+              </span>
             </button>
           )}
           {isOldFlowVersion ? (
@@ -292,6 +363,20 @@ export default component TryFlowResults(
               </option>
             ))}
           </select>
+          {/* Collapse toggle, shown only in the stacked layout (CSS). Makes the
+              tap-to-collapse gesture discoverable: chevron points down when the
+              pane is open, up when collapsed. */}
+          <button
+            type="button"
+            className={styles.collapseChevron}
+            aria-label={collapsed ? 'Expand results' : 'Collapse results'}
+            aria-expanded={!collapsed}
+            onClick={e => {
+              e.stopPropagation();
+              setCollapsed(c => !c);
+            }}>
+            <ChevronIcon />
+          </button>
         </div>
       </div>
       {loading && (

@@ -12,8 +12,17 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Navbar from '@theme/Navbar';
+import styles from '../try-flow/TryFlow.module.css';
 
 const TryFlow = React.lazy(() => import('../try-flow/TryFlow'));
+
+component TryFlowLoading() {
+  return (
+    <div className={styles.suspenseLoader}>
+      <div className={styles.suspenseSpinner} />
+    </div>
+  );
+}
 
 export default component TryFlowPage() {
   const context = useDocusaurusContext();
@@ -27,7 +36,7 @@ export default component TryFlowPage() {
       noFooter>
       <BrowserOnly>
         {() => (
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<TryFlowLoading />}>
             <TryFlow
               defaultFlowVersion={siteConfig.customFields.flowVersion}
               flowVersions={siteConfig.customFields.allFlowVersions}

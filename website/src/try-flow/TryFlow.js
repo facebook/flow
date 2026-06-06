@@ -88,6 +88,19 @@ function setHashedValue(
   localStorage.setItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY, location.hash);
 }
 
+// The saved-state recover prompt is only worth offering when there's actual
+// content to recover. An empty or whitespace-only program isn't, so treat it as
+// if nothing were saved.
+function getRecoverableStateFromStorage(): ?InitialStateFromHash {
+  const state = getHashedValue(
+    localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY),
+  );
+  if (state == null || (state.code ?? '').replace(/\s/g, '') === '') {
+    return null;
+  }
+  return state;
+}
+
 const initialStateFromURI = getHashedValue(location.hash);
 const initialState: InitialStateFromHash = initialStateFromURI || {
   // Only default to an example if we haven't used Try Flow before
@@ -102,6 +115,22 @@ const initialState: InitialStateFromHash = initialStateFromURI || {
 const REFINED_VALUE_DECORATION_OPTIONS = {
   inlineClassName: styles.refinedValueDecoration,
 };
+
+// Minimum widths (px) each pane keeps while dragging the splitter in the
+// side-by-side layout. The stacked-layout breakpoint (TryFlow.module.css) sits
+// above their sum, so there's always room for both before we stack.
+const MIN_EDITOR_WIDTH = 400;
+const MIN_RESULTS_WIDTH = 450;
+
+// Clamp a raw split ratio so neither pane drops below its minimum width at the
+// current container width.
+function clampSplitRatio(ratio: number, containerWidth: number): number {
+  if (containerWidth <= 0) return ratio;
+  const min = MIN_EDITOR_WIDTH / containerWidth;
+  const max = 1 - MIN_RESULTS_WIDTH / containerWidth;
+  if (min >= max) return min;
+  return Math.min(max, Math.max(min, ratio));
+}
 
 component CodeIcon() {
   return (
@@ -174,15 +203,63 @@ component CopyIcon() {
   );
 }
 
+component ClearIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" x2="10" y1="11" y2="17" />
+      <line x1="14" x2="14" y1="11" y2="17" />
+    </svg>
+  );
+}
+
+component RestoreIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  );
+}
+
+component DismissIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
 export default component TryFlow(
   defaultFlowVersion: string,
   flowVersions: $ReadOnlyArray<string>,
 ) {
   const {withBaseUrl} = useBaseUrlUtils();
   const [initialStateFromStorage, setInitialStateFromStorage] = useState(
-    initialStateFromURI == null
-      ? getHashedValue(localStorage.getItem(TRY_FLOW_LAST_CONTENT_STORAGE_KEY))
-      : null,
+    initialStateFromURI == null ? getRecoverableStateFromStorage() : null,
   );
   const [flowVersion, setFlowVersion] = useState(
     initialState.version || defaultFlowVersion,
@@ -250,6 +327,24 @@ export default component TryFlow(
     }
   }
 
+  // Clear the editor, stashing the current program as the recoverable state so
+  // the recover/ignore prompt appears (the same prompt as on reload). Whitespace-
+  // only content isn't worth offering to recover, so in that case we just empty
+  // the editor without arming the prompt.
+  function clearEditor() {
+    const model = monaco.editor.getModels()[0];
+    if (model == null) return;
+    const code = model.getValue();
+    if (code.replace(/\s/g, '') !== '') {
+      setInitialStateFromStorage({
+        code,
+        config: flowService?.config ?? null,
+        version: flowVersion,
+      });
+    }
+    model.setValue('');
+  }
+
   function copyToClipboard(kind: 'link' | 'code', text: string) {
     // Only show the "Copied!" confirmation if the write actually succeeds.
     // copyText falls back to execCommand where the async Clipboard API is
@@ -269,7 +364,10 @@ export default component TryFlow(
     const onMove = (ev: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       const ratio = (ev.clientX - rect.left) / rect.width;
-      setSplitRatio(Math.min(0.8, Math.max(0.2, ratio)));
+      setSplitRatio(clampSplitRatio(ratio, rect.width));
+      // Keep the editor sized to its (now-resized) pane during the drag. rAF so
+      // it reads the post-render width rather than the pre-update one.
+      requestAnimationFrame(() => editorRef.current?.layout());
     };
     const onUp = () => {
       window.removeEventListener('mousemove', onMove);
@@ -288,8 +386,11 @@ export default component TryFlow(
   }
 
   // Keyboard control for the splitter: arrows nudge the ratio, Home/End jump to
-  // the min/max, matching the 0.2–0.8 clamp used by the mouse drag.
+  // the min/max, matching the per-pane minimum-width clamp used by the drag.
   function onSplitterKey(e: SyntheticKeyboardEvent<>) {
+    const width = tryEditorRef.current?.getBoundingClientRect().width ?? 0;
+    const min = width > 0 ? MIN_EDITOR_WIDTH / width : 0.2;
+    const max = width > 0 ? 1 - MIN_RESULTS_WIDTH / width : 0.8;
     const step = 0.02;
     let next;
     switch (e.key) {
@@ -300,16 +401,16 @@ export default component TryFlow(
         next = splitRatio + step;
         break;
       case 'Home':
-        next = 0.2;
+        next = min;
         break;
       case 'End':
-        next = 0.8;
+        next = max;
         break;
       default:
         return;
     }
     e.preventDefault();
-    setSplitRatio(Math.min(0.8, Math.max(0.2, next)));
+    setSplitRatio(clampSplitRatio(next, width));
   }
 
   function revealError(line: number, column: number) {
@@ -411,11 +512,10 @@ export default component TryFlow(
     // update the URL
     setHashedValue(flowService, flowVersion, value);
 
-    // If we've made non-whitespace edits, remove notice to recover from storage.
-    if (
-      initialStateFromStorage != null &&
-      value.replace(/\s/g, '') !== initialState.code.replace(/\s/g, '')
-    ) {
+    // Whenever the recover prompt is showing, the editor starts empty (both on
+    // load from storage and right after Clear). Once the user types real content
+    // into it, dismiss the prompt — they're working on something new now.
+    if (initialStateFromStorage != null && value.replace(/\s/g, '') !== '') {
       setInitialStateFromStorage(null);
     }
   }
@@ -427,6 +527,36 @@ export default component TryFlow(
       setCursorPosition(e.position);
     });
     editorRef.current = editor;
+
+    // The editor fills its pane via flexbox (height: 100%), but Monaco only
+    // re-renders its canvas to a new size when layout() is called. We call it on
+    // the discrete events that actually change the pane size, rather than via a
+    // ResizeObserver: an observer that relayouts inside its own callback (or
+    // Monaco's automaticLayout, which does the same) is what produces the
+    // "ResizeObserver loop completed with undelivered notifications" warning. The
+    // editor therefore snaps to its new size when the results-pane collapse
+    // animation finishes, instead of animating along with it.
+    const relayout = () => editorRef.current?.layout();
+
+    // Results-pane collapse/expand animates the panes' flex sizes; the
+    // transition bubbles up to the .tryEditor container when it finishes.
+    tryEditorRef.current?.addEventListener('transitionend', e => {
+      if (e.propertyName === 'flex-grow' || e.propertyName === 'flex-basis') {
+        relayout();
+      }
+    });
+
+    // Window resizes, including the responsive desktop<->stacked switch.
+    // Coalesced to one relayout per frame.
+    let resizeFrame: ?AnimationFrameID = null;
+    window.addEventListener('resize', () => {
+      if (resizeFrame != null) cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(relayout);
+    });
+
+    // Re-measure once the code font has loaded so glyph widths are correct.
+    // (document.fonts isn't in Flow's DOM lib defs yet.)
+    (document as $FlowFixMe).fonts?.ready?.then(relayout);
   }
 
   return (
@@ -462,23 +592,59 @@ export default component TryFlow(
               </button>
             </div>
             <div className={styles.toolbarActions}>
-              {initialStateFromStorage && (
-                <div className={styles.resetBanner}>
-                  <span>Recover from last saved state?</span>
+              {/* The recover prompt and the Clear button are mutually exclusive
+                  and share one slot: they're stacked and cross-fade between each
+                  other so swapping doesn't jump the layout. */}
+              <div className={styles.swapSlot}>
+                <div
+                  className={clsx(
+                    styles.resetBanner,
+                    initialStateFromStorage
+                      ? styles.swapActive
+                      : styles.swapInactive,
+                  )}>
                   <button
-                    className={styles.toolbarButton}
-                    onClick={resetFromStorage}>
-                    Recover
+                    className={clsx(styles.toolbarButton, styles.iconOnly)}
+                    onClick={resetFromStorage}
+                    title="Recover last saved">
+                    <RestoreIcon />
+                    <span className={styles.toolbarButtonLabel}>
+                      Recover
+                      <span className={styles.labelExtra}> last saved</span>
+                    </span>
                   </button>
+                  {/* Ignore is hidden on phone — typing into the editor dismisses
+                      the prompt anyway, so it's redundant where space is tight. */}
                   <button
-                    className={styles.toolbarButton}
-                    onClick={() => setInitialStateFromStorage(null)}>
-                    Ignore
+                    className={clsx(styles.toolbarButton, styles.phoneHidden)}
+                    onClick={() => setInitialStateFromStorage(null)}
+                    title="Ignore saved">
+                    <DismissIcon />
+                    <span className={styles.toolbarButtonLabel}>
+                      Ignore saved
+                    </span>
                   </button>
                 </div>
-              )}
+                <button
+                  className={clsx(
+                    styles.toolbarButton,
+                    styles.iconOnly,
+                    initialStateFromStorage
+                      ? styles.swapInactive
+                      : styles.swapActive,
+                  )}
+                  onClick={clearEditor}
+                  title="Clear the editor">
+                  <ClearIcon />
+                  <span className={styles.toolbarButtonLabel}>Clear</span>
+                </button>
+              </div>
               <button
-                className={styles.toolbarButton}
+                className={clsx(
+                  styles.toolbarButton,
+                  styles.iconOnly,
+                  styles.copyCode,
+                )}
                 onClick={() =>
                   copyToClipboard(
                     'code',
@@ -487,14 +653,18 @@ export default component TryFlow(
                 }
                 title="Copy the code">
                 <CopyIcon />
-                {copied === 'code' ? 'Copied!' : 'Copy code'}
+                <span className={styles.toolbarButtonLabel}>
+                  {copied === 'code' ? 'Copied!' : 'Copy code'}
+                </span>
               </button>
               <button
                 className={styles.toolbarButton}
                 onClick={() => copyToClipboard('link', window.location.href)}
                 title="Copy a shareable link to this code">
                 <CopyLinkIcon />
-                {copied === 'link' ? 'Copied!' : 'Copy link'}
+                <span className={styles.toolbarButtonLabel}>
+                  {copied === 'link' ? 'Copied!' : 'Copy link'}
+                </span>
               </button>
             </div>
           </div>
@@ -508,26 +678,30 @@ export default component TryFlow(
               }
             />
           </div>
-          <Editor
-            defaultValue={initialState.code}
-            defaultLanguage="flow"
-            theme="vs-light"
-            height="var(--tf-editor-h)"
-            onChange={forceRecheck}
-            onMount={onMount}
-            options={{
-              minimap: {enabled: false},
-              hover: {enabled: true, above: false},
-              scrollBeyondLastLine: false,
-              overviewRulerBorder: false,
-              // Match the site's code font (Monaco uses its own setting, not the
-              // CSS --ifm-font-family-monospace var).
-              fontFamily:
-                "'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-              // Breathing room between the tab bar and the first line of code.
-              padding: {top: 12},
-            }}
-          />
+          <div className={styles.editorBody}>
+            <Editor
+              defaultValue={initialState.code}
+              defaultLanguage="flow"
+              theme="vs-light"
+              height="100%"
+              onChange={forceRecheck}
+              onMount={onMount}
+              options={{
+                minimap: {enabled: false},
+                hover: {enabled: true, above: false},
+                scrollBeyondLastLine: false,
+                overviewRulerBorder: false,
+                // Match the site's code font (Monaco uses its own setting, not the
+                // CSS --ifm-font-family-monospace var). Keep this stack identical
+                // to that var in custom.css so the editor falls back the same way
+                // the rest of the site's code does if Geist Mono fails to load.
+                fontFamily:
+                  "'Geist Mono Variable', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace",
+                // Breathing room between the tab bar and the first line of code.
+                padding: {top: 12},
+              }}
+            />
+          </div>
         </div>
       </div>
       <div
