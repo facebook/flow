@@ -1295,6 +1295,7 @@ module Opts = struct
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
       ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
+      ("file_watcher.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));

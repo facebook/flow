@@ -2230,6 +2230,7 @@ pub mod opts {
             "file_watcher.mergebase_with",
             "file_watcher.mergebase_with_git",
             "file_watcher.mergebase_with_hg",
+            "file_watcher.defer_state",
             "file_watcher.watchman.defer_state",
             "file_watcher.watchman.sync_timeout",
             "file_watcher_timeout",
@@ -2735,6 +2736,7 @@ pub mod opts {
                 "file_watcher.mergebase_with_hg" => {
                     Some(file_watcher_mergebase_with_hg_parser(values, config))
                 }
+                "file_watcher.defer_state" => Some(watchman_defer_states_parser(values, config)),
                 "file_watcher.watchman.defer_state" => {
                     Some(watchman_defer_states_parser(values, config))
                 }
