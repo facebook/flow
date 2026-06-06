@@ -15,5 +15,5 @@ flow_type_sig = { path = "../flow_type_sig" }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 
 [dev-dependencies]
-bumpalo = { version = "3.20.2", features = ["allocator_api", "collections"] }
+bumpalo = { version = "3.20.3", features = ["allocator_api", "collections"] }
 pretty_assertions = { version = "1.4.1", features = ["alloc"], default-features = false }
