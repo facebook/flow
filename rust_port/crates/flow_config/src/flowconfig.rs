@@ -353,7 +353,16 @@ pub mod opts {
             react_custom_jsx_typing: false,
             stylex_shorthand_prop: None,
             react_ref_as_prop: ReactRefAsProp::FullSupport,
-            react_rules: Vec::new(),
+            // Keep in sync with `component_syntax: true` above: when component
+            // syntax is on (the default), the React rules are on too. Explicitly
+            // setting `component_syntax=false` in a .flowconfig clears these again
+            // (see `component_syntax_parser`).
+            react_rules: vec![
+                ReactRule::ValidateRefAccessDuringRender,
+                ReactRule::DeepReadOnlyProps,
+                ReactRule::DeepReadOnlyHookReturns,
+                ReactRule::RulesOfHooks,
+            ],
             react_runtime: ReactRuntime::Classic,
             records: None,
             records_includes: Vec::new(),

@@ -330,7 +330,13 @@ module Opts = struct
       react_custom_jsx_typing = false;
       stylex_shorthand_prop = None;
       react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
-      react_rules = [];
+      (* Keep in sync with [component_syntax = true] above: when component syntax
+         is on (the default), the React rules are on too. Explicitly setting
+         [component_syntax=false] in a .flowconfig clears these again (see
+         [component_syntax_parser]). *)
+      react_rules =
+        Options.
+          [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
       react_runtime = Options.ReactRuntimeClassic;
       records = None;
       records_includes = [];

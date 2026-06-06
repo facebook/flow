@@ -4,3 +4,4 @@
 no_flowlib=false
 all=true
 ban_spread_key_props=true
+component_syntax=false
