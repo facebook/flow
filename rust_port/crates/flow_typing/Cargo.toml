@@ -6,7 +6,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-bumpalo = { version = "3.20.2", features = ["allocator_api", "collections"] }
+bumpalo = { version = "3.20.3", features = ["allocator_api", "collections"] }
 dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
 flow_analysis = { path = "../flow_analysis" }

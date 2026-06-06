@@ -6,4 +6,4 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-chrono = { version = "0.4.44", features = ["clock", "serde", "std"], default-features = false }
+chrono = { version = "0.4.45", features = ["clock", "serde", "std"], default-features = false }
