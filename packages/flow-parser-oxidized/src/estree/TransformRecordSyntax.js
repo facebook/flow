@@ -33,9 +33,9 @@ import type {
   RecordDeclarationStaticProperty,
   RecordExpression,
   ThisExpression,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
-import {isBigIntLiteral} from 'flow-estree-oxidized';
+import {isBigIntLiteral} from 'flow-estree';
 import {SimpleTransform} from '../transform/SimpleTransform';
 import {
   deepCloneNode,

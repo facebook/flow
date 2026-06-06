@@ -38,16 +38,14 @@ module.exports = {
           // Use flow-parser-oxidized as Babel's parser so it understands newer
           // Flow syntax (e.g. `as` casts) beyond what the bundled @babel/parser
           // supports. Disabled by `SKIP_HERMES_PARSER_OVERRIDE=1` during the
-          // build's bootstrap phase — `babel-plugin-syntax-flow-parser-oxidized`
+          // build's bootstrap phase — `babel-plugin-syntax-flow-parser`
           // and its workspace dependencies (`flow-parser-oxidized`,
-          // `flow-estree-oxidized`) have to be built before this plugin can be
+          // `flow-estree`) have to be built before this plugin can be
           // required.
           test: filename =>
             filename != null &&
-            !filename.includes(
-              '/babel-plugin-syntax-flow-parser-oxidized/__tests__/',
-            ),
-          plugins: ['babel-plugin-syntax-flow-parser-oxidized'],
+            !filename.includes('/babel-plugin-syntax-flow-parser/__tests__/'),
+          plugins: ['babel-plugin-syntax-flow-parser'],
         },
       ]
     : [],
@@ -62,9 +60,6 @@ function overrideEnabled() {
   const path = require('path');
   const fs = require('fs');
   return fs.existsSync(
-    path.resolve(
-      __dirname,
-      'babel-plugin-syntax-flow-parser-oxidized/dist/index.js',
-    ),
+    path.resolve(__dirname, 'babel-plugin-syntax-flow-parser/dist/index.js'),
   );
 }

@@ -49,7 +49,7 @@ export HERMES_ESTREE_TYPES_JS="${HERMES_ESTREE_TYPES_JS:-${fbsource_root}/xplat/
 
 codegen_target="fbcode//flow/rust_port/crates/flow_parser_wasm:codegen"
 parser_pkg="flow/packages/flow-parser-oxidized/src"
-estree_pkg="flow/packages/flow-estree-oxidized/src"
+estree_pkg="flow/packages/flow-estree/src"
 dispatch_path="flow/rust_port/crates/flow_parser_wasm/src/serializer_dispatch.rs"
 
 # Ensure cleanup of any leftover .tmp files on exit (success or failure).
@@ -109,13 +109,13 @@ run_arc_f "${parser_pkg}/generated/ESTreeVisitorKeys.js.flow"
 run_codegen "ESTree types" "${estree_pkg}/types.js" --estree-types
 run_arc_f "${estree_pkg}/types.js"
 
-# 5. ESTree predicates (--estree-predicates) — for flow-estree-oxidized
+# 5. ESTree predicates (--estree-predicates) — for flow-estree
 run_codegen "ESTree predicates" \
     "${estree_pkg}/generated/predicates.js" \
     --estree-predicates
 run_arc_f "${estree_pkg}/generated/predicates.js"
 
-# 6. ESTree selector types (--estree-selectors) — for flow-estree-oxidized
+# 6. ESTree selector types (--estree-selectors) — for flow-estree
 run_codegen "ESTree selector types" \
     "${estree_pkg}/generated/HermesESTreeSelectorTypes.js.flow" \
     --estree-selectors

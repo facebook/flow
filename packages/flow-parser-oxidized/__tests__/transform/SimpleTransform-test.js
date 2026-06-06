@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {ESNode} from 'flow-estree-oxidized';
+import type {ESNode} from 'flow-estree';
 
 import {cleanASTForSnapshot, parse} from '../../__test_utils__/parse';
 import {SimpleTransform} from '../../src/transform/SimpleTransform';

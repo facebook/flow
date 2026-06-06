@@ -41,10 +41,10 @@ module.exports = {
       ]),
     ),
 
-    // prettier-plugin-flow-parser-oxidized is a pre-built bundle without src/index.js
-    '^prettier-plugin-flow-parser-oxidized$': path.resolve(
+    // prettier-plugin-flow-parser is a pre-built bundle without src/index.js
+    '^prettier-plugin-flow-parser$': path.resolve(
       __dirname,
-      'prettier-plugin-flow-parser-oxidized',
+      'prettier-plugin-flow-parser',
       'index.mjs',
     ),
 

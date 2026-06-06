@@ -42,7 +42,7 @@ import type {
   TypeParameterDeclaration,
   TypeParameterInstantiation,
   Variance,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 import type {ParserOptions} from '../ParserOptions';
 import type {VisitorKeys} from '../generated/ESTreeVisitorKeys';
 

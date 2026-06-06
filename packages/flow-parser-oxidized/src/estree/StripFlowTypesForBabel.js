@@ -30,7 +30,7 @@ import type {
   QualifiedTypeIdentifier,
   QualifiedTypeofIdentifier,
   AFunction,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
 import {createSyntaxError} from '../utils/createSyntaxError';

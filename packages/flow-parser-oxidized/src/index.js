@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {Program as ESTreeProgram} from 'flow-estree-oxidized';
+import type {Program as ESTreeProgram} from 'flow-estree';
 import type {ParserOptions} from './ParserOptions';
 import type {BabelFile} from './babel/TransformESTreeToBabel';
 

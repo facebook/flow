@@ -21,9 +21,9 @@ import type {
   ExportDefaultDeclaration,
   ObjectPropertyWithNonShorthandStaticName,
   Program,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
-import {isEnumDeclaration} from 'flow-estree-oxidized';
+import {isEnumDeclaration} from 'flow-estree';
 import {SimpleTransform} from '../transform/SimpleTransform';
 import {
   EMPTY_PARENT,

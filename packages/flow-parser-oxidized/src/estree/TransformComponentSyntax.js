@@ -47,7 +47,7 @@ import type {
   BindingName,
   ObjectTypePropertySignature,
   ObjectTypeSpreadProperty,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
 import {shallowCloneNode} from '../transform/astNodeMutationHelpers';

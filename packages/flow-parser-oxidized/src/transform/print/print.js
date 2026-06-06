@@ -11,7 +11,7 @@
 'use strict';
 
 import type {MaybeDetachedNode} from './detachedNodeTypes';
-import type {Program} from 'flow-estree-oxidized';
+import type {Program} from 'flow-estree';
 
 import mutateESTreeASTForPrettier from '../../utils/mutateESTreeASTForPrettier';
 import * as prettier from 'prettier';

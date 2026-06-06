@@ -11,7 +11,7 @@
 'use strict';
 
 import type {VisitorKeysType} from './getVisitorKeys';
-import type {ESNode} from 'flow-estree-oxidized';
+import type {ESNode} from 'flow-estree';
 
 import {getVisitorKeys, isNode} from './getVisitorKeys';
 

@@ -1,5 +1,5 @@
 {
-  "name": "flow-packages-oxidized-workspace",
+  "name": "flow-packages-workspace",
   "private": true,
   "devDependencies": {
     "@babel/cli": "7.16.0",
@@ -11,7 +11,7 @@
     "@babel/preset-env": "7.16.5",
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^9.36.3",
-    "babel-plugin-syntax-flow-parser-oxidized": "*",
+    "babel-plugin-syntax-flow-parser": "*",
     "babel-plugin-transform-flow-enums": "^0.0.2",
     "eslint": "^9.36.3",
     "eslint-config-prettier": "^10.1.8",
@@ -38,12 +38,12 @@
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
   },
   "workspaces": [
-    "flow-eslint-oxidized",
-    "flow-estree-oxidized",
+    "flow-eslint",
+    "flow-estree",
     "flow-parser-oxidized",
-    "flow-transform-oxidized",
-    "babel-plugin-syntax-flow-parser-oxidized",
-    "prettier-plugin-flow-parser-oxidized"
+    "flow-transform",
+    "babel-plugin-syntax-flow-parser",
+    "prettier-plugin-flow-parser"
   ],
   "dependencies": {},
   "resolutions": {

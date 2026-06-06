@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {Program} from 'flow-estree-oxidized';
+import type {Program} from 'flow-estree';
 import type {ParserOptions} from './ParserOptions';
 import type {FlowParserProgram} from './FlowParserDeserializer';
 import type {FlowParserWASM as FlowParserWASMType} from './FlowParserWASM';

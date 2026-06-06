@@ -27,7 +27,7 @@ module.exports = defineConfig([
     '**/fixtures/**',
     'internal-prettier-v3/',
     'jest.config.js',
-    'prettier-plugin-flow-parser-oxidized/index.mjs',
+    'prettier-plugin-flow-parser/index.mjs',
     'babel-plugin-transform-flow-enums/',
     'eslint-plugin-fb-flow/',
     'flow-dev-tools/',
@@ -45,7 +45,7 @@ module.exports = defineConfig([
   {
     files: ['**/*.js', '**/*.js.flow'],
     languageOptions: {
-      parser: require('flow-eslint-oxidized'),
+      parser: require('flow-eslint'),
       globals: {
         ...globals.commonjs,
         ...globals.es2021,

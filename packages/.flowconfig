@@ -25,17 +25,15 @@ munge_underscores=true
 ; Yarn workspaces hoist packages to the top level node_modules, causing module resolution errors if
 ; we do not specify where each package's type definitions can be found.
 module.name_mapper='^flow-parser-oxidized$' -> '<PROJECT_ROOT>/flow-parser-oxidized/src/index.js'
-module.name_mapper='^flow-estree-oxidized$' -> '<PROJECT_ROOT>/flow-estree-oxidized/src/index.js'
-module.name_mapper='^flow-eslint-oxidized$' -> '<PROJECT_ROOT>/flow-eslint-oxidized/src/index.js'
-module.name_mapper='^flow-transform-oxidized$' -> '<PROJECT_ROOT>/flow-transform-oxidized/src/index.js'
-module.name_mapper='^hermes-estree$' -> '<PROJECT_ROOT>/flow-estree-oxidized/src/index.js'
+module.name_mapper='^flow-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
+module.name_mapper='^flow-eslint$' -> '<PROJECT_ROOT>/flow-eslint/src/index.js'
+module.name_mapper='^flow-transform$' -> '<PROJECT_ROOT>/flow-transform/src/index.js'
+module.name_mapper='^prettier-plugin-flow-parser$' -> '<PROJECT_ROOT>/prettier-plugin-flow-parser/index.mjs'
+module.name_mapper='^hermes-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
 
 enums=true
 component_syntax=false
 experimental.pattern_matching=false
-
-[version]
-^0.313.0
 
 [lints]
 untyped-type-import=error

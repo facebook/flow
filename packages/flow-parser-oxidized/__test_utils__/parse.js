@@ -10,8 +10,8 @@
 
 'use strict';
 
-import type {Program as ESTreeProgram} from 'flow-estree-oxidized';
-import type {ESNode} from 'flow-estree-oxidized';
+import type {Program as ESTreeProgram} from 'flow-estree';
+import type {ESNode} from 'flow-estree';
 import type {ParserOptions} from '../src/ParserOptions';
 import type {BabelFile} from '../src/babel/TransformESTreeToBabel';
 import type {VisitorKeys} from '../src/generated/ESTreeVisitorKeys';

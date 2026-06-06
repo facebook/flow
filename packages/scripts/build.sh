@@ -9,17 +9,17 @@ set -xe -o pipefail
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PACKAGES=(
-  flow-estree-oxidized
+  flow-estree
   flow-parser-oxidized
-  flow-eslint-oxidized
-  flow-transform-oxidized
-  babel-plugin-syntax-flow-parser-oxidized
+  flow-eslint
+  flow-transform
+  babel-plugin-syntax-flow-parser
 )
 
 BOOTSTRAP_PACKAGES=(
-  flow-estree-oxidized
+  flow-estree
   flow-parser-oxidized
-  babel-plugin-syntax-flow-parser-oxidized
+  babel-plugin-syntax-flow-parser
 )
 
 # The parser override in babel.config.js requires the workspace plugin to be

@@ -49,7 +49,7 @@
 //!
 //! ## ESTree Flow types (`--estree-types`)
 //!
-//! Generates `types.js` for the flow-estree-oxidized package by mirroring
+//! Generates `types.js` for the flow-estree package by mirroring
 //! upstream `hermes-estree/src/types.js`. Run from the `fbsource` root so
 //! the default upstream path resolves; alternatively set
 //! `HERMES_ESTREE_TYPES_JS` to an absolute path:
@@ -57,29 +57,29 @@
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
 //!     --estree-types > \
-//!     fbcode/flow/packages/flow-estree-oxidized/src/types.js
+//!     fbcode/flow/packages/flow-estree/src/types.js
 //! ```
 //!
 //! ## ESTree predicates (`--estree-predicates`)
 //!
-//! Generates `generated/predicates.js` for the flow-estree-oxidized package.
+//! Generates `generated/predicates.js` for the flow-estree package.
 //! Mirrors upstream `hermes-estree/src/generated/predicates.js`:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
 //!     --estree-predicates > \
-//!     fbcode/flow/packages/flow-estree-oxidized/src/generated/predicates.js
+//!     fbcode/flow/packages/flow-estree/src/generated/predicates.js
 //! ```
 //!
 //! ## ESTree selector types (`--estree-selectors`)
 //!
 //! Generates `generated/HermesESTreeSelectorTypes.js.flow` for the
-//! flow-estree-oxidized package. Mirrors upstream's `genSelectorTypes.js`:
+//! flow-estree package. Mirrors upstream's `genSelectorTypes.js`:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
 //!     --estree-selectors > \
-//!     fbcode/flow/packages/flow-estree-oxidized/src/generated/HermesESTreeSelectorTypes.js.flow
+//!     fbcode/flow/packages/flow-estree/src/generated/HermesESTreeSelectorTypes.js.flow
 //! ```
 
 use std::str::FromStr;
@@ -965,7 +965,7 @@ fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'stati
     missing
 }
 
-/// Generate the `flow-estree-oxidized/src/types.js` content.
+/// Generate the `flow-estree/src/types.js` content.
 ///
 /// The upstream `hermes-estree/src/types.js` is overwhelmingly hand-written
 /// Flow — per-node `interface` declarations, hand-curated unions
@@ -1090,7 +1090,7 @@ fn generate_estree_types() {
  *
  *   buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \\
  *     --estree-types > \\
- *     fbcode/flow/packages/flow-estree-oxidized/src/types.js
+ *     fbcode/flow/packages/flow-estree/src/types.js
  *
  * To regenerate against a different upstream copy, set
  * `HERMES_ESTREE_TYPES_JS` to an absolute path before invoking codegen.
@@ -1322,7 +1322,7 @@ const PREDICATE_TOKENS: &[(&str, &str, &str)] = &[
     ("ClosingAngleBracket", ">", "Punctuator"),
 ];
 
-/// Generate `flow-estree-oxidized/src/generated/predicates.js`.
+/// Generate `flow-estree/src/generated/predicates.js`.
 ///
 /// The output mirrors upstream `hermes-estree/src/generated/predicates.js`:
 /// a `/*:: import type { … } from '../types'; */` block followed by per-node
@@ -1530,7 +1530,7 @@ fn generate_estree_predicates() {
 const DEFAULT_HERMES_ESTREE_SELECTOR_TYPES_PATH: &str =
     "xplat/static_h/tools/hermes-parser/js/hermes-estree/src/generated/HermesESTreeSelectorTypes.js.flow";
 
-/// Generate `flow-estree-oxidized/src/generated/HermesESTreeSelectorTypes.js.flow`.
+/// Generate `flow-estree/src/generated/HermesESTreeSelectorTypes.js.flow`.
 ///
 /// Upstream intentionally checks in a tiny hand-written selector surface that
 /// only types selectors used by local code; `selectors.js` has a typed fallback

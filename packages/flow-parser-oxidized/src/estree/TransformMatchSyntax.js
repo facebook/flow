@@ -37,7 +37,7 @@ import type {
   Super,
   UnaryExpression,
   VariableDeclaration,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
 import {

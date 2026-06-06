@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {SourceLocation} from 'flow-estree-oxidized';
+import type {SourceLocation} from 'flow-estree';
 
 /**
  * Utility for quickly creating source locations inline.

@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {Expression} from 'flow-estree-oxidized';
+import type {Expression} from 'flow-estree';
 
 export type ParserOptions = {
   allowReturnOutsideFunction?: boolean,

@@ -30,7 +30,7 @@ import type {
   Super,
   ThrowStatement,
   VariableDeclaration,
-} from 'flow-estree-oxidized';
+} from 'flow-estree';
 
 // Rely on the mapper to fix up parent relationships.
 export const EMPTY_PARENT: $FlowFixMe = null;

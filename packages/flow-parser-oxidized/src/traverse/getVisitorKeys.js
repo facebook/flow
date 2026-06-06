@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {ESNode} from 'flow-estree-oxidized';
+import type {ESNode} from 'flow-estree';
 import type {VisitorKeys as VisitorKeysType} from '../generated/ESTreeVisitorKeys';
 
 import FlowVisitorKeys from '../generated/ESTreeVisitorKeys';

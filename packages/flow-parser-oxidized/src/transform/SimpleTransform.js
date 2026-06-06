@@ -11,7 +11,7 @@
 'use strict';
 
 import type {VisitorKeysType} from '../traverse/getVisitorKeys';
-import type {ESNode, Program} from 'flow-estree-oxidized';
+import type {ESNode, Program} from 'flow-estree';
 
 import {SimpleTraverser} from '../traverse/SimpleTraverser';
 import {

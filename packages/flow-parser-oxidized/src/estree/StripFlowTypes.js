@@ -19,7 +19,7 @@
 'use strict';
 
 import type {ParserOptions} from '../ParserOptions';
-import type {Program, ESNode} from 'flow-estree-oxidized';
+import type {Program, ESNode} from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
 

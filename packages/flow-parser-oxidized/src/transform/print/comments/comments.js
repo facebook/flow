@@ -8,7 +8,7 @@
  * @format
  */
 
-import type {Comment, ESNode, Program} from 'flow-estree-oxidized';
+import type {Comment, ESNode, Program} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../detachedNodeTypes';
 
 // $FlowExpectedError[untyped-import]
@@ -24,7 +24,7 @@ import {
   addTrailingComment as untypedAddTrailingComment,
   // $FlowFixMe[untyped-import]
 } from './prettier/common/util';
-import {isBlockComment} from 'flow-estree-oxidized';
+import {isBlockComment} from 'flow-estree';
 import {EOL} from 'os';
 
 export type Options = Readonly<{}>;
