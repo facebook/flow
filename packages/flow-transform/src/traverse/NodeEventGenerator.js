@@ -14,7 +14,7 @@ import type {ESNode} from 'flow-estree';
 import type {ESQueryOptions, Selector} from './esquery';
 import type {SafeEmitter} from './SafeEmitter';
 
-import {FlowVisitorKeys} from 'flow-parser-oxidized';
+import {FlowVisitorKeys} from 'flow-parser/oxidized';
 import * as esquery from './esquery';
 
 type ParsedSelector = Readonly<{

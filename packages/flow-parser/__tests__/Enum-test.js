@@ -12,7 +12,7 @@ import type {AlignmentCase} from '../__test_utils__/alignment-utils';
 
 import {expectEspreeAlignment} from '../__test_utils__/alignment-utils';
 import {parseForSnapshot, printForSnapshotBabel} from '../__test_utils__/parse';
-import {ident} from '../src/utils/Builders';
+import {ident} from '../oxidized-src/utils/Builders';
 
 describe('Enum', () => {
   const testCase: AlignmentCase = {

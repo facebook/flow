@@ -11,7 +11,7 @@
 import {parse as parseBabelOriginal} from '@babel/parser';
 import {parse as parseEspreeOriginal} from 'espree';
 import {BABEL_VISITOR_KEYS, parse as parseHermesOriginal} from './parse';
-import {SimpleTraverser} from '../src/traverse/SimpleTraverser';
+import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
 
 function cleanAstForHermes(ast: $FlowFixMe, style: 'babel' | 'estree'): mixed {
   if (style === 'babel') {

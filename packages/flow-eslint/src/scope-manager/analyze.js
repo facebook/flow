@@ -12,7 +12,7 @@
 
 import type {Program} from 'flow-estree';
 
-import {FlowVisitorKeys} from 'flow-parser-oxidized';
+import {FlowVisitorKeys} from 'flow-parser/oxidized';
 import {Referencer} from './referencer';
 import {ScopeManager} from './ScopeManager';
 

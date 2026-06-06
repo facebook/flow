@@ -10,7 +10,7 @@
 
 import type {BaseNode, ESNode} from 'flow-estree';
 
-import {astNodeMutationHelpers} from 'flow-parser-oxidized';
+import {astNodeMutationHelpers} from 'flow-parser/oxidized';
 
 export opaque type DetachedNode<+T> = T;
 export type MaybeDetachedNode<+T> = T | DetachedNode<T>;

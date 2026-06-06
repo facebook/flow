@@ -5,10 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 # Drives the hermes-parser contract test suite (ported under
-# flow/packages/flow-parser-oxidized/__tests__/) against the live wasm-built
+# flow/packages/flow-parser/__tests__/) against the live wasm-built
 # Flow parser. Same wasm-bootstrap dance as runWasmFixtures.sh: build the wasm
-# under emcc with --isolation-dir, drop it into src/FlowParserWASM.js, then
-# invoke jest filtered to flow-parser-oxidized only via the unified workspace
+# under emcc with --isolation-dir, drop it into oxidized-src/FlowParserWASM.js,
+# then invoke jest filtered to flow-parser only via the unified workspace
 # jest config at flow/packages/jest.config.js.
 
 set -e -o pipefail
@@ -19,8 +19,8 @@ FBCODE_DIR=${1:?"missing FBCODE_DIR arg"}
 FBCODE_ABS=$(cd "$FBCODE_DIR" && pwd -P)
 
 WORKSPACE_DIR="$FBCODE_ABS/flow/packages"
-PKG_DIR="$WORKSPACE_DIR/flow-parser-oxidized"
-PKG_SRC="$PKG_DIR/src"
+PKG_DIR="$WORKSPACE_DIR/flow-parser"
+PKG_SRC="$PKG_DIR/oxidized-src"
 WASM_OUT="$PKG_SRC/FlowParserWASM.js"
 
 WASM_PATH=$(buck2 --isolation-dir flow_contract_test build \
@@ -74,14 +74,14 @@ trap '
 cd "$WORKSPACE_DIR"
 
 # Serialize dist/ rebuilds + reads against runOxidizedJestTests.sh, which
-# also does `rm -rf dist; cp -r src dist; babel dist` and then `require()`s
-# `flow-parser-oxidized` (whose `main` resolves to `dist/index.js`). Buck
+# rebuilds the oxidized parser output and then `require()`s
+# `flow-parser/oxidized`. Buck
 # schedules `wasm_parser_contract_test` and `oxidized_jest_test` in
 # parallel; without this flock, target A's jest can read a torn
-# `dist/index.js` (un-stripped Flow `import type` lines from the cp -r
+# `oxidized/index.js` (un-stripped Flow `import type` lines from the copy
 # step) while target B's `yarn build` is mid-flight. Hold the lock through
 # both `yarn build` AND the jest run so a concurrent target can't clobber
-# `dist/` while we're reading from it.
+# `oxidized/` while we're reading from it.
 DIST_FLOCK="$PKG_DIR/.dist.flock"
 exec 9> "$DIST_FLOCK"
 echo "==> waiting for exclusive lock on $DIST_FLOCK"
@@ -93,18 +93,17 @@ echo "==> acquired lock on $DIST_FLOCK"
 # right mode here.
 yarn install --offline
 
-# Build dist/ from src/ (Phase C5 / #11): contract tests `require()` the
-# public entry `flow-parser-oxidized` which package.json `"main"` points at
-# `dist/index.js`. Without this build, jest sees the ESM `src/` files
-# directly and node can't `require()` them.
+# Build oxidized/ from oxidized-src/: contract tests `require()` the public
+# entry `flow-parser/oxidized`. Without this build, jest sees the ESM
+# `oxidized-src/` files directly and node can't `require()` them.
 yarn build
 
 # Use the fbsource third-party Node toolchain (24.x). The system Node may be
 # 16.x which lacks `os.availableParallelism()` — required by jest 30's
 # `getMaxWorkers`.
 #
-# Filter to flow-parser-oxidized only — the unified jest config picks up
+# Filter to flow-parser only — the unified jest config picks up
 # every package's __tests__/ but contract tests scope to the parser surface.
 "$FBCODE_ABS/../xplat/third-party/node/bin/node" --experimental-vm-modules \
     ./node_modules/.bin/jest --no-coverage \
-    --testPathPatterns='flow-parser-oxidized'
+    --testPathPatterns='flow-parser'

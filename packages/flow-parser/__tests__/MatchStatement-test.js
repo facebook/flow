@@ -39,12 +39,12 @@ describe('MatchStatement', () => {
     expect(output).toMatchInlineSnapshot(`
       "$$gen$m0: {
         const $$gen$m1 = x();
-        throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m1);
+        throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m1);
       }"
     `);
 
     expect(() => runMatchStmt(output, () => 'a')).toThrow(
-      /Match: No case succesfully matched\. .* Argument: a/,
+      /Match: No case successfully matched\. .* Argument: a/,
     );
   });
 
@@ -205,14 +205,14 @@ describe('MatchStatement', () => {
           break $$gen$m0;
         }
 
-        throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
+        throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
       }"
     `);
 
     expect(runMatchStmt(output, 'a')).toBe(0);
     expect(runMatchStmt(output, 'b')).toBe(1);
     expect(() => runMatchStmt(output, 'xxx')).toThrow(
-      /Match: No case succesfully matched\. .* Argument: xxx/,
+      /Match: No case successfully matched\. .* Argument: xxx/,
     );
   });
 
@@ -255,7 +255,7 @@ describe('MatchStatement', () => {
           break $$gen$m0;
         }
 
-        throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m1);
+        throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m1);
       }"
     `);
 

@@ -12,7 +12,7 @@
 
 // Phase D1 / task #13 sub-test 1: API-surface diff.
 //
-// `flow-parser-oxidized` is intended as a drop-in replacement for
+// `flow-parser/oxidized` is intended as a drop-in replacement for
 // `hermes-parser`. This suite asserts that the public export surface of our
 // package is a superset of upstream: every name upstream exports is also
 // exported by us, and the `typeof` of each shared export agrees.
@@ -34,11 +34,11 @@ type ModuleExports = interface {
   +[string]: mixed,
 };
 
-const ours: ModuleExports = require('flow-parser-oxidized');
+const ours: ModuleExports = require('flow-parser/oxidized');
 const upstream: ModuleExports = require('hermes-parser');
 
 describe('Public export surface vs hermes-parser', () => {
-  test('every upstream export name is present on flow-parser-oxidized', () => {
+  test('every upstream export name is present on flow-parser/oxidized', () => {
     const upstreamNames = Object.keys(upstream).sort();
     const ourNames = new Set(Object.keys(ours));
     const missing = upstreamNames.filter(name => !ourNames.has(name));

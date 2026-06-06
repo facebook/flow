@@ -35,12 +35,12 @@ module.exports = {
   overrides: overrideEnabled()
     ? [
         {
-          // Use flow-parser-oxidized as Babel's parser so it understands newer
+          // Use flow-parser/oxidized as Babel's parser so it understands newer
           // Flow syntax (e.g. `as` casts) beyond what the bundled @babel/parser
           // supports. Disabled by `SKIP_HERMES_PARSER_OVERRIDE=1` during the
           // build's bootstrap phase — `babel-plugin-syntax-flow-parser`
-          // and its workspace dependencies (`flow-parser-oxidized`,
-          // `flow-estree`) have to be built before this plugin can be
+          // and its workspace dependencies (`flow-parser`, `flow-estree`) have
+          // to be built before this plugin can be
           // required.
           test: filename =>
             filename != null &&

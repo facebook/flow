@@ -186,7 +186,7 @@ describe('Component', () => {
       const scope = scopeManager.scopes[1];
 
       expect(scope.variables).toHaveLength(1); // [Foo]
-      // flow-parser-oxidized respects the OCaml flow_parser AST and emits
+      // flow-parser/oxidized respects the OCaml flow_parser AST and emits
       // `declare component` params as the value-position `ComponentParameter`
       // (with `name` + `local` Identifier slots), unlike upstream
       // hermes-parser which emits the type-position `ComponentTypeParameter`

@@ -15,7 +15,7 @@ import type {EmitterListener} from './SafeEmitter';
 import {codeFrameColumns} from '@babel/code-frame';
 import {NodeEventGenerator} from './NodeEventGenerator';
 import {SafeEmitter} from './SafeEmitter';
-import {SimpleTraverser} from 'flow-parser-oxidized';
+import {SimpleTraverser} from 'flow-parser/oxidized';
 
 export type TraversalContextBase = Readonly<{
   /**

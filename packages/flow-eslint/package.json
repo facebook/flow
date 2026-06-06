@@ -25,6 +25,6 @@
   "dependencies": {
     "esrecurse": "^4.3.0",
     "flow-estree": "0.0.1",
-    "flow-parser-oxidized": "0.0.1"
+    "flow-parser": "0.317.0"
   }
 }

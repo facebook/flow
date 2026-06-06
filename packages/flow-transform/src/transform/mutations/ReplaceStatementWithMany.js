@@ -12,7 +12,7 @@ import type {ESNode, ModuleDeclaration, Statement} from 'flow-estree';
 import type {MutationContext} from '../MutationContext';
 import type {DetachedNode} from '../../detachedNode';
 
-import {astArrayMutationHelpers} from 'flow-parser-oxidized';
+import {astArrayMutationHelpers} from 'flow-parser/oxidized';
 import {getStatementParent} from './utils/getStatementParent';
 import {isValidModuleDeclarationParent} from './utils/isValidModuleDeclarationParent';
 import {moveCommentsToNewNode} from '../comments/comments';

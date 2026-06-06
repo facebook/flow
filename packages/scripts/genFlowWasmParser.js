@@ -14,7 +14,7 @@ const path = require('path');
 
 const OUTPUT_FILE = path.resolve(
   __dirname,
-  '../flow-parser-oxidized/dist/FlowParserWASM.js',
+  '../flow-parser/oxidized/FlowParserWASM.js',
 );
 
 const HEADER = `/**

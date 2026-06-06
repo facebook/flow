@@ -5,9 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 
 # Run all jest tests across the unified flow/packages/ workspace. Replaces the
-# previous per-package orchestrator at
-# flow/packages/flow-parser-oxidized/scripts/facebook/runOxidizedJestTests.sh
-# now that jest config / babel config / devDeps live at the workspace root.
+# previous per-package orchestrator now that jest config / babel config /
+# devDeps live at the workspace root.
 #
 # Usage:
 #   ./runOxidizedJestTests.sh                       # run every package
@@ -24,7 +23,7 @@ FBSOURCE="$(cd "$FBCODE/.." && pwd -P)"
 # lacks `os.availableParallelism()` — required by jest 30's `getMaxWorkers`.
 NODE="$FBSOURCE/xplat/third-party/node/bin/node"
 
-PARSER_DIR="$WORKSPACE_DIR/flow-parser-oxidized"
+PARSER_DIR="$WORKSPACE_DIR/flow-parser"
 
 # ---- argv parsing ---------------------------------------------------------
 JEST_EXTRA=()
@@ -38,8 +37,8 @@ for arg in "$@"; do
 done
 
 # Serialize dist/ rebuilds + reads against runContractTests.sh, which also
-# does `rm -rf dist; cp -r src dist; babel dist` and then `require()`s
-# `flow-parser-oxidized` (whose `main` resolves to `dist/index.js`). Buck
+# rebuilds the oxidized parser output and then `require()`s
+# `flow-parser/oxidized`. Buck
 # schedules `oxidized_jest_test` and `wasm_parser_contract_test` in
 # parallel; without this flock, target A's jest can read a torn
 # `dist/index.js` (un-stripped Flow `import type` lines from the cp -r
@@ -61,10 +60,10 @@ cd "$WORKSPACE_DIR"
 # right mode here.
 yarn install --offline
 
-# Build dist/ for each per-package src/ (and embed the WASM parser into
-# flow-parser-oxidized/dist/FlowParserWASM.js). The unified jest config maps
-# `*/FlowParserWASM` -> dist/FlowParserWASM.js so tests can resolve the wasm
-# wrapper from src-level imports.
+# Build output for each package (and embed the WASM parser into
+# flow-parser/oxidized/FlowParserWASM.js). The unified jest config maps
+# `*/FlowParserWASM` -> flow-parser/oxidized/FlowParserWASM.js so tests can
+# resolve the wasm wrapper from src-level imports.
 yarn build
 
 # The upstream jest testMatch is intentionally broad. In this fork it also

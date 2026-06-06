@@ -53,7 +53,7 @@
 //!
 //!    ```sh
 //!    buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen > \
-//!      fbcode/flow/packages/flow-parser-oxidized/src/FlowParserNodeDeserializers.js
+//!      fbcode/flow/packages/flow-parser/oxidized-src/FlowParserNodeDeserializers.js
 //!    buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- --rust > \
 //!      fbcode/flow/rust_port/crates/flow_parser_wasm/src/serializer_dispatch.rs
 //!    ```

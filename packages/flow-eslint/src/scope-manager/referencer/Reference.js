@@ -81,7 +81,7 @@ class Reference {
    */
   resolved: Variable | null;
   /**
-   * If reference is writeable, this is the node being written to it.
+   * If reference is writable, this is the node being written to it.
    * @public
    */
   +writeExpr: ?ESNode;
@@ -133,7 +133,7 @@ class Reference {
   }
 
   /**
-   * Whether the reference is writeable.
+   * Whether the reference is writable.
    * @public
    */
   isWrite(): boolean {

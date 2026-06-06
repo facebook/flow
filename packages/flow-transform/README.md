@@ -4,7 +4,7 @@ A package for traversing and transforming a Flow AST. Forked from upstream
 [`hermes-transform`](https://github.com/facebook/hermes/tree/main/tools/hermes-parser/js/hermes-transform)
 with the sibling deps rewired:
 
-- `hermes-parser` -> `flow-parser-oxidized`
+- `hermes-parser` -> `flow-parser/oxidized`
 - `hermes-estree` -> `flow-estree`
 - `hermes-eslint` -> `flow-eslint`
 - `prettier-plugin-hermes-parser` -> `prettier-plugin-flow-parser`
@@ -31,9 +31,9 @@ This package is pieced together and inspired by code from:
   `Symbol.for('hermes-transform - ...')` runtime markers. These are private
   to this package (not import paths), preserved verbatim from upstream to
   keep the fork a pure literal rename.
-- **Partial vendor in flow-parser-oxidized**: an early-Phase-E vendor of the
+- **Partial vendor in flow-parser/oxidized**: an early-Phase-E vendor of the
   print/comments pipeline lives at
-  `flow/packages/flow-parser-oxidized/src/transform/print/` (with `print.js`,
+  `flow/packages/flow-parser/oxidized-src/transform/print/` (with `print.js`,
   `detachedNodeTypes.js`, `comments/`). It predates this fork and is left
   untouched. Consumers should migrate to `flow-transform` over time;
   a follow-up can either delete the partial vendor or re-export from this

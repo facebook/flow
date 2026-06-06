@@ -11,7 +11,7 @@
 import type {ESNode} from 'flow-estree';
 import type {MutationContext} from '../MutationContext';
 
-import {isNode} from 'flow-parser-oxidized';
+import {isNode} from 'flow-parser/oxidized';
 
 export type ModifyNodeInPlaceMutation = Readonly<{
   type: 'modifyNodeInPlace',

@@ -15,7 +15,7 @@ export type {TransformVisitor} from './transform/transform';
 export type {TransformContext} from './transform/TransformContext';
 export type {DetachedNode, MaybeDetachedNode} from './detachedNode';
 
-export {SimpleTraverser} from 'flow-parser-oxidized';
+export {SimpleTraverser} from 'flow-parser/oxidized';
 export {traverse, traverseWithContext} from './traverse/traverse';
 export {transform} from './transform/transform';
 export {parse} from './transform/parse';

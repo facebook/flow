@@ -15,7 +15,7 @@
     "flow-enums-runtime": "^0.0.6",
     "flow-eslint": "0.0.1",
     "flow-estree": "0.0.1",
-    "flow-parser-oxidized": "0.0.1",
+    "flow-parser": "0.317.0",
     "string-width": "4.2.3"
   },
   "peerDependencies": {

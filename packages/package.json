@@ -40,7 +40,7 @@
   "workspaces": [
     "flow-eslint",
     "flow-estree",
-    "flow-parser-oxidized",
+    "flow-parser",
     "flow-transform",
     "babel-plugin-syntax-flow-parser",
     "prettier-plugin-flow-parser"

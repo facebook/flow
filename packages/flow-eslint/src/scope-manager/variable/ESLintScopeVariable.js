@@ -26,7 +26,8 @@ class ESLintScopeVariable extends VariableBase {
    * If this is `false`, this variable is readonly.
    * @public
    */
-  writeable: void | boolean; // note that this isn't a typo - ESlint uses this spelling here
+  // @lint-ignore SPELL exact-word-misspell: ESLint's public API uses this exact spelling.
+  writeable: void | boolean;
 
   /**
    * Written to by ESLint.
@@ -38,7 +39,7 @@ class ESLintScopeVariable extends VariableBase {
 
   /**
    * Written to by ESLint.
-   * The configured value in config files. This can be different from `variable.writeable` if there are globals directive comments.
+   * The configured value in config files. This can be different from the variable mutability if there are globals directive comments.
    * @public
    */
   eslintImplicitGlobalSetting: void | 'readonly' | 'writable';

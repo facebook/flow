@@ -32,7 +32,7 @@ import type {
 import type {MutationContext} from '../MutationContext';
 import type {DetachedNode} from '../../detachedNode';
 
-import {astArrayMutationHelpers} from 'flow-parser-oxidized';
+import {astArrayMutationHelpers} from 'flow-parser/oxidized';
 import {InvalidRemovalError} from '../Errors';
 
 export type RemoveNodeMutation = Readonly<{

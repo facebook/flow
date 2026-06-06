@@ -125,7 +125,7 @@ pub extern "C" fn hermesParse(
         ),
     }
 
-    // SAFETY: The JS bridge in flow-parser-oxidized/src/FlowParser.js wraps
+    // SAFETY: The JS bridge in flow-parser/oxidized-src/FlowParser.js wraps
     // every call to `hermesParse` in a try/finally that allocates `source`
     // via `_malloc`, copies `source_size` bytes into it, calls this
     // function, and frees the allocation in `finally`. The pointer is

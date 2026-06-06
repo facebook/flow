@@ -10,7 +10,7 @@ THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PACKAGES=(
   flow-estree
-  flow-parser-oxidized
+  flow-parser
   flow-eslint
   flow-transform
   babel-plugin-syntax-flow-parser
@@ -18,7 +18,7 @@ PACKAGES=(
 
 BOOTSTRAP_PACKAGES=(
   flow-estree
-  flow-parser-oxidized
+  flow-parser
   babel-plugin-syntax-flow-parser
 )
 
@@ -41,11 +41,28 @@ else
   exit 1
 fi
 
+package_src_dir() {
+  local package="$1"
+  if [[ "$package" == "flow-parser" ]]; then
+    echo "$THIS_DIR/../$package/oxidized-src"
+  else
+    echo "$THIS_DIR/../$package/src"
+  fi
+}
+
+package_dist_dir() {
+  local package="$1"
+  if [[ "$package" == "flow-parser" ]]; then
+    echo "$THIS_DIR/../$package/oxidized"
+  else
+    echo "$THIS_DIR/../$package/dist"
+  fi
+}
+
 # Create fresh dist directory for each package, and copy source files in
 for package in "${PACKAGES[@]}"; do
-  PACKAGE_DIR="$THIS_DIR/../$package"
-  DIST_DIR="$PACKAGE_DIR/dist"
-  SRC_DIR="$PACKAGE_DIR/src"
+  DIST_DIR="$(package_dist_dir "$package")"
+  SRC_DIR="$(package_src_dir "$package")"
 
   if [[ ! -d "$SRC_DIR" ]]; then
     continue
@@ -81,15 +98,15 @@ node "$THIS_DIR/genFlowWasmParser.js" "$WASM_PARSER"
 # After this loop their dist/index.js files are valid plain JS, so the
 # override can be re-enabled for the remaining packages.
 for package in "${BOOTSTRAP_PACKAGES[@]}"; do
-  PACKAGE_DIST_DIR="$THIS_DIR/../$package/dist"
+  PACKAGE_DIST_DIR="$(package_dist_dir "$package")"
   if [[ ! -d "$PACKAGE_DIST_DIR" ]]; then
     continue
   fi
   BABEL_IGNORE_ARGS=()
-  if [[ "$package" == "flow-parser-oxidized" ]]; then
+  if [[ "$package" == "flow-parser" ]]; then
     BABEL_IGNORE_ARGS=(
       --ignore
-      "$PACKAGE_DIST_DIR/transform/print/**,$PACKAGE_DIST_DIR/src/transform/print/**"
+      "$PACKAGE_DIST_DIR/transform/print/**,$PACKAGE_DIST_DIR/oxidized-src/transform/print/**"
     )
   fi
   yarn babel \
@@ -100,19 +117,19 @@ for package in "${BOOTSTRAP_PACKAGES[@]}"; do
 done
 
 # Re-enable the override so the remaining packages can be parsed with
-# flow-parser-oxidized (they contain Flow `as` cast syntax).
+# flow-parser/oxidized (they contain Flow `as` cast syntax).
 unset SKIP_HERMES_PARSER_OVERRIDE
 
 for package in "${PACKAGES[@]}"; do
   # Skip packages already processed in the bootstrap pass above.
   case " ${BOOTSTRAP_PACKAGES[*]} " in
     *" $package "*)
-      if [[ "$package" != "flow-parser-oxidized" ]]; then
+      if [[ "$package" != "flow-parser" ]]; then
         continue
       fi
       ;;
   esac
-  PACKAGE_DIST_DIR="$THIS_DIR/../$package/dist"
+  PACKAGE_DIST_DIR="$(package_dist_dir "$package")"
   if [[ ! -d "$PACKAGE_DIST_DIR" ]]; then
     continue
   fi
@@ -121,4 +138,4 @@ done
 
 # Validate that the generated flow files are sane
 # We don't bother validating the raw-js files as they are validated by babel first
-yarn eslint "*/dist/**/*.js.flow" --no-ignore
+yarn eslint "*/dist/**/*.js.flow" "flow-parser/oxidized/**/*.js.flow" --no-ignore

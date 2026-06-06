@@ -10,7 +10,7 @@
 
 'use strict';
 
-import {SimpleTraverser} from '../../src/traverse/SimpleTraverser';
+import {SimpleTraverser} from '../../oxidized-src/traverse/SimpleTraverser';
 
 describe('SimpleTraverser', () => {
   it("traverses all keys except 'parent', 'loc', 'range', 'leadingComments', and 'trailingComments'", () => {

@@ -23,10 +23,18 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "ast-types": "^0.15.2",
+    "@babel/generator": "7.7.4",
+    "@babel/parser": "7.7.4",
+    "@babel/types": "7.7.4",
     "chalk": "^4.1.2",
-    "esprima-fb": "15001.1001.0-dev-harmony-fb",
-    "minimist": ">=1.2.6"
+    "espree": "9.3.2",
+    "flow-enums-runtime": "0.0.6",
+    "flow-estree": "0.0.1",
+    "hermes-estree": "0.36.1",
+    "hermes-parser": "0.36.1",
+    "minimist": ">=1.2.6",
+    "prettier-plugin-hermes-parser": "0.31.1",
+    "string-width": "4.2.3"
   },
   "engines": {
     "node": ">=0.4.0"

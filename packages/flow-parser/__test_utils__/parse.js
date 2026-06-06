@@ -12,13 +12,13 @@
 
 import type {Program as ESTreeProgram} from 'flow-estree';
 import type {ESNode} from 'flow-estree';
-import type {ParserOptions} from '../src/ParserOptions';
-import type {BabelFile} from '../src/babel/TransformESTreeToBabel';
-import type {VisitorKeys} from '../src/generated/ESTreeVisitorKeys';
+import type {ParserOptions} from '../oxidized-src/ParserOptions';
+import type {BabelFile} from '../oxidized-src/babel/TransformESTreeToBabel';
+import type {VisitorKeys} from '../oxidized-src/generated/ESTreeVisitorKeys';
 
-import {SimpleTraverser} from '../src/traverse/SimpleTraverser';
-import {parse as parseOriginal} from '../src/index';
-import {print as printAST} from '../src/transform/print/print';
+import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
+import {parse as parseOriginal} from '../oxidized-src/index';
+import {print as printAST} from '../oxidized-src/transform/print/print';
 
 // $FlowExpectedError[untyped-import]
 import {VISITOR_KEYS as babelVisitorKeys} from '@babel/types';

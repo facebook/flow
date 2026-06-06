@@ -16,7 +16,7 @@ import {
   getVisitorKeys,
   isNode,
   astArrayMutationHelpers,
-} from 'flow-parser-oxidized';
+} from 'flow-parser/oxidized';
 import {moveCommentsToNewNode} from '../comments/comments';
 import {InvalidReplacementError} from '../Errors';
 import {getOriginalNode} from '../../detachedNode';

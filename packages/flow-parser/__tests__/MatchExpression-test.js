@@ -52,19 +52,19 @@ describe('MatchExpression', () => {
     const output = await transform(code);
     expect(output).toMatchInlineSnapshot(`
       "const e = ($$gen$m0 => {
-        throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m0);
+        throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m0);
       })(x());"
     `);
 
     const fn1 = jest.fn(() => 'xxx');
     expect(() => runMatchExp(output, fn1)).toThrow(
-      /Match: No case succesfully matched\. .* Argument: xxx/,
+      /Match: No case successfully matched\. .* Argument: xxx/,
     );
     expect(fn1).toHaveBeenCalled();
 
     const fn2 = jest.fn(() => undefined);
     expect(() => runMatchExp(output, fn2)).toThrow(
-      /Match: No case succesfully matched\. .* Argument: undefined/,
+      /Match: No case successfully matched\. .* Argument: undefined/,
     );
     expect(fn2).toHaveBeenCalled();
   });
@@ -289,14 +289,14 @@ describe('MatchExpression', () => {
       const output = await transform(code);
       expect(output).toMatchInlineSnapshot(`
         "const e = x === 'a' ? 0 : x === 'b' ? 1 : (() => {
-          throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
+          throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
         })();"
       `);
 
       expect(runMatchExp(output, 'a')).toBe(0);
       expect(runMatchExp(output, 'b')).toBe(1);
       expect(() => runMatchExp(output, 'xxx')).toThrow(
-        /Match: No case succesfully matched\. .* Argument: xxx/,
+        /Match: No case successfully matched\. .* Argument: xxx/,
       );
     });
 
@@ -488,7 +488,7 @@ describe('MatchExpression', () => {
       const output = await transform(code);
       expect(output).toMatchInlineSnapshot(`
         "const e = x === 'a' || x === 'b' ? x === 'a' ? 0 : x === 'b' ? 1 : (() => {
-          throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
+          throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + x);
         })() : 2;"
       `);
 
@@ -645,13 +645,13 @@ describe('MatchExpression', () => {
             return 0;
           }
 
-          throw Error("Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m0);
+          throw Error("Match: No case successfully matched. Make exhaustive or add a wildcard case using '_'. Argument: " + $$gen$m0);
         })(x());"
       `);
 
       expect(runMatchExp(output, () => 'a')).toBe(0);
       expect(() => runMatchExp(output, () => 123)).toThrow(
-        /Match: No case succesfully matched\. .* Argument: 123/,
+        /Match: No case successfully matched\. .* Argument: 123/,
       );
     });
 

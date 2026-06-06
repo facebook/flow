@@ -17,7 +17,7 @@ import {
 } from '../../../src/transform/mutations/ModifyNodeInPlace';
 import {MutationContext} from '../../../src/transform/MutationContext';
 import {parseAndGetAstAndNode} from './test-utils';
-import {cleanASTForSnapshot} from 'flow-parser-oxidized/__test_utils__/parse';
+import {cleanASTForSnapshot} from 'flow-parser/__test_utils__/parse';
 
 describe('ReplaceNode', () => {
   it('Identifier', async () => {

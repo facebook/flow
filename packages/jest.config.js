@@ -13,6 +13,15 @@
 const path = require('path');
 const packageJson = require('./package.json');
 
+const workspaceModuleNameMappers = Object.fromEntries(
+  packageJson.workspaces
+    .filter(moduleName => moduleName !== 'flow-parser')
+    .map(moduleName => [
+      `^${moduleName}$`,
+      path.resolve(__dirname, moduleName, 'src', 'index.js'),
+    ]),
+);
+
 module.exports = {
   // All imported modules in your tests should be mocked automatically
   automock: false,
@@ -34,11 +43,29 @@ module.exports = {
   // Otherwise jest will look in the `src` folder and will only find the unusable `.flow` file.
   moduleNameMapper: {
     // the modules themselves
-    ...Object.fromEntries(
-      packageJson.workspaces.map(moduleName => [
-        `^${moduleName}$`,
-        path.resolve(__dirname, moduleName, 'src', 'index.js'),
-      ]),
+    ...workspaceModuleNameMappers,
+
+    '^flow-parser$': path.resolve(__dirname, 'flow-parser', 'flow_parser.js'),
+
+    '^flow-parser/oxidized$': path.resolve(
+      __dirname,
+      'flow-parser',
+      'oxidized-src',
+      'index.js',
+    ),
+
+    '^flow-parser/oxidized/(.*)$': path.resolve(
+      __dirname,
+      'flow-parser',
+      'oxidized-src',
+      '$1',
+    ),
+
+    '^flow-parser/__test_utils__/(.*)$': path.resolve(
+      __dirname,
+      'flow-parser',
+      '__test_utils__',
+      '$1',
     ),
 
     // prettier-plugin-flow-parser is a pre-built bundle without src/index.js
@@ -48,11 +75,11 @@ module.exports = {
       'index.mjs',
     ),
 
-    // flow-parser-oxidized
+    // flow-parser/oxidized
     '.*/FlowParserWASM$': path.resolve(
       __dirname,
-      'flow-parser-oxidized',
-      'dist',
+      'flow-parser',
+      'oxidized',
       'FlowParserWASM.js',
     ),
   },

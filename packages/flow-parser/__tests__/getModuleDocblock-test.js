@@ -10,7 +10,7 @@
 
 'use strict';
 
-import {parseDocblockString} from '../src/getModuleDocblock';
+import {parseDocblockString} from '../oxidized-src/getModuleDocblock';
 
 describe('parseDocblockString', () => {
   it('handles empty docblocks', () => {

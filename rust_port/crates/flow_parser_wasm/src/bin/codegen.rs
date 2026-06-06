@@ -13,7 +13,7 @@
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen > \
-//!     fbcode/flow/packages/flow-parser-oxidized/src/FlowParserNodeDeserializers.js
+//!     fbcode/flow/packages/flow-parser/oxidized-src/FlowParserNodeDeserializers.js
 //! ```
 //!
 //! ## Rust serializer dispatch (`--rust`)
@@ -27,12 +27,12 @@
 //!
 //! ## ESTree visitor keys (`--estree-visitor-keys`)
 //!
-//! Generates `ESTreeVisitorKeys.js` for the flow-parser-oxidized package:
+//! Generates `ESTreeVisitorKeys.js` for `flow-parser/oxidized`:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
 //!     --estree-visitor-keys > \
-//!     fbcode/flow/packages/flow-parser-oxidized/src/generated/ESTreeVisitorKeys.js
+//!     fbcode/flow/packages/flow-parser/oxidized-src/generated/ESTreeVisitorKeys.js
 //! ```
 //!
 //! ## ESTree visitor keys Flow companion (`--estree-visitor-keys-flow`)
@@ -44,7 +44,7 @@
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
 //!     --estree-visitor-keys-flow > \
-//!     fbcode/flow/packages/flow-parser-oxidized/src/generated/ESTreeVisitorKeys.js.flow
+//!     fbcode/flow/packages/flow-parser/oxidized-src/generated/ESTreeVisitorKeys.js.flow
 //! ```
 //!
 //! ## ESTree Flow types (`--estree-types`)
@@ -811,7 +811,7 @@ module.exports = {{
 ///
 /// Emitted via codegen so `regen.sh` (#9) covers both halves of the
 /// `ESTreeVisitorKeys.js (+ .flow)` deliverable in a single regeneration
-/// step. Without this, Flow consumers of `flow-parser-oxidized/src/generated/
+/// step. Without this, Flow consumers of `flow-parser/oxidized-src/generated/
 /// ESTreeVisitorKeys` would receive untyped `any` for the visitor-keys export.
 fn generate_estree_visitor_keys_flow() {
     let header = format!(
@@ -891,7 +891,7 @@ const DEFAULT_HERMES_ESTREE_TYPES_PATH: &str =
 /// - **TS-only nodes** — upstream Hermes parses TypeScript; these kinds
 ///   exist in our SCHEMA only because the Rust serializer kind list mirrors
 ///   the OCaml binary protocol's full type space. Flow-only consumers will
-///   never see them via the flow-parser-oxidized adapter.
+///   never see them via the flow-parser/oxidized adapter.
 /// - **Custom-encoded** — `Literal` (the only `custom_emit` kind) is
 ///   modeled upstream as the `Literal` union over BigInt/Boolean/Null/
 ///   Numeric/RegExp/StringLiteral, not as a standalone interface.
@@ -1146,7 +1146,7 @@ const PREDICATE_SPECIAL_NODES: &[&str] = &["Identifier", "JSXIdentifier", "JSXTe
 /// - **TS-only kinds** — upstream Hermes parses TypeScript; these kinds exist
 ///   in our SCHEMA only because the Rust serializer kind list mirrors the
 ///   OCaml binary protocol's full type space. Flow-only consumers will never
-///   see them via the flow-parser-oxidized adapter.
+///   see them via the flow-parser/oxidized adapter.
 const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     // Optional-chain refinements collapsed into Call/Member by upstream.
     "OptionalCallExpression",

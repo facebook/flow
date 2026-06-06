@@ -13,7 +13,7 @@
 import type {ESNode} from 'flow-estree';
 
 import {cleanASTForSnapshot, parse} from '../../__test_utils__/parse';
-import {SimpleTransform} from '../../src/transform/SimpleTransform';
+import {SimpleTransform} from '../../oxidized-src/transform/SimpleTransform';
 
 function expectTransformToEqual({
   code,

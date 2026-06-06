@@ -37,7 +37,7 @@ import type {
 } from './mutations/ReplaceStatementWithMany';
 
 import {asDetachedNode, deepCloneNode, shallowCloneNode} from '../detachedNode';
-import {isNode} from 'flow-parser-oxidized';
+import {isNode} from 'flow-parser/oxidized';
 import {
   CommentPlacement,
   getCommentsForNode,
