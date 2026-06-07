@@ -30,6 +30,7 @@ import getFlowVersion from '../utils/getFlowVersion';
 import assertFlowSupportsLSP from '../utils/assertFlowSupportsLSP';
 import assertNoLogFileOption from '../utils/assertNoLogFileOption';
 import uriToString from '../utils/uriToString';
+import isWindows from '../utils/isWindows';
 
 import Logger, { type LogLevel } from '../utils/Logger';
 
@@ -183,19 +184,32 @@ export default class FlowLanguageClient {
 
     _statusBarWidget.setFlowInfo({ path: flowPath, version: flowVersion });
 
-    const serverOptions: ServerOptions = {
-      command: flowPath,
-      args: [
-        'lsp',
-        ...['--from', 'vscode'],
-        // auto stop flow process
-        config.stopFlowOnExit ? '--autostop' : null,
-      ].filter((v) => v != null),
-      options: { shell: true },
+    const lspArgs = [
+      'lsp',
+      ...['--from', 'vscode'],
+      // auto stop flow process
+      config.stopFlowOnExit ? '--autostop' : null,
+    ].filter((v) => v != null);
 
-      // see: clientOptions.workspaceFolder below
-      // options: { cwd: flowconfigDir },
-    };
+    // Use shell:false to prevent OS command injection via attacker-controlled
+    // paths (e.g. a directory name containing shell metacharacters).
+    // On Windows, .cmd files cannot be spawned directly without a shell, so
+    // invoke cmd.exe explicitly instead. The cmd.exe metacharacter injection
+    // concern (CVE-2024-27980 class) doesn't apply here: this branch is only
+    // reached when pathToFlow resolves to a .cmd via the user's own VS Code
+    // settings and PATH — not from any attacker-controlled workspace input.
+    const serverOptions: ServerOptions =
+      isWindows() && flowPath.toLowerCase().endsWith('.cmd')
+        ? {
+            command: 'cmd.exe',
+            args: ['/c', flowPath, ...lspArgs],
+            options: { shell: false },
+          }
+        : {
+            command: flowPath,
+            args: lspArgs,
+            options: { shell: false },
+          };
 
     const patternGlob = '**/*';
     // @ts-ignore

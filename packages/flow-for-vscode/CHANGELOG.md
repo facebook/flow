@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.1.4 (2026-06-05)
+
+#### Security
+
+* Fixed OS command injection (RCE) vulnerability: the Flow language server was spawned with `shell: true`, allowing a malicious repository with a specially crafted directory name containing shell metacharacters to execute arbitrary commands when the workspace was opened in VS Code. Fixed by spawning with `shell: false`.
+
 ### 3.1.3 (2026-05-14)
 
 #### Changes
