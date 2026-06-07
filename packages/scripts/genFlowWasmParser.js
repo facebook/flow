@@ -27,8 +27,28 @@ const HEADER = `/**
 'use strict';
 `;
 
+// Emscripten 4 returns a Promise from modularized factories, but sync
+// compilation still initializes the incoming module object before returning.
+const FOOTER = `
+
+const __flowParserWASMModuleFactory = module.exports;
+module.exports = function flowParserWASMModuleFactory(moduleArg = {}) {
+  const moduleResult = __flowParserWASMModuleFactory(moduleArg);
+  if (moduleResult != null && typeof moduleResult.cwrap === 'function') {
+    return moduleResult;
+  }
+  if (moduleArg != null && typeof moduleArg.cwrap === 'function') {
+    return moduleArg;
+  }
+  throw new Error(
+    'FlowParserWASM must initialize synchronously and export cwrap.',
+  );
+};
+module.exports.default = module.exports;
+`;
+
 // Add header and sign file before writing back to disk
 const wasmParserContents = fs.readFileSync(process.argv[2]).toString();
-const fileContents = HEADER + wasmParserContents;
+const fileContents = HEADER + wasmParserContents + FOOTER;
 
 fs.writeFileSync(OUTPUT_FILE, fileContents);
