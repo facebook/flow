@@ -486,6 +486,70 @@ jobs:
         if ($LASTEXITCODE -gt 0) {
           Throw "flow parser esprima ocaml tests exited with error code: $LASTEXITCODE"
         }
+  npm_package_ci:
+    runs-on: ubuntu-22.04
+    env:
+      NODE_VERSION: 24.14.1
+      NPM_VERSION: 11.11.0
+      YARN_VERSION: 1.22.21
+      EMSDK_VERSION: 3.1.44
+      BINARYEN_VERSION: 121
+      BINARYEN_SHA256: c90e0e295e8f8484ba5b47da92f26e5d1d18db6cd2fcc0c5cc265a5a73609f17
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - name: Install Node
+      uses: actions/setup-node@v4.4.0
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - name: Install npm and Yarn
+      run: npm install --global npm@${NPM_VERSION} yarn@${YARN_VERSION}
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        toolchain: nightly-2026-04-14
+        targets: wasm32-unknown-emscripten
+        components: rust-src
+    - name: Install Emscripten
+      run: |
+        git clone --depth 1 --branch "${EMSDK_VERSION}" https://github.com/emscripten-core/emsdk.git "${RUNNER_TEMP}/emsdk"
+        "${RUNNER_TEMP}/emsdk/emsdk" install "${EMSDK_VERSION}"
+        "${RUNNER_TEMP}/emsdk/emsdk" activate "${EMSDK_VERSION}"
+        binaryen_archive="${RUNNER_TEMP}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz"
+        curl --fail --location --retry 3 --output "${binaryen_archive}" "https://github.com/WebAssembly/binaryen/releases/download/version_${BINARYEN_VERSION}/binaryen-version_${BINARYEN_VERSION}-x86_64-linux.tar.gz"
+        echo "${BINARYEN_SHA256}  ${binaryen_archive}" | sha256sum --check -
+        mkdir -p "${RUNNER_TEMP}/binaryen"
+        tar -xzf "${binaryen_archive}" -C "${RUNNER_TEMP}/binaryen"
+        echo "${RUNNER_TEMP}/emsdk" >> "${GITHUB_PATH}"
+        echo "${RUNNER_TEMP}/emsdk/upstream/emscripten" >> "${GITHUB_PATH}"
+        echo "EMSDK=${RUNNER_TEMP}/emsdk" >> "${GITHUB_ENV}"
+        echo "EM_CONFIG=${RUNNER_TEMP}/emsdk/.emscripten" >> "${GITHUB_ENV}"
+        echo "EM_BINARYEN_ROOT=${RUNNER_TEMP}/binaryen/binaryen-version_${BINARYEN_VERSION}" >> "${GITHUB_ENV}"
+        echo "EM_CACHE=${HOME}/.emscripten_cache_${EMSDK_VERSION}" >> "${GITHUB_ENV}"
+        echo "EM_IGNORE_SANITY=1" >> "${GITHUB_ENV}"
+    - name: Verify pinned tool versions
+      run: |
+        test "$(node --version)" = "v${NODE_VERSION}"
+        test "$(npm --version)" = "${NPM_VERSION}"
+        test "$(yarn --version)" = "${YARN_VERSION}"
+        rustup show active-toolchain
+        rustc --version
+        emcc --version
+        test "$("${EM_BINARYEN_ROOT}/bin/wasm-opt" --version)" = "wasm-opt version ${BINARYEN_VERSION} (version_${BINARYEN_VERSION})"
+    - name: Build flow-parser WASM artifact
+      run: packages/scripts/buildFlowParserWasm.sh "${RUNNER_TEMP}/flow-parser-wasm.js"
+    - name: Install package dependencies
+      working-directory: packages
+      run: yarn install --frozen-lockfile
+    - name: Build packages
+      working-directory: packages
+      run: ./scripts/build.sh "${RUNNER_TEMP}/flow-parser-wasm.js"
+    - name: Test packages
+      working-directory: packages
+      run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform'
   npm_pack:
     runs-on: ubuntu-22.04
     needs:
