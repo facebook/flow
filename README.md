@@ -118,10 +118,14 @@ Flow is written in OCaml (OCaml 5.2.0 is required).
     component, then run:
 
     ```sh
-    make js FLOW_JS_IMPL=rust-wasm FLOW_RELEASE=1
+    make js FLOW_JS_IMPL=rust-wasm
     ```
 
-    Omit `FLOW_RELEASE=1` for a faster development build.
+    To build a faster, larger local development version instead, run:
+
+    ```sh
+    make js FLOW_JS_IMPL=rust-wasm FLOW_DOT_JS_WASM_PROFILE=dev
+    ```
 
     The Flow parser can also be compiled to JavaScript. [Read how here](src/parser/README.md).
 

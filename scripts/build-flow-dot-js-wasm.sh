@@ -8,6 +8,7 @@ set -e -o pipefail
 
 usage() {
   echo "Usage: $0 [--output PATH] [--profile dev|release]" >&2
+  echo "Defaults to --profile release. Use --profile dev for a faster, larger local build." >&2
 }
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,7 +52,7 @@ is_truthy() {
 }
 
 if [[ -z "$PROFILE" ]]; then
-  if is_truthy "${FLOW_RELEASE:-${CI:-}}"; then
+  if is_truthy "${FLOW_RELEASE:-${CI:-1}}"; then
     PROFILE=release
   else
     PROFILE=dev
