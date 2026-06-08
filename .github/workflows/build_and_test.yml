@@ -486,7 +486,7 @@ jobs:
         if ($LASTEXITCODE -gt 0) {
           Throw "flow parser esprima ocaml tests exited with error code: $LASTEXITCODE"
         }
-  npm_package_ci:
+  build_rust_port_js_parser_packages:
     runs-on: ubuntu-22.04
     env:
       NODE_VERSION: 24.14.1
@@ -550,6 +550,26 @@ jobs:
     - name: Test packages
       working-directory: packages
       run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform'
+    - name: Temporarily include Rust port artifacts in flow-parser package
+      working-directory: packages/flow-parser
+      run: npm pkg set 'files[1]=oxidized'
+    - name: Pack packages
+      working-directory: packages
+      run: |
+        mkdir -p ../dist/rust-port-js-parser-packages
+        for package in \
+          flow-estree \
+          flow-parser \
+          flow-eslint \
+          flow-transform \
+          babel-plugin-syntax-flow-parser
+        do
+          npm pack "./${package}" --pack-destination ../dist/rust-port-js-parser-packages
+        done
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_js_parser_packages
+        path: dist/rust-port-js-parser-packages/*.tgz
   npm_pack:
     runs-on: ubuntu-22.04
     needs:
