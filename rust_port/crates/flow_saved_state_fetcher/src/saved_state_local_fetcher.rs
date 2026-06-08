@@ -6,8 +6,8 @@
  */
 
 use std::collections::BTreeSet;
-use std::path::Path;
 
+use flow_common::files;
 use flow_common::options::Options;
 
 use crate::saved_state_fetcher::FetchResult;
@@ -40,17 +40,13 @@ pub fn fetch(options: &Options) -> FetchResult {
     }
 
     let changed_files = match std::fs::read_to_string(&changed_files_input_file) {
-        Ok(contents) => contents
-            .lines()
-            .map(|line| {
-                let path = Path::new(line);
-                if path.is_absolute() {
-                    path.to_string_lossy().into_owned()
-                } else {
-                    root.join(path).to_string_lossy().into_owned()
-                }
-            })
-            .collect::<BTreeSet<_>>(),
+        Ok(contents) => {
+            let root_str = root.to_string_lossy();
+            let filenames: Vec<String> = contents.lines().map(str::to_owned).collect();
+            files::canonicalize_filenames(&root_str, &files::imaginary_realpath, &filenames)
+                .into_iter()
+                .collect::<BTreeSet<_>>()
+        }
         Err(err) => return FetchResult::Saved_state_error(err.to_string()),
     };
 
