@@ -278,8 +278,9 @@ pub fn compare_opt(a: Option<&FileKey>, b: Option<&FileKey>) -> std::cmp::Orderi
 }
 
 fn strip_prefix<'a>(prefix: &str, path: &'a str) -> &'a str {
-    if !prefix.is_empty() && path.starts_with(prefix) {
-        &path[prefix.len()..]
+    let plen = prefix.len();
+    if plen > 0 && path.starts_with(prefix) {
+        &path[plen..]
     } else {
         path
     }
@@ -323,8 +324,8 @@ pub fn strip_project_root(path: &str) -> String {
     let guard = PROJECT_ROOT.read().unwrap();
     match guard.as_deref() {
         Some(root) => {
-            if let Some(stripped) = path.strip_prefix(root) {
-                normalize_dir_sep_with(std::path::MAIN_SEPARATOR, stripped)
+            if path.starts_with(root) {
+                normalize_dir_sep_with(std::path::MAIN_SEPARATOR, strip_prefix(root, path))
             } else if !is_relative(path) {
                 relative_path_from(root, path)
             } else {
@@ -443,10 +444,7 @@ impl FileKey {
                     normalize_dir_sep_with(std::path::MAIN_SEPARATOR, strip_prefix(fl, path));
                 format!("{}{}", FLOWLIB_MARKER, stripped)
             }
-            _ => {
-                drop(guard);
-                strip_project_root(path)
-            }
+            _ => strip_project_root(path),
         };
         FileKey::new(FileKeyInner::LibFile(suffix))
     }

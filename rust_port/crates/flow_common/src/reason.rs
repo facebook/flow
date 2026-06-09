@@ -1102,8 +1102,13 @@ pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
             if let Some(root) = strip_root {
                 let file = source.to_absolute();
                 let root = std::path::Path::new(root);
-                if std::path::Path::new(&file).strip_prefix(root).is_ok() {
-                    format!("[LIB] {}", crate::files::relative_path(root, &file))
+                let root_str = crate::files::normalized_root_prefix(root);
+                let normalized_file = crate::sys_utils::normalize_filename_dir_sep(&file);
+                if normalized_file.starts_with(&root_str) {
+                    format!(
+                        "[LIB] {}",
+                        crate::files::relative_path(std::path::Path::new(&root_str), &file)
+                    )
                 } else {
                     format!(
                         "[LIB] {}",
@@ -1120,7 +1125,9 @@ pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
         FileKeyInner::SourceFile(_) | FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => {
             let file = source.to_absolute();
             if let Some(root) = strip_root {
-                crate::files::relative_path(std::path::Path::new(root), &file)
+                let root = std::path::Path::new(root);
+                let root_str = crate::files::normalized_root_prefix(root);
+                crate::files::relative_path(std::path::Path::new(&root_str), &file)
             } else {
                 file
             }

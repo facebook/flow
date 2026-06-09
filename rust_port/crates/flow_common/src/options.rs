@@ -285,19 +285,20 @@ pub struct Options {
 impl Options {
     pub fn hook_compatibility_in_file(&self, file: &flow_parser::file_key::FileKey) -> bool {
         let path = file.to_absolute();
+        let path = crate::sys_utils::normalize_filename_dir_sep(&path);
         let included = if self.hook_compatibility_includes.is_empty() {
             false
         } else {
             self.hook_compatibility_includes
                 .iter()
-                .any(|r| r.is_match(&path))
+                .any(|r| r.is_match(path.as_ref()))
         };
         let excluded = if self.hook_compatibility_excludes.is_empty() {
             false
         } else {
             self.hook_compatibility_excludes
                 .iter()
-                .any(|r| r.is_match(&path))
+                .any(|r| r.is_match(path.as_ref()))
         };
         included || (self.hook_compatibility && !excluded)
     }

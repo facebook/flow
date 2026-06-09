@@ -39,6 +39,13 @@ fn digest_root_part(root_part: &str, max_len: usize) -> String {
     let len = root_part.len();
     if len <= max_len {
         root_part.to_string()
+    } else if max_len <= 12 {
+        let digest = format!("{:x}", md5::Md5::digest(root_part.as_bytes()));
+        if digest.len() > max_len {
+            digest[..max_len].to_string()
+        } else {
+            digest
+        }
     } else {
         let prefix = &root_part[..5];
         let suffix = &root_part[len - 5..];
@@ -54,6 +61,27 @@ fn digest_root_part(root_part: &str, max_len: usize) -> String {
     }
 }
 
+#[cfg(windows)]
+const WINDOWS_MAX_PATH: usize = 259;
+
+#[cfg(windows)]
+fn max_root_part_len_for_path(max_root_part_len: usize, tmp_dir: &str, extension: &str) -> usize {
+    // OCaml caps the filename component at NAME_MAX. On Windows CI, CreateFile
+    // still rejects generated paths at MAX_PATH, so the same digesting step has
+    // to account for the temp directory prefix as well.
+    let dot_extension_len = 1 + extension.len();
+    max_root_part_len.min(
+        WINDOWS_MAX_PATH
+            .saturating_sub(tmp_dir.len())
+            .saturating_sub(dot_extension_len),
+    )
+}
+
+#[cfg(not(windows))]
+fn max_root_part_len_for_path(max_root_part_len: usize, _tmp_dir: &str, _extension: &str) -> usize {
+    max_root_part_len
+}
+
 fn file_of_root(
     max_root_part_len: Option<usize>,
     extension: &str,
@@ -66,7 +94,11 @@ fn file_of_root(
     let root_part = string_utils::filename_escape(&root.to_string_lossy());
     let root_part = match max_root_part_len {
         None => root_part,
-        Some(max_root_part_len) => digest_root_part(&root_part, max_root_part_len),
+        Some(max_root_part_len) => {
+            let max_root_part_len =
+                max_root_part_len_for_path(max_root_part_len, &tmp_dir, extension);
+            digest_root_part(&root_part, max_root_part_len)
+        }
     };
     format!("{}{}.{}", tmp_dir, root_part, extension)
 }

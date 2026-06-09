@@ -104,7 +104,7 @@ fn explain(
     libs: &BTreeSet<String>,
     raw_file: &str,
 ) -> (String, FileResult) {
-    let file = std::fs::canonicalize(raw_file)
+    let file = files::cached_canonicalize(Path::new(raw_file))
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_else(|_| raw_file.to_string());
     let root_str = root.to_string_lossy().to_string();
@@ -290,7 +290,7 @@ fn get_ls_files(
                 && !files::is_in_flowlib(&options, file)
                 && (all || wanted(root, &options, &all_unordered_libs, file))
             {
-                let file = std::fs::canonicalize(file)
+                let file = files::cached_canonicalize(Path::new(file))
                     .map(|p| p.to_string_lossy().to_string())
                     .unwrap_or_else(|_| file.to_string());
                 let mut returned = false;

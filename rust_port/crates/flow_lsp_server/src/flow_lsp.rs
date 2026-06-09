@@ -19,7 +19,6 @@ use std::time::Duration;
 use crossbeam::channel::Receiver;
 use crossbeam::channel::TryRecvError;
 use flow_common_exit_status::FlowExitStatus;
-use tower_lsp_server::UriExt as _;
 
 pub type FilePath = std::path::PathBuf;
 use flow_server_env::file_watcher_status;
@@ -420,22 +419,17 @@ fn connect_temp_dir(connect_params: &ConnectParams) -> String {
     })
 }
 
-fn persistent_canonical_root(root: &std::path::Path) -> FilePath {
-    root.canonicalize().unwrap_or_else(|_| root.to_path_buf())
-}
-
 fn classify_persistent_connect(
     flowconfig_name: &str,
     env: &DisconnectedEnv,
     client_handshake: &socket_handshake::ClientHandshake,
 ) -> Result<ServerConn, ConnectError> {
     let tmp_dir = connect_temp_dir(&env.d_ienv.i_connect_params);
-    let root = persistent_canonical_root(&env.d_ienv.i_root);
     let conn_result = flow_commands_connect::command_connect_simple::connect_once(
         flowconfig_name,
         client_handshake,
         &tmp_dir,
-        &root,
+        &env.d_ienv.i_root,
     );
     let (_sockaddr, stream) = match conn_result {
         Ok((sockaddr, stream)) => (sockaddr, stream),
@@ -538,7 +532,6 @@ fn flow_cli_command(
     connect_params: &ConnectParams,
     root: &FilePath,
 ) -> std::process::Command {
-    let root = persistent_canonical_root(root);
     let exe = std::env::args_os()
         .next()
         .unwrap_or_else(|| std::ffi::OsString::from("flow"));
@@ -565,6 +558,9 @@ fn flow_cli_command(
         if connect_params.autostop {
             command.arg("--autostop");
         }
+        if connect_params.quiet {
+            command.arg("--quiet");
+        }
     }
     command.arg(root);
     command
@@ -575,18 +571,17 @@ fn start_flow_server(
     connect_params: &ConnectParams,
     root: &FilePath,
 ) -> Result<(), String> {
-    let output = flow_cli_command("start", flowconfig_name, connect_params, root)
-        .output()
+    let mut command = flow_cli_command("start", flowconfig_name, connect_params, root);
+    let status = command
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::inherit())
+        .status()
         .map_err(|e| format!("Failed to start Flow server: {}", e))?;
-    if output.status.success() {
+    if status.success() {
         Ok(())
     } else {
-        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        if stderr.is_empty() {
-            Err(format!("Flow start exited with status {}", output.status))
-        } else {
-            Err(stderr)
-        }
+        Err(format!("Flow start exited with status {}", status))
     }
 }
 
@@ -907,7 +902,7 @@ use crate::jsonrpc::get_next_request_id;
 use crate::lsp_interaction;
 
 fn sys_utils_realpath(path: &str) -> Option<String> {
-    std::fs::canonicalize(path)
+    flow_common::files::cached_canonicalize(std::path::Path::new(path))
         .ok()
         .map(|p| p.to_string_lossy().to_string())
 }
@@ -1083,19 +1078,12 @@ fn get_initialize_params(state: &ServerState) -> &lsp_types::InitializeParams {
     &get_ienv(state).i_initialize_params
 }
 
-#[expect(deprecated)]
 fn command_key_of_ienv(ienv: &InitializedEnv) -> String {
-    let path = ienv
-        .i_initialize_params
-        .root_uri
-        .as_ref()
-        .map(|u| u.path().to_string())
-        .or_else(|| ienv.i_initialize_params.root_path.clone())
-        .unwrap_or_default();
-    let file_uri = lsp_types::Uri::from_file_path(&path)
-        .map(|u| u.to_string())
-        .unwrap_or_else(|| format!("file://{}", path));
-    format!("org.flow:{}", file_uri)
+    let path = lsp_helpers::get_root(&ienv.i_initialize_params)
+        .expect("initialized LSP state must have a root");
+    let path = path.to_string_lossy();
+    let file_uri = lsp_helpers::path_to_lsp_uri(path.as_ref(), "");
+    format!("org.flow:{}", file_uri.as_str())
 }
 
 fn command_key_of_server_state(state: &ServerState) -> String {
@@ -1360,15 +1348,15 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
                 Event::ServerMessage(msg) => {
                     let client_path = lsp_helpers::get_root(i_initialize_params)
                         .expect("initialized LSP state must have a root");
+                    let client_path = client_path.to_string_lossy();
                     let client_root = format!(
                         "{}/",
-                        *lsp_types::Uri::from_file_path(&client_path)
-                            .unwrap_or_else(|| lsp_types::Uri::from_str("file:///").unwrap())
+                        lsp_helpers::path_to_lsp_uri(client_path.as_ref(), "").as_str()
                     );
+                    let server_path = i_root.to_string_lossy();
                     let server_root = format!(
                         "{}/",
-                        *lsp_types::Uri::from_file_path(i_root)
-                            .unwrap_or_else(|| lsp_types::Uri::from_str("file:///").unwrap())
+                        lsp_helpers::path_to_lsp_uri(server_path.as_ref(), "").as_str()
                     );
                     let mut mapper = lsp_mapper::default_mapper();
                     let client_root_clone = client_root.clone();
@@ -1399,13 +1387,12 @@ fn convert_to_client_uris(state: &State, event: Event) -> Event {
 
 fn convert_to_server_uris(request: lsp_prot::Request) -> lsp_prot::Request {
     let server_uri_of_client_uri = |uri: DocumentUri| -> DocumentUri {
-        match uri.to_file_path() {
-            Some(path) => {
-                let canonical = std::fs::canonicalize(&path).unwrap_or(path.into_owned());
-                lsp_types::Uri::from_file_path(&canonical).unwrap_or(uri)
-            }
-            None => uri,
-        }
+        let path =
+            lsp_helpers::lsp_uri_to_path(&uri).expect("convert_to_server_uris: invalid file url");
+        let path = FilePath::from(path);
+        let canonical = flow_common::files::cached_canonicalize(&path).unwrap_or(path);
+        let canonical = canonical.to_string_lossy();
+        lsp_helpers::path_to_lsp_uri(canonical.as_ref(), "")
     };
     let mut client_to_server_mapper = lsp_mapper::default_mapper();
     client_to_server_mapper.of_document_uri =
@@ -3548,6 +3535,8 @@ fn main_handle_unsafe(
                 Ok(i_root) => i_root,
                 Err(err) => return Err((error_state, Box::new(FlowLspError::LspException(err)))),
             };
+            // let i_root = Lsp_helpers.get_root i_initialize_params |> File_path.make in
+            let i_root = flow_common::files::cached_canonicalize(&i_root).unwrap_or(i_root);
             flow_parser::file_key::set_project_root(&i_root.to_string_lossy());
 
             let lsp_temp_dir: FilePath = i_connect_params

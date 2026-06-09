@@ -169,7 +169,7 @@ pub(super) fn print_version() {
 pub fn expand_path(path: &str) -> String {
     let path = Path::new(path);
     if path.exists() {
-        path.canonicalize()
+        flow_common::files::cached_canonicalize(path)
             .unwrap_or_else(|_| path.to_path_buf())
             .to_string_lossy()
             .to_string()
@@ -178,7 +178,7 @@ pub fn expand_path(path: &str) -> String {
             .expect("failed to get current directory")
             .join(path);
         if file.exists() {
-            file.canonicalize()
+            flow_common::files::cached_canonicalize(&file)
                 .unwrap_or(file)
                 .to_string_lossy()
                 .to_string()
@@ -2868,20 +2868,20 @@ pub fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path
         flow_common_exit::exit(FlowExitStatus::CouldNotFindFlowconfig, Some(&msg));
     }
     let dir = if path.is_dir() {
-        path.to_path_buf()
+        dir_or_file.to_string()
     } else {
         path.parent()
             .map(|p| {
                 if p.as_os_str().is_empty() {
-                    Path::new(".").to_path_buf()
+                    ".".to_string()
                 } else {
-                    p.to_path_buf()
+                    p.to_string_lossy().to_string()
                 }
             })
-            .unwrap_or_else(|| Path::new(".").to_path_buf())
+            .unwrap_or_else(|| ".".to_string())
     };
-    let resolved = flow_common::files::cached_canonicalize(&dir).unwrap_or_else(|_| dir.clone());
-    match search_for_root(flowconfig_name, resolved, 50) {
+    let dir_path = Path::new(&expand_path(&dir)).to_path_buf();
+    match search_for_root(flowconfig_name, dir_path, 50) {
         Some(root) => {
             flow_event_logger::set_root(Some(root.to_string_lossy().to_string()));
             root
@@ -2889,8 +2889,7 @@ pub fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path
         None => {
             let msg = format!(
                 "Could not find a {} in {} or any of its parent directories.\nSee \"flow init --help\" for more info\n",
-                flowconfig_name,
-                dir.display()
+                flowconfig_name, dir
             );
             flow_common_exit::exit(FlowExitStatus::CouldNotFindFlowconfig, Some(&msg));
         }
@@ -3233,8 +3232,10 @@ fn connect_and_make_request_inner(
 
     // connect handles timeouts itself
     let tmp_dir_string = get_temp_dir(&connect_flags.temp_dir);
-    let tmp_dir_normalized = std::path::Path::new(&tmp_dir_string)
-        .canonicalize()
+    // OCaml:
+    // let normalize dir = File_path.(dir |> make |> to_string) in
+    // let tmp_dir = get_temp_dir connect_flags.temp_dir |> normalize in
+    let tmp_dir_normalized = flow_common::files::cached_canonicalize(Path::new(&tmp_dir_string))
         .unwrap_or_else(|_| std::path::PathBuf::from(&tmp_dir_string));
     let tmp_dir_str = tmp_dir_normalized.to_string_lossy();
     let env = make_env(

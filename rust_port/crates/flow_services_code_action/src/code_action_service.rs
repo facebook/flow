@@ -8,7 +8,6 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
-use std::str::FromStr as _;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -1064,10 +1063,8 @@ fn autofix_in_upstream_file(
                 None => (ast.clone(), uri.clone()),
                 Some(upstream_ast) => {
                     let file_path = source_file.to_path_buf();
-                    let file_uri = Uri::from_file_path(&file_path).unwrap_or_else(|| {
-                        Uri::from_str(&format!("file://{}", file_path.display()))
-                            .unwrap_or_else(|_| uri.clone())
-                    });
+                    let file_uri =
+                        lsp_helpers::path_to_lsp_uri(file_path.to_string_lossy().as_ref(), "");
                     (upstream_ast, file_uri)
                 }
             },
@@ -2508,15 +2505,16 @@ fn code_actions_of_errors(
                     Some(exports),
                 ) if options.autoimports => {
                     let actions = if include_quick_fixes && Loc::intersects(error_loc, &loc) {
+                        let uri_dir = lsp_helpers::lsp_uri_to_path(uri).ok().and_then(|p| {
+                            std::path::Path::new(&p)
+                                .parent()
+                                .map(|d| d.to_string_lossy().to_string())
+                        });
                         suggest_imports(
                             cx,
                             &code_action_utils::layout_options(options),
                             module_system_info,
-                            match uri.to_file_path() {
-                                Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-                                None => None,
-                            }
-                            .as_deref(),
+                            uri_dir.as_deref(),
                             ast,
                             diagnostics,
                             imports_ranked_usage,

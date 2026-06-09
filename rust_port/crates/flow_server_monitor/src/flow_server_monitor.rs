@@ -411,11 +411,8 @@ fn internal_start(
 // `flow_server_monitor_daemon`.
 pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     // Let's make sure this isn't all for naught before we fork
-    let root = args
-        .root
-        .canonicalize()
-        .unwrap_or_else(|_| args.root.clone());
-    let lock_path = server_files_js::lock_file(&args.flowconfig_name, &args.temp_dir, &root);
+    let root = &args.root;
+    let lock_path = server_files_js::lock_file(&args.flowconfig_name, &args.temp_dir, root);
     if !flow_common::lock::check(&lock_path) {
         return Err(format!(
             "There is already a server running for {}",

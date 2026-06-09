@@ -427,6 +427,7 @@ pub mod server_instance {
         exit_msg: &str,
         connection: &ServerConnection,
         pid: i32,
+        daemon_handle: &Arc<Mutex<Option<Handle<(), ()>>>>,
     ) {
         let msg = monitor_prot::MonitorToServerMessage::PleaseDie(
             monitor_prot::PleaseDieReason::MonitorExiting(exit_status, exit_msg.to_string()),
@@ -436,7 +437,8 @@ pub mod server_instance {
         }
         // The monitor waits 1 second before exiting. So let's give the server .75 seconds to shutdown
         // gracefully.
-        let server_status = wait_for_pid_with_timeout(pid, std::time::Duration::from_millis(750));
+        let server_status =
+            wait_for_handle_with_timeout(daemon_handle, pid, std::time::Duration::from_millis(750));
 
         connection.close_immediately();
         let pretty_pid = pid;
@@ -503,10 +505,7 @@ pub mod server_instance {
             }
             #[cfg(not(unix))]
             {
-                flow_hh_logger::error!(
-                    "Forced kill of server process ({}) is not supported on this platform",
-                    pretty_pid
-                );
+                force_kill_handle(daemon_handle, pretty_pid);
             }
         }
     }
@@ -555,15 +554,6 @@ pub mod server_instance {
     static SERVER_NUM: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
     // Spawn a brand new Flow server
-    #[cfg(not(unix))]
-    pub fn start(
-        _monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
-        _start_cause: flow_server_env::server_status::StartCause,
-    ) -> ServerInstance {
-        panic!("Flow server monitor server spawn is not supported on this platform");
-    }
-
-    #[cfg(unix)]
     pub fn start(
         monitor_options: &crate::flow_server_monitor_options::MonitorOptions,
         start_cause: flow_server_env::server_status::StartCause,
@@ -723,9 +713,16 @@ pub mod server_instance {
 
         // Close the connection to the server when we're about to exit
         let on_exit_connection = connection.clone();
+        let on_exit_daemon_handle = daemon_handle.clone();
         let on_exit_thread = Some(std::thread::spawn(move || {
             let (exit_status, exit_msg) = crate::exit_signal::SIGNAL.wait();
-            cleanup_on_exit(exit_status, &exit_msg, &on_exit_connection, pid);
+            cleanup_on_exit(
+                exit_status,
+                &exit_msg,
+                &on_exit_connection,
+                pid,
+                &on_exit_daemon_handle,
+            );
         }));
 
         if !already_initialized {
@@ -869,52 +866,114 @@ pub mod server_instance {
         Stopped(i32),
     }
 
-    #[cfg(not(unix))]
-    fn wait_for_pid_with_timeout(_pid: i32, _timeout: std::time::Duration) -> Option<WaitStatus> {
-        panic!("wait_for_pid_with_timeout is not supported on this platform")
-    }
-
-    #[cfg(unix)]
-    fn wait_for_pid_with_timeout(pid: i32, timeout: std::time::Duration) -> Option<WaitStatus> {
-        use std::sync::mpsc;
-        let (tx, rx) = mpsc::channel();
-        let _handle = std::thread::spawn(move || {
-            use nix::sys::wait;
-            match wait::waitpid(nix::unistd::Pid::from_raw(pid), None) {
-                Ok(wait::WaitStatus::Exited(_, code)) => {
-                    if let Err(e) = tx.send(Some(WaitStatus::Exited(code))) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
+    fn wait_status_of_exit_status(
+        pid: i32,
+        status: std::process::ExitStatus,
+    ) -> Option<WaitStatus> {
+        match status.code() {
+            Some(exit_code) => Some(WaitStatus::Exited(exit_code)),
+            None => {
+                #[cfg(unix)]
+                {
+                    use std::os::unix::process::ExitStatusExt;
+                    if let Some(signal) = status.signal() {
+                        Some(WaitStatus::Signaled(signal))
+                    } else if let Some(signal) = status.stopped_signal() {
+                        Some(WaitStatus::Stopped(signal))
+                    } else {
+                        flow_hh_logger::error!(
+                            "wait_for_handle_with_timeout: unknown wait status for pid {}",
+                            pid
+                        );
+                        None
                     }
                 }
-                Ok(wait::WaitStatus::Signaled(_, sig, _)) => {
-                    if let Err(e) = tx.send(Some(WaitStatus::Signaled(sig as i32))) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
-                    }
-                }
-                Ok(wait::WaitStatus::Stopped(_, sig)) => {
-                    if let Err(e) = tx.send(Some(WaitStatus::Stopped(sig as i32))) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
-                    }
-                }
-                Ok(_) => {
-                    if let Err(e) = tx.send(None) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
-                    }
-                }
-                Err(nix::errno::Errno::ECHILD) => {
-                    flow_hh_logger::info!("Server process has already exited. No need to kill it");
-                    if let Err(e) = tx.send(None) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
-                    }
-                }
-                Err(_) => {
-                    if let Err(e) = tx.send(None) {
-                        flow_hh_logger::warn!("Failed to send wait status: {}", e);
-                    }
+                #[cfg(not(unix))]
+                {
+                    flow_hh_logger::error!(
+                        "wait_for_handle_with_timeout: unknown wait status for pid {}",
+                        pid
+                    );
+                    None
                 }
             }
-        });
-        rx.recv_timeout(timeout).unwrap_or_default()
+        }
+    }
+
+    fn wait_for_handle_with_timeout(
+        daemon_handle: &Arc<Mutex<Option<Handle<(), ()>>>>,
+        pid: i32,
+        timeout: std::time::Duration,
+    ) -> Option<WaitStatus> {
+        let deadline = std::time::Instant::now() + timeout;
+        loop {
+            let wait_status = {
+                let mut guard = match daemon_handle.lock() {
+                    Ok(guard) => guard,
+                    Err(poisoned) => poisoned.into_inner(),
+                };
+                let Some(handle) = guard.as_mut() else {
+                    flow_hh_logger::info!("Server process has already exited. No need to kill it");
+                    return None;
+                };
+                match handle.child.try_wait() {
+                    Ok(Some(status)) => {
+                        let wait_status = wait_status_of_exit_status(pid, status);
+                        *guard = None;
+                        return wait_status;
+                    }
+                    Ok(None) => None,
+                    Err(e) => {
+                        flow_hh_logger::error!(
+                            "wait_for_handle_with_timeout: failed to wait on server pid {}: {}",
+                            pid,
+                            e
+                        );
+                        return None;
+                    }
+                }
+            };
+            if wait_status.is_some() {
+                return wait_status;
+            }
+            let now = std::time::Instant::now();
+            if now >= deadline {
+                return None;
+            }
+            std::thread::sleep(std::cmp::min(
+                std::time::Duration::from_millis(10),
+                deadline.saturating_duration_since(now),
+            ));
+        }
+    }
+
+    #[cfg(not(unix))]
+    fn force_kill_handle(daemon_handle: &Arc<Mutex<Option<Handle<(), ()>>>>, pid: i32) {
+        let mut guard = match daemon_handle.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        let Some(handle) = guard.as_mut() else {
+            flow_hh_logger::info!("Server process ({}) no longer exists", pid);
+            return;
+        };
+        match handle.child.kill() {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::InvalidInput => {}
+            Err(e) => {
+                flow_hh_logger::error!("Failed to kill server process ({}): {}", pid, e);
+                return;
+            }
+        }
+        match handle.child.wait() {
+            Ok(status) => {
+                let _ = wait_status_of_exit_status(pid, status);
+                *guard = None;
+            }
+            Err(e) => {
+                flow_hh_logger::error!("Failed to wait on killed server process ({}): {}", pid, e);
+            }
+        }
     }
 
     pub(crate) fn error_type_of_code(code: i32) -> Option<FlowExitStatus> {
@@ -1115,15 +1174,6 @@ mod keep_alive_loop {
         }
     }
 
-    #[cfg(not(unix))]
-    pub(super) fn wait_for_server_to_die(
-        _monitor_state: MonitorState,
-        _server: &mut server_instance::ServerInstance,
-    ) -> (MonitorState, flow_server_env::server_status::StartCause) {
-        panic!("wait_for_server_to_die is not supported on this platform")
-    }
-
-    #[cfg(unix)]
     pub(super) fn wait_for_server_to_die(
         monitor_state: MonitorState,
         server: &mut server_instance::ServerInstance,
@@ -1139,11 +1189,12 @@ mod keep_alive_loop {
         };
         let wait_status = match daemon_handle {
             Some(mut handle) => match handle.child.wait() {
-                Ok(status) => {
-                    use std::os::unix::process::ExitStatusExt;
-                    match status.code() {
-                        Some(exit_code) => server_instance::WaitStatus::Exited(exit_code),
-                        None => {
+                Ok(status) => match status.code() {
+                    Some(exit_code) => server_instance::WaitStatus::Exited(exit_code),
+                    None => {
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::process::ExitStatusExt;
                             if let Some(signal) = status.signal() {
                                 server_instance::WaitStatus::Signaled(signal)
                             } else if let Some(signal) = status.stopped_signal() {
@@ -1156,8 +1207,16 @@ mod keep_alive_loop {
                                 return (monitor_state, StartCause::MonitorRestart(None));
                             }
                         }
+                        #[cfg(not(unix))]
+                        {
+                            flow_hh_logger::error!(
+                                "wait_for_server_to_die: unknown wait status for pid {}",
+                                pid
+                            );
+                            return (monitor_state, StartCause::MonitorRestart(None));
+                        }
                     }
-                }
+                },
                 Err(e) => {
                     flow_hh_logger::error!(
                         "wait_for_server_to_die: failed to wait on server pid {}: {}",
@@ -1264,14 +1323,24 @@ mod keep_alive_loop {
                 );
 
                 // kill is not a blocking system call, which is likely why it is missing from Lwt_unix
-                if let Err(e) = nix::sys::signal::kill(
-                    nix::unistd::Pid::from_raw(pid),
-                    nix::sys::signal::Signal::SIGKILL,
-                ) {
+                #[cfg(unix)]
+                {
+                    if let Err(e) = nix::sys::signal::kill(
+                        nix::unistd::Pid::from_raw(pid),
+                        nix::sys::signal::Signal::SIGKILL,
+                    ) {
+                        flow_hh_logger::warn!(
+                            "Failed to send SIGKILL to server process ({}): {}",
+                            pid,
+                            e
+                        );
+                    }
+                }
+                #[cfg(not(unix))]
+                {
                     flow_hh_logger::warn!(
-                        "Failed to send SIGKILL to server process ({}): {}",
-                        pid,
-                        e
+                        "Cannot send SIGKILL to stopped server process ({}) on this platform",
+                        pid
                     );
                 }
                 (monitor_state, StartCause::MonitorRestart(None))

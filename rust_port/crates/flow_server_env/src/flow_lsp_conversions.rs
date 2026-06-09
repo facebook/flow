@@ -11,7 +11,6 @@ use flow_common_errors::error_utils::StdinFile;
 use flow_lint_settings::severity::Severity;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
-use tower_lsp_server::UriExt as _;
 
 use crate::lsp::loc_to_lsp_range;
 use crate::lsp::lsp_position_to_flow;
@@ -273,8 +272,9 @@ pub fn flow_completions_to_lsp(
 
 pub fn file_key_to_uri(file_key_opt: Option<&FileKey>) -> Result<lsp_types::Uri, String> {
     let file_key = file_key_opt.ok_or_else(|| "File_key is None".to_string())?;
-    lsp_types::Uri::from_file_path(file_key.to_path_buf())
-        .ok_or_else(|| "Invalid file path".to_string())
+    let file_path = file_key.to_path_buf();
+    let file_path = file_path.to_string_lossy();
+    Ok(crate::lsp_helpers::path_to_lsp_uri(file_path.as_ref(), ""))
 }
 
 pub fn loc_to_lsp(loc: &Loc) -> Result<lsp_types::Location, String> {
@@ -312,7 +312,7 @@ pub fn lsp_DocumentIdentifier_to_flow_path(
 ) -> String {
     let fn_ = crate::lsp_helpers::lsp_textDocumentIdentifier_to_filename(text_document)
         .unwrap_or_else(|_| text_document.uri.path().to_string());
-    match std::fs::canonicalize(&fn_) {
+    match flow_common::files::cached_canonicalize(std::path::Path::new(&fn_)) {
         Ok(path) => path.to_string_lossy().to_string(),
         Err(_) => fn_,
     }
@@ -343,13 +343,16 @@ pub fn diagnostics_of_flow_errors(
         );
         let loc = &lsp_error.loc;
         let source = loc.source.as_ref()?;
-        let uri = lsp_types::Uri::from_file_path(source.to_path_buf())?;
+        let source_path = source.to_path_buf();
+        let uri = crate::lsp_helpers::path_to_lsp_uri(source_path.to_string_lossy().as_ref(), "");
         let related_information: Vec<lsp_types::DiagnosticRelatedInformation> = lsp_error
             .related_locations
             .iter()
             .filter_map(|(loc, related_message)| {
                 let source = loc.source.as_ref()?;
-                let uri = lsp_types::Uri::from_file_path(source.to_path_buf())?;
+                let source_path = source.to_path_buf();
+                let uri =
+                    crate::lsp_helpers::path_to_lsp_uri(source_path.to_string_lossy().as_ref(), "");
                 Some(lsp_types::DiagnosticRelatedInformation {
                     location: lsp_types::Location {
                         uri,

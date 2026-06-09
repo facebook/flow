@@ -51,7 +51,6 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
 use lsp_types::MessageType;
-use tower_lsp_server::UriExt as _;
 
 type CheckResult<'cx> = FileArtifacts<'cx>;
 type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, TypeContentsError>;
@@ -122,8 +121,7 @@ fn live_errors_canceled_response(
             live_errors_failure_kind: lsp_prot::ErrorResponseKind::CanceledErrorResponse,
             live_errors_failure_reason: "Subsumed by a later request".to_string(),
             live_errors_failure_uri: lsp_types::Uri::from_str(uri)
-                .or_else(|_| lsp_types::Uri::from_file_path(uri).ok_or(()))
-                .unwrap_or_else(|_| lsp_types::Uri::from_str(&format!("file://{}", uri)).unwrap()),
+                .unwrap_or_else(|_| lsp_helpers::path_to_lsp_uri(uri, "")),
         })),
         metadata,
     )
@@ -670,7 +668,7 @@ fn mk_module_system_info(
         }),
         node_resolver_root_relative_dirnames,
         resolves_to_real_path: Box::new(|from, to_real_path| {
-            std::fs::canonicalize(from)
+            flow_common::files::cached_canonicalize(std::path::Path::new(from))
                 .ok()
                 .map(|p| p.to_string_lossy().to_string())
                 == Some(to_real_path.to_string())
@@ -5438,10 +5436,8 @@ fn handle_persistent_find_references(
             lsp_types::Location,
         > {
             let (_, loc) = single_ref;
-            let uri = loc
-                .source
-                .as_ref()
-                .and_then(|f| lsp_types::Uri::from_file_path(f.to_path_buf()))?;
+            let file_path = loc.source.as_ref()?.to_path_buf();
+            let uri = lsp_helpers::path_to_lsp_uri(file_path.to_string_lossy().as_ref(), "");
             Some(lsp_types::Location {
                 uri,
                 range: loc_to_lsp_range(loc),
@@ -6462,8 +6458,7 @@ fn live_diagnostics_of_uri(
 ) {
     let live_errors_uri = match lsp_types::Uri::from_str(uri) {
         Ok(u) => u,
-        Err(_) => lsp_types::Uri::from_file_path(uri)
-            .unwrap_or_else(|| lsp_types::Uri::from_str(&format!("file://{}", uri)).unwrap()),
+        Err(_) => lsp_helpers::path_to_lsp_uri(uri, ""),
     };
     let file_path = lsp_uri_to_flow_path(&live_errors_uri);
     let file_input = persistent_connection::get_client(client_id)

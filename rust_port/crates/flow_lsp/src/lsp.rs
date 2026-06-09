@@ -295,7 +295,8 @@ pub mod document_paste {
     use lsp_types::Range;
     use lsp_types::TextDocumentItem;
     use lsp_types::Uri;
-    use tower_lsp_server::UriExt as _;
+
+    use crate::lsp_helpers;
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum ImportType {
@@ -332,9 +333,7 @@ pub mod document_paste {
             }
 
             let import_source = if self.import_source_is_resolved {
-                lsp_types::Uri::from_file_path(&self.import_source)
-                    .map(|url| url.to_string())
-                    .unwrap_or_else(|| self.import_source.clone())
+                crate::lsp_helpers::path_to_lsp_uri(&self.import_source, "").to_string()
             } else {
                 self.import_source.clone()
             };
@@ -366,10 +365,7 @@ pub mod document_paste {
             let h = Helper::deserialize(deserializer)?;
             let import_source = if h.import_source_is_resolved {
                 match lsp_types::Uri::from_str(&h.import_source) {
-                    Ok(url) => match url.to_file_path() {
-                        Some(p) => p.to_string_lossy().into_owned(),
-                        None => h.import_source,
-                    },
+                    Ok(url) => lsp_helpers::lsp_uri_to_path(&url).unwrap_or(h.import_source),
                     Err(_) => h.import_source,
                 }
             } else {

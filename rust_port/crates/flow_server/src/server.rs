@@ -36,6 +36,12 @@ use flow_typing_errors::intermediate_error::to_printable_error;
 use crate::server_daemon;
 use crate::server_env_build;
 
+const SERVER_MAIN_THREAD_STACK_SIZE: usize = if cfg!(debug_assertions) {
+    256 * 1024 * 1024
+} else {
+    32 * 1024 * 1024
+};
+
 pub type CheckOnceSuppressedErrors = Vec<(PrintableError<Loc>, BTreeSet<Loc>)>;
 pub type CheckOnceCollatedErrors<'a> = (
     &'a ConcreteLocPrintableErrorSet,
@@ -559,9 +565,18 @@ pub fn run_from_daemonize(
     monitor_channels: Option<monitor_rpc::Channels>,
     start_cause: server_status::StartCause,
 ) {
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run(init_id, options, monitor_channels, start_cause);
-    }));
+    let init_id = init_id.to_string();
+    let result = std::thread::Builder::new()
+        .name("flow_server_main".to_string())
+        .stack_size(SERVER_MAIN_THREAD_STACK_SIZE)
+        .spawn(move || {
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                run(&init_id, options, monitor_channels, start_cause);
+            }))
+        })
+        .expect("failed to spawn flow_server_main thread")
+        .join()
+        .unwrap_or_else(Err);
     match result {
         Ok(()) => {}
         Err(e) => {

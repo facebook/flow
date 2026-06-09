@@ -1762,17 +1762,17 @@ fn relative_lib_path(strip_root: Option<&std::path::Path>, filename: &str) -> St
     use std::path::Path;
     match strip_root {
         Some(root) => {
-            let root_str = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
-            if filename.starts_with(&root_str) {
+            let root_str = files::normalized_root_prefix(root);
+            let normalized_filename = flow_common::sys_utils::normalize_filename_dir_sep(filename);
+            if normalized_filename.starts_with(&root_str) {
                 relative_path(strip_root, filename)
             } else {
-                format!(
-                    "<BUILTINS>{}{}",
-                    std::path::MAIN_SEPARATOR,
-                    Path::new(filename)
+                files::normalized_concat(
+                    "<BUILTINS>",
+                    &Path::new(filename)
                         .file_name()
                         .map(|s| s.to_string_lossy().to_string())
-                        .unwrap_or_default()
+                        .unwrap_or_default(),
                 )
             }
         }

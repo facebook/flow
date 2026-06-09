@@ -48,7 +48,6 @@ fn main(args: &arg_spec::Values) {
         command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
 
     let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
-    let root = root.canonicalize().unwrap_or(root);
     let tmp_dir = temp_dir.unwrap_or_else(|| {
         std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned())
     });

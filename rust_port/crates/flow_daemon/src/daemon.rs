@@ -348,7 +348,9 @@ pub fn name_of_entry<P, I, O>(entry: &Entry<P, I, O>) -> &'static str {
 // on every platform, and avoids the Unix-only `OwnedFd`.
 pub fn fd_of_path(path: &Path) -> File {
     sys_utils::with_umask(0o111, || {
-        if let Some(parent) = path.parent() {
+        if let Some(parent) = path.parent()
+            && !parent.as_os_str().is_empty()
+        {
             sys_utils::mkdir_no_fail(parent)
                 .unwrap_or_else(|e| panic!("fd_of_path: mkdir_no_fail({:?}): {}", parent, e));
         }

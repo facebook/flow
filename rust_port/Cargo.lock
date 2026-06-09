@@ -1021,7 +1021,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "tower-lsp-server",
 ]
 
 [[package]]
@@ -1288,7 +1287,6 @@ dependencies = [
  "lsp-types",
  "serde",
  "serde_json",
- "tower-lsp-server",
 ]
 
 [[package]]
@@ -1323,7 +1321,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "tower-lsp-server",
  "vec1",
 ]
 

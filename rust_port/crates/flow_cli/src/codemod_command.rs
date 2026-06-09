@@ -344,7 +344,7 @@ fn mk_module_system_info(
         }),
         node_resolver_root_relative_dirnames,
         resolves_to_real_path: Box::new(|from, to_real_path| {
-            std::fs::canonicalize(from)
+            flow_common::files::cached_canonicalize(std::path::Path::new(from))
                 .ok()
                 .map(|path| path.to_string_lossy().to_string())
                 == Some(to_real_path.to_string())

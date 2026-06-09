@@ -72,7 +72,10 @@ pub fn get_path(path: &str) -> String {
     } else {
         root_part
     };
-    format!("{}/{}{}", dir, root_part, extension)
+    std::path::Path::new(&dir)
+        .join(format!("{}{}", root_part, extension))
+        .to_string_lossy()
+        .into_owned()
 }
 
 // Initializes a TCP listener on 127.0.0.1:0, writes the assigned port into `sock_name`

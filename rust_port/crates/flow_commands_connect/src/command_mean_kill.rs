@@ -6,7 +6,6 @@
  */
 
 use std::path::Path;
-use std::path::PathBuf;
 use std::process::Command;
 
 use flow_server_files::server_files_js;
@@ -15,29 +14,8 @@ pub enum FailedToKill {
     Message(Option<String>),
 }
 
-fn canonical_root(root: &Path) -> PathBuf {
-    root.canonicalize().unwrap_or_else(|_| root.to_path_buf())
-}
-
-fn server_lock_is_held(lock_path: &str) -> bool {
-    if !Path::new(lock_path).exists() {
-        return false;
-    }
-    let file = match std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(lock_path)
-    {
-        Ok(file) => file,
-        Err(_) => return true,
-    };
-    matches!(file.try_lock(), Err(std::fs::TryLockError::WouldBlock))
-}
-
 pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
-    let root = canonical_root(root);
-    let lock_path = server_files_js::lock_file(flowconfig_name, tmp_dir, &root);
-    server_lock_is_held(&lock_path)
+    crate::command_connect_simple::server_exists(flowconfig_name, tmp_dir, root)
 }
 
 fn server_may_still_be_alive_after_kill(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
@@ -45,8 +23,7 @@ fn server_may_still_be_alive_after_kill(flowconfig_name: &str, tmp_dir: &str, ro
 }
 
 pub fn mean_kill(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> Result<(), FailedToKill> {
-    let root = canonical_root(root);
-    let pids_file = server_files_js::pids_file(flowconfig_name, tmp_dir, &root);
+    let pids_file = server_files_js::pids_file(flowconfig_name, tmp_dir, root);
     let pids = match std::fs::read_to_string(&pids_file) {
         Ok(contents) => contents
             .lines()
@@ -134,7 +111,7 @@ pub fn mean_kill(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> Result<()
 
     std::thread::sleep(std::time::Duration::from_secs(1));
 
-    if server_may_still_be_alive_after_kill(flowconfig_name, tmp_dir, &root) {
+    if server_may_still_be_alive_after_kill(flowconfig_name, tmp_dir, root) {
         return Err(FailedToKill::Message(None));
     }
 

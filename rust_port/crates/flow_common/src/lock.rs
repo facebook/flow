@@ -8,6 +8,8 @@
 use std::collections::HashMap;
 #[cfg(unix)]
 use std::os::unix::fs::MetadataExt;
+#[cfg(windows)]
+use std::os::windows::fs::FileExt;
 use std::path::Path;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicI32;
@@ -106,7 +108,12 @@ fn _operations(lock_file: &str, op: LockOp) -> bool {
         let already_registered = lock_fds_with(|map| map.contains_key(lock_file));
         match (already_registered, Path::new(lock_file).exists()) {
             (false, _) => register_lock(lock_file).map_err(|_| ())?,
-            (true, false) => return Err(()),
+            (true, false) => {
+                #[cfg(not(windows))]
+                {
+                    return Err(());
+                }
+            }
             (true, true) => {
                 #[cfg(unix)]
                 {
@@ -126,8 +133,8 @@ fn _operations(lock_file: &str, op: LockOp) -> bool {
             }
         }
         lock_fds_with(|map| -> Result<(), ()> {
-            let entry = map.get(lock_file).ok_or(())?;
-            apply_lock_op(&entry.file, op).map_err(|_| ())
+            let entry = map.get_mut(lock_file).ok_or(())?;
+            apply_lock_op(entry, op).map_err(|_| ())
         })
     })();
     result.is_ok()
@@ -141,24 +148,44 @@ enum LockOp {
     Test,
 }
 
-fn try_lock_or_test(file: &std::fs::File, op: LockOp) -> std::io::Result<()> {
-    match file.try_lock() {
+fn try_lock_or_test(entry: &mut LockEntry, op: LockOp) -> std::io::Result<()> {
+    // OCaml:
+    // try Unix.lockf fd op 1 with
+    match entry.file.try_lock() {
         Ok(()) => {
             if let LockOp::Test = op {
-                file.unlock()?;
+                entry.file.unlock()?;
             }
             Ok(())
         }
-        Err(err) => normalize_try_lock_error(err),
+        Err(err) => {
+            #[cfg(windows)]
+            if matches!(op, LockOp::TLock | LockOp::Test) {
+                // On Windows, F_TLOCK and F_TEST fail if we have the lock ourself
+                // However, we then are the only one to be able to write there.
+                let wb = entry.file.seek_write(&[b' '], 0)?;
+                if wb == 1 {
+                    return Ok(());
+                }
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::WriteZero,
+                    "failed to verify owned lock",
+                ));
+            }
+            normalize_try_lock_error(err)
+        }
     }
 }
 
-fn apply_lock_op(file: &std::fs::File, op: LockOp) -> std::io::Result<()> {
+fn apply_lock_op(entry: &mut LockEntry, op: LockOp) -> std::io::Result<()> {
     match op {
-        LockOp::TLock => try_lock_or_test(file, op),
-        LockOp::ULock => file.unlock(),
-        LockOp::Lock => file.lock(),
-        LockOp::Test => try_lock_or_test(file, op),
+        LockOp::TLock => try_lock_or_test(entry, op),
+        LockOp::ULock => {
+            // OCaml: Unix.F_ULOCK
+            entry.file.unlock()
+        }
+        LockOp::Lock => entry.file.lock(),
+        LockOp::Test => try_lock_or_test(entry, op),
     }
 }
 

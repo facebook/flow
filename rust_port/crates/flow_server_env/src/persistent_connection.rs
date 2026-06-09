@@ -723,8 +723,9 @@ pub fn client_did_change(
     filename: &str,
     changes: &[lsp_types::TextDocumentContentChangeEvent],
 ) -> Result<(), (String, String)> {
-    invalidate_client_cache_entry(get_id(client), filename, false);
-    with_registry_mut(get_id(client), |entry| {
+    let client_id = get_id(client);
+    invalidate_client_cache_entry(client_id, filename, false);
+    let result = with_registry_mut(client_id, |entry| {
         let Some(content) = entry.opened_files.get(filename) else {
             return Err((
                 format!("File {} wasn't open to change", filename),
@@ -746,7 +747,11 @@ pub fn client_did_change(
             format!("File {} wasn't open to change", filename),
             String::new(),
         ))
-    })
+    });
+    if result.is_ok() {
+        invalidate_client_cache_entry(client_id, filename, false);
+    }
+    result
 }
 
 pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool {

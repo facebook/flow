@@ -1050,6 +1050,16 @@ pub fn expand_builtin_root_token(flowlib_dir: &Path, s: &str) -> String {
     s.replace(BUILTIN_ROOT_TOKEN, &flowlib_dir_str)
 }
 
+pub fn normalized_concat(dir: &str, file: &str) -> String {
+    let path = Path::new(dir).join(file);
+    normalize_filename_dir_sep(&path.to_string_lossy()).into_owned()
+}
+
+pub fn normalized_root_prefix(root: &Path) -> String {
+    let root = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
+    normalize_filename_dir_sep(&root).into_owned()
+}
+
 fn is_windows_root(root: &str) -> bool {
     cfg!(windows)
         && root.len() == 2
@@ -1153,11 +1163,14 @@ fn make_relative(root: &[String], file: &[String]) -> Vec<String> {
 pub fn relative_path(root: &Path, file: &str) -> String {
     let file_path = Path::new(file);
     match file_path.strip_prefix(root) {
-        Ok(relative) => relative.to_string_lossy().into_owned(),
+        Ok(relative) => normalize_filename_dir_sep(&relative.to_string_lossy()).into_owned(),
         Err(_) => {
             // Fallback to component-based relative path computation
-            let root_components = split_path(&root.to_string_lossy());
-            let file_components = split_path(file);
+            let root = root.to_string_lossy();
+            let root = normalize_filename_dir_sep(&root);
+            let file = normalize_filename_dir_sep(file);
+            let root_components = split_path(&root);
+            let file_components = split_path(&file);
             make_relative(&root_components, &file_components).join("/")
         }
     }
@@ -1318,7 +1331,7 @@ pub fn imaginary_realpath(path: &str) -> String {
 
     let mut rev_suffix = Vec::new();
     let real_prefix = find_real_prefix(path, &mut rev_suffix);
-    let abs = std::fs::canonicalize(&real_prefix)
+    let abs = cached_canonicalize(Path::new(&real_prefix))
         .unwrap_or_else(|_| panic!("Realpath failed for existent path {}", real_prefix));
     let abs_str = abs.to_string_lossy().into_owned();
     rev_suffix.iter().fold(abs_str, |acc, part| {
