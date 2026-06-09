@@ -4,6 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# shellcheck disable=SC2144
+
 assert_ok "$FLOW" stop 2> /dev/null > /dev/null
 
 # These are set by runtests.sh
@@ -14,10 +16,9 @@ unset FLOW_MONITOR_LOG_FILE
 echo "--temp-dir:"
 DIR=$(mktemp -d /tmp/flow.XXXXXX)
 assert_ok "$FLOW" start --wait --temp-dir "$DIR" 2> /dev/null > /dev/null
-# The Rust port unifies on TCP-on-loopback for all platforms (matching OCaml's
-# Sys.win32 branch in src/hack_forked/socket/socket.ml), so the sockv2 file is a
-# regular file containing the assigned port instead of a Unix-domain socket.
-if [[ "$OSTYPE" == "msys"* || "${FLOW_RUST_PORT:-0}" -eq 1 ]]; then
+# Windows stores local IPC connection info in a regular sockv2 marker file.
+# Unix creates a Unix-domain socket at the sockv2 path.
+if [[ "$OSTYPE" == "msys"* ]]; then
     [ -f "$DIR"/*.sockv2 ]  && echo "  sockv2 file exists"
 else
     [ -S "$DIR"/*.sockv2 ]  && echo "  sockv2 file exists"
@@ -36,10 +37,9 @@ echo "FLOW_TEMP_DIR:"
 DIR=$(mktemp -d /tmp/flow.XXXXXX)
 export FLOW_TEMP_DIR="$DIR"
 assert_ok "$FLOW" start --wait 2> /dev/null > /dev/null
-# The Rust port unifies on TCP-on-loopback for all platforms (matching OCaml's
-# Sys.win32 branch in src/hack_forked/socket/socket.ml), so the sockv2 file is a
-# regular file containing the assigned port instead of a Unix-domain socket.
-if [[ "$OSTYPE" == "msys"* || "${FLOW_RUST_PORT:-0}" -eq 1 ]]; then
+# Windows stores local IPC connection info in a regular sockv2 marker file.
+# Unix creates a Unix-domain socket at the sockv2 path.
+if [[ "$OSTYPE" == "msys"* ]]; then
     [ -f "$DIR"/*.sockv2 ]  && echo "  sockv2 file exists"
 else
     [ -S "$DIR"/*.sockv2 ]  && echo "  sockv2 file exists"

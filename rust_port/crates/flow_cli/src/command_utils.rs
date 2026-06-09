@@ -3065,7 +3065,7 @@ fn connect_and_make_request_inner(
 ) -> server_prot::response::Response {
     // Sends the command over the socket
     fn send_command(
-        stream: &mut std::net::TcpStream,
+        stream: &mut flow_common_socket::socket::SocketStream,
         cmd: &server_prot::request::Command,
     ) -> Result<(), bincode::error::EncodeError> {
         let command = flow_monitor_rpc::server_command_with_context::ServerCommandWithContext {
@@ -3102,7 +3102,7 @@ fn connect_and_make_request_inner(
 
     // Waits for a response over the socket. If the connection dies, this will throw an exception
     fn wait_for_response(
-        stream: &mut std::net::TcpStream,
+        stream: &mut flow_common_socket::socket::SocketStream,
         quiet: bool,
         emoji: bool,
         _root: &std::path::Path,
@@ -3284,7 +3284,7 @@ fn connect_and_make_request_inner(
     match response {
         Ok(response) => response,
         Err(()) => {
-            flow_commands_connect::command_connect_simple::close_connection(sockaddr);
+            flow_commands_connect::command_connect_simple::close_connection(&sockaddr);
             if !quiet {
                 eprintf_with_spinner(&format!(
                     "Lost connection to the flow server ({} {} remaining)",

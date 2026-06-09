@@ -252,19 +252,19 @@ fn internal_start(
     // open socket, it will block. When a client tries to connect to a not-yet-open
     // socket, it will fail immediately. The blocking behavior is a little nicer
     let monitor_socket_fd =
-        flow_common_socket::socket::init_tcp_socket(&server_files_js::socket_file(
+        flow_common_socket::socket::init_unix_socket(&server_files_js::socket_file(
             &args.flowconfig_name,
             options.temp_dir.as_str(),
             options.root.as_path(),
         ));
     let legacy2_socket_fd =
-        flow_common_socket::socket::init_tcp_socket(&server_files_js::legacy2_socket_file(
+        flow_common_socket::socket::init_unix_socket(&server_files_js::legacy2_socket_file(
             &args.flowconfig_name,
             options.temp_dir.as_str(),
             options.root.as_path(),
         ));
     let legacy1_socket_fd =
-        flow_common_socket::socket::init_tcp_socket(&server_files_js::legacy1_socket_file(
+        flow_common_socket::socket::init_unix_socket(&server_files_js::legacy1_socket_file(
             &args.flowconfig_name,
             options.temp_dir.as_str(),
             options.root.as_path(),

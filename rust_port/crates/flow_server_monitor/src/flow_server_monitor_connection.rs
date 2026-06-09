@@ -27,6 +27,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use bincode::error::DecodeError;
+use flow_common_socket::socket::SocketStream;
 use flow_tokio_runtime::handle;
 use tokio::sync::Notify;
 use tokio::sync::mpsc;
@@ -46,7 +47,7 @@ pub(crate) const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
 // channel. All Flow monitor channels are bincode-framed (OCaml-faithful, matching
 // `Marshal_tools.{from,to}_fd_with_preamble`):
 //   - `BincodeChannel<File, _, _>`: monitor↔server pipe.
-//   - `BincodeChannel<TcpStream, ServerCommandWithContext, MonitorToClientMessage>`:
+//   - `BincodeChannel<SocketStream, ServerCommandWithContext, MonitorToClientMessage>`:
 //     ephemeral CLI socket.
 //   - `PersistentBincodeChannel`: persistent LSP socket. The persistent path layers an outbound
 //     queue on top of bincode reads to match the OCaml LSP poll/queue contract.
@@ -441,17 +442,17 @@ where
     }
 }
 
-// TcpBincodeChannel: used by ephemeral CLI sockets. Each frame is a bincode-serialized value over
-// a TcpStream, matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`.
-pub struct TcpBincodeChannel<I, O>(std::marker::PhantomData<(I, O)>);
+// SocketBincodeChannel: used by ephemeral CLI sockets. Each frame is a bincode-serialized value
+// over a local socket, matching OCaml `Marshal_tools.{from,to}_fd_with_preamble`.
+pub struct SocketBincodeChannel<I, O>(std::marker::PhantomData<(I, O)>);
 
-impl<I, O> Channel for TcpBincodeChannel<I, O>
+impl<I, O> Channel for SocketBincodeChannel<I, O>
 where
     I: Send + Sync + serde::de::DeserializeOwned + 'static,
     O: Send + Sync + serde::Serialize + 'static,
 {
-    type Reader = std::net::TcpStream;
-    type Writer = std::net::TcpStream;
+    type Reader = SocketStream;
+    type Writer = SocketStream;
     type InMessage = I;
     type OutMessage = O;
 
@@ -526,17 +527,17 @@ impl Channel for PersistentBincodeChannel {
 }
 
 pub struct PersistentReader {
-    pub stream: std::net::TcpStream,
+    pub stream: SocketStream,
     pub disconnect: Arc<dyn Fn() + Send + Sync>,
 }
 
 pub struct PersistentWriter {
-    pub stream: std::net::TcpStream,
+    pub stream: SocketStream,
 }
 
 pub struct EphemeralConnectionProcessor;
 impl ConnectionProcessor for EphemeralConnectionProcessor {
-    type Ch = TcpBincodeChannel<
+    type Ch = SocketBincodeChannel<
         flow_server_env::server_command_with_context::ServerCommandWithContext,
         flow_server_env::monitor_prot::MonitorToClientMessage,
     >;

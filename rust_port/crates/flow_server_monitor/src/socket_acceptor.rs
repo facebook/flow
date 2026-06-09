@@ -18,6 +18,8 @@
 // `RequestWithMetadata` / `MessageFromServer`. All bincode-framed.
 use std::sync::Arc;
 
+use flow_common_socket::socket::SocketListener;
+use flow_common_socket::socket::SocketStream;
 use flow_tokio_runtime::handle;
 
 use crate::flow_server_monitor_connection::MAX_FRAME_BYTES;
@@ -109,14 +111,14 @@ impl StatusWriter for PersistentStatusWriter {
 }
 
 fn create_ephemeral_connection(
-    client_stream: std::net::TcpStream,
+    client_stream: SocketStream,
     close: Arc<dyn Fn() + Send + Sync>,
 ) -> Arc<crate::flow_server_monitor_connection::EphemeralConnection> {
     flow_hh_logger::debug!("Creating a new ephemeral connection");
 
     let read_stream = client_stream
         .try_clone()
-        .expect("clone of TcpStream for read failed");
+        .expect("clone of socket stream for read failed");
     let write_stream = client_stream;
 
     let close_for_create = close.clone();
@@ -187,7 +189,7 @@ fn create_persistent_id() -> i32 {
 }
 
 fn create_persistent_connection(
-    client_stream: std::net::TcpStream,
+    client_stream: SocketStream,
     close: Arc<dyn Fn() + Send + Sync>,
     lsp_init_params: lsp_types::InitializeParams,
 ) {
@@ -209,7 +211,7 @@ fn create_persistent_connection(
 
     let writer_stream = client_stream
         .try_clone()
-        .expect("clone of TcpStream for persistent writer failed");
+        .expect("clone of socket stream for persistent writer failed");
     let reader = crate::flow_server_monitor_connection::PersistentReader {
         stream: client_stream,
         disconnect,
@@ -290,10 +292,10 @@ fn create_persistent_connection(
 // To be perfectly honest, it's not clear whether the SHUTDOWN_BOTH is really needed. I mean,
 // shutdown is useful to shutdown one direction of the socket, but if you're about to close
 // it, does shutting down first actually make any difference?
-fn close(client_stream: std::net::TcpStream) {
+fn close(client_stream: SocketStream) {
     flow_hh_logger::debug!("Shutting down and closing a socket client stream");
 
-    match client_stream.shutdown(std::net::Shutdown::Both) {
+    match client_stream.shutdown() {
         Ok(()) => {}
         Err(err) => match err.kind() {
             std::io::ErrorKind::NotConnected | std::io::ErrorKind::ConnectionReset => {}
@@ -306,7 +308,7 @@ fn close(client_stream: std::net::TcpStream) {
 // Well...I mean this is a pretty descriptive function name. It performs the handshake and then
 // returns the client's side of the handshake.
 fn perform_handshake_and_get_client_handshake(
-    client_stream: &mut std::net::TcpStream,
+    client_stream: &mut SocketStream,
 ) -> Option<flow_server_env::socket_handshake::ClientToMonitor2> {
     use flow_server_env::socket_handshake::*;
 
@@ -378,7 +380,7 @@ fn perform_handshake_and_get_client_handshake(
     // Handshake step 2: server sends back handshake (bincode-framed, OCaml-faithful).
     let server_bin_for_respond = server_bin.clone();
     let server_build_id_for_respond = server_build_id.clone();
-    let respond = |stream: &mut std::net::TcpStream,
+    let respond = |stream: &mut SocketStream,
                    server_intent: ServerIntent,
                    server2: Option<MonitorToClient2>| {
         assert!(server2.is_none() || client_build_id == server_build_id_for_respond);
@@ -509,14 +511,14 @@ fn perform_handshake_and_get_client_handshake(
 }
 
 pub trait Handler {
-    fn create_socket_connection(autostop: bool, client_stream: std::net::TcpStream);
+    fn create_socket_connection(autostop: bool, client_stream: SocketStream);
     fn name() -> &'static str;
 }
 
-fn socket_acceptor_loop<H: Handler>(autostop: bool, listener: std::net::TcpListener) {
+fn socket_acceptor_loop<H: Handler>(autostop: bool, mut listener: SocketListener) {
     loop {
         flow_hh_logger::debug!("Waiting for a new {}", H::name());
-        let (client_stream, _addr) = match listener.accept() {
+        let client_stream = match listener.accept() {
             Ok(c) => c,
             Err(e) => {
                 flow_hh_logger::error!("Uncaught exception in the socket acceptor: {}", e);
@@ -524,7 +526,7 @@ fn socket_acceptor_loop<H: Handler>(autostop: bool, listener: std::net::TcpListe
             }
         };
         if let Err(e) = client_stream.set_nodelay(true) {
-            flow_hh_logger::error!("Failed to set TCP_NODELAY on {}: {}", H::name(), e);
+            flow_hh_logger::error!("Failed to configure {}: {}", H::name(), e);
         }
 
         H::create_socket_connection(autostop, client_stream);
@@ -565,7 +567,7 @@ impl Handler for MonitorSocketHandler {
         "socket connection"
     }
 
-    fn create_socket_connection(autostop: bool, mut client_stream: std::net::TcpStream) {
+    fn create_socket_connection(autostop: bool, mut client_stream: SocketStream) {
         // Autostop is meant to be "edge-triggered", i.e. when we transition
         // from 1 connections to 0 connections then it might stop the server.
         // But when an attempt to connect has failed, we need to close without
@@ -573,7 +575,7 @@ impl Handler for MonitorSocketHandler {
         let close_stream_slot = std::sync::Arc::new(std::sync::Mutex::new(Some(
             client_stream
                 .try_clone()
-                .expect("clone of TcpStream failed"),
+                .expect("clone of socket stream failed"),
         )));
         let close_stream_for_close = close_stream_slot.clone();
         let close_without_autostop: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
@@ -615,7 +617,7 @@ impl Handler for MonitorSocketHandler {
     }
 }
 
-pub fn run(monitor_socket_listener: std::net::TcpListener, autostop: bool) {
+pub fn run(monitor_socket_listener: SocketListener, autostop: bool) {
     socket_acceptor_loop::<MonitorSocketHandler>(autostop, monitor_socket_listener);
 }
 
@@ -625,7 +627,7 @@ impl Handler for LegacySocketHandler {
         "legacy socket connection"
     }
 
-    fn create_socket_connection(_autostop: bool, client_stream: std::net::TcpStream) {
+    fn create_socket_connection(_autostop: bool, client_stream: SocketStream) {
         close(client_stream);
         let msg = "Client and server are different builds. Flow server is out of date. Exiting";
         flow_hh_logger::error!("{}", msg);
@@ -633,6 +635,6 @@ impl Handler for LegacySocketHandler {
     }
 }
 
-pub fn run_legacy(legacy_socket_listener: std::net::TcpListener) {
+pub fn run_legacy(legacy_socket_listener: SocketListener) {
     socket_acceptor_loop::<LegacySocketHandler>(false, legacy_socket_listener);
 }

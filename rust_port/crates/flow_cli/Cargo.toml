@@ -28,6 +28,7 @@ flow_common_exit = { path = "../flow_common_exit" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_common_modulename = { path = "../flow_common_modulename" }
 flow_common_semver = { path = "../flow_common_semver" }
+flow_common_socket = { path = "../flow_common_socket" }
 flow_common_ty = { path = "../flow_common_ty" }
 flow_common_utils = { path = "../flow_common_utils" }
 flow_common_vcs = { path = "../flow_common_vcs" }

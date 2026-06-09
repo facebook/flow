@@ -12,6 +12,7 @@ flow_commands_connect = { path = "../flow_commands_connect" }
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_common_semver = { path = "../flow_common_semver" }
+flow_common_socket = { path = "../flow_common_socket" }
 flow_config = { path = "../flow_config" }
 flow_event_logger = { path = "../flow_event_logger" }
 flow_event_logger_lwt = { path = "../flow_event_logger_lwt" }

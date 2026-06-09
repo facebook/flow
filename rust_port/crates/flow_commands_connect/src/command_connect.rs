@@ -6,13 +6,13 @@
  */
 
 use std::io::Write;
-use std::net::SocketAddr;
-use std::net::TcpStream;
 use std::path::Path;
 use std::time::Duration;
 use std::time::Instant;
 
 use flow_common::flow_version;
+use flow_common_socket::socket::Addr;
+use flow_common_socket::socket::SocketStream;
 use flow_server_env::socket_handshake;
 
 use crate::command_connect_simple as CCS;
@@ -143,7 +143,7 @@ struct RetryInfo {
 
 fn reset_retries_if_necessary(
     retries: &mut RetryInfo,
-    conn: &Result<(SocketAddr, TcpStream), CCSError>,
+    conn: &Result<(Addr, SocketStream), CCSError>,
 ) {
     match conn {
         Err(CCSError::ServerBusy(BusyReason::FailOnInit(..))) => {
@@ -178,7 +178,7 @@ fn connect_rec(
     env: &Env,
     client_handshake: &socket_handshake::ClientHandshake,
     retries: &mut RetryInfo,
-) -> (SocketAddr, TcpStream) {
+) -> (Addr, SocketStream) {
     if retries.retries_remaining < 0 {
         eprintln!("\nOut of retries, exiting!");
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::OutOfRetries);
@@ -328,7 +328,7 @@ fn handle_missing_server(
     env: &Env,
     client_handshake: &socket_handshake::ClientHandshake,
     retries: &mut RetryInfo,
-) -> (SocketAddr, TcpStream) {
+) -> (Addr, SocketStream) {
     if env.autostart {
         if !env.quiet {
             eprintln!("Launching Flow server for {}", env.root.display());
@@ -382,7 +382,7 @@ fn handle_missing_server(
 pub fn connect(
     env: &Env,
     client_handshake: &socket_handshake::ClientHandshake,
-) -> (SocketAddr, TcpStream) {
+) -> (Addr, SocketStream) {
     let mut retries = RetryInfo {
         retries_remaining: env.retries,
         original_retries: env.retries,

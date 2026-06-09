@@ -473,6 +473,7 @@ dependencies = [
  "flow_common_exit_status",
  "flow_common_modulename",
  "flow_common_semver",
+ "flow_common_socket",
  "flow_common_ty",
  "flow_common_utils",
  "flow_common_vcs",
@@ -674,8 +675,12 @@ version = "0.0.0"
 name = "flow_common_socket"
 version = "0.0.0"
 dependencies = [
+ "flow_common",
  "flow_common_exit_status",
+ "flow_tokio_runtime",
  "md-5",
+ "socket2",
+ "tokio",
 ]
 
 [[package]]
@@ -1005,6 +1010,7 @@ dependencies = [
  "flow_common",
  "flow_common_exit_status",
  "flow_common_semver",
+ "flow_common_socket",
  "flow_config",
  "flow_event_logger",
  "flow_event_logger_lwt",

@@ -6,11 +6,11 @@
  */
 
 use std::collections::BTreeMap;
-use std::net::SocketAddr;
-use std::net::TcpStream;
 use std::path::Path;
 use std::sync::Mutex;
 
+use flow_common_socket::socket::Addr;
+use flow_common_socket::socket::SocketStream;
 use flow_server_env::file_watcher_status;
 use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
@@ -78,7 +78,7 @@ pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool 
     matches!(file.try_lock(), Err(std::fs::TryLockError::WouldBlock))
 }
 
-fn wait_on_server_restart(stream: &mut TcpStream) {
+fn wait_on_server_restart(stream: &mut SocketStream) {
     use std::io::Read;
     let mut buf = [0u8; 1];
     loop {
@@ -90,7 +90,7 @@ fn wait_on_server_restart(stream: &mut TcpStream) {
     }
 }
 
-type SockMap = BTreeMap<SocketAddr, TcpStream>;
+type SockMap = BTreeMap<Addr, SocketStream>;
 
 // We used to open a new connection every time we tried to connect to a socket
 // and then shut it down if the connection failed or timed out. However on OSX
@@ -111,25 +111,24 @@ where
 fn open_connection(
     timeout: u64,
     client_handshake: &socket_handshake::ClientHandshake,
-    sockaddr: SocketAddr,
-) -> Result<TcpStream, ConnectExn> {
+    sockaddr: Addr,
+) -> Result<SocketStream, ConnectExn> {
     let existing = with_connections(|conns| conns.get(&sockaddr).and_then(|s| s.try_clone().ok()));
     if let Some(conn) = existing {
         return Ok(conn);
     }
-    let mut conn =
-        match TcpStream::connect_timeout(&sockaddr, std::time::Duration::from_secs(timeout)) {
-            Ok(conn) => conn,
-            Err(e) => {
-                return Err(match e.kind() {
-                    std::io::ErrorKind::NotFound => ConnectExn::MissingSocket,
-                    std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => {
-                        ConnectExn::Timeout
-                    }
-                    _ => ConnectExn::Other,
-                });
-            }
-        };
+    let mut conn = match SocketStream::connect(&sockaddr, std::time::Duration::from_secs(timeout)) {
+        Ok(conn) => conn,
+        Err(e) => {
+            return Err(match e.kind() {
+                std::io::ErrorKind::NotFound => ConnectExn::MissingSocket,
+                std::io::ErrorKind::TimedOut | std::io::ErrorKind::WouldBlock => {
+                    ConnectExn::Timeout
+                }
+                _ => ConnectExn::Other,
+            });
+        }
+    };
     conn.set_nodelay(true).map_err(|_| ConnectExn::Other)?;
     // It's important that we only write this once per connection.
     //
@@ -165,12 +164,12 @@ fn open_connection(
     Ok(conn)
 }
 
-pub fn close_connection(sockaddr: SocketAddr) {
+pub fn close_connection(sockaddr: &Addr) {
     with_connections(|conns| {
-        if let Some(stream) = conns.remove(&sockaddr) {
+        if let Some(stream) = conns.remove(sockaddr) {
             // OCaml: try Timeout.shutdown_connection ic with | _ -> ()
             // Errors from shutdown are intentionally ignored.
-            match stream.shutdown(std::net::Shutdown::Both) {
+            match stream.shutdown() {
                 Ok(()) | Err(_) => (),
             }
         }
@@ -183,18 +182,17 @@ fn establish_connection(
     client_handshake: &socket_handshake::ClientHandshake,
     tmp_dir: &str,
     root: &Path,
-) -> Result<(SocketAddr, TcpStream), ConnectExn> {
-    let socket_path = flow_common_socket::socket::get_path(&server_files_js::socket_file(
+) -> Result<(Addr, SocketStream), ConnectExn> {
+    let sockaddr = flow_common_socket::socket::addr_for_open(&server_files_js::socket_file(
         flowconfig_name,
         tmp_dir,
         root,
-    ));
-
-    let port_str = std::fs::read_to_string(&socket_path).map_err(|_| ConnectExn::Other)?;
-    let port: u16 = port_str.trim().parse().map_err(|_| ConnectExn::Other)?;
-
-    let sockaddr = SocketAddr::from(([127, 0, 0, 1], port));
-    let stream = open_connection(timeout, client_handshake, sockaddr)?;
+    ))
+    .map_err(|e| match e.kind() {
+        std::io::ErrorKind::NotFound => ConnectExn::MissingSocket,
+        _ => ConnectExn::Other,
+    })?;
+    let stream = open_connection(timeout, client_handshake, sockaddr.clone())?;
 
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
@@ -208,9 +206,9 @@ fn establish_connection(
 
 fn get_handshake(
     timeout: u64,
-    sockaddr: SocketAddr,
-    stream: &mut TcpStream,
-) -> Result<(SocketAddr, socket_handshake::ServerHandshake), ConnectExn> {
+    sockaddr: Addr,
+    stream: &mut SocketStream,
+) -> Result<(Addr, socket_handshake::ServerHandshake), ConnectExn> {
     stream
         .set_read_timeout(Some(std::time::Duration::from_secs(timeout)))
         .map_err(|_| ConnectExn::Other)?;
@@ -228,13 +226,13 @@ fn get_handshake(
                 return ConnectExn::Timeout;
             }
         }
-        close_connection(sockaddr);
+        close_connection(&sockaddr);
         ConnectExn::Other
     })?;
     let server1_json: serde_json::Value =
         serde_json::from_str(&wire.0).map_err(|_| ConnectExn::Other)?;
     let server1 = socket_handshake::json_to_monitor_to_client_1(&server1_json).map_err(|_| {
-        close_connection(sockaddr);
+        close_connection(&sockaddr);
         ConnectExn::Other
     })?;
     // Server invariant: it only sends us snd=Some if it knows client+server versions match.
@@ -243,7 +241,7 @@ fn get_handshake(
         Some(bytes) => match serde_json::from_slice::<socket_handshake::MonitorToClient2>(bytes) {
             Ok(s) => Some(s),
             Err(_) => {
-                close_connection(sockaddr);
+                close_connection(&sockaddr);
                 return Err(ConnectExn::Other);
             }
         },
@@ -256,21 +254,21 @@ fn get_handshake(
 fn verify_handshake(
     client_handshake: &socket_handshake::ClientHandshake,
     server_handshake: &socket_handshake::ServerHandshake,
-    sockaddr: SocketAddr,
-    stream: &mut TcpStream,
+    sockaddr: Addr,
+    stream: &mut SocketStream,
 ) -> Result<Result<(), CCSError>, MonitorMisbehaved> {
     let (client1, _client2) = client_handshake;
     let (server1, server2) = server_handshake;
     // First, let's close the connection as needed
     match &server1.server_intent {
         socket_handshake::ServerIntent::ServerWillContinue => {}
-        socket_handshake::ServerIntent::ServerWillHangup => close_connection(sockaddr),
+        socket_handshake::ServerIntent::ServerWillHangup => close_connection(&sockaddr),
         socket_handshake::ServerIntent::ServerWillExit => {
             // If the server will exit shortly, we wouldn't want subsequent connection
             // attempts on the Unix Domain Socket to succeed (only to be doomed to failure).
             // To avoid that fate, we'll wait for the connection to be closed.
             wait_on_server_restart(stream);
-            match stream.shutdown(std::net::Shutdown::Both) {
+            match stream.shutdown() {
                 Ok(()) | Err(_) => (),
             }
         }
@@ -331,12 +329,12 @@ pub fn connect_once(
     client_handshake: &socket_handshake::ClientHandshake,
     tmp_dir: &str,
     root: &Path,
-) -> Result<(SocketAddr, TcpStream), CCSError> {
+) -> Result<(Addr, SocketStream), CCSError> {
     enum BroadCatch {
         MissingSocket,
         TimeoutOrOther,
     }
-    let inner = || -> Result<Result<(SocketAddr, TcpStream), CCSError>, BroadCatch> {
+    let inner = || -> Result<Result<(Addr, SocketStream), CCSError>, BroadCatch> {
         let (sockaddr, mut stream) =
             establish_connection(flowconfig_name, 1, client_handshake, tmp_dir, root).map_err(
                 |e| match e {
@@ -349,7 +347,12 @@ pub fn connect_once(
                 ConnectExn::MissingSocket => BroadCatch::MissingSocket,
                 ConnectExn::Timeout | ConnectExn::Other => BroadCatch::TimeoutOrOther,
             })?;
-        match verify_handshake(client_handshake, &server_handshake, sockaddr, &mut stream) {
+        match verify_handshake(
+            client_handshake,
+            &server_handshake,
+            sockaddr.clone(),
+            &mut stream,
+        ) {
             Ok(Ok(())) => Ok(Ok((sockaddr, stream))),
             Ok(Err(ccs_err)) => Ok(Err(ccs_err)),
             // OCaml: `failwith ...` raised inside `verify_handshake`, caught by `| _ ->`.

@@ -1022,7 +1022,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `with_addr`
       - [x] `get_path`
       - [x] `addr_for_open`
-      - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_tcp_socket`
+      - [x] `init_unix_socket` → `flow_common_socket/src/socket.rs::init_unix_socket`
   - [x] stubs/
     - [x] logging/
       - [x] common/

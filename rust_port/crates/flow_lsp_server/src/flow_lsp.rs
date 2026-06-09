@@ -10,8 +10,6 @@ use std::collections::HashSet;
 use std::fmt;
 use std::io;
 use std::io::Write as _;
-use std::net::Shutdown;
-use std::net::TcpStream;
 use std::str::FromStr as _;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -19,6 +17,8 @@ use std::time::Duration;
 use crossbeam::channel::Receiver;
 use crossbeam::channel::TryRecvError;
 use flow_common_exit_status::FlowExitStatus;
+use flow_common_socket::socket::Addr;
+use flow_common_socket::socket::SocketStream;
 
 pub type FilePath = std::path::PathBuf;
 use flow_server_env::file_watcher_status;
@@ -111,7 +111,8 @@ pub type WrappedMap<V> = HashMap<WrappedId, V>;
 
 pub struct ServerConn {
     pub client_id: lsp_prot::ClientId,
-    pub stream: Mutex<TcpStream>,
+    pub sockaddr: Addr,
+    pub stream: Mutex<SocketStream>,
     pub incoming: Mutex<Receiver<io::Result<lsp_prot::MessageFromServer>>>,
 }
 
@@ -431,7 +432,7 @@ fn classify_persistent_connect(
         &tmp_dir,
         &env.d_ienv.i_root,
     );
-    let (_sockaddr, stream) = match conn_result {
+    let (sockaddr, stream) = match conn_result {
         Ok((sockaddr, stream)) => (sockaddr, stream),
         Err(flow_commands_connect::command_connect_simple::CCSError::ServerMissing) => {
             return Err(ConnectError::ServerMissing);
@@ -511,6 +512,7 @@ fn classify_persistent_connect(
     let client_id = env.d_ienv.i_server_id + 1;
     Ok(ServerConn {
         client_id,
+        sockaddr,
         stream: Mutex::new(stream),
         incoming: Mutex::new(receiver),
     })
@@ -2012,10 +2014,11 @@ fn show_disconnected(
 
 fn close_conn(env: &ConnectedEnv) {
     if let Ok(stream) = env.c_conn.stream.lock() {
-        match stream.shutdown(Shutdown::Both) {
+        match stream.shutdown() {
             Ok(()) | Err(_) => (),
         }
     }
+    flow_commands_connect::command_connect_simple::close_connection(&env.c_conn.sockaddr);
 }
 
 fn track_to_server(
