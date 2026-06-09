@@ -1217,25 +1217,23 @@ let file_watcher_flag prev =
       ("watchman", FlowConfig.Watchman);
     ]
   in
-  let options =
+  let options = base_options @ [("edenfs", FlowConfig.EdenFS)] in
+  let watcher_names =
+    "none, dfind, watchman"
+    ^
     if Edenfs_watcher.is_available () then
-      base_options @ [("edenfs", FlowConfig.EdenFS)]
+      ", edenfs"
     else
-      base_options
+      ""
   in
   prev
   |> flag
        "--file-watcher"
        (enum options)
        ~doc:
-         ("Which file watcher Flow should use (none, dfind, watchman"
-         ^ ( if Edenfs_watcher.is_available () then
-             ", edenfs"
-           else
-             ""
-           )
-         ^ "). "
-         ^ "Flow will ignore file system events if this is set to none. (default: dfind)"
+         ("Which file watcher Flow should use ("
+         ^ watcher_names
+         ^ "). Flow will ignore file system events if this is set to none. (default: dfind)"
          )
   |> flag
        "--file-watcher-debug"
@@ -2126,25 +2124,29 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
     let watchman_fallback =
       { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
     in
-    (* Watchman natively defers during hg operations via Defer_changes subscribe mode.
-       EdenFS requires explicit state names, so we hardcode the hg states here. *)
-    let edenfs_defer_states = ["hg.update"; "hg.transaction"] @ defer_states in
-    FlowServerMonitorOptions.EdenFS
-      {
-        FlowServerMonitorOptions.edenfs_debug = file_watcher_debug;
-        edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
-        edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
-        edenfs_defer_states;
-        edenfs_max_commit_distance =
-          (match Sys.getenv_opt "FLOW_EDENFS_MAX_COMMIT_DISTANCE" with
-          | Some v ->
-            (try int_of_string v with
-            | Failure _ -> 0)
-          | None -> FlowConfig.file_watcher_edenfs_max_commit_distance flowconfig);
-        edenfs_force_subprocess_mergebase =
-          FlowConfig.file_watcher_edenfs_subprocess_mergebase flowconfig;
-        edenfs_watchman_fallback = watchman_fallback;
-      }
+    if not (Edenfs_watcher.is_available ()) then
+      FlowServerMonitorOptions.Watchman watchman_fallback
+    else begin
+      (* Watchman natively defers during hg operations via Defer_changes subscribe mode.
+         EdenFS requires explicit state names, so we hardcode the hg states here. *)
+      let edenfs_defer_states = ["hg.update"; "hg.transaction"] @ defer_states in
+      FlowServerMonitorOptions.EdenFS
+        {
+          FlowServerMonitorOptions.edenfs_debug = file_watcher_debug;
+          edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
+          edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
+          edenfs_defer_states;
+          edenfs_max_commit_distance =
+            (match Sys.getenv_opt "FLOW_EDENFS_MAX_COMMIT_DISTANCE" with
+            | Some v ->
+              (try int_of_string v with
+              | Failure _ -> 0)
+            | None -> FlowConfig.file_watcher_edenfs_max_commit_distance flowconfig);
+          edenfs_force_subprocess_mergebase =
+            FlowConfig.file_watcher_edenfs_subprocess_mergebase flowconfig;
+          edenfs_watchman_fallback = watchman_fallback;
+        }
+    end
 
 let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =
   match mergebase_with with

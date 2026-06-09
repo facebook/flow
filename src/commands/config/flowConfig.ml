@@ -737,12 +737,8 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
   let file_watcher_parser =
-    let base_options = [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] in
     let options =
-      if Edenfs_watcher.is_available () then
-        base_options @ [("edenfs", EdenFS)]
-      else
-        base_options
+      [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman); ("edenfs", EdenFS)]
     in
     enum options (fun opts v -> Ok { opts with file_watcher = Some v })
 
