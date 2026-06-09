@@ -132,6 +132,11 @@ fn _operations(lock_file: &str, op: LockOp) -> bool {
                 }
             }
         }
+        // F_TEST checks whether the lock is available without acquiring or
+        // releasing a lock this process already owns.
+        if already_registered && matches!(op, LockOp::Test) {
+            return Ok(());
+        }
         lock_fds_with(|map| -> Result<(), ()> {
             let entry = map.get_mut(lock_file).ok_or(())?;
             apply_lock_op(entry, op).map_err(|_| ())

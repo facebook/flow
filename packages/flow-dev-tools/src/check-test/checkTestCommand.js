@@ -70,6 +70,13 @@ cross-platform Node.js runner. This replaces runtests.sh.`;
         description: 'Run a specific test (equivalent to filter "^TEST_NAME$")',
         aliases: ['t'],
       },
+      {
+        type: 'string',
+        name: 'run-test',
+        argName: 'TEST_NAME',
+        description:
+          'Run a specific test. Alias for Buck/TPX test harness compatibility.',
+      },
       commonFlags.parallelism,
       {
         type: 'boolean',
@@ -119,6 +126,12 @@ cross-platform Node.js runner. This replaces runtests.sh.`;
         description: 'List tests that will be run',
         aliases: ['l'],
       },
+      {
+        type: 'boolean',
+        name: 'list-tests',
+        description:
+          'List tests that will be run. Alias for Buck/TPX test harness compatibility.',
+      },
     ];
   }
 
@@ -130,8 +143,9 @@ cross-platform Node.js runner. This replaces runtests.sh.`;
 
     // Handle specific test (-t) as filter
     let filter = argv.filter || null;
-    if (argv.test) {
-      let testName = argv.test;
+    const test = argv.test || argv['run-test'];
+    if (test) {
+      let testName = test;
       // Strip suffixes like -saved-state or -long-lived-workers
       if (argv['saved-state']) {
         testName = testName.replace(/-saved-state$/, '');
@@ -161,7 +175,7 @@ cross-platform Node.js runner. This replaces runtests.sh.`;
       quiet: Boolean(argv.quiet) || jsonOutput,
       verbose: Boolean(argv.verbose),
       jsonOutput,
-      listTests: Boolean(argv.list),
+      listTests: Boolean(argv.list) || Boolean(argv['list-tests']),
     };
   }
 

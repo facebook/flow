@@ -13,6 +13,7 @@ const {readdirSync, statSync, existsSync, readFileSync} = require('fs');
 const {join, resolve, basename} = require('path');
 const {format} = require('util');
 
+const {parseTestConfig} = require('./checkTestConfig');
 const {
   runOneTest,
   RUNTEST_SUCCESS,
@@ -56,6 +57,60 @@ function useColor(): boolean {
 
 function color(code: string): string {
   return useColor() ? code : '';
+}
+
+async function shouldListTest(
+  testDir: string,
+  opts: {
+    checkOnly: boolean,
+    savedState: boolean,
+    ...
+  },
+): Promise<boolean> {
+  const {checkOnly, savedState} = opts;
+  const name = basename(testDir);
+  const rustPort = (process.env.FLOW_RUST_PORT || '0') === '1';
+
+  if (
+    process.platform === 'win32' &&
+    (name === 'symlink' || name === 'node_tests')
+  ) {
+    return false;
+  }
+
+  let expFileName = name + '.exp';
+  if (rustPort && existsSync(join(testDir, name + '.exp.rust_port'))) {
+    expFileName = name + '.exp.rust_port';
+  }
+
+  const hasExpFile = existsSync(join(testDir, expFileName));
+  const hasFlowconfig = existsSync(join(testDir, '.flowconfig'));
+  const hasTestconfig = existsSync(join(testDir, '.testconfig'));
+  if (!hasExpFile || (!hasFlowconfig && !hasTestconfig)) {
+    return !(name === 'auxiliary' || name === 'callable');
+  }
+
+  const config = await parseTestConfig(testDir);
+  if (savedState && config.skip_saved_state) {
+    return false;
+  }
+  if (!savedState && config.saved_state_only) {
+    return false;
+  }
+  if (!process.env.FLOW_GIT_BINARY && config.git) {
+    return false;
+  }
+  if (rustPort && config.skip_rust_port) {
+    return false;
+  }
+  if (process.platform === 'win32' && config.skip_windows) {
+    return false;
+  }
+  if (checkOnly && config.cmd.trim() !== 'full-check') {
+    return false;
+  }
+
+  return true;
 }
 
 async function checkTestRunner(args: RunnerArgs): Promise<void> {
@@ -110,20 +165,6 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
     );
   }
 
-  // Get version
-  let version: string;
-  try {
-    version = String(
-      execFileSync(bin, ['version', '--semver'], {encoding: 'utf8'}),
-    ).trim();
-  } catch (e) {
-    process.stderr.write(
-      format('Failed to get Flow version from %s: %s\n', bin, e.message),
-    );
-    process.exit(1);
-    return; // unreachable, for flow
-  }
-
   // Discover test directories
   const testsDirResolved = resolve(testsDir);
   let testDirs: Array<string>;
@@ -167,7 +208,13 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
 
   // List mode
   if (listTests) {
+    const listedTestDirs = [];
     for (const dir of testDirs) {
+      if (await shouldListTest(dir, {checkOnly, savedState})) {
+        listedTestDirs.push(dir);
+      }
+    }
+    for (const dir of listedTestDirs) {
       let name = basename(dir);
       if (savedState) {
         name += '-saved-state';
@@ -177,6 +224,20 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
       process.stdout.write(name + '\n');
     }
     return;
+  }
+
+  // Get version
+  let version: string;
+  try {
+    version = String(
+      execFileSync(bin, ['version', '--semver'], {encoding: 'utf8'}),
+    ).trim();
+  } catch (e) {
+    process.stderr.write(
+      format('Failed to get Flow version from %s: %s\n', bin, e.message),
+    );
+    process.exit(1);
+    return; // unreachable, for flow
   }
 
   if (!quiet) {
@@ -335,7 +396,7 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
         errored++;
         if (jsonOutput) {
           jsonMap[testName] = false;
-        } else if (!quiet) {
+        } else {
           process.stdout.write(
             format(
               '%s[✗] ERRORED:%s %s%s\n',
@@ -355,7 +416,7 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
         errored++;
         if (jsonOutput) {
           jsonMap[testName] = false;
-        } else if (!quiet) {
+        } else {
           process.stdout.write(
             format(
               '%s[✗] ERRORED:%s %s%s\n',
@@ -376,7 +437,7 @@ async function checkTestRunner(args: RunnerArgs): Promise<void> {
         errored++;
         if (jsonOutput) {
           jsonMap[testName] = false;
-        } else if (!quiet) {
+        } else {
           process.stdout.write(
             format(
               '%s[✗] ERRORED:%s %s%s\n',
