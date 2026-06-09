@@ -23,7 +23,6 @@ flow_config = { path = "../flow_config" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_event_logger = { path = "../flow_event_logger" }
 flow_heap = { path = "../flow_heap" }
-flow_heap_serialization = { path = "../flow_heap_serialization" }
 flow_hh_logger = { path = "../flow_hh_logger" }
 flow_imports_exports = { path = "../flow_imports_exports" }
 flow_lazy = { path = "../flow_lazy" }

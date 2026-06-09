@@ -1193,11 +1193,13 @@ pub(crate) fn file_options_of_flowconfig(
     root: &Path,
     flowconfig: &FlowConfig,
 ) -> Arc<flow_common::files::FileOptions> {
+    let temp_dir = flow_server_files::server_files_js::default_temp_dir();
+    let temp_dir = temp_dir.canonicalize().unwrap_or(temp_dir);
     file_options(
         flowconfig,
         root,
         true,
-        flow_server_files::server_files_js::default_temp_dir().as_path(),
+        temp_dir.as_path(),
         vec![],
         vec![],
         vec![],
@@ -2193,7 +2195,14 @@ pub(super) fn make_options(
         declarations: declarations_override,
     } = flowconfig_flags;
 
-    let temp_dir = get_temp_dir(&temp_dir_override);
+    let temp_dir = {
+        let temp_dir = get_temp_dir(&temp_dir_override);
+        std::path::Path::new(&temp_dir)
+            .canonicalize()
+            .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir))
+            .to_string_lossy()
+            .to_string()
+    };
 
     let all = all_override || all.unwrap_or(false);
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
@@ -3304,7 +3313,10 @@ pub(crate) fn connect_and_make_request(
     // contain File_key.t values with relative suffixes; to_string needs
     // the roots to reconstruct absolute paths.
     flow_parser::file_key::set_project_root(&root.to_string_lossy());
-    let temp_dir = std::path::PathBuf::from(get_temp_dir(&connect_flags.temp_dir));
+    let temp_dir_string = get_temp_dir(&connect_flags.temp_dir);
+    let temp_dir = std::path::Path::new(&temp_dir_string)
+        .canonicalize()
+        .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir_string));
     match flow_flowlib::libdir(false, &temp_dir) {
         flow_flowlib::LibDir::Prelude(ref path) => {
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());

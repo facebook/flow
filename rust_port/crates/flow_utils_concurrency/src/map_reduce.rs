@@ -10,6 +10,7 @@
 //! Provides a flexible map-reduce framework inspired by OCaml's MultiWorkerLwt.fold,
 //! with support for batching to reduce lock contention and streaming work distribution.
 
+use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -640,7 +641,7 @@ where
 ///
 /// // Will create batches of size 2: ["a.js", "b.js"], ["c.js", "d.js"]
 /// ```
-pub fn make_next<W: Clone + Send + Sync + 'static>(
+pub fn make_next<W: Send + 'static>(
     num_workers: usize,
     progress_fn: Option<impl Fn(i32, i32, i32) + Send + Sync + 'static>,
     max_size: Option<usize>,
@@ -656,26 +657,24 @@ pub fn make_next<W: Clone + Send + Sync + 'static>(
         max_size
     };
 
-    let items = Arc::new(work_items);
-    let index = Arc::new(Mutex::new(0));
+    let items = Arc::new(Mutex::new((VecDeque::from(work_items), 0)));
     let total = num_jobs as i32;
 
     move || {
-        let mut idx = index.lock();
+        let mut items = items.lock();
+        let (ref mut items, ref mut index) = *items;
 
-        if *idx >= items.len() {
+        if items.is_empty() {
             return Bucket::Done;
         }
 
-        let end = (*idx + bucket_size).min(items.len());
-        let length = (end - *idx) as i32;
+        let length = bucket_size.min(items.len());
         if let Some(ref progress_fn) = progress_fn {
-            progress_fn(total, *idx as i32, length);
+            progress_fn(total, *index as i32, length as i32);
         }
-        let batch = items[*idx..end].to_vec();
-        *idx = end;
+        *index += length;
 
-        Bucket::Job(batch)
+        Bucket::Job(items.drain(..length).collect())
     }
 }
 

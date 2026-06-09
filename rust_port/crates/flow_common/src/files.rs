@@ -536,9 +536,10 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
     match &options.default_lib_dir {
         None => false,
         Some(libdir) => {
-            let root = match libdir {
+            let root_path = match libdir {
                 LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
             };
+            let root = cached_canonicalize(root_path).unwrap_or_else(|_| root_path.clone());
             is_prefix(&root.to_string_lossy(), path)
         }
     }

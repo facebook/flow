@@ -23,10 +23,6 @@ use flow_common_modulename::Modulename;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::entity::ResolvedModule;
 use flow_heap::parsing_heaps::SharedMem;
-use flow_heap_serialization::serialize_aloc_table;
-use flow_heap_serialization::serialize_docblock;
-use flow_heap_serialization::serialize_file_sig_with_errors;
-use flow_heap_serialization::serialize_type_sig;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::file_key::FileKey;
@@ -57,11 +53,6 @@ pub type DenormalizedFileData = NormalizedFileData;
 pub struct ParsedFileData {
     pub haste_module_info: Option<HasteModuleInfo>,
     pub normalized_file_data: NormalizedFileData,
-    pub ast: Option<Vec<u8>>,
-    pub docblock: Option<Vec<u8>>,
-    pub aloc_table: Option<Vec<u8>>,
-    pub type_sig: Option<Vec<u8>>,
-    pub file_sig_with_tolerable_errors: Option<Vec<u8>>,
 }
 
 // We also need to store the info for unparsed files
@@ -441,21 +432,6 @@ fn collect_parsed_data(shared_mem: &SharedMem, file: &FileKey) -> ParsedFileData
             hash: shared_mem.get_file_hash_unsafe(file),
             imports: (*shared_mem.get_imports_unsafe(file)).clone(),
         },
-        ast: None,
-        docblock: shared_mem
-            .get_docblock(file)
-            .map(|docblock| serialize_docblock(docblock.as_ref())),
-        aloc_table: shared_mem
-            .get_aloc_table(file)
-            .map(|table| serialize_aloc_table(table.as_ref())),
-        type_sig: shared_mem
-            .get_type_sig(file)
-            .map(|type_sig| serialize_type_sig(type_sig.as_ref())),
-        file_sig_with_tolerable_errors: shared_mem.get_tolerable_file_sig(file).map(
-            |(file_sig, tolerable_errors)| {
-                serialize_file_sig_with_errors(file_sig.as_ref(), tolerable_errors.as_ref())
-            },
-        ),
     }
 }
 
@@ -695,49 +671,50 @@ fn denormalize_paths(
 fn restore_resolved_requires(
     shared_mem: &Arc<SharedMem>,
     file: &FileKey,
-    normalized_file_data: &NormalizedFileData,
+    resolved_modules: Vec<ResolvedModule>,
+    phantom_dependencies: Vec<Modulename>,
 ) {
-    let phantom_dependencies = normalized_file_data
-        .phantom_dependencies
-        .iter()
-        .cloned()
+    let phantom_dependencies = phantom_dependencies
+        .into_iter()
         .map(flow_heap::entity::Dependency::from_modulename)
         .collect();
-    let resolved_requires = flow_heap::entity::ResolvedRequires::new(
-        normalized_file_data.resolved_modules.clone(),
-        phantom_dependencies,
-    );
+    let resolved_requires =
+        flow_heap::entity::ResolvedRequires::new(resolved_modules, phantom_dependencies);
     shared_mem.set_resolved_requires(file, resolved_requires);
 }
 
 fn restore_parsed(shared_mem: &Arc<SharedMem>, file: &FileKey, parsed_file_data: &ParsedFileData) {
-    let normalized_file_data = &parsed_file_data.normalized_file_data;
+    let ParsedFileData {
+        haste_module_info,
+        normalized_file_data,
+    } = parsed_file_data;
+    let NormalizedFileData {
+        requires,
+        resolved_modules,
+        phantom_dependencies,
+        exports,
+        hash,
+        imports,
+    } = normalized_file_data;
     shared_mem.add_parsed(
         file.dupe(),
-        normalized_file_data.hash,
-        parsed_file_data.haste_module_info.clone(),
+        *hash,
+        haste_module_info.clone(),
         None,
-        parsed_file_data
-            .docblock
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_docblock(file, bytes)),
-        parsed_file_data
-            .aloc_table
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_aloc_table(bytes)),
-        parsed_file_data
-            .type_sig
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_type_sig(file, bytes)),
-        parsed_file_data
-            .file_sig_with_tolerable_errors
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_file_sig_with_errors(file, bytes)),
-        Arc::new(normalized_file_data.exports.clone()),
-        Arc::from(normalized_file_data.requires.clone()),
-        Arc::new(normalized_file_data.imports.clone()),
+        None,
+        None,
+        None,
+        None,
+        Arc::new(exports.clone()),
+        Arc::from(requires.clone()),
+        Arc::new(imports.clone()),
     );
-    restore_resolved_requires(shared_mem, file, normalized_file_data);
+    restore_resolved_requires(
+        shared_mem,
+        file,
+        resolved_modules.clone(),
+        phantom_dependencies.clone(),
+    );
 }
 
 fn restore_unparsed(
@@ -799,11 +776,11 @@ pub fn load(
             .map(|(v, _)| v)
             .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     flow_hh_logger::info!("Decompressing saved-state data");
-    let mut loaded: SerializedLoadedSavedState =
+    let loaded: SerializedLoadedSavedState =
         saved_state_compression::decompress_and_unmarshal(&compressed)?;
     flow_hh_logger::info!("Denormalizing saved-state data");
-    match &mut loaded {
-        SerializedLoadedSavedState::Legacy_saved_state(data) => {
+    match loaded {
+        SerializedLoadedSavedState::Legacy_saved_state(mut data) => {
             // Signal progress so the status state machine transitions to Loading_saved_state,
             // which is required before the Restoring_heaps_start event can fire.
             flow_server_env::monitor_rpc::status_update(
@@ -821,9 +798,9 @@ pub fn load(
                 &mut data.node_modules_containers,
             );
             flow_hh_logger::info!("Finished loading saved-state");
-            Ok(LoadedSavedState::Legacy_saved_state(data.clone()))
+            Ok(LoadedSavedState::Legacy_saved_state(data))
         }
-        SerializedLoadedSavedState::Direct_saved_state(data) => {
+        SerializedLoadedSavedState::Direct_saved_state(mut data) => {
             flow_server_env::monitor_rpc::status_update(
                 flow_server_env::server_status::Event::LoadSavedStateProgress(
                     flow_server_env::server_status::Progress {

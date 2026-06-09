@@ -2486,85 +2486,82 @@ fn saved_duplicate_providers_from_direct_state(
 fn restore_resolved_requires(
     shared_mem: &Arc<SharedMem>,
     file: &FileKey,
-    normalized_file_data: &flow_saved_state::NormalizedFileData,
+    resolved_modules: Vec<flow_heap::entity::ResolvedModule>,
+    phantom_dependencies: Vec<Modulename>,
 ) {
-    let phantom_dependencies = normalized_file_data
-        .phantom_dependencies
-        .iter()
-        .cloned()
+    let phantom_dependencies = phantom_dependencies
+        .into_iter()
         .map(flow_heap::entity::Dependency::from_modulename)
         .collect();
-    let resolved_requires = flow_heap::entity::ResolvedRequires::new(
-        normalized_file_data.resolved_modules.clone(),
-        phantom_dependencies,
-    );
+    let resolved_requires =
+        flow_heap::entity::ResolvedRequires::new(resolved_modules, phantom_dependencies);
     shared_mem.set_resolved_requires(file, resolved_requires);
 }
 
 fn restore_parsed(
     shared_mem: &Arc<SharedMem>,
     file: &FileKey,
-    parsed_file_data: &flow_saved_state::ParsedFileData,
+    parsed_file_data: flow_saved_state::ParsedFileData,
 ) -> BTreeSet<Modulename> {
-    let normalized_file_data = &parsed_file_data.normalized_file_data;
+    let flow_saved_state::ParsedFileData {
+        haste_module_info,
+        normalized_file_data,
+    } = parsed_file_data;
+    let flow_saved_state::NormalizedFileData {
+        requires,
+        resolved_modules,
+        phantom_dependencies,
+        exports,
+        hash,
+        imports,
+    } = normalized_file_data;
     let dirty_modules = shared_mem.add_parsed(
         file.dupe(),
-        normalized_file_data.hash,
-        parsed_file_data.haste_module_info.clone(),
+        hash,
+        haste_module_info,
         None,
-        parsed_file_data
-            .docblock
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_docblock(file, bytes)),
-        parsed_file_data
-            .aloc_table
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_aloc_table(bytes)),
-        parsed_file_data
-            .type_sig
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_type_sig(file, bytes)),
-        parsed_file_data
-            .file_sig_with_tolerable_errors
-            .as_ref()
-            .map(|bytes| flow_heap_serialization::deserialize_file_sig_with_errors(file, bytes)),
-        Arc::new(normalized_file_data.exports.clone()),
-        Arc::from(normalized_file_data.requires.clone()),
-        Arc::new(normalized_file_data.imports.clone()),
+        None,
+        None,
+        None,
+        None,
+        Arc::new(exports),
+        Arc::from(requires),
+        Arc::new(imports),
     );
-    restore_resolved_requires(shared_mem, file, normalized_file_data);
+    restore_resolved_requires(shared_mem, file, resolved_modules, phantom_dependencies);
     dirty_modules
 }
 
 fn restore_unparsed(
     shared_mem: &Arc<SharedMem>,
     file: &FileKey,
-    unparsed_file_data: &flow_saved_state::UnparsedFileData,
+    unparsed_file_data: flow_saved_state::UnparsedFileData,
 ) -> BTreeSet<Modulename> {
     shared_mem.add_unparsed(
         file.dupe(),
         unparsed_file_data.unparsed_hash,
-        unparsed_file_data.unparsed_haste_module_info.clone(),
+        unparsed_file_data.unparsed_haste_module_info,
     )
 }
 
 fn restore_package(
     shared_mem: &Arc<SharedMem>,
     file: &FileKey,
-    package_data: &flow_saved_state::PackageFileData,
+    package_data: flow_saved_state::PackageFileData,
 ) -> BTreeSet<Modulename> {
-    match &package_data.package_info {
+    let flow_saved_state::PackageFileData {
+        package_haste_module_info,
+        package_hash,
+        package_info,
+    } = package_data;
+    match package_info {
         Ok(package_json) => shared_mem.add_package(
             file.dupe(),
-            package_data.package_hash,
-            package_data.package_haste_module_info.clone(),
-            Arc::new(package_json.clone()),
+            package_hash,
+            package_haste_module_info,
+            Arc::new(package_json),
         ),
-        Err(()) => shared_mem.add_unparsed(
-            file.dupe(),
-            package_data.package_hash,
-            package_data.package_haste_module_info.clone(),
-        ),
+        Err(()) => shared_mem.add_unparsed(file.dupe(), package_hash, package_haste_module_info),
     }
 }
 
@@ -2687,66 +2684,8 @@ fn init_with_initial_state(
         dirty_modules,
     );
     resolve_requires(pool, shared_mem, options, &additional_parsed);
-    let dependency_info = {
-        let dependency_info = restore_dependency_info();
-        let mut missing_files = BTreeMap::new();
-        for file in parsed.iter() {
-            if dependency_info
-                .sig_dependency_graph()
-                .find_opt(file)
-                .is_none()
-                || dependency_info
-                    .implementation_dependency_graph()
-                    .find_opt(file)
-                    .is_none()
-            {
-                missing_files.insert(file.dupe(), (BTreeSet::new(), BTreeSet::new()));
-            }
-        }
-        for file in unparsed.iter() {
-            if dependency_info
-                .sig_dependency_graph()
-                .find_opt(file)
-                .is_none()
-                || dependency_info
-                    .implementation_dependency_graph()
-                    .find_opt(file)
-                    .is_none()
-            {
-                missing_files.insert(file.dupe(), (BTreeSet::new(), BTreeSet::new()));
-            }
-        }
-        for file in package_json_files.iter() {
-            if dependency_info
-                .sig_dependency_graph()
-                .find_opt(file)
-                .is_none()
-                || dependency_info
-                    .implementation_dependency_graph()
-                    .find_opt(file)
-                    .is_none()
-            {
-                missing_files.insert(file.dupe(), (BTreeSet::new(), BTreeSet::new()));
-            }
-        }
-        if missing_files.is_empty() {
-            dependency_info
-        } else {
-            DependencyInfo::update(
-                dependency_info,
-                flow_server_env::dependency_info::PartialDependencyGraph::from_map(missing_files),
-                BTreeSet::new(),
-            )
-        }
-    };
+    let dependency_info = restore_dependency_info();
 
-    let errors = Errors {
-        local_errors,
-        duplicate_providers,
-        merge_errors: BTreeMap::new(),
-        warnings,
-        suppressions,
-    };
     let exports = if options.autoimports {
         match saved_export_index {
             Some(index) => {
@@ -2782,17 +2721,28 @@ fn init_with_initial_state(
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
             shared_mem_for_ast.get_ast(file)
         };
-        error_collator::update_collated_errors(
+        let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
+            options.unsuppressable_error_codes.iter().duped().collect();
+        error_collator::update_local_collated_errors(
             &loc_of_aloc,
             &get_ast,
-            options,
-            &CheckedSet::empty(),
-            &errors.suppressions,
-            &errors,
+            &options.root,
+            &options.file_options,
+            options.node_modules_errors,
+            &unsuppressable_error_codes,
+            &suppressions,
+            &local_errors,
             &mut collated_errors,
         );
         error_collator::update_error_state_timestamps(&mut collated_errors);
     }
+    let errors = Errors {
+        local_errors,
+        duplicate_providers,
+        merge_errors: BTreeMap::new(),
+        warnings,
+        suppressions,
+    };
     let env = Env {
         files: parsed,
         dependency_info,
@@ -2846,30 +2796,93 @@ pub fn init_from_legacy_saved_state(
     let mut parsed = FlowOrdSet::new();
     let mut unparsed = FlowOrdSet::new();
     let mut package_json_files = FlowOrdSet::new();
-    let mut dirty_modules = BTreeSet::new();
-    let mut invalid_hashes = Vec::new();
+    let verify = options.saved_state_verify;
 
-    for (file, parsed_file_data) in parsed_heaps {
-        dirty_modules.extend(restore_parsed(shared_mem, &file, &parsed_file_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
-            invalid_hashes.push(file.dupe());
-        }
+    type RestoreAcc = (BTreeSet<FileKey>, BTreeSet<Modulename>, Vec<FileKey>);
+
+    fn merge(acc: &mut RestoreAcc, other: RestoreAcc) {
+        acc.0.extend(other.0);
+        acc.1.extend(other.1);
+        acc.2.extend(other.2);
+    }
+
+    let parsed_acc: RestoreAcc = flow_utils_concurrency::map_reduce::call(
+        pool,
+        flow_utils_concurrency::map_reduce::make_next(
+            pool.num_workers(),
+            None::<fn(i32, i32, i32)>,
+            None,
+            parsed_heaps,
+        ),
+        {
+            let shared_mem = shared_mem.dupe();
+            move |acc: &mut RestoreAcc, batch: Vec<(FileKey, flow_saved_state::ParsedFileData)>| {
+                for (file, parsed_file_data) in batch {
+                    acc.1
+                        .extend(restore_parsed(&shared_mem, &file, parsed_file_data));
+                    if verify && !verify_hash(&shared_mem, &file) {
+                        acc.2.push(file.dupe());
+                    }
+                    acc.0.insert(file);
+                }
+            }
+        },
+        merge,
+    );
+    let (parsed_files, dirty_modules_parsed, invalid_parsed_hashes) = parsed_acc;
+    for file in parsed_files {
         parsed.insert(file);
     }
-    for (file, unparsed_file_data) in unparsed_heaps {
-        dirty_modules.extend(restore_unparsed(shared_mem, &file, &unparsed_file_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
-            invalid_hashes.push(file.dupe());
-        }
+
+    let unparsed_acc: RestoreAcc = flow_utils_concurrency::map_reduce::call(
+        pool,
+        flow_utils_concurrency::map_reduce::make_next(
+            pool.num_workers(),
+            None::<fn(i32, i32, i32)>,
+            None,
+            unparsed_heaps,
+        ),
+        {
+            let shared_mem = shared_mem.dupe();
+            move |acc: &mut RestoreAcc,
+                  batch: Vec<(FileKey, flow_saved_state::UnparsedFileData)>| {
+                for (file, unparsed_file_data) in batch {
+                    acc.1
+                        .extend(restore_unparsed(&shared_mem, &file, unparsed_file_data));
+                    if verify && !verify_hash(&shared_mem, &file) {
+                        acc.2.push(file.dupe());
+                    }
+                    acc.0.insert(file);
+                }
+            }
+        },
+        merge,
+    );
+    let (unparsed_files, dirty_modules_unparsed, invalid_unparsed_hashes) = unparsed_acc;
+    for file in unparsed_files {
         unparsed.insert(file);
     }
-    for (file, package_data) in package_heaps {
-        dirty_modules.extend(restore_package(shared_mem, &file, &package_data));
-        if options.saved_state_verify && !verify_hash(shared_mem, &file) {
-            invalid_hashes.push(file.dupe());
-        }
+
+    let package_acc: RestoreAcc =
+        package_heaps
+            .into_iter()
+            .fold(Default::default(), |mut acc, (file, package_data)| {
+                acc.1
+                    .extend(restore_package(shared_mem, &file, package_data));
+                if verify && !verify_hash(shared_mem, &file) {
+                    acc.2.push(file.dupe());
+                }
+                acc.0.insert(file);
+                acc
+            });
+    let (package_files, dirty_modules_packages, invalid_package_hashes) = package_acc;
+    for file in package_files {
         package_json_files.insert(file);
     }
+
+    let mut dirty_modules = dirty_modules_parsed;
+    dirty_modules.extend(dirty_modules_unparsed);
+    dirty_modules.extend(dirty_modules_packages);
     dirty_modules.extend(clear_deleted_heaps(
         shared_mem,
         env,
@@ -2877,7 +2890,10 @@ pub fn init_from_legacy_saved_state(
         &unparsed,
         &package_json_files,
     ));
-    if options.saved_state_verify {
+    let mut invalid_hashes = invalid_parsed_hashes;
+    invalid_hashes.extend(invalid_unparsed_hashes);
+    invalid_hashes.extend(invalid_package_hashes);
+    if verify {
         assert_valid_hashes(updates, invalid_hashes);
     }
     let local_errors = merge_error_maps(
@@ -2903,6 +2919,7 @@ pub fn init_from_legacy_saved_state(
         dirty_modules,
         local_errors,
     );
+    shared_mem.commit_entities();
     (env, libs_ok)
 }
 
@@ -2985,6 +3002,7 @@ pub fn init_from_direct_saved_state(
         dirty_modules,
         local_errors,
     );
+    shared_mem.commit_entities();
     (env, libs_ok)
 }
 
@@ -2996,16 +3014,14 @@ pub fn init_from_saved_state(
     updates: &CheckedSet,
     env: Option<&Env>,
 ) -> (Env, bool) {
-    let result = match saved_state {
+    match saved_state {
         LoadedSavedState::Legacy_saved_state(data) => {
             init_from_legacy_saved_state(pool, shared_mem, options, data, updates, env)
         }
         LoadedSavedState::Direct_saved_state(data) => {
             init_from_direct_saved_state(pool, shared_mem, options, data, updates, env)
         }
-    };
-    shared_mem.commit_entities();
-    result
+    }
 }
 
 pub fn handle_updates_since_saved_state(
