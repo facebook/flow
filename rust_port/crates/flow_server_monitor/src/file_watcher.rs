@@ -917,8 +917,27 @@ pub mod edenfs_file_watcher {
                 ));
             match wait_result {
                 Ok(()) => {
-                    let instance = env.instance.lock().await;
-                    flow_edenfs_watcher::get_changes_async(&instance)
+                    // `get_changes_async` drives the instance's own tokio runtime via
+                    // `block_on`. This listen loop runs inside the shared
+                    // flow-tokio-runtime on every platform (the rust_port monitor always
+                    // has a runtime entered), so the drain must run on a blocking thread
+                    // to avoid "Cannot start a runtime from within a runtime". Only the
+                    // readiness wait above is platform-specific (AsyncFd vs WSAPoll); the
+                    // drain itself is shared.
+                    let instance = env.instance.clone();
+                    match tokio::task::spawn_blocking(move || {
+                        let instance = instance.blocking_lock();
+                        flow_edenfs_watcher::get_changes_async(&instance)
+                    })
+                    .await
+                    {
+                        Ok(result) => result,
+                        Err(join_err) => {
+                            Err(flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
+                                format!("get_changes task failed: {}", join_err),
+                            ))
+                        }
+                    }
                 }
                 Err(err) => Err(err),
             }
