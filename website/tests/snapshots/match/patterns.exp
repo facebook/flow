@@ -2,6 +2,18 @@
 No errors!
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
 Error ------------------------------------------------------------------------------ -:9:3
 
 This instance pattern hasn't considered all possible properties of the input. There could be additional properties due
@@ -19,16 +31,16 @@ References:
 
 Found 1 error
 
-=== block 3 ===
+=== block 7 ===
 No errors!
 
-=== block 4 ===
+=== block 8 ===
 No errors!
 
-=== block 5 ===
+=== block 9 ===
 No errors!
 
-=== block 6 ===
+=== block 10 ===
 Error ----------------------------------------------------------------------------- -:11:3
 
 Invalid match instance pattern constructor. It must reference a single class. [match-invalid-pattern]
@@ -38,3 +50,12 @@ Invalid match instance pattern constructor. It must reference a single class. [m
 
 
 Found 1 error
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!

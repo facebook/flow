@@ -19,16 +19,23 @@ You can use a number literal prefixed with  `+` or `-`, or BigInt literals prefi
 Other types of expressions are not supported. To match against an arbitrary expression (which has a literal type), first assign it to a variable, and then match against that variable.
 
 Example:
-```js
-match (x) {
-  1 => {}
-  'foo' => {}
+```js flow-check
+const Status = {active: 'active', paused: 'paused'} as const;
+declare const ranks: [10, 20];
+declare const fallbackLabel: 'unknown';
+
+declare const value: unknown;
+
+match (value) {
+  0 => {}
+  'archived' => {}
   null => {}
   -1 => {}
-  foo => {}
-  bar.baz => {}
-  bar['bort'] => {}
-  xs[2] => {}
+  fallbackLabel => {} // a literal-typed variable
+  Status.active => {} // a property access
+  Status['paused'] => {} // a computed string member
+  ranks[0] => {} // a computed number member
+  _ => {}
 }
 ```
 
@@ -43,8 +50,10 @@ Wildcard patterns, which are a single underscore `_`, match everything. If you w
 If part of your input type cannot be matched exhaustively (e.g. `string`), then the `match` will require a wildcard.
 
 Example:
-```js
-match (x) {
+```js flow-check
+declare const username: string;
+
+match (username) {
   _ => {}
 }
 ```
@@ -54,9 +63,11 @@ match (x) {
 Variable declaration patterns, like `const name`, take whatever value is at that position and assign it to a new variable. Conditional check wise, they act like a wildcard and match everything.
 
 Example:
-```js
-const e = match (x) {
-  const x => x,
+```js flow-check
+declare const input: string;
+
+const greeting = match (input) {
+  const name => `Hello, ${name}!`,
 };
 ```
 
@@ -77,11 +88,16 @@ When checking objects with optional properties, in order to make the check exhau
 Property names can be identifiers (e.g. `foo: pattern`), string literals (e.g. `'foo': <pattern>`), or number literals (e.g. `2: <pattern>`). Repeated object keys are banned, and BigInts are not supported as object keys (Flow doesn’t yet support them).
 
 Example:
-```js
-const e = match (x) {
-  {foo: 1, bar: const a} => a,
-  {const baz} => baz,
-  {foo: 2, ...const rest} => rest,
+```js flow-check
+declare const event:
+  | {kind: 'click', x: number, y: number}
+  | {message: string}
+  | {kind: 'scroll', delta: number};
+
+const summary = match (event) {
+  {kind: 'click', x: const x, y: const y} => `click at ${x},${y}`,
+  {const message} => message,
+  {kind: 'scroll', ...const rest} => `scroll ${rest.delta}`,
 };
 ```
 
@@ -204,11 +220,13 @@ Like destructuring, a variable declaration pattern nested inside an array patter
 Array patterns match values which pass `Array.isArray`, so they won’t match array-like objects that aren’t actually arrays, and won’t match iterables. Use `Array.from` on those types of values first if you want to match them with array patterns.
 
 Example:
-```js
-const e = match (x) {
-  [1, 2] => [],
-  [3, 4, ...] => [],
-  [5, 6, ...const rest] => rest,
+```js flow-check
+declare const color: [0, 0, 0] | [255, 0, 0, 1] | [0, 0, 255, 0.5];
+
+const css = match (color) {
+  [0, 0, 0] => 'black',
+  [255, 0, 0, ...] => 'opaque red',
+  [0, 0, 255, ...const rest] => `blue at ${rest[0]} alpha`,
 };
 ```
 
@@ -219,23 +237,26 @@ Or patterns allow you to combine multiple patterns using `|`, for example `'acti
 [Variable declaration patterns](#variable-declaration-patterns) inside of "or" patterns are not yet supported.
 
 Example:
-```js
-match (x) {
-  1 | 2 => {}
-  [4] | [5] => {}
-}
+```js flow-check
+declare const reply: 'yes' | 'yeah' | 'no' | 'nope';
+
+const answer = match (reply) {
+  'yes' | 'yeah' => true,
+  'no' | 'nope' => false,
+};
 ```
 
 ## “As” patterns
 
-As patterns both match a pattern and create a new variable. For example, `[_, _] as pair` will first match any arrays whose length is `2`, and then assign that value to a new variable called `pair`. The syntax `as const pair` also works, we’ll decide which one to keep based on feedback.
+As patterns both match a pattern and create a new variable. For example, `[_, _] as pair` will first match any arrays whose length is `2`, and then assign that value to a new variable called `pair`.
 
 Example:
-```js
-const e = match (x) {
-  // Either one works for now
-  [2, _] as x => x,
-  [1, _] as const x => x,
+```js flow-check
+declare const result: ['ok', number] | ['error', string];
+
+const handled = match (result) {
+  ['ok', _] as success => success,
+  ['error', _] as failure => failure,
 };
 ```
 
