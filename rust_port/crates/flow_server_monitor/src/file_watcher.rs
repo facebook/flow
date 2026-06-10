@@ -1189,8 +1189,15 @@ pub mod edenfs_file_watcher {
                 mergebase_with: self.mergebase_with.clone(),
                 force_subprocess_mergebase: *edenfs_force_subprocess_mergebase,
             };
+            // `flow_edenfs_watcher::init` is a synchronous, blocking call: it builds its
+            // own multi-threaded tokio runtime and drives it with `block_on`. It must run
+            // on a blocking pool thread, not an async worker thread of `flow-tokio-runtime`
+            // — `block_on` panics with "Cannot start a runtime from within a runtime" when
+            // invoked from a thread already driving a runtime. (`spawn_blocking` returns a
+            // `JoinHandle` with the same output type as `spawn`, so `wait_for_init` is
+            // unchanged.)
             *self.init_thread.lock().unwrap() =
-                Some(handle().spawn(async move { flow_edenfs_watcher::init(settings) }));
+                Some(handle().spawn_blocking(move || flow_edenfs_watcher::init(settings)));
         }
 
         async fn wait_for_init(&self, timeout: Option<f64>) -> Result<(), String> {
