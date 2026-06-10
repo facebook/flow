@@ -1,3 +1,8 @@
+### 0.318.0
+
+Likely to cause new Flow errors:
+* Flow will now error on all deprecated utility types. See [Modernizing legacy syntax](https://flow.org/en/docs/modernizing-legacy-syntax/) for migration guidance.
+
 ### 0.317.0
 
 New Features:
