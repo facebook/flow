@@ -390,10 +390,17 @@ fn wait_for_ready(
 ) -> io::Result<()> {
     match timeout {
         None => flow_tokio_runtime::block_on(ready),
-        Some(timeout) => match flow_tokio_runtime::block_on(tokio::time::timeout(timeout, ready)) {
-            Ok(result) => result,
-            Err(_) => Err(io::Error::new(io::ErrorKind::TimedOut, "socket timeout")),
-        },
+        Some(timeout) => {
+            // `tokio::time::timeout` constructs a `Sleep` that registers with
+            // the reactor at construction time, so it must be created inside
+            // the runtime context, not before `block_on`.
+            match flow_tokio_runtime::block_on(
+                async move { tokio::time::timeout(timeout, ready).await },
+            ) {
+                Ok(result) => result,
+                Err(_) => Err(io::Error::new(io::ErrorKind::TimedOut, "socket timeout")),
+            }
+        }
     }
 }
 

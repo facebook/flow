@@ -62,20 +62,7 @@ enum ConnectExn {
 struct MonitorMisbehaved;
 
 pub fn server_exists(flowconfig_name: &str, tmp_dir: &str, root: &Path) -> bool {
-    let lock_file = server_files_js::lock_file(flowconfig_name, tmp_dir, root);
-    let lock_path = std::path::Path::new(&lock_file);
-    if !lock_path.exists() {
-        return false;
-    }
-    let file = match std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open(&lock_file)
-    {
-        Ok(file) => file,
-        Err(_) => return true,
-    };
-    matches!(file.try_lock(), Err(std::fs::TryLockError::WouldBlock))
+    !flow_common::lock::check(&server_files_js::lock_file(flowconfig_name, tmp_dir, root))
 }
 
 fn wait_on_server_restart(stream: &mut SocketStream) {
