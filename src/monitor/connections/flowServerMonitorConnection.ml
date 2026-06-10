@@ -192,7 +192,7 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       (match Exception.unwrap exn with
       | End_of_file
       | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
-        Logger.error "Connection '%s' was closed from the other side" connection.name
+        Logger.debug "Connection '%s' was closed from the other side" connection.name
       | _ ->
         let exn = Exception.to_exn exn in
         Logger.error

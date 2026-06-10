@@ -294,7 +294,7 @@ mod read_loop {
     fn catch<P: ConnectionProcessor>(connection: &Arc<Connection<P>>, exn: LoopExn) {
         match exn {
             LoopExn::EndOfFile | LoopExn::ConnReset => {
-                flow_hh_logger::error!(
+                flow_hh_logger::debug!(
                     "Connection '{}' was closed from the other side",
                     connection.name
                 );
