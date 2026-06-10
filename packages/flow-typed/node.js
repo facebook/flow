@@ -107,6 +107,28 @@ declare module 'fs' {
           ...
         },
   ): void;
+
+  declare function createReadStream(path: string): any;
+
+  declare function readdirSync(path: string): Array<string>;
+
+  declare class Stats {
+    isDirectory(): boolean;
+  }
+
+  declare function lstatSync(path: string): Stats;
+}
+
+declare module 'events' {
+  declare function once(emitter: any, eventName: string): Promise<Array<any>>;
+}
+
+declare module 'readline' {
+  declare class Interface {
+    on(eventName: string, listener: (line: string) => mixed): void;
+  }
+
+  declare function createInterface(options: {input: any, ...}): Interface;
 }
 
 declare module 'os' {
