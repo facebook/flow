@@ -124,7 +124,7 @@ module.exports = async () => {
       },
       navbar: {
         logo: {
-          alt: 'My Facebook Project Logo',
+          alt: 'Flow Logo',
           src: 'img/logo.svg',
         },
         items: [
