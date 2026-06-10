@@ -99,10 +99,6 @@ pub struct StartArgs {
     pub cli_overrides: flow_common::cli_overrides::CliOverrides,
 }
 
-fn prepare_log_file(log_file: &str) -> Result<(), String> {
-    flow_server::server_daemon::try_open_log_file(log_file).map(|_| ())
-}
-
 // `spawn_monitor_child` and `daemonize_with_pipe` (~150 lines of
 // CLI-flag re-encoding + `Stdio::piped` plumbing for the WaitMsg) were
 // removed in the daemon rewire (Step 3 of the daemon plan): the child is
@@ -236,17 +232,18 @@ fn internal_start(
     //
     // The daemon wants to redirect all stderr to the log. So we can dup2
     // `flow server` wants to output to both stderr and the log, so we initialize Logger with this fd
-    let log_fd = {
+    let log_fd = if is_daemon {
+        // daemonize() already pointed our stdout/stderr at the freshly-opened
+        // monitor log (the spawn-model equivalent of OCaml's `Unix.dup2 fd
+        // Unix.stderr`). Re-opening here would rotate the live log onto `.old`.
+        None
+    } else {
         let fd = flow_server::server_daemon::try_open_log_file(&args.monitor_log_file)?;
-        if is_daemon {
-            None
-        } else {
-            let fd_clone = fd
-                .try_clone()
-                .map_err(|e| format!("Failed to clone log file fd for Hh_logger.set_log: {}", e))?;
-            flow_hh_logger::set_log(args.monitor_log_file.clone(), fd_clone);
-            Some(fd)
-        }
+        let fd_clone = fd
+            .try_clone()
+            .map_err(|e| format!("Failed to clone log file fd for Hh_logger.set_log: {}", e))?;
+        flow_hh_logger::set_log(args.monitor_log_file.clone(), fd_clone);
+        Some(fd)
     };
     // Open up the socket immediately. When a client tries to connect to an
     // open socket, it will block. When a client tries to connect to a not-yet-open
@@ -424,9 +421,10 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     let monitor_log_file = args.monitor_log_file.clone();
     let root_str = args.root.to_string_lossy().into_owned();
 
-    prepare_log_file(&monitor_log_file)?;
     let log_for_stdout = flow_server::server_daemon::try_open_log_file(&monitor_log_file)?;
-    let log_for_stderr = flow_server::server_daemon::try_open_log_file(&monitor_log_file)?;
+    let log_for_stderr = log_for_stdout
+        .try_clone()
+        .map_err(|e| format!("Failed to clone monitor log fd: {}", e))?;
 
     let entry = crate::flow_server_monitor_daemon::registered_entry_point();
 
