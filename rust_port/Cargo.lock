@@ -481,6 +481,7 @@ dependencies = [
  "flow_daemon",
  "flow_data_structure_wrapper",
  "flow_dfind",
+ "flow_edenfs_watcher",
  "flow_env_builder",
  "flow_env_builder_resolver",
  "flow_event_logger",

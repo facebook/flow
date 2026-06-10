@@ -32,6 +32,7 @@ use flow_common_vcs::vcs::Vcs;
 use flow_config::FlowConfig;
 use flow_config::LazyMode;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_edenfs_watcher;
 use flow_flowlib::LibDir as FlowlibDir;
 use flow_monitor_rpc::monitor_prot::MonitorToClientMessage;
 use flow_server_env::file_watcher_status;
@@ -1786,10 +1787,15 @@ pub(crate) fn file_watcher_flag() -> arg_spec::FlagType<Option<flow_config::File
 }
 
 pub(crate) fn add_file_watcher_flag(spec: command_spec::Spec) -> command_spec::Spec {
+    let watcher_names = if flow_edenfs_watcher::is_available() {
+        "none, dfind, watchman, edenfs"
+    } else {
+        "none, dfind, watchman"
+    };
     spec.flag(
         "--file-watcher",
         &arg_spec::optional(file_watcher_flag()),
-        "Which file watcher Flow should use (none, dfind, watchman, edenfs). Flow will ignore file system events if this is set to none. (default: dfind)",
+        &format!("Which file watcher Flow should use ({}). Flow will ignore file system events if this is set to none. (default: dfind)", watcher_names),
         None,
     )
     .flag(
@@ -3436,6 +3442,9 @@ pub(crate) fn choose_file_watcher(
                 defer_states: defer_states.clone(),
                 sync_timeout,
             };
+            if !flow_edenfs_watcher::is_available() {
+                return FlowServerMonitorOptions::Watchman(watchman_fallback);
+            }
             // Watchman natively defers during hg operations via Defer_changes subscribe mode.
             // EdenFS requires explicit state names, so we hardcode the hg states here.
             let mut edenfs_defer_states =
