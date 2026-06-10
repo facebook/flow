@@ -9,7 +9,7 @@ import {SinceVersion} from '../../components/VersionTags';
 Flow provides a set of utility types to operate on other types to create new types.
 
 :::info TypeScript comparison
-Most utility types align directly with TypeScript: `Readonly`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`, and `keyof`. See [Concepts that transfer cleanly from TypeScript](../flow-vs-typescript.md#toc-transfer-cleanly) for more.
+Most utility types align directly with TypeScript: `Readonly`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `ConstructorParameters`, `InstanceType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`, and `keyof`. See [Concepts that transfer cleanly from TypeScript](../flow-vs-typescript.md#toc-transfer-cleanly) for more.
 :::
 
 ## `keyof T` {#toc-keys}
@@ -231,27 +231,56 @@ type AllOptional = [a?: number, b?: string];
 [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
 ```
 
-## `ReturnType<F>` {#toc-return-type}
+## `Pick<O, Keys>` {#toc-pick}
 
-This utility type extracts the return type from a given function type.
+This utility type allows you to generate an object type using a subset of the fields from
+another object type.
 
 ```js flow-check
-declare function f(s: string, n: number): boolean;
-type Bool = ReturnType<typeof f>;
-true as Bool;
-1 as Bool; // Error: number is not boolean
+type O = {foo: number, bar: string, baz: boolean};
+type FooAndBar = Pick<O, 'foo' | 'bar'>;
+
+declare const fooAndBar: FooAndBar;
+fooAndBar.baz; // error: baz is missing
+fooAndBar.foo as number; // ok
+fooAndBar.bar as string; // ok
 ```
 
-## `Parameters<F>` {#toc-parameters}
+## `Omit<O, Keys>` {#toc-omit}
 
-This utility type extracts the parameter types from a given function type into a [tuple type](./tuples.md).
-
+This utility type allows you to generate an object type by omitting the specified fields from
+another object type.
 ```js flow-check
-declare function f(s: string, n: number): boolean;
-type Tuple = Parameters<typeof f>; // Evaluates to [string, number]
-'s' as Tuple[0];
-1 as Tuple[1];
-false as Tuple[2]; // Error: tuple type only has two elements
+type O = {foo: number, bar: string, baz: boolean};
+type JustBaz= Omit<O, 'foo' | 'bar'>;
+
+declare const justBaz: JustBaz;
+justBaz.baz as boolean; // ok
+justBaz.foo; // error: missing foo
+justBaz.bar; // error: missing bar
+```
+
+## `Record<Keys, Type>` {#toc-record}
+
+This utility type allows you to generate an object type from a union of keys with the given
+`Type` for each field.
+```js flow-check
+type NumberRecord = Record<'foo' | 'bar', number>;
+declare const numberRecord: NumberRecord;
+numberRecord.foo as number; // ok
+numberRecord.bar as number; // ok
+numberRecord.baz; // error
+```
+
+Note that `Record` is different than using an indexer:
+```js flow-check
+type NumberRecord = Record<'foo' | 'bar', number>;
+type IndexedObject = {['foo' | 'bar']: number};
+
+// Record uses explicit fields, which means they are all required
+const rec: NumberRecord = {}; // error
+// Indexers do not have this same requirement
+const idx: IndexedObject = {}; // no error
 ```
 
 ## `Exclude<T, U>` {#toc-exclude}
@@ -279,6 +308,108 @@ type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
 new Car() as T; // error
 new Dog() as T; // ok
 new Cat() as T; // ok
+```
+
+## `ReturnType<F>` {#toc-return-type}
+
+This utility type extracts the return type from a given function type.
+
+```js flow-check
+declare function f(s: string, n: number): boolean;
+type Bool = ReturnType<typeof f>;
+true as Bool;
+1 as Bool; // Error: number is not boolean
+```
+
+## `Parameters<F>` {#toc-parameters}
+
+This utility type extracts the parameter types from a given function type into a [tuple type](./tuples.md).
+
+```js flow-check
+declare function f(s: string, n: number): boolean;
+type Tuple = Parameters<typeof f>; // Evaluates to [string, number]
+'s' as Tuple[0];
+1 as Tuple[1];
+false as Tuple[2]; // Error: tuple type only has two elements
+```
+
+## `ConstructorParameters<C>` <SinceVersion version="0.317" /> {#toc-constructor-parameters}
+
+This utility type extracts the parameter types of a class's constructor into a [tuple type](./tuples.md). Pass the class itself via [`typeof`](./typeof.md):
+
+```js flow-check
+class Point {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+type PointArgs = ConstructorParameters<typeof Point>; // Evaluates to [number, number]
+[1, 2] as PointArgs; // OK
+'x' as PointArgs[0]; // Error: string is not number
+```
+
+A class with no explicit constructor uses its synthesized default constructor, which takes no arguments:
+
+```js flow-check
+class Empty {}
+type EmptyArgs = ConstructorParameters<typeof Empty>; // Evaluates to []
+[] as EmptyArgs; // OK
+[1] as EmptyArgs; // Error: default constructor takes no arguments
+```
+
+A class without its own constructor inherits the parameters of its parent's constructor:
+
+```js flow-check
+class Animal {
+  name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+class Dog extends Animal {} // no explicit constructor
+
+type DogArgs = ConstructorParameters<typeof Dog>; // Inherited [string]
+['Rex'] as DogArgs; // OK
+[1] as DogArgs; // Error: number is not string
+```
+
+## `InstanceType<C>` <SinceVersion version="0.317" /> {#toc-instance-type}
+
+This utility type extracts the instance type produced by a class's constructor. Pass the class itself via [`typeof`](./typeof.md):
+
+```js flow-check
+class User {
+  name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+type UserInstance = InstanceType<typeof User>; // Evaluates to User
+declare const u: UserInstance;
+u.name as string; // OK
+u as User; // OK
+```
+
+This is useful when you have the type of a class (the static side, e.g. from a [generic](./generics.md) bound or a [`Class<T>`](#toc-class)) and need the type of the values it constructs.
+
+For a [generic](./generics.md) class with no inference context, the class's type parameters resolve to their bounds (defaulting to [`unknown`](./unknown.md)):
+
+```js flow-check
+class Box<T> {
+  value: T;
+  constructor(value: T) {
+    this.value = value;
+  }
+}
+
+type BoxInstance = InstanceType<typeof Box>; // Box<unknown>
+declare const b: BoxInstance;
+b.value as unknown; // OK
 ```
 
 ## `ThisParameterType<F>` {#toc-this-parameter-type}
@@ -338,58 +469,6 @@ type User = Awaited<ReturnType<typeof fetchUser>>;
 
 const user: User = {name: 'George'}; // OK
 const bad: User = 'not a user'; // Error
-```
-
-## `Pick<O, Keys>` {#toc-pick}
-
-This utility type allows you to generate an object type using a subset of the fields from
-another object type.
-
-```js flow-check
-type O = {foo: number, bar: string, baz: boolean};
-type FooAndBar = Pick<O, 'foo' | 'bar'>;
-
-declare const fooAndBar: FooAndBar;
-fooAndBar.baz; // error: baz is missing
-fooAndBar.foo as number; // ok
-fooAndBar.bar as string; // ok
-```
-
-## `Omit<O, Keys>` {#toc-omit}
-
-This utility type allows you to generate an object type by omitting the specified fields from
-another object type.
-```js flow-check
-type O = {foo: number, bar: string, baz: boolean};
-type JustBaz= Omit<O, 'foo' | 'bar'>;
-
-declare const justBaz: JustBaz;
-justBaz.baz as boolean; // ok
-justBaz.foo; // error: missing foo
-justBaz.bar; // error: missing bar
-```
-
-## `Record<Keys, Type>` {#toc-record}
-
-This utility type allows you to generate an object type from a union of keys with the given
-`Type` for each field.
-```js flow-check
-type NumberRecord = Record<'foo' | 'bar', number>;
-declare const numberRecord: NumberRecord;
-numberRecord.foo as number; // ok
-numberRecord.bar as number; // ok
-numberRecord.baz; // error
-```
-
-Note that `Record` is different than using an indexer:
-```js flow-check
-type NumberRecord = Record<'foo' | 'bar', number>;
-type IndexedObject = {['foo' | 'bar']: number};
-
-// Record uses explicit fields, which means they are all required
-const rec: NumberRecord = {}; // error
-// Indexers do not have this same requirement
-const idx: IndexedObject = {}; // no error
 ```
 
 ## `NonNullable<T>` {#toc-nonmaybe}

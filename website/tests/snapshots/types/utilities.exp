@@ -183,194 +183,6 @@ References:
 Found 1 error
 
 === block 15 ===
-Error ----------------------------------------------------------------------------- -:5:1
-
-Cannot cast `1` to `Bool` because number [1] is incompatible with boolean [2]. [incompatible-type]
-
-   -:5:1
-   5| 1 as Bool; // Error: number is not boolean
-      ^ [1]
-
-References:
-   -:5:6
-   5| 1 as Bool; // Error: number is not boolean
-           ^^^^ [2]
-
-
-Found 1 error
-
-=== block 16 ===
-Error ---------------------------------------------------------------------------- -:6:16
-
-Cannot access number literal `2` on `Tuple` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
-[invalid-tuple-index]
-
-   -:6:16
-   6| false as Tuple[2]; // Error: tuple type only has two elements
-                     ^
-
-References:
-   -:6:10
-   6| false as Tuple[2]; // Error: tuple type only has two elements
-               ^^^^^ [1]
-
-
-Found 1 error
-
-=== block 17 ===
-Error ----------------------------------------------------------------------------- -:3:1
-
-Cannot cast `1` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
-
-   -:3:1
-   3| 1 as T; // error
-      ^ [1]
-
-References:
-   -:3:6
-   3| 1 as T; // error
-           ^ [2]
-
-Error ----------------------------------------------------------------------------- -:5:1
-
-Cannot cast `3` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
-
-   -:5:1
-   5| 3 as T; // error
-      ^ [1]
-
-References:
-   -:5:6
-   5| 3 as T; // error
-           ^ [2]
-
-
-Found 2 errors
-
-=== block 18 ===
-Error ----------------------------------------------------------------------------- -:7:1
-
-Cannot cast `new Car()` to `T` because: [incompatible-type]
- - Either `Car` [1] is incompatible with `Dog` [2].
- - Or `Car` [1] is incompatible with `Cat` [3].
-
-   -:7:1
-   7| new Car() as T; // error
-      ^^^^^^^^^ [1]
-
-References:
-   -:6:24
-   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
-                             ^^^ [2]
-   -:6:30
-   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
-                                   ^^^ [3]
-
-
-Found 1 error
-
-=== block 19 ===
-Error ----------------------------------------------------------------------------- -:3:1
-
-Cannot cast `'1'` to `T` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   -:3:1
-   3| '1' as T; // error
-      ^^^ [1]
-
-References:
-   -:3:8
-   3| '1' as T; // error
-             ^ [2]
-
-
-Found 1 error
-
-=== block 20 ===
-Error ----------------------------------------------------------------------------- -:7:1
-
-Cannot call `hasThisParam` because global object [1] is incompatible with number [2]. [incompatible-type]
-
-   -:7:1
-   7| hasThisParam(''); // error: global object is not number
-      ^^^^^^^^^^^^
-
-References:
-   -:7:1
-   7| hasThisParam(''); // error: global object is not number
-      ^^^^^^^^^^^^^^^^ [1]
-   -:2:31
-   2| type HasThisParamFun = (this: number, bar: string) => void;
-                                    ^^^^^^ [2]
-
-
-Found 1 error
-
-=== block 21 ===
-Error ----------------------------------------------------------------------------- -:4:1
-
-Cannot cast `42` to `Response` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   -:4:1
-   4| 42 as Response; // Error: number is not string
-      ^^ [1]
-
-References:
-   -:4:7
-   4| 42 as Response; // Error: number is not string
-            ^^^^^^^^ [2]
-
-
-Found 1 error
-
-=== block 22 ===
-Error ----------------------------------------------------------------------------- -:7:1
-
-Cannot cast `'hello'` to `A` because string [1] is incompatible with number [2]. [incompatible-type]
-
-   -:7:1
-   7| 'hello' as A; // Error: string is not number
-      ^^^^^^^ [1]
-
-References:
-   -:7:12
-   7| 'hello' as A; // Error: string is not number
-                 ^ [2]
-
-Error ----------------------------------------------------------------------------- -:8:1
-
-Cannot cast `42` to `B` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   -:8:1
-   8| 42 as B; // Error: number is not string
-      ^^ [1]
-
-References:
-   -:8:7
-   8| 42 as B; // Error: number is not string
-            ^ [2]
-
-
-Found 2 errors
-
-=== block 23 ===
-Error ---------------------------------------------------------------------------- -:9:19
-
-Cannot assign `'not a user'` to `bad` because string [1] is incompatible with object type [2]. [incompatible-type]
-
-   -:9:19
-   9| const bad: User = 'not a user'; // Error
-                        ^^^^^^^^^^^^ [1]
-
-References:
-   -:9:12
-   9| const bad: User = 'not a user'; // Error
-                 ^^^^ [2]
-
-
-Found 1 error
-
-=== block 24 ===
 Error ---------------------------------------------------------------------------- -:6:11
 
 Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in `Pick` [1]. [prop-missing]
@@ -387,7 +199,7 @@ References:
 
 Found 1 error
 
-=== block 25 ===
+=== block 16 ===
 Error ----------------------------------------------------------------------------- -:7:9
 
 Cannot get `justBaz.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
@@ -417,7 +229,7 @@ References:
 
 Found 2 errors
 
-=== block 26 ===
+=== block 17 ===
 Error ---------------------------------------------------------------------------- -:6:14
 
 Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in `Record` [1]. [prop-missing]
@@ -434,7 +246,7 @@ References:
 
 Found 1 error
 
-=== block 27 ===
+=== block 18 ===
 Error ---------------------------------------------------------------------------- -:6:27
 
 Cannot assign object literal to `rec` because properties `bar` and `foo` are missing in object literal [1] but exist in
@@ -452,7 +264,254 @@ References:
 
 Found 1 error
 
+=== block 19 ===
+Error ----------------------------------------------------------------------------- -:3:1
+
+Cannot cast `1` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
+
+   -:3:1
+   3| 1 as T; // error
+      ^ [1]
+
+References:
+   -:3:6
+   3| 1 as T; // error
+           ^ [2]
+
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `3` to `T` because number [1] is incompatible with `Exclude` [2]. [incompatible-type]
+
+   -:5:1
+   5| 3 as T; // error
+      ^ [1]
+
+References:
+   -:5:6
+   5| 3 as T; // error
+           ^ [2]
+
+
+Found 2 errors
+
+=== block 20 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot cast `new Car()` to `T` because: [incompatible-type]
+ - Either `Car` [1] is incompatible with `Dog` [2].
+ - Or `Car` [1] is incompatible with `Cat` [3].
+
+   -:7:1
+   7| new Car() as T; // error
+      ^^^^^^^^^ [1]
+
+References:
+   -:6:24
+   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
+                             ^^^ [2]
+   -:6:30
+   6| type T = Extract<Car | Dog | Cat, Animal>; // evaluates to Dog | Cat
+                                   ^^^ [3]
+
+
+Found 1 error
+
+=== block 21 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `1` to `Bool` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   -:5:1
+   5| 1 as Bool; // Error: number is not boolean
+      ^ [1]
+
+References:
+   -:5:6
+   5| 1 as Bool; // Error: number is not boolean
+           ^^^^ [2]
+
+
+Found 1 error
+
+=== block 22 ===
+Error ---------------------------------------------------------------------------- -:6:16
+
+Cannot access number literal `2` on `Tuple` because tuple type [1] only has 2 elements, so index 2 is out of bounds.
+[invalid-tuple-index]
+
+   -:6:16
+   6| false as Tuple[2]; // Error: tuple type only has two elements
+                     ^
+
+References:
+   -:6:10
+   6| false as Tuple[2]; // Error: tuple type only has two elements
+               ^^^^^ [1]
+
+
+Found 1 error
+
+=== block 23 ===
+Error ---------------------------------------------------------------------------- -:13:1
+
+Cannot cast `'x'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:13:1
+   13| 'x' as PointArgs[0]; // Error: string is not number
+       ^^^ [1]
+
+References:
+   -:5:18
+    5|   constructor(x: number, y: number) {
+                        ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 24 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast array literal to `EmptyArgs` because array literal [1] has 1 element but tuple type [2] has 0 elements.
+[invalid-tuple-arity]
+
+   -:5:1
+   5| [1] as EmptyArgs; // Error: default constructor takes no arguments
+      ^^^ [1]
+
+References:
+   -:5:8
+   5| [1] as EmptyArgs; // Error: default constructor takes no arguments
+             ^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 25 ===
+Error ---------------------------------------------------------------------------- -:12:2
+
+Cannot cast array literal to `DogArgs` because in index `0`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:12:2
+   12| [1] as DogArgs; // Error: number is not string
+        ^ [1]
+
+References:
+   -:4:21
+    4|   constructor(name: string) {
+                           ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 26 ===
+No errors!
+
+=== block 27 ===
+No errors!
+
 === block 28 ===
+Error ----------------------------------------------------------------------------- -:3:1
+
+Cannot cast `'1'` to `T` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:3:1
+   3| '1' as T; // error
+      ^^^ [1]
+
+References:
+   -:3:8
+   3| '1' as T; // error
+             ^ [2]
+
+
+Found 1 error
+
+=== block 29 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot call `hasThisParam` because global object [1] is incompatible with number [2]. [incompatible-type]
+
+   -:7:1
+   7| hasThisParam(''); // error: global object is not number
+      ^^^^^^^^^^^^
+
+References:
+   -:7:1
+   7| hasThisParam(''); // error: global object is not number
+      ^^^^^^^^^^^^^^^^ [1]
+   -:2:31
+   2| type HasThisParamFun = (this: number, bar: string) => void;
+                                    ^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 30 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `42` to `Response` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:4:1
+   4| 42 as Response; // Error: number is not string
+      ^^ [1]
+
+References:
+   -:4:7
+   4| 42 as Response; // Error: number is not string
+            ^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 31 ===
+Error ----------------------------------------------------------------------------- -:7:1
+
+Cannot cast `'hello'` to `A` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:7:1
+   7| 'hello' as A; // Error: string is not number
+      ^^^^^^^ [1]
+
+References:
+   -:7:12
+   7| 'hello' as A; // Error: string is not number
+                 ^ [2]
+
+Error ----------------------------------------------------------------------------- -:8:1
+
+Cannot cast `42` to `B` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:8:1
+   8| 42 as B; // Error: number is not string
+      ^^ [1]
+
+References:
+   -:8:7
+   8| 42 as B; // Error: number is not string
+            ^ [2]
+
+
+Found 2 errors
+
+=== block 32 ===
+Error ---------------------------------------------------------------------------- -:9:19
+
+Cannot assign `'not a user'` to `bad` because string [1] is incompatible with object type [2]. [incompatible-type]
+
+   -:9:19
+   9| const bad: User = 'not a user'; // Error
+                        ^^^^^^^^^^^^ [1]
+
+References:
+   -:9:12
+   9| const bad: User = 'not a user'; // Error
+                 ^^^^ [2]
+
+
+Found 1 error
+
+=== block 33 ===
 Error ----------------------------------------------------------------------------- -:8:1
 
 Cannot cast `null` to `Name` because null [1] is incompatible with string [2]. [incompatible-type]
@@ -469,10 +528,10 @@ References:
 
 Found 1 error
 
-=== block 29 ===
+=== block 34 ===
 No errors!
 
-=== block 30 ===
+=== block 35 ===
 Error ---------------------------------------------------------------------------- -:5:22
 
 Cannot call `assertEqual` with `42` bound to `expected` because number [1] is incompatible with string [2].
@@ -490,7 +549,7 @@ References:
 
 Found 1 error
 
-=== block 31 ===
+=== block 36 ===
 Error ---------------------------------------------------------------------------- -:8:23
 
 Cannot call `createSignal` with `42` bound to `defaultValue` because number [1] is incompatible with string [2].
@@ -508,10 +567,10 @@ References:
 
 Found 1 error
 
-=== block 32 ===
+=== block 37 ===
 No errors!
 
-=== block 33 ===
+=== block 38 ===
 Error ---------------------------------------------------------------------------- -:13:1
 
 Cannot cast `newObj.b` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
@@ -532,7 +591,7 @@ References:
 
 Found 1 error
 
-=== block 34 ===
+=== block 39 ===
 Error ---------------------------------------------------------------------------- -:12:1
 
 Cannot cast `makeStore(...)` to `Model` because `Store` [1] is incompatible with `Model` [2]. [incompatible-type]
@@ -569,7 +628,7 @@ References:
 
 Found 2 errors
 
-=== block 35 ===
+=== block 40 ===
 Error --------------------------------------------------------------------------- -:10:28
 
 Cannot call `makeParamStore` with `1` bound to `data` because number [1] is incompatible with boolean [2].
@@ -587,7 +646,7 @@ References:
 
 Found 1 error
 
-=== block 36 ===
+=== block 41 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
 Cannot cast `'random string'` to `DataProp` because string literal `random string` [1] is incompatible with template
@@ -605,7 +664,7 @@ References:
 
 Found 1 error
 
-=== block 37 ===
+=== block 42 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
 Cannot cast `'random string'` to `Exclaim` because string literal `random string` [1] is incompatible with template
@@ -623,7 +682,7 @@ References:
 
 Found 1 error
 
-=== block 38 ===
+=== block 43 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
 Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
@@ -655,7 +714,7 @@ References:
 
 Found 2 errors
 
-=== block 39 ===
+=== block 44 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
 Cannot cast `'$999'` to `Price` because string literal `$999` [1] is incompatible with template literal type [2].
@@ -673,7 +732,7 @@ References:
 
 Found 1 error
 
-=== block 40 ===
+=== block 45 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
 Cannot cast `'hello'` to `Greeting` because string literal `hello` [1] is incompatible with string literal `HELLO` [2].
@@ -691,7 +750,7 @@ References:
 
 Found 1 error
 
-=== block 41 ===
+=== block 46 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
 Cannot cast `'WARNING'` to `Tag` because string literal `WARNING` [1] is incompatible with string literal `warning` [2].
@@ -709,7 +768,7 @@ References:
 
 Found 1 error
 
-=== block 42 ===
+=== block 47 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
 Cannot cast `'flow'` to `Name` because string literal `flow` [1] is incompatible with string literal `Flow` [2].
@@ -741,7 +800,7 @@ References:
 
 Found 2 errors
 
-=== block 43 ===
+=== block 48 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
 Cannot cast `'FullName'` to `Field` because string literal `FullName` [1] is incompatible with string literal
@@ -773,7 +832,7 @@ References:
 
 Found 2 errors
 
-=== block 44 ===
+=== block 49 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
 Cannot cast `'south'` to `Direction` because string literal `south` [1] is incompatible with `Direction` [2].
@@ -791,10 +850,10 @@ References:
 
 Found 1 error
 
-=== block 45 ===
+=== block 50 ===
 No errors!
 
-=== block 46 ===
+=== block 51 ===
 Error ----------------------------------------------------------------------------- -:6:1
 
 Cannot cast `'anything'` to `Loud` because string literal `anything` [1] is incompatible with `Loud` [2].
@@ -814,8 +873,8 @@ References:
 
 Found 1 error
 
-=== block 47 ===
+=== block 52 ===
 No errors!
 
-=== block 48 ===
+=== block 53 ===
 No errors!
