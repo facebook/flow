@@ -158,6 +158,7 @@ You can also [migrate from existing patterns](./migration.md) like `switch` or c
 ## Adoption
 
 * Flow: enable by default since Flow v0.317. Before that, add `pattern_matching=true` in your `.flowconfig` under the `[options]` heading.
+  * [Instance patterns](./patterns.md#instance-patterns) are type-checked by default since Flow v0.317, and require hermes-parser v0.33+ for Babel and ESLint.
 * Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.29+, see our [Babel guide](../tools/babel.md) for more details.
 * ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.29+, see our [ESLint guide](../tools/eslint.md) for more details.
 

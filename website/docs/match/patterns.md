@@ -87,6 +87,114 @@ const e = match (x) {
 
 [Getters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) are also not supported \- at runtime they will be evaluated multiple times, once for each conditional check done against them.
 
+## Instance patterns
+
+Instance patterns match instances of a class. The pattern is a class name followed by an object pattern, for example `Point {x: 1, ...}` matches values that are instances of `Point` whose `x` property is `1`. At runtime this is like checking `p instanceof Point && p.x === 1`.
+
+The object pattern part works just like a regular [object pattern](#object-patterns): you can extract properties with variable declaration patterns, use the `{const x}` shorthand, and gather the rest with object rest.
+
+Instances are always inexact, since a class can be extended with additional properties, so you must end the pattern with `...`.
+
+Example:
+```js flow-check
+class Point {
+  x: number;
+  y: number;
+}
+declare const p: Point;
+
+const sum = match (p) {
+  Point {const x, const y, ...} => x + y,
+};
+```
+
+If you leave off the `...`, Flow errors, because the instance could have additional properties:
+```js flow-check
+class Point {
+  x: number;
+  y: number;
+}
+declare const p: Point;
+
+match (p) {
+  Point {const x, const y} => {} // ERROR: instances are inexact, so `...` is required
+}
+```
+
+Different classes in a union can each be matched by their own pattern, and the body is refined to that class:
+```js flow-check
+class Shape {
+  area(): number {
+    return 0;
+  }
+}
+class Circle extends Shape {
+  radius: number;
+}
+class Square extends Shape {
+  side: number;
+}
+
+declare const shape: Circle | Square;
+
+const size = match (shape) {
+  Circle {const radius, ...} => radius, // matches `Circle` instances
+  Square {const side, ...} => side, // matches `Square` instances
+};
+```
+
+Matching follows the prototype chain like `instanceof`: a pattern naming a superclass matches instances of any subclass.
+```js flow-check
+class Shape {
+  area(): number {
+    return 0;
+  }
+}
+class Circle extends Shape {
+  radius: number;
+}
+class Square extends Shape {
+  side: number;
+}
+
+declare const shape: Circle | Square;
+
+const out = match (shape) {
+  Shape {...} => shape.area(), // a superclass pattern matches any subclass instance
+};
+```
+
+[Object patterns](#object-patterns) are structural and also match instances, so `{const x, const y, ...}` matches a `Point`. An instance pattern, on the other hand, only matches instances of the named class, and never a plain object.
+```js flow-check
+class Point {
+  x: number;
+  y: number;
+}
+declare const p: Point;
+
+const sum = match (p) {
+  {const x, const y, ...} => x + y, // an object pattern matches the instance
+};
+```
+
+The constructor must reference a single class. Using a type, interface, or other value is an error.
+```js flow-check
+class Point {
+  x: number;
+  y: number;
+}
+
+declare const p: Point;
+declare const NotAClass: string;
+
+match (p) {
+  NotAClass {...} => {} // ERROR: constructor must reference a single class
+  _ => {}
+}
+```
+
+Instance patterns are available by default since Flow v0.317.
+
 ## Array patterns
 
 Array patterns match both tuple and array values. For example, the pattern `['small', true]` matches array values whose length is `2` and whose elements match the pattern’s elements. If you want a looser length check, you can make the pattern inexact using `...`, for example `['small', true, ...]` will match arrays whose length is `>= 2` and whose first elements match the pattern’s elements. You can match any array or tuple with `[...]`.
@@ -135,3 +243,4 @@ const e = match (x) {
 
 - [Tuples](../types/tuples.md) — tuple patterns in match expressions
 - [Objects](../types/objects.md) — object patterns in match expressions
+- [Classes](../types/classes.md) — instance patterns in match expressions

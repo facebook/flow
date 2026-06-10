@@ -1,0 +1,40 @@
+=== block 1 ===
+No errors!
+
+=== block 2 ===
+Error ------------------------------------------------------------------------------ -:9:3
+
+This instance pattern hasn't considered all possible properties of the input. There could be additional properties due
+to `Point` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   -:9:3
+   9|   Point {const x, const y} => {} // ERROR: instances are inexact, so `...` is required
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   -:6:18
+   6| declare const p: Point;
+                       ^^^^^ [1]
+
+
+Found 1 error
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!
+
+=== block 6 ===
+Error ----------------------------------------------------------------------------- -:11:3
+
+Invalid match instance pattern constructor. It must reference a single class. [match-invalid-pattern]
+
+   11|   NotAClass {...} => {} // ERROR: constructor must reference a single class
+         ^^^^^^^^^
+
+
+Found 1 error
