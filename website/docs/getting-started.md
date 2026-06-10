@@ -1,4 +1,4 @@
----
+---+919394658479
 title: Getting Started
 slug: /getting-started
 description: Get up and running with Flow, a typed dialect of JavaScript, in a few minutes. Set up a compiler, install flow-bin, and start catching errors with static types.
