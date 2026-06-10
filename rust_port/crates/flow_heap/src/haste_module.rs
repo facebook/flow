@@ -18,6 +18,7 @@ use flow_utils_concurrency::locked_set::LockedSet;
 use parking_lot::RwLock;
 
 use crate::entity::Entity;
+use crate::entity::EntityTransaction;
 
 #[derive(Debug, Clone, Dupe)]
 pub struct HasteModule {
@@ -28,10 +29,10 @@ pub struct HasteModule {
 }
 
 impl HasteModule {
-    pub fn new(module_info: HasteModuleInfo) -> Self {
+    pub(crate) fn new(transaction: EntityTransaction, module_info: HasteModuleInfo) -> Self {
         Self {
             module_info: Arc::new(module_info),
-            provider: Arc::new(Entity::empty()),
+            provider: Arc::new(Entity::empty(transaction)),
             dependents: Arc::new(LockedSet::new()),
             all_providers: Arc::new(RwLock::new(BTreeSet::new())),
         }
@@ -59,10 +60,6 @@ impl HasteModule {
 
     pub fn set_provider(&self, provider: Option<FileKey>) {
         self.provider.advance(provider);
-    }
-
-    pub fn commit_provider(&self) {
-        self.provider.commit();
     }
 
     pub fn rollback_provider(&self) {

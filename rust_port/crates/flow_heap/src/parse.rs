@@ -26,6 +26,7 @@ use flow_utils_concurrency::locked_set::LockedSet;
 use parking_lot::RwLock;
 
 use crate::entity::Entity;
+use crate::entity::EntityTransaction;
 use crate::entity::ResolvedRequires;
 
 /// Compressed serialized bytes wrapper for heap-stored data.
@@ -42,16 +43,17 @@ pub struct FileEntry {
 
 impl FileEntry {
     pub(crate) fn new(
+        transaction: EntityTransaction,
         parse: Parse,
         haste_info: Option<HasteModuleInfo>,
         has_dependents: bool,
     ) -> Self {
         Self {
-            parse: Arc::new(Entity::new(parse)),
+            parse: Arc::new(Entity::new(transaction.dupe(), parse)),
             haste_info: Arc::new(if let Some(info) = haste_info {
-                Entity::new(info)
+                Entity::new(transaction, info)
             } else {
-                Entity::empty()
+                Entity::empty(transaction)
             }),
             dependents: if has_dependents {
                 Some(Arc::new(LockedSet::new()))
@@ -67,10 +69,10 @@ impl FileEntry {
     /// don't exist yet but are referenced as dependencies. The entry has no
     /// parse data and no haste info — it exists solely to hold the dependents
     /// list so that reverse-dep edges survive until the file is actually created.
-    pub(crate) fn new_phantom() -> Self {
+    pub(crate) fn new_phantom(transaction: EntityTransaction) -> Self {
         Self {
-            parse: Arc::new(Entity::empty()),
-            haste_info: Arc::new(Entity::empty()),
+            parse: Arc::new(Entity::empty(transaction.dupe())),
+            haste_info: Arc::new(Entity::empty(transaction)),
             dependents: Some(Arc::new(LockedSet::new())),
             alternate_file: Arc::new(RwLock::new(None)),
         }

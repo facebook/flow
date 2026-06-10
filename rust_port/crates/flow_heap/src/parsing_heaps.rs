@@ -40,6 +40,7 @@ use flow_type_sig::signature_error::TolerableError;
 use parking_lot::Mutex;
 
 use crate::entity::Dependency;
+use crate::entity::EntityTransaction;
 use crate::entity::ResolvedRequires;
 use crate::haste_module::HasteModule;
 use crate::parse::FileEntry;
@@ -50,6 +51,7 @@ use crate::parse::TypedParse;
 pub struct SharedMem {
     file_heap: GcMap<FileKey, FileEntry>,
     pub haste_module_heap: GcMap<HasteModuleInfo, HasteModule>,
+    entity_transaction: EntityTransaction,
     reader_cache: ReaderCache,
     configured_heap_size: Option<u64>,
     configured_hash_table_pow: Option<u32>,
@@ -249,6 +251,7 @@ impl SharedMem {
         Self {
             file_heap: GcMap::new(),
             haste_module_heap: GcMap::new(),
+            entity_transaction: EntityTransaction::new(),
             reader_cache: ReaderCache::new(),
             configured_heap_size,
             configured_hash_table_pow,
@@ -751,8 +754,10 @@ impl SharedMem {
         Some(component)
     }
 
-    pub fn file_has_changed(&self, _file: &FileKey) -> bool {
-        false
+    pub fn file_has_changed(&self, file: &FileKey) -> bool {
+        self.file_heap
+            .get(file)
+            .is_some_and(|entry| entry.parse.has_changed())
     }
 
     pub fn get_alternate_file(&self, file: &FileKey) -> Option<FileKey> {
@@ -768,9 +773,9 @@ impl SharedMem {
     }
 
     pub fn get_or_create_haste_module(&self, info: HasteModuleInfo) -> HasteModule {
-        let (module, inserted) = self
-            .haste_module_heap
-            .ensure(&info, || HasteModule::new(info.clone()));
+        let (module, inserted) = self.haste_module_heap.ensure(&info, || {
+            HasteModule::new(self.entity_transaction.dupe(), info.clone())
+        });
         if inserted {
             self.note_alloc();
         }
@@ -821,8 +826,10 @@ impl SharedMem {
         }
         let impl_key = files::chop_declaration_ext(file);
         if self.file_heap.get(&impl_key).is_none() {
-            self.file_heap
-                .insert(impl_key.dupe(), FileEntry::new_phantom());
+            self.file_heap.insert(
+                impl_key.dupe(),
+                FileEntry::new_phantom(self.entity_transaction.dupe()),
+            );
         }
         self.set_alternate_file(&impl_key, file.dupe());
         BTreeSet::new()
@@ -859,10 +866,11 @@ impl SharedMem {
                 ),
                 None => (
                     Arc::new(crate::entity::Entity::new(
+                        self.entity_transaction.dupe(),
                         crate::entity::ResolvedRequires::new(vec![], vec![]),
                     )),
-                    Arc::new(crate::entity::Entity::empty()),
-                    Arc::new(crate::entity::Entity::empty()),
+                    Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
+                    Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
                 ),
             };
 
@@ -897,14 +905,16 @@ impl SharedMem {
                 exports,
                 requires,
                 Arc::new(crate::entity::Entity::new(
+                    self.entity_transaction.dupe(),
                     crate::entity::ResolvedRequires::new(vec![], vec![]),
                 )),
                 imports,
-                Arc::new(crate::entity::Entity::empty()),
-                Arc::new(crate::entity::Entity::empty()),
+                Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
+                Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
             );
 
             let file_entry = FileEntry::new(
+                self.entity_transaction.dupe(),
                 Parse::Typed(typed_parse.dupe()),
                 haste_module_info.clone(),
                 has_dependents,
@@ -968,6 +978,7 @@ impl SharedMem {
         } else {
             let untyped_parse = UntypedParse::new(file_hash);
             let file_entry = FileEntry::new(
+                self.entity_transaction.dupe(),
                 Parse::Untyped(untyped_parse.dupe()),
                 haste_module_info.clone(),
                 has_dependents,
@@ -1061,6 +1072,7 @@ impl SharedMem {
         } else {
             let package_parse = PackageParse::new(file_hash, package_info);
             let file_entry = FileEntry::new(
+                self.entity_transaction.dupe(),
                 Parse::Package(package_parse.dupe()),
                 haste_module_info.clone(),
                 has_dependents,
@@ -1151,7 +1163,9 @@ impl SharedMem {
             }
             Dependency::HasteModule(Modulename::Filename(dep_file))
             | Dependency::File(dep_file) => {
-                let (dep_entry, inserted) = self.file_heap.ensure(dep_file, FileEntry::new_phantom);
+                let (dep_entry, inserted) = self.file_heap.ensure(dep_file, || {
+                    FileEntry::new_phantom(self.entity_transaction.dupe())
+                });
                 dep_entry.add_dependent(file.dupe());
                 usize::from(inserted)
             }
@@ -1555,18 +1569,7 @@ impl SharedMem {
     }
 
     pub fn commit_entities(&self) {
-        for entry in self.file_heap.values() {
-            entry.parse.commit();
-            entry.haste_info.commit();
-            if let Some(Parse::Typed(typed)) = entry.parse_latest() {
-                typed.resolved_requires.commit();
-                typed.leader.commit();
-                typed.sig_hash.commit();
-            }
-        }
-        for module in self.haste_module_heap.values() {
-            module.commit_provider();
-        }
+        self.entity_transaction.commit();
     }
 
     pub fn rollback_entities(&self) {
@@ -1638,6 +1641,29 @@ mod tests {
             Some(Parse::Untyped(_))
         ));
         assert_eq!(shared_mem.heap_size(), 1);
+    }
+
+    #[test]
+    fn commit_entities_commits_the_current_transaction() {
+        let shared_mem = SharedMem::new();
+        let a = source_file("a.js");
+        let b = source_file("b.js");
+
+        shared_mem.add_unparsed(a.dupe(), 1, None);
+        shared_mem.add_unparsed(b.dupe(), 1, None);
+        shared_mem.commit_entities();
+
+        shared_mem.add_unparsed(a.dupe(), 2, None);
+        shared_mem.add_unparsed(b.dupe(), 2, None);
+        shared_mem.commit_entities();
+
+        assert_eq!(shared_mem.get_file_hash_committed(&a), Some(2));
+        assert_eq!(shared_mem.get_file_hash_committed(&b), Some(2));
+
+        shared_mem.rollback_entities();
+
+        assert_eq!(shared_mem.get_file_hash(&a), Some(2));
+        assert_eq!(shared_mem.get_file_hash(&b), Some(2));
     }
 
     #[test]

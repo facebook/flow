@@ -2014,9 +2014,6 @@ pub(crate) fn recheck_impl(
         return Err(RecheckError::Canceled(Vec::new()));
     }
 
-    shared_mem.commit_entities();
-    check_recheck_canceled()?;
-
     let recheck::RecheckResult {
         modified_count,
         deleted_count,
@@ -2029,6 +2026,9 @@ pub(crate) fn recheck_impl(
         slowest_file,
         num_slow_files,
     } = stats;
+
+    shared_mem.commit_entities();
+    check_recheck_canceled()?;
 
     let (collated_errors, error_resolution_stat) =
         with_memory_timer(options, "CollateErrors", || {
