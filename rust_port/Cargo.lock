@@ -588,6 +588,7 @@ dependencies = [
 name = "flow_common"
 version = "0.0.0"
 dependencies = [
+ "dunce",
  "dupe",
  "flow_aloc",
  "flow_common_leb128",

@@ -27,12 +27,7 @@ fn spec() -> command_spec::Spec {
         "Usage: flow stop [OPTION]... [ROOT]\nStops a flow server\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be current directory if unspecified\n".to_string(),
     );
     let spec = command_utils::add_base_flags(spec);
-    let spec = spec.flag(
-        "--temp-dir",
-        &arg_spec::optional(arg_spec::string()),
-        "Temp directory",
-        None,
-    );
+    let spec = command_utils::add_temp_dir_flag(spec);
     let spec = command_utils::add_from_flag(spec);
     spec.flag("--quiet", &arg_spec::truthy(), "Quiet mode", None)
         .anon("root", &arg_spec::optional(arg_spec::string()))
@@ -48,9 +43,11 @@ fn main(args: &arg_spec::Values) {
         command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
 
     let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
-    let tmp_dir = temp_dir.unwrap_or_else(|| {
-        std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned())
-    });
+    // Resolve the temp dir the same way `start`/`status` do (platform temp dir
+    // via `default_temp_dir`), otherwise `stop` looks for the server's lock and
+    // socket files in the wrong place (e.g. the Unix `/tmp/flow` on Windows) and
+    // reports "no server to kill" even when a server is running.
+    let tmp_dir = command_utils::get_temp_dir(&temp_dir);
 
     if !quiet {
         eprintln!("Trying to connect to server for `{}`", root.display());

@@ -6,6 +6,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+dunce = "1.0.5"
 dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
 flow_common_leb128 = { path = "../flow_common_leb128" }

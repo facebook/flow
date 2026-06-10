@@ -59,7 +59,13 @@ impl CanonicalizeCache {
                 )),
             }
         } else {
-            let result = std::fs::canonicalize(path);
+            // Use `dunce::canonicalize` instead of `std::fs::canonicalize`: on
+            // Windows the latter returns a `\\?\` verbatim path, whose `?` is an
+            // illegal filename character once the root is escaped into derived
+            // paths (e.g. the server lock file), causing spurious "server already
+            // running" failures. `dunce` strips the prefix when it is safe to do
+            // so and is a passthrough to std on other platforms.
+            let result = dunce::canonicalize(path);
             let cached_value = result.as_ref().ok().cloned();
             shard.insert(path.to_path_buf(), cached_value);
             result
