@@ -6,10 +6,12 @@
  */
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_common::flow_import_specifier::Userland;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 
@@ -156,27 +158,43 @@ impl Ord for Export {
 
 pub type ExportMap<V> = BTreeMap<Export, V>;
 
-pub type ExportIndex = BTreeMap<FlowSmolStr, ExportMap<i32>>;
+pub type ExportIndex = FlowOrdMap<FlowSmolStr, Arc<ExportMap<i32>>>;
 
 pub fn empty() -> ExportIndex {
-    BTreeMap::new()
+    FlowOrdMap::new()
 }
 
 pub fn add(name: &str, source: Source, kind: Kind, t: &mut ExportIndex) {
-    let exports = t.entry(FlowSmolStr::new(name)).or_default();
+    let exports = t
+        .entry(FlowSmolStr::new(name))
+        .or_insert_with(|| Arc::new(BTreeMap::new()));
+    let exports = Arc::make_mut(exports);
     let key = Export(source, kind);
     *exports.entry(key).or_insert(0) += 1;
 }
 
 pub fn merge(x: &ExportIndex, y: &ExportIndex) -> ExportIndex {
-    let mut result = x.clone();
-    for (name, y_exports) in y {
-        let entry = result.entry(name.dupe()).or_default();
-        for (export_key, y_count) in y_exports {
+    if x.is_empty() {
+        return y.dupe();
+    }
+    if y.is_empty() || x.ptr_eq(y) {
+        return x.dupe();
+    }
+    let mut result = x.dupe();
+    merge_into(&mut result, y);
+    result
+}
+
+fn merge_into(result: &mut ExportIndex, index: &ExportIndex) {
+    for (name, y_exports) in index.iter() {
+        let entry = result
+            .entry(name.dupe())
+            .or_insert_with(|| Arc::new(BTreeMap::new()));
+        let entry = Arc::make_mut(entry);
+        for (export_key, y_count) in y_exports.as_ref() {
             *entry.entry(export_key.clone()).or_insert(0) += y_count;
         }
     }
-    result
 }
 
 pub fn merge_all(indices: Vec<ExportIndex>) -> ExportIndex {
@@ -185,30 +203,38 @@ pub fn merge_all(indices: Vec<ExportIndex>) -> ExportIndex {
     // operate on small maps that fit in cache.
     const BATCH_SIZE: usize = 64;
 
+    fn fold_owned(mut acc: ExportIndex, indices: &[ExportIndex]) -> ExportIndex {
+        for index in indices {
+            merge_into(&mut acc, index);
+        }
+        acc
+    }
+
+    fn fold_batch(batch: Vec<ExportIndex>) -> ExportIndex {
+        let mut batch = batch.into_iter();
+        match batch.next() {
+            None => empty(),
+            Some(first) => fold_owned(first, batch.as_slice()),
+        }
+    }
+
     // let rec batch_fold acc batch batch_len = function
-    fn batch_fold<'a>(
-        mut acc: Vec<ExportIndex>,
-        mut batch: Vec<&'a ExportIndex>,
-        batch_len: usize,
-        rest: &[&'a ExportIndex],
-    ) -> Vec<ExportIndex> {
-        match rest.split_first() {
-            None => {
-                let batched = batch.iter().fold(empty(), |acc, index| merge(index, &acc));
-                acc.push(batched);
-                acc
-            }
-            Some((x, rest)) => {
-                if batch_len >= BATCH_SIZE {
-                    let batched = batch.iter().fold(empty(), |acc, index| merge(index, &acc));
-                    acc.push(batched);
-                    batch_fold(acc, vec![*x], 1, rest)
-                } else {
-                    batch.push(*x);
-                    batch_fold(acc, batch, batch_len + 1, rest)
-                }
+    fn batch_fold(indices: Vec<ExportIndex>) -> Vec<ExportIndex> {
+        let mut acc = Vec::new();
+        let mut batch = Vec::new();
+        let mut batch_len = 0;
+        for x in indices {
+            if batch_len >= BATCH_SIZE {
+                acc.push(fold_batch(batch));
+                batch = vec![x];
+                batch_len = 1;
+            } else {
+                batch.push(x);
+                batch_len += 1;
             }
         }
+        acc.push(fold_batch(batch));
+        acc
     }
 
     let mut indices_iter = indices.into_iter();
@@ -218,20 +244,27 @@ pub fn merge_all(indices: Vec<ExportIndex>) -> ExportIndex {
         (Some(x), Some(y)) => {
             let mut indices = vec![x, y];
             indices.extend(indices_iter);
-            let indices = indices.iter().collect::<Vec<_>>();
-            let batched = batch_fold(Vec::new(), Vec::new(), 0, &indices);
-            batched
-                .iter()
-                .fold(empty(), |acc, index| merge(index, &acc))
+            let batched = batch_fold(indices);
+            let mut batched = batched.into_iter();
+            match batched.next() {
+                None => empty(),
+                Some(first) => fold_owned(first, batched.as_slice()),
+            }
         }
     }
 }
 
 pub fn merge_export_import(add_index: &ExportIndex, t: &ExportIndex) -> ExportIndex {
-    let mut acc = t.clone();
-    for (name, add_exports) in add_index {
-        let entry = acc.entry(name.dupe()).or_default();
-        for (export_key, add_count) in add_exports {
+    if add_index.is_empty() {
+        return t.dupe();
+    }
+    let mut acc = t.dupe();
+    for (name, add_exports) in add_index.iter() {
+        let entry = acc
+            .entry(name.dupe())
+            .or_insert_with(|| Arc::new(BTreeMap::new()));
+        let entry = Arc::make_mut(entry);
+        for (export_key, add_count) in add_exports.as_ref() {
             let Export(source, _) = export_key;
             if let Some(existing_count) = entry.get_mut(export_key) {
                 *existing_count += add_count;
@@ -254,8 +287,8 @@ pub fn fold_names<Acc>(
     t: &ExportIndex,
 ) -> Acc {
     let mut acc = init;
-    for (name, exports) in t {
-        acc = f(acc, name, exports);
+    for (name, exports) in t.iter() {
+        acc = f(acc, name, exports.as_ref());
     }
     acc
 }
@@ -278,7 +311,7 @@ pub fn map(f: impl Fn(&i32) -> i32, t: &ExportIndex) -> ExportIndex {
     t.iter()
         .map(|(name, exports)| {
             let new_exports = exports.iter().map(|(k, v)| (k.clone(), f(v))).collect();
-            (name.dupe(), new_exports)
+            (name.dupe(), Arc::new(new_exports))
         })
         .collect()
 }
@@ -286,6 +319,9 @@ pub fn map(f: impl Fn(&i32) -> i32, t: &ExportIndex) -> ExportIndex {
 // Returns tuple of two disjoint index: (addition_index, removal_index),
 // to be passed to [merge] and [subtract].
 pub fn diff(old_index: &ExportIndex, new_index: &ExportIndex) -> (ExportIndex, ExportIndex) {
+    if old_index.ptr_eq(new_index) || old_index == new_index {
+        return (empty(), empty());
+    }
     let exist_in_index = |export_name: &str, export_key: &Export, map: &ExportIndex| -> bool {
         match map.get(export_name) {
             None => false,
@@ -293,8 +329,8 @@ pub fn diff(old_index: &ExportIndex, new_index: &ExportIndex) -> (ExportIndex, E
         }
     };
     let diff_index = |l: &ExportIndex, r: &ExportIndex| -> ExportIndex {
-        let mut acc: ExportIndex = BTreeMap::new();
-        for (export_name, map) in l {
+        let mut acc = empty();
+        for (export_name, map) in l.iter() {
             for export_key in map.keys() {
                 if exist_in_index(export_name, export_key, r) {
                 } else {
@@ -314,9 +350,12 @@ pub fn diff(old_index: &ExportIndex, new_index: &ExportIndex) -> (ExportIndex, E
 // [subtract to_remove t] removes all of the exports in [to_remove] from [t], and
 // also returns a list of keys that no longer are exported by any file.
 pub fn subtract(old_t: &ExportIndex, t: &ExportIndex) -> (ExportIndex, Vec<FlowSmolStr>) {
-    let mut result = t.clone();
+    if old_t.is_empty() || t.is_empty() {
+        return (t.dupe(), Vec::new());
+    }
+    let mut result = t.dupe();
     let mut dead_names: Vec<FlowSmolStr> = Vec::new();
-    for (name, files_to_remove) in old_t {
+    for (name, files_to_remove) in old_t.iter() {
         match result.get(name) {
             Some(files) => {
                 let updated: ExportMap<i32> = files
@@ -325,10 +364,10 @@ pub fn subtract(old_t: &ExportIndex, t: &ExportIndex) -> (ExportIndex, Vec<FlowS
                     .map(|(k, v)| (k.clone(), *v))
                     .collect();
                 if updated.is_empty() {
-                    result.remove(name.as_str());
+                    result.remove(name);
                     dead_names.push(name.dupe());
                 } else {
-                    result.insert(name.dupe(), updated);
+                    result.insert(name.dupe(), Arc::new(updated));
                 }
             }
             None => {}
@@ -338,10 +377,14 @@ pub fn subtract(old_t: &ExportIndex, t: &ExportIndex) -> (ExportIndex, Vec<FlowS
 }
 
 pub fn subtract_count(rem: &ExportIndex, t: &ExportIndex) -> ExportIndex {
-    let mut acc = t.clone();
-    for (name, rem_exports) in rem {
+    if rem.is_empty() || t.is_empty() {
+        return t.dupe();
+    }
+    let mut acc = t.dupe();
+    for (name, rem_exports) in rem.iter() {
         if let Some(existing) = acc.get_mut(name) {
-            for (export_key, rem_count) in rem_exports {
+            let existing = Arc::make_mut(existing);
+            for (export_key, rem_count) in rem_exports.as_ref() {
                 if let Some(n) = existing.get_mut(export_key) {
                     *n -= rem_count;
                 }
@@ -354,7 +397,7 @@ pub fn subtract_count(rem: &ExportIndex, t: &ExportIndex) -> ExportIndex {
 // [find name t] returns all of the [(file_key, kind)] tuples that export [name]
 pub fn find(name: &str, t: &ExportIndex) -> ExportMap<i32> {
     match t.get(name) {
-        Some(exports) => exports.clone(),
+        Some(exports) => exports.as_ref().clone(),
         None => BTreeMap::new(),
     }
 }

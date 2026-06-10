@@ -23,7 +23,15 @@ pub use im::ordmap::Iter;
 /// This type provides the same functionality as im::OrdMap but also implements
 /// the Dupe trait, making it consistent with other types in the Flow codebase
 /// that use `.dupe()` for cheap copies.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FlowOrdMap<K: Ord + Clone, V: Clone>(im::OrdMap<K, V>);
 
 impl<K: Ord + Clone, V: Ord + Clone> PartialOrd for FlowOrdMap<K, V> {
@@ -57,6 +65,10 @@ impl<K: Ord + Clone, V: Clone> FlowOrdMap<K, V> {
 
     pub fn as_inner(&self) -> &im::OrdMap<K, V> {
         &self.0
+    }
+
+    pub fn ptr_eq(&self, other: &Self) -> bool {
+        self.0.ptr_eq(&other.0)
     }
 }
 

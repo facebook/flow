@@ -26,7 +26,7 @@ use crate::fuzzy_path::FuzzyPath;
 
 #[derive(Debug, Clone)]
 pub struct ExportSearch {
-    index: Arc<ExportIndex>,
+    index: ExportIndex,
     value_matcher: Arc<Mutex<FuzzyPath>>,
     type_matcher: Arc<Mutex<FuzzyPath>>,
 }
@@ -74,8 +74,8 @@ fn summarize_exports(exports: &ExportMap<i32>) -> (bool, bool, i32) {
 fn partition_candidates(index: &ExportIndex) -> Candidates {
     let mut values: Vec<(FlowSmolStr, i32)> = Vec::new();
     let mut types: Vec<(FlowSmolStr, i32)> = Vec::new();
-    for (name, exports) in index {
-        let (has_value, has_type, max_count) = summarize_exports(exports);
+    for (name, exports) in index.iter() {
+        let (has_value, has_type, max_count) = summarize_exports(exports.as_ref());
         if has_value {
             values.push((name.dupe(), max_count));
         }
@@ -90,7 +90,7 @@ pub fn init(index: ExportIndex) -> ExportSearch {
     let Candidates { values, types } = partition_candidates(&index);
     let (value_matcher, type_matcher) = FuzzyPath::init_pair_from_arrays(values, types);
     ExportSearch {
-        index: Arc::new(index),
+        index,
         value_matcher: Arc::new(Mutex::new(value_matcher)),
         type_matcher: Arc::new(Mutex::new(type_matcher)),
     }
@@ -103,7 +103,7 @@ pub fn merge_available_exports(
 ) -> ExportSearch {
     let (addition_index, removal_index) =
         export_index::diff(old_available_exports_index, new_available_exports_index);
-    let (index, dead_candidates) = export_index::subtract(&removal_index, search.index.as_ref());
+    let (index, dead_candidates) = export_index::subtract(&removal_index, &search.index);
     search
         .value_matcher
         .lock()
@@ -127,16 +127,16 @@ pub fn merge_available_exports(
         .expect("export search type matcher mutex poisoned")
         .add_candidates(types);
     ExportSearch {
-        index: Arc::new(index),
+        index,
         value_matcher: search.value_matcher.clone(),
         type_matcher: search.type_matcher.clone(),
     }
 }
 
 pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> ExportSearch {
-    let index = export_index::subtract_count(removed_imports, search.index.as_ref());
+    let index = export_index::subtract_count(removed_imports, &search.index);
     ExportSearch {
-        index: Arc::new(index),
+        index,
         value_matcher: search.value_matcher.clone(),
         type_matcher: search.type_matcher.clone(),
     }
@@ -144,9 +144,9 @@ pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> E
 
 // (*Merge_import *)
 pub fn merge_export_import(new_index: &ExportIndex, search: &ExportSearch) -> ExportSearch {
-    let index = export_index::merge_export_import(new_index, search.index.as_ref());
+    let index = export_index::merge_export_import(new_index, &search.index);
     ExportSearch {
-        index: Arc::new(index),
+        index,
         value_matcher: search.value_matcher.clone(),
         type_matcher: search.type_matcher.clone(),
     }
@@ -318,13 +318,7 @@ fn search_internal(options: &SearchOptions, query: Query, search: &ExportSearch)
             panic!("BothValueAndType query should be handled by search_both_values_and_types")
         }
     };
-    take(
-        weighted,
-        max_results,
-        search.index.as_ref(),
-        &query,
-        &fuzzy_matches,
-    )
+    take(weighted, max_results, &search.index, &query, &fuzzy_matches)
 }
 
 pub fn search_values(
@@ -389,7 +383,7 @@ pub fn search_both_values_and_types(
     } = take(
         weighted,
         max_results,
-        t.index.as_ref(),
+        &t.index,
         &Query::BothValueAndType(query.to_string()),
         &combined,
     );
@@ -419,11 +413,11 @@ pub fn search_both_values_and_types(
 
 // let get_index t = t.index
 pub fn get_index(t: &ExportSearch) -> &ExportIndex {
-    t.index.as_ref()
+    &t.index
 }
 
 pub fn get(name: &str, t: &ExportSearch) -> ExportMap<i32> {
-    export_index::find(name, t.index.as_ref())
+    export_index::find(name, &t.index)
 }
 
 pub fn get_values(name: &str, t: &ExportSearch) -> ExportMap<i32> {

@@ -40,6 +40,32 @@ fn assert_exports(expected: &[(Source, Kind)], actual: &export_index::ExportMap<
 }
 
 #[test]
+fn empty_operations_reuse_index() {
+    let mut index = export_index::empty();
+    export_index::add(
+        "foo",
+        file_source("path/to/foo.js"),
+        Kind::Named,
+        &mut index,
+    );
+    let empty = export_index::empty();
+
+    assert!(export_index::merge(&empty, &index).ptr_eq(&index));
+    assert!(export_index::merge(&index, &empty).ptr_eq(&index));
+
+    let (updated, dead_names) = export_index::subtract(&empty, &index);
+    assert!(updated.ptr_eq(&index));
+    assert!(dead_names.is_empty());
+
+    assert!(export_index::subtract_count(&empty, &index).ptr_eq(&index));
+    assert!(export_index::merge_export_import(&empty, &index).ptr_eq(&index));
+
+    let (addition_index, removal_index) = export_index::diff(&index, &index);
+    assert!(addition_index.is_empty());
+    assert!(removal_index.is_empty());
+}
+
+#[test]
 fn sorted_by_filename_ignoring_extension() {
     let file_a = file_source("path/to/a.js");
     let file_a_foo = file_source("path/to/a.foo.js");
