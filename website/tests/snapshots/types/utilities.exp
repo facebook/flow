@@ -674,7 +674,148 @@ References:
 Found 1 error
 
 === block 40 ===
-No errors!
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'hello'` to `Greeting` because string literal `hello` [1] is incompatible with string literal `HELLO` [2].
+[incompatible-type]
+
+   -:4:1
+   4| 'hello' as Greeting; // ERROR
+      ^^^^^^^ [1]
+
+References:
+   -:4:12
+   4| 'hello' as Greeting; // ERROR
+                 ^^^^^^^^ [2]
+
+
+Found 1 error
 
 === block 41 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'WARNING'` to `Tag` because string literal `WARNING` [1] is incompatible with string literal `warning` [2].
+[incompatible-type]
+
+   -:4:1
+   4| 'WARNING' as Tag; // ERROR
+      ^^^^^^^^^ [1]
+
+References:
+   -:4:14
+   4| 'WARNING' as Tag; // ERROR
+                   ^^^ [2]
+
+
+Found 1 error
+
+=== block 42 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'flow'` to `Name` because string literal `flow` [1] is incompatible with string literal `Flow` [2].
+[incompatible-type]
+
+   -:4:1
+   4| 'flow' as Name; // ERROR
+      ^^^^^^ [1]
+
+References:
+   -:4:11
+   4| 'flow' as Name; // ERROR
+                ^^^^ [2]
+
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'FLOW'` to `Name` because string literal `FLOW` [1] is incompatible with string literal `Flow` [2].
+[incompatible-type]
+
+   -:5:1
+   5| 'FLOW' as Name; // ERROR
+      ^^^^^^ [1]
+
+References:
+   -:5:11
+   5| 'FLOW' as Name; // ERROR
+                ^^^^ [2]
+
+
+Found 2 errors
+
+=== block 43 ===
+Error ----------------------------------------------------------------------------- -:4:1
+
+Cannot cast `'FullName'` to `Field` because string literal `FullName` [1] is incompatible with string literal
+`fullName` [2]. [incompatible-type]
+
+   -:4:1
+   4| 'FullName' as Field; // ERROR
+      ^^^^^^^^^^ [1]
+
+References:
+   -:4:15
+   4| 'FullName' as Field; // ERROR
+                    ^^^^^ [2]
+
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'fullname'` to `Field` because string literal `fullname` [1] is incompatible with string literal
+`fullName` [2]. [incompatible-type]
+
+   -:5:1
+   5| 'fullname' as Field; // ERROR (the tail is left untouched)
+      ^^^^^^^^^^ [1]
+
+References:
+   -:5:15
+   5| 'fullname' as Field; // ERROR (the tail is left untouched)
+                    ^^^^^ [2]
+
+
+Found 2 errors
+
+=== block 44 ===
+Error ----------------------------------------------------------------------------- -:5:1
+
+Cannot cast `'south'` to `Direction` because string literal `south` [1] is incompatible with `Direction` [2].
+[incompatible-type]
+
+   -:5:1
+   5| 'south' as Direction; // ERROR
+      ^^^^^^^ [1]
+
+References:
+   -:5:12
+   5| 'south' as Direction; // ERROR
+                 ^^^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 45 ===
+No errors!
+
+=== block 46 ===
+Error ----------------------------------------------------------------------------- -:6:1
+
+Cannot cast `'anything'` to `Loud` because string literal `anything` [1] is incompatible with `Loud` [2].
+[incompatible-type]
+
+The string literal must already be in `Uppercase` canonical form to be a member of this type.
+
+   -:6:1
+   6| 'anything' as Loud; // ERROR (not already upper case)
+      ^^^^^^^^^^ [1]
+
+References:
+   -:6:15
+   6| 'anything' as Loud; // ERROR (not already upper case)
+                    ^^^^ [2]
+
+
+Found 1 error
+
+=== block 47 ===
+No errors!
+
+=== block 48 ===
 No errors!

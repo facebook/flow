@@ -4,10 +4,12 @@ slug: /types/utilities
 description: "Reference for Flow's built-in utility types: keyof, Partial, Required, Readonly, Pick, Omit, Exclude, Extract, and more."
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Flow provides a set of utility types to operate on other types to create new types.
 
 :::info TypeScript comparison
-Most utility types align directly with TypeScript: `Readonly`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, and `keyof`. See [Concepts that transfer cleanly from TypeScript](../flow-vs-typescript.md#toc-transfer-cleanly) for more.
+Most utility types align directly with TypeScript: `Readonly`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `NoInfer`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`, and `keyof`. See [Concepts that transfer cleanly from TypeScript](../flow-vs-typescript.md#toc-transfer-cleanly) for more.
 :::
 
 ## `keyof T` {#toc-keys}
@@ -586,6 +588,74 @@ type Price = StringPrefix<'$', '1' | '2'>;
 ```
 
 When not specified, the type of the remainder is just `string`.
+
+## `Uppercase<T>`, `Lowercase<T>`, `Capitalize<T>`, `Uncapitalize<T>` <SinceVersion version="0.316" /> {#toc-string-casing}
+
+These four utility types transform the casing of a string type:
+
+- `Uppercase<T>` converts every character to upper case.
+- `Lowercase<T>` converts every character to lower case.
+- `Capitalize<T>` converts the first character to upper case, leaving the rest unchanged.
+- `Uncapitalize<T>` converts the first character to lower case, leaving the rest unchanged.
+
+The argument must be a [string](./primitives.md#toc-strings) type. Applied to a [string literal](./literals.md) type, the result is the transformed literal:
+
+```js flow-check
+type Greeting = Uppercase<'hello'>; // 'HELLO'
+'HELLO' as Greeting; // OK
+'hello' as Greeting; // ERROR
+```
+
+```js flow-check
+type Tag = Lowercase<'WARNING'>; // 'warning'
+'warning' as Tag; // OK
+'WARNING' as Tag; // ERROR
+```
+
+`Capitalize` and `Uncapitalize` only change the first character:
+
+```js flow-check
+type Name = Capitalize<'flow'>; // 'Flow'
+'Flow' as Name; // OK
+'flow' as Name; // ERROR
+'FLOW' as Name; // ERROR
+```
+
+```js flow-check
+type Field = Uncapitalize<'FullName'>; // 'fullName'
+'fullName' as Field; // OK
+'FullName' as Field; // ERROR
+'fullname' as Field; // ERROR (the tail is left untouched)
+```
+
+They distribute over [union](./unions.md) types, transforming each member independently:
+
+```js flow-check
+type Direction = Uppercase<'north' | 'south'>; // 'NORTH' | 'SOUTH'
+'NORTH' as Direction; // OK
+'SOUTH' as Direction; // OK
+'south' as Direction; // ERROR
+```
+
+You can nest them to compose transformations:
+
+```js flow-check
+type RoundTrip = Uncapitalize<Capitalize<'foo'>>;
+'foo' as RoundTrip; // OK
+
+type Nested = Uppercase<Lowercase<'AbC'>>;
+'ABC' as Nested; // OK
+```
+
+Applied to the general `string` type, the result is still a `string`, but it represents only the strings that are already in the transformed form. A concrete literal must already be in that form to be a member:
+
+```js flow-check
+type Loud = Uppercase<string>;
+declare const x: Loud;
+x as string; // OK
+'ANYTHING' as Loud; // OK
+'anything' as Loud; // ERROR (not already upper case)
+```
 
 ## `$Exact<T>` (Discouraged) {#toc-exact}
 
