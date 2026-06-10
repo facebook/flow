@@ -753,13 +753,7 @@ module Opts = struct
     uint (fun opts v -> Ok { opts with file_watcher_edenfs_timeout = v })
 
   let file_watcher_edenfs_max_commit_distance_parser =
-    uint (fun opts v ->
-        if v > 0 && not opts.saved_state_restart_on_reinit then
-          Error
-            "file_watcher.edenfs.max_commit_distance requires saved_state_restart_on_reinit=true"
-        else
-          Ok { opts with file_watcher_edenfs_max_commit_distance = v }
-    )
+    uint (fun opts v -> Ok { opts with file_watcher_edenfs_max_commit_distance = v })
 
   let file_watcher_edenfs_subprocess_mergebase_parser =
     boolean (fun opts v -> Ok { opts with file_watcher_edenfs_subprocess_mergebase = v })

@@ -1328,12 +1328,6 @@ pub mod opts {
     ) -> Result<(), OptError> {
         parse_uint(
             |opts, v| {
-                if v > 0 && !opts.saved_state_restart_on_reinit {
-                    return Err(
-                        "file_watcher.edenfs.max_commit_distance requires saved_state_restart_on_reinit=true"
-                            .to_string(),
-                    );
-                }
                 opts.file_watcher_edenfs_max_commit_distance = v;
                 Ok(())
             },
