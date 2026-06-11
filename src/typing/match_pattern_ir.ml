@@ -170,7 +170,11 @@ module rec PatternObject : sig
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
-    class_info: (ALoc.id * string option) option;
+    (* For instance patterns: the class id, the class name, the set of super
+       class ids, and the instance type of the constructor. The super ids and
+       instance type are used to recognize patterns whose class is a strict
+       subclass of the value's class. *)
+    class_info: (ALoc.id * string option * ALocIDSet.t * Type.t) option;
     keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
@@ -215,7 +219,7 @@ end = struct
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
-    class_info: (ALoc.id * string option) option;
+    class_info: (ALoc.id * string option * ALocIDSet.t * Type.t) option;
     keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
@@ -259,7 +263,7 @@ end = struct
   let to_string (_, { kind; props; class_info; keys_order; rest; _ }) =
     let constructor =
       match class_info with
-      | Some (_, Some class_name) -> Utils_js.spf "%s " class_name
+      | Some (_, Some class_name, _, _) -> Utils_js.spf "%s " class_name
       | _ -> ""
     in
     match kind with
@@ -333,7 +337,7 @@ end = struct
       in
       let obj_pattern = { MatchPattern.ObjectPattern.properties; rest; comments = None } in
       (match class_info with
-      | Some (_, Some name) ->
+      | Some (_, Some name, _, _) ->
         let constructor =
           MatchPattern.InstancePattern.IdentifierConstructor
             (Loc.none, { Flow_ast.Identifier.name; comments = None })
@@ -575,7 +579,7 @@ end = struct
 
   let to_original_type (_, { t; _ }) = t
 
-  let to_pattern (reason, { props; class_info; rest; kind; sentinel_props; _ }) =
+  let to_pattern (reason, { props; class_info; rest; kind; sentinel_props; t; _ }) =
     let loc = Reason.loc_of_reason reason in
     let (props, keys_order, rest) =
       match kind with
@@ -653,7 +657,11 @@ end = struct
         let keys_order = Base.List.init length ~f:(fun i -> string_of_int i) in
         (props, keys_order, rest)
     in
-    let class_info = Base.Option.map class_info ~f:(fun (class_id, name, _) -> (class_id, name)) in
+    let class_info =
+      Base.Option.map class_info ~f:(fun (class_id, name, super_ids) ->
+          (class_id, name, super_ids, t)
+      )
+    in
     ( reason,
       {
         PatternObject.kind;

@@ -82,9 +82,57 @@ fn attempt_union_rep_optimization<'cx>(
     }
 }
 
-pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Option<FlowSmolStr>)> {
-    let concrete = singleton_concrete_type(cx, t);
-    let instance_t = match concrete.deref() {
+// Walk the `super` chain of an instance, collecting the ids of all super
+// classes. Does not include `class_id` itself. Stops on recursive extends.
+fn get_super_class_ids<'cx>(
+    cx: &Context<'cx>,
+    class_id: &ALocId,
+    super_: &Type,
+) -> FlowOrdSet<ALocId> {
+    fn loop_<'cx>(
+        cx: &Context<'cx>,
+        class_id: &ALocId,
+        mut acc: FlowOrdSet<ALocId>,
+        t: &Type,
+    ) -> FlowOrdSet<ALocId> {
+        match singleton_concrete_type(cx, t).deref() {
+            TypeInner::DefT(_, d) => match d.deref() {
+                DefTInner::InstanceT(inst_rc) => {
+                    let inst = inst_rc.deref();
+                    let inst_data = &inst.inst;
+                    match &inst_data.inst_kind {
+                        flow_typing_type::type_::InstanceKind::ClassKind
+                        | flow_typing_type::type_::InstanceKind::RecordKind { .. } => {
+                            let super_class_id = &inst_data.class_id;
+                            let super_ = &inst.super_;
+                            if super_class_id == class_id || acc.contains(super_class_id) {
+                                // Recursive extends: stop looping
+                                acc
+                            } else {
+                                acc.insert(super_class_id.dupe());
+                                loop_(cx, class_id, acc, super_)
+                            }
+                        }
+                        _ => acc,
+                    }
+                }
+                _ => acc,
+            },
+            _ => acc,
+        }
+    }
+    loop_(cx, class_id, FlowOrdSet::default(), super_)
+}
+
+// Like `get_class_info`, but also returns the set of super class ids and the
+// instance type of the constructor. Used when building instance patterns, so
+// we can later recognize patterns whose class is a strict subclass of the
+// value's class.
+fn get_class_info_with_supers<'cx>(
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)> {
+    let instance_t = match singleton_concrete_type(cx, t).deref() {
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::ClassT(class_t) => singleton_concrete_type(cx, class_t),
             _ => flow_typing_type::type_::empty_t::why(reason_of_t(t).dupe()),
@@ -96,11 +144,15 @@ pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Optio
             DefTInner::InstanceT(inst_rc) => {
                 let inst = inst_rc.deref();
                 let inst_data = &inst.inst;
+                let super_ = &inst.super_;
                 match &inst_data.inst_kind {
                     flow_typing_type::type_::InstanceKind::ClassKind
-                    | flow_typing_type::type_::InstanceKind::RecordKind { .. } => {
-                        Some((inst_data.class_id.dupe(), inst_data.class_name.dupe()))
-                    }
+                    | flow_typing_type::type_::InstanceKind::RecordKind { .. } => Some((
+                        inst_data.class_id.dupe(),
+                        inst_data.class_name.dupe(),
+                        get_super_class_ids(cx, &inst_data.class_id, super_),
+                        instance_t.dupe(),
+                    )),
                     _ => None,
                 }
             }
@@ -108,6 +160,10 @@ pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Optio
         },
         _ => None,
     }
+}
+
+pub fn get_class_info<'cx>(cx: &Context<'cx>, t: &Type) -> Option<(ALocId, Option<FlowSmolStr>)> {
+    get_class_info_with_supers(cx, t).map(|(class_id, class_name, _, _)| (class_id, class_name))
 }
 
 // (***********************)
@@ -615,10 +671,10 @@ pub mod pattern_union_builder {
                             }
                         }
                     };
-                match get_class_info(cx, constructor_t) {
-                    Some((class_id, class_name)) => {
+                match get_class_info_with_supers(cx, constructor_t) {
+                    Some((class_id, class_name, super_ids, instance_t)) => {
                         let class_name = constructor_name.or(class_name);
-                        let class_info = Some((class_id, class_name));
+                        let class_info = Some((class_id, class_name, super_ids, instance_t));
                         let (_, ref properties) = inner.properties;
                         object_pattern(
                             cx,
@@ -644,7 +700,7 @@ pub mod pattern_union_builder {
         next_i: usize,
         mut pattern_union: pattern_union::PatternUnion,
         guarded: bool,
-        class_info: Option<(ALocId, Option<FlowSmolStr>)>,
+        class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)>,
         pattern: &ast::match_pattern::ObjectPattern<ALoc, (ALoc, Type)>,
     ) -> (pattern_union::PatternUnion, usize) {
         use flow_parser::ast::match_pattern::object_pattern as ast_obj_pattern;
@@ -860,305 +916,251 @@ mod value_union_builder {
         let mut value_union = value_union;
         for t in ts.iter() {
             match t.deref() {
-                TypeInner::DefT(enum_reason, d) => {
-                    match d.deref() {
-                        DefTInner::EnumValueT(enum_info_rc) => match enum_info_rc.deref().deref() {
-                            EnumInfoInner::ConcreteEnum(enum_info) => {
-                                let members = &enum_info.members;
-                                let has_unknown_members = enum_info.has_unknown_members;
-                                let mut enum_leafs: LeafSet = FlowOrdSet::default();
-                                for (member_name, member_loc) in members.iter() {
-                                    let reason = flow_common::reason::mk_reason(
-                                        flow_common::reason::VirtualReasonDesc::REnumMember {
-                                            enum_desc: Arc::new(enum_reason.desc(true).clone()),
-                                            member_name: member_name.dupe(),
-                                        },
-                                        member_loc.dupe(),
-                                    );
-                                    enum_leafs.insert(leaf::Leaf(
-                                        reason,
-                                        leaf::LeafCtor::EnumMemberC(leaf::EnumMember {
-                                            member_name: member_name.dupe(),
-                                            enum_info: std::rc::Rc::new(enum_info.dupe()),
-                                        }),
-                                    ));
-                                }
-                                if has_unknown_members {
-                                    let reason = enum_reason.dupe().replace_desc(
-                                        flow_common::reason::VirtualReasonDesc::REnumUnknownMembers(
-                                            Arc::new(enum_reason.desc(true).clone()),
-                                        ),
-                                    );
-                                    value_union
-                                        .enum_unknown_members
-                                        .push((reason, enum_leafs.dupe()));
-                                }
-                                value_union.leafs.extend(enum_leafs);
-                            }
-                            _ => {
-                                value_union.inexhaustible.push(t.dupe());
-                            }
-                        },
-                        DefTInner::SingletonBoolT { value, .. } => {
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::BoolC(*value),
-                            ));
-                        }
-                        DefTInner::SingletonNumT { value, .. } => {
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::NumC(value.dupe()),
-                            ));
-                        }
-                        DefTInner::SingletonBigIntT { value, .. } => {
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::BigIntC(value.dupe()),
-                            ));
-                        }
-                        DefTInner::SingletonStrT { value, .. } => {
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::StrC(value.dupe()),
-                            ));
-                        }
-                        DefTInner::NullT => {
-                            value_union
-                                .leafs
-                                .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::NullC));
-                        }
-                        DefTInner::VoidT => {
-                            value_union
-                                .leafs
-                                .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::VoidC));
-                        }
-                        DefTInner::BoolGeneralT => {
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::BoolC(true),
-                            ));
-                            value_union.leafs.insert(leaf::Leaf(
-                                enum_reason.dupe(),
-                                leaf::LeafCtor::BoolC(false),
-                            ));
-                        }
-                        DefTInner::ArrT(arr_rc) => match arr_rc.deref() {
-                            ArrType::TupleAT(box TupleATData {
-                                elements,
-                                arity: (num_req, num_total),
-                                inexact,
-                                ..
-                            }) => {
-                                let reason = enum_reason;
-                                let rest = if *inexact { Some(reason.dupe()) } else { None };
-                                let props_list: Vec<_> = elements
-                                    .iter()
-                                    .map(|elem| {
-                                        let elem_t = if elem.optional {
-                                            match elem.t.deref() {
-                                                TypeInner::OptionalT { type_, .. } => type_.dupe(),
-                                                _ => elem.t.dupe(),
-                                            }
-                                        } else {
-                                            elem.t.dupe()
-                                        };
-                                        let elem_t = if flow_common::polarity::Polarity::compat(
-                                            elem.polarity,
-                                            flow_common::polarity::Polarity::Positive,
-                                        ) {
-                                            elem_t
-                                        } else {
-                                            flow_typing_type::type_::mixed_t::make(
-                                                elem.reason.dupe(),
-                                            )
-                                        };
-                                        let elem_t = elem_t.dupe();
-                                        let lazy_value: value_object::LazyValueUnion<
-                                            'cx,
-                                            Context<'cx>,
-                                        > = std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(
-                                            move |cx: &Context<'cx>| of_type(cx, &elem_t),
-                                        )));
-                                        let elem_loc = elem.reason.loc();
-                                        value_object::Property {
-                                            loc: elem_loc.dupe(),
-                                            value: lazy_value,
-                                            optional: false,
-                                        }
-                                    })
-                                    .collect();
-                                let num_req = *num_req as usize;
-                                let num_total = *num_total as usize;
-                                for idx in 0..=(num_total - num_req) {
-                                    let length = num_req + idx;
-                                    let mut props: FlowOrdMap<
-                                        FlowSmolStr,
-                                        Option<value_object::Property<'cx, Context<'cx>>>,
-                                    > = FlowOrdMap::default();
-                                    for (prop_i, prop) in props_list.iter().take(length).enumerate()
-                                    {
-                                        let key: FlowSmolStr = prop_i.to_string().into();
-                                        props.insert(key, Some(prop.dupe()));
-                                    }
-                                    let tuple = value_object::ValueObject(
-                                        reason.dupe(),
-                                        std::rc::Rc::new(value_object::ValueObjectInner {
-                                            kind: ObjKind::Tuple { length },
-                                            t: t.dupe(),
-                                            props,
-                                            class_info: None,
-                                            rest: rest.dupe(),
-                                            sentinel_props: FlowOrdSet::default(),
-                                        }),
-                                    );
-                                    value_union.tuples.push(tuple);
-                                }
-                            }
-                            ArrType::ArrayAT(box ArrayATData { .. })
-                            | ArrType::ROArrayAT(box (_, _)) => {
-                                let reason = enum_reason;
-                                let arr = value_object::ValueObject(
-                                    reason.dupe(),
-                                    std::rc::Rc::new(value_object::ValueObjectInner {
-                                        kind: ObjKind::Obj,
-                                        t: t.dupe(),
-                                        props: FlowOrdMap::default(),
-                                        class_info: None,
-                                        rest: Some(reason.dupe()),
-                                        sentinel_props: FlowOrdSet::default(),
-                                    }),
+                TypeInner::DefT(enum_reason, d) => match d.deref() {
+                    DefTInner::EnumValueT(enum_info_rc) => match enum_info_rc.deref().deref() {
+                        EnumInfoInner::ConcreteEnum(enum_info) => {
+                            let members = &enum_info.members;
+                            let has_unknown_members = enum_info.has_unknown_members;
+                            let mut enum_leafs: LeafSet = FlowOrdSet::default();
+                            for (member_name, member_loc) in members.iter() {
+                                let reason = flow_common::reason::mk_reason(
+                                    flow_common::reason::VirtualReasonDesc::REnumMember {
+                                        enum_desc: Arc::new(enum_reason.desc(true).clone()),
+                                        member_name: member_name.dupe(),
+                                    },
+                                    member_loc.dupe(),
                                 );
-                                value_union.arrays.push(arr);
+                                enum_leafs.insert(leaf::Leaf(
+                                    reason,
+                                    leaf::LeafCtor::EnumMemberC(leaf::EnumMember {
+                                        member_name: member_name.dupe(),
+                                        enum_info: std::rc::Rc::new(enum_info.dupe()),
+                                    }),
+                                ));
                             }
-                        },
-                        DefTInner::ObjT(obj_rc) => {
-                            let obj = obj_rc.deref();
-                            if obj.call_t.is_none() {
-                                let reason = enum_reason;
-                                let obj_kind = &obj.flags.obj_kind;
-                                let props_tmap = obj.props_tmap.dupe();
-                                let rest = match obj_kind {
-                                    TypeObjKind::Exact => None,
-                                    TypeObjKind::Inexact => Some(reason.dupe()),
-                                    TypeObjKind::Indexed(dict) => {
-                                        Some(reason_of_t(&dict.key).dupe())
+                            if has_unknown_members {
+                                let reason = enum_reason.dupe().replace_desc(
+                                    flow_common::reason::VirtualReasonDesc::REnumUnknownMembers(
+                                        Arc::new(enum_reason.desc(true).clone()),
+                                    ),
+                                );
+                                value_union
+                                    .enum_unknown_members
+                                    .push((reason, enum_leafs.dupe()));
+                            }
+                            value_union.leafs.extend(enum_leafs);
+                        }
+                        _ => {
+                            value_union.inexhaustible.push(t.dupe());
+                        }
+                    },
+                    DefTInner::SingletonBoolT { value, .. } => {
+                        value_union.leafs.insert(leaf::Leaf(
+                            enum_reason.dupe(),
+                            leaf::LeafCtor::BoolC(*value),
+                        ));
+                    }
+                    DefTInner::SingletonNumT { value, .. } => {
+                        value_union.leafs.insert(leaf::Leaf(
+                            enum_reason.dupe(),
+                            leaf::LeafCtor::NumC(value.dupe()),
+                        ));
+                    }
+                    DefTInner::SingletonBigIntT { value, .. } => {
+                        value_union.leafs.insert(leaf::Leaf(
+                            enum_reason.dupe(),
+                            leaf::LeafCtor::BigIntC(value.dupe()),
+                        ));
+                    }
+                    DefTInner::SingletonStrT { value, .. } => {
+                        value_union.leafs.insert(leaf::Leaf(
+                            enum_reason.dupe(),
+                            leaf::LeafCtor::StrC(value.dupe()),
+                        ));
+                    }
+                    DefTInner::NullT => {
+                        value_union
+                            .leafs
+                            .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::NullC));
+                    }
+                    DefTInner::VoidT => {
+                        value_union
+                            .leafs
+                            .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::VoidC));
+                    }
+                    DefTInner::BoolGeneralT => {
+                        value_union
+                            .leafs
+                            .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::BoolC(true)));
+                        value_union
+                            .leafs
+                            .insert(leaf::Leaf(enum_reason.dupe(), leaf::LeafCtor::BoolC(false)));
+                    }
+                    DefTInner::ArrT(arr_rc) => match arr_rc.deref() {
+                        ArrType::TupleAT(box TupleATData {
+                            elements,
+                            arity: (num_req, num_total),
+                            inexact,
+                            ..
+                        }) => {
+                            let reason = enum_reason;
+                            let rest = if *inexact { Some(reason.dupe()) } else { None };
+                            let props_list: Vec<_> = elements
+                                .iter()
+                                .map(|elem| {
+                                    let elem_t = if elem.optional {
+                                        match elem.t.deref() {
+                                            TypeInner::OptionalT { type_, .. } => type_.dupe(),
+                                            _ => elem.t.dupe(),
+                                        }
+                                    } else {
+                                        elem.t.dupe()
+                                    };
+                                    let elem_t = if flow_common::polarity::Polarity::compat(
+                                        elem.polarity,
+                                        flow_common::polarity::Polarity::Positive,
+                                    ) {
+                                        elem_t
+                                    } else {
+                                        flow_typing_type::type_::mixed_t::make(elem.reason.dupe())
+                                    };
+                                    let elem_t = elem_t.dupe();
+                                    let lazy_value: value_object::LazyValueUnion<
+                                        'cx,
+                                        Context<'cx>,
+                                    > = std::rc::Rc::new(flow_lazy::Lazy::new(Box::new(
+                                        move |cx: &Context<'cx>| of_type(cx, &elem_t),
+                                    )));
+                                    let elem_loc = elem.reason.loc();
+                                    value_object::Property {
+                                        loc: elem_loc.dupe(),
+                                        value: lazy_value,
+                                        optional: false,
                                     }
-                                };
-                                let props_map = cx.find_props(props_tmap);
-                                let mut obj_props: FlowOrdMap<
+                                })
+                                .collect();
+                            let num_req = *num_req as usize;
+                            let num_total = *num_total as usize;
+                            for idx in 0..=(num_total - num_req) {
+                                let length = num_req + idx;
+                                let mut props: FlowOrdMap<
                                     FlowSmolStr,
                                     Option<value_object::Property<'cx, Context<'cx>>>,
                                 > = FlowOrdMap::default();
-                                let mut sentinel_props_set: FlowOrdSet<FlowSmolStr> =
-                                    FlowOrdSet::default();
-                                for (name, p) in props_map.iter() {
-                                    let key: FlowSmolStr = name.as_smol_str().dupe();
-                                    let prop = value_object_property_builder::of_type_prop(&key, p);
-                                    obj_props.insert(key.dupe(), prop);
-                                    if all_sentinel_props.contains(name) {
-                                        sentinel_props_set.insert(key);
-                                    }
+                                for (prop_i, prop) in props_list.iter().take(length).enumerate() {
+                                    let key: FlowSmolStr = prop_i.to_string().into();
+                                    props.insert(key, Some(prop.dupe()));
                                 }
-                                let obj_value = value_object::ValueObject(
+                                let tuple = value_object::ValueObject(
                                     reason.dupe(),
                                     std::rc::Rc::new(value_object::ValueObjectInner {
-                                        kind: ObjKind::Obj,
+                                        kind: ObjKind::Tuple { length },
                                         t: t.dupe(),
-                                        props: obj_props,
+                                        props,
                                         class_info: None,
-                                        rest,
-                                        sentinel_props: sentinel_props_set,
+                                        rest: rest.dupe(),
+                                        sentinel_props: FlowOrdSet::default(),
                                     }),
                                 );
-                                value_union.objects.push(obj_value);
-                            } else {
-                                value_union.inexhaustible.push(t.dupe());
+                                value_union.tuples.push(tuple);
                             }
                         }
-                        DefTInner::InstanceT(inst_rc) => {
+                        ArrType::ArrayAT(box ArrayATData { .. })
+                        | ArrType::ROArrayAT(box (_, _)) => {
                             let reason = enum_reason;
-                            let inst = inst_rc.deref();
-                            let inst_data = &inst.inst;
-                            let class_id = &inst_data.class_id;
-                            let class_name = &inst_data.class_name;
-                            let inst_kind = &inst_data.inst_kind;
-                            let super_ = &inst.super_;
-                            let rest = match inst_kind {
-                                InstanceKind::RecordKind { .. } => None,
-                                InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => {
-                                    Some(reason.dupe())
-                                }
-                            };
-                            let class_info: Option<(
-                                ALocId,
-                                Option<FlowSmolStr>,
-                                FlowOrdSet<ALocId>,
-                            )> = {
-                                // let rec get_super_ids acc t =
-                                fn get_super_ids<'cx>(
-                                    cx: &Context<'cx>,
-                                    class_id: &ALocId,
-                                    mut acc: FlowOrdSet<ALocId>,
-                                    t: &Type,
-                                ) -> FlowOrdSet<ALocId> {
-                                    if let TypeInner::DefT(_, def_t) =
-                                        singleton_concrete_type(cx, t).deref()
-                                        && let DefTInner::InstanceT(super_inst_rc) = def_t.deref()
-                                    {
-                                        {
-                                            let super_inst = super_inst_rc.deref();
-                                            let super_inst_data = &super_inst.inst;
-                                            match &super_inst_data.inst_kind {
-                                                InstanceKind::ClassKind
-                                                | InstanceKind::RecordKind { .. } => {
-                                                    let super_class_id = &super_inst_data.class_id;
-                                                    if super_class_id == class_id
-                                                        || acc.contains(super_class_id)
-                                                    {
-                                                        acc
-                                                    } else {
-                                                        acc.insert(super_class_id.dupe());
-                                                        get_super_ids(
-                                                            cx,
-                                                            class_id,
-                                                            acc,
-                                                            &super_inst.super_,
-                                                        )
-                                                    }
-                                                }
-                                                _ => acc,
-                                            }
-                                        }
-                                    } else {
-                                        acc
-                                    }
-                                }
-                                Some((
-                                    class_id.dupe(),
-                                    class_name.as_ref().map(|n| n.dupe()),
-                                    get_super_ids(cx, class_id, FlowOrdSet::default(), super_),
-                                ))
-                            };
-                            let obj_value = value_object::ValueObject(
+                            let arr = value_object::ValueObject(
                                 reason.dupe(),
                                 std::rc::Rc::new(value_object::ValueObjectInner {
                                     kind: ObjKind::Obj,
                                     t: t.dupe(),
                                     props: FlowOrdMap::default(),
-                                    class_info,
-                                    rest,
+                                    class_info: None,
+                                    rest: Some(reason.dupe()),
                                     sentinel_props: FlowOrdSet::default(),
                                 }),
                             );
-                            value_union.objects.push(obj_value);
+                            value_union.arrays.push(arr);
                         }
-                        DefTInner::EmptyT => {}
-                        _ => {
+                    },
+                    DefTInner::ObjT(obj_rc) => {
+                        let obj = obj_rc.deref();
+                        if obj.call_t.is_none() {
+                            let reason = enum_reason;
+                            let obj_kind = &obj.flags.obj_kind;
+                            let props_tmap = obj.props_tmap.dupe();
+                            let rest = match obj_kind {
+                                TypeObjKind::Exact => None,
+                                TypeObjKind::Inexact => Some(reason.dupe()),
+                                TypeObjKind::Indexed(dict) => Some(reason_of_t(&dict.key).dupe()),
+                            };
+                            let props_map = cx.find_props(props_tmap);
+                            let mut obj_props: FlowOrdMap<
+                                FlowSmolStr,
+                                Option<value_object::Property<'cx, Context<'cx>>>,
+                            > = FlowOrdMap::default();
+                            let mut sentinel_props_set: FlowOrdSet<FlowSmolStr> =
+                                FlowOrdSet::default();
+                            for (name, p) in props_map.iter() {
+                                let key: FlowSmolStr = name.as_smol_str().dupe();
+                                let prop = value_object_property_builder::of_type_prop(&key, p);
+                                obj_props.insert(key.dupe(), prop);
+                                if all_sentinel_props.contains(name) {
+                                    sentinel_props_set.insert(key);
+                                }
+                            }
+                            let obj_value = value_object::ValueObject(
+                                reason.dupe(),
+                                std::rc::Rc::new(value_object::ValueObjectInner {
+                                    kind: ObjKind::Obj,
+                                    t: t.dupe(),
+                                    props: obj_props,
+                                    class_info: None,
+                                    rest,
+                                    sentinel_props: sentinel_props_set,
+                                }),
+                            );
+                            value_union.objects.push(obj_value);
+                        } else {
                             value_union.inexhaustible.push(t.dupe());
                         }
                     }
-                }
+                    DefTInner::InstanceT(inst_rc) => {
+                        let reason = enum_reason;
+                        let inst = inst_rc.deref();
+                        let inst_data = &inst.inst;
+                        let class_id = &inst_data.class_id;
+                        let class_name = &inst_data.class_name;
+                        let inst_kind = &inst_data.inst_kind;
+                        let super_ = &inst.super_;
+                        let rest = match inst_kind {
+                            InstanceKind::RecordKind { .. } => None,
+                            InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => {
+                                Some(reason.dupe())
+                            }
+                        };
+                        let class_info = Some((
+                            class_id.dupe(),
+                            class_name.as_ref().map(|n| n.dupe()),
+                            get_super_class_ids(cx, class_id, super_),
+                        ));
+                        let obj_value = value_object::ValueObject(
+                            reason.dupe(),
+                            std::rc::Rc::new(value_object::ValueObjectInner {
+                                kind: ObjKind::Obj,
+                                t: t.dupe(),
+                                props: FlowOrdMap::default(),
+                                class_info,
+                                rest,
+                                sentinel_props: FlowOrdSet::default(),
+                            }),
+                        );
+                        value_union.objects.push(obj_value);
+                    }
+                    DefTInner::EmptyT => {}
+                    _ => {
+                        value_union.inexhaustible.push(t.dupe());
+                    }
+                },
                 _ => {
                     value_union.inexhaustible.push(t.dupe());
                 }
@@ -1605,11 +1607,17 @@ fn filter_objects_by_patterns<'cx>(
         value_objects.iter().duped().collect();
 
     while let Some(value_object) = queue.pop_front() {
+        // Fold over the object patterns over the current object value. We thread
+        // `subclass_covered`: the set of class ids of earlier subclass patterns
+        // that fully cover their class. A later subclass pattern for the same
+        // class or a subclass of it is then redundant (see
+        // `filter_object_by_pattern`).
         let mut result = FilterObjectResult::NoMatch {
             used_pattern_locs: ALocSet::new(),
             left: value_object.dupe(),
         };
         let mut additional_used_pattern_locs: ALocSet = ALocSet::new();
+        let mut subclass_covered: FlowOrdSet<ALocId> = FlowOrdSet::default();
         for (_, pattern_object) in pattern_objects.iter() {
             match &result {
                 FilterObjectResult::Match { .. } => {}
@@ -1617,8 +1625,15 @@ fn filter_objects_by_patterns<'cx>(
                     used_pattern_locs, ..
                 } => {
                     additional_used_pattern_locs.extend(used_pattern_locs.iter().map(|l| l.dupe()));
-                    result =
-                        filter_object_by_pattern(cx, raise_errors, &value_object, pattern_object)?;
+                    let (new_result, new_subclass_covered) = filter_object_by_pattern(
+                        cx,
+                        raise_errors,
+                        &subclass_covered,
+                        &value_object,
+                        pattern_object,
+                    )?;
+                    result = new_result;
+                    subclass_covered = new_subclass_covered;
                 }
             }
         }
@@ -1650,13 +1665,19 @@ fn filter_objects_by_patterns<'cx>(
     Ok((acc_left, acc_matched, acc_used_pattern_locs))
 }
 
-/// Filter an object value by an object pattern.
+// Filter an object value by an object pattern. Also threads `subclass_covered`:
+// the set of class ids of earlier subclass patterns that fully cover their
+// class, returning the (possibly extended) set.
 fn filter_object_by_pattern<'cx>(
     cx: &Context<'cx>,
     raise_errors: bool,
+    subclass_covered: &FlowOrdSet<ALocId>,
     value_object: &value_object::ValueObject<'cx, Context<'cx>>,
     pattern_object: &pattern_object::PatternObject,
-) -> Result<FilterObjectResult<'cx>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<
+    (FilterObjectResult<'cx>, FlowOrdSet<ALocId>),
+    flow_utils_concurrency::job_error::JobError,
+> {
     let value_object::ValueObject(reason_value, value_inner) = value_object;
     let value_object::ValueObjectInner {
         props: value_props_orig,
@@ -1677,19 +1698,120 @@ fn filter_object_by_pattern<'cx>(
         contains_invalid_pattern: _,
     } = pattern_inner.as_ref();
 
-    let possibly_matches = match (value_class_info, pattern_class_info) {
-        (_, None) => true,
-        (None, Some(_)) => false,
-        (Some((value_class_id, _, value_super_ids)), Some((pattern_class_id, _))) => {
-            value_class_id == pattern_class_id || value_super_ids.contains(pattern_class_id)
+    enum MatchKind {
+        Match,
+        NoMatch,
+        SubclassPattern,
+    }
+    let match_kind = match (value_class_info, pattern_class_info) {
+        // Structural pattern: can match
+        (_, None) => MatchKind::Match,
+        // Structural value, nominal pattern: cannot match
+        (None, Some(_)) => MatchKind::NoMatch,
+        // Nominal value, nominal pattern
+        (
+            Some((value_class_id, _, value_super_ids)),
+            Some((pattern_class_id, _, pattern_super_ids, _)),
+        ) => {
+            if value_class_id == pattern_class_id || value_super_ids.contains(pattern_class_id) {
+                // Pattern's class is the value's class or a super class: matches.
+                MatchKind::Match
+            } else if pattern_super_ids.contains(value_class_id) {
+                // Pattern's class is a strict subclass of the value's class.
+                MatchKind::SubclassPattern
+            } else {
+                MatchKind::NoMatch
+            }
         }
     };
-    if !possibly_matches {
-        return Ok(FilterObjectResult::NoMatch {
-            used_pattern_locs: ALocSet::new(),
-            left: value_object.dupe(),
-        });
+    match match_kind {
+        MatchKind::NoMatch => {
+            return Ok((
+                FilterObjectResult::NoMatch {
+                    used_pattern_locs: ALocSet::new(),
+                    left: value_object.dupe(),
+                },
+                subclass_covered.dupe(),
+            ));
+        }
+        MatchKind::SubclassPattern => {
+            // Flow does not track all the subclasses of a class, so a subclass pattern
+            // cannot reduce the value for exhaustiveness checking - we leave the value
+            // unconsumed, just like `NoMatch`. But the runtime value could be an
+            // instance of the subclass, so the pattern is reachable: we mark it (and
+            // its sub-patterns) as used so it is not reported as unused.
+            return match pattern_class_info {
+                None => {
+                    // Unreachable: `SubclassPattern` implies a nominal pattern.
+                    Ok((
+                        FilterObjectResult::NoMatch {
+                            used_pattern_locs: ALocSet::new(),
+                            left: value_object.dupe(),
+                        },
+                        subclass_covered.dupe(),
+                    ))
+                }
+                Some((pattern_class_id, _, pattern_super_ids, pattern_instance_t)) => {
+                    let covered_by_earlier = subclass_covered.contains(pattern_class_id)
+                        || !pattern_super_ids
+                            .dupe()
+                            .into_inner()
+                            .intersection(subclass_covered.dupe().into_inner())
+                            .is_empty();
+                    if covered_by_earlier {
+                        // An earlier subclass pattern already fully covers this class (or a
+                        // super class of it), so this pattern is unused.
+                        Ok((
+                            FilterObjectResult::NoMatch {
+                                used_pattern_locs: ALocSet::new(),
+                                left: value_object.dupe(),
+                            },
+                            subclass_covered.dupe(),
+                        ))
+                    } else {
+                        // Validate the object part of the pattern by matching it against a value
+                        // of the pattern's own class, reusing the normal filtering path.
+                        let value_union = value_union_builder::of_type(cx, pattern_instance_t);
+                        let pattern_union = pattern_union::PatternUnion {
+                            objects: vec![(0, pattern_object.dupe())],
+                            ..pattern_union::empty()
+                        };
+                        let FilterUnionResult {
+                            value_left,
+                            mut used_pattern_locs,
+                            ..
+                        } = filter_values_by_patterns(
+                            cx,
+                            raise_errors,
+                            &value_union,
+                            &pattern_union,
+                        )?;
+                        used_pattern_locs.insert(reason_pattern.loc().dupe());
+                        // If the pattern fully consumes a value of its own class, it covers that
+                        // class, so later equal-or-narrower subclass patterns become unused. A
+                        // non-total pattern (missing `...`, an unsatisfiable property, or a
+                        // guard) leaves the class uncovered.
+                        let subclass_covered = if value_left.is_empty() {
+                            let mut subclass_covered = subclass_covered.dupe();
+                            subclass_covered.insert(pattern_class_id.dupe());
+                            subclass_covered
+                        } else {
+                            subclass_covered.dupe()
+                        };
+                        Ok((
+                            FilterObjectResult::NoMatch {
+                                used_pattern_locs,
+                                left: value_object.dupe(),
+                            },
+                            subclass_covered,
+                        ))
+                    }
+                }
+            };
+        }
+        MatchKind::Match => {}
     }
+    // A `Match`/`NoMatch` outcome here never changes `subclass_covered`.
 
     // Sort the keys that are sentinel props for the value first.
     let pattern_keys = {
@@ -1730,10 +1852,13 @@ fn filter_object_by_pattern<'cx>(
         }
     }
     if value_props_early_break {
-        return Ok(FilterObjectResult::NoMatch {
-            used_pattern_locs: ALocSet::new(),
-            left: value_object.dupe(),
-        });
+        return Ok((
+            FilterObjectResult::NoMatch {
+                used_pattern_locs: ALocSet::new(),
+                left: value_object.dupe(),
+            },
+            subclass_covered.dupe(),
+        ));
     }
 
     // If this pattern is gaurded, then it can't filter out values
@@ -1854,7 +1979,7 @@ fn filter_object_by_pattern<'cx>(
     }
 
     if let Some(result) = early_stop {
-        return Ok(result);
+        return Ok((result, subclass_covered.dupe()));
     }
 
     let pattern_loc = reason_pattern.loc();
@@ -1895,10 +2020,13 @@ fn filter_object_by_pattern<'cx>(
         *pattern_kind != ObjKind::Obj && value_rest.is_some() && pattern_rest.is_none();
 
     if no_match || non_matching_rest {
-        Ok(FilterObjectResult::NoMatch {
-            used_pattern_locs,
-            left: value_object.dupe(),
-        })
+        Ok((
+            FilterObjectResult::NoMatch {
+                used_pattern_locs,
+                left: value_object.dupe(),
+            },
+            subclass_covered.dupe(),
+        ))
     } else {
         let matched = value_object::ValueObject(
             reason_value.dupe(),
@@ -1911,11 +2039,14 @@ fn filter_object_by_pattern<'cx>(
                 sentinel_props: sentinel_props.dupe(),
             }),
         );
-        Ok(FilterObjectResult::Match {
-            used_pattern_locs,
-            queue_additions,
-            matched,
-        })
+        Ok((
+            FilterObjectResult::Match {
+                used_pattern_locs,
+                queue_additions,
+                matched,
+            },
+            subclass_covered.dupe(),
+        ))
     }
 }
 

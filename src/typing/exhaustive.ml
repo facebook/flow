@@ -34,7 +34,40 @@ let attempt_union_rep_optimization cx (rep : Type.UnionRep.t) : unit =
       ~find_resolved:(Context.find_resolved cx)
       ~find_props:(Context.find_props cx)
 
-let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
+(* Walk the `super` chain of an instance, collecting the ids of all super
+   classes. Does not include `class_id` itself. Stops on recursive extends. *)
+let get_super_class_ids cx ~class_id super : ALocIDSet.t =
+  let rec loop acc t =
+    match singleton_concrete_type cx t with
+    | Type.DefT
+        ( _,
+          Type.InstanceT
+            {
+              Type.inst =
+                {
+                  Type.inst_kind = Type.ClassKind | Type.RecordKind _;
+                  class_id = super_class_id;
+                  _;
+                };
+              super;
+              _;
+            }
+        ) ->
+      if ALoc.equal_id super_class_id class_id || ALocIDSet.mem super_class_id acc then
+        (* Recursive extends: stop looping *)
+        acc
+      else
+        loop (ALocIDSet.add super_class_id acc) super
+    | _ -> acc
+  in
+  loop ALocIDSet.empty super
+
+(* Like `get_class_info`, but also returns the set of super class ids and the
+   instance type of the constructor. Used when building instance patterns, so
+   we can later recognize patterns whose class is a strict subclass of the
+   value's class. *)
+let get_class_info_with_supers cx (t : Type.t) :
+    (ALoc.id * string option * ALocIDSet.t * Type.t) option =
   let instance_t =
     match singleton_concrete_type cx t with
     | Type.DefT (_, Type.ClassT t) -> singleton_concrete_type cx t
@@ -47,11 +80,17 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
           {
             Type.inst =
               { Type.inst_kind = Type.ClassKind | Type.RecordKind _; class_id; class_name; _ };
+            super;
             _;
           }
       ) ->
-    Some (class_id, class_name)
+    Some (class_id, class_name, get_super_class_ids cx ~class_id super, instance_t)
   | _ -> None
+
+let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
+  match get_class_info_with_supers cx t with
+  | Some (class_id, class_name, _, _) -> Some (class_id, class_name)
+  | None -> None
 
 (***********************)
 (* Datatype builders   *)
@@ -395,10 +434,10 @@ end = struct
           (t, Some name)
         | InstancePattern.MemberConstructor ((_, t), _) -> (t, None)
       in
-      (match get_class_info cx constructor_t with
-      | Some (class_id, class_name) ->
+      (match get_class_info_with_supers cx constructor_t with
+      | Some (class_id, class_name, super_ids, instance_t) ->
         let class_name = Base.Option.first_some constructor_name class_name in
-        let class_info = Some (class_id, class_name) in
+        let class_info = Some (class_id, class_name, super_ids, instance_t) in
         object_pattern
           cx
           ~raise_errors
@@ -728,33 +767,7 @@ end = struct
             | Type.InterfaceKind _ ->
               Some reason
           in
-          let class_info =
-            let rec get_super_ids acc t =
-              match singleton_concrete_type cx t with
-              | Type.DefT
-                  ( _,
-                    Type.InstanceT
-                      {
-                        Type.inst =
-                          {
-                            Type.inst_kind = Type.ClassKind | Type.RecordKind _;
-                            class_id = super_class_id;
-                            _;
-                          };
-                        super;
-                        _;
-                      }
-                  ) ->
-                if ALoc.equal_id super_class_id class_id || ALocIDSet.mem super_class_id acc then
-                  (* Recursive extends: stop looping *)
-                  acc
-                else
-                  let acc = ALocIDSet.add super_class_id acc in
-                  get_super_ids acc super
-              | _ -> acc
-            in
-            Some (class_id, class_name, get_super_ids ALocIDSet.empty super)
-          in
+          let class_info = Some (class_id, class_name, get_super_class_ids cx ~class_id super) in
           let obj =
             ( reason,
               {
@@ -1053,22 +1066,36 @@ and filter_objects_by_patterns
     | [] -> acc
     | value_object :: rest_queue ->
       let (acc_left, acc_matched, acc_used_pattern_locs) = acc in
-      (* Fold over the object patterns over the current object value. *)
-      let (result, additional_used_pattern_locs) =
+      (* Fold over the object patterns over the current object value. We thread
+         `subclass_covered`: the set of class ids of earlier subclass patterns
+         that fully cover their class. A later subclass pattern for the same
+         class or a subclass of it is then redundant (see
+         `filter_object_by_pattern`). *)
+      let (result, additional_used_pattern_locs, _subclass_covered) =
         Base.List.fold
           pattern_objects
-          ~init:(NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, ALocSet.empty)
+          ~init:
+            ( NoMatch { used_pattern_locs = ALocSet.empty; left = value_object },
+              ALocSet.empty,
+              ALocIDSet.empty
+            )
           ~f:(fun acc (_, pattern_object) ->
-            let (result, additional_used_pattern_locs) = acc in
+            let (result, additional_used_pattern_locs, subclass_covered) = acc in
             match result with
             | Match _ -> acc
             | NoMatch { used_pattern_locs; left = _ } ->
               let additional_used_pattern_locs =
                 ALocSet.union additional_used_pattern_locs used_pattern_locs
               in
-              ( filter_object_by_pattern cx ~raise_errors value_object pattern_object,
-                additional_used_pattern_locs
-              ))
+              let (result, subclass_covered) =
+                filter_object_by_pattern
+                  cx
+                  ~raise_errors
+                  ~subclass_covered
+                  value_object
+                  pattern_object
+              in
+              (result, additional_used_pattern_locs, subclass_covered))
       in
       let (queue, acc_left, acc_matched, used_pattern_locs) =
         match result with
@@ -1093,10 +1120,15 @@ and filter_objects_by_patterns
   in
   f ([], [], ALocSet.empty) value_objects
 
-(* Filter an object value by an object pattern. *)
+(* Filter an object value by an object pattern. Also threads `subclass_covered`:
+   the set of class ids of earlier subclass patterns that fully cover their
+   class, returning the (possibly extended) set. *)
 and filter_object_by_pattern
-    cx ~raise_errors (value_object : ValueObject.t) (pattern_object : PatternObject.t) :
-    filter_object_result =
+    cx
+    ~raise_errors
+    ~(subclass_covered : ALocIDSet.t)
+    (value_object : ValueObject.t)
+    (pattern_object : PatternObject.t) : filter_object_result * ALocIDSet.t =
   let open Base.Continue_or_stop in
   let ( reason_value,
         {
@@ -1123,199 +1155,257 @@ and filter_object_by_pattern
       ) =
     pattern_object
   in
-  let possibly_matches =
+  let match_kind =
     match (value_class_info, pattern_class_info) with
     (* Structural pattern: can match *)
-    | (_, None) -> true
+    | (_, None) -> `Match
     (* Structural value, nominal pattern: cannot match *)
-    | (None, Some _) -> false
-    (* Nominal value, nominal pattern: potentially matches *)
-    | (Some (value_class_id, _, value_super_ids), Some (pattern_class_id, _)) ->
-      ALoc.equal_id value_class_id pattern_class_id
-      || ALocIDSet.mem pattern_class_id value_super_ids
+    | (None, Some _) -> `NoMatch
+    (* Nominal value, nominal pattern *)
+    | (Some (value_class_id, _, value_super_ids), Some (pattern_class_id, _, pattern_super_ids, _))
+      ->
+      if
+        ALoc.equal_id value_class_id pattern_class_id
+        || ALocIDSet.mem pattern_class_id value_super_ids
+      then
+        (* Pattern's class is the value's class or a super class: matches. *)
+        `Match
+      else if ALocIDSet.mem value_class_id pattern_super_ids then
+        (* Pattern's class is a strict subclass of the value's class. *)
+        `SubclassPattern
+      else
+        `NoMatch
   in
-  if not possibly_matches then
-    NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
-  else
-    (* Sort the keys that are sentinel props for the value first. *)
-    let pattern_keys =
-      keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
-      |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
-    in
-    (* If every key in the pattern also exists in the value, then return the props of the
-       value, otherwise return `None`, so we can skip below directly to `NoMatch`. *)
-    let value_props =
-      Base.List.fold_until
-        pattern_keys
-        ~init:value_props
-        ~f:(fun value_props key ->
-          match SMap.find_opt key value_props with
-          | Some (Some _) -> Continue value_props
-          | Some None -> Stop None
-          | None ->
-            let { PatternObject.Property.loc = key_loc; _ } = SMap.find key pattern_props in
-            let prop = ValueUnionBuilder.get_prop cx (key_loc, key) t in
-            if Base.Option.is_none prop then
-              Stop None
-            else
-              Continue (SMap.add key prop value_props))
-        ~finish:Base.Option.some
-    in
-    match value_props with
-    | None -> NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
-    | Some value_props ->
-      (* If this pattern is gaurded, then it can't filter out values. *)
-      let no_match = guarded in
-      (* We fold over the `pattern_keys` of the pattern and match the value at that key to the pattern
-         at that key. We build up `head` which is the properties matched so far. The `remainder_value`
-         is the properties of the value left to check. If we don't have a match, but need to continue
-         checking for the purposes of marking patterns as used, we set `no_match` to true. *)
-      Base.List.fold_until
-        pattern_keys
-        ~init:(ALocSet.empty, no_match, [], SMap.empty, value_props)
-        ~f:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) key ->
-          let { PatternObject.Property.value = pattern; _ } = SMap.find key pattern_props in
-          (* Checked above in `has_all_props` *)
-          let prop_value = SMap.find key value_props |> Base.Option.value_exn in
-          let { ValueObject.Property.loc = loc_value; value; optional } = prop_value in
-          let remainder_value = SMap.remove key remainder_value in
-          let (value_left, value_matched, value_matched_is_empty, new_used_pattern_locs) =
-            match PatternUnion.only_wildcard pattern with
-            | Some wildcard ->
-              (ValueUnion.empty, value, false, ALocSet.singleton (Reason.loc_of_reason wildcard))
+  match match_kind with
+  | `NoMatch ->
+    (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, subclass_covered)
+  | `SubclassPattern ->
+    (* Flow does not track all the subclasses of a class, so a subclass pattern
+       cannot reduce the value for exhaustiveness checking - we leave the value
+       unconsumed, just like `NoMatch`. But the runtime value could be an
+       instance of the subclass, so the pattern is reachable: we mark it (and
+       its sub-patterns) as used so it is not reported as unused. *)
+    (match pattern_class_info with
+    | None ->
+      (* Unreachable: `SubclassPattern` implies a nominal pattern. *)
+      (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, subclass_covered)
+    | Some (pattern_class_id, _, pattern_super_ids, pattern_instance_t) ->
+      let covered_by_earlier =
+        ALocIDSet.mem pattern_class_id subclass_covered
+        || not (ALocIDSet.is_empty (ALocIDSet.inter pattern_super_ids subclass_covered))
+      in
+      if covered_by_earlier then
+        (* An earlier subclass pattern already fully covers this class (or a
+           super class of it), so this pattern is unused. *)
+        (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }, subclass_covered)
+      else
+        (* Validate the object part of the pattern by matching it against a value
+           of the pattern's own class, reusing the normal filtering path. *)
+        let value_union = ValueUnionBuilder.of_type cx pattern_instance_t in
+        let pattern_union =
+          { PatternUnion.empty with PatternUnion.objects = [(0, pattern_object)] }
+        in
+        let { value_left; used_pattern_locs; _ } =
+          filter_values_by_patterns cx ~raise_errors ~value_union ~pattern_union
+        in
+        let used_pattern_locs =
+          ALocSet.add (Reason.loc_of_reason reason_pattern) used_pattern_locs
+        in
+        (* If the pattern fully consumes a value of its own class, it covers that
+           class, so later equal-or-narrower subclass patterns become unused. A
+           non-total pattern (missing `...`, an unsatisfiable property, or a
+           guard) leaves the class uncovered. *)
+        let subclass_covered =
+          if ValueUnion.is_empty value_left then
+            ALocIDSet.add pattern_class_id subclass_covered
+          else
+            subclass_covered
+        in
+        (NoMatch { used_pattern_locs; left = value_object }, subclass_covered))
+  | `Match ->
+    (* A `Match`/`NoMatch` outcome here never changes `subclass_covered`. *)
+    let result =
+      (* Sort the keys that are sentinel props for the value first. *)
+      let pattern_keys =
+        keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
+        |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
+      in
+      (* If every key in the pattern also exists in the value, then return the props of the
+         value, otherwise return `None`, so we can skip below directly to `NoMatch`. *)
+      let value_props =
+        Base.List.fold_until
+          pattern_keys
+          ~init:value_props
+          ~f:(fun value_props key ->
+            match SMap.find_opt key value_props with
+            | Some (Some _) -> Continue value_props
+            | Some None -> Stop None
             | None ->
-              let { value_left; value_matched; used_pattern_locs = new_used_pattern_locs } =
-                filter_values_by_patterns
-                  cx
-                  ~raise_errors
-                  ~value_union:(Lazy.force value)
-                  ~pattern_union:pattern
-              in
-              ( value_left,
-                lazy value_matched,
-                ValueUnion.is_empty value_matched,
-                new_used_pattern_locs
-              )
-          in
-          let used_pattern_locs = ALocSet.union used_pattern_locs new_used_pattern_locs in
-          let property_matched =
-            { ValueObject.Property.loc = loc_value; value = value_matched; optional }
-          in
-          let head = SMap.add key (Some property_matched) head in
-          if no_match || value_matched_is_empty then
-            if ALocSet.is_empty new_used_pattern_locs then
-              Stop (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object })
-            else
-              let no_match = true in
-              Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
-          else if (not optional) && ValueUnion.is_empty value_left then
-            (* Full match *)
-            Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
-          else
-            (* Partial match *)
-            let (props_left, rest) =
-              if ValueUnion.is_empty value_left then
-                (* Optional value is ignored from left pattern, but then there are additional,
-                   unknown properties. *)
-                let value_rest =
-                  if Base.Option.is_some value_rest then
-                    value_rest
-                  else
-                    Some
-                      (Reason.mk_reason
-                         (Reason.RUnknownUnspecifiedProperty (Reason.desc_of_reason reason_value))
-                         loc_value
-                      )
-                in
-                (SMap.add key None head, value_rest)
+              let { PatternObject.Property.loc = key_loc; _ } = SMap.find key pattern_props in
+              let prop = ValueUnionBuilder.get_prop cx (key_loc, key) t in
+              if Base.Option.is_none prop then
+                Stop None
               else
-                let property_left =
-                  { ValueObject.Property.loc = loc_value; value = lazy value_left; optional }
-                in
-                (SMap.add key (Some property_left) head, value_rest)
-            in
-            let props_left = SMap.union props_left remainder_value in
-            let object_left =
-              ( reason_value,
-                {
-                  ValueObject.props = props_left;
-                  class_info = value_class_info;
-                  rest;
-                  t;
-                  kind = value_kind;
-                  sentinel_props;
-                }
-              )
-            in
-            let queue_additions = object_left :: queue_additions in
-            Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value))
-        ~finish:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) ->
-          let pattern_loc = Reason.loc_of_reason reason_pattern in
-          let used_pattern_locs = ALocSet.add pattern_loc used_pattern_locs in
-          let used_pattern_locs =
-            if
-              Base.Option.is_some value_rest
-              || (not @@ ValueObject.Properties.is_empty remainder_value)
-            then
-              match pattern_rest with
+                Continue (SMap.add key prop value_props))
+          ~finish:Base.Option.some
+      in
+      match value_props with
+      | None -> NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
+      | Some value_props ->
+        (* If this pattern is gaurded, then it can't filter out values. *)
+        let no_match = guarded in
+        (* We fold over the `pattern_keys` of the pattern and match the value at that key to the pattern
+           at that key. We build up `head` which is the properties matched so far. The `remainder_value`
+           is the properties of the value left to check. If we don't have a match, but need to continue
+           checking for the purposes of marking patterns as used, we set `no_match` to true. *)
+        Base.List.fold_until
+          pattern_keys
+          ~init:(ALocSet.empty, no_match, [], SMap.empty, value_props)
+          ~f:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) key ->
+            let { PatternObject.Property.value = pattern; _ } = SMap.find key pattern_props in
+            (* Checked above in `has_all_props` *)
+            let prop_value = SMap.find key value_props |> Base.Option.value_exn in
+            let { ValueObject.Property.loc = loc_value; value; optional } = prop_value in
+            let remainder_value = SMap.remove key remainder_value in
+            let (value_left, value_matched, value_matched_is_empty, new_used_pattern_locs) =
+              match PatternUnion.only_wildcard pattern with
+              | Some wildcard ->
+                (ValueUnion.empty, value, false, ALocSet.singleton (Reason.loc_of_reason wildcard))
               | None ->
-                ( if pattern_kind = ObjKind.Obj then
-                  let missing_props =
-                    SMap.fold
-                      (fun key prop acc ->
-                        if Base.Option.is_some prop then
-                          key :: acc
-                        else
-                          acc)
-                      remainder_value
-                      []
-                    |> Base.List.rev
-                  in
-                  if raise_errors then
-                    Flow_js.add_output
-                      cx
-                      (Error_message.EMatchError
-                         (Error_message.MatchNonExhaustiveObjectPattern
-                            {
-                              loc = Reason.loc_of_reason reason_pattern;
-                              rest = value_rest;
-                              missing_props;
-                              pattern_kind =
-                                (match pattern_class_info with
-                                | Some _ ->
-                                  Flow_intermediate_error_types.MatchObjPatternKind.Instance
-                                | None -> Flow_intermediate_error_types.MatchObjPatternKind.Object);
-                            }
-                         )
-                      )
-                );
-                used_pattern_locs
-              | Some pattern_rest ->
-                ALocSet.add (Reason.loc_of_reason pattern_rest) used_pattern_locs
-            else
-              used_pattern_locs
-          in
-          let non_matching_rest =
-            pattern_kind <> ObjKind.Obj
-            && Base.Option.is_some value_rest
-            && Base.Option.is_none pattern_rest
-          in
-          if no_match || non_matching_rest then
-            NoMatch { used_pattern_locs; left = value_object }
-          else
-            let matched =
-              ( reason_value,
-                {
-                  ValueObject.props = head;
-                  class_info = value_class_info;
-                  rest = value_rest;
-                  t;
-                  kind = value_kind;
-                  sentinel_props;
-                }
-              )
+                let { value_left; value_matched; used_pattern_locs = new_used_pattern_locs } =
+                  filter_values_by_patterns
+                    cx
+                    ~raise_errors
+                    ~value_union:(Lazy.force value)
+                    ~pattern_union:pattern
+                in
+                ( value_left,
+                  lazy value_matched,
+                  ValueUnion.is_empty value_matched,
+                  new_used_pattern_locs
+                )
             in
-            Match { used_pattern_locs; queue_additions; matched })
+            let used_pattern_locs = ALocSet.union used_pattern_locs new_used_pattern_locs in
+            let property_matched =
+              { ValueObject.Property.loc = loc_value; value = value_matched; optional }
+            in
+            let head = SMap.add key (Some property_matched) head in
+            if no_match || value_matched_is_empty then
+              if ALocSet.is_empty new_used_pattern_locs then
+                Stop (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object })
+              else
+                let no_match = true in
+                Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
+            else if (not optional) && ValueUnion.is_empty value_left then
+              (* Full match *)
+              Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
+            else
+              (* Partial match *)
+              let (props_left, rest) =
+                if ValueUnion.is_empty value_left then
+                  (* Optional value is ignored from left pattern, but then there are additional,
+                     unknown properties. *)
+                  let value_rest =
+                    if Base.Option.is_some value_rest then
+                      value_rest
+                    else
+                      Some
+                        (Reason.mk_reason
+                           (Reason.RUnknownUnspecifiedProperty (Reason.desc_of_reason reason_value))
+                           loc_value
+                        )
+                  in
+                  (SMap.add key None head, value_rest)
+                else
+                  let property_left =
+                    { ValueObject.Property.loc = loc_value; value = lazy value_left; optional }
+                  in
+                  (SMap.add key (Some property_left) head, value_rest)
+              in
+              let props_left = SMap.union props_left remainder_value in
+              let object_left =
+                ( reason_value,
+                  {
+                    ValueObject.props = props_left;
+                    class_info = value_class_info;
+                    rest;
+                    t;
+                    kind = value_kind;
+                    sentinel_props;
+                  }
+                )
+              in
+              let queue_additions = object_left :: queue_additions in
+              Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value))
+          ~finish:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) ->
+            let pattern_loc = Reason.loc_of_reason reason_pattern in
+            let used_pattern_locs = ALocSet.add pattern_loc used_pattern_locs in
+            let used_pattern_locs =
+              if
+                Base.Option.is_some value_rest
+                || (not @@ ValueObject.Properties.is_empty remainder_value)
+              then
+                match pattern_rest with
+                | None ->
+                  ( if pattern_kind = ObjKind.Obj then
+                    let missing_props =
+                      SMap.fold
+                        (fun key prop acc ->
+                          if Base.Option.is_some prop then
+                            key :: acc
+                          else
+                            acc)
+                        remainder_value
+                        []
+                      |> Base.List.rev
+                    in
+                    if raise_errors then
+                      Flow_js.add_output
+                        cx
+                        (Error_message.EMatchError
+                           (Error_message.MatchNonExhaustiveObjectPattern
+                              {
+                                loc = Reason.loc_of_reason reason_pattern;
+                                rest = value_rest;
+                                missing_props;
+                                pattern_kind =
+                                  (match pattern_class_info with
+                                  | Some _ ->
+                                    Flow_intermediate_error_types.MatchObjPatternKind.Instance
+                                  | None -> Flow_intermediate_error_types.MatchObjPatternKind.Object);
+                              }
+                           )
+                        )
+                  );
+                  used_pattern_locs
+                | Some pattern_rest ->
+                  ALocSet.add (Reason.loc_of_reason pattern_rest) used_pattern_locs
+              else
+                used_pattern_locs
+            in
+            let non_matching_rest =
+              pattern_kind <> ObjKind.Obj
+              && Base.Option.is_some value_rest
+              && Base.Option.is_none pattern_rest
+            in
+            if no_match || non_matching_rest then
+              NoMatch { used_pattern_locs; left = value_object }
+            else
+              let matched =
+                ( reason_value,
+                  {
+                    ValueObject.props = head;
+                    class_info = value_class_info;
+                    rest = value_rest;
+                    t;
+                    kind = value_kind;
+                    sentinel_props;
+                  }
+                )
+              in
+              Match { used_pattern_locs; queue_additions; matched })
+    in
+    (result, subclass_covered)
 
 (* mixed/any values mark object and tuple patterns as used. *)
 and visit_mixed cx ~(raise_errors : bool) (reason : Reason.t) (pattern_union : PatternUnion.t) :

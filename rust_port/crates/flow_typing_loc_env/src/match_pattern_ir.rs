@@ -364,7 +364,11 @@ pub mod pattern_object {
     pub struct PatternObjectInner {
         pub kind: ObjKind,
         pub props: Properties,
-        pub class_info: Option<(ALocId, Option<FlowSmolStr>)>,
+        // For instance patterns: the class id, the class name, the set of super
+        // class ids, and the instance type of the constructor. The super ids and
+        // instance type are used to recognize patterns whose class is a strict
+        // subclass of the value's class.
+        pub class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>, Type)>,
         pub keys_order: Vec<FlowSmolStr>,
         pub rest: Option<Reason>,
         pub contains_invalid_pattern: bool,
@@ -457,7 +461,7 @@ pub mod pattern_object {
             } = inner.as_ref();
 
             let constructor = match class_info {
-                Some((_, Some(class_name))) => format!("{} ", class_name),
+                Some((_, Some(class_name), _, _)) => format!("{} ", class_name),
                 _ => String::new(),
             };
 
@@ -575,7 +579,7 @@ pub mod pattern_object {
                     };
 
                     match class_info {
-                        Some((_, Some(name))) => {
+                        Some((_, Some(name), _, _)) => {
                             let constructor = InstancePatternConstructor::IdentifierConstructor(
                                 Identifier::new(IdentifierInner {
                                     loc: Loc::none(),
@@ -893,6 +897,7 @@ pub mod value_object {
                 rest,
                 kind,
                 sentinel_props,
+                t,
                 ..
             } = inner.as_ref();
 
@@ -1001,9 +1006,9 @@ pub mod value_object {
                 }
             };
 
-            let class_info = class_info
-                .as_ref()
-                .map(|(class_id, name, _)| (class_id.dupe(), name.dupe()));
+            let class_info = class_info.as_ref().map(|(class_id, name, super_ids)| {
+                (class_id.dupe(), name.dupe(), super_ids.dupe(), t.dupe())
+            });
 
             pattern_object::PatternObject(
                 reason.dupe(),

@@ -73,7 +73,7 @@ module rec PatternObject : sig
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
-    class_info: (ALoc.id * string option) option;
+    class_info: (ALoc.id * string option * ALocIDSet.t * Type.t) option;
     keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
