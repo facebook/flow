@@ -245,6 +245,27 @@ const SubjAA_via_iface: SubjAA_Ctor = SubjAA; // OK — Class<SubjAA> <: interfa
 const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
 new SubjAA_via_iface(7).x as number; // OK — going through the iface, we get a SubjAA back
 
+// `Class<C>` (the type-level form) must behave like `typeof C` for
+// ConstructorParameters / InstanceType. `typeof C` reads the class *value*
+// (a bare `ClassT(InstanceT)`), but `Class<C>` names the class in *type*
+// position, so the instance is reached through an [AnnotT] wrapper
+// (`ClassT(AnnotT(InstanceT))`). [find_ctor] must unwrap that [AnnotT] —
+// otherwise the construct sig is dropped and the constraint check reports
+// "construct signature missing in statics of C".
+type FooClassParams = ConstructorParameters<Class<Foo>>;
+const fcp1: FooClassParams = [1, "s"]; // OK
+const fcp2: FooClassParams = [1, 2]; // ERROR: number incompatible with string
+type FooClassInstance = InstanceType<Class<Foo>>;
+declare const fci: FooClassInstance;
+fci.x as number; // OK
+fci as Foo; // OK
+
+// Same through a type alias (an extra [AnnotT] layer) — still unwrapped.
+type FooAlias = Foo;
+type FooAliasParams = ConstructorParameters<Class<FooAlias>>;
+const fap1: FooAliasParams = [1, "s"]; // OK
+const fap2: FooAliasParams = ["bad", "s"]; // ERROR: string incompatible with number
+
 // declare-class + interface declaration-merge with `new()` is exercised by
 // the type-sig pipeline; see `declare_class_interface_merging_new` in
 // `src/parser_utils/type_sig/__tests__/type_sig_tests.ml`. Within a single

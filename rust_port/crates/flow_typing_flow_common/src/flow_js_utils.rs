@@ -407,6 +407,7 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
                 &instance.super_,
                 find_ctor,
             ),
+            TypeInner::AnnotT(_, t, _) => find_ctor(cx, t),
             TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => find_ctor(cx, c),
             TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
                 find_ctor(cx, inner)

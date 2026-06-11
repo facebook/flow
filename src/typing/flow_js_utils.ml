@@ -182,6 +182,7 @@ let extract_class_ctor_t cx this =
     | DefT (_, InstanceT { inst = { proto_props; _ }; super; _ })
     | ThisInstanceT (_, { inst = { proto_props; _ }; super; _ }, _, _) ->
       lookup_ctor proto_props super find_ctor
+    | AnnotT (_, t, _) -> find_ctor t
     | ThisTypeAppT (_, c, _, _) -> find_ctor c
     | DefT (_, ClassT inner) -> find_ctor inner
     | DefT (r, PolyT { tparams_loc; tparams; t_out; id = _ }) ->
