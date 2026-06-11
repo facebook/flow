@@ -246,7 +246,12 @@ pub enum MessageFromServer {
 pub fn string_of_request(request: &Request) -> String {
     match request {
         Request::Subscribe => "subscribe".to_string(),
-        Request::LspToServer(msg) => format!("lspToServer {:?}", msg),
+        Request::LspToServer(msg) => {
+            format!(
+                "lspToServer {}",
+                flow_lsp::lsp_fmt::denorm_message_to_string(msg)
+            )
+        }
         Request::LiveErrorsRequest(uri) => format!("liveErrorsRequest {}", **uri),
     }
 }
@@ -274,7 +279,12 @@ pub fn json_of_request((request, metadata): &RequestWithMetadata) -> serde_json:
 pub fn string_of_response(response: &Response) -> String {
     match response {
         Response::LspFromServer(None) => "lspFromServer None".to_string(),
-        Response::LspFromServer(Some(msg)) => format!("lspFromServer {:?}", msg),
+        Response::LspFromServer(Some(msg)) => {
+            format!(
+                "lspFromServer {}",
+                flow_lsp::lsp_fmt::denorm_message_to_string(msg)
+            )
+        }
         Response::LiveErrorsResponse(Ok(LiveErrorsResponse {
             live_diagnostics,
             live_errors_uri,
