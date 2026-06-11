@@ -1244,6 +1244,18 @@ pub fn filename_from_string(
 }
 
 pub fn mkdirp(path_str: &str, _perm: u32) {
+    // On Windows, paths may use the verbatim (`\\?\C:\...`) or device
+    // (`\\.\C:\...`) prefix. The `?` and `.` are illegal filename characters,
+    // and our splitting logic below would otherwise turn them into a path
+    // component, causing `mkdir ?` / `mkdir .` to fail with "filename,
+    // directory name, or volume label syntax is incorrect" (os error 123).
+    // Strip the prefix so we operate on a normal absolute path.
+    #[cfg(windows)]
+    let path_str = path_str
+        .strip_prefix(r"\\?\")
+        .or_else(|| path_str.strip_prefix(r"\\.\"))
+        .unwrap_or(path_str);
+
     let parts: Vec<&str> = path_str
         .split(&['/', '\\'][..])
         .filter(|s| !s.is_empty())
@@ -1378,4 +1390,55 @@ pub fn canonicalize_filenames(
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn mkdirp_handles_windows_verbatim_prefix() {
+        // Repro for the panic
+        //   mkdirp: mkdir ? failed: The filename, directory name, or
+        //   volume label syntax is incorrect. (os error 123)
+        // which used to fire when a path with the `\\?\` (verbatim) prefix
+        // was passed in: the splitting logic produced a `?` directory
+        // component that Windows refuses to create.
+        let tmp = std::env::temp_dir();
+        let tmp_str = tmp.to_string_lossy();
+        // Make sure we exercise a `\\?\C:\...` style path even when the
+        // platform's temp dir is plain.
+        let extended = if tmp_str.starts_with(r"\\?\") {
+            tmp_str.to_string()
+        } else {
+            format!(r"\\?\{}", tmp_str)
+        };
+        let nested = format!(
+            "{}\\flow_mkdirp_verbatim_prefix_test\\nested\\dir",
+            extended.trim_end_matches(['\\', '/']),
+        );
+        // Clean up first (ignore errors), then create.
+        let _ = std::fs::remove_dir_all(format!(
+            "{}\\flow_mkdirp_verbatim_prefix_test",
+            tmp.to_string_lossy().trim_end_matches(['\\', '/']),
+        ));
+        mkdirp(&nested, 0o755);
+        // The created directory should be reachable via the plain path
+        // form, since the `\\?\` prefix is just an access-mode hint.
+        let plain = format!(
+            "{}\\flow_mkdirp_verbatim_prefix_test\\nested\\dir",
+            tmp.to_string_lossy().trim_end_matches(['\\', '/']),
+        );
+        assert!(
+            Path::new(&plain).is_dir(),
+            "expected mkdirp to create {} when called with the \\\\?\\ prefix",
+            plain
+        );
+        // Cleanup.
+        let _ = std::fs::remove_dir_all(format!(
+            "{}\\flow_mkdirp_verbatim_prefix_test",
+            tmp.to_string_lossy().trim_end_matches(['\\', '/']),
+        ));
+    }
 }
