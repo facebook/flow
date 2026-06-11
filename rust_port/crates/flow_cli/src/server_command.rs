@@ -61,6 +61,12 @@ fn main(
     let flowconfig_path = server_files_js::config_file(&flowconfig_name, &root);
     let (flowconfig, flowconfig_hash) =
         command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+    flow_event_logger::set_server_config(
+        flowconfig.options.log_saving.get("timeout").copied(),
+        &flowconfig_name,
+        root.clone(),
+        flowconfig.options.root_name.as_deref(),
+    );
     let options = Arc::new(command_utils::make_options(
         flowconfig_name.clone(),
         flowconfig_hash,

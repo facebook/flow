@@ -31,6 +31,7 @@
 #[cfg(not(fbcode_build))]
 mod stub {
     use std::collections::BTreeMap;
+    use std::path::PathBuf;
     use std::sync::Mutex;
     use std::sync::OnceLock;
     use std::time::SystemTime;
@@ -246,6 +247,19 @@ mod stub {
             .lock()
             .expect("flow_event_logger context mutex poisoned")
             .root_name = root_name;
+    }
+
+    pub fn set_server_config(
+        _tls: Option<flow_common::options::LogSaving>,
+        _flowconfig_name: &str,
+        root: PathBuf,
+        root_name: Option<&str>,
+    ) {
+        let mut context = context()
+            .lock()
+            .expect("flow_event_logger context mutex poisoned");
+        context.root = Some(root.to_string_lossy().into_owned());
+        context.root_name = root_name.map(ToOwned::to_owned);
     }
 
     pub fn set_saved_state_filename(fn_: String) {
@@ -650,6 +664,7 @@ pub use stub::*;
 #[cfg(fbcode_build)]
 mod fb_facade {
     use std::collections::BTreeMap;
+    use std::path::PathBuf;
     use std::sync::Mutex;
     use std::sync::OnceLock;
     use std::time::SystemTime;
@@ -967,6 +982,16 @@ mod fb_facade {
     // SHIM: forwards directly; FB and OSS share identical signature.
     pub fn set_root_name(root_name: Option<String>) {
         fb::set_root_name(root_name);
+    }
+
+    // SHIM: forwards directly; FB and OSS share identical signature.
+    pub fn set_server_config(
+        tls: Option<flow_common::options::LogSaving>,
+        flowconfig_name: &str,
+        root: PathBuf,
+        root_name: Option<&str>,
+    ) {
+        fb::set_server_config(tls, flowconfig_name, root, root_name);
     }
 
     // SHIM: forwards directly; FB and OSS share identical signature.
