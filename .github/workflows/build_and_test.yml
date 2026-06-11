@@ -35,6 +35,101 @@ jobs:
     - name: Test Rust port
       working-directory: rust_port
       run: cargo test
+    - name: Build Rust port binary
+      working-directory: rust_port
+      run: cargo build --release --bin flow_cli
+    - name: Create artifacts
+      run: |-
+        mkdir -p bin/rust-port-linux
+        cp rust_port/target/release/flow_cli bin/rust-port-linux/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_and_test_rust_port_bin
+        path: bin/rust-port-linux/flow
+  build_rust_port_linux_arm64:
+    runs-on: 4-core-ubuntu-arm
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@nightly
+    - name: set up rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: flow-rust-port-linux-arm64
+        workspaces: rust_port -> target
+    - name: Build Rust port binary
+      working-directory: rust_port
+      run: cargo build --release --bin flow_cli
+    - name: Create artifacts
+      run: |-
+        mkdir -p bin/rust-port-linux-arm64
+        cp rust_port/target/release/flow_cli bin/rust-port-linux-arm64/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_linux_arm64_bin
+        path: bin/rust-port-linux-arm64/flow
+  build_rust_port_macos_arm64:
+    runs-on: macos-15
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: maxim-lobanov/setup-xcode@v1.6.0
+      with:
+        xcode-version: '16.4.0'
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@nightly
+    - name: set up rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: flow-rust-port-macos-arm64
+        workspaces: rust_port -> target
+    - name: Build Rust port binary
+      working-directory: rust_port
+      run: cargo build --release --bin flow_cli
+    - name: Create artifacts
+      run: |-
+        mkdir -p bin/rust-port-macos-arm64
+        cp rust_port/target/release/flow_cli bin/rust-port-macos-arm64/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_macos_arm64_bin
+        path: bin/rust-port-macos-arm64/flow
+  build_rust_port_win:
+    runs-on: windows-2022
+    env:
+      CARGO_INCREMENTAL: 0
+      CARGO_TERM_COLOR: always
+      RUSTC_BOOTSTRAP: 1
+      RUST_MIN_STACK: 5242880
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@nightly
+    - name: set up rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: flow-rust-port-win
+        workspaces: rust_port -> target
+    - name: Build Rust port binary
+      working-directory: rust_port
+      run: cargo build --release --bin flow_cli
+    - name: Create artifacts
+      run: |-
+        New-Item -ItemType Directory -Force bin\rust-port-win64
+        Copy-Item rust_port\target\release\flow_cli.exe bin\rust-port-win64\flow.exe
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_win_bin
+        path: bin/rust-port-win64/flow.exe
   build_js:
     runs-on: ubuntu-22.04
     env:
@@ -405,6 +500,57 @@ jobs:
         echo "TEMP=$env:USERPROFILE\AppData\Local\Temp" >> $env:GITHUB_ENV
     - name: Run tool tests
       run: node packages/flow-dev-tools/bin/tool test --bin bin/win64/flow.exe --parallelism 1
+  runtests_rust_port_linux:
+    runs-on: ubuntu-22.04
+    needs:
+    - build_and_test_rust_port
+    env:
+      FLOW_RUNTESTS_PARALLELISM: 8
+      FLOW_RUST_PORT: 1
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: build_and_test_rust_port_bin
+        path: bin/rust-port-linux
+    - run: chmod +x bin/rust-port-linux/flow
+    - name: Run Rust port tests
+      run: ./runtests.sh bin/rust-port-linux/flow
+  runtests_rust_port_macos_arm:
+    runs-on: macos-15
+    needs:
+    - build_rust_port_macos_arm64
+    env:
+      FLOW_RUST_PORT: 1
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1.6.0
+      with:
+        xcode-version: '16.4.0'
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: build_rust_port_macos_arm64_bin
+        path: bin/rust-port-macos-arm64
+    - run: chmod +x bin/rust-port-macos-arm64/flow
+    - name: Run Rust port tests
+      run: ./runtests.sh bin/rust-port-macos-arm64/flow
+  tool_test_rust_port_linux:
+    runs-on: ubuntu-22.04
+    needs:
+    - build_and_test_rust_port
+    env:
+      FLOW_RUST_PORT: 1
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: build_and_test_rust_port_bin
+        path: bin/rust-port-linux
+    - run: chmod +x bin/rust-port-linux/flow
+    - name: Install tool deps from yarn
+      run: (cd packages/flow-dev-tools && yarn install | cat)
+    - name: Run Rust port newtests
+      run: ./tool test -p 4 --check check --bin bin/rust-port-linux/flow
   ounit_test_linux:
     runs-on: ubuntu-22.04
     env:
