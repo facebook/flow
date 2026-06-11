@@ -27,11 +27,11 @@ import {parseForESLint} from '../src';
  */
 export function verifyHasScopes(
   code: string,
-  expectedScopes: $ReadOnlyArray<{
+  expectedScopes: ReadonlyArray<{
     type: ScopeTypeType,
-    variables: $ReadOnlyArray<{
+    variables: ReadonlyArray<{
       name: string,
-      type: ?DefinitionTypeType | $ReadOnlyArray<DefinitionTypeType>,
+      type: ?DefinitionTypeType | ReadonlyArray<DefinitionTypeType>,
       referenceCount: ?number,
       eslintUsed?: boolean,
     }>,

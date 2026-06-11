@@ -12,7 +12,7 @@ import {printForSnapshot} from '../__test_utils__/parse';
 
 const transform = (src: string) => printForSnapshot(src, {babel: true});
 
-function run(declaration: string, testExp: string): mixed {
+function run(declaration: string, testExp: string): unknown {
   const f: $FlowFixMe = new Function(`${declaration}\nreturn ${testExp};`);
   return f();
 }

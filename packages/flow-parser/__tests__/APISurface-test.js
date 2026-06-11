@@ -31,7 +31,7 @@
 // upstream behavior.
 
 type ModuleExports = interface {
-  +[string]: mixed,
+  +[string]: unknown,
 };
 
 const ours: ModuleExports = require('flow-parser/oxidized');

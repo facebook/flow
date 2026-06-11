@@ -13,7 +13,10 @@ import {parse as parseEspreeOriginal} from 'espree';
 import {BABEL_VISITOR_KEYS, parse as parseHermesOriginal} from './parse';
 import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
 
-function cleanAstForHermes(ast: $FlowFixMe, style: 'babel' | 'estree'): mixed {
+function cleanAstForHermes(
+  ast: $FlowFixMe,
+  style: 'babel' | 'estree',
+): unknown {
   if (style === 'babel') {
     // Babel changes what properties are stripped by each version, to support some
     // older versions of Babel we don't exactly match the output of the latest babel
@@ -42,7 +45,7 @@ function cleanAstForHermes(ast: $FlowFixMe, style: 'babel' | 'estree'): mixed {
   );
 }
 
-function cleanAstForEspree(ast: $FlowFixMe): mixed {
+function cleanAstForEspree(ast: $FlowFixMe): unknown {
   // $FlowExpectedError[incompatible-use]
   delete ast.comments;
   // $FlowExpectedError[incompatible-use]
@@ -67,7 +70,7 @@ function cleanAstForEspree(ast: $FlowFixMe): mixed {
   );
 }
 
-function cleanBabelAst(ast: $FlowFixMe): mixed {
+function cleanBabelAst(ast: $FlowFixMe): unknown {
   delete ast.errors;
 
   SimpleTraverser.traverse(ast, {
@@ -92,7 +95,7 @@ function cleanBabelAst(ast: $FlowFixMe): mixed {
   );
 }
 
-export function parseBabel(source: string): mixed {
+export function parseBabel(source: string): unknown {
   // Trim end of string as Babel includes all whitespace in the
   // range but Hermes parser does not.
   const sourceTrimmed = source.trimEnd();
@@ -125,7 +128,7 @@ export function parseBabel(source: string): mixed {
   return cleanBabelAst(ast);
 }
 
-export function parseEspree(source: string): mixed {
+export function parseEspree(source: string): unknown {
   const ast = parseEspreeOriginal(source, {
     comment: false,
     ecmaVersion: 'latest',
@@ -140,7 +143,10 @@ export function parseEspree(source: string): mixed {
   return cleanAstForEspree(ast);
 }
 
-export function parseHermes(source: string, style: 'babel' | 'estree'): mixed {
+export function parseHermes(
+  source: string,
+  style: 'babel' | 'estree',
+): unknown {
   // $FlowExpectedError[incompatible-type] - the overloads confuse flow
   const ast = parseHermesOriginal(source, {
     babel: style === 'babel',
@@ -150,7 +156,7 @@ export function parseHermes(source: string, style: 'babel' | 'estree'): mixed {
   return cleanAstForHermes(ast, style);
 }
 
-export type AlignmentExpectation = $ReadOnly<
+export type AlignmentExpectation = Readonly<
   | {
       expectToFail: false,
     }
@@ -162,15 +168,15 @@ export type AlignmentExpectation = $ReadOnly<
       expectedExceptionMessage: string,
     },
 >;
-export type AlignmentCase = $ReadOnly<{
+export type AlignmentCase = Readonly<{
   code: string,
   espree: AlignmentExpectation,
   babel: AlignmentExpectation,
 }>;
 
 function expectAlignment(
-  hermesAst: () => mixed,
-  otherAst: () => mixed,
+  hermesAst: () => unknown,
+  otherAst: () => unknown,
   expectation: AlignmentExpectation,
   parserType: 'Babel' | 'ESTree',
 ): void {

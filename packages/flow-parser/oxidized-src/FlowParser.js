@@ -40,17 +40,17 @@ type FlowParse = (
 
 type WireSourceLocation = {
   source?: ?string,
-  start?: mixed,
-  end?: mixed,
+  start?: unknown,
+  end?: unknown,
   rangeStart?: number,
   rangeEnd?: number,
-  [string]: mixed,
+  [string]: unknown,
 };
 
 type WireNode = {
   loc?: WireSourceLocation,
   range?: [number, number],
-  [string]: mixed,
+  [string]: unknown,
 };
 
 let FlowParserWASM: FlowParserWASMType;
@@ -174,7 +174,7 @@ function copyToHeap(buffer: Buffer, addr: number): void {
 // than the literal boolean `true` is treated as `false` so callers can't
 // accidentally pass `undefined`/`null`/strings and get NaN at the cwrap
 // boundary.
-function flag(v: mixed): 0 | 1 {
+function flag(v: unknown): 0 | 1 {
   return v === true ? 1 : 0;
 }
 
@@ -317,7 +317,7 @@ function parse(source: string, options: ParserOptions): Program {
     const visitedNodes: WeakSet<WireNode> = new WeakSet();
     const locRanges: WeakMap<WireSourceLocation, [number, number]> =
       new WeakMap();
-    function fixLocs(node: mixed): void {
+    function fixLocs(node: unknown): void {
       if (node == null || typeof node !== 'object') {
         return;
       }

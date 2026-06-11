@@ -29,8 +29,8 @@ function test({
   skipTypes,
 }: {
   wrapCode: (code: string) => string,
-  getAssertionObject: () => mixed,
-  skipTypes?: $ReadOnlyArray<StatementTypes>,
+  getAssertionObject: () => unknown,
+  skipTypes?: ReadonlyArray<StatementTypes>,
 }) {
   function loopSamples(side: 'before' | 'after') {
     describe(side, () => {

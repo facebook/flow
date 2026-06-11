@@ -52,10 +52,16 @@ function getParentKey(
       if (parent[key] === target) {
         return {type: 'single', node: parent, key};
       }
-    } else if (Array.isArray(parent[key])) {
+    } else if (
+      Array.isArray(
+        // $FlowExpectedError[prop-missing]
+        parent[key],
+      )
+    ) {
       for (let i = 0; i < parent[key].length; i += 1) {
         // $FlowExpectedError[invalid-tuple-index]
         const current = parent[key][i];
+        // $FlowFixMe[invalid-compare]
         if (current === target) {
           return {type: 'array', node: parent, key, targetIndex: i};
         }

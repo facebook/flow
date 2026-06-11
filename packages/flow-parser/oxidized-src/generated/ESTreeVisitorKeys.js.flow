@@ -17,6 +17,6 @@
 
 'use strict';
 
-export type VisitorKeys = $ReadOnly<{[string]: $ReadOnlyArray<string>}>;
+export type VisitorKeys = Readonly<{[string]: ReadonlyArray<string>}>;
 
 declare module.exports: VisitorKeys;

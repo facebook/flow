@@ -122,7 +122,7 @@ describe('NodeEventGenerator', () => {
   });
 
   describe('traversing the entire AST', () => {
-    type Emissions = $ReadOnlyArray<[string, ESNode]>;
+    type Emissions = ReadonlyArray<[string, ESNode]>;
     /**
      * Gets a list of emitted types/selectors from the generator, in emission order
      * @param ast The AST to traverse
@@ -132,7 +132,7 @@ describe('NodeEventGenerator', () => {
      */
     function getEmissions(
       ast: Program,
-      possibleQueries: $ReadOnlyArray<string>,
+      possibleQueries: ReadonlyArray<string>,
     ): Emissions {
       const emissions: Array<Emissions[number]> = [];
       const emitter = new SafeEmitter();
@@ -168,7 +168,7 @@ describe('NodeEventGenerator', () => {
      */
     function assertEmissions(
       sourceText: string,
-      possibleQueries: $ReadOnlyArray<string>,
+      possibleQueries: ReadonlyArray<string>,
       // these tests do simple access into the AST, so it's much easier to just have the access untyped
       expectedEmissions: $FlowFixMe => Emissions,
     ): void {

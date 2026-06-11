@@ -42,14 +42,14 @@ const prettierConfig = Object.freeze({
 
 declare function parse(
   code: string,
-  opts: $ReadOnly<{...ParserOptions, babel: true}>,
+  opts: Readonly<{...ParserOptions, babel: true}>,
 ): BabelFile;
 // eslint-disable-next-line no-redeclare
 declare function parse(
   code: string,
   opts?:
-    | $ReadOnly<{...ParserOptions, babel?: false | void}>
-    | $ReadOnly<{...ParserOptions, babel: false}>,
+    | Readonly<{...ParserOptions, babel?: false | void}>
+    | Readonly<{...ParserOptions, babel: false}>,
 ): ESTreeProgram;
 // eslint-disable-next-line no-redeclare
 export function parse(code: string, options: ParserOptions) {
@@ -68,14 +68,14 @@ export function parseForSnapshot(
     enableExperimentalComponentSyntax,
     enableExperimentalFlowMatchSyntax,
     enableExperimentalFlowRecordSyntax,
-  }: $ReadOnly<{
+  }: Readonly<{
     preserveRange?: boolean,
     babel?: boolean,
     enableExperimentalComponentSyntax?: boolean,
     enableExperimentalFlowMatchSyntax?: boolean,
     enableExperimentalFlowRecordSyntax?: boolean,
   }> = {},
-): mixed {
+): unknown {
   const parseOpts = {
     enableExperimentalComponentSyntax:
       enableExperimentalComponentSyntax ?? true,
@@ -103,12 +103,12 @@ export function parseForSnapshot(
 export function printForSnapshotESTree(code: string): Promise<string> {
   return printForSnapshot(code);
 }
-export function parseForSnapshotESTree(code: string): mixed {
+export function parseForSnapshotESTree(code: string): unknown {
   return parseForSnapshot(code);
 }
 export function printForSnapshotBabel(
   code: string,
-  options?: $ReadOnly<{
+  options?: Readonly<{
     reactRuntimeTarget?: ParserOptions['reactRuntimeTarget'],
     transformOptions?: ParserOptions['transformOptions'],
   }>,
@@ -119,7 +119,7 @@ export function printForSnapshotBabel(
     transformOptions: options?.transformOptions,
   });
 }
-export function parseForSnapshotBabel(code: string): mixed {
+export function parseForSnapshotBabel(code: string): unknown {
   return parseForSnapshot(code, {babel: true});
 }
 
@@ -132,7 +132,7 @@ export async function printForSnapshot(
     enableExperimentalFlowRecordSyntax,
     reactRuntimeTarget,
     transformOptions,
-  }: $ReadOnly<{
+  }: Readonly<{
     babel?: boolean,
     enableExperimentalComponentSyntax?: boolean,
     enableExperimentalFlowMatchSyntax?: boolean,
@@ -166,12 +166,12 @@ export async function printForSnapshot(
 
 export function cleanASTForSnapshot(
   ast: ESNode,
-  options?: $ReadOnly<{
+  options?: Readonly<{
     preserveRange?: boolean,
     babel?: boolean,
     enforceLocationInformation?: boolean,
   }>,
-): mixed {
+): unknown {
   SimpleTraverser.traverse(ast, {
     enter(node) {
       if (options?.enforceLocationInformation === true && node.loc == null) {

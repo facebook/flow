@@ -19,7 +19,7 @@ function expectTransformToEqual({
   code,
   result,
   transform,
-}: $ReadOnly<{
+}: Readonly<{
   code: string,
   result: string,
   transform: ESNode => ESNode | null,

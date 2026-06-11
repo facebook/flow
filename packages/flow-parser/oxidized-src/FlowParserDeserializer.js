@@ -32,8 +32,8 @@ export type FlowParserProgram = {
   tokens?: Array<HermesToken>,
   errors?: Array<{loc: HermesSourceLocation, message: string}>,
   sourceType?: 'script' | 'module',
-  docblock?: mixed,
-  [string]: mixed,
+  docblock?: unknown,
+  [string]: unknown,
 };
 
 /**

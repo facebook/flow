@@ -25,7 +25,7 @@ export type {VisitorKeysType};
 export function getVisitorKeys<T: ESNode>(
   node: T,
   visitorKeys?: ?VisitorKeysType,
-): ReadonlyArray<$Keys<T>> {
+) /*: ReadonlyArray<keyof T> */ {
   const keys = (visitorKeys ?? FlowVisitorKeys)[node.type];
   if (keys == null) {
     throw new Error(`No visitor keys found for node type "${node.type}".`);

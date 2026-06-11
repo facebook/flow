@@ -24,7 +24,7 @@ class C {
   }
 }
 
-function runMatchExp(code: string, x: mixed): mixed {
+function runMatchExp(code: string, x: unknown): unknown {
   const f: $FlowFixMe = new Function(
     'x',
     'foo',

@@ -14,7 +14,7 @@ import {traverse} from '../../../src/traverse/traverse';
 import {parse} from '../../../src/transform/parse';
 
 export type StatementTypes = Statement['type'] | ModuleDeclaration['type'];
-export const CODE_SAMPLES: $ReadOnly<{[StatementTypes]: string}> = {
+export const CODE_SAMPLES: Readonly<{[StatementTypes]: string}> = {
   ExpressionStatement: 'foo;',
   BlockStatement: '{}',
   EmptyStatement: ';',
@@ -51,7 +51,7 @@ export const CODE_SAMPLES: $ReadOnly<{[StatementTypes]: string}> = {
   DeclareExportAllDeclaration: "declare export * from 'foo';",
   DeclareModuleExports: 'declare module.exports: Foo;',
 };
-export const MODULE_DECLARATIONS: $ReadOnlyArray<ModuleDeclaration['type']> = [
+export const MODULE_DECLARATIONS: ReadonlyArray<ModuleDeclaration['type']> = [
   'ImportDeclaration',
   'ExportNamedDeclaration',
   'ExportDefaultDeclaration',
@@ -60,10 +60,10 @@ export const MODULE_DECLARATIONS: $ReadOnlyArray<ModuleDeclaration['type']> = [
   'DeclareExportAllDeclaration',
   'DeclareModuleExports',
 ];
-export const LOOP_ONLY_STATEMENTS: $ReadOnlyArray<
+export const LOOP_ONLY_STATEMENTS: ReadonlyArray<
   'BreakStatement' | 'ContinueStatement',
 > = ['BreakStatement', 'ContinueStatement'];
-export const DEFAULT_SKIP_STATEMENTS: $ReadOnlyArray<StatementTypes> = [
+export const DEFAULT_SKIP_STATEMENTS: ReadonlyArray<StatementTypes> = [
   ...MODULE_DECLARATIONS,
   ...LOOP_ONLY_STATEMENTS,
 ];
@@ -102,7 +102,7 @@ export function testStatementMutation({
     ast: Program,
     target: Statement | ModuleDeclaration,
   ) => void,
-  skipTypes?: $ReadOnlyArray<StatementTypes>,
+  skipTypes?: ReadonlyArray<StatementTypes>,
 }) {
   for (const type of Object.keys(CODE_SAMPLES)) {
     if (skipTypes.includes(type)) {

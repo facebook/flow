@@ -30,8 +30,8 @@ function test({
   skipTypes,
 }: {
   wrapCode: (code: string) => string,
-  getAssertionObject: (nodes: [mixed, mixed]) => mixed,
-  skipTypes?: $ReadOnlyArray<StatementTypes>,
+  getAssertionObject: (nodes: [unknown, unknown]) => unknown,
+  skipTypes?: ReadonlyArray<StatementTypes>,
 }) {
   testStatementMutation({
     wrapCode,

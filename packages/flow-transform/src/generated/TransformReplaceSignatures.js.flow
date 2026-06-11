@@ -22,6 +22,6 @@ import type {DetachedNode} from '../detachedNode';
 type VariableDeclarationReplaceSignature = (
   target: VariableDeclaration,
   nodeToReplaceWith: DetachedNode<VariableDeclaration>,
-  options?: $ReadOnly<{keepComments?: boolean}>,
+  options?: Readonly<{keepComments?: boolean}>,
 ) => void;
 export type TransformReplaceSignatures = VariableDeclarationReplaceSignature;
