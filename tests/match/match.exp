@@ -1430,275 +1430,292 @@ References:
                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ refining.js:23:19
+Error ------------------------------------------------------------------------------------------------ refining.js:25:19
 
-Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:23:19
-   23|     const test => test as empty, // ERROR: `2`
+   refining.js:25:19
+   25|     const test => test as empty, // ERROR: `3n`
                          ^^^^
 
 References:
-   refining.js:16:24
-   16|   declare const x: 1 | 2;
-                              ^ [1]
-   refining.js:23:27
-   23|     const test => test as empty, // ERROR: `2`
-                                 ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ refining.js:33:19
-
-Cannot cast `test` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
-
-   refining.js:33:19
-   33|     const test => test as empty, // ERROR: void
-                         ^^^^
-
-References:
-   refining.js:29:24
-   29|   declare const x: 1 | void;
-                              ^^^^ [1]
-   refining.js:33:27
-   33|     const test => test as empty, // ERROR: void
+   refining.js:16:26
+   16|   declare const x: -3n | 3n;
+                                ^^ [1]
+   refining.js:25:27
+   25|     const test => test as empty, // ERROR: `3n`
                                  ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ refining.js:43:19
 
-Cannot cast `test` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:43:19
-   43|     const test => test as empty, // `null | undefined`
+   43|     const test => test as empty, // ERROR: `2`
                          ^^^^
 
 References:
-   refining.js:39:20
-   39|   declare const x: ?1;
-                          ^^ [1]
+   refining.js:36:24
+   36|   declare const x: 1 | 2;
+                              ^ [1]
    refining.js:43:27
-   43|     const test => test as empty, // `null | undefined`
+   43|     const test => test as empty, // ERROR: `2`
                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ refining.js:58:19
+Error ------------------------------------------------------------------------------------------------ refining.js:53:19
 
-Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:58:19
-   58|     const test => test as empty, // ERROR: `2`
+   refining.js:53:19
+   53|     const test => test as empty, // ERROR: void
                          ^^^^
 
 References:
    refining.js:49:24
-   49|   declare const x: 1 | 2;
-                              ^ [1]
-   refining.js:58:27
-   58|     const test => test as empty, // ERROR: `2`
+   49|   declare const x: 1 | void;
+                              ^^^^ [1]
+   refining.js:53:27
+   53|     const test => test as empty, // ERROR: void
                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ refining.js:68:19
+Error ------------------------------------------------------------------------------------------------ refining.js:63:19
 
-Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:68:19
-   68|     const test => test as empty, // ERROR `3`
+   refining.js:63:19
+   63|     const test => test as empty, // `null | undefined`
                          ^^^^
 
 References:
-   refining.js:64:28
-   64|   declare const x: 1 | 2 | 3;
+   refining.js:59:20
+   59|   declare const x: ?1;
+                          ^^ [1]
+   refining.js:63:27
+   63|     const test => test as empty, // `null | undefined`
+                                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ refining.js:78:19
+
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   refining.js:78:19
+   78|     const test => test as empty, // ERROR: `2`
+                         ^^^^
+
+References:
+   refining.js:69:24
+   69|   declare const x: 1 | 2;
+                              ^ [1]
+   refining.js:78:27
+   78|     const test => test as empty, // ERROR: `2`
+                                 ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ refining.js:88:19
+
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   refining.js:88:19
+   88|     const test => test as empty, // ERROR `3`
+                         ^^^^
+
+References:
+   refining.js:84:28
+   84|   declare const x: 1 | 2 | 3;
                                   ^ [1]
-   refining.js:68:27
-   68|     const test => test as empty, // ERROR `3`
+   refining.js:88:27
+   88|     const test => test as empty, // ERROR `3`
                                  ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ refining.js:81:19
+Error ----------------------------------------------------------------------------------------------- refining.js:101:19
 
 Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:81:19
-   81|     const test => test as empty, // ERROR: `2`
-                         ^^^^
-
-References:
-   refining.js:74:24
-   74|   declare const x: 1 | 2;
-                              ^ [1]
-   refining.js:81:27
-   81|     const test => test as empty, // ERROR: `2`
-                                 ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ refining.js:91:19
-
-Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
-
-   refining.js:91:19
-   91|     const test => test as empty, // ERROR: `{bar: void, a: 1}`
-                         ^^^^
-
-References:
-   refining.js:87:40
-   87|   declare const x: {foo: void, a: 0} | {bar: void, a: 1};
-                                              ^^^^^^^^^^^^^^^^^ [1]
-   refining.js:91:27
-   91|     const test => test as empty, // ERROR: `{bar: void, a: 1}`
-                                 ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- refining.js:104:19
-
-Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
-
-   refining.js:104:19
-   104|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:101:19
+   101|     const test => test as empty, // ERROR: `2`
                           ^^^^
 
 References:
-   refining.js:99:20
-    99|                  | {type: 'baz', val: boolean};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refining.js:104:27
-   104|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:94:24
+    94|   declare const x: 1 | 2;
+                               ^ [1]
+   refining.js:101:27
+   101|     const test => test as empty, // ERROR: `2`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:114:19
+Error ----------------------------------------------------------------------------------------------- refining.js:111:19
 
 Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:114:19
-   114|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:111:19
+   111|     const test => test as empty, // ERROR: `{bar: void, a: 1}`
                           ^^^^
 
 References:
-   refining.js:99:20
-    99|                  | {type: 'baz', val: boolean};
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refining.js:114:27
-   114|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:107:40
+   107|   declare const x: {foo: void, a: 0} | {bar: void, a: 1};
+                                               ^^^^^^^^^^^^^^^^^ [1]
+   refining.js:111:27
+   111|     const test => test as empty, // ERROR: `{bar: void, a: 1}`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:126:19
+Error ----------------------------------------------------------------------------------------------- refining.js:124:19
 
 Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:126:19
-   126|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:124:19
+   124|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
                           ^^^^
 
 References:
-   refining.js:99:20
-    99|                  | {type: 'baz', val: boolean};
+   refining.js:119:20
+   119|                  | {type: 'baz', val: boolean};
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refining.js:126:27
-   126|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+   refining.js:124:27
+   124|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:136:19
+Error ----------------------------------------------------------------------------------------------- refining.js:134:19
+
+Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+
+   refining.js:134:19
+   134|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+                          ^^^^
+
+References:
+   refining.js:119:20
+   119|                  | {type: 'baz', val: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refining.js:134:27
+   134|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refining.js:146:19
+
+Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+
+   refining.js:146:19
+   146|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+                          ^^^^
+
+References:
+   refining.js:119:20
+   119|                  | {type: 'baz', val: boolean};
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refining.js:146:27
+   146|     const test => test as empty, // ERROR: `{type: 'baz', val: boolean}`
+                                  ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- refining.js:156:19
 
 Cannot cast `test` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:136:19
-   136|     const test => test as empty, // ERROR: `null`
+   refining.js:156:19
+   156|     const test => test as empty, // ERROR: `null`
                           ^^^^
 
 References:
-   refining.js:132:20
-   132|   declare const x: null | {type: 'bar', val: number};
+   refining.js:152:20
+   152|   declare const x: null | {type: 'bar', val: number};
                            ^^^^ [1]
-   refining.js:136:27
-   136|     const test => test as empty, // ERROR: `null`
+   refining.js:156:27
+   156|     const test => test as empty, // ERROR: `null`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:148:19
+Error ----------------------------------------------------------------------------------------------- refining.js:168:19
 
 Cannot cast `test` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:148:19
-   148|     const test => test as empty, // ERROR: `{type: 'bar', val: string}`
+   refining.js:168:19
+   168|     const test => test as empty, // ERROR: `{type: 'bar', val: string}`
                           ^^^^
 
 References:
-   refining.js:143:20
-   143|                  | {type: 'bar', val: string}
+   refining.js:163:20
+   163|                  | {type: 'bar', val: string}
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refining.js:148:27
-   148|     const test => test as empty, // ERROR: `{type: 'bar', val: string}`
+   refining.js:168:27
+   168|     const test => test as empty, // ERROR: `{type: 'bar', val: string}`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:161:19
+Error ----------------------------------------------------------------------------------------------- refining.js:181:19
 
 Cannot cast `test` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:161:19
-   161|     const test => test as empty, // ERROR: `['baz', boolean]`
+   refining.js:181:19
+   181|     const test => test as empty, // ERROR: `['baz', boolean]`
                           ^^^^
 
 References:
-   refining.js:156:20
-   156|                  | ['baz', boolean];
+   refining.js:176:20
+   176|                  | ['baz', boolean];
                            ^^^^^^^^^^^^^^^^ [1]
-   refining.js:161:27
-   161|     const test => test as empty, // ERROR: `['baz', boolean]`
+   refining.js:181:27
+   181|     const test => test as empty, // ERROR: `['baz', boolean]`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:172:19
+Error ----------------------------------------------------------------------------------------------- refining.js:192:19
 
 Cannot cast `test` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:172:19
-   172|     const test => test as empty, // ERROR: `['foo', string]`
+   refining.js:192:19
+   192|     const test => test as empty, // ERROR: `['foo', string]`
                           ^^^^
 
 References:
-   refining.js:167:45
-   167|   declare const x: null | ['bar', number] | ['foo', string];
+   refining.js:187:45
+   187|   declare const x: null | ['bar', number] | ['foo', string];
                                                     ^^^^^^^^^^^^^^^ [1]
-   refining.js:172:27
-   172|     const test => test as empty, // ERROR: `['foo', string]`
+   refining.js:192:27
+   192|     const test => test as empty, // ERROR: `['foo', string]`
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:185:19
+Error ----------------------------------------------------------------------------------------------- refining.js:205:19
 
 Cannot cast `test` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:185:19
-   185|     const test => test as empty, // ERROR: [boolean, boolean, boolean]
+   refining.js:205:19
+   205|     const test => test as empty, // ERROR: [boolean, boolean, boolean]
                           ^^^^
 
 References:
-   refining.js:180:20
-   180|                  | [boolean, boolean, boolean];
+   refining.js:200:20
+   200|                  | [boolean, boolean, boolean];
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refining.js:185:27
-   185|     const test => test as empty, // ERROR: [boolean, boolean, boolean]
+   refining.js:205:27
+   205|     const test => test as empty, // ERROR: [boolean, boolean, boolean]
                                   ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- refining.js:193:16
+Error ----------------------------------------------------------------------------------------------- refining.js:213:16
 
 Cannot cast `d` to empty because array type [1] is incompatible with empty [2]. [incompatible-type]
 
-   refining.js:193:16
-   193|     const d => d as empty, // ERROR: `Array<string>`
+   refining.js:213:16
+   213|     const d => d as empty, // ERROR: `Array<string>`
                        ^
 
 References:
-   refining.js:189:31
-   189|   declare const x: [number] | Array<string>;
+   refining.js:209:31
+   209|   declare const x: [number] | Array<string>;
                                       ^^^^^^^^^^^^^ [1]
-   refining.js:193:21
-   193|     const d => d as empty, // ERROR: `Array<string>`
+   refining.js:213:21
+   213|     const d => d as empty, // ERROR: `Array<string>`
                             ^^^^^ [2]
 
 
@@ -1904,4 +1921,4 @@ References:
 
 
 
-Found 145 errors
+Found 146 errors

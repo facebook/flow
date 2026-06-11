@@ -20,6 +20,33 @@
   }
 }
 
+// Negative bigint
+{
+  declare const x: -3n;
+
+  match (x) { // OK
+    -3n => {}
+  }
+
+  match (x) { // ERROR: missing `-3n` (positive `3n` is a different value)
+    3n => {} // ERROR: unused pattern, `3n` is not part of input type `-3n`
+  }
+}
+
+// Negative and positive bigint are distinct
+{
+  declare const x: -3n | 3n;
+
+  match (x) { // OK
+    -3n => {}
+    3n => {}
+  }
+
+  match (x) { // ERROR: missing `3n`
+    -3n => {}
+  }
+}
+
 // Boolean
 {
   declare const x: boolean;

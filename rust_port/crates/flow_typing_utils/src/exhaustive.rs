@@ -537,9 +537,13 @@ pub mod pattern_union_builder {
                                 (pattern_union, i)
                             }
                             unary_pattern::Operator::Minus => {
+                                let literal =
+                                    flow_parser::ast_utils::negate_bigint_literal((value, raw));
                                 let leaf_val = leaf::Leaf(
                                     reason,
-                                    leaf::LeafCtor::BigIntC(type_::BigIntLiteral(value, raw)),
+                                    leaf::LeafCtor::BigIntC(type_::BigIntLiteral(
+                                        literal.0, literal.1,
+                                    )),
                                 );
                                 pattern_union =
                                     add_leaf(cx, raise_errors, guarded, pattern_union, leaf_val);

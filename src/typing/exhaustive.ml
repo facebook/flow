@@ -353,7 +353,7 @@ end = struct
         (* We've already errored on `+` on bigint literal patterns. *)
         ({ pattern_union with contains_invalid_pattern = true }, i)
       | Minus ->
-        let literal = (value, raw) in
+        let literal = Flow_ast_utils.negate_bigint_literal (value, raw) in
         let leaf = (reason, Leaf.BigIntC literal) in
         let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
         (pattern_union, next_i))

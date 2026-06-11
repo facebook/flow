@@ -232,205 +232,244 @@ References:
                                            ^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:32:3
+Error ---------------------------------------------------------------------------------------------------- basic.js:31:3
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `false` to match
-boolean [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `-3n` to match bigint
+literal `-3n` [1]. [match-not-exhaustive]
 
-   basic.js:32:3
-   32|   match (x) { // ERROR: missing `false`
+   basic.js:31:3
+   31|   match (x) { // ERROR: missing `-3n` (positive `3n` is a different value)
          ^^^^^
 
 References:
    basic.js:25:20
-   25|   declare const x: boolean;
+   25|   declare const x: -3n;
+                          ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:32:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   32|     3n => {} // ERROR: unused pattern, `3n` is not part of input type `-3n`
+           ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:45:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `3n` to match bigint
+literal `3n` [1]. [match-not-exhaustive]
+
+   basic.js:45:3
+   45|   match (x) { // ERROR: missing `3n`
+         ^^^^^
+
+References:
+   basic.js:38:26
+   38|   declare const x: -3n | 3n;
+                                ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- basic.js:59:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `false` to match
+boolean [1]. [match-not-exhaustive]
+
+   basic.js:59:3
+   59|   match (x) { // ERROR: missing `false`
+         ^^^^^
+
+References:
+   basic.js:52:20
+   52|   declare const x: boolean;
                           ^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:46:3
+Error ---------------------------------------------------------------------------------------------------- basic.js:73:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
 undefined [1]. [match-not-exhaustive]
 
-   basic.js:46:3
-   46|   match (x) { // ERROR: missing `undefined`
+   basic.js:73:3
+   73|   match (x) { // ERROR: missing `undefined`
          ^^^^^
 
 References:
-   basic.js:39:27
-   39|   declare const x: null | void;
+   basic.js:66:27
+   66|   declare const x: null | void;
                                  ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:60:3
+Error ---------------------------------------------------------------------------------------------------- basic.js:87:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
 undefined [1]. [match-not-exhaustive]
 
-   basic.js:60:3
-   60|   match (obj.prop) { // ERROR: missing `undefined`
+   basic.js:87:3
+   87|   match (obj.prop) { // ERROR: missing `undefined`
          ^^^^^
 
 References:
-   basic.js:53:30
-   53|   declare const obj: {prop?: 1};
+   basic.js:80:30
+   80|   declare const obj: {prop?: 1};
                                     ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:75:3
+Error --------------------------------------------------------------------------------------------------- basic.js:102:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `null` to match null or
 undefined [1]. [match-not-exhaustive]
 
-   basic.js:75:3
-   75|   match (x) { // ERROR: missing `null`
-         ^^^^^
+   basic.js:102:3
+   102|   match (x) { // ERROR: missing `null`
+          ^^^^^
 
 References:
-   basic.js:67:20
-   67|   declare const x: ?1;
-                          ^^ [1]
+   basic.js:94:20
+    94|   declare const x: ?1;
+                           ^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- basic.js:80:3
+Error --------------------------------------------------------------------------------------------------- basic.js:107:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match null
 or undefined [1]. [match-not-exhaustive]
 
-   basic.js:80:3
-   80|   match (x) { // ERROR: missing `undefined`
-         ^^^^^
+   basic.js:107:3
+   107|   match (x) { // ERROR: missing `undefined`
+          ^^^^^
 
 References:
-   basic.js:67:20
-   67|   declare const x: ?1;
-                          ^^ [1]
+   basic.js:94:20
+    94|   declare const x: ?1;
+                           ^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:110:3
+Error --------------------------------------------------------------------------------------------------- basic.js:137:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `true` to match
 boolean [1]. [match-not-exhaustive]
 
-   basic.js:110:3
-   110|   match (x) { // ERROR: missing `true`
+   basic.js:137:3
+   137|   match (x) { // ERROR: missing `true`
           ^^^^^
 
 References:
-   basic.js:97:42
-    97|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
+   basic.js:124:42
+   124|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
                                                  ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:147:3
+Error --------------------------------------------------------------------------------------------------- basic.js:174:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `true` to match
 boolean [1]. [match-not-exhaustive]
 
-   basic.js:147:3
-   147|   match (x) { // ERROR: missing `true`
+   basic.js:174:3
+   174|   match (x) { // ERROR: missing `true`
           ^^^^^
 
 References:
-   basic.js:134:42
-   134|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
+   basic.js:161:42
+   161|   declare const x: 'foo' | 1 | -2 | 3n | boolean | null | void;
                                                  ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:174:5
+Error --------------------------------------------------------------------------------------------------- basic.js:201:5
 
 This match wildcard [1] is unused. The values it matches are either already covered by previous patterns, or are not
 part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   174|     _ => {}
+   201|     _ => {}
             ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:189:5
+Error --------------------------------------------------------------------------------------------------- basic.js:216:5
 
 This match wildcard [1] is unused. The values it matches are either already covered by previous patterns, or are not
 part of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   189|     const a => {}
+   216|     const a => {}
             ^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:202:3
+Error --------------------------------------------------------------------------------------------------- basic.js:229:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
 literal `2` [1]. [match-not-exhaustive]
 
-   basic.js:202:3
-   202|   match (x) { // ERROR: missing `2`
+   basic.js:229:3
+   229|   match (x) { // ERROR: missing `2`
           ^^^^^
 
 References:
-   basic.js:195:24
-   195|   declare const x: 1 | 2;
+   basic.js:222:24
+   222|   declare const x: 1 | 2;
                                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:235:3
+Error --------------------------------------------------------------------------------------------------- basic.js:262:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'foo'` to match string
 literal `foo` [1]. [match-not-exhaustive]
 
-   basic.js:235:3
-   235|   match (x) { // ERROR: missing `'foo'`
+   basic.js:262:3
+   262|   match (x) { // ERROR: missing `'foo'`
           ^^^^^
 
 References:
-   basic.js:235:10
-   235|   match (x) { // ERROR: missing `'foo'`
+   basic.js:262:10
+   262|   match (x) { // ERROR: missing `'foo'`
                  ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:250:3
+Error --------------------------------------------------------------------------------------------------- basic.js:277:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match string [1].
 [match-not-exhaustive]
 
-   basic.js:250:3
-   250|   match (x) { // ERROR
+   basic.js:277:3
+   277|   match (x) { // ERROR
           ^^^^^
 
 References:
-   basic.js:245:6
-   245|     [string]: boolean,
+   basic.js:272:6
+   272|     [string]: boolean,
              ^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:276:3
+Error --------------------------------------------------------------------------------------------------- basic.js:303:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
 literal `2` [1]. [match-not-exhaustive]
 
-   basic.js:276:3
-   276|   match (x) { // ERROR: missing `2`
+   basic.js:303:3
+   303|   match (x) { // ERROR: missing `2`
           ^^^^^
 
 References:
-   basic.js:265:8
-   265|   bar: 2;
+   basic.js:292:8
+   292|   bar: 2;
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:287:3
+Error --------------------------------------------------------------------------------------------------- basic.js:314:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
 literal `2` [1]. [match-not-exhaustive]
 
-   basic.js:287:3
-   287|   match (x) { // ERROR: missing `2`
+   basic.js:314:3
+   314|   match (x) { // ERROR: missing `2`
           ^^^^^
 
 References:
-   basic.js:265:8
-   265|   bar: 2;
+   basic.js:292:8
+   292|   bar: 2;
                ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:296:3
+Error --------------------------------------------------------------------------------------------------- basic.js:323:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `1` to match number literal `1` [1]
@@ -440,125 +479,125 @@ Error --------------------------------------------------------------------------
 - `5` to match number literal `5` [5]
 and 2 others. [match-not-exhaustive]
 
-   basic.js:296:3
-   296|   match (x) { // ERROR: missing 1..5 and 2 others
+   basic.js:323:3
+   323|   match (x) { // ERROR: missing 1..5 and 2 others
           ^^^^^
 
 References:
-   basic.js:294:20
-   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+   basic.js:321:20
+   321|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                            ^ [1]
-   basic.js:294:24
-   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+   basic.js:321:24
+   321|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                                ^ [2]
-   basic.js:294:28
-   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+   basic.js:321:28
+   321|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                                    ^ [3]
-   basic.js:294:32
-   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+   basic.js:321:32
+   321|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                                        ^ [4]
-   basic.js:294:36
-   294|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+   basic.js:321:36
+   321|   declare const x: 1 | 2 | 3 | 4 | 5 | 6 | 7;
                                            ^ [5]
-
-
-Error --------------------------------------------------------------------------------------------------- basic.js:306:5
-
-This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
-of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
-
-   306|     'foo' => {} // ERROR
-            ^^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- basic.js:308:5
-
-This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
-of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
-
-   308|     true => {} // ERROR
-            ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:333:5
 
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   333|     'foo' => {} // ERROR
+            ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:335:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   335|     true => {} // ERROR
+            ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- basic.js:360:5
+
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match
 `unknown` [1]. [match-not-exhaustive]
 
-   basic.js:333:5
-   333|     match (x) {} // ERROR: missing wildcard `_`
+   basic.js:360:5
+   360|     match (x) {} // ERROR: missing wildcard `_`
             ^^^^^
 
 References:
-   basic.js:327:20
-   327|   function f<T>(x: T) {
+   basic.js:354:20
+   354|   function f<T>(x: T) {
                            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:337:5
+Error --------------------------------------------------------------------------------------------------- basic.js:364:5
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `'bar'` to match string literal `bar` [1]
 - `'foo'` to match string literal `foo` [1] [match-not-exhaustive]
 
-   basic.js:337:5
-   337|     match (x) {} // ERROR
+   basic.js:364:5
+   364|     match (x) {} // ERROR
             ^^^^^
 
 References:
-   basic.js:336:42
-   336|   function g<T extends 'foo' | 'bar'>(x: T) {
+   basic.js:363:42
+   363|   function g<T extends 'foo' | 'bar'>(x: T) {
                                                  ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:350:3
+Error --------------------------------------------------------------------------------------------------- basic.js:377:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: _, ...}` to match
 object type [1]. [match-not-exhaustive]
 
-   basic.js:350:3
-   350|   match (x) {} // ERROR
+   basic.js:377:3
+   377|   match (x) {} // ERROR
           ^^^^^
 
 References:
-   basic.js:348:20
-   348|   declare const x: {foo: 0, ...} & {bar: 1, ...};
+   basic.js:375:20
+   375|   declare const x: {foo: 0, ...} & {bar: 1, ...};
                            ^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:378:5
+Error --------------------------------------------------------------------------------------------------- basic.js:405:5
 
 Unary pattern `+` on bigint literal is not supported. [match-invalid-pattern]
 
-   378|     +1n => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
+   405|     +1n => {} // ERROR: invalid pattern (doesn't error for unnecessary pattern)
             ^^^
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:379:5
+Error --------------------------------------------------------------------------------------------------- basic.js:406:5
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
 of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   379|     999 => {} // ERROR: unnecessary pattern
+   406|     999 => {} // ERROR: unnecessary pattern
             ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- basic.js:387:3
+Error --------------------------------------------------------------------------------------------------- basic.js:414:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
 - `"baz'bort"` to match string literal `baz'bort` [1]
 - `'foo"bar'` to match string literal `foo"bar` [2] [match-not-exhaustive]
 
-   basic.js:387:3
-   387|   match (x) {} // ERROR: properly quoted
+   basic.js:414:3
+   414|   match (x) {} // ERROR: properly quoted
           ^^^^^
 
 References:
-   basic.js:385:20
-   385|   declare const x: "baz'bort" | 'foo"bar'
+   basic.js:412:20
+   412|   declare const x: "baz'bort" | 'foo"bar'
                            ^^^^^^^^^^ [1]
-   basic.js:385:33
-   385|   declare const x: "baz'bort" | 'foo"bar'
+   basic.js:412:33
+   412|   declare const x: "baz'bort" | 'foo"bar'
                                         ^^^^^^^^^ [2]
 
 
@@ -2520,4 +2559,4 @@ References:
 
 
 
-Found 183 errors
+Found 186 errors

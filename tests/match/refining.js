@@ -11,6 +11,26 @@
   };
 }
 
+// Negative bigint patterns refine distinctly from positive
+{
+  declare const x: -3n | 3n;
+
+  const e1 = match (x) {
+    -3n => 0,
+    const test => test as 3n, // OK: only `3n` remains after removing `-3n`
+  };
+
+  const e2 = match (x) {
+    -3n => 0,
+    const test => test as empty, // ERROR: `3n`
+  };
+
+  const e3 = match (x) {
+    3n => 0,
+    const test => test as -3n, // OK: only `-3n` remains after removing `3n`
+  };
+}
+
 // Identifier patterns
 {
   declare const x: 1 | 2;
