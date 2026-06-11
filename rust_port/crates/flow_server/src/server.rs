@@ -274,7 +274,6 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
             .unwrap_or_default()
             .as_secs_f64()
             - _start_time;
-        flow_hh_logger::info!("Idle heartbeat after {:.3}s", idle_time);
         flow_event_logger::idle_heartbeat(idle_time, &serde_json::Value::Null);
         flow_tokio_runtime::spawn(async {
             if let Err(err) = flow_event_logger_lwt::flush().await {
