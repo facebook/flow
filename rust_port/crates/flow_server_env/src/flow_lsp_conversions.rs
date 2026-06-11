@@ -490,7 +490,7 @@ pub fn synthetic_diagnostics_of_refined_locations(locs: &[Loc]) -> Vec<lsp_types
             message: "refined-value".to_string(),
             tags: None,
             related_information: None,
-            data: Some(serde_json::json!("RefinementInformation")),
+            data: Some(serde_json::json!({"semanticDecorationType": "refined-value"})),
             code_description: None,
         })
         .collect()
