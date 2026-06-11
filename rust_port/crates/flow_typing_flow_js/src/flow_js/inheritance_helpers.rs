@@ -481,6 +481,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         ) -> Result<(), FlowJsException> {
             use flow_typing_type::type_::ThisInstanceTData;
             use flow_typing_type::type_::ThisTypeAppTData;
+            use flow_typing_type::type_::TypeAppTData;
             let dropped = flow_js_utils::drop_resolved(cx, lower);
             match dropped.deref() {
                 // Unwrap wrapping types and re-dispatch so the InstanceT /
@@ -527,7 +528,40 @@ pub(super) fn inst_structural_subtype<'cx>(
                     }
                 }
                 TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
-                    match flow_js_utils::extract_class_ctor_t(cx, this) {
+                    // [this] may carry an unevaluated [TypeAppT] — a generic class
+                    // named in type position lowers to [ClassT(TypeAppT(Foo, ts))]
+                    // (e.g. [Class<Foo<number>>]), and a bounded type parameter
+                    // [X: Foo<number>] lowers [Class<X>] to a [TypeAppT] buried
+                    // under [AnnotT]/[GenericT]. [extract_class_ctor_t]'s walk can't
+                    // specialize a [TypeAppT], so supply [specialize_typeapp] (with
+                    // [trace] in scope) — the same primitive the general [TypeAppT]
+                    // lower-bound rule uses. The resulting [AnnotT] is unwrapped by
+                    // the existing walk.
+                    let specialize_typeapp = |t: &Type| -> Result<Type, FlowJsException> {
+                        match t.deref() {
+                            TypeInner::TypeAppT(box TypeAppTData {
+                                reason: reason_tapp,
+                                use_op,
+                                type_,
+                                targs,
+                                from_value,
+                                use_desc,
+                            }) => super::helpers::mk_typeapp_instance_annot(
+                                cx,
+                                Some(trace),
+                                use_op.dupe(),
+                                reason_tapp,
+                                reason_tapp,
+                                *from_value,
+                                Some(*use_desc),
+                                type_,
+                                targs.dupe(),
+                            ),
+                            _ => Ok(t.dupe()),
+                        }
+                    };
+                    match flow_js_utils::extract_class_ctor_t(cx, Some(&specialize_typeapp), this)?
+                    {
                         Some(lt) => rec_flow(
                             cx,
                             trace,

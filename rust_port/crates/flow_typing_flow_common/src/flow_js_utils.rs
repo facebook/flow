@@ -362,7 +362,11 @@ pub fn combine_construct_ts(ts: Vec<Type>) -> Option<Type> {
 // [MethodT NoMethodAction] returns an unresolved [OpenT] that
 // [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
 // has already seen the raw method-bound funtype.
-pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type> {
+pub fn extract_class_ctor_t<'cx>(
+    cx: &Context<'cx>,
+    specialize_typeapp: Option<&dyn Fn(&Type) -> Result<Type, FlowJsException>>,
+    this: &Type,
+) -> Result<Option<Type>, FlowJsException> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
@@ -373,8 +377,8 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
         cx: &Context<'cx>,
         proto_props: properties::Id,
         super_: &Type,
-        recur: impl Fn(&Context<'cx>, &Type) -> Option<Type>,
-    ) -> Option<Type> {
+        recur: impl Fn(&Context<'cx>, &Type) -> Result<Option<Type>, FlowJsException>,
+    ) -> Result<Option<Type>, FlowJsException> {
         let props = cx.find_props(proto_props);
         match props.get(&Name::new(FlowSmolStr::new_inline("constructor"))) {
             // A setter-only "constructor" is reachable: the parser emits
@@ -386,11 +390,15 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
             // [set constructor], so silently inheriting a parent ctor would mask
             // the parse error and produce a misleading construct sig at
             // [new C(...)] sites.
-            Some(p) => flow_typing_type::type_::property::read_t(p),
+            Some(p) => Ok(flow_typing_type::type_::property::read_t(p)),
             None => recur(cx, super_),
         }
     }
-    fn find_ctor<'cx>(cx: &Context<'cx>, t: &Type) -> Option<Type> {
+    fn find_ctor<'cx>(
+        cx: &Context<'cx>,
+        specialize_typeapp: Option<&dyn Fn(&Type) -> Result<Type, FlowJsException>>,
+        t: &Type,
+    ) -> Result<Option<Type>, FlowJsException> {
         let dropped = drop_resolved(cx, t);
         match dropped.deref() {
             TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
@@ -398,19 +406,21 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
                     cx,
                     inst_t.inst.proto_props.dupe(),
                     &inst_t.super_,
-                    find_ctor,
+                    |cx, t| find_ctor(cx, specialize_typeapp, t),
                 )
             }
             TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => lookup_ctor(
                 cx,
                 instance.inst.proto_props.dupe(),
                 &instance.super_,
-                find_ctor,
+                |cx, t| find_ctor(cx, specialize_typeapp, t),
             ),
-            TypeInner::AnnotT(_, t, _) => find_ctor(cx, t),
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => find_ctor(cx, c),
+            TypeInner::AnnotT(_, t, _) => find_ctor(cx, specialize_typeapp, t),
+            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => {
+                find_ctor(cx, specialize_typeapp, c)
+            }
             TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
-                find_ctor(cx, inner)
+                find_ctor(cx, specialize_typeapp, inner)
             }
             // Preserve [PolyT] so generic classes carry their tparams through to
             // call sites. Without this, downstream sees unsubstituted [BoundT]
@@ -425,7 +435,7 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
                     id: _,
                 }) = def_t.deref() =>
             {
-                find_ctor(cx, t_out).map(|ctor| {
+                Ok(find_ctor(cx, specialize_typeapp, t_out)?.map(|ctor| {
                     Type::new(TypeInner::DefT(
                         r.dupe(),
                         DefT::new(DefTInner::PolyT(Box::new(PolyTData {
@@ -435,14 +445,29 @@ pub fn extract_class_ctor_t<'cx>(cx: &Context<'cx>, this: &Type) -> Option<Type>
                             id: poly::Id::generate_id(),
                         }))),
                     ))
-                })
+                }))
             }
-            TypeInner::GenericT(box GenericTData { bound, .. }) => find_ctor(cx, bound),
-            _ => None,
+            TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                find_ctor(cx, specialize_typeapp, bound)
+            }
+            TypeInner::TypeAppT(_) => {
+                // An unevaluated type application (e.g. [Class<Foo<number>>], or
+                // [Class<X>] for a bounded [X: Foo<number>] where the [TypeAppT] sits
+                // under [AnnotT]/[GenericT]) must be *specialized* — its type args
+                // substituted — not just unwrapped, before the constructor can be read.
+                // [find_ctor] is a pure walk with no flow machinery, so a caller with
+                // [trace] in scope supplies [specialize_typeapp]; without it (callers
+                // that can't specialize) the construct sig is dropped as before.
+                match specialize_typeapp {
+                    Some(specialize) => find_ctor(cx, specialize_typeapp, &specialize(&dropped)?),
+                    None => Ok(None),
+                }
+            }
+            _ => Ok(None),
         }
     }
-    find_ctor(cx, this)
-        .map(|ctor| flow_typing_type::type_util::normalize_construct_sig(Some(this.dupe()), ctor))
+    Ok(find_ctor(cx, specialize_typeapp, this)?
+        .map(|ctor| flow_typing_type::type_util::normalize_construct_sig(Some(this.dupe()), ctor)))
 }
 
 // Try to extract a construct sig from a lower type, handling all forms that
@@ -465,7 +490,8 @@ pub fn extract_lower_construct_t<'cx>(cx: &Context<'cx>, lower: &Type) -> Option
     let peeked = peek(cx, lower);
     match peeked.deref() {
         TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
-            extract_class_ctor_t(cx, this)
+            extract_class_ctor_t(cx, None, this)
+                .expect("extract_class_ctor_t without specialize_typeapp cannot raise")
         }
         _ => combine_construct_ts(collect_construct_ts(cx, lower)),
     }

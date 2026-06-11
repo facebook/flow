@@ -160,7 +160,7 @@ let combine_construct_ts ts =
    [MethodT NoMethodAction] returns an unresolved [OpenT] that
    [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
    has already seen the raw method-bound funtype. *)
-let extract_class_ctor_t cx this =
+let extract_class_ctor_t ?specialize_typeapp cx this =
   let lookup_ctor proto_props super recur =
     let props = Context.find_props cx proto_props in
     match NameUtils.Map.find_opt (OrdinaryName "constructor") props with
@@ -195,6 +195,17 @@ let extract_class_ctor_t cx this =
           DefT (r, PolyT { tparams_loc; tparams; t_out = ctor; id = Type.Poly.generate_id () })
       )
     | GenericT { bound; _ } -> find_ctor bound
+    | TypeAppT _ as t ->
+      (* An unevaluated type application (e.g. [Class<Foo<number>>], or
+         [Class<X>] for a bounded [X: Foo<number>] where the [TypeAppT] sits
+         under [AnnotT]/[GenericT]) must be *specialized* — its type args
+         substituted — not just unwrapped, before the constructor can be read.
+         [find_ctor] is a pure walk with no flow machinery, so a caller with
+         [trace] in scope supplies [specialize_typeapp]; without it (callers
+         that can't specialize) the construct sig is dropped as before. *)
+      (match specialize_typeapp with
+      | Some specialize -> find_ctor (specialize t)
+      | None -> None)
     | _ -> None
   in
   Base.Option.map (find_ctor this) ~f:(TypeUtil.normalize_construct_sig ~override_return_t:this)

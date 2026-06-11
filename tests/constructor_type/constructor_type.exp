@@ -396,88 +396,152 @@ References:
                                    ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- utilities.js:204:2
+Error ---------------------------------------------------------------------------------------------- utilities.js:209:30
+
+Cannot assign array literal to `gip2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:209:30
+   209| const gip2: GenInstParams = ["s"]; // ERROR: string incompatible with number
+                                     ^^^ [1]
+
+References:
+   utilities.js:207:58
+   207| type GenInstParams = ConstructorParameters<Class<GenBase<number>>>;
+                                                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:213:1
+
+Cannot cast `gii.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   utilities.js:213:1
+   213| gii.x as string; // ERROR: number incompatible with string
+        ^^^^^
+
+References:
+   utilities.js:210:51
+   210| type GenInstInstance = InstanceType<Class<GenBase<number>>>;
+                                                          ^^^^^^ [1]
+   utilities.js:213:10
+   213| gii.x as string; // ERROR: number incompatible with string
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- utilities.js:223:29
+
+Cannot assign array literal to `bp2` because in index `0`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   utilities.js:223:29
+   223|   const bp2: BoundParams = ["s"]; // ERROR: string incompatible with number
+                                    ^^^ [1]
+
+References:
+   utilities.js:220:30
+   220| function genBound<X: GenBase<number>>(): void {
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:227:3
+
+Cannot cast `bi.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   utilities.js:227:3
+   227|   bi.x as string; // ERROR: number incompatible with string
+          ^^^^
+
+References:
+   utilities.js:220:30
+   220| function genBound<X: GenBase<number>>(): void {
+                                     ^^^^^^ [1]
+   utilities.js:227:11
+   227|   bi.x as string; // ERROR: number incompatible with string
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- utilities.js:232:2
 
 Cannot cast object literal to interface type because a construct signature declaring the expected parameter / return
 type is missing in object literal [1] but exists in interface type [2]. [incompatible-type]
 
-   utilities.js:204:2
-   204| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
+   utilities.js:232:2
+   232| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
          ^^^^^^^^ [1]
 
 References:
-   utilities.js:204:15
-   204| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
+   utilities.js:232:15
+   232| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- utilities.js:219:5
+Error ----------------------------------------------------------------------------------------------- utilities.js:247:5
 
 Cannot call `cfn` with `"bad"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
-   utilities.js:219:5
-   219| cfn("bad"); // ERROR: call sig wants number
+   utilities.js:247:5
+   247| cfn("bad"); // ERROR: call sig wants number
             ^^^^^ [1]
 
 References:
-   utilities.js:211:9
-   211|     (x: number): {called: number};
+   utilities.js:239:9
+   239|     (x: number): {called: number};
                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- utilities.js:220:9
+Error ----------------------------------------------------------------------------------------------- utilities.js:248:9
 
 Cannot call `cfn` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   utilities.js:220:9
-   220| new cfn(1); // ERROR: construct sig wants string
+   utilities.js:248:9
+   248| new cfn(1); // ERROR: construct sig wants string
                 ^ [1]
 
 References:
-   utilities.js:212:12
-   212|     new(x: string): {constructed: string};
+   utilities.js:240:12
+   240|     new(x: string): {constructed: string};
                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- utilities.js:232:18
+Error ---------------------------------------------------------------------------------------------- utilities.js:260:18
 
 Cannot call `HasStaticNew` because no arguments are expected by default constructor [1]. [extra-arg]
 
-   utilities.js:232:18
-   232| new HasStaticNew(1); // ERROR: default ctor takes no args (proves `static new` isn't the construct sig)
+   utilities.js:260:18
+   260| new HasStaticNew(1); // ERROR: default ctor takes no args (proves `static new` isn't the construct sig)
                          ^
 
 References:
-   utilities.js:226:15
-   226| declare class HasStaticNew {
+   utilities.js:254:15
+   254| declare class HasStaticNew {
                       ^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- utilities.js:245:68
+Error ---------------------------------------------------------------------------------------------- utilities.js:273:68
 
 Cannot assign `SubjAA` to `SubjAA_via_iface_bad` because in the first parameter: number [1] is incompatible with
 string [2]. [incompatible-type]
 
-   utilities.js:245:68
-   245| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
+   utilities.js:273:68
+   273| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
                                                                            ^^^^^^
 
 References:
-   utilities.js:241:20
-   241|     constructor(x: number) { this.x = x; }
+   utilities.js:269:20
+   269|     constructor(x: number) { this.x = x; }
                            ^^^^^^ [1]
-   utilities.js:245:48
-   245| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
+   utilities.js:273:48
+   273| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
                                                        ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- utilities.js:257:34
+Error ---------------------------------------------------------------------------------------------- utilities.js:285:34
 
 Cannot assign array literal to `fcp2` because in index `1`: number [1] is incompatible with string [2].
 [incompatible-type]
 
-   utilities.js:257:34
-   257| const fcp2: FooClassParams = [1, 2]; // ERROR: number incompatible with string
+   utilities.js:285:34
+   285| const fcp2: FooClassParams = [1, 2]; // ERROR: number incompatible with string
                                          ^ [1]
 
 References:
@@ -486,13 +550,13 @@ References:
                                       ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- utilities.js:267:31
+Error ---------------------------------------------------------------------------------------------- utilities.js:295:31
 
 Cannot assign array literal to `fap2` because in index `0`: string [1] is incompatible with number [2].
 [incompatible-type]
 
-   utilities.js:267:31
-   267| const fap2: FooAliasParams = ["bad", "s"]; // ERROR: string incompatible with number
+   utilities.js:295:31
+   295| const fap2: FooAliasParams = ["bad", "s"]; // ERROR: string incompatible with number
                                       ^^^^^ [1]
 
 References:
@@ -502,4 +566,4 @@ References:
 
 
 
-Found 31 errors
+Found 35 errors

@@ -6381,7 +6381,31 @@ struct
                | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
                | None -> not_a_constructor ())
              | DefT (_, ClassT this) ->
-               (match extract_class_ctor_t cx this with
+               (* [this] may carry an unevaluated [TypeAppT] — a generic class
+                  named in type position lowers to [ClassT(TypeAppT(Foo, ts))]
+                  (e.g. [Class<Foo<number>>]), and a bounded type parameter
+                  [X: Foo<number>] lowers [Class<X>] to a [TypeAppT] buried
+                  under [AnnotT]/[GenericT]. [extract_class_ctor_t]'s walk can't
+                  specialize a [TypeAppT], so supply [specialize_typeapp] (with
+                  [trace] in scope) — the same primitive the general [TypeAppT]
+                  lower-bound rule uses. The resulting [AnnotT] is unwrapped by
+                  the existing walk. *)
+               let specialize_typeapp t =
+                 match t with
+                 | TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc } ->
+                   mk_typeapp_instance_annot
+                     cx
+                     ~trace
+                     ~use_op
+                     ~reason_op:reason_tapp
+                     ~reason_tapp
+                     ~from_value
+                     ~use_desc
+                     type_
+                     targs
+                 | _ -> t
+               in
+               (match extract_class_ctor_t ~specialize_typeapp cx this with
                | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
                | None -> not_a_constructor ())
              | DefT (_, (ObjT _ | FunT _)) -> not_a_constructor ()

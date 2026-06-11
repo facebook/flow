@@ -199,6 +199,34 @@ type GenBaseFirst = GenBaseParams[0];
 declare const gbf: GenBaseFirst;
 gbf as unknown; // OK — GenBaseParams[0] = unknown
 
+// Generic class instantiated and named in *type* position:
+// `Class<GenBase<number>>` lowers to `ClassT(TypeAppT(GenBase, [number]))`.
+// Unlike a bare `Class<C>` (an [AnnotT]-wrapped instance), the [TypeAppT] must
+// be *specialized* (T := number), not just unwrapped, before the constructor
+// can be read. `find_ctor` does this via the `specialize_typeapp` it is given.
+type GenInstParams = ConstructorParameters<Class<GenBase<number>>>;
+const gip1: GenInstParams = [1]; // OK — T = number
+const gip2: GenInstParams = ["s"]; // ERROR: string incompatible with number
+type GenInstInstance = InstanceType<Class<GenBase<number>>>;
+declare const gii: GenInstInstance;
+gii.x as number; // OK — T = number
+gii.x as string; // ERROR: number incompatible with string
+
+// Same, but through a type parameter bounded by the instantiation: `Class<X>`
+// for `X: GenBase<number>` lowers to a [TypeAppT] buried under [AnnotT] /
+// [GenericT], not at the top of `this`. `find_ctor` reaches it by descending
+// those wrappers and specializes it there (T := number). The instance type of
+// `Class<X>` is `X` itself.
+function genBound<X: GenBase<number>>(): void {
+  type BoundParams = ConstructorParameters<Class<X>>;
+  const bp1: BoundParams = [1]; // OK — T = number
+  const bp2: BoundParams = ["s"]; // ERROR: string incompatible with number
+  type BoundInstance = InstanceType<Class<X>>;
+  declare const bi: BoundInstance;
+  bi.x as number; // OK — T = number
+  bi.x as string; // ERROR: number incompatible with string
+}
+
 // Object literal flowing to construct-sig interface.
 // There's exactly one focused error per missing slot.
 ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)
