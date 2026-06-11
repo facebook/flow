@@ -7088,13 +7088,22 @@ fn __flow_impl<'cx>(
                 let r = reason_of_t(value_t).dupe();
                 let key_t = match index {
                     None => num_module_t::why(r),
-                    Some(i) => Type::new(TypeInner::DefT(
-                        r,
-                        DefT::new(DefTInner::SingletonNumT {
-                            from_annot: true,
-                            value: NumberLiteral(i as f64, i.to_string().into()),
-                        }),
-                    )),
+                    Some(i) => {
+                        // The key for tuple position [i] is the numeric literal [i]. Borrow only the
+                        // location from the element type's reason; its description must describe the key
+                        // (the number literal), not the value type, otherwise errors mentioning the key
+                        // render with the element type's description (e.g. the self-contradictory
+                        // "string is incompatible with string").
+                        let key_reason =
+                            r.replace_desc(VirtualReasonDesc::RNumberLit(i.to_string().into()));
+                        Type::new(TypeInner::DefT(
+                            key_reason,
+                            DefT::new(DefTInner::SingletonNumT {
+                                from_annot: true,
+                                value: NumberLiteral(i as f64, i.to_string().into()),
+                            }),
+                        ))
+                    }
                 };
                 slice_utils::mk_mapped_prop_type(
                     &filter_optional_t,

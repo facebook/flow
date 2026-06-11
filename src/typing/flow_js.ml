@@ -3973,8 +3973,16 @@ struct
               match index with
               | None -> NumModuleT.why r
               | Some i ->
+                (* The key for tuple position [i] is the numeric literal [i]. Borrow only the
+                 * location from the element type's reason; its description must describe the key
+                 * (the number literal), not the value type, otherwise errors mentioning the key
+                 * render with the element type's description (e.g. the self-contradictory
+                 * "string is incompatible with string"). *)
+                let key_reason = replace_desc_reason (RNumberLit (string_of_int i)) r in
                 DefT
-                  (r, SingletonNumT { from_annot = true; value = (float_of_int i, string_of_int i) })
+                  ( key_reason,
+                    SingletonNumT { from_annot = true; value = (float_of_int i, string_of_int i) }
+                  )
             in
             Slice_utils.mk_mapped_prop_type
               ~filter_optional
