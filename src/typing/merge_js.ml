@@ -1272,7 +1272,7 @@ let check_match_exhaustiveness cx tast =
               (pattern, Base.Option.is_some guard)
               )
         in
-        Exhaustive.analyze cx ~match_loc patterns arg_t;
+        Exhaustive.analyze cx ~is_global_var:(Type_env.is_global_var cx) ~match_loc patterns arg_t;
         super#match_ ~on_case_body x
     end
   in

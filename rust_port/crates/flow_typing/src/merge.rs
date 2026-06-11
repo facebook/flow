@@ -1926,7 +1926,13 @@ fn check_match_exhaustiveness<'cx>(
                 .iter()
                 .map(|case| (case.pattern.clone(), case.guard.is_some()))
                 .collect();
-            exhaustive::analyze(self.cx, match_loc.dupe(), &patterns, arg_t)?;
+            exhaustive::analyze(
+                self.cx,
+                &|loc| flow_typing_utils::type_env::is_global_var(self.cx, loc),
+                match_loc.dupe(),
+                &patterns,
+                arg_t,
+            )?;
             ast_visitor::match_default(self, loc, m, on_case_body)
         }
     }

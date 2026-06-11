@@ -9,6 +9,7 @@ val get_class_info : Context.t -> Type.t -> (ALoc.id * string option) option
 
 val analyze :
   Context.t ->
+  is_global_var:(ALoc.t -> bool) ->
   match_loc:ALoc.t ->
   ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list ->
   Type.t ->
@@ -18,6 +19,7 @@ val analyze :
 module PatternUnionBuilder : sig
   val add_pattern :
     Context.t ->
+    is_global_var:(ALoc.t -> bool) ->
     raise_errors:bool ->
     Match_pattern_ir.PatternUnion.t * int ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * bool ->

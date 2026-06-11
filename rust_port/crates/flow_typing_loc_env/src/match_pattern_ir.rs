@@ -79,6 +79,8 @@ pub mod leaf {
         StrC(Name),
         NumC(NumberLiteral),
         BigIntC(BigIntLiteral),
+        // The global `NaN`. Has type `number`. Matched at runtime via `Number.isNaN`.
+        NaNC,
         NullC,
         VoidC,
         EnumMemberC(EnumMember),
@@ -98,6 +100,7 @@ pub mod leaf {
                 }
                 LeafCtor::NumC(NumberLiteral(_, s)) => write!(f, "{}", s),
                 LeafCtor::BigIntC(BigIntLiteral(_, s)) => write!(f, "{}", s),
+                LeafCtor::NaNC => write!(f, "NaN"),
                 LeafCtor::NullC => write!(f, "null"),
                 LeafCtor::VoidC => write!(f, "undefined"),
                 LeafCtor::EnumMemberC(EnumMember {
@@ -166,6 +169,17 @@ pub mod leaf {
                             raw: raw.to_string().into(),
                             comments: None,
                         }),
+                    },
+                ),
+                LeafCtor::NaNC => (
+                    Loc::none(),
+                    match_pattern::MatchPattern::IdentifierPattern {
+                        loc: Loc::none(),
+                        inner: Box::new(Identifier::new(IdentifierInner {
+                            loc: Loc::none(),
+                            name: "NaN".into(),
+                            comments: None,
+                        })),
                     },
                 ),
                 LeafCtor::NullC => (
@@ -282,6 +296,7 @@ pub mod leaf {
                         from_annot: false,
                     }),
                 )),
+                LeafCtor::NaNC => flow_typing_type::type_::num_module_t::make(reason.dupe()),
                 LeafCtor::NullC => flow_typing_type::type_::null::make(reason.dupe()),
                 LeafCtor::VoidC => flow_typing_type::type_::void::make(reason.dupe()),
                 LeafCtor::EnumMemberC(EnumMember {

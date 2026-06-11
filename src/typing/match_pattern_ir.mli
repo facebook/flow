@@ -30,6 +30,7 @@ module Leaf : sig
     | StrC of Reason.name
     | NumC of Type.number_literal
     | BigIntC of Type.bigint_literal
+    | NaNC
     | NullC
     | VoidC
     | EnumMemberC of enum_member

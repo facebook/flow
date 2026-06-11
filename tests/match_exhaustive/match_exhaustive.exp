@@ -1570,6 +1570,90 @@ References:
                         ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------- nan.js:5:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1].
+[match-not-exhaustive]
+
+   nan.js:5:3
+   5|   match (x) { // ERROR: wildcard still needed, `NaN` doesn't contribute to exhaustiveness
+        ^^^^^
+
+References:
+   nan.js:3:20
+   3|   declare const x: number;
+                         ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ nan.js:23:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   23|     NaN => {} // ERROR: unused, `NaN` can never match a string
+           ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ nan.js:45:5
+
+This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   nan.js:45:5
+   45|     NaN => {} // ERROR: unused, already seen
+           ^^^ [1]
+
+References:
+   nan.js:44:5
+   44|     NaN => {}
+           ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ nan.js:56:5
+
+This match pattern [1] is unused. The values it matches were already covered by a previous match wildcard [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   nan.js:56:5
+   56|     NaN => {} // ERROR: unused, already matched by wildcard
+           ^^^ [1]
+
+References:
+   nan.js:55:5
+   55|     _ => {}
+           ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ nan.js:65:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match number [1].
+[match-not-exhaustive]
+
+   nan.js:65:3
+   65|   match (x) { // ERROR: wildcard needed
+         ^^^^^
+
+References:
+   nan.js:62:20
+   62|   declare const x: number;
+                          ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ nan.js:71:5
+
+This match pattern [1] is unused. The values it matches were already covered by a previous match pattern [2]. To fix,
+either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   nan.js:71:5
+   71|     1 => {} // ERROR: unused, `NaN` is `1`
+           ^ [1]
+
+References:
+   nan.js:70:5
+   70|     NaN => {} // treated as the literal `1`
+           ^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: true, foo: false}`
@@ -2559,4 +2643,4 @@ References:
 
 
 
-Found 186 errors
+Found 192 errors

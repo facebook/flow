@@ -25,6 +25,8 @@ module Leaf : sig
     | StrC of Reason.name
     | NumC of Type.number_literal
     | BigIntC of Type.bigint_literal
+    (* The global `NaN`. Has type `number`. Matched at runtime via `Number.isNaN`. *)
+    | NaNC
     | NullC
     | VoidC
     | EnumMemberC of enum_member
@@ -63,6 +65,8 @@ end = struct
     | StrC of Reason.name
     | NumC of Type.number_literal
     | BigIntC of Type.bigint_literal
+    (* The global `NaN`. Has type `number`. Matched at runtime via `Number.isNaN`. *)
+    | NaNC
     | NullC
     | VoidC
     | EnumMemberC of enum_member
@@ -78,6 +82,7 @@ end = struct
     | StrC value -> Type.DefT (reason, Type.SingletonStrT { value; from_annot = false })
     | NumC value -> Type.DefT (reason, Type.SingletonNumT { value; from_annot = false })
     | BigIntC value -> Type.DefT (reason, Type.SingletonBigIntT { value; from_annot = false })
+    | NaNC -> Type.NumModuleT.make reason
     | NullC -> Type.NullT.make reason
     | VoidC -> Type.VoidT.make reason
     | EnumMemberC { enum_info; member_name = _ } ->
@@ -93,6 +98,7 @@ end = struct
         (Reason.display_string_of_name name)
     | NumC (_, s) -> s
     | BigIntC (_, s) -> s
+    | NaNC -> "NaN"
     | NullC -> "null"
     | VoidC -> "undefined"
     | EnumMemberC { enum_info = { Type.enum_name; _ }; member_name } ->
@@ -121,6 +127,11 @@ end = struct
     | BigIntC (value, raw) ->
       ( Loc.none,
         Flow_ast.MatchPattern.BigIntPattern { Flow_ast.BigIntLiteral.value; raw; comments = None }
+      )
+    | NaNC ->
+      ( Loc.none,
+        Flow_ast.MatchPattern.IdentifierPattern
+          (Loc.none, { Flow_ast.Identifier.name = "NaN"; comments = None })
       )
     | NullC -> (Loc.none, Flow_ast.MatchPattern.NullPattern None)
     | VoidC ->

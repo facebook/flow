@@ -145,6 +145,7 @@ fn get_pattern_union_state_from_prev<'cx>(
                         .expect("match pattern cache missing");
                     exhaustive::pattern_union_builder::add_pattern(
                         cx,
+                        &|loc| type_env::is_global_var(cx, loc),
                         false,
                         (
                             prev_pattern_union_state.0,

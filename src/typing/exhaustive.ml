@@ -97,11 +97,17 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
 (***********************)
 
 module PatternUnionBuilder : sig
-  val of_patterns_ast : Context.t -> raise_errors:bool -> pattern_ast_list -> PatternUnion.t
+  val of_patterns_ast :
+    Context.t ->
+    is_global_var:(ALoc.t -> bool) ->
+    raise_errors:bool ->
+    pattern_ast_list ->
+    PatternUnion.t
 
   (* For incremental building: add a single pattern to an existing (unfinalized) PatternUnion *)
   val add_pattern :
     Context.t ->
+    is_global_var:(ALoc.t -> bool) ->
     raise_errors:bool ->
     PatternUnion.t * int ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * bool ->
@@ -275,15 +281,24 @@ end = struct
 
   let rec of_pattern_ast
       (cx : Context.t)
+      ~(is_global_var : ALoc.t -> bool)
       ~(raise_errors : bool)
       (pattern_ast : (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t) : t =
     let (pattern_union, _) =
-      of_pattern_ast' cx (empty, 0) ~raise_errors ~guarded:false ~last:false pattern_ast
+      of_pattern_ast'
+        cx
+        ~is_global_var
+        (empty, 0)
+        ~raise_errors
+        ~guarded:false
+        ~last:false
+        pattern_ast
     in
     pattern_union
 
   and of_pattern_ast'
       (cx : Context.t)
+      ~(is_global_var : ALoc.t -> bool)
       ~(raise_errors : bool)
       ((pattern_union, i) : t * int)
       ~(guarded : bool)
@@ -357,6 +372,14 @@ end = struct
         let leaf = (reason, Leaf.BigIntC literal) in
         let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
         (pattern_union, next_i))
+    | IdentifierPattern ((id_loc, _), { Flow_ast.Identifier.name = "NaN"; _ })
+      when is_global_var id_loc ->
+      (* The global `NaN`. It has type `number`, so it does not contribute to
+         exhaustiveness, but it is a valid pattern and is marked as used whenever
+         `number` is part of the input type. *)
+      let leaf = (reason, Leaf.NaNC) in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
+      (pattern_union, next_i)
     | IdentifierPattern ((_, t), _)
     | MemberPattern ((_, t), _) ->
       let t = singleton_concrete_type cx t in
@@ -364,10 +387,10 @@ end = struct
       | Some leaf -> (add_leaf cx ~raise_errors ~guarded pattern_union leaf, next_i)
       | None -> ({ pattern_union with contains_invalid_pattern = true }, i))
     | AsPattern { AsPattern.pattern; _ } ->
-      of_pattern_ast' cx ~raise_errors (pattern_union, i) ~guarded ~last pattern
+      of_pattern_ast' cx ~is_global_var ~raise_errors (pattern_union, i) ~guarded ~last pattern
     | OrPattern { OrPattern.patterns; _ } ->
       Base.List.fold patterns ~init:(pattern_union, i) ~f:(fun acc pattern_ast ->
-          of_pattern_ast' ~raise_errors ~guarded ~last cx acc pattern_ast
+          of_pattern_ast' ~is_global_var ~raise_errors ~guarded ~last cx acc pattern_ast
       )
     | ArrayPattern { ArrayPattern.elements; rest; _ } ->
       let length = Base.List.length elements in
@@ -381,7 +404,7 @@ end = struct
                { ArrayPattern.Element.pattern; _ }
              ->
             let key = string_of_int i in
-            let value = of_pattern_ast cx ~raise_errors pattern in
+            let value = of_pattern_ast cx ~is_global_var ~raise_errors pattern in
             let contains_invalid_pattern =
               contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
             in
@@ -418,7 +441,16 @@ end = struct
       let pattern_union = add_tuple cx ~raise_errors pattern_union ~length tuple in
       (pattern_union, next_i)
     | ObjectPattern x ->
-      object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
+      object_pattern
+        cx
+        ~is_global_var
+        ~raise_errors
+        ~reason
+        ~next_i
+        ~pattern_union
+        ~guarded
+        ~class_info:None
+        x
     | InstancePattern { InstancePattern.constructor; properties = (_, properties); _ } ->
       let (constructor_t, constructor_name) =
         match constructor with
@@ -440,6 +472,7 @@ end = struct
         let class_info = Some (class_id, class_name, super_ids, instance_t) in
         object_pattern
           cx
+          ~is_global_var
           ~raise_errors
           ~reason
           ~next_i
@@ -449,7 +482,8 @@ end = struct
           properties
       | _ -> (pattern_union, next_i))
 
-  and object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =
+  and object_pattern
+      cx ~is_global_var ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =
     let open Flow_ast.MatchPattern in
     let { ObjectPattern.properties; rest; _ } = pattern in
     let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
@@ -466,7 +500,7 @@ end = struct
                 (loc, Dtoa.ecma_string_of_float value)
               | BigIntLiteral (loc, { Flow_ast.BigIntLiteral.raw; _ }) -> (loc, raw)
             in
-            let value = of_pattern_ast cx ~raise_errors pattern in
+            let value = of_pattern_ast cx ~is_global_var ~raise_errors pattern in
             (* If the object patterns seems like it could also match tuples, record that. *)
             let tuple_like =
               match tuple_like with
@@ -525,14 +559,14 @@ end = struct
     { pattern_union with objects = Base.List.rev objects }
 
   (* Add a single pattern to an existing (unfinalized) PatternUnion *)
-  let add_pattern cx ~raise_errors acc (pattern_ast, guarded) ~last =
-    of_pattern_ast' cx acc ~raise_errors ~guarded ~last pattern_ast
+  let add_pattern cx ~is_global_var ~raise_errors acc (pattern_ast, guarded) ~last =
+    of_pattern_ast' cx ~is_global_var acc ~raise_errors ~guarded ~last pattern_ast
 
-  let of_patterns_ast cx ~raise_errors patterns_ast =
+  let of_patterns_ast cx ~is_global_var ~raise_errors patterns_ast =
     let last_i = Base.List.length patterns_ast - 1 in
     let (pattern_union, _) =
       Base.List.foldi patterns_ast ~init:(empty, 0) ~f:(fun i acc pattern ->
-          add_pattern cx ~raise_errors acc pattern ~last:(i = last_i)
+          add_pattern cx ~is_global_var ~raise_errors acc pattern ~last:(i = last_i)
       )
     in
     finalize pattern_union
@@ -1549,8 +1583,10 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
 (* If there is no values left over after filtering by the patterns, the check is exhaustive.
    Otherwise, build up examples of patterns that could be added to make the `match` exhaustive.
    Then, check the patterns to see if any are unused. *)
-let analyze cx ~match_loc patterns arg_t =
-  let pattern_union = PatternUnionBuilder.of_patterns_ast cx ~raise_errors:true patterns in
+let analyze cx ~is_global_var ~match_loc patterns arg_t =
+  let pattern_union =
+    PatternUnionBuilder.of_patterns_ast cx ~is_global_var ~raise_errors:true patterns
+  in
   let value_union = ValueUnionBuilder.of_type cx arg_t in
   let { value_left; used_pattern_locs; value_matched } =
     filter_values_by_patterns cx ~raise_errors:true ~value_union ~pattern_union

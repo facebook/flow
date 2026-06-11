@@ -414,11 +414,13 @@ pub mod pattern_union_builder {
 
     fn of_pattern_ast<'cx>(
         cx: &Context<'cx>,
+        is_global_var: &dyn Fn(ALoc) -> bool,
         raise_errors: bool,
         pattern_ast: &ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>,
     ) -> pattern_union::PatternUnion {
         let (pattern_union, _) = of_pattern_ast_inner(
             cx,
+            is_global_var,
             raise_errors,
             (pattern_union::empty(), 0),
             false,
@@ -430,6 +432,7 @@ pub mod pattern_union_builder {
 
     fn of_pattern_ast_inner<'cx>(
         cx: &Context<'cx>,
+        is_global_var: &dyn Fn(ALoc) -> bool,
         raise_errors: bool,
         acc: (pattern_union::PatternUnion, usize),
         guarded: bool,
@@ -553,6 +556,16 @@ pub mod pattern_union_builder {
                     }
                 }
             }
+            MatchPattern::IdentifierPattern { inner, .. }
+                if inner.name.as_str() == "NaN" && is_global_var(inner.loc.0.dupe()) =>
+            {
+                // The global `NaN`. It has type `number`, so it does not contribute to
+                // exhaustiveness, but it is a valid pattern and is marked as used whenever
+                // `number` is part of the input type.
+                let leaf_val = leaf::Leaf(reason, leaf::LeafCtor::NaNC);
+                pattern_union = add_leaf(cx, raise_errors, guarded, pattern_union, leaf_val);
+                (pattern_union, next_i)
+            }
             MatchPattern::IdentifierPattern { inner, .. } => {
                 let (_, ref id_t) = inner.loc;
                 let concrete_t = singleton_concrete_type(cx, id_t);
@@ -585,6 +598,7 @@ pub mod pattern_union_builder {
             }
             MatchPattern::AsPattern { inner, .. } => of_pattern_ast_inner(
                 cx,
+                is_global_var,
                 raise_errors,
                 (pattern_union, i),
                 guarded,
@@ -594,7 +608,15 @@ pub mod pattern_union_builder {
             MatchPattern::OrPattern { inner, .. } => {
                 let mut acc = (pattern_union, i);
                 for pat in inner.patterns.iter() {
-                    acc = of_pattern_ast_inner(cx, raise_errors, acc, guarded, last, pat);
+                    acc = of_pattern_ast_inner(
+                        cx,
+                        is_global_var,
+                        raise_errors,
+                        acc,
+                        guarded,
+                        last,
+                        pat,
+                    );
                 }
                 acc
             }
@@ -607,7 +629,7 @@ pub mod pattern_union_builder {
                 let mut contains_invalid_pattern_arr = false;
                 for (idx, elem) in elements.iter().enumerate() {
                     let key: FlowSmolStr = idx.to_string().into();
-                    let value = of_pattern_ast(cx, raise_errors, &elem.pattern);
+                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &elem.pattern);
                     contains_invalid_pattern_arr =
                         contains_invalid_pattern_arr || value.contains_invalid_pattern;
                     props.insert(
@@ -650,6 +672,7 @@ pub mod pattern_union_builder {
             }
             MatchPattern::ObjectPattern { inner, .. } => object_pattern(
                 cx,
+                is_global_var,
                 raise_errors,
                 &reason,
                 next_i,
@@ -682,6 +705,7 @@ pub mod pattern_union_builder {
                         let (_, ref properties) = inner.properties;
                         object_pattern(
                             cx,
+                            is_global_var,
                             raise_errors,
                             &reason,
                             next_i,
@@ -699,6 +723,7 @@ pub mod pattern_union_builder {
 
     fn object_pattern<'cx>(
         cx: &Context<'cx>,
+        is_global_var: &dyn Fn(ALoc) -> bool,
         raise_errors: bool,
         reason: &Reason,
         next_i: usize,
@@ -735,7 +760,7 @@ pub mod pattern_union_builder {
                             (key_loc.dupe(), bigint_lit.raw.dupe())
                         }
                     };
-                    let value = of_pattern_ast(cx, raise_errors, &property.pattern);
+                    let value = of_pattern_ast(cx, is_global_var, raise_errors, &property.pattern);
                     // If the object patterns seems like it could also match tuples, record that.
                     tuple_like = match tuple_like {
                         None => None,
@@ -809,16 +834,26 @@ pub mod pattern_union_builder {
 
     pub fn add_pattern<'cx>(
         cx: &Context<'cx>,
+        is_global_var: &dyn Fn(ALoc) -> bool,
         raise_errors: bool,
         acc: (pattern_union::PatternUnion, usize),
         (pattern_ast, guarded): (&ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, bool),
         last: bool,
     ) -> (pattern_union::PatternUnion, usize) {
-        of_pattern_ast_inner(cx, raise_errors, acc, guarded, last, pattern_ast)
+        of_pattern_ast_inner(
+            cx,
+            is_global_var,
+            raise_errors,
+            acc,
+            guarded,
+            last,
+            pattern_ast,
+        )
     }
 
     pub(super) fn of_patterns_ast<'cx>(
         cx: &Context<'cx>,
+        is_global_var: &dyn Fn(ALoc) -> bool,
         raise_errors: bool,
         patterns_ast: &match_pattern_ir::PatternAstList,
     ) -> pattern_union::PatternUnion {
@@ -829,7 +864,14 @@ pub mod pattern_union_builder {
         };
         let mut acc = (pattern_union::empty(), 0);
         for (i, (pat, guarded)) in patterns_ast.iter().enumerate() {
-            acc = add_pattern(cx, raise_errors, acc, (pat, *guarded), i == last_i);
+            acc = add_pattern(
+                cx,
+                is_global_var,
+                raise_errors,
+                acc,
+                (pat, *guarded),
+                i == last_i,
+            );
         }
         let (pattern_union, _) = acc;
         finalize(pattern_union)
@@ -2245,11 +2287,12 @@ fn check_for_unused_patterns<'cx>(
 /// Then, check the patterns to see if any are unused.
 pub fn analyze<'cx>(
     cx: &Context<'cx>,
+    is_global_var: &dyn Fn(ALoc) -> bool,
     match_loc: ALoc,
     patterns: &match_pattern_ir::PatternAstList,
     arg_t: &Type,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    let pattern_union = pattern_union_builder::of_patterns_ast(cx, true, patterns);
+    let pattern_union = pattern_union_builder::of_patterns_ast(cx, is_global_var, true, patterns);
     let value_union = value_union_builder::of_type(cx, arg_t);
     let FilterUnionResult {
         value_left,

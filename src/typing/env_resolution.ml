@@ -56,6 +56,7 @@ let get_pattern_union_state_from_prev node_cache cx prev_pattern_loc =
       let prev_pattern = Base.Option.value_exn (Node_cache.get_match_pattern node_cache prev_loc) in
       Exhaustive.PatternUnionBuilder.add_pattern
         cx
+        ~is_global_var:(Type_env.is_global_var cx)
         ~raise_errors:false
         prev_pattern_union_state
         prev_pattern
