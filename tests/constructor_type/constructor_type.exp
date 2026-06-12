@@ -438,9 +438,9 @@ Cannot assign array literal to `bp2` because in index `0`: string [1] is incompa
                                     ^^^ [1]
 
 References:
-   utilities.js:220:30
-   220| function genBound<X: GenBase<number>>(): void {
-                                     ^^^^^^ [2]
+   utilities.js:220:37
+   220| function genBound<X extends GenBase<number>>(): void {
+                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:227:3
@@ -452,9 +452,9 @@ Cannot cast `bi.x` to string because number [1] is incompatible with string [2].
           ^^^^
 
 References:
-   utilities.js:220:30
-   220| function genBound<X: GenBase<number>>(): void {
-                                     ^^^^^^ [1]
+   utilities.js:220:37
+   220| function genBound<X extends GenBase<number>>(): void {
+                                            ^^^^^^ [1]
    utilities.js:227:11
    227|   bi.x as string; // ERROR: number incompatible with string
                   ^^^^^^ [2]

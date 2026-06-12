@@ -217,7 +217,7 @@ gii.x as string; // ERROR: number incompatible with string
 // [GenericT], not at the top of `this`. `find_ctor` reaches it by descending
 // those wrappers and specializes it there (T := number). The instance type of
 // `Class<X>` is `X` itself.
-function genBound<X: GenBase<number>>(): void {
+function genBound<X extends GenBase<number>>(): void {
   type BoundParams = ConstructorParameters<Class<X>>;
   const bp1: BoundParams = [1]; // OK — T = number
   const bp2: BoundParams = ["s"]; // ERROR: string incompatible with number
