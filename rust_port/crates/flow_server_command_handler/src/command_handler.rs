@@ -6492,20 +6492,26 @@ fn live_diagnostics_of_uri(
                             &all_unordered_libs,
                             &file_path,
                         );
-                        let type_parse_artifacts_cache =
-                            persistent_connection::get_client(client_id).map(|client| {
-                                persistent_connection::type_parse_artifacts_cache(&client)
-                            });
-                        let intermediate_result = || parse_contents(options, content, &file_key);
-                        let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) =
-                            type_parse_artifacts_with_cache(
-                                options,
-                                type_parse_artifacts_cache.as_ref(),
-                                shared_mem.clone(),
-                                env.master_cx.clone(),
-                                file_key.dupe(),
-                                intermediate_result,
-                            );
+                        let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) = {
+                            let intermediate_result = parse_contents(options, content, &file_key);
+                            let (_, parse_errs) = &intermediate_result;
+                            if !parse_errs.is_empty() {
+                                (Err(TypeContentsError::Errors(parse_errs.clone())), None)
+                            } else {
+                                let type_parse_artifacts_cache =
+                                    persistent_connection::get_client(client_id).map(|client| {
+                                        persistent_connection::type_parse_artifacts_cache(&client)
+                                    });
+                                type_parse_artifacts_with_cache(
+                                    options,
+                                    type_parse_artifacts_cache.as_ref(),
+                                    shared_mem.clone(),
+                                    env.master_cx.clone(),
+                                    file_key.dupe(),
+                                    || intermediate_result,
+                                )
+                            }
+                        };
                         let (live_errors, live_warnings) =
                             printable_errors_of_file_artifacts_result(
                                 options,
