@@ -153,12 +153,10 @@ let stub_metadata ~root ~checked =
     root;
     strict_es6_import_export = false;
     strip_root = true;
-    deprecated_colon_extends = [];
     deprecated_colon_extends_excludes = [];
     stylex_shorthand_prop = None;
     ts_syntax = true;
     allow_variance_keywords = true;
-    deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];
     tslib_syntax = true;
     typescript_library_definition_support = false;

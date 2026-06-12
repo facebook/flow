@@ -82,9 +82,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   allow_variance_keywords: bool;
-  deprecated_variance_sigils: bool;
   deprecated_variance_sigils_excludes: Str.regexp list;
-  deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   tslib_syntax: bool;
   typescript_library_definition_support: bool;
@@ -378,9 +376,7 @@ let metadata_of_options options =
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
     allow_variance_keywords = Options.allow_variance_keywords options;
-    deprecated_variance_sigils = Options.deprecated_variance_sigils options;
     deprecated_variance_sigils_excludes = Options.deprecated_variance_sigils_excludes options;
-    deprecated_colon_extends = Options.deprecated_colon_extends options;
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     tslib_syntax = Options.tslib_syntax options;
     typescript_library_definition_support = Options.typescript_library_definition_support options;
@@ -754,8 +750,6 @@ let is_variance_sigil_deprecated cx =
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     let excluded_dirs = cx.metadata.deprecated_variance_sigils_excludes in
     not (List.exists (fun r -> Str.string_match r normalized_filename 0) excluded_dirs)
-
-let deprecated_colon_extends cx = cx.metadata.deprecated_colon_extends
 
 let is_colon_extends_deprecated cx =
   if is_lib_file cx then

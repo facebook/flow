@@ -32,7 +32,6 @@ let stub_metadata ~root ~checked =
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
     allow_variance_keywords = true;
-    deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];
     assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;
@@ -82,7 +81,6 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     stylex_shorthand_prop = None;
     ts_syntax = true;
-    deprecated_colon_extends = [];
     deprecated_colon_extends_excludes = [];
     tslib_syntax = false;
     type_expansion_recursion_limit = 3;

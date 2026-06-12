@@ -132,9 +132,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   allow_variance_keywords: bool;
-  deprecated_variance_sigils: bool;
   deprecated_variance_sigils_excludes: Str.regexp list;
-  deprecated_colon_extends: string list;
   deprecated_colon_extends_excludes: Str.regexp list;
   tslib_syntax: bool;
   typescript_library_definition_support: bool;
@@ -311,8 +309,6 @@ val ts_syntax : t -> bool
 val allow_variance_keywords : t -> bool
 
 val is_variance_sigil_deprecated : t -> bool
-
-val deprecated_colon_extends : t -> string list
 
 val is_colon_extends_deprecated : t -> bool
 

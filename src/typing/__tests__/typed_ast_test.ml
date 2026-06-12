@@ -23,7 +23,6 @@ let metadata =
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
     allow_variance_keywords = true;
-    deprecated_variance_sigils = false;
     deprecated_variance_sigils_excludes = [];
     assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;
@@ -33,7 +32,6 @@ let metadata =
     component_syntax = true;
     async_component_syntax = false;
     async_component_syntax_includes = [];
-    deprecated_colon_extends = [];
     deprecated_colon_extends_excludes = [];
     deprecated_utilities = SMap.empty;
     deprecated_utilities_excludes = [];

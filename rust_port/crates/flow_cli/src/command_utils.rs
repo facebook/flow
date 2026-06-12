@@ -2127,14 +2127,12 @@ pub(super) fn make_options(
                 strict_es6_import_export,
                 ts_syntax,
                 allow_variance_keywords,
-                deprecated_variance_sigils,
                 deprecated_variance_sigils_excludes,
                 ts_utility_syntax,
                 tslib_syntax,
                 typescript_library_definition_support,
                 deprecated_utilities,
                 deprecated_utilities_excludes,
-                deprecated_colon_extends,
                 deprecated_colon_extends_excludes,
                 enable_custom_error,
                 assert_operator,
@@ -2621,14 +2619,6 @@ pub(super) fn make_options(
         ))
     };
 
-    let deprecated_colon_extends: Arc<[String]> = deprecated_colon_extends
-        .into_iter()
-        .map(|s| {
-            let s = flow_common::files::expand_project_root_token(&root, &s);
-            flow_common::files::expand_builtin_root_token(&flowlib_path, &s)
-        })
-        .collect::<Vec<_>>()
-        .into();
     let deprecated_colon_extends_excludes: Arc<[Regex]> = deprecated_colon_extends_excludes
         .iter()
         .map(|s| {
@@ -2681,7 +2671,6 @@ pub(super) fn make_options(
         debug: debug_override,
         deprecated_utilities,
         deprecated_utilities_excludes,
-        deprecated_colon_extends,
         deprecated_colon_extends_excludes,
         dev_only_refinement_info_as_errors,
         distributed: distributed_override,
@@ -2789,7 +2778,6 @@ pub(super) fn make_options(
         temp_dir: FlowSmolStr::new(temp_dir),
         ts_syntax,
         allow_variance_keywords,
-        deprecated_variance_sigils,
         deprecated_variance_sigils_excludes,
         tslib_syntax,
         typescript_library_definition_support,
