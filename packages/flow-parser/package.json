@@ -9,7 +9,8 @@
     "email": "flow@fb.com"
   },
   "files": [
-    "flow_parser.js"
+    "flow_parser.js",
+    "oxidized"
   ],
   "main": "flow_parser.js",
   "repository": {
@@ -21,7 +22,9 @@
     "test": "node test/run_tests.js",
     "build": "make js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "flow-estree": "0.318.0"
+  },
   "devDependencies": {
     "@babel/generator": "7.7.4",
     "@babel/parser": "7.7.4",
@@ -29,7 +32,6 @@
     "chalk": "^4.1.2",
     "espree": "9.3.2",
     "flow-enums-runtime": "0.0.6",
-    "flow-estree": "0.0.1",
     "hermes-estree": "0.36.1",
     "hermes-parser": "0.36.1",
     "minimist": ">=1.2.6",
