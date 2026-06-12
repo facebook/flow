@@ -19,8 +19,6 @@ pub struct ProjectsOptions {
     pub projects_overlap_mapping: BTreeMap<usize, Bitset>,
     pub projects_path_mapping: Vec<(Regex, Bitset)>,
     pub projects_strict_boundary: bool,
-    pub projects_strict_boundary_validate_import_pattern_opt_outs: bool,
-    pub projects_strict_boundary_import_pattern_opt_outs: Vec<Regex>,
     pub multi_platform_ambient_supports_platform_project_overrides: Vec<(Bitset, Vec<FlowSmolStr>)>,
 }
 
@@ -31,8 +29,6 @@ impl Default for ProjectsOptions {
             projects_overlap_mapping: BTreeMap::new(),
             projects_path_mapping: vec![],
             projects_strict_boundary: false,
-            projects_strict_boundary_validate_import_pattern_opt_outs: false,
-            projects_strict_boundary_import_pattern_opt_outs: vec![],
             multi_platform_ambient_supports_platform_project_overrides: vec![],
         }
     }
@@ -50,8 +46,6 @@ impl ProjectsOptions {
         map_path: impl Fn(String) -> Regex,
         projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
         projects_strict_boundary: bool,
-        projects_strict_boundary_validate_import_pattern_opt_outs: bool,
-        projects_strict_boundary_import_pattern_opt_outs: Vec<Regex>,
         multi_platform_ambient_supports_platform_project_overrides: Vec<(
             FlowSmolStr,
             Vec<FlowSmolStr>,
@@ -123,8 +117,6 @@ impl ProjectsOptions {
             projects_overlap_mapping,
             projects_path_mapping,
             projects_strict_boundary,
-            projects_strict_boundary_validate_import_pattern_opt_outs,
-            projects_strict_boundary_import_pattern_opt_outs,
             multi_platform_ambient_supports_platform_project_overrides,
         }
     }
@@ -139,19 +131,6 @@ impl ProjectsOptions {
         }
     }
 
-    pub fn projects_strict_boundary_validate_import_pattern_opt_outs(&self) -> bool {
-        self.projects_strict_boundary_validate_import_pattern_opt_outs
-    }
-
-    pub fn is_import_specifier_that_opt_out_of_strict_boundary(
-        &self,
-        import_specifier: &str,
-    ) -> bool {
-        self.projects_strict_boundary_import_pattern_opt_outs
-            .iter()
-            .any(|pattern| pattern.is_match(import_specifier))
-    }
-
     /// Suppose we have web and native project, and some paths that can be part of both web and native.
     /// Then this function will return which projects' files can be accessed by the given project.
     ///
@@ -159,7 +138,7 @@ impl ProjectsOptions {
     /// can only import web+native code. However, the latter is temporarily allowed for experimentation.
     pub fn reachable_projects_bitsets_from_projects_bitset(
         &self,
-        import_specifier: &str,
+        _import_specifier: &str,
         p: FlowProjects,
     ) -> Vec<FlowProjects> {
         let size = self.projects.len();
@@ -194,18 +173,6 @@ impl ProjectsOptions {
             }
         };
 
-        // Unlike the one below, these imports from common code into 1-project code is explicitly allowed.
-        // To maintain sanity, we will ensure that the files from different namespaces will have the same
-        // signature as the chosen one here.
-        let additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs =
-            match (
-                additional_from_common_code,
-                self.is_import_specifier_that_opt_out_of_strict_boundary(import_specifier),
-            ) {
-                (Some(_), _) | (_, false) => None,
-                (None, true) => one_project_reachable_from_common_code(),
-            };
-
         let additional_from_1_project_code_unsafe = if self.projects_strict_boundary {
             None
         } else {
@@ -215,22 +182,14 @@ impl ProjectsOptions {
             // This is of course incorrect, and we should move these web-only code into common code instead.
             // However, the temporary measure exists so that we can still have good type coverage during
             // experimentation before we can lock down the boundary.
-            match (
-                additional_from_common_code,
-                additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs,
-            ) {
-                (Some(_), _) | (_, Some(_)) => None,
-                (None, None) => one_project_reachable_from_common_code(),
+            match additional_from_common_code {
+                Some(_) => None,
+                None => one_project_reachable_from_common_code(),
             }
         };
 
         let mut result = vec![p];
         if let Some(p) = additional_from_common_code {
-            result.push(p);
-        }
-        if let Some(p) =
-            additional_from_1_project_code_allowed_with_strict_boundary_import_pattern_opt_outs
-        {
             result.push(p);
         }
         if let Some(p) = additional_from_1_project_code_unsafe {
@@ -274,25 +233,6 @@ impl ProjectsOptions {
         } else {
             None
         }
-    }
-
-    /// Same as above, but drop the first project.
-    /// This is useful for projects_strict_boundary_import_pattern_opt_outs, where we pick the file from
-    /// the first project to act as common interface, but then we validate that all the other corresponding
-    /// files in other projects conform to the interface of the first file.
-    pub fn individual_projects_bitsets_from_common_project_bitset_excluding_first(
-        &self,
-        common: FlowProjects,
-    ) -> Option<Vec<FlowProjects>> {
-        self.individual_projects_bitsets_from_common_project_bitset(common)
-            .and_then(|mut projects| {
-                if projects.is_empty() {
-                    None
-                } else {
-                    projects.remove(0);
-                    Some(projects)
-                }
-            })
     }
 
     pub fn multi_platform_ambient_supports_platform_for_project(

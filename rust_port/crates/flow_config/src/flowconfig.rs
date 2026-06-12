@@ -170,8 +170,6 @@ pub mod opts {
         pub projects_overlap_mapping: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         pub projects_path_mapping: Vec<(String, Vec<FlowSmolStr>)>,
         pub projects_strict_boundary: bool,
-        pub projects_strict_boundary_validate_import_pattern_opt_outs: bool,
-        pub projects_strict_boundary_import_pattern_opt_outs: Vec<Regex>,
         pub react_custom_jsx_typing: bool,
         pub stylex_shorthand_prop: Option<String>,
         pub react_ref_as_prop: ReactRefAsProp,
@@ -348,8 +346,6 @@ pub mod opts {
             projects_overlap_mapping: BTreeMap::new(),
             projects_path_mapping: Vec::new(),
             projects_strict_boundary: false,
-            projects_strict_boundary_validate_import_pattern_opt_outs: true,
-            projects_strict_boundary_import_pattern_opt_outs: Vec::new(),
             react_custom_jsx_typing: false,
             stylex_shorthand_prop: None,
             react_ref_as_prop: ReactRefAsProp::FullSupport,
@@ -970,27 +966,6 @@ pub mod opts {
                 Ok(())
             },
             None,
-            true,
-            values,
-            config,
-        )
-    }
-
-    fn projects_strict_boundary_import_pattern_opt_outs_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        fn init_fn(opts: &mut Opts) {
-            opts.projects_strict_boundary_import_pattern_opt_outs = vec![];
-        }
-        parse_string(
-            |opts, v| {
-                let regex = optparse_regexp(&v)?;
-                opts.projects_strict_boundary_import_pattern_opt_outs
-                    .push(regex);
-                Ok(())
-            },
-            Some(init_fn),
             true,
             values,
             config,
@@ -2208,8 +2183,6 @@ pub mod opts {
             "experimental.pattern_matching",
             "experimental.projects",
             "experimental.projects.strict_boundary",
-            "experimental.projects.strict_boundary.import_pattern_opt_outs",
-            "experimental.projects.strict_boundary.import_pattern_opt_outs.validate",
             "experimental.projects_path_mapping",
             "experimental.records",
             "experimental.records.includes",
@@ -2535,19 +2508,6 @@ pub mod opts {
                     values,
                     config,
                 )),
-                "experimental.projects.strict_boundary.import_pattern_opt_outs.validate" => {
-                    Some(parse_boolean(
-                        |opts, v| {
-                            opts.projects_strict_boundary_validate_import_pattern_opt_outs = v;
-                            Ok(())
-                        },
-                        values,
-                        config,
-                    ))
-                }
-                "experimental.projects.strict_boundary.import_pattern_opt_outs" => Some(
-                    projects_strict_boundary_import_pattern_opt_outs_parser(values, config),
-                ),
                 "experimental.records" => Some(parse_boolean(
                     |opts, v| {
                         opts.records = Some(v);

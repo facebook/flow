@@ -7,13 +7,11 @@
 
 use std::cell::LazyCell;
 use std::collections::BTreeMap;
-use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocMap;
@@ -58,7 +56,6 @@ use flow_typing_errors::error_message::EDevOnlyRefinedLocInfoData;
 use flow_typing_errors::error_message::EDuplicateModuleProviderData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EKeySpreadPropData;
-use flow_typing_errors::error_message::EMissingPlatformSupportData;
 use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
@@ -1506,146 +1503,6 @@ fn check_haste_provider_conflict<'cx>(
     Ok(())
 }
 
-fn validate_strict_boundary_import_pattern_opt_outs<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    let validate = |error_loc: &ALoc,
-                    import_specifier: &str,
-                    projects: &[FlowProjects]|
-     -> Result<(), flow_utils_concurrency::job_error::JobError> {
-        let get_exports_t = |specifier: &FlowImportSpecifier| -> Option<Type> {
-            match cx.find_require(specifier) {
-                ResolvedRequire::MissingModule => None,
-                ResolvedRequire::UncheckedModule(_) => None,
-                ResolvedRequire::TypedModule(f) => match f(cx, cx) {
-                    Err(_) => None,
-                    Ok(m) => {
-                        if m.module_export_types.has_every_named_export {
-                            Some(any_t::at(AnySource::Untyped, error_loc.dupe()))
-                        } else {
-                            // For conformance test, we only care about the value part
-                            let (values_t, _) = flow_js_utils::import_module_ns_t_kit::on_module_t(
-                                cx,
-                                false,
-                                m.module_reason.dupe(),
-                                false,
-                                &m,
-                            )
-                            .expect("on_module_t should not fail outside speculation");
-                            Some(values_t)
-                        }
-                    }
-                },
-            }
-        };
-        match get_exports_t(&FlowImportSpecifier::userland(FlowSmolStr::new(
-            import_specifier,
-        ))) {
-            // If we cannot resolve the actual import, we will already error.
-            // Therefore, we don't have to error again.
-            None => {}
-            Some(acting_common_interface_module_t) => {
-                let _file_options = cx.file_options();
-                let _projects_options = cx.projects_options();
-                let missing_platforms: Vec<BTreeSet<FlowSmolStr>> = projects
-                    .iter()
-                    .map(|project| {
-                        let specifier = FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                            namespace: FlowProjects::to_bitset(*project),
-                            name: FlowSmolStr::new(import_specifier),
-                            allow_implicit_platform_specific_import: true,
-                        };
-                        match get_exports_t(&specifier) {
-                            // If we cannot find the counterparts in other Haste namespaces, we need to error.
-                            // Consider the following example:
-                            //
-                            // ```
-                            // // file:common.js
-                            // import 'foo';
-                            //
-                            // // file: web/foo.js
-                            // // missing file: native/foo.js
-                            // ```
-                            //
-                            // The above example will cause us unable to find `foo` from `native` namespace.
-                            // We should error, because it will cause missing-module error in a flowconfig that
-                            // includes all of common code + `native/`.
-                            None => Ok(platform_set::available_platforms(
-                                &_file_options,
-                                _projects_options,
-                                cx.file().as_str(),
-                                _projects_options
-                                    .multi_platform_ambient_supports_platform_for_project(*project)
-                                    .as_deref(),
-                            )
-                            .map(|ps| ps.to_platform_string_set(&_file_options))),
-                            Some(alternative_module_t) => {
-                                tvar_resolver::resolve(
-                                    cx,
-                                    tvar_resolver::default_no_lowers,
-                                    true,
-                                    &acting_common_interface_module_t,
-                                );
-                                tvar_resolver::resolve(
-                                    cx,
-                                    tvar_resolver::default_no_lowers,
-                                    true,
-                                    &alternative_module_t,
-                                );
-                                let use_op =
-                                    UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface(
-                                        Box::new(ConformToCommonInterfaceData {
-                                            self_sig_loc: error_loc.dupe(),
-                                            self_module_loc: error_loc.dupe(),
-                                            originate_from_import: true,
-                                        }),
-                                    )));
-                                flow_js::flow_non_speculating(
-                                    cx,
-                                    (
-                                        &alternative_module_t,
-                                        &UseT::new(UseTInner::UseT(
-                                            use_op,
-                                            acting_common_interface_module_t.dupe(),
-                                        )),
-                                    ),
-                                )?;
-                                Ok(None)
-                            }
-                        }
-                    })
-                    .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?
-                    .into_iter()
-                    .flatten()
-                    .collect();
-                let mut all_missing = BTreeSet::new();
-                for ps in &missing_platforms {
-                    all_missing.extend(ps.iter().duped());
-                }
-                if !all_missing.is_empty() {
-                    flow_js_utils::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EMissingPlatformSupport(Box::new(
-                            EMissingPlatformSupportData {
-                                loc: error_loc.dupe(),
-                                missing_platforms: all_missing,
-                            },
-                        )),
-                    );
-                }
-            }
-        }
-        Ok(())
-    };
-    for (error_loc, import_specifier, projects) in cx
-        .post_inference_projects_strict_boundary_import_pattern_opt_outs_validations()
-        .iter()
-    {
-        validate(error_loc, import_specifier, projects)?;
-    }
-    Ok(())
-}
-
 fn check_multiplatform_conformance<'cx>(
     cx: &Context<'cx>,
     ast: &ast::Program<ALoc, ALoc>,
@@ -2210,7 +2067,6 @@ pub fn post_merge_checks<'cx>(
     if !cx.is_lib_file() {
         check_haste_provider_conflict(cx, tast)?;
         check_multiplatform_conformance(cx, ast, tast)?;
-        validate_strict_boundary_import_pattern_opt_outs(cx)?;
     }
     check_polarity_fn(cx);
     check_general_post_inference_validations(cx)?;

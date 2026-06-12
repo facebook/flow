@@ -257,10 +257,6 @@ val projects_path_mapping : config -> (string * string list) list
 
 val projects_strict_boundary : config -> bool
 
-val projects_strict_boundary_import_pattern_opt_outs : config -> Str.regexp list
-
-val projects_strict_boundary_validate_import_pattern_opt_outs : config -> bool
-
 val react_custom_jsx_typing : config -> bool
 
 val react_ref_as_prop : config -> Options.ReactRefAsProp.t

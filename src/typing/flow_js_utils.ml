@@ -2581,31 +2581,6 @@ end = struct
         in
         add_output cx message
 
-  let validate_projects_strict_boundary_import_pattern_opt_outs cx error_loc import_specifier =
-    if
-      Flow_projects.projects_strict_boundary_validate_import_pattern_opt_outs
-        ~opts:(Context.projects_options cx)
-      && Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier
-    then
-      let projects_options = Context.projects_options cx in
-      let file = File_key.suffix (Context.file cx) in
-      let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
-      match
-        Flow_projects.projects_bitset_of_path ~opts:projects_options file
-        |> Base.Option.bind
-             ~f:
-               (Flow_projects.individual_projects_bitsets_from_common_project_bitset_excluding_first
-                  ~opts:projects_options
-               )
-      with
-      | None -> ()
-      | Some projects ->
-        Context.add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation
-          cx
-          error_loc
-          import_specifier
-          projects
-
   let get_module_type_or_any
       cx
       ?(perform_platform_validation = false)
@@ -2634,10 +2609,7 @@ end = struct
         | Context.MissingModule -> Error (lookup_builtin_module_error cx mref loc)
       in
       let need_platform_validation =
-        (perform_platform_validation
-        && not (Context.is_projects_strict_boundary_import_pattern_opt_outs cx mref)
-        )
-        && Files.multi_platform (Context.file_options cx)
+        perform_platform_validation && Files.multi_platform (Context.file_options cx)
       in
       ( if need_platform_validation then
         match module_type_or_any with
@@ -2646,7 +2618,6 @@ end = struct
             check_platform_availability cx loc m.module_available_platforms
         | Error _ -> ()
       );
-      validate_projects_strict_boundary_import_pattern_opt_outs cx loc mref;
       module_type_or_any
 
   let get_imported_type

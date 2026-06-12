@@ -4925,7 +4925,6 @@ pub mod import_export_utils {
     use flow_aloc::ALoc;
     use flow_common::flow_import_specifier::FlowImportSpecifier;
     use flow_common::flow_import_specifier::Userland;
-    use flow_common::flow_projects::FlowProjects;
     use flow_common::flow_symbol::Symbol;
     use flow_common::platform_set::PlatformSet;
     use flow_common::reason::Name;
@@ -4993,35 +4992,6 @@ pub mod import_export_utils {
         }
     }
 
-    fn validate_projects_strict_boundary_import_pattern_opt_outs<'cx>(
-        cx: &Context<'cx>,
-        error_loc: ALoc,
-        import_specifier: &Userland,
-    ) {
-        if cx
-            .projects_options()
-            .projects_strict_boundary_validate_import_pattern_opt_outs()
-            && cx.is_projects_strict_boundary_import_pattern_opt_outs(import_specifier)
-        {
-            let projects_options = cx.projects_options();
-            let file = cx.file().as_str();
-            let import_specifier_str = import_specifier.as_str();
-            match FlowProjects::from_path(projects_options, file).and_then(|p| {
-                projects_options
-                    .individual_projects_bitsets_from_common_project_bitset_excluding_first(p)
-            }) {
-                None => {}
-                Some(projects) => {
-                    cx.add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation(
-                        error_loc,
-                        import_specifier_str.to_string(),
-                        projects,
-                    );
-                }
-            }
-        }
-    }
-
     pub fn get_module_type_or_any<'cx>(
         cx: &Context<'cx>,
         perform_platform_validation: bool,
@@ -5072,9 +5042,8 @@ pub mod import_export_utils {
                         loc.dupe(),
                     )?),
                 };
-            let need_platform_validation = perform_platform_validation
-                && !cx.is_projects_strict_boundary_import_pattern_opt_outs(&mref)
-                && cx.file_options().multi_platform;
+            let need_platform_validation =
+                perform_platform_validation && cx.file_options().multi_platform;
             if need_platform_validation {
                 match &module_type_or_any {
                     Ok(m) => {
@@ -5089,9 +5058,6 @@ pub mod import_export_utils {
                     Err(_) => {}
                 }
             }
-            // validate_projects_strict_boundary_import_pattern_opt_outs cx loc mref;
-            validate_projects_strict_boundary_import_pattern_opt_outs(cx, loc, &mref);
-            // module_type_or_any
             Ok(module_type_or_any)
         }
     }

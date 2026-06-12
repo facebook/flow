@@ -352,7 +352,6 @@ impl FileSig {
             calc.add_haste_synthetic_imports();
             calc.add_multiplatform_synthetic_imports();
             let Ok(()) = calc.program(ast);
-            calc.add_synthetic_imports_for_strict_boundary_import_pattern_opt_outs();
         }
         Self(calc.requires)
     }
@@ -410,72 +409,6 @@ impl<'a> RequiresCalculator<'a> {
             (ast::statement::ExportKind::ExportType, None) => {}
             (ast::statement::ExportKind::ExportType, Some(source)) => {
                 self.add_require(Require::ExportFrom { source });
-            }
-        }
-    }
-
-    fn add_synthetic_imports_for_strict_boundary_import_pattern_opt_outs(&mut self) {
-        use flow_common::files;
-        use flow_common::flow_projects::FlowProjects;
-
-        if !self
-            .opts
-            .project_options
-            .projects_strict_boundary_validate_import_pattern_opt_outs()
-        {
-            return;
-        }
-
-        if files::haste_name_opt(&self.opts.file_options, self.file_key).is_none() {
-            return;
-        }
-
-        let file = self.file_key.as_str();
-        if !self.opts.project_options.is_common_code_path(file) {
-            return;
-        }
-
-        // Collect the import specifiers that need synthetic imports
-        let mut import_specifiers_to_add = Vec::new();
-        for require in &self.requires {
-            let import_specifier = match require {
-                Require::Require { source, .. }
-                | Require::ImportDynamic { source, .. }
-                | Require::Import0 { source }
-                | Require::Import { source, .. }
-                | Require::ExportFrom { source } => source.1.dupe(),
-                Require::ImportSyntheticUserland { .. } | Require::ImportSyntheticHaste { .. } => {
-                    continue;
-                }
-            };
-
-            if self
-                .opts
-                .project_options
-                .is_import_specifier_that_opt_out_of_strict_boundary(import_specifier.as_str())
-            {
-                import_specifiers_to_add.push(import_specifier);
-            }
-        }
-
-        // Now add the synthetic imports
-        if let Some(projects_bitset) = FlowProjects::from_path(&self.opts.project_options, file) {
-            if let Some(individual_projects) = self
-                .opts
-                .project_options
-                .individual_projects_bitsets_from_common_project_bitset_excluding_first(
-                    projects_bitset,
-                )
-            {
-                for import_specifier in import_specifiers_to_add {
-                    for project in &individual_projects {
-                        self.add_require(Require::ImportSyntheticHaste {
-                            namespace: project.to_bitset(),
-                            name: import_specifier.dupe(),
-                            allow_implicit_platform_specific_import: true,
-                        });
-                    }
-                }
             }
         }
     }

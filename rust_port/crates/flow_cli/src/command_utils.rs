@@ -2103,8 +2103,6 @@ pub(super) fn make_options(
                 projects_overlap_mapping,
                 projects_path_mapping,
                 projects_strict_boundary,
-                projects_strict_boundary_validate_import_pattern_opt_outs,
-                projects_strict_boundary_import_pattern_opt_outs,
                 react_custom_jsx_typing,
                 stylex_shorthand_prop,
                 react_ref_as_prop,
@@ -2622,8 +2620,6 @@ pub(super) fn make_options(
             map_path,
             projects_path_mapping,
             projects_strict_boundary,
-            projects_strict_boundary_validate_import_pattern_opt_outs,
-            projects_strict_boundary_import_pattern_opt_outs,
             multi_platform_ambient_supports_platform_project_overrides,
         ))
     };

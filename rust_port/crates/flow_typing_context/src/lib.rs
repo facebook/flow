@@ -456,8 +456,6 @@ pub struct ComponentT<'cx> {
             >,
         >,
     >,
-    post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
-        RefCell<Vec<(ALoc, String, Vec<FlowProjects>)>>,
     /// Supports interface declaration merging. When two or more
     /// `interface Foo { ... }` declarations share a name in one scope,
     /// TS-style merging folds them into a single Foo. A consequence is that
@@ -796,9 +794,6 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         post_inference_polarity_checks: RefCell::new(Vec::new()),
         post_inference_validation_flows: RefCell::new(VecDeque::new()),
         post_inference_validation_callbacks: RefCell::new(Vec::new()),
-        post_inference_projects_strict_boundary_import_pattern_opt_outs_validations: RefCell::new(
-            Vec::new(),
-        ),
         merging_interface_field_types: RefCell::new(HashMap::new()),
         merging_interface_typeparams: RefCell::new(HashMap::new()),
         interface_prop_ids: RefCell::new(BTreeMap::new()),
@@ -1293,24 +1288,6 @@ impl<'cx> Context<'cx> {
         self.0.metadata.overridable.checked
     }
 
-    pub fn is_projects_strict_boundary_import_pattern_opt_outs(
-        &self,
-        import_specifier: &Userland,
-    ) -> bool {
-        if flow_common::files::haste_name_opt(&self.0.metadata.frozen.file_options, &self.0.file)
-            .is_some()
-        {
-            let projects_options = &self.0.metadata.frozen.projects_options;
-            let file = self.0.file.as_str();
-            let import_specifier_str = import_specifier.as_str();
-            projects_options.is_common_code_path(file)
-                && projects_options
-                    .is_import_specifier_that_opt_out_of_strict_boundary(import_specifier_str)
-        } else {
-            false
-        }
-    }
-
     pub fn is_verbose(&self) -> bool {
         match &self.0.metadata.frozen.verbose {
             None => false,
@@ -1540,15 +1517,6 @@ impl<'cx> Context<'cx> {
         >,
     > {
         self.0.ccx.post_inference_validation_callbacks.borrow()
-    }
-
-    pub fn post_inference_projects_strict_boundary_import_pattern_opt_outs_validations(
-        &self,
-    ) -> std::cell::Ref<'_, Vec<(ALoc, String, Vec<FlowProjects>)>> {
-        self.0
-            .ccx
-            .post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
-            .borrow()
     }
 
     /// Reserve a slot in `merging_interface_field_types` for every interface
@@ -2108,19 +2076,6 @@ impl<'cx> Context<'cx> {
             .post_inference_validation_callbacks
             .borrow_mut()
             .push(f);
-    }
-
-    pub fn add_post_inference_projects_strict_boundary_import_pattern_opt_outs_validation(
-        &self,
-        l: ALoc,
-        import_specifier: String,
-        projects: Vec<FlowProjects>,
-    ) {
-        self.0
-            .ccx
-            .post_inference_projects_strict_boundary_import_pattern_opt_outs_validations
-            .borrow_mut()
-            .push((l, import_specifier, projects));
     }
 
     pub fn add_env_cache_entry(&self, for_value: bool, id: i32, t: PossiblyRefinedWriteState) {
