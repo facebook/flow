@@ -125,6 +125,26 @@ let inherited_method = function
   | OrdinaryName "constructor" -> false
   | _ -> true
 
+let find_resolved_opt cx ~default ~f id =
+  let constraints = Context.find_graph cx id in
+  match constraints with
+  | Resolved t -> f t
+  | FullyResolved s -> f (Context.force_fully_resolved_tvar cx s)
+  | Unresolved _ -> default
+
+(* Unwrap resolved tvars (and resolved [GenericT] bounds) to their solution
+   without otherwise concretizing. Used as a local optimization by
+   [evaluate_type_destructor_] so a resolved tvar is evaluated once to an
+   annotation rather than getting a bound on both sides. *)
+let rec drop_resolved cx t =
+  match t with
+  | GenericT { reason; name; id = g_id; bound = OpenT (_, id); no_infer } ->
+    find_resolved_opt cx id ~default:t ~f:(fun t ->
+        GenericT { reason; name; id = g_id; bound = drop_resolved cx t; no_infer }
+    )
+  | OpenT (_, id) -> find_resolved_opt cx id ~default:t ~f:(drop_resolved cx)
+  | _ -> t
+
 (********************** start of slab **********************************)
 module M__flow
     (FlowJs : Flow_common.S)
@@ -2896,7 +2916,8 @@ struct
           (* Reject [new C(...)] where [C] is an abstract class. We do not
              short-circuit — let the constructor call proceed so downstream
              typing still produces sensible results. *)
-          if Flow_js_utils.is_class_abstract cx this then
+          let concretize t = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
+          if Flow_js_utils.is_class_abstract ~concretize this then
             add_output
               cx
               (Error_message.EAbstractClass
@@ -2982,7 +3003,8 @@ struct
                    loc = loc_of_reason reason_op;
                  }
               );
-          (match combine_construct_ts (collect_construct_ts cx l) with
+          let concretize t = possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t in
+          (match combine_construct_ts (collect_construct_ts ~concretize cx l) with
           | Some construct_t ->
             let ret =
               Tvar.mk_no_wrap_where cx reason_op (fun tout ->
@@ -6343,16 +6365,17 @@ struct
              add_output cx error_message
            in
            (* Diamond inheritance (e.g. [B extends X], [C extends X],
-              [D extends B, C]) intentionally collects [X]'s sig multiple
-              times via [collect_construct_ts] — overload resolution picks
-              the first match either way, so duplicates are harmless at
-              type-check time, just verbose in [ty_normalizer] output.
-              Deduping would need structural equality on funtypes and isn't
-              worth the extra machinery here. *)
+              [D extends B, C]) collects [X]'s sig multiple times via
+              [collect_construct_ts] — overload resolution picks the first
+              match either way, so duplicates are harmless at type-check
+              time. *)
            (* Detect abstract-vs-non-abstract assignment: lower carries an
               abstract bit (either an abstract class via [ClassT] or an
               [abstract new () => T] interface) and upper does not. *)
-           if (not upper_inst_abstract) && Flow_js_utils.is_class_abstract cx lower then
+           let concretize t =
+             possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+           in
+           if (not upper_inst_abstract) && Flow_js_utils.is_class_abstract ~concretize lower then
              add_output
                cx
                (Error_message.EAbstractClass
@@ -6361,61 +6384,25 @@ struct
                     loc = loc_of_reason reason_struct;
                   }
                );
-           let rec dispatch_lower lower =
-             match drop_resolved cx lower with
-             (* Unwrap wrapping types and re-dispatch so the InstanceT /
-                ClassT arms below see what's underneath. Without this, an
-                [AnnotT]-wrapped (e.g. cross-module-imported) interface,
-                a [GenericT] whose bound carries the construct sig, or a
-                [ThisInstanceT] / [ThisTypeAppT] would slip through to the
-                silent-skip catch-all and the construct comparison would
-                be quietly dropped. *)
-             | AnnotT (r, t, use_desc) -> dispatch_lower (reposition_reason cx r ~use_desc t)
-             | GenericT { bound; _ } -> dispatch_lower bound
-             | ThisInstanceT (r, inst, _, _) -> dispatch_lower (DefT (r, InstanceT inst))
-             | ThisTypeAppT (_, c, _, _) -> dispatch_lower c
-             | DefT (_, InstanceT _) as t ->
-               (* Interface: own + inherited via [super], in derived-first
-                  order. *)
-               (match combine_construct_ts (collect_construct_ts cx t) with
-               | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
-               | None -> not_a_constructor ())
-             | DefT (_, ClassT this) ->
-               (* [this] may carry an unevaluated [TypeAppT] — a generic class
-                  named in type position lowers to [ClassT(TypeAppT(Foo, ts))]
-                  (e.g. [Class<Foo<number>>]), and a bounded type parameter
-                  [X: Foo<number>] lowers [Class<X>] to a [TypeAppT] buried
-                  under [AnnotT]/[GenericT]. [extract_class_ctor_t]'s walk can't
-                  specialize a [TypeAppT], so supply [specialize_typeapp] (with
-                  [trace] in scope) — the same primitive the general [TypeAppT]
-                  lower-bound rule uses. The resulting [AnnotT] is unwrapped by
-                  the existing walk. *)
-               let specialize_typeapp t =
-                 match t with
-                 | TypeAppT { reason = reason_tapp; use_op; type_; targs; from_value; use_desc } ->
-                   mk_typeapp_instance_annot
-                     cx
-                     ~trace
-                     ~use_op
-                     ~reason_op:reason_tapp
-                     ~reason_tapp
-                     ~from_value
-                     ~use_desc
-                     type_
-                     targs
-                 | _ -> t
-               in
-               (match extract_class_ctor_t ~specialize_typeapp cx this with
-               | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
-               | None -> not_a_constructor ())
-             | DefT (_, (ObjT _ | FunT _)) -> not_a_constructor ()
-             | _ ->
-               (* Other lowers (AnyT, NullT, ObjProtoT, FunProtoT, etc.) —
-                  silently skip; other rules will produce errors as
-                  needed. *)
-               ()
-           in
-           dispatch_lower lower
+           Base.List.iter (concretize lower) ~f:(fun lower ->
+               match lower with
+               | DefT (_, InstanceT _) as t ->
+                 (* Interface: own + inherited via [super], in derived-first
+                    order. *)
+                 (match combine_construct_ts (collect_construct_ts ~concretize cx t) with
+                 | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
+                 | None -> not_a_constructor ())
+               | DefT (_, ClassT this) ->
+                 (match extract_class_ctor_t ~concretize cx this with
+                 | Some lt -> rec_flow cx trace (lt, UseT (use_op, ut))
+                 | None -> not_a_constructor ())
+               | DefT (_, (ObjT _ | FunT _)) -> not_a_constructor ()
+               | _ ->
+                 (* Other lowers (AnyT, NullT, ObjProtoT, FunProtoT, etc.) —
+                    silently skip; other rules will produce errors as
+                    needed. *)
+                 ()
+           )
        )
 
   and check_super cx trace ~use_op lreason ureason t x p =

@@ -5059,7 +5059,10 @@ fn __flow_impl<'cx>(
             // Reject [new C(...)] where [C] is an abstract class. We do not
             // short-circuit — let the constructor call proceed so downstream
             // typing still produces sensible results.
-            if flow_js_utils::is_class_abstract(cx, this) {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+            };
+            if flow_js_utils::is_class_abstract(&concretize, this)? {
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EAbstractClass(Box::new(
@@ -5178,7 +5181,14 @@ fn __flow_impl<'cx>(
                     )),
                 )?;
             }
-            match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(cx, l)) {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+            };
+            match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
+                &concretize,
+                cx,
+                l,
+            )?) {
                 Some(construct_t) => {
                     let ret = flow_typing_tvar::mk_no_wrap_where(
                         cx,

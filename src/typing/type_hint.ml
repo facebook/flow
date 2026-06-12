@@ -445,7 +445,10 @@ and type_of_hint_decomposition cx opts op reason t =
            hint matches what would actually flow. *)
         (match get_t cx t with
         | DefT (_, InstanceT _) as t ->
-          (match Flow_js_utils.extract_lower_construct_t cx t with
+          let concretize t =
+            Flow_js.possible_concrete_types_for_inspection cx (TypeUtil.reason_of_t t) t
+          in
+          (match Flow_js_utils.(combine_construct_ts (collect_construct_ts ~concretize cx t)) with
           | Some lt -> lt
           (* Interface without a construct signature — `new` on it is an
              error, but we don't have a sensible hint to give. Return an

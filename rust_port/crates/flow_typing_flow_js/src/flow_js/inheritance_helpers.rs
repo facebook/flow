@@ -11,7 +11,6 @@ use std::sync::Arc;
 use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_flow_common::flow_js_utils;
-use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -451,16 +450,16 @@ pub(super) fn inst_structural_subtype<'cx>(
             add_output(cx, error_message)
         };
         // Diamond inheritance (e.g. [B extends X], [C extends X],
-        // [D extends B, C]) intentionally collects [X]'s sig multiple
-        // times via [collect_construct_ts] — overload resolution picks
-        // the first match either way, so duplicates are harmless at
-        // type-check time, just verbose in [ty_normalizer] output.
-        // Deduping would need structural equality on funtypes and isn't
-        // worth the extra machinery here.
+        // [D extends B, C]) collects [X]'s sig multiple times via
+        // [collect_construct_ts] — overload resolution picks the first
+        // match either way, so duplicates are harmless at type-check time.
         // Detect abstract-vs-non-abstract assignment: lower carries an
         // abstract bit (either an abstract class via [ClassT] or an
         // [abstract new () => T] interface) and upper does not.
-        if !upper_inst_abstract && flow_js_utils::is_class_abstract(cx, lower) {
+        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+            possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+        };
+        if !upper_inst_abstract && flow_js_utils::is_class_abstract(&concretize, lower)? {
             add_output(
                 cx,
                 ErrorMessage::EAbstractClass(Box::new(
@@ -471,117 +470,45 @@ pub(super) fn inst_structural_subtype<'cx>(
                 )),
             )?;
         }
-        fn dispatch_lower<'cx>(
-            cx: &Context<'cx>,
-            trace: DepthTrace,
-            use_op: &UseOp,
-            ut: &Type,
-            lower: &Type,
-            not_a_constructor: &dyn Fn(&Context<'cx>) -> Result<(), FlowJsException>,
-        ) -> Result<(), FlowJsException> {
-            use flow_typing_type::type_::ThisInstanceTData;
-            use flow_typing_type::type_::ThisTypeAppTData;
-            use flow_typing_type::type_::TypeAppTData;
-            let dropped = flow_js_utils::drop_resolved(cx, lower);
-            match dropped.deref() {
-                // Unwrap wrapping types and re-dispatch so the InstanceT /
-                // ClassT arms below see what's underneath. Without this, an
-                // [AnnotT]-wrapped (e.g. cross-module-imported) interface,
-                // a [GenericT] whose bound carries the construct sig, or a
-                // [ThisInstanceT] / [ThisTypeAppT] would slip through to the
-                // silent-skip catch-all and the construct comparison would
-                // be quietly dropped.
-                TypeInner::AnnotT(r, t, use_desc) => {
-                    let repositioned =
-                        super::helpers::reposition_reason(cx, Some(trace), r, *use_desc, t)?;
-                    dispatch_lower(cx, trace, use_op, ut, &repositioned, not_a_constructor)
-                }
-                TypeInner::GenericT(box GenericTData { bound, .. }) => {
-                    dispatch_lower(cx, trace, use_op, ut, bound, not_a_constructor)
-                }
-                TypeInner::ThisInstanceT(box ThisInstanceTData {
-                    reason: r,
-                    instance,
-                    ..
-                }) => {
-                    let t = Type::new(TypeInner::DefT(
-                        r.dupe(),
-                        DefT::new(DefTInner::InstanceT(Rc::new(instance.dupe()))),
-                    ));
-                    dispatch_lower(cx, trace, use_op, ut, &t, not_a_constructor)
-                }
-                TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => {
-                    dispatch_lower(cx, trace, use_op, ut, c, not_a_constructor)
-                }
+        for lower in concretize(lower)? {
+            match lower.deref() {
                 // Interface: own + inherited via [super], in derived-first
                 // order.
                 TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(_) = def_t.deref() => {
                     match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
-                        cx, &dropped,
-                    )) {
+                        &concretize,
+                        cx,
+                        &lower,
+                    )?) {
                         Some(lt) => rec_flow(
                             cx,
                             trace,
                             (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
-                        ),
-                        None => not_a_constructor(cx),
+                        )?,
+                        None => not_a_constructor(cx)?,
                     }
                 }
                 TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
-                    // [this] may carry an unevaluated [TypeAppT] — a generic class
-                    // named in type position lowers to [ClassT(TypeAppT(Foo, ts))]
-                    // (e.g. [Class<Foo<number>>]), and a bounded type parameter
-                    // [X: Foo<number>] lowers [Class<X>] to a [TypeAppT] buried
-                    // under [AnnotT]/[GenericT]. [extract_class_ctor_t]'s walk can't
-                    // specialize a [TypeAppT], so supply [specialize_typeapp] (with
-                    // [trace] in scope) — the same primitive the general [TypeAppT]
-                    // lower-bound rule uses. The resulting [AnnotT] is unwrapped by
-                    // the existing walk.
-                    let specialize_typeapp = |t: &Type| -> Result<Type, FlowJsException> {
-                        match t.deref() {
-                            TypeInner::TypeAppT(box TypeAppTData {
-                                reason: reason_tapp,
-                                use_op,
-                                type_,
-                                targs,
-                                from_value,
-                                use_desc,
-                            }) => super::helpers::mk_typeapp_instance_annot(
-                                cx,
-                                Some(trace),
-                                use_op.dupe(),
-                                reason_tapp,
-                                reason_tapp,
-                                *from_value,
-                                Some(*use_desc),
-                                type_,
-                                targs.dupe(),
-                            ),
-                            _ => Ok(t.dupe()),
-                        }
-                    };
-                    match flow_js_utils::extract_class_ctor_t(cx, Some(&specialize_typeapp), this)?
-                    {
+                    match flow_js_utils::extract_class_ctor_t(&concretize, cx, this)? {
                         Some(lt) => rec_flow(
                             cx,
                             trace,
                             (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
-                        ),
-                        None => not_a_constructor(cx),
+                        )?,
+                        None => not_a_constructor(cx)?,
                     }
                 }
                 TypeInner::DefT(_, def_t)
                     if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::FunT(_, _)) =>
                 {
-                    not_a_constructor(cx)
+                    not_a_constructor(cx)?;
                 }
                 // Other lowers (AnyT, NullT, ObjProtoT, FunProtoT, etc.) —
                 // silently skip; other rules will produce errors as
                 // needed.
-                _ => Ok(()),
+                _ => {}
             }
         }
-        dispatch_lower(cx, trace, &use_op, &ut, lower, &not_a_constructor)?;
     }
     Ok(())
 }

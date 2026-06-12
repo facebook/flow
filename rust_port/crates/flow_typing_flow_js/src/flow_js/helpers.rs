@@ -2361,6 +2361,52 @@ pub(super) fn singleton_concrete_type<'cx>(
     }
 }
 
+fn find_resolved_opt<'cx, T, F>(cx: &Context<'cx>, default: T, f: F, id: i32) -> T
+where
+    F: FnOnce(&Type) -> T,
+{
+    use flow_typing_type::type_::constraint::Constraints;
+    match cx.find_graph(id) {
+        Constraints::Resolved(t) => f(&t),
+        Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
+        Constraints::Unresolved(_) => default,
+    }
+}
+
+// Unwrap resolved tvars (and resolved [GenericT] bounds) to their solution
+// without otherwise concretizing. Used as a local optimization by
+// [evaluate_type_destructor_] so a resolved tvar is evaluated once to an
+// annotation rather than getting a bound on both sides.
+pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+    match t.deref() {
+        TypeInner::GenericT(box GenericTData {
+            reason,
+            name,
+            id: g_id,
+            bound,
+            no_infer,
+        }) if let TypeInner::OpenT(tvar) = bound.deref() => find_resolved_opt(
+            cx,
+            t.dupe(),
+            |resolved_t| {
+                Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                    reason: reason.dupe(),
+                    name: name.dupe(),
+                    id: g_id.clone(),
+                    bound: drop_resolved(cx, resolved_t),
+                    no_infer: *no_infer,
+                })))
+            },
+            tvar.id() as i32,
+        ),
+        TypeInner::OpenT(tvar) => {
+            let id = tvar.id() as i32;
+            find_resolved_opt(cx, t.dupe(), |resolved_t| drop_resolved(cx, resolved_t), id)
+        }
+        _ => t.dupe(),
+    }
+}
+
 pub(super) fn possible_concrete_types_for_optional_chain<'cx>(
     cx: &Context<'cx>,
     reason: &Reason,

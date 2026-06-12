@@ -1111,7 +1111,16 @@ fn type_of_hint_decomposition<'cx>(
                         // error-any so downstream hint consumers treat it as "no hint"
                         // rather than misrouting into the class-unwrap branch below
                         // (which would silently produce nothing).
-                        match flow_js_utils::extract_lower_construct_t(cx, &t) {
+                        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                            FlowJs::possible_concrete_types_for_inspection(
+                                cx,
+                                type_util::reason_of_t(t),
+                                t,
+                            )
+                        };
+                        match flow_js_utils::combine_construct_ts(
+                            flow_js_utils::collect_construct_ts(&concretize, cx, &t)?,
+                        ) {
                             Some(lt) => Ok(lt),
                             None => Ok(flow_typing_type::type_::any_t::error(reason.dupe())),
                         }

@@ -175,92 +175,51 @@ pub fn possible_uses<'cx>(cx: &Context<'cx>, id: i32) -> Vec<UseT<Context<'cx>>>
     uses_of(cx, &cx.find_graph(id))
 }
 
-pub fn find_resolved_opt<'cx, T, F>(cx: &Context<'cx>, default: T, f: F, id: i32) -> T
-where
-    F: FnOnce(&Type) -> T,
-{
-    let constraints = cx.find_graph(id);
-    match constraints {
-        Constraints::Resolved(t) => f(&t),
-        Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
-        Constraints::Unresolved(_) => default,
+// Does [t] carry an [abstract] bit? Any-abstract over both connectives: a
+// union may be the abstract branch at runtime (the iteration over
+// [concretize]'s split), and an intersection IS abstract if any branch is.
+// [concretize] handles the wrappers ([AnnotT], [TypeAppT], unions, resolved
+// tvars, etc.), so only the structural forms remain here.
+pub fn is_class_abstract(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    t: &Type,
+) -> Result<bool, FlowJsException> {
+    for t in concretize(t)? {
+        let is_abstract = match t.deref() {
+            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                inst_t.inst.inst_abstract
+            }
+            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                instance.inst.inst_abstract
+            }
+            TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+                is_class_abstract(concretize, inner)?
+            }
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() =>
+            {
+                is_class_abstract(concretize, t_out)?
+            }
+            TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                is_class_abstract(concretize, bound)?
+            }
+            TypeInner::IntersectionT(_, rep) => {
+                let mut any = false;
+                for m in rep.members_iter() {
+                    if is_class_abstract(concretize, m)? {
+                        any = true;
+                        break;
+                    }
+                }
+                any
+            }
+            _ => false,
+        };
+        if is_abstract {
+            return Ok(true);
+        }
     }
-}
-
-pub fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
-    match t.deref() {
-        TypeInner::GenericT(box GenericTData {
-            reason,
-            name,
-            id: g_id,
-            bound,
-            no_infer,
-        }) if let TypeInner::OpenT(tvar) = bound.deref() => find_resolved_opt(
-            cx,
-            t.dupe(),
-            |resolved_t| {
-                Type::new(TypeInner::GenericT(Box::new(GenericTData {
-                    reason: reason.dupe(),
-                    name: name.dupe(),
-                    id: g_id.clone(),
-                    bound: drop_resolved(cx, resolved_t),
-                    no_infer: *no_infer,
-                })))
-            },
-            tvar.id() as i32,
-        ),
-        TypeInner::OpenT(tvar) => {
-            let id = tvar.id() as i32;
-            find_resolved_opt(cx, t.dupe(), |resolved_t| drop_resolved(cx, resolved_t), id)
-        }
-        _ => t.dupe(),
-    }
-}
-
-// Does [t] carry an [abstract] bit? Walks the wrappers used by
-// [extract_class_ctor_t] / [collect_construct_ts] so that
-// [Class<AbstractFoo>], a poly class, a [GenericT] bound, an
-// [AnnotT]-wrapped imported type, a [TypeAppT] instantiation, etc., all
-// reach the underlying [InstanceT].
-//
-// Connective semantics:
-// - [UnionT]: any-abstract. A runtime value satisfying the union may be
-//   the abstract branch, so [new]/assignment is unsafe.
-// - [IntersectionT]: any-abstract. The runtime class object must satisfy
-//   every branch, so if any branch is abstract the value IS that
-//   abstract class.
-//
-// Not handled (intentionally): [MaybeT]/[OptionalT]/[EvalT]. None of
-// these are expected at a constructor or constructor-assignment site —
-// null-check or evaluation runs first — and the catch-all [false] is a
-// safe miss (the existing typing pipeline rejects the construct on
-// other grounds before we get here).
-pub fn is_class_abstract<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
-    use flow_typing_type::type_::ThisTypeAppTData;
-    let dropped = drop_resolved(cx, t);
-    match dropped.deref() {
-        TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
-            inst_t.inst.inst_abstract
-        }
-        TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
-            instance.inst.inst_abstract
-        }
-        TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
-            is_class_abstract(cx, inner)
-        }
-        TypeInner::DefT(_, def_t)
-            if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() =>
-        {
-            is_class_abstract(cx, t_out)
-        }
-        TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => is_class_abstract(cx, c),
-        TypeInner::TypeAppT(box TypeAppTData { type_, .. }) => is_class_abstract(cx, type_),
-        TypeInner::GenericT(box GenericTData { bound, .. }) => is_class_abstract(cx, bound),
-        TypeInner::AnnotT(_, inner, _) => is_class_abstract(cx, inner),
-        TypeInner::UnionT(_, rep) => rep.members_iter().any(|m| is_class_abstract(cx, m)),
-        TypeInner::IntersectionT(_, rep) => rep.members_iter().any(|m| is_class_abstract(cx, m)),
-        _ => false,
-    }
+    Ok(false)
 }
 
 // Both writer pipelines ([type_annotation.rs] and [type_sig_merge.rs]) store
@@ -282,42 +241,59 @@ pub fn read_construct_t<'cx>(cx: &Context<'cx>, id: i32) -> Type {
 // when overload resolution is order-sensitive (e.g. [infer]'s overload pick).
 // Only [InterfaceKind] walks [super]; class [inst_kind]s use the
 // [proto_props.constructor] mechanism handled by [extract_class_ctor_t].
-pub fn collect_construct_ts<'cx>(cx: &Context<'cx>, t: &Type) -> Vec<Type> {
-    use flow_typing_type::type_::ThisTypeAppTData;
-    fn go<'cx>(cx: &Context<'cx>, mut acc: Vec<Type>, t: &Type) -> Vec<Type> {
-        let dropped = drop_resolved(cx, t);
-        match dropped.deref() {
-            TypeInner::AnnotT(_, t, _) => go(cx, acc, t),
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => go(cx, acc, c),
-            TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
-                go(cx, acc, inner)
-            }
-            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
-                if let Some(id) = inst_t.inst.inst_construct_t {
-                    acc.push(read_construct_t(cx, id));
+pub fn collect_construct_ts<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<Vec<Type>, FlowJsException> {
+    fn go<'cx>(
+        concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+        cx: &Context<'cx>,
+        mut acc: Vec<Type>,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        for t in concretize(t)? {
+            acc = match t.deref() {
+                TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+                    go(concretize, cx, acc, inner)?
                 }
-                match &inst_t.inst.inst_kind {
-                    InstanceKind::InterfaceKind { .. } => go(cx, acc, &inst_t.super_),
-                    _ => acc,
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                    if let Some(id) = inst_t.inst.inst_construct_t {
+                        acc.push(read_construct_t(cx, id));
+                    }
+                    match &inst_t.inst.inst_kind {
+                        InstanceKind::InterfaceKind { .. } => {
+                            go(concretize, cx, acc, &inst_t.super_)?
+                        }
+                        _ => acc,
+                    }
                 }
-            }
-            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
-                if let Some(id) = instance.inst.inst_construct_t {
-                    acc.push(read_construct_t(cx, id));
+                TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                    if let Some(id) = instance.inst.inst_construct_t {
+                        acc.push(read_construct_t(cx, id));
+                    }
+                    match &instance.inst.inst_kind {
+                        InstanceKind::InterfaceKind { .. } => {
+                            go(concretize, cx, acc, &instance.super_)?
+                        }
+                        _ => acc,
+                    }
                 }
-                match &instance.inst.inst_kind {
-                    InstanceKind::InterfaceKind { .. } => go(cx, acc, &instance.super_),
-                    _ => acc,
+                TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                    go(concretize, cx, acc, bound)?
                 }
-            }
-            TypeInner::GenericT(box GenericTData { bound, .. }) => go(cx, acc, bound),
-            TypeInner::IntersectionT(_, rep) => rep
-                .members_iter()
-                .fold(acc, |acc, member| go(cx, acc, member)),
-            _ => acc,
+                TypeInner::IntersectionT(_, rep) => {
+                    for member in rep.members_iter() {
+                        acc = go(concretize, cx, acc, member)?;
+                    }
+                    acc
+                }
+                _ => acc,
+            };
         }
+        Ok(acc)
     }
-    go(cx, Vec::new(), t)
+    go(concretize, cx, Vec::new(), t)
 }
 
 // Combine a list of construct sigs into the canonical overload form: a single
@@ -363,14 +339,13 @@ pub fn combine_construct_ts(ts: Vec<Type>) -> Option<Type> {
 // [normalize_construct_sig] can't rewrite — by the time it resolves, subtyping
 // has already seen the raw method-bound funtype.
 pub fn extract_class_ctor_t<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
-    specialize_typeapp: Option<&dyn Fn(&Type) -> Result<Type, FlowJsException>>,
     this: &Type,
 ) -> Result<Option<Type>, FlowJsException> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
-    use flow_typing_type::type_::ThisTypeAppTData;
     use flow_typing_type::type_::poly;
     use flow_typing_type::type_::properties;
     fn lookup_ctor<'cx>(
@@ -395,106 +370,67 @@ pub fn extract_class_ctor_t<'cx>(
         }
     }
     fn find_ctor<'cx>(
+        concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
         cx: &Context<'cx>,
-        specialize_typeapp: Option<&dyn Fn(&Type) -> Result<Type, FlowJsException>>,
         t: &Type,
     ) -> Result<Option<Type>, FlowJsException> {
-        let dropped = drop_resolved(cx, t);
-        match dropped.deref() {
-            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
-                lookup_ctor(
-                    cx,
-                    inst_t.inst.proto_props.dupe(),
-                    &inst_t.super_,
-                    |cx, t| find_ctor(cx, specialize_typeapp, t),
-                )
-            }
-            TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => lookup_ctor(
-                cx,
-                instance.inst.proto_props.dupe(),
-                &instance.super_,
-                |cx, t| find_ctor(cx, specialize_typeapp, t),
-            ),
-            TypeInner::AnnotT(_, t, _) => find_ctor(cx, specialize_typeapp, t),
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => {
-                find_ctor(cx, specialize_typeapp, c)
-            }
-            TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
-                find_ctor(cx, specialize_typeapp, inner)
-            }
-            // Preserve [PolyT] so generic classes carry their tparams through to
-            // call sites. Without this, downstream sees unsubstituted [BoundT]
-            // in argument/return positions. Fresh [Poly.generate_id ()] — the
-            // wrapped polytype is a different value from the class's [PolyT],
-            // so memoization on the original id would be wrong.
-            TypeInner::DefT(r, def_t)
-                if let DefTInner::PolyT(box PolyTData {
-                    tparams_loc,
-                    tparams,
-                    t_out,
-                    id: _,
-                }) = def_t.deref() =>
-            {
-                Ok(find_ctor(cx, specialize_typeapp, t_out)?.map(|ctor| {
-                    Type::new(TypeInner::DefT(
-                        r.dupe(),
-                        DefT::new(DefTInner::PolyT(Box::new(PolyTData {
-                            tparams_loc: tparams_loc.dupe(),
-                            tparams: tparams.dupe(),
-                            t_out: ctor,
-                            id: poly::Id::generate_id(),
-                        }))),
-                    ))
-                }))
-            }
-            TypeInner::GenericT(box GenericTData { bound, .. }) => {
-                find_ctor(cx, specialize_typeapp, bound)
-            }
-            TypeInner::TypeAppT(_) => {
-                // An unevaluated type application (e.g. [Class<Foo<number>>], or
-                // [Class<X>] for a bounded [X: Foo<number>] where the [TypeAppT] sits
-                // under [AnnotT]/[GenericT]) must be *specialized* — its type args
-                // substituted — not just unwrapped, before the constructor can be read.
-                // [find_ctor] is a pure walk with no flow machinery, so a caller with
-                // [trace] in scope supplies [specialize_typeapp]; without it (callers
-                // that can't specialize) the construct sig is dropped as before.
-                match specialize_typeapp {
-                    Some(specialize) => find_ctor(cx, specialize_typeapp, &specialize(&dropped)?),
-                    None => Ok(None),
+        for t in concretize(t)? {
+            let result = match t.deref() {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                    lookup_ctor(
+                        cx,
+                        inst_t.inst.proto_props.dupe(),
+                        &inst_t.super_,
+                        |cx, t| find_ctor(concretize, cx, t),
+                    )?
                 }
+                TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => lookup_ctor(
+                    cx,
+                    instance.inst.proto_props.dupe(),
+                    &instance.super_,
+                    |cx, t| find_ctor(concretize, cx, t),
+                )?,
+                TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
+                    find_ctor(concretize, cx, inner)?
+                }
+                // Preserve [PolyT] so generic classes carry their tparams through to
+                // call sites. Without this, downstream sees unsubstituted [BoundT]
+                // in argument/return positions. Fresh generated id — the wrapped
+                // polytype is a different value from the class's [PolyT], so
+                // memoization on the original id would be wrong.
+                TypeInner::DefT(r, def_t)
+                    if let DefTInner::PolyT(box PolyTData {
+                        tparams_loc,
+                        tparams,
+                        t_out,
+                        id: _,
+                    }) = def_t.deref() =>
+                {
+                    find_ctor(concretize, cx, t_out)?.map(|ctor| {
+                        Type::new(TypeInner::DefT(
+                            r.dupe(),
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                tparams_loc: tparams_loc.dupe(),
+                                tparams: tparams.dupe(),
+                                t_out: ctor,
+                                id: poly::Id::generate_id(),
+                            }))),
+                        ))
+                    })
+                }
+                TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                    find_ctor(concretize, cx, bound)?
+                }
+                _ => None,
+            };
+            if let Some(ctor) = result {
+                return Ok(Some(ctor));
             }
-            _ => Ok(None),
         }
+        Ok(None)
     }
-    Ok(find_ctor(cx, specialize_typeapp, this)?
+    Ok(find_ctor(concretize, cx, this)?
         .map(|ctor| flow_typing_type::type_util::normalize_construct_sig(Some(this.dupe()), ctor)))
-}
-
-// Try to extract a construct sig from a lower type, handling all forms that
-// might carry one: interface own/inherited [inst_construct_t], class
-// [proto_props.constructor], and the standard wrapping types ([AnnotT],
-// [GenericT], [ThisTypeAppT]). Returns [None] if the lower has no construct
-// sig. Used by [ConstructorT] dispatch, [inst_structural_subtype]'s
-// construct comparison, and [type_hint.rs]'s [Decomp_CallNew].
-pub fn extract_lower_construct_t<'cx>(cx: &Context<'cx>, lower: &Type) -> Option<Type> {
-    use flow_typing_type::type_::ThisTypeAppTData;
-    fn peek<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
-        let dropped = drop_resolved(cx, t);
-        match dropped.deref() {
-            TypeInner::AnnotT(_, t, _) => peek(cx, t),
-            TypeInner::GenericT(box GenericTData { bound: t, .. })
-            | TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: t, .. }) => peek(cx, t),
-            _ => dropped.dupe(),
-        }
-    }
-    let peeked = peek(cx, lower);
-    match peeked.deref() {
-        TypeInner::DefT(_, def_t) if let DefTInner::ClassT(this) = def_t.deref() => {
-            extract_class_ctor_t(cx, None, this)
-                .expect("extract_class_ctor_t without specialize_typeapp cannot raise")
-        }
-        _ => combine_construct_ts(collect_construct_ts(cx, lower)),
-    }
 }
 
 pub fn collect_lowers<'cx>(

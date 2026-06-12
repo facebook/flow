@@ -206,7 +206,7 @@ fn evaluate_type_destructor_<'cx>(
 ) -> Result<(), FlowJsException> {
     // As an optimization, unwrap resolved tvars so that they are only evaluated
     // once to an annotation instead of a tvar that gets a bound on both sides.
-    let t = flow_js_utils::drop_resolved(cx, t);
+    let t = super::helpers::drop_resolved(cx, t);
     match t.deref() {
         // | OpenT _
         TypeInner::OpenT(_) => {
