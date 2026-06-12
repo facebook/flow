@@ -1719,13 +1719,12 @@ module NewAPI = struct
 
   (** Haste modules *)
 
-  let haste_module_size = 5 * addr_size
+  let haste_module_size = 4 * addr_size
 
   let prepare_write_haste_module =
-    let write chunk haste_module_name haste_namespace_bitset provider dependents =
+    let write chunk haste_module_name provider dependents =
       let addr = write_header chunk Haste_module_tag haste_module_size in
       unsafe_write_addr chunk haste_module_name;
-      unsafe_write_tagged_int chunk (Bitset.to_int haste_namespace_bitset);
       unsafe_write_addr chunk provider;
       unsafe_write_addr chunk null_addr (* all providers *);
       unsafe_write_addr chunk dependents;
@@ -1737,18 +1736,13 @@ module NewAPI = struct
 
   let haste_name_addr m = addr_offset m 1
 
-  let haste_namespace_bitset_addr m = addr_offset m 2
+  let haste_provider_addr m = addr_offset m 2
 
-  let haste_provider_addr m = addr_offset m 3
+  let haste_all_providers_addr m = addr_offset m 3
 
-  let haste_all_providers_addr m = addr_offset m 4
-
-  let haste_dependents_addr m = addr_offset m 5
+  let haste_dependents_addr m = addr_offset m 4
 
   let get_haste_name = get_generic haste_name_addr
-
-  let get_haste_namespace_bitset i =
-    get_generic_int haste_namespace_bitset_addr i |> Bitset.from_int_unchecked
 
   let get_haste_provider = get_generic haste_provider_addr
 

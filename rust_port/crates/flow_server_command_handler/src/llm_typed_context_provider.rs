@@ -325,7 +325,7 @@ pub fn extract_imports(
             }
             Require::ImportDynamic { source, .. } => Some(format!("import('{}')", source.1)),
             Require::ExportFrom { source } => Some(format!("export ... from '{}'", source.1)),
-            Require::ImportSyntheticUserland { .. } | Require::ImportSyntheticHaste { .. } => None,
+            Require::ImportSyntheticUserland { .. } => None,
         })
         .collect()
 }

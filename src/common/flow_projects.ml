@@ -135,95 +135,13 @@ let is_common_code_path ~opts path =
       (fun _ common_project_bitset -> Bitset.equal common_project_bitset projects_bitset)
       opts.projects_overlap_mapping
 
-(**
- * Suppose we have web and native project, and some paths that can be part of both web and native.
- * Then this function will return which projects' files can be accessed by the given project.
- *
- * This is used to enforce that web code can use both web and web+native code, while web+native code
- * can only import web+native code. However, the latter is temporarily allowed for experimentation.
- *)
-let reachable_projects_bitsets_from_projects_bitset ~opts ~import_specifier:_ p =
-  let size = Nel.length opts.projects in
-  (* 1-project code can reach into common code.
-   * e.g. Suppose that we have two projects web and native.
-   * Web code can use common code (web+native). *)
-  let additional_from_common_code =
-    Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
-        if Bitset.equal p (Bitset.set i (Bitset.all_zero size)) then
-          IMap.find_opt i opts.projects_overlap_mapping
-        else
-          None
-    )
-  in
-  (* Normally, we do not allow common code importing one-project code. However, when we decide
-   * to allow it for compatibility purposes, we will pick the one project declared first in flowconfig. *)
-  let one_project_reachable_from_common_code () =
-    if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
-      Base.List.find_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
-          if Bitset.mem i p then
-            Some (Bitset.all_zero size |> Bitset.set i)
-          else
-            None
-      )
-    else
-      None
-  in
-  let additional_from_1_project_code_unsafe =
-    if opts.projects_strict_boundary then
-      None
-    else
-      (* Temporary hack: common code can reach into 1-project code.
-       * e.g. Suppose that we have two projects web and native.
-       * We temporarily allow common code (web+native) to use web-only code.
-       * This is of course incorrect, and we should move these web-only code into common code instead.
-       * However, the temporary measure exists so that we can still have good type coverage during
-       * experimentation before we can lock down the boundary. *)
-      match additional_from_common_code with
-      | Some _ -> None
-      | None -> one_project_reachable_from_common_code ()
-  in
-  p
-  :: (Base.Option.to_list additional_from_common_code
-     @ Base.Option.to_list additional_from_1_project_code_unsafe
-     )
-
-(**
- * Suppose we have web and native project, and some paths that can be part of both web and native.
- * Then this function will always return the bitset representation of web,native projects, if and
- * only if it's given a web+native project.
- *
- * This is important to enforce in Haste that we have only one provider for a module name `N`. The
- * module name might come from multiple projects, so we have to search for files that might provide
- * all of the following haste_module_info: `web:N`, `native:N` to ensure that there is no module
- * that will also provide `N` that's already provided in the common code.
- *)
-let individual_projects_bitsets_from_common_project_bitset ~opts common =
-  let size = Nel.length opts.projects in
-  if Base.List.mem ~equal:Bitset.equal (IMap.values opts.projects_overlap_mapping) common then
-    (* Given the common project, compute all the individual singleton projects in it. *)
-    let individual_singleton_projects =
-      if IMap.exists (fun _ b -> Bitset.equal b common) opts.projects_overlap_mapping then
-        Base.List.filter_mapi (Nel.to_list opts.projects) ~f:(fun i _ ->
-            if Bitset.mem i common then
-              Some (Bitset.all_zero size |> Bitset.set i)
-            else
-              None
-        )
-      else
-        []
-    in
-    Some individual_singleton_projects
-  else
-    None
-
 let multi_platform_ambient_supports_platform_for_project ~opts p =
   let p =
     if opts.projects_strict_boundary then
       p
     else if IMap.exists (fun _ b -> Bitset.equal b p) opts.projects_overlap_mapping then
-      (* Similar to the temporary hack above in `reachable_projects_bitsets_from_projects_bitset`
-       * that allows common code to reach into 1-project code,
-       * here we make reduce the common code's platform list into the 1-project's platform list.
+      (* Under non-strict project boundaries, reduce the common code's platform list into the
+       * first concrete project's platform list.
        *
        * This is helpful for a flowconfig for a specific platform (e.g. web) that includes only
        * platform specific code and common code, so that even the common code is assumed to have

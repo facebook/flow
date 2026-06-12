@@ -406,9 +406,6 @@ mod tests {
                     None => ResolvedRequire::MissingModule,
                 }
             }
-            FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => {
-                ResolvedRequire::MissingModule
-            }
         });
         let builtins_ref_for_mk = builtins_ref.dupe();
         let cx = Context::make(

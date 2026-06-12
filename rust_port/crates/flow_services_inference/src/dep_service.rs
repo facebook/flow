@@ -175,10 +175,9 @@ fn file_dependencies(
         if let Some(f) = implementation_file(shared_mem, resolved_module) {
             if parsed.contains(&f) {
                 all_files.insert(f.dupe());
-                if let FlowImportSpecifier::Userland(u) = mref {
-                    if sig_require_set.contains(u) {
-                        sig_files.insert(f);
-                    }
+                let FlowImportSpecifier::Userland(u) = mref;
+                if sig_require_set.contains(u) {
+                    sig_files.insert(f);
                 }
             }
         }

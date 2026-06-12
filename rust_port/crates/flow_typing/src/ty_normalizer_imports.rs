@@ -339,7 +339,6 @@ fn add_import_bindings<'a>(
         Require::ImportDynamic { .. }
         | Require::Import0 { .. }
         | Require::ImportSyntheticUserland { .. }
-        | Require::ImportSyntheticHaste { .. }
         | Require::ExportFrom { .. } => Ok(acc),
     }
 }

@@ -154,9 +154,6 @@ fn entries_of_exports_helper<'a>(
             Export::Module(module_specifier, sub_exports) => {
                 let sub_module_name = match module_specifier {
                     FlowImportSpecifier::Userland(u) => u.display(),
-                    FlowImportSpecifier::HasteImportWithSpecifiedNamespace { name, .. } => {
-                        name.as_str()
-                    }
                 };
                 let sub_exports = Exports::new(sub_exports.clone());
                 entries_of_exports_helper(
@@ -325,14 +322,10 @@ fn add_imports(
                             let (kind, name) = kind_and_name(&u);
                             export_index::add(&name, Source::Builtin(u), kind, index);
                         }
-                        Err(Some(FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                            ..
-                        })) => {}
                         Err(None) => {
-                            if let FlowImportSpecifier::Userland(u) = mref {
-                                let (kind, name) = kind_and_name(u);
-                                export_index::add(&name, Source::Builtin(u.dupe()), kind, index);
-                            }
+                            let FlowImportSpecifier::Userland(u) = mref;
+                            let (kind, name) = kind_and_name(u);
+                            export_index::add(&name, Source::Builtin(u.dupe()), kind, index);
                         }
                     },
                     None => {}
@@ -378,20 +371,17 @@ fn add_exports_of_checked_file(
 fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex) {
     for export in lib_exports.iter() {
         match export {
-            Export::Module(module_specifier, sub_exports) => match module_specifier {
-                FlowImportSpecifier::Userland(module_name) => {
-                    let source = Source::Builtin(module_name.dupe());
-                    let sub_exports = Exports::new(sub_exports.clone());
-                    add_exports(
-                        &source,
-                        module_name.display(),
-                        &|_: &str| None,
-                        &sub_exports,
-                        index,
-                    );
-                }
-                _ => {}
-            },
+            Export::Module(FlowImportSpecifier::Userland(module_name), sub_exports) => {
+                let source = Source::Builtin(module_name.dupe());
+                let sub_exports = Exports::new(sub_exports.clone());
+                add_exports(
+                    &source,
+                    module_name.display(),
+                    &|_: &str| None,
+                    &sub_exports,
+                    index,
+                );
+            }
             Export::Named(name) => {
                 export_index::add(name, Source::Global, Kind::Named, index);
             }

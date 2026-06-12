@@ -583,15 +583,7 @@ module Opts = struct
           | None -> return ()
         in
         (* The validation and tracking below ensures that a project never appears in more than
-         * one unique overlapping pattern.
-         *
-         * This is especially useful when the project configuration is used for haste namespacing
-         * with very simple lookup for reachable namespaces.
-         * e.g. given A, it can know that it needs to look up only A and A+B, instead of all possible
-         * namespace set combinations that include A.
-         *
-         * See Flow_projects.reachable_projects_bitsets_from_projects_bitset for implementation
-         * that relies on the fact. *)
+         * one unique overlapping pattern. *)
         let%bind projects_overlap_mapping =
           if List.length projects <= 1 then
             return opts.projects_overlap_mapping

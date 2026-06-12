@@ -13,7 +13,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_analysis::scope_api::ScopeInfo;
 use flow_analysis::scope_builder;
-use flow_common::bitset::Bitset;
 use flow_common::files::FileOptions;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_projects::ProjectsOptions;
@@ -100,13 +99,6 @@ pub enum Require {
     /// This variant can only be used if the synthetic import can also be written down in the userland.
     ImportSyntheticUserland {
         source: FlowSmolStr,
-    },
-    /// A synthetic Haste import declaration without a source location.
-    /// This variant is used to generate synthetic Haste imports for multiplatform Haste purposes.
-    ImportSyntheticHaste {
-        namespace: Bitset,
-        name: FlowSmolStr,
-        allow_implicit_platform_specific_import: bool,
     },
     /// import declaration with specifiers
     Import {
@@ -224,16 +216,6 @@ impl FileSig {
                 Require::ImportSyntheticUserland { source } => {
                     format!("ImportSyntheticUserland {{ source = {} }}", source)
                 }
-                Require::ImportSyntheticHaste {
-                    namespace: _,
-                    name,
-                    allow_implicit_platform_specific_import,
-                } => {
-                    format!(
-                        "ImportSyntheticHaste {{ name = {}; allow_implicit = {} }}",
-                        name, allow_implicit_platform_specific_import
-                    )
-                }
                 Require::Import {
                     import_loc: _,
                     source,
@@ -293,19 +275,6 @@ impl FileSig {
                     let specifier = FlowImportSpecifier::userland(source.dupe());
                     map.entry(specifier).or_insert_with(Vec::new);
                 }
-                Require::ImportSyntheticHaste {
-                    namespace,
-                    name,
-                    allow_implicit_platform_specific_import,
-                } => {
-                    let specifier = FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                        namespace: *namespace,
-                        name: name.dupe(),
-                        allow_implicit_platform_specific_import:
-                            *allow_implicit_platform_specific_import,
-                    };
-                    map.entry(specifier).or_insert_with(Vec::new);
-                }
                 Require::Require {
                     source: Source(loc, mref),
                     ..
@@ -349,7 +318,6 @@ impl FileSig {
     ) -> Self {
         let mut calc = RequiresCalculator::new(file_key, ast, opts);
         if !file_key.is_lib_file() {
-            calc.add_haste_synthetic_imports();
             calc.add_multiplatform_synthetic_imports();
             let Ok(()) = calc.program(ast);
         }
@@ -409,31 +377,6 @@ impl<'a> RequiresCalculator<'a> {
             (ast::statement::ExportKind::ExportType, None) => {}
             (ast::statement::ExportKind::ExportType, Some(source)) => {
                 self.add_require(Require::ExportFrom { source });
-            }
-        }
-    }
-
-    fn add_haste_synthetic_imports(&mut self) {
-        use flow_common::files;
-        use flow_common::flow_projects::FlowProjects;
-
-        if let Some(haste_name) = files::haste_name_opt(&self.opts.file_options, self.file_key) {
-            if let Some(projects_bitset) =
-                FlowProjects::from_path(&self.opts.project_options, self.file_key.as_str())
-            {
-                if let Some(individual_projects) = self
-                    .opts
-                    .project_options
-                    .individual_projects_bitsets_from_common_project_bitset(projects_bitset)
-                {
-                    for project in individual_projects {
-                        self.add_require(Require::ImportSyntheticHaste {
-                            namespace: project.to_bitset(),
-                            name: FlowSmolStr::from(haste_name.as_str()),
-                            allow_implicit_platform_specific_import: false,
-                        });
-                    }
-                }
             }
         }
     }

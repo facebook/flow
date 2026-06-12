@@ -332,11 +332,6 @@ pub(crate) fn module_of_module_ref(
             let name = match mapped_name {
                 None => module_ref.dupe(),
                 Some(FlowImportSpecifier::Userland(name)) => name.dupe(),
-                Some(FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. }) => {
-                    panic!(
-                        "We import from Flow_import_specifier.Userland, so we should not get other kinds of missing modules."
-                    )
-                }
             };
             module_::T::String(name.display().to_string())
         }
@@ -675,7 +670,6 @@ fn type_import_declarations(
                 | Require::Import0 { .. }
                 | Require::ImportDynamic { .. }
                 | Require::ImportSyntheticUserland { .. }
-                | Require::ImportSyntheticHaste { .. }
                 | Require::ExportFrom { .. } => vec![],
             }
         })
@@ -874,7 +868,6 @@ fn import_declarations(
                 Require::ImportDynamic { .. }
                 | Require::Import0 { .. }
                 | Require::ImportSyntheticUserland { .. }
-                | Require::ImportSyntheticHaste { .. }
                 | Require::ExportFrom { .. } => vec![],
                 Require::Import {
                     source, named, ns, ..

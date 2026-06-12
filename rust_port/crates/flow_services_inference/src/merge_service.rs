@@ -475,9 +475,9 @@ pub fn sig_hash(
             requires
                 .iter()
                 .zip(resolved.iter())
-                .filter_map(|(spec, resolved)| match spec {
-                    FlowImportSpecifier::Userland(u) => Some((u.dupe(), resolved.clone())),
-                    _ => None,
+                .map(|(spec, resolved)| {
+                    let FlowImportSpecifier::Userland(u) = spec;
+                    (u.dupe(), resolved.clone())
                 })
                 .collect()
         };

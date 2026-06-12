@@ -351,9 +351,6 @@ fn prepare_file(
                         None => ResolvedRequire::MissingModule,
                     }
                 }
-                FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => {
-                    ResolvedRequire::MissingModule
-                }
             },
         );
     let cx = Context::make(

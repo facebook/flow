@@ -265,16 +265,8 @@ let get_haste_module_info ~reader f =
 let mk_module_system_info =
   let is_package_file ~options ~reader ~module_path ~module_name =
     let dependency =
-      match
-        Flow_projects.projects_bitset_of_path
-          ~opts:(Options.projects_options options)
-          (File_key.strip_project_root module_path)
-      with
-      | None -> None
-      | Some ns ->
-        let namespace_bitset = Flow_projects.to_bitset ns in
-        Parsing_heaps.get_dependency
-          (Modulename.Haste (Haste_module_info.mk ~module_name ~namespace_bitset))
+      let _ = (options, module_path) in
+      Parsing_heaps.get_dependency (Modulename.Haste (Haste_module_info.mk ~module_name))
     in
     match Option.bind dependency (Parsing_heaps.Reader.get_provider ~reader) with
     | Some addr -> Parsing_heaps.Reader.is_package_file ~reader addr

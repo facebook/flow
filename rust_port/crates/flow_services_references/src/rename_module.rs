@@ -97,7 +97,7 @@ fn get_loc_to_replacement_map(
                     acc
                 }
             }
-            Require::ImportSyntheticUserland { .. } | Require::ImportSyntheticHaste { .. } => acc,
+            Require::ImportSyntheticUserland { .. } => acc,
         })
 }
 

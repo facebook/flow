@@ -190,8 +190,7 @@ let extract_imports ~(file_key : File_key.t) ~(ast : (Loc.t, Loc.t) Ast.Program.
         Some (Printf.sprintf "import('%s')" module_name)
       | File_sig.ExportFrom { source = (_, module_name) } ->
         Some (Printf.sprintf "export ... from '%s'" module_name)
-      | File_sig.ImportSyntheticUserland _ -> None
-      | File_sig.ImportSyntheticHaste _ -> None)
+      | File_sig.ImportSyntheticUserland _ -> None)
     requires
 
 (** Extract declarations from typed AST *)

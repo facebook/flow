@@ -1,9 +1,16 @@
-Error --------------------------------------------------------------------------------------------- common/Common.js:1:8
+Error ------------------------------------------------------------------------------------- web/SameNameNotCommon.js:1:1
 
-Cannot resolve module `SameNameNotCommon`. [cannot-resolve-module]
+Duplicate module provider for `SameNameNotCommon`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
 
-   1| import 'SameNameNotCommon'; // banned under experimental.projects.strict_boundary=true
-             ^^^^^^^^^^^^^^^^^^^
+   web/SameNameNotCommon.js:1:1
+   1|
+      
+
+References:
+   native/SameNameNotCommon.js:1:1
+   1|
+       [1]
 
 
 

@@ -52,13 +52,6 @@ and require =
   (* A synthetic import declaration without a source location.
    * This variant can only be used if the synthetic import can also be written down in the userland. *)
   | ImportSyntheticUserland of { source: string }
-  (* A synthetic Haste import declaration without a source location.
-   * This variant is used to generate synthetic Haste imports for multiplatform Haste purposes. *)
-  | ImportSyntheticHaste of {
-      namespace: Bitset.t;
-      name: string;
-      allow_implicit_platform_specific_import: bool;
-    }
   (* import declaration with specifiers *)
   | Import of {
       import_loc: Loc.t;

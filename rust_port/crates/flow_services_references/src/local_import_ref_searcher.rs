@@ -90,7 +90,6 @@ pub fn search<'cx>(
             | Require::ImportDynamic { .. }
             | Require::Import0 { .. }
             | Require::ImportSyntheticUserland { .. }
-            | Require::ImportSyntheticHaste { .. }
             | Require::ExportFrom { .. } => {}
         }
     }

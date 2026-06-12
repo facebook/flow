@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
-use flow_common::bitset::Bitset;
 use flow_common_modulename::HasteModuleInfo;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
@@ -40,10 +39,6 @@ impl HasteModule {
 
     pub fn module_name(&self) -> &FlowSmolStr {
         self.module_info.module_name()
-    }
-
-    pub fn namespace_bitset(&self) -> &Bitset {
-        self.module_info.namespace_bitset()
     }
 
     pub fn module_info(&self) -> &HasteModuleInfo {

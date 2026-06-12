@@ -218,9 +218,7 @@ let read_file_hash parse =
 let read_haste_module_info info =
   let open Heap in
   let haste_module = get_haste_module info in
-  Haste_module_info.mk
-    ~module_name:(haste_module |> get_haste_name |> read_string)
-    ~namespace_bitset:(get_haste_namespace_bitset haste_module)
+  Haste_module_info.mk ~module_name:(haste_module |> get_haste_name |> read_string)
 
 let read_dependency_name =
   let haste_name m = Heap.read_string (Heap.get_haste_name m) in
@@ -305,11 +303,7 @@ let read_dependency =
   let open Heap in
   read_dependency
     (fun addr ->
-      Modulename.Haste
-        (Haste_module_info.mk
-           ~module_name:(get_haste_name addr |> read_string)
-           ~namespace_bitset:(get_haste_namespace_bitset addr)
-        ))
+      Modulename.Haste (Haste_module_info.mk ~module_name:(get_haste_name addr |> read_string)))
     (fun addr -> Modulename.Filename (read_file_key addr))
 
 let read_resolved_module f addr =
@@ -349,11 +343,7 @@ let read_resolved_modules_map f parse resolved_requires =
   Flow_import_specifier.Map.of_increasing_iterator_unchecked f n
 
 let haste_modulename m =
-  Modulename.Haste
-    (Haste_module_info.mk
-       ~module_name:(Heap.read_string (Heap.get_haste_name m))
-       ~namespace_bitset:(Heap.get_haste_namespace_bitset m)
-    )
+  Modulename.Haste (Haste_module_info.mk ~module_name:(Heap.read_string (Heap.get_haste_name m)))
 
 let prepare_find_or_add find add key =
   match find key with
@@ -382,13 +372,7 @@ let prepare_add_haste_module haste_module_info =
   and+ provider = prepare_write_entity
   and+ dependents = prepare_write_sklist
   and+ haste_module = prepare_write_haste_module in
-  let m =
-    haste_module
-      name'
-      (Haste_module_info.namespace_bitset haste_module_info)
-      (provider None)
-      dependents
-  in
+  let m = haste_module name' (provider None) dependents in
   HasteModuleHeap.add haste_module_info m
 
 let prepare_find_or_add_haste_module = prepare_find_or_add get_haste_module prepare_add_haste_module

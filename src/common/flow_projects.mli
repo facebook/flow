@@ -32,9 +32,4 @@ val projects_bitset_of_path : opts:options -> string -> t option
 
 val is_common_code_path : opts:options -> string -> bool
 
-val reachable_projects_bitsets_from_projects_bitset :
-  opts:options -> import_specifier:string -> t -> t list
-
-val individual_projects_bitsets_from_common_project_bitset : opts:options -> t -> t list option
-
 val multi_platform_ambient_supports_platform_for_project : opts:options -> t -> string list option

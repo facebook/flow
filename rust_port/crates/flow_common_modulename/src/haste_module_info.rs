@@ -7,49 +7,44 @@
 
 use std::cmp::Ordering;
 use std::fmt;
+use std::hash::Hash;
+use std::hash::Hasher;
 
 use dupe::Dupe;
-use flow_common::bitset::Bitset;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-#[derive(
-    Debug,
-    Clone,
-    Dupe,
-    PartialEq,
-    Eq,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
 pub struct HasteModuleInfo {
     module_name: FlowSmolStr,
-    namespace_bitset: Bitset,
 }
 
 impl HasteModuleInfo {
-    pub fn mk(module_name: FlowSmolStr, namespace_bitset: Bitset) -> Self {
-        Self {
-            module_name,
-            namespace_bitset,
-        }
+    pub fn mk(module_name: FlowSmolStr) -> Self {
+        Self { module_name }
     }
 
     pub fn module_name(&self) -> &FlowSmolStr {
         &self.module_name
     }
+}
 
-    pub fn namespace_bitset(&self) -> &Bitset {
-        &self.namespace_bitset
+impl PartialEq for HasteModuleInfo {
+    fn eq(&self, other: &Self) -> bool {
+        self.module_name == other.module_name
+    }
+}
+
+impl Eq for HasteModuleInfo {}
+
+impl Hash for HasteModuleInfo {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.module_name.hash(state);
     }
 }
 
 impl Ord for HasteModuleInfo {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self.module_name.cmp(&other.module_name) {
-            Ordering::Equal => self.namespace_bitset.cmp(&other.namespace_bitset),
-            c => c,
-        }
+        self.module_name.cmp(&other.module_name)
     }
 }
 
@@ -61,6 +56,6 @@ impl PartialOrd for HasteModuleInfo {
 
 impl fmt::Display for HasteModuleInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}", self.module_name, self.namespace_bitset)
+        write!(f, "{}", self.module_name)
     }
 }

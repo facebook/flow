@@ -2798,7 +2798,6 @@ end = struct
             (match Context.builtin_module_opt cx mref with
             | Some (_, (lazy m)) -> Some m
             | None -> None)
-          | _ -> None
         else
           match Context.find_require cx source with
           | Context.TypedModule f ->

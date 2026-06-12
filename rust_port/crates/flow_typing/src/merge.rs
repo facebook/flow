@@ -36,7 +36,6 @@ use flow_lint_settings::strict_mode_settings::StrictModeSettings;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
-use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table;
@@ -53,7 +52,6 @@ use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EConstantConditionData;
 use flow_typing_errors::error_message::EDevOnlyInvalidatedRefinementInfoData;
 use flow_typing_errors::error_message::EDevOnlyRefinedLocInfoData;
-use flow_typing_errors::error_message::EDuplicateModuleProviderData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EKeySpreadPropData;
 use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
@@ -108,7 +106,6 @@ use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::type_or_type_desc;
 use flow_typing_type::type_::void;
-use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_utils::check_polarity;
 use flow_typing_utils::exhaustive;
@@ -1328,181 +1325,6 @@ fn check_react_rules_fn<'cx>(
     react_rules::check_react_rules(cx, tast)
 }
 
-fn check_haste_provider_conflict<'cx>(
-    cx: &Context<'cx>,
-    tast: &ast::Program<ALoc, (ALoc, Type)>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    let file_options = cx.file_options();
-    let filename = cx.file();
-    let Some(haste_name) = files::haste_name_opt(&file_options, filename) else {
-        return Ok(());
-    };
-    let haste_name = FlowSmolStr::new(haste_name);
-    let opts = cx.projects_options();
-    let Some(projects) = FlowProjects::from_path(opts, filename.as_str())
-        .and_then(|fp| opts.individual_projects_bitsets_from_common_project_bitset(fp))
-    else {
-        return Ok(());
-    };
-    let pos = flow_parser::loc::Position { line: 1, column: 0 };
-    let loc_of_file = |f: &FileKey| -> ALoc {
-        ALoc::of_loc(Loc {
-            source: Some(f.dupe()),
-            start: pos,
-            end: pos,
-        })
-    };
-    let add_duplicate_provider_error = |platform_specific_provider_file: &FileKey| {
-        flow_js_utils::add_output_non_speculating(
-            cx,
-            ErrorMessage::EDuplicateModuleProvider(Box::new(EDuplicateModuleProviderData {
-                module_name: haste_name.dupe(),
-                conflict: loc_of_file(filename),
-                provider: loc_of_file(platform_specific_provider_file),
-            })),
-        );
-    };
-    if files::has_declaration_ext(filename) {
-        // Suppose we have the setup of web project, native project, and web+native common code project.
-        // We want to emit the same kinds of Haste module provider conflict error as if the same set of
-        // code is covered by two flowconfigs.
-        // (one include web only + common, one include native only + common)
-        //
-        // We have Foo.js.flow in common code.
-        //
-        // 1. If we have also have Foo.js in common code:
-        //   a. We have Foo.js.flow or Foo.js in web code.
-        //      This is not good, but we will complain anyways from Foo.js in common code.
-        //   b. Nothing in web code. We are good
-        // 2. If we don't have Foo.js in common code:
-        //   a. We have Foo.js.flow or Foo.js in web code.
-        //      This can be tolerated, because the Foo.js.flow file can act as common interface file.
-        //   b. Nothing in web code. We are good.
-        //
-        // Therefore, in all possible cases, we don't have to emit an error.
-        // .js.flow case - check for conformance
-        for project in &projects {
-            let specifier = FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                namespace: FlowProjects::to_bitset(*project),
-                name: haste_name.dupe(),
-                allow_implicit_platform_specific_import: false,
-            };
-            match cx.find_require(&specifier) {
-                // There is no corresponding implementation file. This is allowed.
-                ResolvedRequire::MissingModule => {}
-                ResolvedRequire::UncheckedModule(platform_specific_provider_module_loc) => {
-                    // If the corresponding platform specific file is untyped, then we assume it satisfies
-                    // the common interface. However, we do need to make sure that it's not another
-                    // .js.flow file
-                    let platform_specific_provider_file =
-                        ALoc::source(&platform_specific_provider_module_loc).unwrap();
-                    if files::has_declaration_ext(platform_specific_provider_file) {
-                        add_duplicate_provider_error(platform_specific_provider_file);
-                    }
-                }
-                ResolvedRequire::TypedModule(f) => match f(cx, cx) {
-                    Err(t) => {
-                        // Similar to the case above,
-                        // but in this case the module is any typed instead of untyped.
-                        let platform_specific_provider_file =
-                            ALoc::source(type_util::loc_of_t(&t)).unwrap();
-                        if files::has_declaration_ext(platform_specific_provider_file) {
-                            add_duplicate_provider_error(platform_specific_provider_file);
-                        }
-                    }
-                    Ok(platform_specific_module_type) => {
-                        let get_exports_t =
-                            |is_common_interface_module: bool, reason: Reason, m: &ModuleType| {
-                                // For conformance test, we only care about the value part
-                                let (values_t, _) =
-                                    flow_js_utils::import_module_ns_t_kit::on_module_t(
-                                        cx,
-                                        is_common_interface_module,
-                                        reason,
-                                        false,
-                                        m,
-                                    )
-                                    .expect("on_module_t should not fail outside speculation");
-                                values_t
-                            };
-                        let (self_sig_loc, self_module_type) =
-                            module_info_analyzer::analyze_program(cx, tast)?;
-                        let prog_aloc = tast.loc.dupe();
-                        let interface_t = {
-                            let reason = flow_common::reason::mk_reason(
-                                VirtualReasonDesc::RCommonInterface,
-                                tast.loc.dupe(),
-                            );
-                            get_exports_t(true, reason, &self_module_type)
-                        };
-                        let platform_specific_t = get_exports_t(
-                            false,
-                            platform_specific_module_type.module_reason.dupe(),
-                            &platform_specific_module_type,
-                        );
-                        // We need to fully resolve the type to prevent tvar widening.
-                        tvar_resolver::resolve(
-                            cx,
-                            tvar_resolver::default_no_lowers,
-                            true,
-                            &interface_t,
-                        );
-                        tvar_resolver::resolve(
-                            cx,
-                            tvar_resolver::default_no_lowers,
-                            true,
-                            &platform_specific_t,
-                        );
-                        let use_op = UseOp::Op(Arc::new(RootUseOp::ConformToCommonInterface(
-                            Box::new(ConformToCommonInterfaceData {
-                                self_sig_loc,
-                                self_module_loc: prog_aloc,
-                                originate_from_import: false,
-                            }),
-                        )));
-                        flow_js::flow_non_speculating(
-                            cx,
-                            (
-                                &platform_specific_t,
-                                &UseT::new(UseTInner::UseT(use_op, interface_t)),
-                            ),
-                        )?
-                    }
-                },
-            }
-        }
-    } else {
-        // We have Foo.js in common code.
-        // We should error if we want Foo.js or Foo.js.flow in web only code.
-        // non-.js.flow case - error if platform-specific file exists
-        for project in &projects {
-            let platform_specific_provider_module_loc = {
-                let specifier = FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                    namespace: FlowProjects::to_bitset(*project),
-                    name: haste_name.dupe(),
-                    allow_implicit_platform_specific_import: false,
-                };
-                match cx.find_require(&specifier) {
-                    ResolvedRequire::MissingModule => None,
-                    ResolvedRequire::UncheckedModule(loc) => Some(loc),
-                    ResolvedRequire::TypedModule(f) => match f(cx, cx) {
-                        Ok(m) => Some(m.module_reason.loc().dupe()),
-                        Err(t) => Some(type_util::loc_of_t(&t).dupe()),
-                    },
-                }
-            };
-            if let Some(platform_specific_provider_module_loc) =
-                platform_specific_provider_module_loc
-            {
-                let platform_specific_provider_file =
-                    ALoc::source(&platform_specific_provider_module_loc).unwrap();
-                add_duplicate_provider_error(platform_specific_provider_file);
-            }
-        }
-    }
-    Ok(())
-}
-
 fn check_multiplatform_conformance<'cx>(
     cx: &Context<'cx>,
     ast: &ast::Program<ALoc, ALoc>,
@@ -2065,7 +1887,6 @@ pub fn post_merge_checks<'cx>(
     force_lazy_tvars(cx);
     check_react_rules_fn(cx, tast)?;
     if !cx.is_lib_file() {
-        check_haste_provider_conflict(cx, tast)?;
         check_multiplatform_conformance(cx, ast, tast)?;
     }
     check_polarity_fn(cx);

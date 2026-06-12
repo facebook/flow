@@ -38,11 +38,6 @@ and require =
     }
   | Import0 of { source: Loc.t Ast_utils.source }
   | ImportSyntheticUserland of { source: string }
-  | ImportSyntheticHaste of {
-      namespace: Bitset.t;
-      name: string;
-      allow_implicit_platform_specific_import: bool;
-    }
   | Import of {
       import_loc: Loc.t;
       source: Loc.t Ast_utils.source;
@@ -118,7 +113,6 @@ let to_string require_list =
     | ImportDynamic _ -> "ImportDynamic"
     | Import0 _ -> "Import0"
     | ImportSyntheticUserland _ -> "ImportSyntheticUserland"
-    | ImportSyntheticHaste _ -> "ImportSyntheticHaste"
     | Import _ -> "Import"
     | ExportFrom _ -> "ExportFrom"
   in
@@ -133,14 +127,6 @@ let require_loc_map msig =
       | ImportSyntheticUserland { source } ->
         Flow_import_specifier.Map.add
           (Flow_import_specifier.userland_specifier source)
-          []
-          acc
-          ~combine:List.rev_append
-      | ImportSyntheticHaste { namespace; name; allow_implicit_platform_specific_import } ->
-        Flow_import_specifier.Map.add
-          (Flow_import_specifier.HasteImportWithSpecifiedNamespace
-             { namespace; name; allow_implicit_platform_specific_import }
-          )
           []
           acc
           ~combine:List.rev_append
@@ -208,29 +194,6 @@ class requires_calculator ~file_key ~ast ~opts =
         | (ExportType, Some source) -> add_require (ExportFrom { source })
       in
       this#update_file_sig add
-
-    method add_haste_synthetic_imports =
-      match Files.haste_name_opt ~options:opts.file_options file_key with
-      | None -> ()
-      | Some haste_name ->
-        (match
-           let opts = opts.project_options in
-           Flow_projects.projects_bitset_of_path ~opts (File_key.suffix file_key)
-           |> Base.Option.bind
-                ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
-         with
-        | None -> ()
-        | Some projects ->
-          Base.List.iter projects ~f:(fun project ->
-              this#add_require
-                (ImportSyntheticHaste
-                   {
-                     namespace = Flow_projects.to_bitset project;
-                     name = haste_name;
-                     allow_implicit_platform_specific_import = false;
-                   }
-                )
-          ))
 
     method add_multiplatform_synthetic_imports =
       match
@@ -622,7 +585,6 @@ let program ~file_key ~ast ~opts =
   (match file_key with
   | File_key.LibFile _ -> ()
   | _ ->
-    walk#add_haste_synthetic_imports;
     walk#add_multiplatform_synthetic_imports;
     ignore @@ walk#program ast);
   walk#acc

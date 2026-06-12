@@ -7,11 +7,9 @@
 
 type t [@@deriving show]
 
-val mk : module_name:string -> namespace_bitset:Bitset.t -> t
+val mk : module_name:string -> t
 
 val module_name : t -> string
-
-val namespace_bitset : t -> Bitset.t
 
 val equal : t -> t -> bool
 

@@ -9,10 +9,9 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 use dupe::Dupe;
-use flow_common::bitset::Bitset;
+use dupe::IterDupedExt;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
-use flow_common::flow_projects::FlowProjects;
 use flow_common::options::ModuleSystem;
 use flow_common::options::Options;
 use flow_common_modulename::HasteModuleInfo;
@@ -46,6 +45,21 @@ fn choose_provider_and_warn_about_duplicates(
         acc.insert(m.clone(), (provider.dupe(), duplicates));
     }
 
+    fn is_common_code_path(options: &Options, key: &FileKey) -> bool {
+        options.projects_options.is_common_code_path(key.as_str())
+    }
+
+    fn common_interface_implementation_pair(
+        options: &Options,
+        defn: &FileKey,
+        impl_: &FileKey,
+    ) -> bool {
+        files::has_declaration_ext(defn)
+            && !files::has_declaration_ext(impl_)
+            && is_common_code_path(options, defn)
+            && !is_common_code_path(options, impl_)
+    }
+
     let (mut definitions, mut implementations): (Vec<_>, Vec<_>) =
         providers.into_iter().partition(files::has_declaration_ext);
 
@@ -66,24 +80,41 @@ fn choose_provider_and_warn_about_duplicates(
         let dup_impls = implementations;
         let defn = definitions.remove(0);
         let dup_defns = definitions;
+        let all_impls: Vec<FileKey> = std::iter::once(impl_.dupe())
+            .chain(dup_impls.iter().duped())
+            .collect();
+        let (mut common_interface_impls, other_impls): (Vec<_>, Vec<_>) = all_impls
+            .into_iter()
+            .partition(|impl_| common_interface_implementation_pair(options, &defn, impl_));
 
         let def_with_flow_ext_chopped = files::chop_declaration_ext(&defn);
         let file_options = &options.file_options;
         let impl_with_platform_suffix_chopped =
             files::chop_platform_suffix_for_file(file_options, &impl_);
 
-        if def_with_flow_ext_chopped != impl_with_platform_suffix_chopped {
+        if !common_interface_impls.is_empty() {
+            let selected_impl = common_interface_impls.remove(0);
+            let duplicates = common_interface_impls
+                .into_iter()
+                .chain(other_impls)
+                .collect();
+            warn_duplicate_providers(m, &selected_impl, duplicates, errmap);
+            warn_duplicate_providers(m, &defn, dup_defns, errmap);
+            Some(selected_impl)
+        } else if def_with_flow_ext_chopped != impl_with_platform_suffix_chopped {
             if files::chop_platform_suffix_for_file(file_options, &def_with_flow_ext_chopped)
                 != impl_with_platform_suffix_chopped
             {
                 warn_duplicate_providers(m, &defn, vec![impl_.dupe()], errmap);
             }
+            warn_duplicate_providers(m, &impl_, dup_impls, errmap);
+            warn_duplicate_providers(m, &defn, dup_defns, errmap);
+            Some(defn)
+        } else {
+            warn_duplicate_providers(m, &impl_, dup_impls, errmap);
+            warn_duplicate_providers(m, &defn, dup_defns, errmap);
+            Some(defn)
         }
-
-        warn_duplicate_providers(m, &impl_, dup_impls, errmap);
-        warn_duplicate_providers(m, &defn, dup_defns, errmap);
-
-        Some(defn)
     }
 }
 
@@ -1159,7 +1190,6 @@ mod node {
 
                 Err(None)
             }
-            FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => Err(None),
         }
     }
 
@@ -1267,32 +1297,20 @@ mod haste {
         file: &FileKey,
         package_info: &PackageInfo,
     ) -> Option<HasteModuleInfo> {
-        let namespace_of_path = |fk: &FileKey| -> Bitset {
-            FlowProjects::from_path(&options.projects_options, fk.suffix())
-                .map(|p| p.to_bitset())
-                .unwrap_or_else(|| {
-                    panic!("Path {} doesn't match any Haste namespace.", fk.suffix())
-                })
-        };
-
         let abs_path = file.to_absolute();
         match file.inner() {
             FileKeyInner::SourceFile(_) => {
                 if is_mock(file) {
-                    Some(HasteModuleInfo::mk(
-                        short_module_name_of(file).into(),
-                        namespace_of_path(file),
-                    ))
+                    Some(HasteModuleInfo::mk(short_module_name_of(file).into()))
                 } else {
                     files::haste_name_opt(&options.file_options, file)
-                        .map(|name| HasteModuleInfo::mk(name.into(), namespace_of_path(file)))
+                        .map(|name| HasteModuleInfo::mk(name.into()))
                 }
             }
             FileKeyInner::JsonFile(_) => {
                 if let PackageInfo(Some(pkg)) = package_info {
                     if pkg.haste_commonjs() || !is_within_node_modules(options, &abs_path) {
-                        pkg.name()
-                            .map(|name| HasteModuleInfo::mk(name.dupe(), namespace_of_path(file)))
+                        pkg.name().map(|name| HasteModuleInfo::mk(name.dupe()))
                     } else {
                         None
                     }
@@ -1323,13 +1341,12 @@ mod haste {
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         importing_file_dir: &str,
-        namespace_opt: Option<Bitset>,
         import_specifier: &str,
     ) -> Option<Dependency> {
         let (name, subpath) = parse_haste_name(import_specifier);
 
-        let mut resolve = |namespace_bitset: &Bitset| -> Option<Dependency> {
-            let haste_info = HasteModuleInfo::mk(name.clone().into(), namespace_bitset.clone());
+        let mut resolve = || -> Option<Dependency> {
+            let haste_info = HasteModuleInfo::mk(name.clone().into());
             let mname = Modulename::Haste(haste_info.clone());
             let dependency = shared_mem.get_dependency(&mname);
 
@@ -1379,27 +1396,7 @@ mod haste {
             }
         };
 
-        let haste_namespace_bitset_candidates = if let Some(namespace) = namespace_opt {
-            vec![namespace]
-        } else {
-            let opts = &options.projects_options;
-            if let Some(p) = FlowProjects::from_path(opts, importing_file.as_str()) {
-                opts.reachable_projects_bitsets_from_projects_bitset(import_specifier, p)
-                    .into_iter()
-                    .map(|p| p.to_bitset())
-                    .collect()
-            } else {
-                vec![]
-            }
-        };
-
-        for bitset in &haste_namespace_bitset_candidates {
-            if let Some(result) = resolve(bitset) {
-                return Some(result);
-            }
-        }
-
-        None
+        resolve()
     }
 
     fn parse_haste_name(import_specifier: &str) -> (String, Vec<String>) {
@@ -1425,7 +1422,6 @@ mod haste {
         shared_mem: &SharedMem,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
-        namespace_opt: Option<Bitset>,
         import_specifier: &str,
     ) -> Option<Dependency> {
         let importing_file_abs = importing_file.to_absolute();
@@ -1440,7 +1436,6 @@ mod haste {
             phantom_acc.as_deref_mut(),
             importing_file,
             importing_file_dir,
-            namespace_opt,
             import_specifier,
         );
 
@@ -1508,7 +1503,6 @@ mod haste {
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 importing_file_dir,
-                None,
                 import_specifier,
             )
             .or_else(|| {
@@ -1554,7 +1548,6 @@ mod haste {
                     shared_mem,
                     phantom_acc.as_deref_mut(),
                     importing_file,
-                    None,
                     import_specifier,
                 )
                 .or_else(|| {
@@ -1595,7 +1588,6 @@ mod haste {
                             phantom_acc.as_deref_mut(),
                             importing_file,
                             importing_file_dir,
-                            None,
                             &platform_specifier,
                         ) {
                             return Some(result);
@@ -1607,7 +1599,6 @@ mod haste {
                         shared_mem,
                         phantom_acc.as_deref_mut(),
                         importing_file,
-                        None,
                         import_specifier,
                     )
                     .or_else(|| {
@@ -1677,86 +1668,6 @@ mod haste {
                 };
 
                 Err(mapped_name)
-            }
-            FlowImportSpecifier::HasteImportWithSpecifiedNamespace {
-                namespace,
-                name,
-                allow_implicit_platform_specific_import,
-            } => {
-                let candidates = super::module_name_candidates(options, name);
-                let import_specifier_str = candidates.first();
-                let importing_file_abs = importing_file.to_absolute();
-                let importing_file_dir = Path::new(&importing_file_abs)
-                    .parent()
-                    .and_then(|p| p.to_str())
-                    .unwrap_or("");
-                let namespace_opt = Some(namespace.clone());
-
-                let result = if *allow_implicit_platform_specific_import {
-                    let projects = FlowProjects::from_bitset_unchecked(namespace.clone());
-                    let explicit_platforms = options
-                        .projects_options
-                        .multi_platform_ambient_supports_platform_for_project(projects);
-
-                    let ordered_platforms =
-                        super::node::ordered_allowed_implicit_platform_specific_import(
-                            &options.file_options,
-                            &options.projects_options,
-                            importing_file.as_str(),
-                            explicit_platforms,
-                        );
-
-                    match ordered_platforms {
-                        Some(platforms) => {
-                            for platform in &platforms {
-                                let platform_specifier =
-                                    format!("{}.{}", import_specifier_str, platform);
-                                if let Some(dep) = resolve_haste_module(
-                                    options,
-                                    shared_mem,
-                                    phantom_acc.as_deref_mut(),
-                                    importing_file,
-                                    importing_file_dir,
-                                    namespace_opt.clone(),
-                                    &platform_specifier,
-                                ) {
-                                    return Ok(dep);
-                                }
-                            }
-
-                            resolve_haste_module_disallow_platform_specific(
-                                options,
-                                shared_mem,
-                                phantom_acc.as_deref_mut(),
-                                importing_file,
-                                namespace_opt.clone(),
-                                import_specifier_str,
-                            )
-                        }
-                        None => resolve_haste_module_disallow_platform_specific(
-                            options,
-                            shared_mem,
-                            phantom_acc.as_deref_mut(),
-                            importing_file,
-                            namespace_opt.clone(),
-                            import_specifier_str,
-                        ),
-                    }
-                } else {
-                    resolve_haste_module_disallow_platform_specific(
-                        options,
-                        shared_mem,
-                        phantom_acc,
-                        importing_file,
-                        namespace_opt,
-                        import_specifier_str,
-                    )
-                };
-
-                match result {
-                    Some(dep) => Ok(dep),
-                    None => Err(Some(import_specifier.clone())),
-                }
             }
         }
     }

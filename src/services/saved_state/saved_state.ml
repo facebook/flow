@@ -95,18 +95,11 @@ let modulename_map_fn ~on_file ?on_string = function
     | None -> module_name
     | Some f ->
       Modulename.Haste
-        (Haste_module_info.mk
-           ~module_name:(f (Haste_module_info.module_name haste_module_info))
-           ~namespace_bitset:(Haste_module_info.namespace_bitset haste_module_info)
-        ))
+        (Haste_module_info.mk ~module_name:(f (Haste_module_info.module_name haste_module_info))))
 
 let import_specifier_map_fn ~on_string = function
   | Flow_import_specifier.Userland name ->
     Flow_import_specifier.Userland (Flow_import_specifier.map_userland ~f:on_string name)
-  | Flow_import_specifier.HasteImportWithSpecifiedNamespace
-      { namespace; name; allow_implicit_platform_specific_import } ->
-    Flow_import_specifier.HasteImportWithSpecifiedNamespace
-      { namespace; name = on_string name; allow_implicit_platform_specific_import }
 
 let resolved_module_map_fn ~on_file ?on_string = function
   | Ok mname -> Ok (modulename_map_fn ~on_file ?on_string mname)

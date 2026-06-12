@@ -121,10 +121,6 @@ fn unknown_module_t<'cx>(
                 None => ResolvedRequire::MissingModule,
             }
         }
-        FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => {
-            // We should not lookup builtins modules for synthetic imports.
-            ResolvedRequire::MissingModule
-        }
     }
 }
 
@@ -143,10 +139,6 @@ fn unchecked_module_t<'cx>(
                 Some(typed) => ResolvedRequire::TypedModule(typed),
                 None => ResolvedRequire::UncheckedModule(loc),
             }
-        }
-        FlowImportSpecifier::HasteImportWithSpecifiedNamespace { .. } => {
-            // We should not lookup builtins modules for synthetic imports.
-            ResolvedRequire::UncheckedModule(loc)
         }
     }
 }

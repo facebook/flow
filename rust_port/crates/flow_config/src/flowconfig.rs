@@ -937,14 +937,6 @@ pub mod opts {
 
                 // The validation and tracking below ensures that a project never appears in more than
                 // one unique overlapping pattern.
-                //
-                // This is especially useful when the project configuration is used for haste namespacing
-                // with very simple lookup for reachable namespaces.
-                // e.g. given A, it can know that it needs to look up only A and A+B, instead of all possible
-                // namespace set combinations that include A.
-                //
-                // See Flow_projects.reachable_projects_bitsets_from_projects_bitset for implementation
-                // that relies on the fact.
                 if projects.len() > 1 {
                     let ns_set: BTreeSet<FlowSmolStr> = projects.iter().cloned().collect();
                     for ns in &projects {

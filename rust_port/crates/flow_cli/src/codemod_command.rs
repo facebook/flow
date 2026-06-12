@@ -27,7 +27,6 @@ use flow_codemods::utils::codemod_runner::SimpleTypedRunnerConfig;
 use flow_codemods::utils::codemod_runner::TypedRunnerWithPrepassConfig;
 use flow_codemods::utils::codemod_runner::UntypedRunnerConfig;
 use flow_codemods::utils::codemod_utils::MakeMain;
-use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
@@ -316,7 +315,6 @@ fn mk_module_system_info(
     let shared_mem_clone = shared_mem.clone();
     let shared_mem_clone2 = shared_mem.clone();
     let shared_mem_clone3 = shared_mem.clone();
-    let projects_options = options.projects_options.dupe();
     LspModuleSystemInfo {
         file_options: options.file_options.dupe(),
         haste_module_system: options.module_system == flow_common::options::ModuleSystem::Haste,
@@ -327,16 +325,9 @@ fn mk_module_system_info(
                 .map(|package| Ok((*package).clone()))
         }),
         is_package_file: Box::new(move |module_path, module_name| {
-            let dependency = FlowProjects::from_path(
-                &projects_options,
-                &flow_parser::file_key::strip_project_root(module_path),
-            )
-            .and_then(|namespace| {
-                shared_mem_clone3.get_dependency(&Modulename::Haste(HasteModuleInfo::mk(
-                    module_name.into(),
-                    namespace.to_bitset(),
-                )))
-            });
+            let _ = module_path;
+            let dependency = shared_mem_clone3
+                .get_dependency(&Modulename::Haste(HasteModuleInfo::mk(module_name.into())));
             match dependency.and_then(|dependency| shared_mem_clone3.get_provider(&dependency)) {
                 Some(addr) => shared_mem_clone3.is_package_file(&addr),
                 None => false,

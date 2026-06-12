@@ -13,6 +13,15 @@ let choose_provider_and_warn_about_duplicates =
     | [] -> acc
     | (f, _) :: fs -> SMap.add m (provider, (f, List.map fst fs)) acc
   in
+  let is_common_code_path ~options key =
+    Flow_projects.is_common_code_path ~opts:(Options.projects_options options) (File_key.suffix key)
+  in
+  let common_interface_implementation_pair ~options defn impl =
+    Files.has_declaration_ext defn
+    && (not (Files.has_declaration_ext impl))
+    && is_common_code_path ~options defn
+    && not (is_common_code_path ~options impl)
+  in
   fun ~options m errmap providers fallback ->
     let (definitions, implementations) =
       let f (key, _) = Files.has_declaration_ext key in
@@ -31,34 +40,48 @@ let choose_provider_and_warn_about_duplicates =
     | (impl :: dup_impls, defn :: dup_defns) ->
       let (impl_key, _) = impl in
       let (defn_key, _) = defn in
+      let all_impls = impl :: dup_impls in
+      let (common_interface_impls, other_impls) =
+        Base.List.partition_tf all_impls ~f:(fun (impl_key, _) ->
+            common_interface_implementation_pair ~options defn_key impl_key
+        )
+      in
       let def_with_flow_ext_chopped = Files.chop_declaration_ext defn_key in
       let impl_with_platform_suffix_chopped =
         Files.chop_platform_suffix_for_file ~options:(Options.file_options options) impl_key
       in
-      let errmap =
-        (* Allow pair of A.js.flow & A.ios.js *)
-        if def_with_flow_ext_chopped = impl_with_platform_suffix_chopped then
-          errmap
-        else if
-          (* Additionally allow pair of A.ios.js.flow & A.ios.js *)
-          Files.chop_platform_suffix_for_file
-            ~options:(Options.file_options options)
-            def_with_flow_ext_chopped
-          = impl_with_platform_suffix_chopped
-        then
-          errmap
-        else
-          (* For illegal shadow errors, we error on the pair .js.flow and .js *)
-          warn_duplicate_providers m defn [impl] errmap
-      in
-      let errmap =
-        errmap
-        (* For duplicate provider errors, we error on either two implementation files
-         * or on two declaration files *)
-        |> warn_duplicate_providers m impl dup_impls
-        |> warn_duplicate_providers m defn dup_defns
-      in
-      (Some (snd defn), errmap)
+      (match common_interface_impls with
+      | selected_impl :: dup_common_interface_impls ->
+        let errmap =
+          warn_duplicate_providers m selected_impl (dup_common_interface_impls @ other_impls) errmap
+        in
+        let errmap = warn_duplicate_providers m defn dup_defns errmap in
+        (Some (snd selected_impl), errmap)
+      | [] ->
+        let errmap =
+          if
+            (* Allow pair of A.js.flow & A.ios.js *)
+            def_with_flow_ext_chopped = impl_with_platform_suffix_chopped
+          then
+            errmap
+          else if
+            (* Additionally allow pair of A.ios.js.flow & A.ios.js *)
+            Files.chop_platform_suffix_for_file
+              ~options:(Options.file_options options)
+              def_with_flow_ext_chopped
+            = impl_with_platform_suffix_chopped
+          then
+            errmap
+          else
+            (* For illegal shadow errors, we error on the pair .js.flow and .js *)
+            warn_duplicate_providers m defn [impl] errmap
+        in
+        let errmap =
+          (* For duplicate provider errors, we error on two implementation files. *)
+          warn_duplicate_providers m impl dup_impls errmap
+        in
+        let errmap = warn_duplicate_providers m defn dup_defns errmap in
+        (Some (snd defn), errmap))
 
 (**
  * A set of module.name_mapper config entry allows users to specify regexp
@@ -757,9 +780,6 @@ module Node = struct
          * to resolve to a libdef, since we try to resolve to libdef modules
          * during check in the `Error _` case. *)
         Error None)
-    | Flow_import_specifier.HasteImportWithSpecifiedNamespace _ ->
-      (* We should never find Haste modules under Node. *)
-      Error None
 
   (* in node, file names are module names, as guaranteed by
      our implementation of exported_name, so anything but a
@@ -797,38 +817,22 @@ module Haste : MODULE_SYSTEM = struct
 
   let exported_module options =
     let haste_name_opt = Files.haste_name_opt ~options:(Options.file_options options) in
-    let projects_options = Options.projects_options options in
-    let namespace_of_path file_key =
-      match
-        File_key.suffix file_key |> Flow_projects.projects_bitset_of_path ~opts:projects_options
-      with
-      | None -> failwith ("Path " ^ File_key.suffix file_key ^ " doesn't match any Haste namespace.")
-      | Some bitset -> Flow_projects.to_bitset bitset
-    in
     let is_within_node_modules = is_within_node_modules options in
     fun file ~package_info ->
       let abs_path = File_key.to_string file in
       match file with
       | File_key.SourceFile _ ->
         if is_mock file then
-          Some
-            (Haste_module_info.mk
-               ~module_name:(short_module_name_of file)
-               ~namespace_bitset:(namespace_of_path file)
-            )
+          Some (Haste_module_info.mk ~module_name:(short_module_name_of file))
         else (
           match haste_name_opt file with
-          | Some module_name ->
-            Some (Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path file))
+          | Some module_name -> Some (Haste_module_info.mk ~module_name)
           | None -> None
         )
       | File_key.JsonFile _ ->
         (match package_info with
         | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules abs_path) ->
-          Package_json.name pkg
-          |> Option.map (fun module_name ->
-                 Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path file)
-             )
+          Package_json.name pkg |> Option.map (fun module_name -> Haste_module_info.mk ~module_name)
         | _ -> None)
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)
@@ -841,13 +845,7 @@ module Haste : MODULE_SYSTEM = struct
       None
 
   let resolve_haste_module
-      ~options
-      ~reader
-      ~phantom_acc
-      ~importing_file
-      ~importing_file_dir
-      ~namespace_opt
-      ~import_specifier =
+      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
     let (name, subpath) =
       match String.split_on_char '/' import_specifier with
       | [] -> (import_specifier, [])
@@ -855,7 +853,8 @@ module Haste : MODULE_SYSTEM = struct
         (scope ^ "/" ^ package, rest)
       | package :: rest -> (package, rest)
     in
-    let resolve mname =
+    let resolve () =
+      let mname = Modulename.Haste (Haste_module_info.mk ~module_name:name) in
       let dependency = Parsing_heaps.get_dependency mname in
       match Option.bind dependency (Parsing_heaps.Reader_dispatcher.get_provider ~reader) with
       | Some addr ->
@@ -888,35 +887,10 @@ module Haste : MODULE_SYSTEM = struct
         record_phantom_dependency mname dependency phantom_acc;
         None
     in
-    let haste_namespace_bitset_candidates =
-      match namespace_opt with
-      | Some namespace -> [namespace]
-      | None ->
-        let opts = Options.projects_options options in
-        (match Flow_projects.projects_bitset_of_path ~opts (File_key.suffix importing_file) with
-        | None -> []
-        | Some bitset ->
-          bitset
-          |> Flow_projects.reachable_projects_bitsets_from_projects_bitset ~opts ~import_specifier
-          |> List.map Flow_projects.to_bitset)
-    in
-    let mname_of_bitset namespace_bitset =
-      Modulename.Haste (Haste_module_info.mk ~module_name:name ~namespace_bitset)
-    in
-    lazy_seq
-      (Base.List.map haste_namespace_bitset_candidates ~f:(fun b ->
-           lazy (resolve (mname_of_bitset b))
-       )
-      )
+    resolve ()
 
   let resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-      ~options
-      ~reader
-      ~phantom_acc
-      ~importing_file
-      ~importing_file_dir
-      ~namespace_opt
-      ~import_specifier =
+      ~options ~reader ~phantom_acc ~importing_file ~importing_file_dir ~import_specifier =
     let dependency =
       resolve_haste_module
         ~options
@@ -924,7 +898,6 @@ module Haste : MODULE_SYSTEM = struct
         ~phantom_acc
         ~importing_file
         ~importing_file_dir
-        ~namespace_opt
         ~import_specifier
     in
     let file_options = Options.file_options options in
@@ -969,7 +942,6 @@ module Haste : MODULE_SYSTEM = struct
                  ~phantom_acc
                  ~importing_file
                  ~importing_file_dir
-                 ~namespace_opt:None
                  ~import_specifier
               );
             lazy
@@ -1017,7 +989,6 @@ module Haste : MODULE_SYSTEM = struct
                    ~phantom_acc
                    ~importing_file
                    ~importing_file_dir
-                   ~namespace_opt:None
                    ~import_specifier
                 );
               lazy
@@ -1057,7 +1028,6 @@ module Haste : MODULE_SYSTEM = struct
                       ~phantom_acc
                       ~importing_file
                       ~importing_file_dir
-                      ~namespace_opt:None
                       ~import_specifier:(import_specifier ^ "." ^ platform)
                    )
              )
@@ -1069,7 +1039,6 @@ module Haste : MODULE_SYSTEM = struct
                      ~phantom_acc
                      ~importing_file
                      ~importing_file_dir
-                     ~namespace_opt:None
                      ~import_specifier
                   );
                 lazy
@@ -1131,70 +1100,6 @@ module Haste : MODULE_SYSTEM = struct
           | _ -> Some (Flow_import_specifier.userland_specifier import_specifier)
         in
         Error mapped_name)
-    | Flow_import_specifier.HasteImportWithSpecifiedNamespace
-        { namespace; name; allow_implicit_platform_specific_import } as specifier ->
-      let importing_file_dir = Filename.dirname (File_key.to_string importing_file) in
-      let import_specifier = Nel.hd (module_name_candidates ~options name) in
-      let namespace_opt = Some namespace in
-      (match
-         match
-           ( allow_implicit_platform_specific_import,
-             Node.ordered_allowed_implicit_platform_specific_import
-               ~file_options:(Options.file_options options)
-               ~projects_options:(Options.projects_options options)
-               ~importing_file:(File_key.suffix importing_file)
-               ~explicit_available_platforms:
-                 (Flow_projects.multi_platform_ambient_supports_platform_for_project
-                    ~opts:(Options.projects_options options)
-                    (Flow_projects.from_bitset_unchecked namespace)
-                 )
-           )
-         with
-         | (true, Some ordered_platforms) ->
-           lazy_seq
-             (Base.List.map ordered_platforms ~f:(fun platform ->
-                  lazy
-                    (resolve_haste_module
-                       ~options
-                       ~reader
-                       ~phantom_acc
-                       ~importing_file
-                       ~importing_file_dir
-                       ~namespace_opt
-                       ~import_specifier:(import_specifier ^ "." ^ platform)
-                    )
-              )
-             @ [
-                 lazy
-                   (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-                      ~options
-                      ~reader
-                      ~phantom_acc
-                      ~importing_file
-                      ~importing_file_dir
-                      ~namespace_opt
-                      ~import_specifier
-                   );
-               ]
-             )
-         | (false, _)
-         | (true, None) ->
-           lazy_seq
-             [
-               lazy
-                 (resolve_haste_module_disallow_platform_specific_haste_modules_under_multiplatform
-                    ~options
-                    ~reader
-                    ~phantom_acc
-                    ~importing_file
-                    ~importing_file_dir
-                    ~namespace_opt
-                    ~import_specifier
-                 );
-             ]
-       with
-      | Some m -> Ok m
-      | None -> Error (Some specifier))
 
   (* in haste, many files may provide the same module. here we're also
      supporting the notion of mock modules - allowed duplicates used as

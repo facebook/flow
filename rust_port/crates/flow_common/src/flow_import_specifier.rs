@@ -8,8 +8,6 @@
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-use crate::bitset::Bitset;
-
 #[derive(
     Debug,
     Clone,
@@ -60,11 +58,6 @@ impl Userland {
 )]
 pub enum FlowImportSpecifier {
     Userland(Userland),
-    HasteImportWithSpecifiedNamespace {
-        namespace: Bitset,
-        name: FlowSmolStr,
-        allow_implicit_platform_specific_import: bool,
-    },
 }
 
 impl FlowImportSpecifier {

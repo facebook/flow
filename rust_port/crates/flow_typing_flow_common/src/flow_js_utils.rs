@@ -5410,7 +5410,6 @@ pub mod import_export_utils {
                         FlowImportSpecifier::Userland(mref) => cx
                             .builtin_module_opt(mref)
                             .map(|(_reason, m)| m.get_forced(cx).dupe()),
-                        _ => None,
                     }
                 } else {
                     match cx.find_require(&source) {
