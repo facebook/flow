@@ -33,7 +33,7 @@ use flow_typing_errors::flow_error::error_of_msg;
 use flow_typing_errors::intermediate_error::make_intermediate_error;
 use flow_typing_errors::intermediate_error::to_printable_error;
 use flow_typing_errors::intermediate_error_types::IntermediateError;
-use murmur3::murmur3_32_of_slice;
+use murmur3::murmur3_32;
 
 use crate::collated_errors::CollatedErrors;
 use crate::collated_errors::ErrorStateTimestamps;
@@ -381,7 +381,9 @@ pub fn compute_per_file_errors(
                 let hash_input = format!("{}:{}", code_str, lsp.message);
                 let hash = format!(
                     "{:x}",
-                    murmur3_32_of_slice(hash_input.as_bytes(), 0) & 0x3fff_ffff
+                    murmur3_32(&mut hash_input.as_bytes(), 0)
+                        .expect("reading from a byte slice should not fail")
+                        & 0x3fff_ffff
                 );
                 let error_message = if *context_count < with_context_limit {
                     *context_count += 1;
