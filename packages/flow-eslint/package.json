@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "esrecurse": "^4.3.0",
-    "flow-estree": "0.0.1",
+    "flow-estree": "0.318.0",
     "flow-parser": "0.318.0"
   }
 }

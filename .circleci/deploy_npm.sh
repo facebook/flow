@@ -13,6 +13,9 @@ if [[ "$GITHUB_REF_NAME" = "" ]]; then exit 0; fi
 if [ -f ~/.npmrc ]; then mv ~/.npmrc ~/.npmrc.bak; fi
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
+echo "Publishing flow-estree";
+npm publish ./dist/npm-flow-estree.tgz;
+
 echo "Publishing flow-parser";
 npm publish ./dist/npm-flow-parser.tgz;
 

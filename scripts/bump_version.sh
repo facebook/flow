@@ -23,6 +23,10 @@ sed -i 's/^\(let version = "\)[^"]*\("\)/\1'"$VERSION"'\2/' src/common/flow_vers
 sed -i 's/^\(version: "\)[^"]*\("\)/\1'"$OPAM_VERSION"'\2/' flowtype.opam
 sed -i 's/^\(version: "\)[^"]*\("\)/\1'"$OPAM_VERSION"'\2/' flow_parser.opam
 sed -i 's/\("version": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-parser/package.json
+sed -i 's/\("version": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-estree/package.json
+sed -i 's/\("flow-estree": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-parser/package.json
+sed -i 's/\("flow-estree": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-eslint/package.json
+sed -i 's/\("flow-estree": "\)[^"]*\("\)/\1'"$VERSION"'\2/' packages/flow-transform/package.json
 sed -i 's/\("version": "\)[^"]*\("\)/\1'"$REMOVE_TYPES_VERSION"'\2/' packages/flow-remove-types/package.json
 sed -i 's/\("flow-parser": "\)[^"]*\("\)/\1^'"$VERSION"'\2/' packages/flow-remove-types/package.json
 

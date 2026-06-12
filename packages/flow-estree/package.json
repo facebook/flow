@@ -1,6 +1,6 @@
 {
   "name": "flow-estree",
-  "version": "0.0.1",
+  "version": "0.318.0",
   "description": "Flow types for the Flow-ESTree spec produced by the Flow Rust parser, forked from hermes-estree.",
   "homepage": "https://flow.org",
   "license": "MIT",
