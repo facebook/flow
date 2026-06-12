@@ -13,7 +13,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::flow_import_specifier::Userland;
-use flow_common::options::CastingSyntax;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
@@ -472,7 +471,6 @@ pub struct EnumIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason_upper: VirtualReason<L>,
     pub enum_kind: EnumKind,
     pub representation_type: Option<FlowSmolStr>,
-    pub casting_syntax: CastingSyntax,
 }
 
 #[derive(
@@ -2849,7 +2847,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidTypeCastSyntax {
         loc: L,
-        enabled_casting_syntax: CastingSyntax,
     },
 
     EMissingPlatformSupportWithAvailablePlatforms(
@@ -3321,10 +3318,8 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         }
         Explanation::ExplanationConcreteEnumCasting {
             representation_type,
-            casting_syntax,
         } => Explanation::ExplanationConcreteEnumCasting {
             representation_type,
-            casting_syntax,
         },
         Explanation::ExplanationCustomError(data) => {
             let ExplanationCustomErrorData {
@@ -4365,14 +4360,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason_upper,
                         enum_kind,
                         representation_type,
-                        casting_syntax,
                     }) => EnumIncompatible(Box::new(EnumIncompatibleData {
                         use_op: map_use_op(use_op),
                         reason_lower: map_reason(reason_lower),
                         reason_upper: map_reason(reason_upper),
                         enum_kind,
                         representation_type,
-                        casting_syntax,
                     })),
                     EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
                         reason,
@@ -5081,13 +5074,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 .unwrap(),
             })),
 
-            EInvalidTypeCastSyntax {
-                loc,
-                enabled_casting_syntax,
-            } => EInvalidTypeCastSyntax {
-                loc: f(loc),
-                enabled_casting_syntax,
-            },
+            EInvalidTypeCastSyntax { loc } => EInvalidTypeCastSyntax { loc: f(loc) },
 
             EMissingPlatformSupportWithAvailablePlatforms(
                 box EMissingPlatformSupportWithAvailablePlatformsData {
@@ -6445,14 +6432,10 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
     }
 }
 
-pub fn type_casting_examples(
-    enabled_casting_syntax: CastingSyntax,
-) -> (&'static str, &'static str) {
+pub fn type_casting_examples() -> (&'static str, &'static str) {
     let example_as = "<expr> as <type>";
     let example_colon = "(<expr>: <type>)";
-    match enabled_casting_syntax {
-        CastingSyntax::Both | CastingSyntax::As => (example_as, example_colon),
-    }
+    (example_as, example_colon)
 }
 
 /// Friendly messages are created differently based on the specific error they come from.
@@ -6549,7 +6532,6 @@ pub struct IncompatibleEnumData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub enum_kind: EnumKind,
     pub representation_type: Option<FlowSmolStr>,
-    pub casting_syntax: CastingSyntax,
 }
 
 #[derive(
@@ -7145,7 +7127,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                     enum_kind,
                     representation_type,
-                    casting_syntax,
                 },
             )) => IncompatibleEnum(Box::new(IncompatibleEnumData {
                 reason_lower,
@@ -7153,7 +7134,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 enum_kind,
                 representation_type,
-                casting_syntax,
             })),
 
             ErrorMessage::EMalformedCode(_) => Normal(Message::MessageSuppressionMalformedCode),
@@ -7626,12 +7606,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            ErrorMessage::EInvalidTypeCastSyntax {
-                enabled_casting_syntax,
-                ..
-            } => Normal(Message::MessageInvalidTypeCastingSyntax(
-                enabled_casting_syntax,
-            )),
+            ErrorMessage::EInvalidTypeCastSyntax { .. } => {
+                Normal(Message::MessageInvalidTypeCastingSyntax)
+            }
 
             ErrorMessage::ECannotCallReactComponent { reason } => {
                 Normal(Message::MessageCannotCallReactComponent(reason))

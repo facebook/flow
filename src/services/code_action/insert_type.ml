@@ -74,7 +74,7 @@ let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string,
 (* This class maps each node that contains the target until a node is contained
    by the target *)
 
-class mapper ~strict ~synth_type ~casting_syntax target =
+class mapper ~strict ~synth_type target =
   let target_is_point = Utils.is_point target in
   object (this)
     inherit Flow_ast_contains_mapper.mapper target as super
@@ -219,12 +219,9 @@ class mapper ~strict ~synth_type ~casting_syntax target =
       let open Flow_ast.Expression in
       if this#target_contained_by l then
         if this#is_target l then
-          let open Options.CastingSyntax in
-          match (synth_type l, casting_syntax) with
-          | (Error _, _) -> super#expression e
-          | (Ok annot, As)
-          | (Ok annot, Both) ->
-            (l, AsExpression AsExpression.{ expression = e; annot; comments = None })
+          match synth_type l with
+          | Error _ -> super#expression e
+          | Ok annot -> (l, AsExpression AsExpression.{ expression = e; annot; comments = None })
         else
           super#expression e
       else
@@ -386,9 +383,8 @@ let insert_type_custom_synth_type
       in
       (rc, add_imports rc)
   in
-  let casting_syntax = Context.casting_syntax cx in
   let synth_type = synth_type ~remote_converter in
-  let mapper = new mapper ~strict ~synth_type ~casting_syntax target in
+  let mapper = new mapper ~strict ~synth_type target in
   let (loc, ast') = mapper#program ast in
   let statements = maybe_add_imports ast'.Flow_ast.Program.statements in
   (loc, { ast' with Flow_ast.Program.statements })

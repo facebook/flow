@@ -3692,14 +3692,8 @@ module Make
       let (t, l) = logical cx syntactic_flags loc l in
       ((loc, t), Logical l)
     | TypeCast { TypeCast.expression = e; annot; comments } ->
-      let casting_syntax = Context.casting_syntax cx in
-      let open Options.CastingSyntax in
-      (match casting_syntax with
-      | Both -> ()
-      | As ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.EInvalidTypeCastSyntax { loc; enabled_casting_syntax = casting_syntax }));
+      if not (Context.supports_legacy_colon_cast_syntax cx) then
+        Flow_js_utils.add_output cx (Error_message.EInvalidTypeCastSyntax { loc });
       let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
       let (((_, infer_t), _) as e') = expression cx e in
       let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
@@ -3707,17 +3701,12 @@ module Make
       Type_operation_utils.perform_type_cast cx use_op infer_t t;
       ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
     | AsExpression { AsExpression.expression = e; annot; comments } ->
-      let casting_syntax = Context.casting_syntax cx in
-      let open Options.CastingSyntax in
-      (match casting_syntax with
-      | As
-      | Both ->
-        let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-        let (((_, infer_t), _) as e') = expression cx e in
-        let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
-        Tvar_resolver.resolve cx infer_t;
-        Type_operation_utils.perform_type_cast cx use_op infer_t t;
-        ((loc, t), AsExpression { AsExpression.expression = e'; annot = annot'; comments }))
+      let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+      let (((_, infer_t), _) as e') = expression cx e in
+      let use_op = Op (Cast { lower = mk_expression_reason e; upper = reason_of_t t }) in
+      Tvar_resolver.resolve cx infer_t;
+      Type_operation_utils.perform_type_cast cx use_op infer_t t;
+      ((loc, t), AsExpression { AsExpression.expression = e'; annot = annot'; comments })
     | AsConstExpression { AsConstExpression.expression = e; comments } ->
       let (((_, t), _) as e) = expression cx ~as_const:true e in
       check_const_assertion cx e;
@@ -8330,29 +8319,20 @@ module Make
                   )
               )
             | AsExpression { AsExpression.expression = expr; annot; comments } ->
-              let casting_syntax = Context.casting_syntax cx in
-              let open Options.CastingSyntax in
-              (match casting_syntax with
-              | As
-              | Both ->
-                let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-                ( t,
-                  fun () ->
-                    let (((_, infer_t), _) as e') = expression cx expr in
-                    let use_op =
-                      Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
-                    in
-                    Tvar_resolver.resolve cx infer_t;
-                    Type_operation_utils.perform_type_cast cx use_op infer_t t;
-                    ( (loc, t),
-                      AsExpression { AsExpression.expression = e'; annot = annot'; comments }
-                    )
-                ))
-            | TypeCast ({ TypeCast.expression = expr; annot; comments } as cast) ->
-              let casting_syntax = Context.casting_syntax cx in
-              let open Options.CastingSyntax in
-              (match casting_syntax with
-              | Both ->
+              let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
+              ( t,
+                fun () ->
+                  let (((_, infer_t), _) as e') = expression cx expr in
+                  let use_op =
+                    Op (Cast { lower = mk_expression_reason expr; upper = reason_of_t t })
+                  in
+                  Tvar_resolver.resolve cx infer_t;
+                  Type_operation_utils.perform_type_cast cx use_op infer_t t;
+                  ((loc, t), AsExpression { AsExpression.expression = e'; annot = annot'; comments })
+              )
+            | TypeCast cast ->
+              if Context.supports_legacy_colon_cast_syntax cx then (
+                let { TypeCast.expression = expr; annot; comments } = cast in
                 let (t, annot') = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
                 ( t,
                   fun () ->
@@ -8364,14 +8344,11 @@ module Make
                     Type_operation_utils.perform_type_cast cx use_op infer_t t;
                     ((loc, t), TypeCast { TypeCast.expression = e'; annot = annot'; comments })
                 )
-              | As ->
-                Flow_js_utils.add_output
-                  cx
-                  (Error_message.EInvalidTypeCastSyntax
-                     { loc; enabled_casting_syntax = casting_syntax }
-                  );
+              ) else (
+                Flow_js_utils.add_output cx (Error_message.EInvalidTypeCastSyntax { loc });
                 let t = AnyT.at (AnyError None) loc in
-                (t, (fun () -> ((loc, t), TypeCast (Tast_utils.error_mapper#type_cast cast)))))
+                (t, (fun () -> ((loc, t), TypeCast (Tast_utils.error_mapper#type_cast cast))))
+              )
             | TSSatisfies ({ TSSatisfies.expression = expr; annot; comments } as cast) ->
               if not (Context.tslib_syntax cx) then (
                 Flow_js_utils.add_output

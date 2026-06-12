@@ -94,12 +94,6 @@ type log_saving = {
   rate: float;
 }
 
-module CastingSyntax = struct
-  type t =
-    | As
-    | Both
-end
-
 type t = {
   opt_all: bool;
   opt_assert_operator: AssertOperator.t;
@@ -110,7 +104,6 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_ban_spread_key_props: bool;
-  opt_casting_syntax: CastingSyntax.t;
   opt_casting_syntax_only_support_as_excludes: Str.regexp list;
   opt_channel_mode: [ `pipe | `socket ];
   opt_async_component_syntax: bool;
@@ -237,8 +230,6 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
 let ban_spread_key_props opts = opts.opt_ban_spread_key_props
-
-let casting_syntax opts = opts.opt_casting_syntax
 
 let casting_syntax_only_support_as_excludes opts = opts.opt_casting_syntax_only_support_as_excludes
 

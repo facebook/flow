@@ -1484,8 +1484,6 @@ let make_options
       Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
     opt_ban_spread_key_props =
       Base.Option.value (FlowConfig.ban_spread_key_props flowconfig) ~default:false;
-    opt_casting_syntax =
-      Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.As;
     opt_casting_syntax_only_support_as_excludes =
       Base.List.map
         ~f:(fun pattern ->

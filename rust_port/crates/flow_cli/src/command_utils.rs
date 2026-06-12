@@ -18,7 +18,6 @@ use std::process::Stdio;
 use std::sync::Arc;
 
 use flow_common::options;
-use flow_common::options::CastingSyntax;
 use flow_common::options::Format;
 use flow_common::options::GcControl;
 use flow_common::options::LogSaving;
@@ -2021,7 +2020,6 @@ pub(super) fn make_options(
                 automatic_require_default,
                 babel_loose_array_spread,
                 ban_spread_key_props,
-                casting_syntax,
                 casting_syntax_only_support_as_excludes,
                 channel_mode,
                 component_syntax,
@@ -2216,7 +2214,6 @@ pub(super) fn make_options(
     let automatic_require_default = automatic_require_default.unwrap_or(false);
     let babel_loose_array_spread = babel_loose_array_spread.unwrap_or(false);
     let ban_spread_key_props = ban_spread_key_props.unwrap_or(false);
-    let casting_syntax = casting_syntax.unwrap_or(CastingSyntax::As);
     let channel_mode = match channel_mode {
         Some(flow_config::ChannelMode::Pipe) => options::ChannelMode::Pipe,
         Some(flow_config::ChannelMode::Socket) => options::ChannelMode::Socket,
@@ -2676,7 +2673,6 @@ pub(super) fn make_options(
         automatic_require_default,
         babel_loose_array_spread,
         ban_spread_key_props,
-        casting_syntax,
         casting_syntax_only_support_as_excludes,
         channel_mode,
         component_syntax,

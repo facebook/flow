@@ -37,7 +37,6 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   ban_spread_key_props: bool;
-  casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
   async_component_syntax: bool;
   async_component_syntax_includes: Str.regexp list;
@@ -333,7 +332,6 @@ let metadata_of_options options =
     (* global *)
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
-    casting_syntax = Options.casting_syntax options;
     casting_syntax_only_support_as_excludes =
       Options.casting_syntax_only_support_as_excludes options;
     async_component_syntax = Options.async_component_syntax options;
@@ -590,14 +588,8 @@ let builtin_type_opt cx n = Builtins.get_builtin_type_opt (builtins cx) n
 
 let builtin_module_opt cx = Builtins.get_builtin_module_opt (builtins cx)
 
-let casting_syntax cx =
-  match cx.metadata.casting_syntax with
-  | Options.CastingSyntax.Both -> Options.CastingSyntax.Both
-  | Options.CastingSyntax.As ->
-    if in_dirlist cx cx.metadata.casting_syntax_only_support_as_excludes then
-      Options.CastingSyntax.Both
-    else
-      Options.CastingSyntax.As
+let supports_legacy_colon_cast_syntax cx =
+  in_dirlist cx cx.metadata.casting_syntax_only_support_as_excludes
 
 let async_component_syntax cx =
   in_dirlist cx cx.metadata.async_component_syntax_includes || cx.metadata.async_component_syntax

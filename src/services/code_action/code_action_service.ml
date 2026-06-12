@@ -1120,17 +1120,13 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EInvalidTypeCastSyntax { loc = error_loc; enabled_casting_syntax } ->
+  | Error_message.EInvalidTypeCastSyntax { loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       let (title, diagnostic_title, fix) =
-        let open Options.CastingSyntax in
-        match enabled_casting_syntax with
-        | As
-        | Both ->
-          ( "Convert to `as` expression `<expr> as <type>`",
-            "convert_colon_cast",
-            Autofix_casting_syntax.convert_colon_cast
-          )
+        ( "Convert to `as` expression `<expr> as <type>`",
+          "convert_colon_cast",
+          Autofix_casting_syntax.convert_colon_cast
+        )
       in
       [
         {

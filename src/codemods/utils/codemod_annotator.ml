@@ -97,7 +97,6 @@ module Make (Extra : BASE_STATS) = struct
     ~lint_severities
     ~max_type_size
     ~merge_arrays
-    ?(casting_syntax = Options.casting_syntax cctx.Codemod_context.Typed.options)
     () =
     object (this)
       inherit [Acc.t, Loc.t] Flow_ast_visitor.visitor ~init:Acc.empty as super
@@ -246,11 +245,7 @@ module Make (Extra : BASE_STATS) = struct
         | (expr_loc, _) ->
           Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
           this#annotate_node loc ty (fun annot ->
-              let open Options.CastingSyntax in
-              match casting_syntax with
-              | As
-              | Both ->
-                (expr_loc, AsExpression AsExpression.{ expression; annot; comments = None })
+              (expr_loc, AsExpression AsExpression.{ expression; annot; comments = None })
           )
 
       method private add_unannotated_loc_warnings lmap =

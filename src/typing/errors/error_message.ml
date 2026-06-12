@@ -84,7 +84,6 @@ type 'loc enum_error_kind =
       reason_upper: 'loc virtual_reason;
       enum_kind: enum_kind;
       representation_type: string option;
-      casting_syntax: Options.CastingSyntax.t;
     }
   | EnumInvalidAbstractUse of {
       reason: 'loc virtual_reason;
@@ -830,10 +829,7 @@ and 'loc t' =
       invalid_render_type_kind: 'loc invalid_render_type_kind;
       invalid_type_reasons: 'loc virtual_reason Nel.t;
     }
-  | EInvalidTypeCastSyntax of {
-      loc: 'loc;
-      enabled_casting_syntax: Options.CastingSyntax.t;
-    }
+  | EInvalidTypeCastSyntax of { loc: 'loc }
   | EMissingPlatformSupportWithAvailablePlatforms of {
       loc: 'loc;
       available_platforms: SSet.t;
@@ -1078,8 +1074,8 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationConstrainedAssign { name; declaration; providers } ->
     ExplanationConstrainedAssign
       { name; declaration = f declaration; providers = Base.List.map ~f providers }
-  | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
-    ExplanationConcreteEnumCasting { representation_type; casting_syntax }
+  | ExplanationConcreteEnumCasting { representation_type } ->
+    ExplanationConcreteEnumCasting { representation_type }
   | ExplanationCustomError { name; custom_error_loc } ->
     ExplanationCustomError { name; custom_error_loc = f custom_error_loc }
   | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
@@ -1740,8 +1736,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
           { loc = f loc; enum_reason = map_reason enum_reason; example_member; from_match }
       | EnumMemberUsedAsType { reason; enum_reason } ->
         EnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
-      | EnumIncompatible
-          { use_op; reason_lower; reason_upper; enum_kind; representation_type; casting_syntax } ->
+      | EnumIncompatible { use_op; reason_lower; reason_upper; enum_kind; representation_type } ->
         EnumIncompatible
           {
             use_op = map_use_op use_op;
@@ -1749,7 +1744,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
             reason_upper = map_reason reason_upper;
             enum_kind;
             representation_type;
-            casting_syntax;
           }
       | EnumInvalidAbstractUse { reason; enum_reason } ->
         EnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
@@ -1958,8 +1952,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
           map_loc_of_invalid_render_type_kind map_reason invalid_render_type_kind;
         invalid_type_reasons = Nel.map map_reason invalid_type_reasons;
       }
-  | EInvalidTypeCastSyntax { loc; enabled_casting_syntax } ->
-    EInvalidTypeCastSyntax { loc = f loc; enabled_casting_syntax }
+  | EInvalidTypeCastSyntax { loc } -> EInvalidTypeCastSyntax { loc = f loc }
   | EMissingPlatformSupportWithAvailablePlatforms { loc; available_platforms; required_platforms }
     ->
     EMissingPlatformSupportWithAvailablePlatforms
@@ -2648,7 +2641,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ECallTypeArity { call_loc; _ } -> Some call_loc
   | EMissingTypeArgs { reason_op; _ } -> Some (loc_of_reason reason_op)
   | EInvalidRendersTypeArgument { loc; _ } -> Some loc
-  | EInvalidTypeCastSyntax { loc; _ } -> Some loc
+  | EInvalidTypeCastSyntax { loc } -> Some loc
   | ESignatureBindingValidation e ->
     Signature_error.(
       (match e with
@@ -2887,14 +2880,10 @@ let string_of_internal_error = function
   | MethodBivariantInvariant str ->
     "Method bivariant subtyping issue, please report this to the Flow team: " ^ str
 
-let type_casting_examples enabled_casting_syntax =
+let type_casting_examples () =
   let example_as = "<expr> as <type>" in
   let example_colon = "(<expr>: <type>)" in
-  let open Options.CastingSyntax in
-  match enabled_casting_syntax with
-  | Both
-  | As ->
-    (example_as, example_colon)
+  (example_as, example_colon)
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
@@ -2932,7 +2921,6 @@ type 'loc friendly_message_recipe =
       use_op: 'loc Type.virtual_use_op;
       enum_kind: enum_kind;
       representation_type: string option;
-      casting_syntax: Options.CastingSyntax.t;
     }
   | PropMissingInLookup of {
       loc: 'loc;
@@ -3702,10 +3690,8 @@ let friendly_message_of_msg = function
     | EnumMemberUsedAsType { reason; enum_reason } ->
       Normal
         (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
-    | EnumIncompatible
-        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
-      IncompatibleEnum
-        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
+    | EnumIncompatible { reason_lower; reason_upper; use_op; enum_kind; representation_type } ->
+      IncompatibleEnum { reason_lower; reason_upper; use_op; enum_kind; representation_type }
     | EnumInvalidAbstractUse { reason; enum_reason } ->
       Normal
         (MessageCannotExhaustivelyCheckAbstractEnums
@@ -3915,8 +3901,7 @@ let friendly_message_of_msg = function
       (MessageInvalidRendersTypeArgument
          { renders_variant; invalid_render_type_kind; invalid_type_reasons }
       )
-  | EInvalidTypeCastSyntax { enabled_casting_syntax; _ } ->
-    Normal (MessageInvalidTypeCastingSyntax enabled_casting_syntax)
+  | EInvalidTypeCastSyntax _ -> Normal MessageInvalidTypeCastingSyntax
   | EMissingPlatformSupportWithAvailablePlatforms
       { loc = _; available_platforms; required_platforms } ->
     Normal

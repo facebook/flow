@@ -1898,9 +1898,7 @@ let dump_error_message =
           "EEnumError (EnumMemberUsedAsType (%s) (%s))"
           (dump_reason cx reason)
           (dump_reason cx enum_reason)
-      | EnumIncompatible
-          { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax = _ }
-        ->
+      | EnumIncompatible { reason_lower; reason_upper; use_op; enum_kind; representation_type } ->
         spf
           "EEnumError (EnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; enum_kind = %s; representation_type = %s })"
           (dump_reason cx reason_lower)
@@ -2079,7 +2077,7 @@ let dump_error_message =
     | ERefComponentProp { loc; _ } -> spf "ERefComponentProp (%s)" (string_of_aloc loc)
     | EKeySpreadProp { loc; _ } -> spf "EKeySpreadProp (%s)" (string_of_aloc loc)
     | EInvalidComponentRestParam loc -> spf "EInvalidComponentRestParam (%s)" (string_of_aloc loc)
-    | EInvalidTypeCastSyntax { loc; _ } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
+    | EInvalidTypeCastSyntax { loc } -> spf "EInvalidTypeCastSyntax (%s)" (string_of_aloc loc)
     | EMissingPlatformSupportWithAvailablePlatforms { loc; available_platforms; required_platforms }
       ->
       spf

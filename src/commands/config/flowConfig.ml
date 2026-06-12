@@ -53,7 +53,6 @@ module Opts = struct
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
     ban_spread_key_props: bool option;
-    casting_syntax: Options.CastingSyntax.t option;
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     async_component_syntax: bool;
@@ -238,7 +237,6 @@ module Opts = struct
       automatic_require_default = None;
       babel_loose_array_spread = None;
       ban_spread_key_props = None;
-      casting_syntax = None;
       casting_syntax_only_support_as_excludes = [];
       channel_mode = None;
       async_component_syntax = false;
@@ -506,11 +504,6 @@ module Opts = struct
 
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
-
-  let casting_syntax_parser =
-    enum
-      [("as", Options.CastingSyntax.As); ("both", Options.CastingSyntax.Both)]
-      (fun opts v -> Ok { opts with casting_syntax = Some v })
 
   let channel_mode_parser ~enabled =
     enum
@@ -1092,7 +1085,6 @@ module Opts = struct
       );
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("ban_spread_key_props", ban_spread_key_props_parser);
-      ("casting_syntax", casting_syntax_parser);
       (* check_is_status is deprecated and ignored. `flow check` is always an alias for `flow status`. *)
       ("check_is_status", boolean (fun opts _v -> Ok opts));
       ("component_syntax", component_syntax_parser);
@@ -1988,8 +1980,6 @@ let automatic_require_default c = c.options.Opts.automatic_require_default
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let ban_spread_key_props c = c.options.Opts.ban_spread_key_props
-
-let casting_syntax c = c.options.Opts.casting_syntax
 
 let casting_syntax_only_support_as_excludes c =
   c.options.Opts.casting_syntax_only_support_as_excludes

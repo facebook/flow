@@ -3272,7 +3272,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           Some "bigint"
         | _ -> None
       in
-      let casting_syntax = Context.casting_syntax cx in
       add_output
         cx
         Error_message.(
@@ -3284,7 +3283,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  use_op;
                  enum_kind;
                  representation_type;
-                 casting_syntax;
                }
             )
         )

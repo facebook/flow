@@ -14,7 +14,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_analysis::scope_api::ScopeInfo;
-use flow_common::options::CastingSyntax;
 use flow_common::options::Options;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common_errors::error_codes::ErrorCode;
@@ -1681,17 +1680,10 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EInvalidTypeCastSyntax {
-            loc: error_loc,
-            enabled_casting_syntax,
-        } => {
+        ErrorMessage::EInvalidTypeCastSyntax { loc: error_loc } => {
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                let (title, diagnostic_title) = match enabled_casting_syntax {
-                    CastingSyntax::As | CastingSyntax::Both => (
-                        "Convert to `as` expression `<expr> as <type>`",
-                        "convert_colon_cast",
-                    ),
-                };
+                let title = "Convert to `as` expression `<expr> as <type>`";
+                let diagnostic_title = "convert_colon_cast";
                 vec![AstTransformOfError {
                     title: title.to_string(),
                     diagnostic_title: diagnostic_title.to_string(),

@@ -87,7 +87,6 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   ban_spread_key_props: bool;
-  casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
   async_component_syntax: bool;
   async_component_syntax_includes: Str.regexp list;
@@ -197,7 +196,7 @@ val builtin_type_opt : t -> string -> (ALoc.t * Type.t) option
 val builtin_module_opt :
   t -> Flow_import_specifier.userland -> (Reason.t * Type.moduletype Lazy.t) option
 
-val casting_syntax : t -> Options.CastingSyntax.t
+val supports_legacy_colon_cast_syntax : t -> bool
 
 val async_component_syntax : t -> bool
 

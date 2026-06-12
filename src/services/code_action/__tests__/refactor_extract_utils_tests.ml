@@ -38,7 +38,6 @@ let stub_metadata ~root ~checked =
     automatic_require_default = false;
     babel_loose_array_spread = false;
     ban_spread_key_props = false;
-    casting_syntax = Options.CastingSyntax.Both;
     casting_syntax_only_support_as_excludes = [];
     component_syntax = false;
     async_component_syntax = false;

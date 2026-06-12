@@ -25,7 +25,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::options::AssertOperator;
-use flow_common::options::CastingSyntax;
 use flow_common::options::Options;
 use flow_common::options::ReactRefAsProp;
 use flow_common::options::ReactRule;
@@ -175,7 +174,6 @@ fn config_options(config: Option<&Value>) -> Options {
             AssertOperator::Disabled
         },
         babel_loose_array_spread: bool_config(config, "babel_loose_array_spread", false),
-        casting_syntax: CastingSyntax::Both,
         component_syntax: true,
         enable_const_params: bool_config(config, "experimental.const_params", false),
         enable_pattern_matching: true,

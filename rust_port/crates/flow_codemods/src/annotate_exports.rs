@@ -268,7 +268,6 @@ impl<'a, 'cx> AnnotateExportsMapper<'a, 'cx> {
                 lint_severities,
                 max_type_size: max_type_size as usize,
                 merge_arrays: false,
-                casting_syntax: cctx.options.casting_syntax,
                 acc: flow_services_code_action::insert_type_utils::Acc::empty(),
                 _phantom: std::marker::PhantomData,
             },
@@ -496,7 +495,6 @@ impl<'ast, 'a, 'cx> AstVisitor<'ast, Loc> for AnnotateExportsMapper<'a, 'cx> {
         let loc = expr.loc().clone();
         match self.sig_verification_loc_tys.get(&loc) {
             Some(type_entry) => {
-                let _casting_syntax = self.cctx.options.casting_syntax;
                 let type_entry = type_entry.clone();
                 match type_entry {
                     Err(errs) => {

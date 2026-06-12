@@ -6081,7 +6081,6 @@ pub fn rec_sub_t<'cx>(
                 }
                 _ => None,
             };
-            let casting_syntax = cx.casting_syntax();
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(
@@ -6091,7 +6090,6 @@ pub fn rec_sub_t<'cx>(
                         use_op,
                         enum_kind,
                         representation_type,
-                        casting_syntax,
                     },
                 ))),
             )

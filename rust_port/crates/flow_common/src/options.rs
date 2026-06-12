@@ -111,25 +111,6 @@ impl AssertOperator {
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    Default,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum CastingSyntax {
-    #[default]
-    As,
-    Both,
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ChannelMode {
     #[default]
@@ -172,7 +153,6 @@ pub struct Options {
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
-    pub casting_syntax: CastingSyntax,
     pub casting_syntax_only_support_as_excludes: Arc<[Regex]>,
     pub channel_mode: ChannelMode,
     pub component_syntax: bool,

@@ -12,7 +12,6 @@ use std::collections::HashSet;
 use std::hash::DefaultHasher;
 
 use flow_common::options::AssertOperator;
-use flow_common::options::CastingSyntax;
 use flow_common::options::LogSaving;
 use flow_common::options::ModuleSystem;
 use flow_common::options::ReactRefAsProp;
@@ -77,7 +76,6 @@ pub mod opts {
         pub automatic_require_default: Option<bool>,
         pub babel_loose_array_spread: Option<bool>,
         pub ban_spread_key_props: Option<bool>,
-        pub casting_syntax: Option<CastingSyntax>,
         pub casting_syntax_only_support_as_excludes: Vec<String>,
         pub channel_mode: Option<ChannelMode>,
         pub component_syntax: bool,
@@ -257,7 +255,6 @@ pub mod opts {
             automatic_require_default: None,
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
-            casting_syntax: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
             channel_mode: None,
             component_syntax: true,
@@ -809,19 +806,6 @@ pub mod opts {
             },
             None,
             false,
-            values,
-            config,
-        )
-    }
-
-    fn casting_syntax_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
-        let allowed = vec![("as", CastingSyntax::As), ("both", CastingSyntax::Both)];
-        enum_parser(
-            &allowed,
-            |opts, v| {
-                opts.casting_syntax = Some(v);
-                Ok(())
-            },
             values,
             config,
         )
@@ -2138,7 +2122,6 @@ pub mod opts {
             "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
             "babel_loose_array_spread",
             "ban_spread_key_props",
-            "casting_syntax",
             "check_is_status",
             "component_syntax",
             "dev_only.refinement_info_as_errors",
@@ -2335,7 +2318,6 @@ pub mod opts {
                 }
                 "babel_loose_array_spread" => Some(babel_loose_array_spread_parser(values, config)),
                 "ban_spread_key_props" => Some(ban_spread_key_props_parser(values, config)),
-                "casting_syntax" => Some(casting_syntax_parser(values, config)),
                 // check_is_status is deprecated and ignored. `flow check` is always an alias for `flow status`.
                 "check_is_status" => Some(parse_boolean(|_opts, _v| Ok(()), values, config)),
                 "component_syntax" => Some(component_syntax_parser(values, config)),
@@ -2381,27 +2363,22 @@ pub mod opts {
                     values,
                     config,
                 )),
-                "experimental.casting_syntax.only_support_as.excludes" => {
-                    fn init_fn(opts: &mut Opts) {
-                        opts.casting_syntax_only_support_as_excludes = vec![];
-                    }
-                    Some(parse_string(
-                        |opts, v| {
-                            opts.casting_syntax_only_support_as_excludes
-                                .push(ocaml_str_to_rust_regex(&v));
-                            Ok(())
-                        },
-                        Some(init_fn),
-                        true,
-                        values,
-                        config,
-                    ))
-                }
                 "experimental.const_params" => Some(parse_boolean(
                     |opts, v| {
                         opts.enable_const_params = Some(v);
                         Ok(())
                     },
+                    values,
+                    config,
+                )),
+                "experimental.casting_syntax.only_support_as.excludes" => Some(parse_string(
+                    |opts, v| {
+                        opts.casting_syntax_only_support_as_excludes
+                            .push(ocaml_str_to_rust_regex(&v));
+                        Ok(())
+                    },
+                    Some(|opts| opts.casting_syntax_only_support_as_excludes = Vec::new()),
+                    true,
                     values,
                     config,
                 )),
@@ -3797,4 +3774,43 @@ pub fn get_with_ignored_version(
     let warnings = parse(&mut config, lines, ignore_version)?;
     let hash_string = format!("{:016x}", hash);
     Ok((config, warnings, hash_string))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn casting_syntax_is_unsupported() {
+        for value in ["as", "both"] {
+            let mut config = empty_config();
+            let result = parse(
+                &mut config,
+                vec![
+                    (1, "[options]".to_owned()),
+                    (2, "all=true".to_owned()),
+                    (3, format!("casting_syntax={}", value)),
+                ],
+                true,
+            );
+
+            match result {
+                Ok(warnings) => {
+                    assert_eq!(warnings.len(), 1);
+                    let warning = &warnings[0];
+                    assert_eq!(warning.0, 3);
+                    assert_eq!(
+                        warning.1.as_str(),
+                        "Unsupported option specified! (casting_syntax)"
+                    );
+                }
+                Err(Error(line, message)) => {
+                    panic!(
+                        "casting_syntax={} errored at line {}: {}",
+                        value, line, message
+                    )
+                }
+            }
+        }
+    }
 }

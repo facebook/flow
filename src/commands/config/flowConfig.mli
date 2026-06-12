@@ -83,8 +83,6 @@ val babel_loose_array_spread : config -> bool option
 
 val ban_spread_key_props : config -> bool option
 
-val casting_syntax : config -> Options.CastingSyntax.t option
-
 val casting_syntax_only_support_as_excludes : config -> string list
 
 val channel_mode : config -> [ `pipe | `socket ] option

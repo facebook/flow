@@ -226,8 +226,6 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
       | _ -> super#variable_declarator ~kind decl
 
     method! private expression (expr : (Loc.t, Loc.t) Ast.Expression.t) =
-      let { Codemod_context.Typed.options; _ } = cctx in
-      let casting_syntax = Options.casting_syntax options in
       let expr = super#expression expr in
       let (loc, _) = expr in
       match LMap.find_opt loc sig_verification_loc_tys with
@@ -236,14 +234,10 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
         let error e =
           let (loc, _) = e in
           let annot = (Loc.none, flowfixme_ast) in
-          let open Options.CastingSyntax in
-          match casting_syntax with
-          | As
-          | Both ->
-            ( loc,
-              Ast.Expression.AsExpression
-                { Ast.Expression.AsExpression.expression = e; annot; comments = None }
-            )
+          ( loc,
+            Ast.Expression.AsExpression
+              { Ast.Expression.AsExpression.expression = e; annot; comments = None }
+          )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr

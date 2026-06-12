@@ -626,7 +626,6 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     reason_upper,
                     enum_kind,
                     representation_type,
-                    casting_syntax,
                 },
             )) => {
                 let ((reason_lower_new, reason_upper_new), use_op_new) =
@@ -639,7 +638,6 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                             reason_upper: reason_upper_new,
                             enum_kind: enum_kind.clone(),
                             representation_type: representation_type.clone(),
-                            casting_syntax: *casting_syntax,
                         })),
                     ))
             }
@@ -3694,7 +3692,6 @@ where
                 use_op,
                 enum_kind,
                 representation_type,
-                casting_syntax,
             }),
         ) => {
             use super::error_message::EnumKind;
@@ -3727,7 +3724,6 @@ where
                     (EnumKind::ConcreteEnumKind, Some(repr_type)) => {
                         Some(Explanation::ExplanationConcreteEnumCasting {
                             representation_type: repr_type.to_string().into(),
-                            casting_syntax,
                         })
                     }
                     (EnumKind::AbstractEnumKind, _) => {
@@ -3964,7 +3960,6 @@ where
             }
             ExplanationConcreteEnumCasting {
                 representation_type,
-                casting_syntax: _,
             } => {
                 let example = format!("<expr> as {}", representation_type);
                 friendly::Message(vec![
@@ -7527,9 +7522,9 @@ where
                 features.extend(additional_explanation);
                 friendly::Message(features)
             }
-            MessageInvalidTypeCastingSyntax(enabled_casting_syntax) => {
+            MessageInvalidTypeCastingSyntax => {
                 use super::error_message::type_casting_examples;
-                let (valid, invalid) = type_casting_examples(*enabled_casting_syntax);
+                let (valid, invalid) = type_casting_examples();
                 friendly::Message(vec![
                     text("Invalid type cast syntax. Use the form "),
                     code(valid),

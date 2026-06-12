@@ -3446,7 +3446,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 use_op,
                 enum_kind,
                 representation_type,
-                casting_syntax: _,
             }) => {
                 let enum_kind_str = match enum_kind {
                     EnumKind::ConcreteEnumKind => "concrete",

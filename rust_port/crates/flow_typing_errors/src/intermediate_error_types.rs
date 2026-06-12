@@ -11,7 +11,6 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use flow_common::options::CastingSyntax;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
@@ -983,7 +982,6 @@ pub enum Explanation<L: Dupe> {
     ExplanationConstrainedAssign(Box<ExplanationConstrainedAssignData<L>>),
     ExplanationConcreteEnumCasting {
         representation_type: FlowSmolStr,
-        casting_syntax: CastingSyntax,
     },
     ExplanationCustomError(Box<ExplanationCustomErrorData<L>>),
     ExplanationFunctionsWithStaticsToObject,
@@ -2139,7 +2137,7 @@ pub enum Message<L: Dupe> {
 
     MessageInternalType(InternalType),
 
-    MessageInvalidTypeCastingSyntax(CastingSyntax),
+    MessageInvalidTypeCastingSyntax,
 
     MessageInvalidTypeGuardFunctionKind(FlowSmolStr),
 

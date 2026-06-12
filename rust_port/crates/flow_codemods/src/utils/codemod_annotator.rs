@@ -9,7 +9,6 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 use dupe::Dupe;
-use flow_common::options::CastingSyntax;
 use flow_common_ty::ty;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_serializer;
@@ -242,7 +241,6 @@ pub struct Mapper<'a, 'cx, Extra: BaseStats> {
     pub lint_severities: LintSettings<Severity>,
     pub max_type_size: usize,
     pub merge_arrays: bool,
-    pub casting_syntax: CastingSyntax,
 
     pub acc: Acc<Extra>,
 
@@ -418,9 +416,8 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
             _ => {
                 let expr_loc = expression.loc().clone();
                 Acc::<Extra>::debug(&expr_loc, &debug::T::AddAnnotation(debug::NodeKind::Expr));
-                let casting_syntax = self.casting_syntax;
-                self.annotate_node(loc, ty, move |annot| match casting_syntax {
-                    CastingSyntax::As | CastingSyntax::Both => ast::expression::Expression::new(
+                self.annotate_node(loc, ty, move |annot| {
+                    ast::expression::Expression::new(
                         ast::expression::ExpressionInner::AsExpression {
                             loc: expr_loc.clone(),
                             inner: std::sync::Arc::new(ast::expression::AsExpression {
@@ -429,7 +426,7 @@ impl<'a, 'cx, Extra: BaseStats> Mapper<'a, 'cx, Extra> {
                                 comments: None,
                             }),
                         },
-                    ),
+                    )
                 })
             }
         }

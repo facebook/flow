@@ -407,10 +407,7 @@ type 'loc explanation =
       declaration: 'loc;
       providers: 'loc list;
     }
-  | ExplanationConcreteEnumCasting of {
-      representation_type: string;
-      casting_syntax: Options.CastingSyntax.t;
-    }
+  | ExplanationConcreteEnumCasting of { representation_type: string }
   | ExplanationCustomError of {
       name: string;
       custom_error_loc: 'loc;
@@ -1062,7 +1059,7 @@ type 'loc message =
   | MessageInvalidTupleTypeSpread of 'loc virtual_reason
   | MessageTupleElementAfterInexactSpread
   | MessageInternalType of internal_type
-  | MessageInvalidTypeCastingSyntax of Options.CastingSyntax.t
+  | MessageInvalidTypeCastingSyntax
   | MessageInvalidTypeGuardFunctionKind of string
   | MessageInvalidTypeGuardFunctionWritten of {
       type_guard_reason: 'loc virtual_reason;

@@ -6709,18 +6709,11 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::TypeCast { inner, .. } => {
-            let casting_syntax = cx.casting_syntax();
-            match &casting_syntax {
-                flow_common::options::CastingSyntax::Both => {}
-                flow_common::options::CastingSyntax::As => {
-                    flow_js_utils::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EInvalidTypeCastSyntax {
-                            loc: loc.dupe(),
-                            enabled_casting_syntax: casting_syntax.clone(),
-                        },
-                    );
-                }
+            if !cx.supports_legacy_colon_cast_syntax() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EInvalidTypeCastSyntax { loc: loc.dupe() },
+                );
             }
             let (t, annot_prime) = type_annotation::mk_type_available_annotation(
                 cx,
@@ -15332,129 +15325,107 @@ pub fn mk_class_sig<'a>(
                         ExpressionInner::AsExpression { inner, .. } => {
                             let as_expr = inner.as_ref();
                             let as_comments = as_expr.comments.dupe();
-                            match cx.casting_syntax() {
-                                flow_common::options::CastingSyntax::As
-                                | flow_common::options::CastingSyntax::Both => {
-                                    let (t, annot_ast) =
-                                        type_annotation::mk_type_available_annotation(
-                                            cx,
-                                            FlowOrdMap::new(),
-                                            &as_expr.annot,
-                                        )?;
-                                    let t_c = t.dupe();
-                                    let sub_expr_c = as_expr.expression.clone();
-                                    (
-                                        t,
-                                        Box::new(move |cx| {
-                                            let e_prime =
-                                                expression(None, None, None, cx, &sub_expr_c)?;
-                                            let infer_t = e_prime.loc().1.dupe();
-                                            let use_op =
-                                                UseOp::Op(Arc::new(type_::RootUseOp::Cast {
-                                                    lower: mk_expression_reason(&sub_expr_c),
-                                                    upper: reason_of_t(&t_c).dupe(),
-                                                }));
-                                            tvar_resolver::resolve(
-                                                cx,
-                                                tvar_resolver::default_no_lowers,
-                                                true,
-                                                &infer_t,
-                                            );
-                                            type_operation_utils::perform_type_cast(
-                                                cx, use_op, &infer_t, &t_c,
-                                            )
-                                            .unwrap();
-                                            Ok(expression::Expression::new(
-                                                ExpressionInner::AsExpression {
-                                                    loc: (loc, t_c),
-                                                    inner: expression::AsExpression {
-                                                        expression: e_prime,
-                                                        annot: annot_ast,
-                                                        comments: as_comments,
-                                                    }
-                                                    .into(),
-                                                },
-                                            ))
-                                        }),
+                            let (t, annot_ast) = type_annotation::mk_type_available_annotation(
+                                cx,
+                                FlowOrdMap::new(),
+                                &as_expr.annot,
+                            )?;
+                            let t_c = t.dupe();
+                            let sub_expr_c = as_expr.expression.clone();
+                            (
+                                t,
+                                Box::new(move |cx| {
+                                    let e_prime = expression(None, None, None, cx, &sub_expr_c)?;
+                                    let infer_t = e_prime.loc().1.dupe();
+                                    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
+                                        lower: mk_expression_reason(&sub_expr_c),
+                                        upper: reason_of_t(&t_c).dupe(),
+                                    }));
+                                    tvar_resolver::resolve(
+                                        cx,
+                                        tvar_resolver::default_no_lowers,
+                                        true,
+                                        &infer_t,
+                                    );
+                                    type_operation_utils::perform_type_cast(
+                                        cx, use_op, &infer_t, &t_c,
                                     )
-                                }
-                            }
+                                    .unwrap();
+                                    Ok(expression::Expression::new(ExpressionInner::AsExpression {
+                                        loc: (loc, t_c),
+                                        inner: expression::AsExpression {
+                                            expression: e_prime,
+                                            annot: annot_ast,
+                                            comments: as_comments,
+                                        }
+                                        .into(),
+                                    }))
+                                }),
+                            )
                         }
                         ExpressionInner::TypeCast { inner, .. } => {
                             let cast = inner.as_ref();
-                            let tc_comments = cast.comments.dupe();
-                            match cx.casting_syntax() {
-                                flow_common::options::CastingSyntax::Both => {
-                                    let (t, annot_ast) =
-                                        type_annotation::mk_type_available_annotation(
+                            if cx.supports_legacy_colon_cast_syntax() {
+                                let tc_comments = cast.comments.dupe();
+                                let (t, annot_ast) = type_annotation::mk_type_available_annotation(
+                                    cx,
+                                    FlowOrdMap::new(),
+                                    &cast.annot,
+                                )?;
+                                let t_c = t.dupe();
+                                let sub_expr_c = cast.expression.clone();
+                                (
+                                    t,
+                                    Box::new(move |cx| {
+                                        let e_prime =
+                                            expression(None, None, None, cx, &sub_expr_c)?;
+                                        let infer_t = e_prime.loc().1.dupe();
+                                        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::Cast {
+                                            lower: mk_expression_reason(&sub_expr_c),
+                                            upper: reason_of_t(&t_c).dupe(),
+                                        }));
+                                        tvar_resolver::resolve(
                                             cx,
-                                            FlowOrdMap::new(),
-                                            &cast.annot,
-                                        )?;
-                                    let t_c = t.dupe();
-                                    let sub_expr_c = cast.expression.clone();
-                                    (
-                                        t,
-                                        Box::new(move |cx| {
-                                            let e_prime =
-                                                expression(None, None, None, cx, &sub_expr_c)?;
-                                            let infer_t = e_prime.loc().1.dupe();
-                                            let use_op =
-                                                UseOp::Op(Arc::new(type_::RootUseOp::Cast {
-                                                    lower: mk_expression_reason(&sub_expr_c),
-                                                    upper: reason_of_t(&t_c).dupe(),
-                                                }));
-                                            tvar_resolver::resolve(
-                                                cx,
-                                                tvar_resolver::default_no_lowers,
-                                                true,
-                                                &infer_t,
-                                            );
-                                            type_operation_utils::perform_type_cast(
-                                                cx, use_op, &infer_t, &t_c,
-                                            )
-                                            .unwrap();
-                                            Ok(expression::Expression::new(
-                                                ExpressionInner::TypeCast {
-                                                    loc: (loc, t_c),
-                                                    inner: expression::TypeCast {
-                                                        expression: e_prime,
-                                                        annot: annot_ast,
-                                                        comments: tc_comments,
-                                                    }
-                                                    .into(),
-                                                },
-                                            ))
-                                        }),
-                                    )
-                                }
-                                flow_common::options::CastingSyntax::As => {
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EInvalidTypeCastSyntax {
-                                            loc: loc.dupe(),
-                                            enabled_casting_syntax: cx.casting_syntax(),
-                                        },
-                                    );
-                                    let t = any_t::at(type_::AnySource::AnyError(None), loc.dupe());
-                                    let t_c = t.dupe();
-                                    let cast_c = cast.clone();
-                                    (
-                                        t,
-                                        Box::new(move |_cx| {
-                                            let Ok(mapped_cast) = polymorphic_ast_mapper::type_cast(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                &cast_c,
-                                            );
-                                            Ok(expression::Expression::new(
-                                                ExpressionInner::TypeCast {
-                                                    loc: (loc, t_c),
-                                                    inner: mapped_cast.into(),
-                                                },
-                                            ))
-                                        }),
-                                    )
-                                }
+                                            tvar_resolver::default_no_lowers,
+                                            true,
+                                            &infer_t,
+                                        );
+                                        type_operation_utils::perform_type_cast(
+                                            cx, use_op, &infer_t, &t_c,
+                                        )
+                                        .unwrap();
+                                        Ok(expression::Expression::new(ExpressionInner::TypeCast {
+                                            loc: (loc, t_c),
+                                            inner: expression::TypeCast {
+                                                expression: e_prime,
+                                                annot: annot_ast,
+                                                comments: tc_comments,
+                                            }
+                                            .into(),
+                                        }))
+                                    }),
+                                )
+                            } else {
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EInvalidTypeCastSyntax { loc: loc.dupe() },
+                                );
+                                let t = any_t::at(type_::AnySource::AnyError(None), loc.dupe());
+                                let t_c = t.dupe();
+                                let cast_c = cast.clone();
+                                (
+                                    t,
+                                    Box::new(move |_cx| {
+                                        let Ok(mapped_cast) = polymorphic_ast_mapper::type_cast(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &cast_c,
+                                        );
+                                        Ok(expression::Expression::new(ExpressionInner::TypeCast {
+                                            loc: (loc, t_c),
+                                            inner: mapped_cast.into(),
+                                        }))
+                                    }),
+                                )
                             }
                         }
                         ExpressionInner::TSSatisfies { inner, .. } => {

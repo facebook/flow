@@ -287,9 +287,7 @@ let post_process_errors original_errors =
               { reason_lower = reason_lower'; reason_upper; use_op; explanation }
            )
     | EEnumError
-        (EnumIncompatible
-          { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
-          ) ->
+        (EnumIncompatible { reason_lower; reason_upper; use_op; enum_kind; representation_type }) ->
       let ((reason_lower', reason_upper), use_op) =
         dedupe_by_flip (reason_lower, reason_upper) use_op
       in
@@ -303,7 +301,6 @@ let post_process_errors original_errors =
                    use_op;
                    enum_kind;
                    representation_type;
-                   casting_syntax;
                  }
               )
            )
@@ -1587,10 +1584,8 @@ let rec make_intermediate_error :
         ~lower_desc
         ~upper_desc
         use_op
-    | ( None,
-        IncompatibleEnum
-          { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
-      ) ->
+    | (None, IncompatibleEnum { reason_lower; reason_upper; use_op; enum_kind; representation_type })
+      ->
       let in_type_arg_position =
         let rec loop = function
           | Op _ -> false
@@ -1607,7 +1602,7 @@ let rec make_intermediate_error :
         else
           match (enum_kind, representation_type) with
           | (ConcreteEnumKind, Some representation_type) ->
-            Some (ExplanationConcreteEnumCasting { representation_type; casting_syntax })
+            Some (ExplanationConcreteEnumCasting { representation_type })
           | (AbstractEnumKind, _) -> Some ExplanationAbstractEnumCasting
           | _ -> None
       in
@@ -1952,14 +1947,8 @@ let to_printable_error :
           ref (mk_reason (RIdentifier (OrdinaryName name)) declaration);
           text " if a different type is desired";
         ]
-    | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
-      let example =
-        let open Options.CastingSyntax in
-        match casting_syntax with
-        | Both
-        | As ->
-          spf "<expr> as %s" representation_type
-      in
+    | ExplanationConcreteEnumCasting { representation_type } ->
+      let example = spf "<expr> as %s" representation_type in
       [
         text "You can explicitly cast your enum value to a ";
         text representation_type;
@@ -4368,8 +4357,8 @@ let to_printable_error :
       @ refs invalid_type_reasons
       @ [text " as the type argument of renders type."]
       @ additional_explanation
-    | MessageInvalidTypeCastingSyntax enabled_casting_syntax ->
-      let (valid, invalid) = type_casting_examples enabled_casting_syntax in
+    | MessageInvalidTypeCastingSyntax ->
+      let (valid, invalid) = type_casting_examples () in
       [
         text "Invalid type cast syntax. Use the form ";
         code valid;

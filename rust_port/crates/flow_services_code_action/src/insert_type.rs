@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::options::CastingSyntax;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_serializer;
@@ -120,7 +119,6 @@ pub fn path_of_loc(error: Option<Result<String, String>>, loc: &Loc) -> Result<S
 pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> {
     strict: bool,
     synth_type: F,
-    casting_syntax: CastingSyntax,
     target: Loc,
     target_is_point: bool,
     error: Option<Errors>,
@@ -128,12 +126,11 @@ pub struct Mapper<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expect
 }
 
 impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F> {
-    pub fn new(strict: bool, synth_type: F, casting_syntax: CastingSyntax, target: Loc) -> Self {
+    pub fn new(strict: bool, synth_type: F, target: Loc) -> Self {
         let target_is_point = insert_type_utils::is_point(&target);
         Mapper {
             strict,
             synth_type,
-            casting_syntax,
             target,
             target_is_point,
             error: None,
@@ -442,24 +439,21 @@ impl<F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>> Mapper<F
         if self.target_contained_by(&l) {
             if self.is_target(&l) {
                 let l2 = l.dupe();
-                match ((self.synth_type)(l), self.casting_syntax) {
-                    (Err(_), _) => Ok(e),
-                    (Ok((annot_loc, annot_type)), CastingSyntax::As)
-                    | (Ok((annot_loc, annot_type)), CastingSyntax::Both) => {
-                        Ok(ast::expression::Expression::new(
-                            ast::expression::ExpressionInner::AsExpression {
-                                loc: l2,
-                                inner: Arc::new(ast::expression::AsExpression {
-                                    expression: e,
-                                    annot: ast::types::Annotation {
-                                        loc: annot_loc,
-                                        annotation: annot_type,
-                                    },
-                                    comments: None,
-                                }),
-                            },
-                        ))
-                    }
+                match (self.synth_type)(l) {
+                    Err(_) => Ok(e),
+                    Ok((annot_loc, annot_type)) => Ok(ast::expression::Expression::new(
+                        ast::expression::ExpressionInner::AsExpression {
+                            loc: l2,
+                            inner: Arc::new(ast::expression::AsExpression {
+                                expression: e,
+                                annot: ast::types::Annotation {
+                                    loc: annot_loc,
+                                    annotation: annot_type,
+                                },
+                                comments: None,
+                            }),
+                        },
+                    )),
                 }
             } else {
                 Ok(e)
@@ -539,10 +533,9 @@ impl<'ast, F: Fn(Loc) -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected>>
         if self.target_contained_by(&l) {
             if self.is_target(&l) {
                 let l2 = l.dupe();
-                match ((self.synth_type)(l), self.casting_syntax) {
-                    (Err(_), _) => flow_parser::ast_visitor::map_expression_default(self, e),
-                    (Ok((annot_loc, annot_type)), CastingSyntax::As)
-                    | (Ok((annot_loc, annot_type)), CastingSyntax::Both) => {
+                match (self.synth_type)(l) {
+                    Err(_) => flow_parser::ast_visitor::map_expression_default(self, e),
+                    Ok((annot_loc, annot_type)) => {
                         self.changed = true;
                         ast::expression::Expression::new(
                             ast::expression::ExpressionInner::AsExpression {
@@ -949,12 +942,11 @@ pub fn insert_type_custom_synth_type<'a>(
             (&mut owned_rc, true)
         }
     };
-    let casting_syntax = cx.casting_syntax();
     let rc_cell = std::cell::RefCell::new(rc);
     let synth_type_bound = |loc: Loc| -> Result<(Loc, ast::types::Type<Loc, Loc>), Expected> {
         synth_type(&mut rc_cell.borrow_mut(), loc)
     };
-    let mut mapper = Mapper::new(strict, synth_type_bound, casting_syntax, target);
+    let mut mapper = Mapper::new(strict, synth_type_bound, target);
     let ast_prime = mapper.program(ast)?;
     let rc = rc_cell.into_inner();
     let statements = if should_add_imports {

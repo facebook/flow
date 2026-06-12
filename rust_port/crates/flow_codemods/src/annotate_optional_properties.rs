@@ -237,7 +237,6 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                 lint_severities,
                 max_type_size: max_type_size as usize,
                 merge_arrays: false,
-                casting_syntax: cctx.options.casting_syntax,
                 acc: flow_services_code_action::insert_type_utils::Acc::empty(),
                 _phantom: std::marker::PhantomData,
             },
