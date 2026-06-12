@@ -66,7 +66,6 @@ use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
-use flow_typing_errors::error_message::InOutVariance;
 use flow_typing_errors::error_message::IncompatibleUseData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
@@ -1501,61 +1500,7 @@ pub fn ast_transforms_of_error(
             }
         }
         ErrorMessage::ETSSyntax(box ETSSyntaxData {
-            kind: TSSyntaxKind::TSReadonlyVariance,
-            loc: error_loc,
-        }) => {
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                vec![AstTransformOfError {
-                    title: "Convert to `+`".to_string(),
-                    diagnostic_title: "convert_readonly_variance".to_string(),
-                    transform: untyped_ast_transform(Box::new(|ast, loc| {
-                        autofix_ts_syntax::convert_readonly_variance(ast, loc)
-                    })),
-                    target_loc: error_loc.dupe(),
-                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
-                }]
-            } else {
-                vec![]
-            }
-        }
-        ErrorMessage::ETSSyntax(box ETSSyntaxData {
-            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::In),
-            loc: error_loc,
-        }) => {
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                vec![AstTransformOfError {
-                    title: "Convert to `-`".to_string(),
-                    diagnostic_title: "convert_in_variance".to_string(),
-                    transform: untyped_ast_transform(Box::new(|ast, loc| {
-                        autofix_ts_syntax::convert_in_variance(ast, loc)
-                    })),
-                    target_loc: error_loc.dupe(),
-                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
-                }]
-            } else {
-                vec![]
-            }
-        }
-        ErrorMessage::ETSSyntax(box ETSSyntaxData {
-            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::Out),
-            loc: error_loc,
-        }) => {
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                vec![AstTransformOfError {
-                    title: "Convert to `+`".to_string(),
-                    diagnostic_title: "convert_out_variance".to_string(),
-                    transform: untyped_ast_transform(Box::new(|ast, loc| {
-                        autofix_ts_syntax::convert_out_variance(ast, loc)
-                    })),
-                    target_loc: error_loc.dupe(),
-                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
-                }]
-            } else {
-                vec![]
-            }
-        }
-        ErrorMessage::ETSSyntax(box ETSSyntaxData {
-            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::InOut),
+            kind: TSSyntaxKind::TSInOutVariance,
             loc: error_loc,
         }) => {
             if loc_opt_intersects(loc, error_loc.dupe()) {

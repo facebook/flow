@@ -22,7 +22,6 @@ let metadata =
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
-    allow_variance_keywords = true;
     deprecated_variance_sigils_excludes = [];
     assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;

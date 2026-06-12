@@ -786,8 +786,7 @@ and 'loc t' =
       loc: 'loc;
     }
   | EVarianceKeyword of {
-      kind:
-        [ `Writeonly | `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ];
+      kind: [ `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ];
       loc: 'loc;
     }
   | EInvalidBinaryArith of {
@@ -965,8 +964,7 @@ and 'loc upper_kind =
 and ts_syntax_kind =
   | TSNever
   | TSUndefined
-  | TSReadonlyVariance
-  | TSInOutVariance of [ `In | `Out | `InOut ]
+  | TSInOutVariance
   | TSReadonlyType of [ `Tuple | `Array ] option
   | TSClassAccessibility of Flow_ast.Class.TSAccessibility.kind
   | TSParameterProperty
@@ -3851,10 +3849,7 @@ let friendly_message_of_msg = function
     match kind with
     | TSNever -> Normal MessageTSNeverType
     | TSUndefined -> Normal MessageTSUndefinedType
-    | TSReadonlyVariance -> Normal MessageTSVarianceReadOnly
-    | TSInOutVariance `In -> Normal MessageTSVarianceIn
-    | TSInOutVariance `Out -> Normal MessageTSVarianceOut
-    | TSInOutVariance `InOut -> Normal MessageTSVarianceInOut
+    | TSInOutVariance -> Normal MessageTSVarianceInOut
     | TSReadonlyType (Some arg_kind) ->
       (match arg_kind with
       | `Tuple -> Normal MessageTSReadonlyOperatorOnTuple
@@ -3868,7 +3863,6 @@ let friendly_message_of_msg = function
   end
   | EAbstractClass { kind; _ } -> Normal (MessageAbstract kind)
   | EOverride { kind; _ } -> Normal (MessageOverride kind)
-  | EVarianceKeyword { kind = `Writeonly; _ } -> Normal MessageVarianceKeywordWriteonly
   | EVarianceKeyword { kind = (`Plus _ | `Minus _) as sigil; _ } ->
     Normal (MessageDeprecatedVarianceSigil sigil)
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->

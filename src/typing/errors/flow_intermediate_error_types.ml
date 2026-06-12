@@ -1185,11 +1185,7 @@ type 'loc message =
   | MessageTSReadonlyOperatorOnArray
   | MessageTSReadonlyOperatorOnTuple
   | MessageTSReadonlyType
-  | MessageTSVarianceIn
   | MessageTSVarianceInOut
-  | MessageTSVarianceOut
-  | MessageTSVarianceReadOnly
-  | MessageVarianceKeywordWriteonly
   | MessageDeprecatedVarianceSigil of
       [ `Plus of [ `Property | `TypeParam ] | `Minus of [ `Property | `TypeParam ] ]
   | MessageTSClassAccessibility of Flow_ast.Class.TSAccessibility.kind

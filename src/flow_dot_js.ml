@@ -156,7 +156,6 @@ let stub_metadata ~root ~checked =
     deprecated_colon_extends_excludes = [];
     stylex_shorthand_prop = None;
     ts_syntax = true;
-    allow_variance_keywords = true;
     deprecated_variance_sigils_excludes = [];
     tslib_syntax = true;
     typescript_library_definition_support = false;

@@ -237,31 +237,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   let polarity cx ~on variance =
     ( if not (Context.ts_syntax cx) then
       match variance with
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.Readonly; _ })
-        when not (Context.allow_variance_keywords cx) ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc })
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.In; _ })
-        when not (Context.allow_variance_keywords cx) ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `In; loc })
-      | Some (loc, { Ast.Variance.kind = Ast.Variance.Out; _ })
-        when not (Context.allow_variance_keywords cx) ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `Out; loc })
       | Some (loc, { Ast.Variance.kind = Ast.Variance.InOut; _ }) ->
         Flow_js_utils.add_output
           cx
-          (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc })
+          (Error_message.ETSSyntax { kind = Error_message.TSInOutVariance; loc })
       | _ -> ()
     );
     (match variance with
-    | Some (loc, { Ast.Variance.kind = Ast.Variance.Writeonly; _ })
-      when not (Context.allow_variance_keywords cx) ->
-      Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Writeonly; loc })
     | Some (loc, { Ast.Variance.kind = Ast.Variance.Plus; _ })
       when Context.is_variance_sigil_deprecated cx ->
       Flow_js_utils.add_output cx (Error_message.EVarianceKeyword { kind = `Plus on; loc })

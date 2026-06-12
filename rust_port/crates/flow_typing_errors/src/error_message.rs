@@ -2163,7 +2163,6 @@ pub struct EVarianceKeywordData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub enum VarianceKeywordKind {
-    Writeonly,
     Plus(crate::intermediate_error_types::VarianceSigilParent),
     Minus(crate::intermediate_error_types::VarianceSigilParent),
 }
@@ -3064,8 +3063,7 @@ pub enum UpperKind<L: Dupe> {
 pub enum TSSyntaxKind {
     TSNever,
     TSUndefined,
-    TSReadonlyVariance,
-    TSInOutVariance(InOutVariance),
+    TSInOutVariance,
     TSReadonlyType(Option<ReadonlyTypeKind>),
     TSClassAccessibility(ast::class::ts_accessibility::Kind),
     TSParameterProperty,
@@ -3108,24 +3106,6 @@ pub enum InvalidMappedTypeErrorKind {
 pub enum InvalidTemplateLiteralTypeErrorKind {
     TooComplex,
     InvalidPlaceholderType,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum InOutVariance {
-    In,
-    Out,
-    InOut,
 }
 
 #[derive(
@@ -9050,16 +9030,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 let msg = match kind {
                     TSSyntaxKind::TSNever => Message::MessageTSNeverType,
                     TSSyntaxKind::TSUndefined => Message::MessageTSUndefinedType,
-                    TSSyntaxKind::TSReadonlyVariance => Message::MessageTSVarianceReadOnly,
-                    TSSyntaxKind::TSInOutVariance(InOutVariance::In) => {
-                        Message::MessageTSVarianceIn
-                    }
-                    TSSyntaxKind::TSInOutVariance(InOutVariance::Out) => {
-                        Message::MessageTSVarianceOut
-                    }
-                    TSSyntaxKind::TSInOutVariance(InOutVariance::InOut) => {
-                        Message::MessageTSVarianceInOut
-                    }
+                    TSSyntaxKind::TSInOutVariance => Message::MessageTSVarianceInOut,
                     TSSyntaxKind::TSReadonlyType(Some(arg_kind)) => match arg_kind {
                         ReadonlyTypeKind::Tuple => Message::MessageTSReadonlyOperatorOnTuple,
                         ReadonlyTypeKind::Array => Message::MessageTSReadonlyOperatorOnArray,
@@ -9092,7 +9063,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use crate::intermediate_error_types::Message;
                 use crate::intermediate_error_types::VarianceSigilKind;
                 let msg = match kind {
-                    VarianceKeywordKind::Writeonly => Message::MessageVarianceKeywordWriteonly,
                     VarianceKeywordKind::Plus(parent) => {
                         Message::MessageDeprecatedVarianceSigil(VarianceSigilKind::Plus(parent))
                     }

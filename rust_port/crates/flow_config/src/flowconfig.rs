@@ -193,7 +193,6 @@ pub mod opts {
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
         pub ts_syntax: Option<bool>,
-        pub allow_variance_keywords: bool,
         pub deprecated_variance_sigils_excludes: Vec<String>,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: Option<bool>,
@@ -377,7 +376,6 @@ pub mod opts {
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
             ts_syntax: None,
-            allow_variance_keywords: true,
             deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,
             tslib_syntax: None,
@@ -2158,7 +2156,6 @@ pub mod opts {
             "experimental.records.includes",
             "experimental.strict_es6_import_export",
             "experimental.ts_syntax",
-            "experimental.allow_variance_keywords",
             "experimental.deprecated_variance_sigils",
             "experimental.deprecated_variance_sigils.excludes",
             "experimental.deprecated_colon_extends",
@@ -2510,14 +2507,6 @@ pub mod opts {
                 "experimental.ts_syntax" => Some(parse_boolean(
                     |opts, v| {
                         opts.ts_syntax = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.allow_variance_keywords" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.allow_variance_keywords = v;
                         Ok(())
                     },
                     values,

@@ -162,7 +162,6 @@ module Opts = struct
     strict_es6_import_export: bool;
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool option;
-    allow_variance_keywords: bool;
     deprecated_variance_sigils: bool;
     deprecated_variance_sigils_excludes: string list;
     deprecated_colon_extends: string list;
@@ -352,7 +351,6 @@ module Opts = struct
       strict_es6_import_export = false;
       supported_operating_systems = [];
       ts_syntax = None;
-      allow_variance_keywords = true;
       deprecated_variance_sigils = false;
       deprecated_variance_sigils_excludes = [];
       deprecated_colon_extends = [];
@@ -1195,9 +1193,6 @@ module Opts = struct
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = Some v }));
-      ( "experimental.allow_variance_keywords",
-        boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
-      );
       ("experimental.deprecated_variance_sigils", enum [("true", ())] (fun opts () -> Ok opts));
       ( "experimental.deprecated_variance_sigils.excludes",
         string
@@ -2210,8 +2205,6 @@ let supported_operating_systems c = c.options.Opts.supported_operating_systems
 let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
 let ts_syntax c = Base.Option.value c.options.Opts.ts_syntax ~default:false
-
-let allow_variance_keywords c = c.options.Opts.allow_variance_keywords
 
 let deprecated_variance_sigils c = c.options.Opts.deprecated_variance_sigils
 

@@ -246,7 +246,6 @@ pub struct Options {
     pub stylex_shorthand_prop: Option<String>,
     pub temp_dir: FlowSmolStr,
     pub ts_syntax: bool,
-    pub allow_variance_keywords: bool,
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,

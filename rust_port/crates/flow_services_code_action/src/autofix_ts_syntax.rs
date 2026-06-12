@@ -31,9 +31,6 @@ enum Kind {
     ReadOnlyTupleType,
     TypeParamColon,
     InOutVariance,
-    ReadonlyVariance,
-    InVariance,
-    OutVariance,
     PlusSigilToReadonly,
     PlusSigilToOut,
     MinusSigilToWriteonly,
@@ -158,33 +155,6 @@ impl AstVisitor<'_, Loc> for Mapper {
             comments,
         } = variance;
         match variance_kind {
-            ast::VarianceKind::Readonly
-                if self.kind == Kind::ReadonlyVariance && self.contains.is_target(loc) =>
-            {
-                ast::Variance {
-                    loc: LOC_NONE,
-                    kind: ast::VarianceKind::Plus,
-                    comments: comments.clone(),
-                }
-            }
-            ast::VarianceKind::In
-                if self.kind == Kind::InVariance && self.contains.is_target(loc) =>
-            {
-                ast::Variance {
-                    loc: LOC_NONE,
-                    kind: ast::VarianceKind::Minus,
-                    comments: comments.clone(),
-                }
-            }
-            ast::VarianceKind::Out
-                if self.kind == Kind::OutVariance && self.contains.is_target(loc) =>
-            {
-                ast::Variance {
-                    loc: LOC_NONE,
-                    kind: ast::VarianceKind::Plus,
-                    comments: comments.clone(),
-                }
-            }
             ast::VarianceKind::Plus
                 if self.kind == Kind::PlusSigilToReadonly && self.contains.is_target(loc) =>
             {
@@ -296,30 +266,6 @@ pub fn convert_type_param_colon(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::
     let mut mapper = Mapper {
         contains: ContainsMapper::new(loc),
         kind: Kind::TypeParamColon,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_readonly_variance(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::ReadonlyVariance,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_in_variance(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::InVariance,
-    };
-    mapper.map_program(ast)
-}
-
-pub fn convert_out_variance(ast: &ast::Program<Loc, Loc>, loc: Loc) -> ast::Program<Loc, Loc> {
-    let mut mapper = Mapper {
-        contains: ContainsMapper::new(loc),
-        kind: Kind::OutVariance,
     };
     mapper.map_program(ast)
 }

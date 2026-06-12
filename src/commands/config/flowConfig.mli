@@ -309,8 +309,6 @@ val stylex_shorthand_prop : config -> string option
 
 val ts_syntax : config -> bool
 
-val allow_variance_keywords : config -> bool
-
 val deprecated_variance_sigils : config -> bool
 
 val deprecated_variance_sigils_excludes : config -> string list

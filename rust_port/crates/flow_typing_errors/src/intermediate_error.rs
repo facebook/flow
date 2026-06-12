@@ -8396,43 +8396,11 @@ where
                     }
                 }
             }
-            MessageTSVarianceIn => friendly::Message(vec![
-                text("The equivalent of TypeScript's "),
-                code("in"),
-                text(" variance annotation is "),
-                code("-"),
-                text(" in Flow."),
-            ]),
             MessageTSVarianceInOut => friendly::Message(vec![
                 text("The equivalent of TypeScript's "),
                 code("in out"),
                 text(" variance annotation in Flow is to simply leave it out - "),
                 text("it's the default if you don't have a variance annotation."),
-            ]),
-            MessageTSVarianceOut => friendly::Message(vec![
-                text("The equivalent of TypeScript's "),
-                code("out"),
-                text(" variance annotation is "),
-                code("+"),
-                text(" in Flow."),
-            ]),
-            MessageTSVarianceReadOnly => friendly::Message(vec![
-                text("While TypeScript uses "),
-                code("readonly"),
-                text(" to specify read only properties, Flow uses "),
-                code("+"),
-                text(" in the form "),
-                code("+foo: T"),
-                text(" for class and object type properties, and "),
-                code("+[string]: T"),
-                text(" for dictionaries."),
-            ]),
-            MessageVarianceKeywordWriteonly => friendly::Message(vec![
-                text("The "),
-                code("writeonly"),
-                text(" variance keyword is gated behind the "),
-                code("experimental.allow_variance_keywords"),
-                text(" flowconfig option."),
             ]),
             MessageDeprecatedVarianceSigil(sigil) => {
                 use crate::intermediate_error_types::VarianceSigilKind;

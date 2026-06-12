@@ -81,7 +81,6 @@ type metadata = {
   strip_root: bool;
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
-  allow_variance_keywords: bool;
   deprecated_variance_sigils_excludes: Str.regexp list;
   deprecated_colon_extends_excludes: Str.regexp list;
   tslib_syntax: bool;
@@ -375,7 +374,6 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
-    allow_variance_keywords = Options.allow_variance_keywords options;
     deprecated_variance_sigils_excludes = Options.deprecated_variance_sigils_excludes options;
     deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     tslib_syntax = Options.tslib_syntax options;
@@ -739,8 +737,6 @@ let should_strip_root cx = cx.metadata.strip_root
 let stylex_shorthand_prop cx = cx.metadata.stylex_shorthand_prop
 
 let ts_syntax cx = cx.metadata.ts_syntax
-
-let allow_variance_keywords cx = cx.metadata.allow_variance_keywords
 
 let is_variance_sigil_deprecated cx =
   if is_lib_file cx then

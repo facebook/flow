@@ -1701,7 +1701,6 @@ let make_options
     opt_stylex_shorthand_prop = FlowConfig.stylex_shorthand_prop flowconfig;
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
-    opt_allow_variance_keywords = FlowConfig.allow_variance_keywords flowconfig;
     opt_deprecated_variance_sigils = FlowConfig.deprecated_variance_sigils flowconfig;
     opt_deprecated_variance_sigils_excludes =
       Base.List.map

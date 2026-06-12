@@ -387,58 +387,13 @@ pub fn polarity<'a>(
         match variance {
             Some(ast::Variance {
                 loc,
-                kind: ast::VarianceKind::Readonly,
-                ..
-            }) if !cx.allow_variance_keywords() => {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSReadonlyVariance,
-                        loc: loc.dupe(),
-                    })),
-                );
-            }
-            Some(ast::Variance {
-                loc,
-                kind: ast::VarianceKind::In,
-                ..
-            }) if !cx.allow_variance_keywords() => {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
-                            flow_typing_errors::error_message::InOutVariance::In,
-                        ),
-                        loc: loc.dupe(),
-                    })),
-                );
-            }
-            Some(ast::Variance {
-                loc,
-                kind: ast::VarianceKind::Out,
-                ..
-            }) if !cx.allow_variance_keywords() => {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
-                            flow_typing_errors::error_message::InOutVariance::Out,
-                        ),
-                        loc: loc.dupe(),
-                    })),
-                );
-            }
-            Some(ast::Variance {
-                loc,
                 kind: ast::VarianceKind::InOut,
                 ..
             }) => {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::ETSSyntax(Box::new(ETSSyntaxData {
-                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance(
-                            flow_typing_errors::error_message::InOutVariance::InOut,
-                        ),
+                        kind: flow_typing_errors::error_message::TSSyntaxKind::TSInOutVariance,
                         loc: loc.dupe(),
                     })),
                 );
@@ -447,19 +402,6 @@ pub fn polarity<'a>(
         }
     }
     match variance {
-        Some(ast::Variance {
-            loc,
-            kind: ast::VarianceKind::Writeonly,
-            ..
-        }) if !cx.allow_variance_keywords() => {
-            flow_js_utils::add_output_non_speculating(
-                cx,
-                ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
-                    kind: flow_typing_errors::error_message::VarianceKeywordKind::Writeonly,
-                    loc: loc.dupe(),
-                })),
-            );
-        }
         Some(ast::Variance {
             loc,
             kind: ast::VarianceKind::Plus,

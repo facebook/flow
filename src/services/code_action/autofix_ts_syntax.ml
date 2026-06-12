@@ -40,10 +40,6 @@ class mapper target_loc kind =
       let open Flow_ast.Variance in
       let (loc, { kind = variance_kind; comments }) = variance in
       match variance_kind with
-      | Readonly when kind = `ReadonlyVariance && this#is_target loc ->
-        (Loc.none, { kind = Plus; comments })
-      | In when kind = `InVariance && this#is_target loc -> (Loc.none, { kind = Minus; comments })
-      | Out when kind = `OutVariance && this#is_target loc -> (Loc.none, { kind = Plus; comments })
       | Plus when kind = `PlusSigilToReadonly && this#is_target loc ->
         (Loc.none, { kind = Readonly; comments })
       | Plus when kind = `PlusSigilToOut && this#is_target loc ->
@@ -80,18 +76,6 @@ let convert_undefined_type ast loc =
 
 let convert_type_param_colon ast loc =
   let mapper = new mapper loc `TypeParamColon in
-  mapper#program ast
-
-let convert_readonly_variance ast loc =
-  let mapper = new mapper loc `ReadonlyVariance in
-  mapper#program ast
-
-let convert_in_variance ast loc =
-  let mapper = new mapper loc `InVariance in
-  mapper#program ast
-
-let convert_out_variance ast loc =
-  let mapper = new mapper loc `OutVariance in
   mapper#program ast
 
 let remove_in_out_variance ast loc =

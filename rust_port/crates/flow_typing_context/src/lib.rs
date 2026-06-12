@@ -198,7 +198,6 @@ pub struct FrozenMetadata {
     pub strip_root: bool,
     pub stylex_shorthand_prop: Option<String>,
     pub ts_syntax: bool,
-    pub allow_variance_keywords: bool,
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
@@ -261,7 +260,6 @@ impl Default for FrozenMetadata {
             strip_root: true,
             stylex_shorthand_prop: None,
             ts_syntax: false,
-            allow_variance_keywords: true,
             deprecated_variance_sigils_excludes: Arc::from([]),
             deprecated_colon_extends_excludes: Arc::from([]),
             ts_utility_syntax: false,
@@ -669,7 +667,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             strip_root: options.strip_root,
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
             ts_syntax: options.ts_syntax,
-            allow_variance_keywords: options.allow_variance_keywords,
             deprecated_variance_sigils_excludes: options.deprecated_variance_sigils_excludes.dupe(),
             deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
             ts_utility_syntax: options.ts_utility_syntax,
@@ -1377,10 +1374,6 @@ impl<'cx> Context<'cx> {
 
     pub fn ts_syntax(&self) -> bool {
         self.0.metadata.frozen.ts_syntax
-    }
-
-    pub fn allow_variance_keywords(&self) -> bool {
-        self.0.metadata.frozen.allow_variance_keywords
     }
 
     pub fn is_variance_sigil_deprecated(&self) -> bool {

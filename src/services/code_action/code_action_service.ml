@@ -988,46 +988,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `+`";
-          diagnostic_title = "convert_readonly_variance";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_variance;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `In; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `-`";
-          diagnostic_title = "convert_in_variance";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_in_variance;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `Out; loc = error_loc } ->
-    if loc_opt_intersects ~error_loc ~loc then
-      [
-        {
-          title = "Convert to `+`";
-          diagnostic_title = "convert_out_variance";
-          transform = untyped_ast_transform Autofix_ts_syntax.convert_out_variance;
-          target_loc = error_loc;
-          confidence = WillFixErrorAndSafeForRunningOnSave;
-        };
-      ]
-    else
-      []
-  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance `InOut; loc = error_loc } ->
+  | Error_message.ETSSyntax { kind = Error_message.TSInOutVariance; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {

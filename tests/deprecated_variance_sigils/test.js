@@ -27,7 +27,7 @@ interface IProp {
   -contraProp: number; // error: - deprecated
 }
 
-// Keywords still pass when allow_variance_keywords=true.
+// Keywords still pass.
 type W = { writeonly p: number }; // ok
 class CIn<in T> {} // ok
 class COut<out T> {} // ok
