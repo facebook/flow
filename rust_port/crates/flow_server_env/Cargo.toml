@@ -30,6 +30,7 @@ flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 flow_utils_tty = { path = "../flow_utils_tty" }
 lsp-types = "0.97"
+murmur3 = "0.5.2"
 rayon = "1.11.0"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

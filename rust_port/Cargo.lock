@@ -1324,6 +1324,7 @@ dependencies = [
  "flow_utils_concurrency",
  "flow_utils_tty",
  "lsp-types",
+ "murmur3",
  "rayon",
  "serde",
  "serde_json",
@@ -2739,6 +2740,11 @@ dependencies = [
  "wasi",
  "windows-sys 0.61.2",
 ]
+
+[[package]]
+name = "murmur3"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "nix"

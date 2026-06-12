@@ -2068,6 +2068,51 @@ pub(crate) fn recheck_impl(
             Ok((collated_errors, error_resolution_stat))
         })?;
 
+    let typing_errors_data = if options.log_per_error_typing_telemetry {
+        let per_file_errors = error_collator::compute_per_file_errors(10, &collated_errors);
+        let typing_errors_data = {
+            let error_info_to_json =
+                |error_collator::PerErrorInfo {
+                     error_code,
+                     line_agnostic_hash,
+                     error_message,
+                 }: error_collator::PerErrorInfo|
+                 -> serde_json::Value {
+                    let mut props = serde_json::Map::new();
+                    props.insert("error_code".to_string(), error_code.into());
+                    props.insert("line_agnostic_hash".to_string(), line_agnostic_hash.into());
+                    let props = match error_message {
+                        Some(msg) => {
+                            props.insert("error_context".to_string(), msg.into());
+                            props
+                        }
+                        None => props,
+                    };
+                    serde_json::Value::Object(props)
+                };
+            let mut total_count = 0;
+            let by_file: serde_json::Map<String, serde_json::Value> = per_file_errors
+                .into_iter()
+                .map(|error_collator::PerFileErrors { file_path, errors }| {
+                    total_count += errors.len();
+                    (
+                        file_path.to_string(),
+                        serde_json::Value::Array(
+                            errors.into_iter().map(&error_info_to_json).collect(),
+                        ),
+                    )
+                })
+                .collect();
+            serde_json::json!({
+                "total_count": total_count,
+                "by_file": by_file,
+            })
+        };
+        Some(typing_errors_data)
+    } else {
+        None
+    };
+
     let env = Env {
         collated_errors,
         errors: env.errors,
@@ -2102,6 +2147,9 @@ pub(crate) fn recheck_impl(
             Some(num_slow_files as i32),
             changed_mergebase,
         );
+        if let Some(typing_errors_data) = typing_errors_data.as_ref() {
+            flow_event_logger::log_typing_errors(typing_errors_data);
+        }
         record_recheck_time();
     });
 

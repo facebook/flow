@@ -1982,6 +1982,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] `update_collated_errors`
       - [x] `get_with_separate_warnings` (internal 3-tuple version, private)
       - [x] `type_error_stat` (private)
+      - [x] `per_error_info` type → `PerErrorInfo`
+      - [x] `per_file_errors` type → `PerFileErrors`
+      - [x] `compute_per_file_errors`
       - [x] `error_resolution_stat` type → `ErrorResolutionStat`
       - [x] `update_error_state_timestamps`
       - [x] `get_without_suppressed`

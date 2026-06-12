@@ -17,6 +17,7 @@ use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_errors::error_utils::code_of_printable_error;
+use flow_common_errors::error_utils::lsp_output;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::Program;
@@ -32,6 +33,7 @@ use flow_typing_errors::flow_error::error_of_msg;
 use flow_typing_errors::intermediate_error::make_intermediate_error;
 use flow_typing_errors::intermediate_error::to_printable_error;
 use flow_typing_errors::intermediate_error_types::IntermediateError;
+use murmur3::murmur3_32_of_slice;
 
 use crate::collated_errors::CollatedErrors;
 use crate::collated_errors::ErrorStateTimestamps;
@@ -338,6 +340,104 @@ fn type_error_stat(collated_errors: &CollatedErrors) -> (bool, bool, bool, bool)
         have_subtyping_errors,
         have_subtyping_errors_and_all_in_one_file,
     )
+}
+
+pub struct PerErrorInfo {
+    pub error_code: String,
+    pub line_agnostic_hash: String,
+    pub error_message: Option<String>,
+}
+
+pub struct PerFileErrors<'a> {
+    pub file_path: &'a str,
+    pub errors: Vec<PerErrorInfo>,
+}
+
+// let compute_per_file_errors ~with_context_limit collated_errors =
+pub fn compute_per_file_errors(
+    with_context_limit: usize,
+    collated_errors: &CollatedErrors,
+) -> Vec<PerFileErrors<'_>> {
+    let mut context_count = 0;
+    fn process_errors<'a>(
+        with_context_limit: usize,
+        context_count: &mut usize,
+        filename: &'a FileKey,
+        errors: &ConcreteLocPrintableErrorSet,
+        mut acc: Vec<PerFileErrors<'a>>,
+    ) -> Vec<PerFileErrors<'a>> {
+        if errors.is_empty() {
+            acc
+        } else {
+            let file_path = match filename.inner() {
+                FileKeyInner::SourceFile(s)
+                | FileKeyInner::JsonFile(s)
+                | FileKeyInner::ResourceFile(s)
+                | FileKeyInner::LibFile(s) => s.as_str(),
+            };
+            let error_infos = errors.iter().fold(Vec::new(), |mut acc, error| {
+                let lsp = lsp_output::lsp_of_error(false, error);
+                let code_str = lsp.code;
+                let hash_input = format!("{}:{}", code_str, lsp.message);
+                let hash = format!(
+                    "{:x}",
+                    murmur3_32_of_slice(hash_input.as_bytes(), 0) & 0x3fff_ffff
+                );
+                let error_message = if *context_count < with_context_limit {
+                    *context_count += 1;
+                    let msg = lsp.message;
+                    let msg = if msg.len() > 400 {
+                        let mut end = 400;
+                        while !msg.is_char_boundary(end) {
+                            end -= 1;
+                        }
+                        format!("{}...", &msg[..end])
+                    } else {
+                        msg
+                    };
+                    Some(msg)
+                } else {
+                    None
+                };
+                acc.push(PerErrorInfo {
+                    error_code: code_str,
+                    line_agnostic_hash: hash,
+                    error_message,
+                });
+                acc
+            });
+            acc.push(PerFileErrors {
+                file_path,
+                errors: error_infos,
+            });
+            acc
+        }
+    }
+    let acc =
+        collated_errors
+            .collated_merge_errors
+            .iter()
+            .fold(Vec::new(), |acc, (filename, errors)| {
+                process_errors(
+                    with_context_limit,
+                    &mut context_count,
+                    filename,
+                    errors,
+                    acc,
+                )
+            });
+    collated_errors
+        .collated_local_errors
+        .iter()
+        .fold(acc, |acc, (filename, errors)| {
+            process_errors(
+                with_context_limit,
+                &mut context_count,
+                filename,
+                errors,
+                acc,
+            )
+        })
 }
 
 pub struct ErrorResolutionStat {
