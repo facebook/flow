@@ -545,8 +545,7 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
             let root_path = match libdir {
                 LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
             };
-            let root = cached_canonicalize(root_path).unwrap_or_else(|_| root_path.clone());
-            is_prefix(&root.to_string_lossy(), path)
+            is_prefix(&root_path.to_string_lossy(), path)
         }
     }
 }
@@ -567,7 +566,7 @@ pub fn ordered_and_unordered_lib_paths(
             let root_path = match libdir {
                 LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
             };
-            let root = cached_canonicalize(root_path).unwrap_or_else(|_| root_path.clone());
+            let root = root_path.clone();
             let root_resolved = root.to_string_lossy().to_string();
             let filter: Box<dyn Fn(&str) -> bool + '_> = Box::new(move |path: &str| {
                 is_prefix(&root_resolved, path) || is_valid_path(options, path)
