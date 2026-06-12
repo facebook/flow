@@ -1,3 +1,2 @@
 [options]
-experimental.deprecated_utilities='$Keys' -> '<PROJECT_ROOT>/'
-experimental.deprecated_utilities='mixed' -> '<PROJECT_ROOT>/'
+experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/excluded/

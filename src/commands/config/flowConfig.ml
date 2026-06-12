@@ -1159,9 +1159,6 @@ module Opts = struct
       ( "experimental.const_params",
         boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
-      ( "experimental.deprecated_utilities",
-        mapping ~multiple:true (fun v -> Ok v) (fun opts (_utility, _directory) -> Ok opts)
-      );
       ( "experimental.deprecated_utilities.excludes",
         string
           ~init:(fun opts -> { opts with deprecated_utilities_excludes = [] })

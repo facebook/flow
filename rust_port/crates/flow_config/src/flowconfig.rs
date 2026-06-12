@@ -2165,7 +2165,6 @@ pub mod opts {
             "experimental.component_syntax.hook_compatibility.excludes",
             "experimental.component_syntax.hook_compatibility.includes",
             "experimental.const_params",
-            "experimental.deprecated_utilities",
             "experimental.deprecated_utilities.excludes",
             "experimental.enable_custom_error",
             "experimental.facebook_module_interop",
@@ -2580,14 +2579,6 @@ pub mod opts {
                         opts.ts_utility_syntax = v;
                         Ok(())
                     },
-                    values,
-                    config,
-                )),
-                "experimental.deprecated_utilities" => Some(parse_mapping(
-                    |(utility, directory)| Ok((utility, directory)),
-                    |_opts, (_utility, _directory)| Ok(()),
-                    None,
-                    true,
                     values,
                     config,
                 )),

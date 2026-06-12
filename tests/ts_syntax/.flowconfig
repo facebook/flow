@@ -5,7 +5,6 @@ unused_ts_shim.js
 all=true
 no_flowlib=false
 
-experimental.deprecated_utilities='$ReadOnlyArray' -> '<PROJECT_ROOT>/not_used'
 experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
 
 experimental.deprecated_colon_extends.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
