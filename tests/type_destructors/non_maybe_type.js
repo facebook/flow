@@ -30,7 +30,7 @@ class B {
 type Node = number | string;
 
 declare class A<T> {
-  concat<S, Item: A<S> | S>(items: A<Item>): A<T | S>;
+  concat<S, Item extends A<S> | S>(items: A<Item>): A<T | S>;
   filter(callbackfn: typeof Boolean): A<NonNullable<T>>;
 }
 

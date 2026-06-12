@@ -1151,12 +1151,12 @@ Cannot return `w` because `unknown` [1] is incompatible with `X` [2]. [incompati
                ^
 
 References:
-   nested.js:5:45
-   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
-                                                  ^ [1]
-   nested.js:5:49
-   5| function f<X, Y: X, Z: Y, W>(y: Y, z: X, w: W): X {
-                                                      ^ [2]
+   nested.js:5:59
+   5| function f<X, Y extends X, Z extends Y, W>(y: Y, z: X, w: W): X {
+                                                                ^ [1]
+   nested.js:5:63
+   5| function f<X, Y extends X, Z extends Y, W>(y: Y, z: X, w: W): X {
+                                                                    ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- react.js:13:3

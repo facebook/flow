@@ -35,7 +35,7 @@ export type $DeepReadOnly<T> =
   T extends {...} ? {readonly [K in keyof T]: $DeepReadOnly<T[K]>} : T;
 
 export type Info<
-  T: {readonly bar: {readonly type: string, ...}, ...},
+  T extends {readonly bar: {readonly type: string, ...}, ...},
 > =
   [readonly t: T] extends [readonly t: {bar: infer A, ...}]
   ? {

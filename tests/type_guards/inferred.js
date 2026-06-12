@@ -62,7 +62,7 @@ function test5() {
 }
 
 function test6() {
-  declare function takesSynthesizablePolyGuard<T, S: T>(input: T, callbackfn: (value: T) => implies value is S): S;
+  declare function takesSynthesizablePolyGuard<T, S extends T>(input: T, callbackfn: (value: T) => implies value is S): S;
 
   declare const value: ?string;
   const u = takesSynthesizablePolyGuard(value, x => x != null);
@@ -71,7 +71,7 @@ function test6() {
 }
 
 function test7() {
-  declare function takesPolyGuard<T, U: T>(guard: (x: T) => implies x is U): [T, U];
+  declare function takesPolyGuard<T, U extends T>(guard: (x: T) => implies x is U): [T, U];
 
   const [t1, u1] = takesPolyGuard<number, 4>((value) => value === 4); // okay
   const [t2, u2] = takesPolyGuard((value: unknown) => value === 4);
@@ -84,7 +84,7 @@ function test7() {
 }
 
 function test8() {
-  declare function takesOverloadedPolyGuard<T, U: T>(value: T, guard: (x: T) => implies x is U): [T, U];
+  declare function takesOverloadedPolyGuard<T, U extends T>(value: T, guard: (x: T) => implies x is U): [T, U];
   declare function takesOverloadedPolyGuard<T>(value: T, guard: (x: T) => boolean): [T, T];
 
   declare const value: number;
@@ -101,7 +101,7 @@ function test8() {
 
 function test9() {
   // overload resolution should pick the first overload
-  declare function takesOverloadedPolyGuard<T, U: T>(guard: (x: T) => implies x is U): [T, U];
+  declare function takesOverloadedPolyGuard<T, U extends T>(guard: (x: T) => implies x is U): [T, U];
   declare function takesOverloadedPolyGuard<T>(guard: (x: T) => boolean): [T, T];
 
   declare const value: number;
@@ -135,7 +135,7 @@ function test12() {
 }
 
 function test13() {
-  declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
+  declare function takesGuard<T, U extends T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
 
   declare const x: number;
   const [t, u] = takesGuard(

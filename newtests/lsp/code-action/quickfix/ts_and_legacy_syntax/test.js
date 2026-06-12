@@ -237,7 +237,7 @@ module.exports = suite(
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]).flowConfig('_flowconfig_deprecated_colon_extends'),
+    ]),
     test('provide quickfix for `readonly` variance', [
       addFile('fix-readonly-variance.js.ignored', 'fix-readonly-variance.js'),
       lspStartAndConnect(),
@@ -695,7 +695,7 @@ module.exports = suite(
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    ]),
     test('provide quickfix for deprecated `-` sigil on property', [
       addFile(
         'fix-deprecated-minus-sigil-prop.js.ignored',
@@ -728,7 +728,7 @@ module.exports = suite(
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    ]),
     test('provide quickfix for deprecated `+` sigil on type parameter', [
       addFile(
         'fix-deprecated-plus-sigil-tparam.js.ignored',
@@ -761,7 +761,7 @@ module.exports = suite(
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    ]),
     test('provide quickfix for deprecated `-` sigil on type parameter', [
       addFile(
         'fix-deprecated-minus-sigil-tparam.js.ignored',
@@ -794,6 +794,6 @@ module.exports = suite(
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
-    ]).flowConfig('_flowconfig_deprecated_variance_sigils'),
+    ]),
   ],
 ) as SuiteType;

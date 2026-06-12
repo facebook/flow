@@ -5,9 +5,9 @@
 
 // This one for when there are no JSX attributes
 declare function JSX<
-  Children: ReadonlyArray<unknown>,
+  Children extends ReadonlyArray<unknown>,
   Elem,
-  C: (props: {...}, children: Children) => Elem,
+  C extends (props: {...}, children: Children) => Elem,
 >(
   component: C,
   props: null,
@@ -16,10 +16,10 @@ declare function JSX<
 
 // This one for when there are JSX attributes.
 declare function JSX<
-  Children: ReadonlyArray<unknown>,
+  Children extends ReadonlyArray<unknown>,
   Elem,
-  Props: any,
-  C: (props: Props, children: Children) => Elem,
+  Props extends any,
+  C extends (props: Props, children: Children) => Elem,
 >(
   component: C,
   props: Props,

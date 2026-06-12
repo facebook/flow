@@ -125,7 +125,7 @@ Cannot cast `x` to `C` because in type argument `In` [1]: `B` [2] is incompatibl
 
 References:
    inout.js:4:21
-   4| class C<out Out, in In: Out = Out> {}
+   4| class C<out Out, in In extends Out = Out> {}
                           ^^ [1]
    inout.js:6:20
    6| declare const x: C<B>;

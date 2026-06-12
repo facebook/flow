@@ -1237,9 +1237,9 @@ with function type [2], which is a type-guard function. [function-predicate]
             ^^^^^^^^ [1]
 
 References:
-   inferred.js:138:48
-   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   inferred.js:138:55
+   138|   declare function takesGuard<T, U extends T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- inferred.js:142:12
@@ -1255,9 +1255,9 @@ References:
    inferred.js:140:20
    140|   declare const x: number;
                            ^^^^^^ [1]
-   inferred.js:138:58
-   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
-                                                                 ^^^^^^^^^^^^^^ [2]
+   inferred.js:138:65
+   138|   declare function takesGuard<T, U extends T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
+                                                                        ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:158:3
@@ -1843,14 +1843,14 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- refinement.js:40:21
+Error ---------------------------------------------------------------------------------------------- refinement.js:40:28
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:40:21
-   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => value is S, thisArg?: This): Array<S>;
-                           ^
+   refinement.js:40:28
+   40|     filter<This, S extends T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => value is S, thisArg?: This): Array<S>;
+                                  ^
 
 References:
    refinement.js:38:36
@@ -2541,14 +2541,14 @@ References:
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- refinement.js:243:21
+Error --------------------------------------------------------------------------------------------- refinement.js:243:28
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:243:21
-   243|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
-                            ^
+   refinement.js:243:28
+   243|     filter<This, S extends T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
+                                   ^
 
 References:
    refinement.js:241:36

@@ -1,6 +1,6 @@
-// `experimental.deprecated_variance_sigils=true` deprecates `+` and `-` variance
-// sigils for files outside the configured excludes — keywords like
-// `readonly` / `writeonly` / `in` / `out` are unaffected by this flag.
+// `+` and `-` variance sigils are deprecated for files outside the configured
+// excludes — keywords like `readonly` / `writeonly` / `in` / `out` are
+// unaffected.
 
 type CovObj = { +p: number }; // error: + deprecated
 type ContraObj = { -p: number }; // error: - deprecated

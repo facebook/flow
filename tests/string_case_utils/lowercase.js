@@ -58,7 +58,7 @@ type L9 = Lowercase<Uppercase<'mixed'>>;
 // --- Generic preservation: `Lowercase<T>` survives substitution and the
 //     constraint is enforced once T is bound. ---
 
-type Y<T: 'FOO' | 'BAR'> = Lowercase<T>;
+type Y<T extends 'FOO' | 'BAR'> = Lowercase<T>;
 'foo' as Y<'FOO'>; // OK
 'FOO' as Y<'FOO'>; // ERROR
 'anything' as Y<'FOO'>; // ERROR

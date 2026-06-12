@@ -59,13 +59,13 @@ type N1 = Uppercase<[Lowercase<'AbC'>][0]>;
 //     arg stays an opaque EvalT after a generic is instantiated with an
 //     indexed-access type. ---
 
-type M<T: string> = Uppercase<T>;
+type M<T extends string> = Uppercase<T>;
 type AI1 = M<['foo'][0]>;
 'FOO' as AI1; // OK
 'foo' as AI1; // ERROR
 'BAR' as AI1; // ERROR
 
-type Mlow<T: string> = Lowercase<T>;
+type Mlow<T extends string> = Lowercase<T>;
 type AI2 = Mlow<{f: 'FOO'}['f']>;
 'foo' as AI2; // OK
 'FOO' as AI2; // ERROR

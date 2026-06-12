@@ -355,9 +355,9 @@ Cannot call `f` because in type argument `TEnumValue`: boolean [1] is incompatib
          ^^^^ [1]
 
 References:
-   abstract-enum.js:26:15
-   26|   TEnumValue: EnumValue<TRepresentationType>,
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   abstract-enum.js:26:22
+   26|   TEnumValue extends EnumValue<TRepresentationType>,
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:36:1
@@ -1553,9 +1553,9 @@ Cannot call `test` because in type argument `T`: `E` [1] is incompatible with st
             ^ [1]
 
 References:
-   error-coercion.js:33:18
-   33| function test<T: string>() {}
-                        ^^^^^^ [2]
+   error-coercion.js:33:25
+   33| function test<T extends string>() {}
+                               ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ error-duplicate-values.js:6:7

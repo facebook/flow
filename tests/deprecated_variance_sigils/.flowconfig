@@ -6,7 +6,6 @@
 
 [options]
 all=true
-experimental.deprecated_variance_sigils=true
 experimental.deprecated_variance_sigils.excludes=<PROJECT_ROOT>/excluded_dir
 
 [lints]

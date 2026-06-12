@@ -3,8 +3,8 @@
 import * as React from 'react';
 
 type ElementProp<
-  T: React.ElementType,
-  P: keyof React.ElementConfig<T>,
+  T extends React.ElementType,
+  P extends keyof React.ElementConfig<T>,
 > = React.ElementConfig<T>[P];
 
 type BaseProps = Readonly<{

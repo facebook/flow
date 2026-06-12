@@ -1,6 +1,6 @@
 function mergeWithDefaults<
-  TArgs: interface {},
-  TDefaults: Partial<TArgs>,
+  TArgs extends interface {},
+  TDefaults extends Partial<TArgs>,
   TResult,
 >(
   defaults: TDefaults,

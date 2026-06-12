@@ -1,2 +1,3 @@
 [options]
 all=true
+experimental.deprecated_variance_sigils.excludes=<PROJECT_ROOT>/

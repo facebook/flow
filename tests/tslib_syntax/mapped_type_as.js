@@ -116,7 +116,7 @@ const _ci_exact: {| X: number | string |} = ci; // OK - non-identity remap close
 ci.notThere; // ERROR - source's open shape did not propagate
 
 // Semi-homomorphic with non-literal selected indexer keys preserves the indexer
-type PickAs<T, K: keyof T> = {[P in K as P]: T[P]};
+type PickAs<T, K extends keyof T> = {[P in K as P]: T[P]};
 type SemiDict = PickAs<{[s: string]: number}, string>;
 declare const sd: SemiDict;
 const _sd_val: number = sd.foo; // OK - string indexer retained

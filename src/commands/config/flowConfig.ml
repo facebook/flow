@@ -1217,9 +1217,7 @@ module Opts = struct
       ( "experimental.allow_variance_keywords",
         boolean (fun opts v -> Ok { opts with allow_variance_keywords = v })
       );
-      ( "experimental.deprecated_variance_sigils",
-        boolean (fun opts v -> Ok { opts with deprecated_variance_sigils = v })
-      );
+      ("experimental.deprecated_variance_sigils", enum [("true", ())] (fun opts () -> Ok opts));
       ( "experimental.deprecated_variance_sigils.excludes",
         string
           ~init:(fun opts -> { opts with deprecated_variance_sigils_excludes = [] })
@@ -1231,13 +1229,7 @@ module Opts = struct
                 deprecated_variance_sigils_excludes = v :: opts.deprecated_variance_sigils_excludes;
               })
       );
-      ( "experimental.deprecated_colon_extends",
-        string
-          ~init:(fun opts -> { opts with deprecated_colon_extends = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok { opts with deprecated_colon_extends = v :: opts.deprecated_colon_extends })
-      );
+      ("experimental.deprecated_colon_extends", string ~multiple:true (fun opts _v -> Ok opts));
       ( "experimental.deprecated_colon_extends.excludes",
         string
           ~init:(fun opts -> { opts with deprecated_colon_extends_excludes = [] })

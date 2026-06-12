@@ -9,7 +9,7 @@ declare function ComponentWithChildren<T>(props: {
   children: React.Node,
 }): React.Node;
 
-declare function ComponentMultipleArgs<R, S, T: string>(props: {
+declare function ComponentMultipleArgs<R, S, T extends string>(props: {
   r: R,
   s: S,
   t: T,

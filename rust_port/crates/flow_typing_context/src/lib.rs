@@ -1403,9 +1403,6 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_variance_sigil_deprecated(&self) -> bool {
-        if !self.0.metadata.frozen.deprecated_variance_sigils {
-            return false;
-        }
         if self.is_lib_file() {
             return false;
         }
@@ -1421,25 +1418,12 @@ impl<'cx> Context<'cx> {
         if self.is_lib_file() {
             return false;
         }
-        match &*self.0.metadata.frozen.deprecated_colon_extends {
-            [] => false,
-            dirs => {
-                let filename = self.0.file.to_absolute();
-                let normalized_filename =
-                    flow_common::sys_utils::normalize_filename_dir_sep(&filename);
-                let is_excluded = self
-                    .0
-                    .metadata
-                    .frozen
-                    .deprecated_colon_extends_excludes
-                    .iter()
-                    .any(|r: &Regex| r.is_match(&normalized_filename));
-                !is_excluded
-                    && dirs
-                        .iter()
-                        .any(|prefix| normalized_filename.starts_with(prefix.as_str()))
-            }
-        }
+        let filename = self.0.file.to_absolute();
+        let normalized_filename = flow_common::sys_utils::normalize_filename_dir_sep(&filename);
+        let excluded_dirs = &self.0.metadata.frozen.deprecated_colon_extends_excludes;
+        !excluded_dirs
+            .iter()
+            .any(|r: &Regex| r.is_match(&normalized_filename))
     }
 
     pub fn ts_utility_syntax(&self) -> bool {

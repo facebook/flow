@@ -22,8 +22,8 @@ E as T; // ERROR
 
 // Generic usage
 function f<
-  TRepresentationType: EnumRepresentationTypes,
-  TEnumValue: EnumValue<TRepresentationType>,
+  TRepresentationType extends EnumRepresentationTypes,
+  TEnumValue extends EnumValue<TRepresentationType>,
 >(e: Enum<TEnumValue>) {
   declare const raw: TRepresentationType; // OK
   declare const val: TEnumValue;

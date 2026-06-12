@@ -716,7 +716,7 @@ import * as React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
 component Selector<
-  TEnumValue: EnumValue<string>,
+  TEnumValue extends EnumValue<string>,
 >(
   items: Enum<TEnumValue>,
   callback: (TEnumValue) => void,

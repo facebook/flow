@@ -8,9 +8,9 @@ Cannot create `ComponentMultipleArgs` element because in type argument `T`: bool
                                               ^^^^^^^ [1]
 
 References:
-   test.js:12:49
-   12| declare function ComponentMultipleArgs<R, S, T: string>(props: {
-                                                       ^^^^^^ [2]
+   test.js:12:56
+   12| declare function ComponentMultipleArgs<R, S, T extends string>(props: {
+                                                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:40
@@ -23,9 +23,9 @@ Cannot create `ComponentMultipleArgs` element because in type argument `T`: bool
                                               ^^^^^^^ [1]
 
 References:
-   test.js:12:49
-   12| declare function ComponentMultipleArgs<R, S, T: string>(props: {
-                                                       ^^^^^^ [2]
+   test.js:12:56
+   12| declare function ComponentMultipleArgs<R, S, T extends string>(props: {
+                                                              ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:65
@@ -53,8 +53,8 @@ Cannot use function type [1] with fewer than 3 type arguments. [missing-type-arg
 
 References:
    test.js:12:39
-   12| declare function ComponentMultipleArgs<R, S, T: string>(props: {
-                                             ^^^^^^^^^^^^^^^^^ [1]
+   12| declare function ComponentMultipleArgs<R, S, T extends string>(props: {
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 

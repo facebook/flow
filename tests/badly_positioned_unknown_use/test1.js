@@ -7,7 +7,7 @@ declare export function foo<P>(
 class Comp extends React.Component<{...}, {...}> {}
 
 function f<
-  Comp: React.ComponentType<{...}>,
+  Comp extends React.ComponentType<{...}>,
 >(): Comp => {
 ...} {
   return function() {

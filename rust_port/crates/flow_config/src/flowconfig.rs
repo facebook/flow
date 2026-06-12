@@ -2559,11 +2559,9 @@ pub mod opts {
                     values,
                     config,
                 )),
-                "experimental.deprecated_variance_sigils" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.deprecated_variance_sigils = v;
-                        Ok(())
-                    },
+                "experimental.deprecated_variance_sigils" => Some(enum_parser(
+                    &[("true", ())],
+                    |_opts, ()| Ok(()),
                     values,
                     config,
                 )),
@@ -2603,16 +2601,9 @@ pub mod opts {
                     values,
                     config,
                 )),
-                "experimental.deprecated_colon_extends" => Some(parse_string(
-                    |opts, v| {
-                        opts.deprecated_colon_extends.push(v);
-                        Ok(())
-                    },
-                    Some(|opts| opts.deprecated_colon_extends = Vec::new()),
-                    true,
-                    values,
-                    config,
-                )),
+                "experimental.deprecated_colon_extends" => {
+                    Some(parse_string(|_opts, _v| Ok(()), None, true, values, config))
+                }
                 "experimental.deprecated_colon_extends.excludes" => Some(parse_string(
                     |opts, v| {
                         opts.deprecated_colon_extends_excludes.push(v);

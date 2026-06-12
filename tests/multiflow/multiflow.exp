@@ -238,9 +238,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
         ^^^^^^^^^^^^
 
 References:
-   jsx.js:10:14
-   10|   C: (props: {...}, children: Children) => Elem,
-                    ^^^^^ [1]
+   jsx.js:10:21
+   10|   C extends (props: {...}, children: Children) => Elem,
+                           ^^^^^ [1]
    jsx.js:33:38
    33| declare function ExpectsProps(props: {name: string, ...}, children: any): string;
                                             ^^^^^^^^^^^^^^^^^^^ [2]

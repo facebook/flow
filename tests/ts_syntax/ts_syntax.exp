@@ -1279,36 +1279,6 @@ Error --------------------------------------------------------------------------
       ^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------- type_param_colon_extends.js:2:26
-
-Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
-[incompatible-variance]
-
-   type_param_colon_extends.js:2:26
-   2| type B<out T: string> = [T];
-                               ^
-
-References:
-   type_param_colon_extends.js:2:12
-   2| type B<out T: string> = [T];
-                 ^ [1]
-
-
-Error --------------------------------------------------------------------------------- type_param_colon_extends.js:4:33
-
-Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
-[incompatible-variance]
-
-   type_param_colon_extends.js:4:33
-   4| type D<out T: string = "hi"> = [T];
-                                      ^
-
-References:
-   type_param_colon_extends.js:4:12
-   4| type D<out T: string = "hi"> = [T];
-                 ^ [1]
-
-
 Error --------------------------------------------------------------------------------------- type_param_extends.js:2:33
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -1349,4 +1319,4 @@ types. [unsupported-syntax]
 
 
 
-Found 145 errors
+Found 143 errors

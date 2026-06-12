@@ -30,5 +30,5 @@ const sym: symbol = S.A; // Error, with suggestion
 const z: boolean = S.A; // Error, no suggestion
 
 // Type argument position - no cast suggestion should appear
-function test<T: string>() {}
+function test<T extends string>() {}
 test<E>(); // Error, no suggestion (cast syntax invalid in type arg position)

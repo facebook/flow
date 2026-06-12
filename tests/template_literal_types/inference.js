@@ -4,7 +4,7 @@ declare function stripPrefix<T extends string>(s: `data-${T}`): T;
 stripPrefix('data-value') as 'value'; // OK
 stripPrefix('data-value') as 'other'; // ERROR
 
-declare function f<T: string>(x: `hello ${T}`): T;
+declare function f<T extends string>(x: `hello ${T}`): T;
 f('hello world') as 'world'; // OK
 f('hello world') as 'x'; // ERROR
 

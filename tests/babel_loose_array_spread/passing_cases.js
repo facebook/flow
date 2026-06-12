@@ -16,7 +16,7 @@ f.bind(null, ...b);
 
 function f(...args: Array<unknown>) {}
 
-declare function compose<A, T: ReadonlyArray<any>, R>(
+declare function compose<A, T extends ReadonlyArray<any>, R>(
   f1: (a: A) => R,
   f2: (...T) => A,
 ): (...T) => R;
