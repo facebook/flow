@@ -174,19 +174,13 @@ jobs:
       run: opam exec -- make do-test-js
     - name: Build flow_parser.js
       run: opam exec -- make -C src/parser js
-    - name: Create artifacts
+    - name: Create package artifact inputs
       run: |-
-        mkdir -p dist
-        cp src/parser/flow_parser.js dist/flow_parser.js
         cp src/parser/flow_parser.js packages/flow-parser/flow_parser.js
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_bin
         path: bin/flow.js
-    - uses: actions/upload-artifact@v4.4.0
-      with:
-        name: build_js_dist
-        path: dist/flow_parser.js
     - name: Install Node
       uses: actions/setup-node@v4.4.0
       with:
@@ -705,22 +699,12 @@ jobs:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
-        name: build_js_bin
-        path: bin
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_js_dist
-        path: dist
-    - uses: actions/download-artifact@v4.1.7
-      with:
         name: build_js_packages
         path: packages/flow-parser
     - name: Pack flow-parser
       run: |
-        mkdir -p packages/flow-parser/dist/
-        pwd
-        ls -lR .
-        cp dist/flow_parser.js packages/flow-parser/dist/flow_parser.js
+        test -f packages/flow-parser/flow_parser.js
+        test -d packages/flow-parser/oxidized
         make dist/npm-flow-parser.tgz
     - name: Pack flow-remove-types and flow-node
       run: |
