@@ -99,7 +99,6 @@ use lsp_types::NumberOrString;
 use lsp_types::TextEdit;
 use lsp_types::Uri;
 use lsp_types::WorkspaceEdit;
-use tower_lsp_server::UriExt as _;
 
 use crate::autofix_casting_syntax;
 use crate::autofix_class_member_access;
@@ -2866,11 +2865,14 @@ pub fn code_actions_at_loc<'a>(
                         cx,
                         &code_action_utils::layout_options(options),
                         module_system_info,
-                        match uri.to_file_path() {
-                            Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-                            None => None,
-                        }
-                        .as_deref(),
+                        lsp_helpers::lsp_uri_to_path(uri)
+                            .ok()
+                            .and_then(|p| {
+                                std::path::Path::new(&p)
+                                    .parent()
+                                    .map(|d| d.to_string_lossy().to_string())
+                            })
+                            .as_deref(),
                         ast,
                         diagnostics,
                         imports_ranked_usage,
@@ -3304,10 +3306,11 @@ pub fn autofix_imports_lsp(
     ast: &ast::Program<Loc, Loc>,
     uri: &Uri,
 ) -> Vec<TextEdit> {
-    let src_dir = match uri.to_file_path() {
-        Some(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
-        None => None,
-    };
+    let src_dir = lsp_helpers::lsp_uri_to_path(uri).ok().and_then(|p| {
+        std::path::Path::new(&p)
+            .parent()
+            .map(|d| d.to_string_lossy().to_string())
+    });
     let edits = autofix_imports_fn(
         options,
         env,

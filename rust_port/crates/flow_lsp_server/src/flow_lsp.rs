@@ -613,7 +613,7 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
     use flow_common::path_matcher::PathMatcher;
     use regex::Regex;
     let temp_dir = flow_server_files::server_files_js::default_temp_dir();
-    let temp_dir = temp_dir.canonicalize().unwrap_or(temp_dir);
+    let temp_dir = files::cached_canonicalize(&temp_dir).unwrap_or(temp_dir);
     let no_flowlib = true;
     let default_lib_dir = {
         let libdir = flow_flowlib::libdir(no_flowlib, &temp_dir);
@@ -3548,7 +3548,8 @@ fn main_handle_unsafe(
                 .as_ref()
                 .map(|s| FilePath::from(s.as_str()))
                 .unwrap_or_else(server_files_js_default_temp_dir);
-            let lsp_temp_dir = lsp_temp_dir.canonicalize().unwrap_or(lsp_temp_dir);
+            let lsp_temp_dir =
+                flow_common::files::cached_canonicalize(&lsp_temp_dir).unwrap_or(lsp_temp_dir);
 
             match flow_flowlib::libdir(false, &lsp_temp_dir) {
                 flow_flowlib::LibDir::Prelude(path) => {

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+pub mod file_url;
 pub mod lsp;
 pub mod lsp_fmt;
 pub mod lsp_helpers;

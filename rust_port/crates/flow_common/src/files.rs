@@ -1393,7 +1393,26 @@ pub fn canonicalize_filenames(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[cfg(windows)]
+    #[test]
+    fn cached_canonicalize_strips_windows_verbatim_prefix() {
+        let tmp = std::env::temp_dir().join(format!(
+            "flow_cached_canonicalize_verbatim_prefix_test_{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&tmp).unwrap();
+
+        let canonical = super::cached_canonicalize(&tmp).unwrap();
+
+        let canonical = canonical.to_string_lossy();
+        assert!(
+            !canonical.starts_with(r"\\?\"),
+            "expected cached_canonicalize to strip Windows verbatim prefix, got {}",
+            canonical
+        );
+
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
 
     #[cfg(windows)]
     #[test]
@@ -1422,7 +1441,7 @@ mod tests {
             "{}\\flow_mkdirp_verbatim_prefix_test",
             tmp.to_string_lossy().trim_end_matches(['\\', '/']),
         ));
-        mkdirp(&nested, 0o755);
+        super::mkdirp(&nested, 0o755);
         // The created directory should be reachable via the plain path
         // form, since the `\\?\` prefix is just an access-mode hint.
         let plain = format!(
@@ -1430,7 +1449,7 @@ mod tests {
             tmp.to_string_lossy().trim_end_matches(['\\', '/']),
         );
         assert!(
-            Path::new(&plain).is_dir(),
+            std::path::Path::new(&plain).is_dir(),
             "expected mkdirp to create {} when called with the \\\\?\\ prefix",
             plain
         );

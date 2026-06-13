@@ -1040,7 +1040,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] utils/
         - [x] buffered_line_reader_test.ml → `not needed` (no standalone Rust `Buffered_line_reader`; Watchman/JSON-RPC use `BufReader`)
         - [x] collections_test.ml → `not needed` (tests OCaml `WrappedMap`/`ImmQueue`; Rust uses standard map/queue types)
-        - [x] file_url_test.ml → `not needed` (Rust uses `lsp_types::Url::{from_file_path,to_file_path}`)
+        - [x] file_url_test.ml → `flow_lsp/src/file_url.rs` (inline tests)
         - [x] hh_json_test.ml → `not needed` (use `serde_json`)
         - [x] lsp_helpers_test.ml → `flow_lsp/src/lsp_helpers.rs` (inline tests)
         - [x] string_utils_test.ml → `flow_common/src/string_utils.rs` (inline tests)
@@ -1102,7 +1102,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] file_content/
       - [x] file_content.ml → `flow_server_utils/src/file_content.rs`
     - [x] file_url/
-      - [x] file_url.ml → `lsp_types::Url::{from_file_path, to_file_path}` (`url` crate)
+      - [x] file_url.ml → `flow_lsp/src/file_url.rs`
     - [x] hh_json/
       - [x] hh_json.ml → `flow_hh_json/src/lib.rs` (intentionally partial: use serde json)
         - [x] `json_string_of_value`

@@ -1194,7 +1194,7 @@ pub(crate) fn file_options_of_flowconfig(
     flowconfig: &FlowConfig,
 ) -> Arc<flow_common::files::FileOptions> {
     let temp_dir = flow_server_files::server_files_js::default_temp_dir();
-    let temp_dir = temp_dir.canonicalize().unwrap_or(temp_dir);
+    let temp_dir = flow_common::files::cached_canonicalize(&temp_dir).unwrap_or(temp_dir);
     file_options(
         flowconfig,
         root,
@@ -2196,8 +2196,7 @@ pub(super) fn make_options(
 
     let temp_dir = {
         let temp_dir = get_temp_dir(&temp_dir_override);
-        std::path::Path::new(&temp_dir)
-            .canonicalize()
+        flow_common::files::cached_canonicalize(std::path::Path::new(&temp_dir))
             .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir))
             .to_string_lossy()
             .to_string()
@@ -3298,8 +3297,7 @@ pub(crate) fn connect_and_make_request(
     // the roots to reconstruct absolute paths.
     flow_parser::file_key::set_project_root(&root.to_string_lossy());
     let temp_dir_string = get_temp_dir(&connect_flags.temp_dir);
-    let temp_dir = std::path::Path::new(&temp_dir_string)
-        .canonicalize()
+    let temp_dir = flow_common::files::cached_canonicalize(std::path::Path::new(&temp_dir_string))
         .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir_string));
     match flow_flowlib::libdir(false, &temp_dir) {
         flow_flowlib::LibDir::Prelude(ref path) => {
