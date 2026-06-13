@@ -627,6 +627,28 @@ jobs:
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run Rust port newtests
       run: ./tool test --check check --bin bin/rust-port-macos-arm64/flow
+  tool_test_rust_port_win:
+    runs-on: windows-2022
+    needs:
+    - build_rust_port_win
+    env:
+      FLOW_RUST_PORT: 1
+    steps:
+    - uses: actions/checkout@v3.6.0
+    - uses: actions/download-artifact@v4.1.7
+      with:
+        name: build_rust_port_win_bin
+        path: bin/rust-port-win64
+    - name: Install tool deps from yarn
+      run: |-
+        cd packages/flow-dev-tools
+        yarn install --ignore-scripts --pure-lockfile
+    - name: Set TMP env var for consistency
+      run: |-
+        echo "TMP=$env:USERPROFILE\AppData\Local\Temp" >> $env:GITHUB_ENV
+        echo "TEMP=$env:USERPROFILE\AppData\Local\Temp" >> $env:GITHUB_ENV
+    - name: Run Rust port newtests
+      run: node packages/flow-dev-tools/bin/tool test --check check --bin bin/rust-port-win64/flow.exe --parallelism 1
   ounit_test_linux:
     runs-on: ubuntu-22.04
     env:

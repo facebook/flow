@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::str::FromStr;
+use std::sync::LazyLock;
+
 use flow_server_utils::file_content;
 use lsp_types::Position;
 use lsp_types::Range;
-use tower_lsp_server::UriExt as _;
+use regex::Regex;
 
+use crate::file_url;
 use crate::lsp::DocumentUri;
 use crate::lsp::error as lsp_error;
 
@@ -27,21 +31,29 @@ fn invalid_file_url_error(uri: &DocumentUri) -> lsp_error::T {
     }
 }
 
+static URL_SCHEME_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^([a-zA-Z][a-zA-Z0-9+.-]+):").unwrap());
+
 pub fn lsp_uri_to_path(uri: &DocumentUri) -> Result<String, lsp_error::T> {
-    if uri.scheme().map(|scheme| scheme.as_str()) == Some("file") {
-        uri.to_file_path()
-            .map(|p| p.to_string_lossy().to_string())
-            .ok_or_else(|| invalid_file_url_error(uri))
+    let uri_str = uri.as_str();
+    if let Some(caps) = URL_SCHEME_REGEX.captures(uri_str) {
+        let scheme = caps.get(1).unwrap().as_str();
+        if scheme == "file" {
+            file_url::parse(uri_str).map_err(|_| invalid_file_url_error(uri))
+        } else {
+            Err(invalid_file_url_error(uri))
+        }
     } else {
-        Err(invalid_file_url_error(uri))
+        Ok(uri_str.to_string())
     }
 }
 
 pub fn path_to_lsp_uri(path: &str, default_path: &str) -> DocumentUri {
     if path.is_empty() {
-        DocumentUri::from_file_path(default_path).expect("path_to_lsp_uri: default_path invalid")
+        DocumentUri::from_str(&file_url::create(default_path))
+            .expect("path_to_lsp_uri: default_path invalid")
     } else {
-        DocumentUri::from_file_path(path).expect("path_to_lsp_uri: path invalid")
+        DocumentUri::from_str(&file_url::create(path)).expect("path_to_lsp_uri: path invalid")
     }
 }
 
@@ -424,6 +436,18 @@ mod tests {
             insert_lines,
             insert_chars_on_final_line,
         }
+    }
+
+    #[test]
+    fn test_path_to_lsp_uri() {
+        assert_eq!(
+            "file:///c%3A/autoexec.bat",
+            path_to_lsp_uri("c:/autoexec.bat", "").as_str()
+        );
+        assert_eq!(
+            "file:///etc/hash%23hash",
+            path_to_lsp_uri("/etc/hash#hash", "").as_str()
+        );
     }
 
     #[test]

@@ -191,7 +191,11 @@ fn remove_cache_entry_from_client(
     }
 }
 
-fn invalidate_client_cache_entry(client_id: Prot::ClientId, filename: &str, autocomplete: bool) {
+pub fn invalidate_client_cache_entry(
+    client_id: Prot::ClientId,
+    filename: &str,
+    autocomplete: bool,
+) {
     let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
     let Some(generation) = with_registry_mut(client_id, |entry| {
         entry.cache_invalidation_generation += 1;
