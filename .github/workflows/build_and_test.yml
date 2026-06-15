@@ -40,12 +40,18 @@ jobs:
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
-        mkdir -p bin/rust-port-linux
+        mkdir -p bin/rust-port-linux dist/flow
         cp rust_port/target/release/flow_cli bin/rust-port-linux/flow
+        cp bin/rust-port-linux/flow dist/flow/flow
+        cd dist && zip -r flow-linux64.zip flow/flow
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_and_test_rust_port_bin
         path: bin/rust-port-linux/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_and_test_rust_port_dist
+        path: dist/flow-linux64.zip
   build_rust_port_linux_arm64:
     runs-on: 4-core-ubuntu-arm
     env:
@@ -67,12 +73,18 @@ jobs:
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
-        mkdir -p bin/rust-port-linux-arm64
+        mkdir -p bin/rust-port-linux-arm64 dist/flow
         cp rust_port/target/release/flow_cli bin/rust-port-linux-arm64/flow
+        cp bin/rust-port-linux-arm64/flow dist/flow/flow
+        cd dist && zip -r flow-linux64-arm64.zip flow/flow
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_rust_port_linux_arm64_bin
         path: bin/rust-port-linux-arm64/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_linux_arm64_dist
+        path: dist/flow-linux64-arm64.zip
   build_rust_port_macos_arm64:
     runs-on: macos-15
     env:
@@ -97,12 +109,18 @@ jobs:
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
-        mkdir -p bin/rust-port-macos-arm64
+        mkdir -p bin/rust-port-macos-arm64 dist/flow
         cp rust_port/target/release/flow_cli bin/rust-port-macos-arm64/flow
+        cp bin/rust-port-macos-arm64/flow dist/flow/flow
+        cd dist && zip -r flow-osx-arm64.zip flow/flow
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_rust_port_macos_arm64_bin
         path: bin/rust-port-macos-arm64/flow
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_macos_arm64_dist
+        path: dist/flow-osx-arm64.zip
   build_rust_port_win:
     runs-on: windows-2022
     env:
@@ -125,11 +143,20 @@ jobs:
     - name: Create artifacts
       run: |-
         New-Item -ItemType Directory -Force bin\rust-port-win64
+        New-Item -ItemType Directory -Force dist\flow
         Copy-Item rust_port\target\release\flow_cli.exe bin\rust-port-win64\flow.exe
+        Copy-Item bin\rust-port-win64\flow.exe dist\flow\flow.exe
+        Push-Location dist
+        Compress-Archive -Path flow -DestinationPath flow-win64.zip -Force
+        Pop-Location
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_rust_port_win_bin
         path: bin/rust-port-win64/flow.exe
+    - uses: actions/upload-artifact@v4.4.0
+      with:
+        name: build_rust_port_win_dist
+        path: dist/flow-win64.zip
   build_js:
     runs-on: ubuntu-22.04
     env:
@@ -836,33 +863,33 @@ jobs:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-22.04
     needs:
-    - build_linux
-    - build_linux_arm64
-    - build_macos_arm64
-    - build_win
+    - build_and_test_rust_port
+    - build_rust_port_linux_arm64
+    - build_rust_port_macos_arm64
+    - build_rust_port_win
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
-        name: build_linux_dist
+        name: build_and_test_rust_port_dist
         path: dist
     - name: Upload Linux binary (x86_64)
       run: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-${{ github.ref_name }}.zip"
     - uses: actions/download-artifact@v4.1.7
       with:
-        name: build_linux_arm64_dist
+        name: build_rust_port_linux_arm64_dist
         path: dist
     - name: Upload Linux binary (arm64)
       run: .circleci/github_upload.sh dist/flow-linux64-arm64.zip "flow-linux-arm64-${{ github.ref_name }}.zip"
     - uses: actions/download-artifact@v4.1.7
       with:
-        name: build_macos_arm64_dist
+        name: build_rust_port_macos_arm64_dist
         path: dist
     - name: Upload Mac binary (arm64)
       run: .circleci/github_upload.sh dist/flow-osx-arm64.zip "flow-osx-arm64-${{ github.ref_name }}.zip"
     - uses: actions/download-artifact@v4.1.7
       with:
-        name: build_win_dist
+        name: build_rust_port_win_dist
         path: dist
     - name: Upload Windows binary
       run: .circleci/github_upload.sh dist/flow-win64.zip "flow-win64-${{ github.ref_name }}.zip"
