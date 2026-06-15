@@ -16,6 +16,11 @@ type lazy_mode =
   | Non_lazy
   | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
 
+type builtin_lib =
+  | Builtin_flowlib
+  | Builtin_prelude
+  | Builtin_tslib
+
 type config
 
 type warning = int * string
@@ -226,6 +231,8 @@ val multi_platform_extensions : config -> string list
 val munge_underscores : config -> bool
 
 val no_flowlib : config -> bool
+
+val builtin_lib : config -> builtin_lib
 
 val no_implicit_override : config -> bool
 

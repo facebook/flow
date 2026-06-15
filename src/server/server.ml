@@ -33,6 +33,7 @@ let extract_flowlibs_or_exit options =
       match libdir with
       | Files.Prelude path -> Flowlib.Prelude path
       | Files.Flowlib path -> Flowlib.Flowlib path
+      | Files.Tslib path -> Flowlib.Tslib path
     in
     (try Flowlib.extract libdir with
     | e ->
@@ -229,7 +230,7 @@ let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
      that receives options via Marshal, so we must set them here too. *)
   File_key.set_project_root (File_path.to_string (Options.root options));
   (match Options.file_options options |> Files.default_lib_dir with
-  | Some (Files.Flowlib path | Files.Prelude path) ->
+  | Some (Files.Flowlib path | Files.Prelude path | Files.Tslib path) ->
     File_key.set_flowlib_root (File_path.to_string path)
   | None -> ());
   SharedMem.on_compact := on_compact;

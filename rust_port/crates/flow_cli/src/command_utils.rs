@@ -30,6 +30,7 @@ use flow_common_exit::FlowExitStatus;
 use flow_common_vcs::vcs::Vcs;
 use flow_config::FlowConfig;
 use flow_config::LazyMode;
+use flow_config::opts::BuiltinLib as ConfigBuiltinLib;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_edenfs_watcher;
 use flow_flowlib::LibDir as FlowlibDir;
@@ -1003,6 +1004,21 @@ pub(crate) fn remove_exclusion(pattern: &str) -> &str {
     pattern.strip_prefix('!').unwrap_or(pattern)
 }
 
+fn flowlib_builtin_lib(
+    builtin_lib: ConfigBuiltinLib,
+    cli_no_flowlib: bool,
+) -> flow_flowlib::BuiltinLib {
+    if cli_no_flowlib {
+        flow_flowlib::BuiltinLib::Prelude
+    } else {
+        match builtin_lib {
+            ConfigBuiltinLib::Flowlib => flow_flowlib::BuiltinLib::Flowlib,
+            ConfigBuiltinLib::Prelude => flow_flowlib::BuiltinLib::Prelude,
+            ConfigBuiltinLib::Tslib => flow_flowlib::BuiltinLib::Tslib,
+        }
+    }
+}
+
 pub(crate) fn file_options(
     flowconfig: &FlowConfig,
     root: &Path,
@@ -1016,10 +1032,12 @@ pub(crate) fn file_options(
 ) -> Arc<flow_common::files::FileOptions> {
     use flow_common::files::FileOptions;
 
-    let flowlib_dir = flow_flowlib::libdir(no_flowlib, temp_dir);
+    let builtin_lib = flowlib_builtin_lib(flowconfig.options.builtin_lib, no_flowlib);
+    let flowlib_dir = flow_flowlib::libdir(builtin_lib, temp_dir);
     let default_lib_dir = Some(match flowlib_dir {
         flow_flowlib::LibDir::Prelude(path) => flow_common::files::LibDir::Prelude(path),
         flow_flowlib::LibDir::Flowlib(path) => flow_common::files::LibDir::Flowlib(path),
+        flow_flowlib::LibDir::Tslib(path) => flow_common::files::LibDir::Tslib(path),
     });
 
     let implicitly_include_root = flowconfig.options.files_implicitly_include_root;
@@ -2086,7 +2104,7 @@ pub(super) fn make_options(
                 multi_platform_extension_group_mapping,
                 multi_platform_ambient_supports_platform_project_overrides,
                 munge_underscores,
-                no_flowlib,
+                builtin_lib,
                 no_implicit_override,
                 no_unchecked_indexed_access,
                 node_modules_errors,
@@ -2272,10 +2290,8 @@ pub(super) fn make_options(
             .collect(),
     );
 
-    let flowlib_dir = flow_flowlib::libdir(
-        no_flowlib || cli_no_flowlib,
-        &std::path::PathBuf::from(&temp_dir),
-    );
+    let builtin_lib = flowlib_builtin_lib(builtin_lib, cli_no_flowlib);
+    let flowlib_dir = flow_flowlib::libdir(builtin_lib, &std::path::PathBuf::from(&temp_dir));
     flow_flowlib::extract(&flowlib_dir);
     let flowlib_path = flow_flowlib::path_of_libdir(&flowlib_dir).to_path_buf();
 
@@ -2564,6 +2580,7 @@ pub(super) fn make_options(
             default_lib_dir: Some(match flowlib_dir {
                 FlowlibDir::Prelude(path) => flow_common::files::LibDir::Prelude(path),
                 FlowlibDir::Flowlib(path) => flow_common::files::LibDir::Flowlib(path),
+                FlowlibDir::Tslib(path) => flow_common::files::LibDir::Tslib(path),
             }),
             ignores: ignores_processed,
             untyped: untyped_processed,
@@ -3299,11 +3316,14 @@ pub(crate) fn connect_and_make_request(
     let temp_dir_string = get_temp_dir(&connect_flags.temp_dir);
     let temp_dir = flow_common::files::cached_canonicalize(std::path::Path::new(&temp_dir_string))
         .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir_string));
-    match flow_flowlib::libdir(false, &temp_dir) {
+    match flow_flowlib::libdir(flow_flowlib::BuiltinLib::Flowlib, &temp_dir) {
         flow_flowlib::LibDir::Prelude(ref path) => {
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
         }
         flow_flowlib::LibDir::Flowlib(ref path) => {
+            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
+        }
+        flow_flowlib::LibDir::Tslib(ref path) => {
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
         }
     }

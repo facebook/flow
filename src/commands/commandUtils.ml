@@ -717,11 +717,20 @@ let file_options =
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
-      let no_flowlib = no_flowlib || FlowConfig.no_flowlib flowconfig in
+      let builtin_lib =
+        if no_flowlib then
+          Flowlib.Builtin_prelude
+        else
+          match FlowConfig.builtin_lib flowconfig with
+          | FlowConfig.Builtin_flowlib -> Flowlib.Builtin_flowlib
+          | FlowConfig.Builtin_prelude -> Flowlib.Builtin_prelude
+          | FlowConfig.Builtin_tslib -> Flowlib.Builtin_tslib
+      in
       let libdir =
-        match Flowlib.libdir ~no_flowlib temp_dir with
+        match Flowlib.libdir ~builtin_lib temp_dir with
         | Flowlib.Prelude path -> Files.Prelude path
         | Flowlib.Flowlib path -> Files.Flowlib path
+        | Flowlib.Tslib path -> Files.Tslib path
       in
       Some libdir
     in
@@ -1458,9 +1467,19 @@ let make_options
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = File_path.to_string temp_dir in
   let flowlib_dir =
-    match Flowlib.libdir ~no_flowlib:options_flags.no_flowlib temp_dir with
+    let builtin_lib =
+      if options_flags.no_flowlib then
+        Flowlib.Builtin_prelude
+      else
+        match FlowConfig.builtin_lib flowconfig with
+        | FlowConfig.Builtin_flowlib -> Flowlib.Builtin_flowlib
+        | FlowConfig.Builtin_prelude -> Flowlib.Builtin_prelude
+        | FlowConfig.Builtin_tslib -> Flowlib.Builtin_tslib
+    in
+    match Flowlib.libdir ~builtin_lib temp_dir with
     | Flowlib.Prelude path -> path
     | Flowlib.Flowlib path -> path
+    | Flowlib.Tslib path -> path
   in
   (* Initialize File_key root prefixes for relative path storage *)
   File_key.set_project_root (File_path.to_string root);
@@ -2053,9 +2072,10 @@ let connect_and_make_request ?retries flowconfig_name connect_flags root request
      the roots to reconstruct absolute paths. *)
   File_key.set_project_root (File_path.to_string root);
   let temp_dir = File_path.make (get_temp_dir connect_flags.temp_dir) in
-  (match Flowlib.libdir ~no_flowlib:false temp_dir with
+  (match Flowlib.libdir ~builtin_lib:Flowlib.Builtin_flowlib temp_dir with
   | Flowlib.Prelude path -> File_key.set_flowlib_root (File_path.to_string path)
-  | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path));
+  | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path)
+  | Flowlib.Tslib path -> File_key.set_flowlib_root (File_path.to_string path));
   match connect_flags.timeout with
   | None -> connect_and_make_request ?retries flowconfig_name connect_flags root request
   | Some timeout ->

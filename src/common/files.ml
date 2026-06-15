@@ -10,6 +10,7 @@
 type lib_dir =
   | Prelude of File_path.t
   | Flowlib of File_path.t
+  | Tslib of File_path.t
 
 type options = {
   default_lib_dir: lib_dir option;
@@ -637,7 +638,8 @@ let is_in_flowlib (options : options) : string -> bool =
     let root_str =
       match libdir with
       | Prelude path
-      | Flowlib path ->
+      | Flowlib path
+      | Tslib path ->
         File_path.to_string path
     in
     (* Similar to the |> File_path.to_string |> File_path.make |> File_path.to_string indirection
@@ -655,7 +657,8 @@ let ordered_and_unordered_lib_paths (options : options) =
       let root_str =
         match libdir with
         | Prelude path
-        | Flowlib path ->
+        | Flowlib path
+        | Tslib path ->
           File_path.to_string path
       in
       (* At the time when the config is first created, the flowlibs might be extracted if the

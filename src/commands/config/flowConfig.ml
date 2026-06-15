@@ -27,6 +27,11 @@ type lazy_mode =
   | Non_lazy
   | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
 
+type builtin_lib =
+  | Builtin_flowlib
+  | Builtin_prelude
+  | Builtin_tslib
+
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
@@ -122,7 +127,7 @@ module Opts = struct
     multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_extensions: string list;
     munge_underscores: bool;
-    no_flowlib: bool;
+    builtin_lib: builtin_lib;
     no_implicit_override: bool;
     no_unchecked_indexed_access: bool;
     node_modules_errors: bool;
@@ -305,7 +310,7 @@ module Opts = struct
       multi_platform_extension_group_mapping = [];
       multi_platform_extensions = [];
       munge_underscores = false;
-      no_flowlib = false;
+      builtin_lib = Builtin_flowlib;
       no_implicit_override = false;
       no_unchecked_indexed_access = false;
       node_modules_errors = false;
@@ -1274,7 +1279,29 @@ module Opts = struct
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ("name", root_name_parser);
-      ("no_flowlib", boolean (fun opts v -> Ok { opts with no_flowlib = v }));
+      ( "builtin_lib",
+        enum
+          [
+            ("flowlib", Builtin_flowlib);
+            ("prelude", Builtin_prelude);
+            ("experimental.tslib", Builtin_tslib);
+          ]
+          (fun opts v -> Ok { opts with builtin_lib = v })
+      );
+      ( "no_flowlib",
+        boolean (fun opts v ->
+            Ok
+              {
+                opts with
+                builtin_lib =
+                  ( if v then
+                    Builtin_prelude
+                  else
+                    Builtin_flowlib
+                  );
+              }
+        )
+      );
       ( "no_unchecked_indexed_access",
         boolean (fun opts v -> Ok { opts with no_unchecked_indexed_access = v })
       );
@@ -2121,7 +2148,14 @@ let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
-let no_flowlib c = c.options.Opts.no_flowlib
+let builtin_lib c = c.options.Opts.builtin_lib
+
+let no_flowlib c =
+  match c.options.Opts.builtin_lib with
+  | Builtin_prelude -> true
+  | Builtin_flowlib
+  | Builtin_tslib ->
+    false
 
 let no_implicit_override c = c.options.Opts.no_implicit_override
 

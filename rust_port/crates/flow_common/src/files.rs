@@ -88,6 +88,7 @@ pub fn cached_canonicalize(path: &Path) -> std::io::Result<PathBuf> {
 pub enum LibDir {
     Prelude(PathBuf),
     Flowlib(PathBuf),
+    Tslib(PathBuf),
 }
 #[derive(Debug, Clone)]
 pub struct FileOptions {
@@ -543,7 +544,7 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
         None => false,
         Some(libdir) => {
             let root_path = match libdir {
-                LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
+                LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
             };
             is_prefix(&root_path.to_string_lossy(), path)
         }
@@ -564,7 +565,7 @@ pub fn ordered_and_unordered_lib_paths(
         Some(libdir) => {
             let libs = &options.lib_paths;
             let root_path = match libdir {
-                LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
+                LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
             };
             let root = root_path.clone();
             let root_resolved = root.to_string_lossy().to_string();

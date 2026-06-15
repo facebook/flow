@@ -11,16 +11,26 @@ let flowlib_dir_ref = ref ""
 
 let prelude_dir_ref = ref ""
 
+let tslib_dir_ref = ref ""
+
 let flowlib_cache = ref None
 
 let prelude_cache = ref None
 
+let tslib_cache = ref None
+
 (* Read in all the flowlib files *)
+let is_lib_file file =
+  Filename.check_suffix file ".js"
+  || Filename.check_suffix file ".d.ts"
+  || Filename.check_suffix file ".d.mts"
+  || Filename.check_suffix file ".d.cts"
+
 let get_libs dir =
   Sys.readdir dir
   |> Array.fold_left
        (fun acc file ->
-         if Filename.check_suffix file ".js" then
+         if is_lib_file file then
            let contents = Script_utils.string_of_file (Filename.concat dir file) in
            (file, contents) :: acc
          else
@@ -76,6 +86,14 @@ let prelude_contents ~loc ~path:_ =
   let (_hash, contents) = memo ~loc !prelude_dir_ref prelude_cache in
   contents
 
+let tslib_hash ~loc ~path:_ =
+  let (hash, _contents) = memo ~loc !tslib_dir_ref tslib_cache in
+  hash
+
+let tslib_contents ~loc ~path:_ =
+  let (_hash, contents) = memo ~loc !tslib_dir_ref tslib_cache in
+  contents
+
 let make_rule name f =
   Context_free.Rule.extension
     (Extension.declare name Extension.Context.expression Ast_pattern.(pstr nil) f)
@@ -86,9 +104,12 @@ let rules =
     make_rule "flowlib_contents" flowlib_contents;
     make_rule "prelude_hash" prelude_hash;
     make_rule "prelude_contents" prelude_contents;
+    make_rule "tslib_hash" tslib_hash;
+    make_rule "tslib_contents" tslib_contents;
   ]
 
 let () =
   Driver.add_arg "-flowlib" (Arg.Set_string flowlib_dir_ref) ~doc:"Path to flowlib directory";
   Driver.add_arg "-prelude" (Arg.Set_string prelude_dir_ref) ~doc:"Path to prelude directory";
+  Driver.add_arg "-tslib" (Arg.Set_string tslib_dir_ref) ~doc:"Path to tslib directory";
   Driver.register_transformation ~rules "ppx_gen_flowlibs"

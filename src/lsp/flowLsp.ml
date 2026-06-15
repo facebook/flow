@@ -2460,9 +2460,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
            ~default:Server_files_js.default_temp_dir
         )
     in
-    (match Flowlib.libdir ~no_flowlib:false lsp_temp_dir with
+    (match Flowlib.libdir ~builtin_lib:Flowlib.Builtin_flowlib lsp_temp_dir with
     | Flowlib.Prelude path -> File_key.set_flowlib_root (File_path.to_string path)
-    | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path));
+    | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path)
+    | Flowlib.Tslib path -> File_key.set_flowlib_root (File_path.to_string path));
     (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
         of logging to stderr and exiting. *)
     let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in

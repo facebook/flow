@@ -9,7 +9,10 @@
    -flowlib
    %{project_root}/lib
    -prelude
-   %{project_root}/prelude))
+   %{project_root}/prelude
+   -tslib
+   %{project_root}/tslib))
  (preprocessor_deps
   (source_tree %{project_root}/lib)
-  (source_tree %{project_root}/prelude)))
+  (source_tree %{project_root}/prelude)
+  (source_tree %{project_root}/tslib)))

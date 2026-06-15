@@ -614,12 +614,12 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
     use regex::Regex;
     let temp_dir = flow_server_files::server_files_js::default_temp_dir();
     let temp_dir = files::cached_canonicalize(&temp_dir).unwrap_or(temp_dir);
-    let no_flowlib = true;
     let default_lib_dir = {
-        let libdir = flow_flowlib::libdir(no_flowlib, &temp_dir);
+        let libdir = flow_flowlib::libdir(flow_flowlib::BuiltinLib::Prelude, &temp_dir);
         Some(match libdir {
             flow_flowlib::LibDir::Prelude(path) => files::LibDir::Prelude(path),
             flow_flowlib::LibDir::Flowlib(path) => files::LibDir::Flowlib(path),
+            flow_flowlib::LibDir::Tslib(path) => files::LibDir::Tslib(path),
         })
     };
     let ignores: Vec<((String, Option<String>), Regex)> = flowconfig
@@ -3551,11 +3551,14 @@ fn main_handle_unsafe(
             let lsp_temp_dir =
                 flow_common::files::cached_canonicalize(&lsp_temp_dir).unwrap_or(lsp_temp_dir);
 
-            match flow_flowlib::libdir(false, &lsp_temp_dir) {
+            match flow_flowlib::libdir(flow_flowlib::BuiltinLib::Flowlib, &lsp_temp_dir) {
                 flow_flowlib::LibDir::Prelude(path) => {
                     flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
                 }
                 flow_flowlib::LibDir::Flowlib(path) => {
+                    flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
+                }
+                flow_flowlib::LibDir::Tslib(path) => {
                     flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
                 }
             }

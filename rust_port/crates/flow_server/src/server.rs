@@ -130,6 +130,7 @@ fn extract_flowlibs_or_exit(options: &Options) {
             let flowlib_libdir = match libdir {
                 LibDir::Prelude(path) => flow_flowlib::LibDir::Prelude(path.clone()),
                 LibDir::Flowlib(path) => flow_flowlib::LibDir::Flowlib(path.clone()),
+                LibDir::Tslib(path) => flow_flowlib::LibDir::Tslib(path.clone()),
             };
             let extract_result =
                 std::panic::catch_unwind(|| flow_flowlib::extract(&flowlib_libdir));
@@ -385,7 +386,7 @@ pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -
 pub fn create_program_init(init_id: &str, options: Arc<Options>) -> Genv {
     file_key::set_project_root(&options.root.display().to_string());
     match &options.file_options.default_lib_dir {
-        Some(LibDir::Flowlib(path) | LibDir::Prelude(path)) => {
+        Some(LibDir::Flowlib(path) | LibDir::Prelude(path) | LibDir::Tslib(path)) => {
             file_key::set_flowlib_root(&path.display().to_string());
         }
         None => {}

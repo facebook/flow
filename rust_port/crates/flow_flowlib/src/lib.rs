@@ -13,31 +13,48 @@ use flow_common::sys_utils;
 
 mod flowlib_contents;
 mod prelude_contents;
+mod tslib_contents;
 
-fn hash(no_flowlib: bool) -> String {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BuiltinLib {
+    Flowlib,
+    Prelude,
+    Tslib,
+}
+
+pub fn builtin_lib_of_no_flowlib(no_flowlib: bool) -> BuiltinLib {
     if no_flowlib {
-        prelude_contents::HASH.to_string()
+        BuiltinLib::Prelude
     } else {
-        flowlib_contents::HASH.to_string()
+        BuiltinLib::Flowlib
     }
 }
 
-fn contents(no_flowlib: bool) -> &'static [(&'static str, &'static str)] {
-    if no_flowlib {
-        prelude_contents::CONTENTS
-    } else {
-        flowlib_contents::CONTENTS
+fn hash(lib: BuiltinLib) -> String {
+    match lib {
+        BuiltinLib::Flowlib => flowlib_contents::HASH.to_string(),
+        BuiltinLib::Prelude => prelude_contents::HASH.to_string(),
+        BuiltinLib::Tslib => tslib_contents::HASH.to_string(),
+    }
+}
+
+fn contents(lib: BuiltinLib) -> &'static [(&'static str, &'static str)] {
+    match lib {
+        BuiltinLib::Flowlib => flowlib_contents::CONTENTS,
+        BuiltinLib::Prelude => prelude_contents::CONTENTS,
+        BuiltinLib::Tslib => tslib_contents::CONTENTS,
     }
 }
 
 pub fn contents_list(no_flowlib: bool) -> Vec<(&'static str, &'static str)> {
-    contents(no_flowlib).to_vec()
+    contents(builtin_lib_of_no_flowlib(no_flowlib)).to_vec()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LibDir {
     Flowlib(PathBuf),
     Prelude(PathBuf),
+    Tslib(PathBuf),
 }
 
 #[cfg(unix)]
@@ -55,14 +72,14 @@ fn get_euid() -> u32 {
 /// named uniquely based on the flowlib contents, as well as the effective
 /// user ID (euid) of the current process. The euid is used to ensure that
 /// the directory is writable by the current user.
-pub fn libdir(no_flowlib: bool, parent_dir: &Path) -> LibDir {
+pub fn libdir(builtin_lib: BuiltinLib, parent_dir: &Path) -> LibDir {
     let euid = get_euid();
-    let basename = format!("flowlib_{}_{}", hash(no_flowlib), euid);
+    let basename = format!("flowlib_{}_{}", hash(builtin_lib), euid);
     let path = parent_dir.join(&basename);
-    if no_flowlib {
-        LibDir::Prelude(path)
-    } else {
-        LibDir::Flowlib(path)
+    match builtin_lib {
+        BuiltinLib::Flowlib => LibDir::Flowlib(path),
+        BuiltinLib::Prelude => LibDir::Prelude(path),
+        BuiltinLib::Tslib => LibDir::Tslib(path),
     }
 }
 
@@ -70,6 +87,7 @@ pub fn path_of_libdir(libdir: &LibDir) -> &Path {
     match libdir {
         LibDir::Prelude(path) => path,
         LibDir::Flowlib(path) => path,
+        LibDir::Tslib(path) => path,
     }
 }
 
@@ -88,11 +106,12 @@ fn write_flowlib(dir: &Path, (filename, contents): &(&str, &str)) {
 
 pub fn extract(libdir: &LibDir) {
     mkdir(libdir);
-    let (path, no_flowlib) = match libdir {
-        LibDir::Prelude(path) => (path.as_path(), true),
-        LibDir::Flowlib(path) => (path.as_path(), false),
+    let (path, lib) = match libdir {
+        LibDir::Prelude(path) => (path.as_path(), BuiltinLib::Prelude),
+        LibDir::Flowlib(path) => (path.as_path(), BuiltinLib::Flowlib),
+        LibDir::Tslib(path) => (path.as_path(), BuiltinLib::Tslib),
     };
-    for entry in contents(no_flowlib) {
+    for entry in contents(lib) {
         write_flowlib(path, entry);
     }
 }
@@ -101,6 +120,7 @@ pub fn extract_if_missing(libdir: &LibDir) {
     let sentinel_name = match libdir {
         LibDir::Flowlib(_) => "core.js",
         LibDir::Prelude(_) => "prelude.js",
+        LibDir::Tslib(_) => "lib.d.ts",
     };
     let libdir_path = path_of_libdir(libdir);
     let sentinel = libdir_path.join(sentinel_name);
@@ -113,6 +133,7 @@ fn libdir_from_files_libdir(files_libdir: &flow_common::files::LibDir) -> LibDir
     match files_libdir {
         flow_common::files::LibDir::Prelude(path) => LibDir::Prelude(path.clone()),
         flow_common::files::LibDir::Flowlib(path) => LibDir::Flowlib(path.clone()),
+        flow_common::files::LibDir::Tslib(path) => LibDir::Tslib(path.clone()),
     }
 }
 

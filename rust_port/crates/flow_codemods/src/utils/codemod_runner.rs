@@ -144,6 +144,7 @@ pub fn extract_flowlibs_or_exit(options: &Options) {
             let flowlib_libdir = match libdir {
                 LibDir::Prelude(path) => flow_flowlib::LibDir::Prelude(path),
                 LibDir::Flowlib(path) => flow_flowlib::LibDir::Flowlib(path),
+                LibDir::Tslib(path) => flow_flowlib::LibDir::Tslib(path),
             };
             let extract_result =
                 std::panic::catch_unwind(|| flow_flowlib::extract(&flowlib_libdir));

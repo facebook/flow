@@ -338,7 +338,8 @@ fn collect_non_flowlib_libs(env: &Env, options: &Options) -> BTreeSet<FlowSmolSt
         .as_ref()
         .map(|dir| match dir {
             flow_common::files::LibDir::Prelude(path)
-            | flow_common::files::LibDir::Flowlib(path) => path.clone(),
+            | flow_common::files::LibDir::Flowlib(path)
+            | flow_common::files::LibDir::Tslib(path) => path.clone(),
         });
     env.all_unordered_libs
         .iter()

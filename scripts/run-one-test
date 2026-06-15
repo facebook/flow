@@ -371,8 +371,8 @@ runtest() {
             pushd "$cwd" >/dev/null
         fi
 
-        # if .flowconfig sets no_flowlib, don't pass the cli flag
-        if [ -f .flowconfig ] && grep -q "no_flowlib" .flowconfig; then
+        # if .flowconfig sets the builtin lib, don't pass the cli flag
+        if [ -f .flowconfig ] && grep -q -E "no_flowlib|builtin_lib" .flowconfig; then
             flowlib=""
         fi
 

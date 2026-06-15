@@ -66,6 +66,13 @@ pub mod opts {
 
     struct OptError(u32, ErrorKind);
 
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum BuiltinLib {
+        Flowlib,
+        Prelude,
+        Tslib,
+    }
+
     #[derive(Debug, Clone)]
     pub struct Opts {
         pub all: Option<bool>,
@@ -153,7 +160,7 @@ pub mod opts {
         pub multi_platform_ambient_supports_platform_project_overrides:
             Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
         pub munge_underscores: bool,
-        pub no_flowlib: bool,
+        pub builtin_lib: BuiltinLib,
         pub no_implicit_override: bool,
         pub no_unchecked_indexed_access: bool,
         pub node_modules_errors: bool,
@@ -325,7 +332,7 @@ pub mod opts {
             multi_platform_extension_group_mapping: Vec::new(),
             multi_platform_ambient_supports_platform_project_overrides: Vec::new(),
             munge_underscores: false,
-            no_flowlib: false,
+            builtin_lib: BuiltinLib::Flowlib,
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
@@ -2211,6 +2218,7 @@ pub mod opts {
             "module.use_strict",
             "munge_underscores",
             "name",
+            "builtin_lib",
             "no_flowlib",
             "no_implicit_override",
             "no_unchecked_indexed_access",
@@ -2762,9 +2770,26 @@ pub mod opts {
                     config,
                 )),
                 "name" => Some(root_name_parser(values, config)),
+                "builtin_lib" => Some(enum_parser(
+                    &[
+                        ("flowlib", BuiltinLib::Flowlib),
+                        ("prelude", BuiltinLib::Prelude),
+                        ("experimental.tslib", BuiltinLib::Tslib),
+                    ],
+                    |opts, v| {
+                        opts.builtin_lib = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
                 "no_flowlib" => Some(parse_boolean(
                     |opts, v| {
-                        opts.no_flowlib = v;
+                        opts.builtin_lib = if v {
+                            BuiltinLib::Prelude
+                        } else {
+                            BuiltinLib::Flowlib
+                        };
                         Ok(())
                     },
                     values,

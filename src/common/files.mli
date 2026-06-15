@@ -10,6 +10,7 @@
 type lib_dir =
   | Prelude of File_path.t
   | Flowlib of File_path.t
+  | Tslib of File_path.t
 
 type options
 

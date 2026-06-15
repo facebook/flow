@@ -43,6 +43,7 @@ let extract_flowlibs_or_exit options =
       match libdir with
       | Files.Prelude path -> Flowlib.Prelude path
       | Files.Flowlib path -> Flowlib.Flowlib path
+      | Files.Tslib path -> Flowlib.Tslib path
     in
     (try Flowlib.extract libdir with
     | e ->
