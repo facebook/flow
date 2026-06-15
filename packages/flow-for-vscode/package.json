@@ -198,7 +198,7 @@
     "babel-jest": "29.7.0",
     "babel-runtime": "^6.26.0",
     "builtin-modules": "3.1.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.28.1",
     "jest": "29.7.0",
     "prettier": "3.4.2",
     "typescript": "^5.7.2",
