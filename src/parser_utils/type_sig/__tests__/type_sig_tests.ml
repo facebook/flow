@@ -329,6 +329,21 @@ let print_builtins ordered_contents_indent =
   let fmt = make_test_formatter () in
   pp_builtins fmt builtins
 
+let print_builtins_errors ordered_contents_indent =
+  let ordered_asts =
+    List.map
+      (fun contents_indent ->
+        let contents = dedent_trim contents_indent in
+        let parse_options = parse_options ~module_ref_prefix:None in
+        let (ast, _errors) = Parser_flow.program ~parse_options contents in
+        ast)
+      ordered_contents_indent
+  in
+  let sig_opts = sig_options ~for_builtins:true () in
+  let (errs, locs, _) = Type_sig_utils.parse_and_pack_builtins sig_opts ordered_asts in
+  let fmt = make_test_formatter () in
+  pp_errors (mk_pp_loc locs) fmt errs
+
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
@@ -6418,6 +6433,37 @@ let%expect_test "declare_namespace_declaration_merging" =
     Builtin global value ns_v_and_then_t
     Builtin global type non_ns_type
     Builtin global type ns_t |}]
+
+let%expect_test "declare_namespace_nested_declaration_merging_no_errors" =
+  print_builtins_errors [
+    {|
+      declare namespace ns {
+        interface ValueAndType {
+          a: string;
+        }
+        declare const ValueAndType: { prototype: ValueAndType };
+        declare namespace nested {
+          interface Inner {
+            a: string;
+          }
+          declare const Inner: { prototype: Inner };
+        }
+      }
+    |};
+    {|
+      declare namespace ns {
+        interface ValueAndType {
+          b: number;
+        }
+        declare namespace nested {
+          interface Inner {
+            b: number;
+          }
+        }
+      }
+    |};
+  ];
+  [%expect {||}]
 
 let%expect_test "builtin_pattern" =
   print_builtins [{|

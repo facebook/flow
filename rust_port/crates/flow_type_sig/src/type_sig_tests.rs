@@ -21928,6 +21928,42 @@ Builtin global type ns_t
 }
 
 #[test]
+fn declare_namespace_nested_declaration_merging_no_errors() {
+    let first = r#"
+        declare namespace ns {
+          interface ValueAndType {
+            a: string;
+          }
+          declare const ValueAndType: { prototype: ValueAndType };
+          declare namespace nested {
+            interface Inner {
+              a: string;
+            }
+            declare const Inner: { prototype: Inner };
+          }
+        }
+    "#;
+    let second = r#"
+        declare namespace ns {
+          interface ValueAndType {
+            b: number;
+          }
+          declare namespace nested {
+            interface Inner {
+              b: number;
+            }
+          }
+        }
+    "#;
+    let output = print_builtins(vec![first, second]);
+    assert!(
+        !output.contains("\nErrors:\n"),
+        "nested namespace declaration merging should not report errors:\n{}",
+        output
+    );
+}
+
+#[test]
 fn builtin_pattern() {
     let input = r#"
         const o = { p: 0 };

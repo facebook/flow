@@ -5,8 +5,8 @@ declare namespace ns_v {
   declare const b: string;
 }
 declare namespace ns_v {
-  type a = string; // error: already bound
-  type b = string; // error: already bound
+  type a = string; // ok: value and type bindings can share a name
+  type b = string; // ok: value and type bindings can share a name
 }
 declare namespace ns_t {
   type T1 = string;

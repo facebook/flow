@@ -2334,23 +2334,19 @@ module Scope = struct
               :: tbls.additional_errors
         | None ->
           (match SMap.find_opt name !existing_types with
-          | Some ((existing_binding_loc, _) as existing_entry) ->
+          | Some existing_entry ->
             (match merge_namespace_value_type_entry tbls name existing_entry entry with
             | Some merged_entry ->
               existing_types := SMap.remove name !existing_types;
               existing_values := SMap.add name merged_entry !existing_values
-            | None ->
-              tbls.additional_errors <-
-                Signature_error.NamespacedNameAlreadyBound
-                  { name; invalid_binding_loc = loc; existing_binding_loc }
-                :: tbls.additional_errors)
+            | None -> existing_values := SMap.add name entry !existing_values)
           | None -> existing_values := SMap.add name entry !existing_values))
       values;
     SMap.iter
       (fun name ((loc, _) as entry) ->
-        match SMap.find_opt name !existing_values with
+        match SMap.find_opt name !existing_types with
         | Some ((existing_binding_loc, _) as existing_entry) ->
-          if merge_namespace_type_value_entry tbls name existing_entry entry then
+          if merge_namespace_type_type_entry tbls name existing_entry entry then
             ()
           else
             tbls.additional_errors <-
@@ -2358,15 +2354,12 @@ module Scope = struct
                 { name; invalid_binding_loc = loc; existing_binding_loc }
               :: tbls.additional_errors
         | None ->
-          (match SMap.find_opt name !existing_types with
-          | Some ((existing_binding_loc, _) as existing_entry) ->
-            if merge_namespace_type_type_entry tbls name existing_entry entry then
+          (match SMap.find_opt name !existing_values with
+          | Some existing_entry ->
+            if merge_namespace_type_value_entry tbls name existing_entry entry then
               ()
             else
-              tbls.additional_errors <-
-                Signature_error.NamespacedNameAlreadyBound
-                  { name; invalid_binding_loc = loc; existing_binding_loc }
-                :: tbls.additional_errors
+              existing_types := SMap.add name entry !existing_types
           | None -> existing_types := SMap.add name entry !existing_types))
       types
 

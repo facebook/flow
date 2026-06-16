@@ -4800,19 +4800,13 @@ pub(super) mod scope {
                         });
                 }
             } else if let Some(existing_entry) = existing_types.get(&n).cloned() {
-                let existing_binding_loc = existing_entry.0.dupe();
                 if let Some(merged_entry) =
                     merge_namespace_value_type_entry(scopes, tbls, &n, &existing_entry, &entry)
                 {
                     existing_types.remove(&n);
                     existing_values.insert(n, merged_entry);
                 } else {
-                    tbls.additional_errors
-                        .push(BindingValidation::NamespacedNameAlreadyBound {
-                            name: n,
-                            invalid_binding_loc: entry.0,
-                            existing_binding_loc,
-                        });
+                    existing_values.insert(n, entry);
                 }
             } else {
                 existing_values.insert(n, entry);
@@ -4820,17 +4814,7 @@ pub(super) mod scope {
         }
 
         for (n, entry) in ns_types {
-            if let Some(existing_entry) = existing_values.get(&n).cloned() {
-                let existing_binding_loc = existing_entry.0.dupe();
-                if !merge_namespace_type_value_entry(scopes, tbls, &n, &existing_entry, &entry) {
-                    tbls.additional_errors
-                        .push(BindingValidation::NamespacedNameAlreadyBound {
-                            name: n,
-                            invalid_binding_loc: entry.0,
-                            existing_binding_loc,
-                        });
-                }
-            } else if let Some(existing_entry) = existing_types.get(&n).cloned() {
+            if let Some(existing_entry) = existing_types.get(&n).cloned() {
                 let existing_binding_loc = existing_entry.0.dupe();
                 if !merge_namespace_type_type_entry(scopes, tbls, &n, &existing_entry, &entry) {
                     tbls.additional_errors
@@ -4839,6 +4823,10 @@ pub(super) mod scope {
                             invalid_binding_loc: entry.0,
                             existing_binding_loc,
                         });
+                }
+            } else if let Some(existing_entry) = existing_values.get(&n).cloned() {
+                if !merge_namespace_type_value_entry(scopes, tbls, &n, &existing_entry, &entry) {
+                    existing_types.insert(n, entry);
                 }
             } else {
                 existing_types.insert(n, entry);
@@ -4940,9 +4928,33 @@ pub(super) mod scope {
             values.get(&name).map(|n| n.dupe()),
             types.get(&name).map(|n| n.dupe()),
         ) {
-            (_, Some(_), Some(_)) => {
-                panic!("Invariant violation: a name cannot be in both values and types")
+            (
+                _,
+                Some(BindingNode::LocalBinding(value_node)),
+                Some(BindingNode::LocalBinding(type_node)),
+            ) => {
+                if value_node.0.ptr_eq(&type_node.0) {
+                    merge_namespace_into_local_binding_node(
+                        scopes,
+                        tbls,
+                        &value_node,
+                        ns_values,
+                        ns_types,
+                    );
+                } else {
+                    merge_namespace_into_local_binding_node(
+                        scopes,
+                        tbls,
+                        &value_node,
+                        ns_values.clone(),
+                        ns_types.clone(),
+                    );
+                    merge_namespace_into_local_binding_node(
+                        scopes, tbls, &type_node, ns_values, ns_types,
+                    );
+                }
             }
+            (_, Some(_), Some(_)) => {}
             (_, None, None) => {
                 let def = LocalBinding::NamespaceBinding {
                     id_loc,
@@ -5027,9 +5039,42 @@ pub(super) mod scope {
                     parent_values.get(&name).map(|n| n.dupe()),
                     parent_types.get(&name).map(|n| n.dupe()),
                 ) {
-                    (_, Some(_), Some(_)) => {
-                        panic!("Invariant violation: a name cannot be in both values and types")
+                    (
+                        _,
+                        Some(BindingNode::LocalBinding(value_node)),
+                        Some(BindingNode::LocalBinding(type_node)),
+                    ) => {
+                        let merged = if value_node.0.ptr_eq(&type_node.0) {
+                            merge_namespace_into_local_binding_node(
+                                scopes,
+                                tbls,
+                                &value_node,
+                                ns_values.clone(),
+                                ns_types.clone(),
+                            )
+                        } else {
+                            let merged_value = merge_namespace_into_local_binding_node(
+                                scopes,
+                                tbls,
+                                &value_node,
+                                ns_values.clone(),
+                                ns_types.clone(),
+                            );
+                            let merged_type = merge_namespace_into_local_binding_node(
+                                scopes,
+                                tbls,
+                                &type_node,
+                                ns_values.clone(),
+                                ns_types.clone(),
+                            );
+                            merged_value || merged_type
+                        };
+                        if merged {
+                            k(scopes, &name, value_node);
+                        }
+                        merged
                     }
+                    (_, Some(_), Some(_)) => false,
                     (false, Some(BindingNode::LocalBinding(node)), None)
                     | (true, Some(BindingNode::LocalBinding(node)), None)
                     | (true, None, Some(BindingNode::LocalBinding(node)))

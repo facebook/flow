@@ -164,6 +164,10 @@ impl<'a, T> Node<'a, T> {
         self.inner.data.borrow_mut()
     }
 
+    pub(super) fn ptr_eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self.inner, other.inner)
+    }
+
     pub(super) fn mark(&self, visitor: impl FnOnce(&T) -> bool) {
         if *self.inner.mark_status.borrow() != MarkStatus::Unmarked {
             return;

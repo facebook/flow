@@ -129,7 +129,7 @@ declare namespace NsWithDeclMerge {
 declare function fnWithDeclMerge(): void;
 declare namespace fnWithDeclMerge {
   declare function Router(): void;
-  interface Router { route: string } // error: name-already-bound
+  interface Router { route: string } // ok: value and type bindings can share a name
   type T = string;
 }
 '' as fnWithDeclMerge.T; // ok
