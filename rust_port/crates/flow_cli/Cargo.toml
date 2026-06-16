@@ -76,7 +76,7 @@ flow_utils_find = { path = "../flow_utils_find" }
 flow_utils_tty = { path = "../flow_utils_tty" }
 libc = "0.2.186"
 lsp-types = "0.97"
-regex = "1.12.3"
+regex = "1.12.4"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 vec1 = { version = "1.12.1", features = ["serde"] }

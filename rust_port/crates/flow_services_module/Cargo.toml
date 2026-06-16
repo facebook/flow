@@ -16,5 +16,5 @@ flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 lazy_static = "1.5"
-regex = "1.12.3"
+regex = "1.12.4"
 vec1 = { version = "1.12.1", features = ["serde"] }
