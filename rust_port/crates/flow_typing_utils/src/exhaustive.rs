@@ -34,6 +34,7 @@ use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
 use flow_typing_errors::error_message::MatchNotExhaustiveData;
 use flow_typing_errors::error_message::MatchUnusedPatternData;
 use flow_typing_flow_common::concrete_type_eq;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_loc_env::match_pattern_ir;
@@ -49,6 +50,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_mapper;
+use flow_utils_concurrency::job_error::JobError;
 
 // open Match_pattern_ir
 type SMap<V> = FlowOrdMap<FlowSmolStr, V>;
@@ -1222,19 +1224,13 @@ mod value_union_builder {
         cx: &Context<'cx>,
         key: &(ALoc, FlowSmolStr),
         obj: &Type,
-    ) -> Result<
-        Option<value_object::Property<'cx, Context<'cx>>>,
-        flow_utils_concurrency::job_error::JobError,
-    > {
+    ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
         fn get_prop_from_dict<'cx>(
             cx: &Context<'cx>,
             key_loc: &ALoc,
             key_name: &FlowSmolStr,
             dict: Option<&flow_typing_type::type_::DictType>,
-        ) -> Result<
-            Option<value_object::Property<'cx, Context<'cx>>>,
-            flow_utils_concurrency::job_error::JobError,
-        > {
+        ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
             match dict {
                 Some(dict) => {
                     let reason_key = flow_common::reason::mk_reason(
@@ -1278,10 +1274,7 @@ mod value_union_builder {
             props_list: &[flow_typing_type::type_::properties::Id],
             dict: Option<&flow_typing_type::type_::DictType>,
             key: &(ALoc, FlowSmolStr),
-        ) -> Result<
-            Option<value_object::Property<'cx, Context<'cx>>>,
-            flow_utils_concurrency::job_error::JobError,
-        > {
+        ) -> Result<Option<value_object::Property<'cx, Context<'cx>>>, JobError> {
             let (_, key_name) = key;
             let current_prop = props_list.iter().find_map(|id| {
                 let name = flow_common::reason::Name::new(key_name.dupe());
@@ -1333,19 +1326,18 @@ mod value_union_builder {
                 let name = flow_common::reason::Name::new(key_name.dupe());
                 if flow_typing_flow_common::flow_js_utils::is_object_prototype_method(&name) {
                     let builtin_t = flow_js::get_builtin_type(cx, reason, None, "Object");
-                    // Propagate WorkerCanceled and TimedOut; other
+                    // Propagate WorkerCanceled, TimedOut, and DebugThrow; other
                     // FlowJsException variants are dropped here matching the
                     // original `.ok()?` behavior. See plan.md §"JobError".
                     let builtin_t = match builtin_t {
                         Ok(t) => t,
-                        Err(
-                            flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(
-                                c,
-                            ),
-                        ) => return Err(flow_utils_concurrency::job_error::JobError::Canceled(c)),
-                        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(
-                            t,
-                        )) => return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t)),
+                        Err(FlowJsException::WorkerCanceled(c)) => {
+                            return Err(JobError::Canceled(c));
+                        }
+                        Err(FlowJsException::TimedOut(t)) => return Err(JobError::TimedOut(t)),
+                        Err(FlowJsException::DebugThrow { loc }) => {
+                            return Err(JobError::DebugThrow { loc });
+                        }
                         Err(_) => return Ok(None),
                     };
                     get_prop(cx, key, &builtin_t)
@@ -1390,7 +1382,7 @@ fn is_leaf_subtype_of_inexhaustible<'cx>(
     cx: &Context<'cx>,
     leaf_val: &leaf::Leaf,
     inexhaustible: &FlowVector<Type>,
-) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+) -> Result<bool, JobError> {
     let leaf_type = leaf_val.to_type();
     for t in inexhaustible.iter() {
         if FlowJs::speculative_subtyping_succeeds(cx, &leaf_type, t)? {
@@ -1440,7 +1432,7 @@ fn filter_values_by_patterns<'cx>(
     raise_errors: bool,
     value_union: &value_union::ValueUnion<'cx, Context<'cx>>,
     pattern_union: &pattern_union::PatternUnion,
-) -> Result<FilterUnionResult<'cx>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<FilterUnionResult<'cx>, JobError> {
     let value_union::ValueUnion {
         leafs: value_leafs,
         tuples: value_tuples,
@@ -1644,7 +1636,7 @@ fn filter_objects_by_patterns<'cx>(
         Vec<value_object::ValueObject<'cx, Context<'cx>>>,
         ALocSet,
     ),
-    flow_utils_concurrency::job_error::JobError,
+    JobError,
 > {
     let mut acc_left: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
     let mut acc_matched: Vec<value_object::ValueObject<'cx, Context<'cx>>> = Vec::new();
@@ -1720,10 +1712,7 @@ fn filter_object_by_pattern<'cx>(
     subclass_covered: &FlowOrdSet<ALocId>,
     value_object: &value_object::ValueObject<'cx, Context<'cx>>,
     pattern_object: &pattern_object::PatternObject,
-) -> Result<
-    (FilterObjectResult<'cx>, FlowOrdSet<ALocId>),
-    flow_utils_concurrency::job_error::JobError,
-> {
+) -> Result<(FilterObjectResult<'cx>, FlowOrdSet<ALocId>), JobError> {
     let value_object::ValueObject(reason_value, value_inner) = value_object;
     let value_object::ValueObjectInner {
         props: value_props_orig,
@@ -2102,7 +2091,7 @@ fn visit_mixed<'cx>(
     raise_errors: bool,
     reason: &Reason,
     pattern_union: &pattern_union::PatternUnion,
-) -> Result<ALocSet, flow_utils_concurrency::job_error::JobError> {
+) -> Result<ALocSet, JobError> {
     let pattern_tuples_exact = &pattern_union.tuples_exact;
     let pattern_tuples_inexact = &pattern_union.tuples_inexact;
     let pattern_objects = &pattern_union.objects;
@@ -2198,7 +2187,7 @@ fn mark_leaf_pattern_used<'cx>(
     inexhaustible: &FlowVector<Type>,
     leaf_pattern: &leaf::Leaf,
     used_pattern_locs: &mut ALocSet,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let reason = &leaf_pattern.0;
     let loc = reason.loc();
     if value_leafs_matched.contains(leaf_pattern)
@@ -2291,7 +2280,7 @@ pub fn analyze<'cx>(
     match_loc: ALoc,
     patterns: &match_pattern_ir::PatternAstList,
     arg_t: &Type,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let pattern_union = pattern_union_builder::of_patterns_ast(cx, is_global_var, true, patterns);
     let value_union = value_union_builder::of_type(cx, arg_t);
     let FilterUnionResult {
@@ -2474,8 +2463,7 @@ pub fn filter_by_pattern_union<'cx>(
     cx: &Context<'cx>,
     root_t: &Type,
     pattern_union: &pattern_union::PatternUnion,
-) -> Result<value_union::ValueUnion<'cx, Context<'cx>>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<value_union::ValueUnion<'cx, Context<'cx>>, JobError> {
     let value_union = value_union_builder::of_type(cx, root_t);
     let FilterUnionResult {
         value_left,

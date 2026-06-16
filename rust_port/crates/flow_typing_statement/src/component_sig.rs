@@ -25,6 +25,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_util;
 use flow_typing_utils::abnormal::CheckExprError;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::component_params;
 use crate::statement;
@@ -48,14 +49,8 @@ pub mod component_declaration_body {
         exhaust: &'b Option<(RefCell<Vec<Type>>, Vec<ALoc>)>,
     }
 
-    impl<'ast>
-        AstVisitor<
-            'ast,
-            ALoc,
-            (ALoc, Type),
-            &'ast ALoc,
-            flow_utils_concurrency::job_error::JobError,
-        > for ComponentScopeVisitor<'_, '_, '_>
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
+        for ComponentScopeVisitor<'_, '_, '_>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -69,7 +64,7 @@ pub mod component_declaration_body {
             &mut self,
             _loc: &'ast ALoc,
             _expr: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             Ok(())
         }
 
@@ -77,7 +72,7 @@ pub mod component_declaration_body {
             &mut self,
             _loc: &'ast ALoc,
             _component: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             Ok(())
         }
 
@@ -85,7 +80,7 @@ pub mod component_declaration_body {
             &mut self,
             loc: &'ast ALoc,
             switch: &'ast ast::statement::Switch<ALoc, (ALoc, Type)>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             let (ref exhaust_loc, ref t) = switch.exhaustive_out;
             if let Some((exhaustive_ts, exhaust_locs)) = self.exhaust {
                 if exhaust_locs.contains(exhaust_loc) {
@@ -99,7 +94,7 @@ pub mod component_declaration_body {
         fn statement(
             &mut self,
             stmt: &'ast ast::statement::Statement<ALoc, (ALoc, Type)>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             match &**stmt {
                 ast::statement::StatementInner::Return {
                     inner: return_stmt, ..
@@ -116,14 +111,14 @@ pub mod component_declaration_body {
         fn visit(
             &mut self,
             statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             self.statement_list(statements)
         }
 
         fn custom_return(
             &self,
             return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+        ) -> Result<(), JobError> {
             let (_, ref t) = return_stmt.return_out;
             let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::FunReturnStatement {
                 value: match &return_stmt.argument {
@@ -154,10 +149,7 @@ pub mod component_declaration_body {
         reason_cmp: Reason,
         renders_t: Type,
         body: declaration_body_config::Body<ALoc>,
-    ) -> Result<
-        declaration_body_config::Body<(ALoc, Type)>,
-        flow_utils_concurrency::job_error::JobError,
-    > {
+    ) -> Result<declaration_body_config::Body<(ALoc, Type)>, JobError> {
         let (body_loc, body_block) = body;
         let statements = &body_block.body;
 
@@ -203,7 +195,7 @@ pub mod component_declaration_body {
         .visit(&body_ast.body)?;
         if let Some((maybe_exhaustively_checked_ts, _)) = &exhaust {
             let ts = maybe_exhaustively_checked_ts.borrow();
-            if type_operation_utils::type_assertions::non_exhaustive(cx, &ts) {
+            if type_operation_utils::type_assertions::non_exhaustive(cx, &ts)? {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     error_message::ErrorMessage::EComponentMissingReturn(reason_cmp),
@@ -254,7 +246,7 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
     rest: Option<&C::Rest>,
     renders_t: Type,
     id_opt: Option<(&ALoc, &FlowSmolStr)>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let config_reason = reason
         .dupe()
         .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));

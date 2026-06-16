@@ -45,7 +45,9 @@ use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::implicit_instantiation;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
+use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::BinaryTest;
@@ -78,6 +80,7 @@ use flow_typing_type::type_::SpeculationHintSetData;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Targ;
 use flow_typing_type::type_::ThisInstanceTData;
+use flow_typing_type::type_::ThisStatus;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
@@ -97,22 +100,29 @@ use flow_typing_type::type_::react;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_::unsoundness;
 use flow_typing_type::type_util;
+use flow_utils_concurrency::job_error::JobError;
 use vec1::Vec1;
 
 use crate::speculation_flow;
 use crate::type_env;
 
-pub type ConcrArgListFn = Rc<dyn for<'cx> Fn(&Context<'cx>, Option<ALoc>) -> Vec<(ALoc, CallArg)>>;
+pub type ConcrArgListFn =
+    Rc<dyn for<'cx> Fn(&Context<'cx>, Option<ALoc>) -> Result<Vec<(ALoc, CallArg)>, JobError>>;
 
-pub type ConcrJsxProps<'cx> =
-    Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>;
+pub type ConcrJsxProps<'cx> = Rc<
+    flow_lazy::Lazy<
+        Context<'cx>,
+        Result<Type, JobError>,
+        Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
+    >,
+>;
 
-pub type ConcrBaseHintT = Result<Type, flow_utils_concurrency::job_error::JobError>;
+pub type ConcrBaseHintT = Result<Type, JobError>;
 
 pub type ConcrHint<'cx> = Hint<
     'cx,
     ConcrBaseHintT,
-    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    Result<Option<Vec<Targ>>, JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
@@ -120,7 +130,7 @@ pub type ConcrHint<'cx> = Hint<
 pub type ConcrHintDecomposition<'cx> = HintDecomposition<
     'cx,
     ConcrBaseHintT,
-    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    Result<Option<Vec<Targ>>, JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
@@ -128,7 +138,7 @@ pub type ConcrHintDecomposition<'cx> = HintDecomposition<
 pub type ConcrHintDecompositionInner<'cx> = HintDecompositionInner<
     'cx,
     ConcrBaseHintT,
-    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    Result<Option<Vec<Targ>>, JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
@@ -136,7 +146,7 @@ pub type ConcrHintDecompositionInner<'cx> = HintDecompositionInner<
 pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
     'cx,
     ConcrBaseHintT,
-    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    Result<Option<Vec<Targ>>, JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
@@ -144,7 +154,7 @@ pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
 pub type ConcrJsxHints<'cx> = JsxImplicitInstantiationHints<
     'cx,
     ConcrBaseHintT,
-    Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    Result<Option<Vec<Targ>>, JobError>,
     ConcrArgListFn,
     ConcrJsxProps<'cx>,
 >;
@@ -190,16 +200,12 @@ impl From<flow_utils_concurrency::job_error::CheckTimeout> for SandboxError {
     }
 }
 
-impl From<flow_utils_concurrency::job_error::JobError> for SandboxError {
-    fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+impl From<JobError> for SandboxError {
+    fn from(e: JobError) -> Self {
         match e {
-            flow_utils_concurrency::job_error::JobError::Canceled(c) => {
-                SandboxError::WorkerCanceled(c)
-            }
-            flow_utils_concurrency::job_error::JobError::TimedOut(t) => SandboxError::TimedOut(t),
-            flow_utils_concurrency::job_error::JobError::DebugThrow { loc } => {
-                SandboxError::DebugThrow { loc }
-            }
+            JobError::Canceled(c) => SandboxError::WorkerCanceled(c),
+            JobError::TimedOut(t) => SandboxError::TimedOut(t),
+            JobError::DebugThrow { loc } => SandboxError::DebugThrow { loc },
         }
     }
 }
@@ -244,7 +250,7 @@ fn in_sandbox_cx<'cx>(
     cx: &Context<'cx>,
     t: &Type,
     f: impl FnOnce(Type) -> Result<Type, SandboxError>,
-) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Type>, JobError> {
     cx.run_and_rolled_back_cache(|| {
         let original_errors = cx.errors();
         cx.reset_errors(ErrorSet::empty());
@@ -277,15 +283,15 @@ fn in_sandbox_cx<'cx>(
             }
             Err(SandboxError::WorkerCanceled(c)) => {
                 cx.reset_errors(original_errors);
-                Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
+                Err(JobError::Canceled(c))
             }
             Err(SandboxError::TimedOut(t)) => {
                 cx.reset_errors(original_errors);
-                Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
+                Err(JobError::TimedOut(t))
             }
             Err(SandboxError::DebugThrow { loc }) => {
                 cx.reset_errors(original_errors);
-                Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
+                Err(JobError::DebugThrow { loc })
             }
             Ok(t) => {
                 let new_errors = cx.errors();
@@ -305,7 +311,7 @@ fn synthesis_speculation_call<'cx>(
     call_reason: &Reason,
     reason: &Reason,
     rep: &inter_rep::InterRep,
-    targs: Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
+    targs: Result<Option<Vec<Targ>>, JobError>,
     argts: Vec<CallArg>,
 ) -> Result<Type, SandboxError> {
     let intersection = Type::new(TypeInner::IntersectionT(reason.dupe(), rep.dupe()));
@@ -392,10 +398,7 @@ fn synthesis_instantiate_callee<'cx>(
         } else {
             match &typeparam.default {
                 Some(default) => flow_js::subst(cx, None, None, None, &map, default.dupe()),
-                None => any_t::make(
-                    flow_typing_type::type_::AnySource::AnyError(None),
-                    reason.dupe(),
-                ),
+                None => any_t::make(AnySource::AnyError(None), reason.dupe()),
             }
         };
         map.insert(typeparam.name.dupe(), t);
@@ -454,12 +457,8 @@ fn instantiate_callee<'cx>(
         reason: &Reason,
         targs: &Rc<
             LazyCell<
-                Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>,
-                Box<
-                    dyn Fn()
-                            -> Result<Option<Vec<Targ>>, flow_utils_concurrency::job_error::JobError>
-                        + 'cx,
-                >,
+                Result<Option<Vec<Targ>>, JobError>,
+                Box<dyn Fn() -> Result<Option<Vec<Targ>>, JobError> + 'cx>,
             >,
         >,
         arg_list: &Rc<LazyCell<ConcrArgListFn, Box<dyn Fn() -> ConcrArgListFn + 'cx>>>,
@@ -598,7 +597,7 @@ fn instantiate_callee<'cx>(
                                     };
                                     let arg_list_fn: &ConcrArgListFn = arg_list.deref();
                                     let target_loc = Some(target_reason.loc().dupe());
-                                    let args = arg_list_fn(cx, target_loc);
+                                    let args = arg_list_fn(cx, target_loc)?;
                                     args.iter()
                                         .enumerate()
                                         .map(|(i, (loc, call_arg))| {
@@ -686,13 +685,10 @@ fn instantiate_callee<'cx>(
     let resolve_overload_and_targs = |fn_t: &Type| -> Result<Type, SandboxError> {
         let t = match fn_t.deref() {
             TypeInner::IntersectionT(r, rep) => {
-                let targs_val: &Result<
-                    Option<Vec<Targ>>,
-                    flow_utils_concurrency::job_error::JobError,
-                > = targs.deref();
+                let targs_val: &Result<Option<Vec<Targ>>, JobError> = targs.deref();
                 let arg_list_fn: &ConcrArgListFn = arg_list.deref();
                 let target_loc = Some(target_reason.loc().dupe());
-                let args_val = arg_list_fn(cx, target_loc);
+                let args_val = arg_list_fn(cx, target_loc)?;
                 let argts: Vec<CallArg> = args_val.iter().map(|(_, arg)| arg.clone()).collect();
                 synthesis_speculation_call(cx, reason, r, rep, targs_val.clone(), argts)?
             }
@@ -765,7 +761,7 @@ fn instantiate_component<'cx>(
                         unknown_use(),
                         reason.dupe(),
                         component.dupe(),
-                        jsx_props_and_children.get_forced(cx).dupe(),
+                        jsx_props_and_children.try_get_forced(cx)?.dupe(),
                         jsx_targs_val.as_ref().map(|v| Rc::from(v.as_slice())),
                         false,
                     )
@@ -831,7 +827,7 @@ fn type_of_hint_decomposition<'cx>(
     op: &ConcrHintDecompositionInner<'cx>,
     reason: &Reason,
     t: &Type,
-) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Type>, JobError> {
     let make_fun_t = |reason: &Reason,
                       cx: &Context<'cx>,
                       params: Vec<FunParam>,
@@ -862,7 +858,7 @@ fn type_of_hint_decomposition<'cx>(
         let func = FunType {
             this_t: (
                 unsoundness::unresolved_any(reason.dupe()),
-                flow_typing_type::type_::ThisStatus::ThisFunction,
+                ThisStatus::ThisFunction,
             ),
             params: params.into(),
             rest_param,
@@ -1055,13 +1051,13 @@ fn type_of_hint_decomposition<'cx>(
                     let elem_t = flow_typing_tvar::mk(cx, reason.dupe());
                     let arr_t = Type::new(TypeInner::DefT(
                         reason.dupe(),
-                        DefT::new(DefTInner::ArrT(Rc::new(
-                            flow_typing_type::type_::ArrType::ArrayAT(Box::new(ArrayATData {
+                        DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
+                            ArrayATData {
                                 elem_t: elem_t.dupe(),
                                 tuple_view: Some(empty_tuple_view()),
                                 react_dro: None,
-                            })),
-                        ))),
+                            },
+                        ))))),
                     ));
                     cx.run_in_implicit_instantiation_mode(|| {
                         speculation_flow::flow_t_unsafe(cx, (arr_t, t.dupe()))
@@ -1122,7 +1118,7 @@ fn type_of_hint_decomposition<'cx>(
                             flow_js_utils::collect_construct_ts(&concretize, cx, &t)?,
                         ) {
                             Some(lt) => Ok(lt),
-                            None => Ok(flow_typing_type::type_::any_t::error(reason.dupe())),
+                            None => Ok(any_t::error(reason.dupe())),
                         }
                     }
                     _ => {
@@ -1556,7 +1552,7 @@ fn type_of_hint_decomposition<'cx>(
                                         let tout = Tvar::new(r.dupe(), id as u32);
                                         crate::predicate_kit::run_predicate_for_filtering(
                                             cx, &t, &predicate, &tout,
-                                        );
+                                        )?;
                                         Ok::<(), SandboxError>(())
                                     },
                                 )
@@ -1645,14 +1641,14 @@ fn evaluate_hint_ops<'cx>(
     t: Type,
     kind: HintKind,
     ops: Vec<(usize, ConcrHintDecomposition<'cx>)>,
-) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
+) -> Result<HintEvalResult, JobError> {
     fn loop_ops<'cx>(
         cx: &Context<'cx>,
         opts: &HintOptions,
         reason: &Reason,
         mut t: Type,
         ops: &[(usize, ConcrHintDecomposition<'cx>)],
-    ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<Option<Type>, JobError> {
         for (id, op) in ops {
             let result = match cx.hint_eval_cache_find_opt(*id as i32) {
                 Some(result) => result,
@@ -1685,7 +1681,7 @@ fn evaluate_hint_inner<'cx>(
     opts: &HintOptions,
     reason: &Reason,
     hint: ConcrHint<'cx>,
-) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
+) -> Result<HintEvalResult, JobError> {
     if opts.expected_only {
         match &hint {
             Hint::HintPlaceholder
@@ -1717,7 +1713,7 @@ fn evaluate_hints_inner<'cx>(
     opts: &HintOptions,
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
-) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
+) -> Result<HintEvalResult, JobError> {
     let mut result = HintEvalResult::NoHint;
     for hint in hints {
         match evaluate_hint_inner(cx, opts, reason, hint)? {
@@ -1739,7 +1735,7 @@ pub fn evaluate_hint<'cx>(
     skip_optional: Option<bool>,
     reason: &Reason,
     hint: ConcrHint<'cx>,
-) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
+) -> Result<HintEvalResult, JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),
@@ -1753,7 +1749,7 @@ pub fn evaluate_hints<'cx>(
     skip_optional: Option<bool>,
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
-) -> Result<HintEvalResult, flow_utils_concurrency::job_error::JobError> {
+) -> Result<HintEvalResult, JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),

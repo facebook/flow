@@ -60,6 +60,7 @@ use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::predicate_kit;
 use crate::speculation_flow;
@@ -894,7 +895,7 @@ pub mod operators {
     fn mk_tvar_and_resolve_to_logical_union<'cx>(
         cx: &Context<'cx>,
         reason: &Reason,
-        f: impl FnOnce(&Context<'cx>, &flow_typing_type::type_::Tvar) -> Result<(), FlowJsException>,
+        f: impl FnOnce(&Context<'cx>, &type_::Tvar) -> Result<(), FlowJsException>,
     ) -> Result<Type, FlowJsException> {
         use flow_typing_type::type_::Tvar;
         let id = flow_typing_tvar::mk_no_wrap(cx, reason);
@@ -903,7 +904,7 @@ pub mod operators {
         match flow_js_utils::merge_tvar_opt(
             cx,
             true,
-            flow_typing_type::type_::union_rep::UnionKind::LogicalKind,
+            type_::union_rep::UnionKind::LogicalKind,
             reason,
             id,
         ) {
@@ -912,156 +913,154 @@ pub mod operators {
         }
     }
 
-    pub fn logical_and<'cx>(cx: &Context<'cx>, reason: &Reason, left: &Type, right: &Type) -> Type {
-        mk_tvar_and_resolve_to_logical_union(cx, reason, |cx, tout| {
-            let ts = FlowJs::possible_concrete_types_for_inspection(
-                cx,
-                reason_of_t(left),
-                left,
-            )?;
-            for left in &ts {
-                if let TypeInner::DefT(reason, def_t) = left.deref() {
-                    if matches!(
-                        def_t.deref(),
-                        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
-                    ) {
-                        flow_js_utils::add_output(
-                            cx,
-                            ErrorMessage::ESketchyNumberLint(
-                                flow_lint_settings::lints::SketchyNumberKind::And,
-                                reason.dupe(),
-                            ),
-                        )?;
+    pub fn logical_and<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type, JobError> {
+        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
+            cx,
+            reason,
+            |cx, tout| {
+                let ts =
+                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                for left in &ts {
+                    if let TypeInner::DefT(reason, def_t) = left.deref() {
+                        if matches!(
+                            def_t.deref(),
+                            DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
+                        ) {
+                            flow_js_utils::add_output(
+                                cx,
+                                ErrorMessage::ESketchyNumberLint(
+                                    flow_lint_settings::lints::SketchyNumberKind::And,
+                                    reason.dupe(),
+                                ),
+                            )?;
+                        }
                     }
-                }
-                // a falsy && b ~> a
-                // a truthy && b ~> b
-                // a && b ~> a falsy | b
-                match type_filter::truthy(cx, left.dupe()) {
-                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                    {
-                        // falsy
-                        predicate_kit::run_predicate_for_filtering(
-                            cx,
-                            left,
-                            &Predicate::new(flow_typing_type::type_::PredicateInner::NotP(
-                                Predicate::new(flow_typing_type::type_::PredicateInner::TruthyP),
-                            )),
-                            tout,
-                        );
-                    }
-                    _ => {
-                        match type_filter::not_truthy(cx, left.dupe()) {
-                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                            {
-                                // truthy
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+                    // a falsy && b ~> a
+                    // a truthy && b ~> b
+                    // a && b ~> a falsy | b
+                    match type_filter::truthy(cx, left.dupe()) {
+                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                        {
+                            // falsy
+                            predicate_kit::run_predicate_for_filtering(
+                                cx,
+                                left,
+                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                    type_::PredicateInner::TruthyP,
+                                ))),
+                                tout,
+                            )?;
+                        }
+                        _ => {
+                            match type_filter::not_truthy(cx, left.dupe()) {
+                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                                {
+                                    // truthy
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
-                            }
-                            _ => {
-                                predicate_kit::run_predicate_for_filtering(
-                                    cx,
-                                    left,
-                                    &Predicate::new(flow_typing_type::type_::PredicateInner::NotP(
-                                        Predicate::new(
-                                            flow_typing_type::type_::PredicateInner::TruthyP,
-                                        ),
-                                    )),
-                                    tout,
-                                );
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
+                                _ => {
+                                    predicate_kit::run_predicate_for_filtering(
+                                        cx,
+                                        left,
+                                        &Predicate::new(type_::PredicateInner::NotP(
+                                            Predicate::new(type_::PredicateInner::TruthyP),
+                                        )),
+                                        tout,
+                                    )?;
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
                             }
                         }
                     }
                 }
-            }
-            Ok(())
-        })
-        .unwrap()
+                Ok(())
+            },
+        ))
     }
 
-    pub fn logical_or<'cx>(cx: &Context<'cx>, reason: &Reason, left: &Type, right: &Type) -> Type {
-        mk_tvar_and_resolve_to_logical_union(cx, reason, |cx, tout| {
-            let ts = FlowJs::possible_concrete_types_for_inspection(
-                cx,
-                reason_of_t(left),
-                left,
-            )?;
-            for left in &ts {
-                // a truthy || b ~> a
-                // a falsy || b ~> b
-                // a || b ~> a truthy | b
-                match type_filter::not_truthy(cx, left.dupe()) {
-                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                    {
-                        // truthy
-                        predicate_kit::run_predicate_for_filtering(
-                            cx,
-                            left,
-                            &Predicate::new(flow_typing_type::type_::PredicateInner::TruthyP),
-                            tout,
-                        );
-                    }
-                    _ => {
-                        match type_filter::truthy(cx, left.dupe()) {
-                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                            {
-                                // falsy
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+    pub fn logical_or<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type, JobError> {
+        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
+            cx,
+            reason,
+            |cx, tout| {
+                let ts =
+                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                for left in &ts {
+                    // a truthy || b ~> a
+                    // a falsy || b ~> b
+                    // a || b ~> a truthy | b
+                    match type_filter::not_truthy(cx, left.dupe()) {
+                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                        {
+                            // truthy
+                            predicate_kit::run_predicate_for_filtering(
+                                cx,
+                                left,
+                                &Predicate::new(type_::PredicateInner::TruthyP),
+                                tout,
+                            )?;
+                        }
+                        _ => {
+                            match type_filter::truthy(cx, left.dupe()) {
+                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                                {
+                                    // falsy
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
-                            }
-                            _ => {
-                                predicate_kit::run_predicate_for_filtering(
-                                    cx,
-                                    left,
-                                    &Predicate::new(
-                                        flow_typing_type::type_::PredicateInner::TruthyP,
-                                    ),
-                                    tout,
-                                );
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
+                                _ => {
+                                    predicate_kit::run_predicate_for_filtering(
+                                        cx,
+                                        left,
+                                        &Predicate::new(type_::PredicateInner::TruthyP),
+                                        tout,
+                                    )?;
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
                             }
                         }
                     }
                 }
-            }
-            Ok(())
-        })
-        .unwrap()
+                Ok(())
+            },
+        ))
     }
 
     pub fn logical_nullish_coalesce<'cx>(
@@ -1069,101 +1068,95 @@ pub mod operators {
         reason: &Reason,
         left: &Type,
         right: &Type,
-    ) -> Type {
-        mk_tvar_and_resolve_to_logical_union(cx, reason, |cx, tout| {
-            let ts = FlowJs::possible_concrete_types_for_inspection(
-                cx,
-                reason_of_t(left),
-                left,
-            )?;
-            for left in &ts {
-                let maybe_result = type_filter::maybe(cx, left.dupe());
-                match &maybe_result {
-                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                    {
-                        predicate_kit::run_predicate_for_filtering(
-                            cx,
-                            left,
-                            &Predicate::new(flow_typing_type::type_::PredicateInner::NotP(
-                                Predicate::new(flow_typing_type::type_::PredicateInner::MaybeP),
-                            )),
-                            tout,
-                        );
-                    }
-                    // This `AnyT` case is required to have similar behavior to the other logical operators.
-                    type_filter::FilterResult { type_: t, .. }
-                        if matches!(t.deref(), TypeInner::AnyT(_, _)) =>
-                    {
-                        // not-nullish
-                        predicate_kit::run_predicate_for_filtering(
-                            cx,
-                            left,
-                            &Predicate::new(flow_typing_type::type_::PredicateInner::NotP(
-                                Predicate::new(flow_typing_type::type_::PredicateInner::MaybeP),
-                            )),
-                            tout,
-                        );
-                    }
-                    _ => {
-                        match type_filter::not_maybe(cx, left.dupe()) {
-                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                            {
-                                // nullish
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+    ) -> Result<Type, JobError> {
+        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
+            cx,
+            reason,
+            |cx, tout| {
+                let ts =
+                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                for left in &ts {
+                    let maybe_result = type_filter::maybe(cx, left.dupe());
+                    match &maybe_result {
+                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                        {
+                            predicate_kit::run_predicate_for_filtering(
+                                cx,
+                                left,
+                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                    type_::PredicateInner::MaybeP,
+                                ))),
+                                tout,
+                            )?;
+                        }
+                        // This `AnyT` case is required to have similar behavior to the other logical operators.
+                        type_filter::FilterResult { type_: t, .. }
+                            if matches!(t.deref(), TypeInner::AnyT(_, _)) =>
+                        {
+                            // not-nullish
+                            predicate_kit::run_predicate_for_filtering(
+                                cx,
+                                left,
+                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                    type_::PredicateInner::MaybeP,
+                                ))),
+                                tout,
+                            )?;
+                        }
+                        _ => {
+                            match type_filter::not_maybe(cx, left.dupe()) {
+                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                                {
+                                    // nullish
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
-                            }
-                            _ => {
-                                predicate_kit::run_predicate_for_filtering(
-                                    cx,
-                                    left,
-                                    &Predicate::new(flow_typing_type::type_::PredicateInner::NotP(
-                                        Predicate::new(
-                                            flow_typing_type::type_::PredicateInner::MaybeP,
-                                        ),
-                                    )),
-                                    tout,
-                                );
-                                let use_t = flow_typing_type::type_::UseT::new(
-                                    flow_typing_type::type_::UseTInner::UseT(
-                                        flow_typing_type::type_::unknown_use(),
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
+                                _ => {
+                                    predicate_kit::run_predicate_for_filtering(
+                                        cx,
+                                        left,
+                                        &Predicate::new(type_::PredicateInner::NotP(
+                                            Predicate::new(type_::PredicateInner::MaybeP),
+                                        )),
+                                        tout,
+                                    )?;
+                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
+                                        type_::unknown_use(),
                                         Type::new(TypeInner::OpenT(Tvar::new(
                                             tout.reason().dupe(),
                                             tout.id(),
                                         ))),
-                                    ),
-                                );
-                                flow_js::flow(cx, (right, &use_t))?;
+                                    ));
+                                    flow_js::flow(cx, (right, &use_t))?;
+                                }
                             }
                         }
                     }
                 }
-            }
-            Ok(())
-        })
-        .unwrap()
+                Ok(())
+            },
+        ))
     }
 
     pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
         fn f(reason: &Reason, t: &Type) -> Type {
             match t.deref() {
-                TypeInner::AnyT(_, src) => flow_typing_type::type_::any_t::why(*src, reason.dupe()),
+                TypeInner::AnyT(_, src) => type_::any_t::why(*src, reason.dupe()),
                 TypeInner::DefT(_, def_t)
                     if matches!(
                         def_t.deref(),
                         DefTInner::BoolGeneralT
-                            | DefTInner::StrGeneralT(flow_typing_type::type_::Literal::AnyLiteral)
-                            | DefTInner::NumGeneralT(flow_typing_type::type_::Literal::AnyLiteral)
+                            | DefTInner::StrGeneralT(type_::Literal::AnyLiteral)
+                            | DefTInner::NumGeneralT(type_::Literal::AnyLiteral)
                     ) =>
                 {
-                    flow_typing_type::type_::bool_module_t::at(reason.loc().dupe())
+                    type_::bool_module_t::at(reason.loc().dupe())
                 }
                 // !x when x is falsy
                 TypeInner::DefT(_, def_t)
@@ -1196,7 +1189,7 @@ pub mod operators {
                         }),
                     ))
                 }
-                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::SingletonNumT { value: flow_typing_type::type_::NumberLiteral(v, _), .. } if *v == 0.0) =>
+                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::SingletonNumT { value: type_::NumberLiteral(v, _), .. } if *v == 0.0) =>
                 {
                     let reason = reason
                         .dupe()
@@ -1263,7 +1256,7 @@ pub mod operators {
                 TypeInner::DefT(r, def_t)
                     if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
                 {
-                    flow_typing_type::type_::empty_t::why(r.dupe())
+                    type_::empty_t::why(r.dupe())
                 }
                 TypeInner::DefT(r, def_t)
                     if matches!(
@@ -1306,29 +1299,31 @@ pub mod promise {
 
     use super::*;
 
-    pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
+    pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
         // await distributes over union: await (Promise<T> | void) = T | void
-        let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t).unwrap();
+        let ts = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_inspection(cx, reason, t),
+        )?;
         let mut results = Vec::with_capacity(ts.len());
         for t in ts.iter() {
-            results.push(
-                FlowJs::run_await(cx, flow_typing_type::type_::unknown_use(), reason, t).unwrap(),
-            );
+            results.push(flow_js_utils::flow_js_result_to_job_error(
+                FlowJs::run_await(cx, type_::unknown_use(), reason, t),
+            )?);
         }
-        match results.as_slice() {
+        Ok(match results.as_slice() {
             [] => type_::empty_t::why(reason.dupe()),
             [t] => t.dupe(),
             [t0, t1, ts @ ..] => Type::new(TypeInner::UnionT(
                 reason.dupe(),
-                flow_typing_type::type_::union_rep::make(
+                type_::union_rep::make(
                     None,
-                    flow_typing_type::type_::union_rep::UnionKind::UnknownKind,
+                    type_::union_rep::UnionKind::UnknownKind,
                     t0.dupe(),
                     t1.dupe(),
                     Rc::from(ts),
                 ),
             )),
-        }
+        })
     }
 }
 
@@ -1425,7 +1420,7 @@ pub mod special_cased_functions {
                 // Special case any. Otherwise this will lead to confusing errors when
                 // any tranforms to an object type.
                 TypeInner::AnyT(_, _) => {
-                    flow_typing_flow_js::flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t(cx, (to_obj, t))?;
                     Ok(())
                 }
                 _ => {
@@ -1473,10 +1468,10 @@ pub mod special_cased_functions {
                                 )
                             })?,
                         };
-                        flow_typing_flow_js::flow_js::flow_t(cx, (&member_tvar, &tvar))?;
+                        flow_js::flow_t(cx, (&member_tvar, &tvar))?;
                         tvar = member_tvar;
                     }
-                    flow_typing_flow_js::flow_js::flow_t(cx, (&tvar, t))?;
+                    flow_js::flow_t(cx, (&tvar, t))?;
                     Ok(())
                 }
                 (TypeInner::DefT(lreason, def_t), ObjAssignKind::ObjAssign { .. })
@@ -1494,7 +1489,7 @@ pub mod special_cased_functions {
                                 )
                             })
                             .reposition(reason_op.loc().dupe());
-                        match flow_typing_type::type_::property::read_t(p) {
+                        match type_::property::read_t(p) {
                             Some(prop_t) => {
                                 let propref = flow_typing_type::type_util::mk_named_prop(
                                     reason_prop.dupe(),
@@ -1506,10 +1501,10 @@ pub mod special_cased_functions {
                                     reason_prop.dupe(),
                                     |cx, tout| -> Result<(), FlowJsException> {
                                         let use_t = UseT::new(UseTInner::FilterOptionalT(
-                                            flow_typing_type::type_::unknown_use(),
+                                            type_::unknown_use(),
                                             tout.dupe(),
                                         ));
-                                        flow_typing_flow_js::flow_js::flow(cx, (&prop_t, &use_t))?;
+                                        flow_js::flow(cx, (&prop_t, &use_t))?;
                                         Ok(())
                                     },
                                 )?;
@@ -1541,15 +1536,13 @@ pub mod special_cased_functions {
                     })?;
                     match &flags.obj_kind {
                         ObjKind::Indexed(_) => {
-                            let any = flow_typing_type::type_::any_t::make(
-                                flow_typing_type::type_::AnySource::Untyped,
-                                reason_op.dupe(),
-                            );
-                            flow_typing_flow_js::flow_js::flow_t(cx, (&any, t))?;
+                            let any =
+                                type_::any_t::make(type_::AnySource::Untyped, reason_op.dupe());
+                            flow_js::flow_t(cx, (&any, t))?;
                             Ok(())
                         }
                         ObjKind::Exact | ObjKind::Inexact => {
-                            flow_typing_flow_js::flow_js::flow_t(cx, (to_obj, t))?;
+                            flow_js::flow_t(cx, (to_obj, t))?;
                             Ok(())
                         }
                     }
@@ -1565,7 +1558,7 @@ pub mod special_cased_functions {
                             .iter()
                             .filter(|(n, _)| !own_props.contains_key(n)),
                     ) {
-                        match flow_typing_type::type_::property::read_t(p) {
+                        match type_::property::read_t(p) {
                             Some(prop_t) => {
                                 let propref = flow_typing_type::type_util::mk_named_prop(
                                     reason_op.dupe(),
@@ -1581,7 +1574,7 @@ pub mod special_cased_functions {
                                     prop_t,
                                     None,
                                 ));
-                                flow_typing_flow_js::flow_js::flow(cx, (to_obj, &set_prop_use))?;
+                                flow_js::flow(cx, (to_obj, &set_prop_use))?;
                             }
                             None => {
                                 flow_js_utils::add_output(
@@ -1597,36 +1590,36 @@ pub mod special_cased_functions {
                             }
                         }
                     }
-                    flow_typing_flow_js::flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t(cx, (to_obj, t))?;
                     Ok(())
                 }
                 (TypeInner::AnyT(_, src), ObjAssignKind::ObjAssign { .. }) => {
-                    let any = flow_typing_type::type_::any_t::make(*src, reason.dupe());
-                    flow_typing_flow_js::flow_js::flow_t(cx, (&any, t))?;
+                    let any = type_::any_t::make(*src, reason.dupe());
+                    flow_js::flow_t(cx, (&any, t))?;
                     Ok(())
                 }
                 (TypeInner::AnyT(_, _), _) => {
-                    flow_typing_flow_js::flow_js::flow_t(cx, (l, t))?;
+                    flow_js::flow_t(cx, (l, t))?;
                     Ok(())
                 }
                 (TypeInner::ObjProtoT(_), ObjAssignKind::ObjAssign { .. }) => {
-                    flow_typing_flow_js::flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t(cx, (to_obj, t))?;
                     Ok(())
                 }
                 // Object.assign semantics
                 (TypeInner::DefT(_, def_t), ObjAssignKind::ObjAssign { .. })
                     if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
                 {
-                    flow_typing_flow_js::flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t(cx, (to_obj, t))?;
                     Ok(())
                 }
                 // {...mixed} is the equivalent of {...{[string]: mixed}}
                 (TypeInner::DefT(mixed_reason, def_t), ObjAssignKind::ObjAssign { .. })
                     if matches!(def_t.deref(), DefTInner::MixedT(_)) =>
                 {
-                    let dict = flow_typing_type::type_::DictType {
+                    let dict = type_::DictType {
                         dict_name: None,
-                        key: flow_typing_type::type_::str_module_t::make(mixed_reason.dupe()),
+                        key: type_::str_module_t::make(mixed_reason.dupe()),
                         value: l.dupe(),
                         dict_polarity: Polarity::Neutral,
                     };
@@ -1656,13 +1649,12 @@ pub mod special_cased_functions {
                         })
                         | ArrType::ArrayAT(box ArrayATData {
                             elem_t,
-                            tuple_view:
-                                Some(flow_typing_type::type_::TupleView { inexact: true, .. }),
+                            tuple_view: Some(type_::TupleView { inexact: true, .. }),
                             ..
                         })
                         | ArrType::ROArrayAT(box (elem_t, _)) => {
                             // Object.assign(o, ...Array<x>) -> Object.assign(o, x)
-                            let default_kind = flow_typing_type::type_::default_obj_assign_kind();
+                            let default_kind = type_::default_obj_assign_kind();
                             assign_from(
                                 cx,
                                 reason,
@@ -1691,8 +1683,7 @@ pub mod special_cased_functions {
                                         )),
                                     )?;
                                 }
-                                let default_kind =
-                                    flow_typing_type::type_::default_obj_assign_kind();
+                                let default_kind = type_::default_obj_assign_kind();
                                 assign_from(
                                     cx,
                                     reason,
@@ -1715,7 +1706,7 @@ pub mod special_cased_functions {
                             let ts = flow_typing_type::type_util::tuple_ts_of_elements(
                                 &tuple_view.elements,
                             );
-                            let default_kind = flow_typing_type::type_::default_obj_assign_kind();
+                            let default_kind = type_::default_obj_assign_kind();
                             for from in &ts {
                                 assign_from(
                                     cx,
@@ -1734,11 +1725,7 @@ pub mod special_cased_functions {
                     }
                 }
                 (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
-                    let repositioned = flow_typing_flow_js::flow_js::reposition(
-                        cx,
-                        reason.loc().dupe(),
-                        bound.dupe(),
-                    )?;
+                    let repositioned = flow_js::reposition(cx, reason.loc().dupe(), bound.dupe())?;
                     assign_from(
                         cx,
                         reason,
@@ -1768,8 +1755,8 @@ pub mod special_cased_functions {
                             use_op: Some(use_op.clone()),
                         })),
                     )?;
-                    let any = flow_typing_type::type_::any_t::error(reason_op.dupe());
-                    flow_typing_flow_js::flow_js::flow_t(cx, (&any, t))?;
+                    let any = type_::any_t::error(reason_op.dupe());
+                    flow_js::flow_t(cx, (&any, t))?;
                     Ok(())
                 }
             }
@@ -1784,9 +1771,7 @@ pub mod special_cased_functions {
                 let mut result = target_t.clone();
                 for that in rest_arg_ts {
                     let (that, kind) = match that.deref() {
-                        CallArgInner::Arg(t) => {
-                            (t.dupe(), flow_typing_type::type_::default_obj_assign_kind())
-                        }
+                        CallArgInner::Arg(t) => (t.dupe(), type_::default_obj_assign_kind()),
                         CallArgInner::SpreadArg(t) => (t.dupe(), ObjAssignKind::ObjSpreadAssign),
                     };
                     let chain_use_op =
@@ -1871,10 +1856,9 @@ pub mod special_cased_functions {
                         },
                     )?;
                 }
-                let repositioned =
-                    flow_typing_flow_js::flow_js::reposition(cx, reason.loc().dupe(), result)?;
+                let repositioned = flow_js::reposition(cx, reason.loc().dupe(), result)?;
                 let use_t = UseT::new(UseTInner::UseT(use_op.clone(), tout.dupe()));
-                flow_typing_flow_js::flow_js::flow(cx, (&repositioned, &use_t))?;
+                flow_js::flow(cx, (&repositioned, &use_t))?;
                 Ok(())
             },
         )
@@ -1887,15 +1871,14 @@ pub fn perform_type_cast<'cx>(
     use_op: UseOp,
     l: &Type,
     cast_to_t: &Type,
-) -> Result<(), flow_typing_flow_common::flow_js_utils::FlowJsException> {
-    let flow =
-        |source_t: &Type| -> Result<(), flow_typing_flow_common::flow_js_utils::FlowJsException> {
-            FlowJs::flow(
-                cx,
-                source_t,
-                &UseT::new(UseTInner::UseT(use_op.dupe(), cast_to_t.dupe())),
-            )
-        };
+) -> Result<(), FlowJsException> {
+    let flow = |source_t: &Type| -> Result<(), FlowJsException> {
+        FlowJs::flow(
+            cx,
+            source_t,
+            &UseT::new(UseTInner::UseT(use_op.dupe(), cast_to_t.dupe())),
+        )
+    };
     let resolved_cast_to =
         FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(cast_to_t), cast_to_t)?;
     let should_short_circuit_empty_cast = match resolved_cast_to.deref() {
@@ -2279,40 +2262,45 @@ pub mod type_assertions {
         use_op: &UseOp,
         t: &Type,
         targs_to_infer: &[Type],
-    ) {
-        let ts =
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t).unwrap();
+    ) -> Result<(), JobError> {
+        let ts = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+        )?;
         for ti in &ts {
             match ti.deref() {
                 TypeInner::DefT(enum_reason, def_t)
                     if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable {
                             reason: enum_reason.dupe(),
                             for_in: false,
                         }),
-                    )
-                    .unwrap();
-                    let any = flow_typing_type::type_::any_t::at(
-                        flow_typing_type::type_::AnySource::AnyError(None),
-                        loc.dupe(),
-                    );
+                    ))?;
+                    let any = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                     for targ in targs_to_infer {
-                        flow_typing_flow_js::flow_js::unify(cx, Some(use_op.clone()), &any, targ)
-                            .unwrap();
+                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify(
+                            cx,
+                            Some(use_op.clone()),
+                            &any,
+                            targ,
+                        ))?;
                     }
                 }
                 TypeInner::AnyT(reason, src) => {
                     let src = flow_js_utils::any_mod_src_keep_placeholder(
-                        flow_typing_type::type_::AnySource::AnyError(None),
+                        type_::AnySource::AnyError(None),
                         src,
                     );
                     for targ in targs_to_infer {
-                        let any = flow_typing_type::type_::any_t::why(src.clone(), reason.dupe());
-                        flow_typing_flow_js::flow_js::unify(cx, Some(use_op.clone()), &any, targ)
-                            .unwrap();
+                        let any = type_::any_t::why(src.clone(), reason.dupe());
+                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify(
+                            cx,
+                            Some(use_op.clone()),
+                            &any,
+                            targ,
+                        ))?;
                     }
                 }
                 _ => {
@@ -2347,24 +2335,24 @@ pub mod type_assertions {
                             targs_to_infer.to_vec(),
                         )
                     };
-                    let use_t = flow_typing_type::type_::UseT::new(
-                        flow_typing_type::type_::UseTInner::UseT(use_op.clone(), iterable),
-                    );
-                    flow_typing_flow_js::flow_js::flow(cx, (ti, &use_t)).unwrap();
+                    let use_t = type_::UseT::new(type_::UseTInner::UseT(use_op.clone(), iterable));
+                    flow_js_utils::flow_js_result_to_job_error(flow_js::flow(cx, (ti, &use_t)))?;
                 }
             }
         }
+        Ok(())
     }
 
-    pub fn non_exhaustive<'cx>(cx: &Context<'cx>, ts: &[Type]) -> bool {
+    pub fn non_exhaustive<'cx>(cx: &Context<'cx>, ts: &[Type]) -> Result<bool, JobError> {
         for t in ts {
-            let concrete_types =
-                FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t).unwrap();
+            let concrete_types = flow_js_utils::flow_js_result_to_job_error(
+                FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t),
+            )?;
             if !concrete_types.is_empty() {
-                return true;
+                return Ok(true);
             }
         }
-        false
+        Ok(false)
     }
 
     fn assert_operator_receiver_base<'cx>(
@@ -2498,7 +2486,10 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn check_assert_operator_implicitly_nullable<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+    pub fn check_assert_operator_implicitly_nullable<'cx>(
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<bool, JobError> {
         fn valid_target(t: &Type) -> bool {
             match t.deref() {
                 TypeInner::AnyT(_, _) => true,
@@ -2516,12 +2507,16 @@ pub mod type_assertions {
             }
         }
 
-        let ts =
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t).unwrap();
-        ts.iter().any(valid_target)
+        let ts = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+        )?;
+        Ok(ts.iter().any(valid_target))
     }
 
-    pub fn check_assert_operator_nullable<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+    pub fn check_assert_operator_nullable<'cx>(
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<bool, JobError> {
         fn valid_target(t: &Type) -> bool {
             match t.deref() {
                 TypeInner::AnyT(_, _) => true,
@@ -2539,8 +2534,9 @@ pub mod type_assertions {
             }
         }
 
-        let ts =
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t).unwrap();
-        ts.iter().any(valid_target)
+        let ts = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+        )?;
+        Ok(ts.iter().any(valid_target))
     }
 }

@@ -76,6 +76,7 @@ use flow_typing_type::type_::properties;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
+use flow_utils_concurrency::job_error::JobError;
 use vec1::Vec1;
 
 // For any constraints, return a list of def types that form either the lower
@@ -758,8 +759,7 @@ pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
 
 pub fn map_on_resolved_type<'cx, F>(cx: &Context<'cx>, reason_op: Reason, l: Type, f: F) -> Type
 where
-    F: FnOnce(&Context<'cx>, Type) -> Result<Type, flow_utils_concurrency::job_error::JobError>
-        + 'cx,
+    F: FnOnce(&Context<'cx>, Type) -> Result<Type, JobError> + 'cx,
 {
     flow_typing_tvar::mk_fully_resolved_lazy(
         cx,
@@ -1259,18 +1259,12 @@ impl From<flow_utils_concurrency::job_error::CheckTimeout> for FlowJsException {
     }
 }
 
-impl From<flow_utils_concurrency::job_error::JobError> for FlowJsException {
-    fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
+impl From<JobError> for FlowJsException {
+    fn from(e: JobError) -> Self {
         match e {
-            flow_utils_concurrency::job_error::JobError::Canceled(c) => {
-                FlowJsException::WorkerCanceled(c)
-            }
-            flow_utils_concurrency::job_error::JobError::TimedOut(t) => {
-                FlowJsException::TimedOut(t)
-            }
-            flow_utils_concurrency::job_error::JobError::DebugThrow { loc } => {
-                FlowJsException::DebugThrow { loc }
-            }
+            JobError::Canceled(c) => FlowJsException::WorkerCanceled(c),
+            JobError::TimedOut(t) => FlowJsException::TimedOut(t),
+            JobError::DebugThrow { loc } => FlowJsException::DebugThrow { loc },
         }
     }
 }
@@ -1283,6 +1277,16 @@ pub enum FlowJsException {
     WorkerCanceled(flow_utils_concurrency::worker_cancel::WorkerCanceled),
     TimedOut(flow_utils_concurrency::job_error::CheckTimeout),
     DebugThrow { loc: ALoc },
+}
+
+pub fn flow_js_result_to_job_error<T>(result: Result<T, FlowJsException>) -> Result<T, JobError> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
+        Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
+        Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
 }
 
 // When emitting a single error for a representative union member, wrap the
@@ -3602,6 +3606,7 @@ pub mod cjs_require_t_kit {
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::properties::PropertiesMap;
     use flow_typing_type::type_util;
+    use flow_utils_concurrency::job_error::JobError;
 
     use super::FlowJsException;
     use super::check_nonstrict_import;
@@ -3618,11 +3623,7 @@ pub mod cjs_require_t_kit {
         module_: &ModuleType,
     ) -> Result<(Type, ALoc), FlowJsException>
     where
-        R: Fn(
-            &Context<'cx>,
-            ALoc,
-            Type,
-        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+        R: Fn(&Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
     {
         let ModuleTypeInner {
             module_reason,
@@ -4663,6 +4664,7 @@ pub mod copy_type_exports_t_kit {
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::NamedSymbol;
     use flow_typing_type::type_::Type;
+    use flow_utils_concurrency::job_error::JobError;
 
     use super::export_type_t_kit;
 
@@ -4672,37 +4674,32 @@ pub mod copy_type_exports_t_kit {
         reason: Reason,
         target_module_type: &ModuleType,
         module_: &ModuleType,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    ) -> Result<(), JobError>
     where
-        F: Fn(
-            &Context<'cx>,
-            Reason,
-            Type,
-        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Context<'cx>, Reason, Type) -> Result<Type, JobError>,
     {
         let source_exports = &module_.module_export_types;
 
-        let export_all =
-            |exports_tmap_id| -> Result<(), flow_utils_concurrency::job_error::JobError> {
-                let exports_tmap = cx.find_exports(exports_tmap_id);
-                for (export_name, ns) in exports_tmap.iter() {
-                    let type_ = concretize_export_type(cx, reason.dupe(), ns.type_.dupe())?;
-                    let concretized_ns = NamedSymbol::new(
-                        ns.name_loc.dupe(),
-                        ns.preferred_def_locs.clone(),
-                        type_,
-                        ns.type_for_extends.clone(),
-                    );
-                    export_type_t_kit::on_concrete_type(
-                        cx,
-                        reason.dupe(),
-                        &concretized_ns,
-                        export_name.dupe(),
-                        target_module_type,
-                    );
-                }
-                Ok(())
-            };
+        let export_all = |exports_tmap_id| -> Result<(), JobError> {
+            let exports_tmap = cx.find_exports(exports_tmap_id);
+            for (export_name, ns) in exports_tmap.iter() {
+                let type_ = concretize_export_type(cx, reason.dupe(), ns.type_.dupe())?;
+                let concretized_ns = NamedSymbol::new(
+                    ns.name_loc.dupe(),
+                    ns.preferred_def_locs.clone(),
+                    type_,
+                    ns.type_for_extends.clone(),
+                );
+                export_type_t_kit::on_concrete_type(
+                    cx,
+                    reason.dupe(),
+                    &concretized_ns,
+                    export_name.dupe(),
+                    target_module_type,
+                );
+            }
+            Ok(())
+        };
 
         export_all(source_exports.value_exports_tmap)?;
         export_all(source_exports.type_exports_tmap)?;
@@ -4724,6 +4721,7 @@ pub mod cjs_extract_named_exports_t_kit {
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::exports;
     use flow_typing_type::type_::properties;
+    use flow_utils_concurrency::job_error::JobError;
 
     use super::export_named_t_kit;
     use super::is_munged_prop_name;
@@ -4735,9 +4733,9 @@ pub mod cjs_extract_named_exports_t_kit {
         reason: Reason,
         local_module: ModuleType,
         t: Type,
-    ) -> Result<ModuleType, flow_utils_concurrency::job_error::JobError>
+    ) -> Result<ModuleType, JobError>
     where
-        F: Fn(Type) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(Type) -> Result<Type, JobError>,
     {
         let t = concretize(t)?;
         match t.deref() {
@@ -4884,6 +4882,7 @@ pub mod import_export_utils {
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_util::def_loc_of_t;
+    use flow_utils_concurrency::job_error::JobError;
 
     use super::ExportClassification;
     use super::FlowJsException;
@@ -5245,11 +5244,7 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
     ) -> Result<(Option<ALoc>, Type), FlowJsException>
     where
-        R: Fn(
-            &Context<'cx>,
-            ALoc,
-            Type,
-        ) -> Result<Type, flow_utils_concurrency::job_error::JobError>,
+        R: Fn(&Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
     {
         let is_strict = cx.is_strict();
         Ok(match source_module {
@@ -5650,7 +5645,7 @@ pub trait GetPropHelper {
             &flow_common::reason::Name,
             &Reason,
             &Type,
-        ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        ) -> Result<bool, JobError>,
     >;
 }
 
@@ -7566,6 +7561,7 @@ pub mod render_types {
     use flow_typing_type::type_util::loc_of_t;
     use flow_typing_type::type_util::reason_of_t;
     use flow_typing_type::type_util::union_of_ts;
+    use flow_utils_concurrency::job_error::JobError;
     use vec1::Vec1;
 
     use crate::flow_js_utils::add_output_non_speculating;
@@ -7616,8 +7612,8 @@ pub mod render_types {
 
     struct RenderTypeNormalizationContext<'a, 'cx, F, G>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         cx: &'a Context<'cx>,
         type_collector: TypeCollector,
@@ -7633,8 +7629,8 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         new_error: (Reason, PotentialFixableErrorKind),
     ) where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         let mut error_acc = normalization_cx.error_acc_ref.borrow_mut();
         let (r, k2) = new_error;
@@ -7658,8 +7654,8 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         e: ErrorMessage<ALoc>,
     ) where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         let mut error_acc = normalization_cx.error_acc_ref.borrow_mut();
         error_acc.normal_errors.push(e);
@@ -7669,10 +7665,10 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    ) -> Result<(), JobError>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         match t.deref() {
             TypeInner::DefT(r, def_t) => match def_t.deref() {
@@ -7765,10 +7761,10 @@ pub mod render_types {
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    ) -> Result<(), JobError>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
@@ -7888,10 +7884,10 @@ pub mod render_types {
     fn on_concretized_bad_non_element_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    ) -> Result<(), JobError>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         match &*t {
             TypeInner::DefT(invalid_type_reason, def_t)
@@ -7960,10 +7956,10 @@ pub mod render_types {
     fn on_concretized_element_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>
+    ) -> Result<(), JobError>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         match &*t {
             TypeInner::GenericT(box GenericTData { reason, .. }) => {
@@ -8065,10 +8061,10 @@ pub mod render_types {
         concretize: F,
         is_iterable_for_better_error: G,
         input: Type,
-    ) -> Result<Type, flow_utils_concurrency::job_error::JobError>
+    ) -> Result<Type, JobError>
     where
-        F: Fn(&Type) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>,
-        G: Fn(&Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
+        F: Fn(&Type) -> Result<Vec<Type>, JobError>,
+        G: Fn(&Type) -> Result<bool, JobError>,
     {
         let type_collector = TypeCollector::create();
         let error_acc_ref = RefCell::new(ErrorAcc {
@@ -8138,13 +8134,8 @@ pub mod render_types {
         t: Type,
     ) -> Type
     where
-        F: Fn(
-                &Context<'cx>,
-                &Type,
-            ) -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError>
-            + 'cx,
-        G: Fn(&Context<'cx>, &Type) -> Result<bool, flow_utils_concurrency::job_error::JobError>
-            + 'cx,
+        F: Fn(&Context<'cx>, &Type) -> Result<Vec<Type>, JobError> + 'cx,
+        G: Fn(&Context<'cx>, &Type) -> Result<bool, JobError> + 'cx,
     {
         let reason_inner = reason.dupe();
         let renders_variant_inner = renders_variant.clone();
@@ -8155,14 +8146,11 @@ pub mod render_types {
             Box::new(move |cx: &Context<'cx>| {
                 cx.run_in_signature_tvar_env(|| {
                     let arg_loc = loc_of_t(&t).dupe();
-                    let concretize_partial = |t: &Type| -> Result<
-                        Vec<Type>,
-                        flow_utils_concurrency::job_error::JobError,
-                    > { concretize(cx, t) };
-                    let is_iterable_partial =
-                        |t: &Type| -> Result<bool, flow_utils_concurrency::job_error::JobError> {
-                            is_iterable_for_better_error(cx, t)
-                        };
+                    let concretize_partial =
+                        |t: &Type| -> Result<Vec<Type>, JobError> { concretize(cx, t) };
+                    let is_iterable_partial = |t: &Type| -> Result<bool, JobError> {
+                        is_iterable_for_better_error(cx, t)
+                    };
                     normalize_render_type_argument(
                         cx,
                         arg_loc,

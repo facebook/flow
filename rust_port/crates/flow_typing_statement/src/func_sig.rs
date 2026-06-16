@@ -26,6 +26,7 @@ use flow_parser::polymorphic_ast_mapper;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_loc_env::func_class_sig_types::ConfigTypes;
@@ -41,6 +42,7 @@ use flow_typing_type::type_util;
 use flow_typing_utils::abnormal::CheckExprError;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_operation_utils;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::func_params;
 use crate::statement;
@@ -64,8 +66,7 @@ struct FuncScopeVisitor<'a, 'cx, 'b> {
     no_yield: bool,
 }
 
-impl<'ast>
-    AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, flow_utils_concurrency::job_error::JobError>
+impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
     for FuncScopeVisitor<'_, '_, '_>
 {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
@@ -80,7 +81,7 @@ impl<'ast>
         &mut self,
         _loc: &'ast ALoc,
         _expr: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         Ok(())
     }
 
@@ -88,7 +89,7 @@ impl<'ast>
         &mut self,
         _loc: &'ast ALoc,
         _component: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         Ok(())
     }
 
@@ -96,7 +97,7 @@ impl<'ast>
         &mut self,
         loc: &'ast ALoc,
         switch: &'ast ast::statement::Switch<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         let (ref exhaust_loc, ref t) = switch.exhaustive_out;
         if let Some((exhaustive_ts, exhaust_locs, _)) = self.exhaust {
             if exhaust_locs.contains(exhaust_loc) {
@@ -110,7 +111,7 @@ impl<'ast>
         &mut self,
         loc: &'ast (ALoc, Type),
         yield_expr: &'ast ast::expression::Yield<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         let (_, ref t) = yield_expr.result_out;
         let use_op = if yield_expr.delegate {
             type_::unknown_use()
@@ -142,7 +143,7 @@ impl<'ast>
     fn statement(
         &mut self,
         stmt: &'ast ast::statement::Statement<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         match &**stmt {
             ast::statement::StatementInner::Return {
                 inner: return_stmt, ..
@@ -162,7 +163,7 @@ impl<'ast>
         &mut self,
         loc: &'ast (ALoc, Type),
         expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         if ast_utils::is_call_to_invariant(&expr.callee) {
             match expr.arguments.arguments.as_ref() {
                 [] => {
@@ -190,7 +191,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
     fn visit(
         &mut self,
         statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         self.statement_list(statements)?;
         if !self.has_return_annot {
             if self.no_return && self.has_throw {
@@ -228,7 +229,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
         &mut self,
         loc: ALoc,
         return_stmt: &ast::statement::Return<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<(), JobError> {
         let (_, ref t) = return_stmt.return_out;
         let t = match self.kind {
             Kind::Async => {
@@ -238,7 +239,7 @@ impl FuncScopeVisitor<'_, '_, '_> {
                 let async_return_reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RAsyncReturn, loc.dupe());
                 let awaited =
-                    type_operation_utils::promise::await_(self.cx, &async_return_reason, t);
+                    type_operation_utils::promise::await_(self.cx, &async_return_reason, t)?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
                     &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
@@ -843,7 +844,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                 };
                 Some((
                     RefCell::new(if undeclared {
-                        vec![flow_typing_type::type_::void::at(body_loc.dupe())]
+                        vec![type_::void::at(body_loc.dupe())]
                     } else {
                         vec![]
                     }),
@@ -881,13 +882,13 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
 
     if let Some((maybe_exhaustively_checked_ts, _, flow_on_non_exhaustive)) = &exhaust {
         let ts = maybe_exhaustively_checked_ts.borrow();
-        if type_operation_utils::type_assertions::non_exhaustive(cx, &ts) {
+        if type_operation_utils::type_assertions::non_exhaustive(cx, &ts)? {
             match flow_js::flow(cx, (&flow_on_non_exhaustive.0, &flow_on_non_exhaustive.1)) {
                 Ok(()) => {}
-                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
+                Err(FlowJsException::WorkerCanceled(c)) => {
                     return Err(c.into());
                 }
-                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(c)) => {
+                Err(FlowJsException::TimedOut(c)) => {
                     return Err(c.into());
                 }
                 Err(err) => panic!("Should not be under speculation: {:?}", err),

@@ -116,6 +116,7 @@ use flow_typing_utils::type_operation_utils::type_assertions;
 use flow_typing_utils::type_sig_merge;
 use flow_typing_visitors::type_visitor;
 use flow_typing_visitors::type_visitor::TypeVisitor;
+use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::Node;
 
 fn force_lazy_tvars<'cx>(cx: &Context<'cx>) {
@@ -614,14 +615,19 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
     }
 }
 
-fn try_eval_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> TruthynessResult {
+fn try_eval_type_truthyness<'cx>(
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<TruthynessResult, JobError> {
     let reason = reason_of_t(t);
-    let concrete_types = FlowJs::all_possible_concrete_types(cx, reason, t).unwrap();
+    let concrete_types = flow_js_utils::flow_js_result_to_job_error(
+        FlowJs::all_possible_concrete_types(cx, reason, t),
+    )?;
     let results: Vec<_> = concrete_types
         .iter()
         .map(|t| try_eval_concrete_type_truthyness(cx, t))
         .collect();
-    match results.len() {
+    Ok(match results.len() {
         0 => TruthynessResult::ConstCondUnknown,
         1 => results.into_iter().next().unwrap(),
         _ => {
@@ -647,7 +653,7 @@ fn try_eval_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> TruthynessResul
                 TruthynessResult::ConstCondUnknown
             }
         }
-    }
+    })
 }
 
 #[derive(Clone, Dupe)]
@@ -683,9 +689,12 @@ fn condition_allowed() -> CheckConditionResult {
     CheckConditionResult::ConditionAllowed
 }
 
-fn use_type_to_check_conditional<'cx>(cx: &Context<'cx>, ttype: &Type) -> CheckConditionResult {
+fn use_type_to_check_conditional<'cx>(
+    cx: &Context<'cx>,
+    ttype: &Type,
+) -> Result<CheckConditionResult, JobError> {
     // We always show warning for errors generated from type inferrence
-    match try_eval_type_truthyness(cx, ttype) {
+    Ok(match try_eval_type_truthyness(cx, ttype)? {
         TruthynessResult::ConstCondTruthy {
             constant_condition_kind,
             reason,
@@ -708,7 +717,7 @@ fn use_type_to_check_conditional<'cx>(cx: &Context<'cx>, ttype: &Type) -> CheckC
         // ConstCondUnconcretized shouldn't happen because we call
         // `all_possible_concrete_types` to concretize all possible types
         TruthynessResult::ConstCondUnconcretized => CheckConditionResult::ConditionAllowed,
-    }
+    })
 }
 
 fn check_conditional<'cx>(
@@ -716,12 +725,12 @@ fn check_conditional<'cx>(
     cx: &Context<'cx>,
     e: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     cached_results: &mut ALocMap<CheckConditionResult>,
-) -> CheckConditionResult {
+) -> Result<CheckConditionResult, JobError> {
     let mut should_report_error_ref = should_report_error;
     let (loc, ttype) = e.loc();
     let exp = e.deref();
     if let Some(result) = cached_results.get(loc) {
-        return result.dupe();
+        return Ok(result.dupe());
     }
     let check_condition_result = match exp {
         ast::expression::ExpressionInner::StringLiteral { inner, .. } => {
@@ -753,8 +762,8 @@ fn check_conditional<'cx>(
         ast::expression::ExpressionInner::Update { .. } => condition_allowed(),
         ast::expression::ExpressionInner::Logical { inner, .. } => match inner.operator {
             ast::expression::LogicalOperator::Or | ast::expression::LogicalOperator::And => {
-                let left_result = check_conditional(false, cx, &inner.left, cached_results);
-                let right_result = check_conditional(false, cx, &inner.right, cached_results);
+                let left_result = check_conditional(false, cx, &inner.left, cached_results)?;
+                let right_result = check_conditional(false, cx, &inner.right, cached_results)?;
                 match (&left_result, &right_result) {
                     (
                         CheckConditionResult::ConditionBanned {
@@ -789,15 +798,15 @@ fn check_conditional<'cx>(
         },
         ast::expression::ExpressionInner::TypeCast { inner, .. } => {
             should_report_error_ref = false;
-            check_conditional(should_report_error, cx, &inner.expression, cached_results)
+            check_conditional(should_report_error, cx, &inner.expression, cached_results)?
         }
         ast::expression::ExpressionInner::AsConstExpression { inner, .. } => {
             should_report_error_ref = false;
-            check_conditional(should_report_error, cx, &inner.expression, cached_results)
+            check_conditional(should_report_error, cx, &inner.expression, cached_results)?
         }
         ast::expression::ExpressionInner::TSSatisfies { inner, .. } => {
             should_report_error_ref = false;
-            check_conditional(should_report_error, cx, &inner.expression, cached_results)
+            check_conditional(should_report_error, cx, &inner.expression, cached_results)?
         }
         ast::expression::ExpressionInner::Member { .. } => condition_allowed(),
         ast::expression::ExpressionInner::OptionalMember { .. } => condition_allowed(),
@@ -807,8 +816,8 @@ fn check_conditional<'cx>(
         ast::expression::ExpressionInner::Conditional { inner, .. } => {
             // we don't need to check or unnest `test` here because they are unnested and checked
             // in `expression` function
-            let left_result = check_conditional(false, cx, &inner.consequent, cached_results);
-            let right_result = check_conditional(false, cx, &inner.alternate, cached_results);
+            let left_result = check_conditional(false, cx, &inner.consequent, cached_results)?;
+            let right_result = check_conditional(false, cx, &inner.alternate, cached_results)?;
             match (&left_result, &right_result) {
                 (
                     CheckConditionResult::ConditionBanned {
@@ -839,7 +848,7 @@ fn check_conditional<'cx>(
         ast::expression::ExpressionInner::Sequence { inner, .. } => {
             let last = inner.expressions.last().unwrap();
             should_report_error_ref = false;
-            check_conditional(should_report_error, cx, last, cached_results)
+            check_conditional(should_report_error, cx, last, cached_results)?
         }
         ast::expression::ExpressionInner::Function { .. } => condition_banned_and_truthy(),
         ast::expression::ExpressionInner::ArrowFunction { .. } => condition_banned_and_truthy(),
@@ -852,7 +861,8 @@ fn check_conditional<'cx>(
         ast::expression::ExpressionInner::Import { .. } => condition_banned_and_truthy(),
         ast::expression::ExpressionInner::Unary { inner, .. } => match inner.operator {
             ast::expression::UnaryOperator::Not => {
-                let arg_eval_result = check_conditional(false, cx, &inner.argument, cached_results);
+                let arg_eval_result =
+                    check_conditional(false, cx, &inner.argument, cached_results)?;
                 match arg_eval_result {
                     CheckConditionResult::ConditionBanned {
                         is_truthy,
@@ -874,11 +884,11 @@ fn check_conditional<'cx>(
             | ast::expression::UnaryOperator::Plus
             | ast::expression::UnaryOperator::BitNot
             | ast::expression::UnaryOperator::Typeof => {
-                check_conditional(false, cx, &inner.argument, cached_results)
+                check_conditional(false, cx, &inner.argument, cached_results)?
             }
             ast::expression::UnaryOperator::Void => condition_banned_and_falsy(),
             ast::expression::UnaryOperator::Delete | ast::expression::UnaryOperator::Nonnull => {
-                use_type_to_check_conditional(cx, ttype)
+                use_type_to_check_conditional(cx, ttype)?
             }
             ast::expression::UnaryOperator::Await => condition_allowed(),
         },
@@ -887,7 +897,7 @@ fn check_conditional<'cx>(
                 // vanilla assignment (e.g. `a='test_str'`) is represented by `None`
                 None => {
                     should_report_error_ref = false;
-                    check_conditional(should_report_error, cx, &inner.right, cached_results)
+                    check_conditional(should_report_error, cx, &inner.right, cached_results)?
                 }
                 // we don't check compound assignment (e.g. `++`, `--`, `+=`, ...)
                 // because their value could change
@@ -902,19 +912,21 @@ fn check_conditional<'cx>(
         | ast::expression::ExpressionInner::Binary { .. }
         | ast::expression::ExpressionInner::Identifier { .. }
         | ast::expression::ExpressionInner::Record { .. }
-        | ast::expression::ExpressionInner::This { .. } => use_type_to_check_conditional(cx, ttype),
+        | ast::expression::ExpressionInner::This { .. } => {
+            use_type_to_check_conditional(cx, ttype)?
+        }
     };
     if should_report_error_ref {
         cached_results.insert(loc.dupe(), check_condition_result.dupe());
     }
-    check_condition_result
+    Ok(check_condition_result)
 }
 
-fn detect_constant_conditions<'cx>(cx: &Context<'cx>) {
+fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     let all_conditions = cx.get_all_conditions();
     let mut all_condition_results: ALocMap<CheckConditionResult> = ALocMap::new();
     for condition in all_conditions.iter() {
-        check_conditional(true, cx, condition, &mut all_condition_results);
+        check_conditional(true, cx, condition, &mut all_condition_results)?;
     }
     let mut banned_conditions: Vec<(ALoc, bool, bool, ConstantConditionKind, Option<Reason>)> =
         Vec::new();
@@ -949,6 +961,7 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) {
             })),
         );
     }
+    Ok(())
 }
 
 struct StrictComparisonResult {
@@ -969,7 +982,7 @@ fn check_strict_comparison<'cx>(
             ast::expression::Expression<ALoc, (ALoc, Type)>,
         ),
     )],
-) -> Result<Vec<StrictComparisonResult>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Vec<StrictComparisonResult>, JobError> {
     Ok(all_strict_comparisons
         .iter()
         .map(|(loc, (left_ast, right_ast))| {
@@ -1004,7 +1017,7 @@ fn check_strict_comparison<'cx>(
                 cx: &Context<'cx>,
                 left: &Type,
                 right: &Type,
-            ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+            ) -> Result<bool, JobError> {
                 let left_filtered = type_filter::not_maybe(cx, left.dupe()).type_;
                 let right_filtered = type_filter::not_maybe(cx, right.dupe()).type_;
                 let left_expanded = drop_generic(left.dupe());
@@ -1081,15 +1094,13 @@ fn check_strict_comparison<'cx>(
                 }
             })
         })
-        .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?
+        .collect::<Result<Vec<_>, JobError>>()?
         .into_iter()
         .flatten()
         .collect())
 }
 
-fn detect_invalid_strict_comparison<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     let all_strict_comparisons = cx.get_all_strict_comparisons();
     let all_strict_comparisons: Vec<_> = all_strict_comparisons.iter().cloned().collect();
     for result in check_strict_comparison(cx, &all_strict_comparisons)? {
@@ -1119,9 +1130,7 @@ fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn detect_unused_promises<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn detect_unused_promises<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     for (loc, t, async_) in cx.maybe_unused_promises().iter() {
         let t = tvar_resolver::resolved_t(
             |r| any_t::make(AnySource::Untyped, r.dupe()),
@@ -1147,11 +1156,7 @@ fn detect_unused_promises<'cx>(
     Ok(())
 }
 
-fn enforce_optimize<'cx>(
-    cx: &Context<'cx>,
-    loc: &ALoc,
-    t: &Type,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), JobError> {
     let reason = flow_common::reason::mk_reason(
         VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(Name::new(
             FlowSmolStr::new_inline("$Flow$EnforceOptimized"),
@@ -1176,9 +1181,7 @@ fn enforce_optimize<'cx>(
     flow_js::flow_t_non_speculating(cx, (&internal_t, t))
 }
 
-fn check_union_opt<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn check_union_opt<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     let mut result = Ok(());
     cx.iter_union_opt(|loc, t| {
         if result.is_ok() {
@@ -1282,15 +1285,16 @@ fn detect_non_voidable_properties<'cx>(cx: &Context<'cx>) {
     }
 }
 
-fn check_polarity_fn<'cx>(cx: &Context<'cx>) {
+fn check_polarity_fn<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     for (tparams, polarity, t) in cx.post_inference_polarity_checks().iter() {
-        check_polarity::check_polarity(cx, tparams, *polarity, t).expect("Non speculating");
+        flow_js_utils::flow_js_result_to_job_error(check_polarity::check_polarity(
+            cx, tparams, *polarity, t,
+        ))?;
     }
+    Ok(())
 }
 
-fn check_general_post_inference_validations<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn check_general_post_inference_validations<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     for (t, use_t) in cx.post_inference_validation_flows().iter() {
         flow_js::flow_non_speculating(cx, (t, use_t))?
     }
@@ -1300,9 +1304,7 @@ fn check_general_post_inference_validations<'cx>(
     Ok(())
 }
 
-fn check_interface_merge_prop_conflicts<'cx>(
-    cx: &Context<'cx>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn check_interface_merge_prop_conflicts<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     for (use_op, tparam_subst_map, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
         let bad_t = type_subst::subst(
             cx,
@@ -1321,7 +1323,7 @@ fn check_interface_merge_prop_conflicts<'cx>(
 fn check_react_rules_fn<'cx>(
     cx: &Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     react_rules::check_react_rules(cx, tast)
 }
 
@@ -1329,7 +1331,7 @@ fn check_multiplatform_conformance<'cx>(
     cx: &Context<'cx>,
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let prog_aloc = &ast.loc;
     let filename = cx.file();
     let file_options = cx.file_options();
@@ -1566,21 +1568,15 @@ fn check_spread_prop_keys<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALo
 fn check_match_exhaustiveness<'cx>(
     cx: &Context<'cx>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     if !cx.enable_pattern_matching() {
         return Ok(());
     }
     struct MatchExhaustivenessChecker<'a, 'cx> {
         cx: &'a Context<'cx>,
     }
-    impl<'ast>
-        ast_visitor::AstVisitor<
-            'ast,
-            ALoc,
-            (ALoc, Type),
-            &'ast ALoc,
-            flow_utils_concurrency::job_error::JobError,
-        > for MatchExhaustivenessChecker<'_, '_>
+    impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
+        for MatchExhaustivenessChecker<'_, '_>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -1592,12 +1588,8 @@ fn check_match_exhaustiveness<'cx>(
             &mut self,
             loc: &'ast ALoc,
             m: &'ast ast::match_::Match<ALoc, (ALoc, Type), B>,
-            on_case_body: impl FnMut(
-                &mut Self,
-                &'ast B,
-            )
-                -> Result<(), flow_utils_concurrency::job_error::JobError>,
-        ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+            on_case_body: impl FnMut(&mut Self, &'ast B) -> Result<(), JobError>,
+        ) -> Result<(), JobError> {
             let match_loc = &m.match_keyword_loc;
             let (_, arg_t) = m.arg.loc();
             let patterns: Vec<_> = m
@@ -1654,10 +1646,13 @@ fn emit_refinement_information_as_errors<'cx>(cx: &Context<'cx>) {
 }
 
 // (* let check_assert_operator cx tast = *)
-fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {
+fn check_assert_operator<'cx>(
+    cx: &Context<'cx>,
+    tast: &ast::Program<ALoc, (ALoc, Type)>,
+) -> Result<(), JobError> {
     // (* if Context.assert_operator_enabled cx then ignore (checker#program tast ...) *)
     if !cx.assert_operator_enabled() {
-        return;
+        return Ok(());
     }
     // (* let check_specialized_assert_operator ~op_reason expr = *)
     fn check_specialized_assert_operator<'cx>(
@@ -1740,18 +1735,18 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
         cx: &Context<'cx>,
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
-    ) {
+    ) -> Result<(), JobError> {
         let obj_reason = reason::mk_typed_expression_reason(expr);
         let (_, t) = expr.loc();
-        let legal = type_assertions::check_assert_operator_nullable(cx, t)
+        let legal = type_assertions::check_assert_operator_nullable(cx, t)?
             || match expr.deref() {
                 ast::expression::ExpressionInner::Member { loc: _, inner } => {
                     let (_, obj_t) = inner.object.loc();
-                    type_assertions::check_assert_operator_implicitly_nullable(cx, obj_t)
+                    type_assertions::check_assert_operator_implicitly_nullable(cx, obj_t)?
                 }
                 ast::expression::ExpressionInner::OptionalMember { loc: _, inner } => {
                     let (_, obj_t) = inner.member.object.loc();
-                    type_assertions::check_assert_operator_implicitly_nullable(cx, obj_t)
+                    type_assertions::check_assert_operator_implicitly_nullable(cx, obj_t)?
                 }
                 _ => false,
             };
@@ -1765,22 +1760,24 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
                 })),
             );
         }
+        Ok(())
     }
     fn check<'cx>(
         cx: &Context<'cx>,
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
-    ) {
-        check_assert_operator_useful(cx, op_reason, expr);
+    ) -> Result<(), JobError> {
+        check_assert_operator_useful(cx, op_reason, expr)?;
         if cx.assert_operator_specialized() {
             check_specialized_assert_operator(cx, op_reason, expr);
         }
+        Ok(())
     }
 
     struct AssertOperatorChecker<'a, 'cx> {
         cx: &'a Context<'cx>,
     }
-    impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
+    impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
         for AssertOperatorChecker<'_, '_>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
@@ -1792,27 +1789,27 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
         fn expression(
             &mut self,
             expr: &'ast ast::expression::Expression<ALoc, (ALoc, Type)>,
-        ) -> Result<(), !> {
+        ) -> Result<(), JobError> {
             match expr.deref() {
                 ast::expression::ExpressionInner::Unary { loc: _, inner }
                     if inner.operator == ast::expression::UnaryOperator::Nonnull =>
                 {
                     let op_reason = reason::mk_typed_expression_reason(expr);
-                    check(self.cx, &op_reason, &inner.argument);
+                    check(self.cx, &op_reason, &inner.argument)?;
                 }
                 ast::expression::ExpressionInner::OptionalCall { loc: _, inner }
                     if inner.optional == ast::expression::OptionalCallKind::AssertNonnull =>
                 {
                     let target = &inner.call.callee;
                     let op_reason = reason::mk_typed_expression_reason(target);
-                    check(self.cx, &op_reason, target);
+                    check(self.cx, &op_reason, target)?;
                 }
                 ast::expression::ExpressionInner::OptionalMember { loc: _, inner }
                     if inner.optional == ast::expression::OptionalMemberKind::AssertNonnull =>
                 {
                     let target = &inner.member.object;
                     let op_reason = reason::mk_typed_expression_reason(target);
-                    check(self.cx, &op_reason, target);
+                    check(self.cx, &op_reason, target)?;
                 }
                 _ => {}
             }
@@ -1821,7 +1818,8 @@ fn check_assert_operator<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc
     }
 
     let mut checker = AssertOperatorChecker { cx };
-    let Ok(()) = checker.program(tast);
+    checker.program(tast)?;
+    Ok(())
 }
 
 fn convert_type_to_type_desc_in_errors<'cx>(
@@ -1883,27 +1881,27 @@ pub fn post_merge_checks<'cx>(
     ast: &ast::Program<ALoc, ALoc>,
     tast: &ast::Program<ALoc, (ALoc, Type)>,
     metadata: &Metadata,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     force_lazy_tvars(cx);
     check_react_rules_fn(cx, tast)?;
     if !cx.is_lib_file() {
         check_multiplatform_conformance(cx, ast, tast)?;
     }
-    check_polarity_fn(cx);
+    check_polarity_fn(cx)?;
     check_general_post_inference_validations(cx)?;
     check_interface_merge_prop_conflicts(cx)?;
     detect_sketchy_null_checks(cx, tast);
     detect_non_voidable_properties(cx);
     detect_test_prop_misses(cx);
     detect_unnecessary_optional_chains(cx);
-    detect_constant_conditions(cx);
+    detect_constant_conditions(cx)?;
     detect_import_export_errors(cx, ast, metadata);
     detect_invalid_strict_comparison(cx)?;
     detect_unused_promises(cx)?;
     check_union_opt(cx)?;
     check_spread_prop_keys(cx, tast);
     check_match_exhaustiveness(cx, tast)?;
-    check_assert_operator(cx, tast);
+    check_assert_operator(cx, tast)?;
     emit_refinement_information_as_errors(cx);
     convert_type_to_type_desc_in_errors(cx, file_sig, tast);
     Ok(())

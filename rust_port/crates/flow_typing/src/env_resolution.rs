@@ -85,6 +85,8 @@ use flow_typing_utils::exhaustive;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_hint;
 use flow_typing_utils::type_operation_utils;
+use flow_utils_concurrency::job_error::JobError;
+
 fn mk_tparams_map<'cx>(
     cx: &Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
@@ -221,7 +223,7 @@ fn resolve_annotation<'cx>(
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     react_deep_read_only: Option<(ALoc, name_def_types::DroAnnot)>,
     anno: &ast::types::Annotation<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let tparams_map = mk_tparams_map(cx, tparams_map);
     let (t, anno_typed) = type_annotation::mk_type_available_annotation(cx, tparams_map, anno)?;
@@ -244,15 +246,16 @@ fn resolve_annotation<'cx>(
                 let react_dro = type_::ReactDro(param_loc, dro_type);
                 let destructor = Rc::new(type_::Destructor::ReactDRO(Box::new(react_dro)));
                 let eval_id = type_::eval::Id::generate_id();
-                flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                    cx,
-                    type_::unknown_use(),
-                    &reason,
-                    &t,
-                    &destructor,
-                    eval_id,
-                )
-                .expect("non speculative")
+                flow_js_exception_to_job_error(
+                    flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                        cx,
+                        type_::unknown_use(),
+                        &reason,
+                        &t,
+                        &destructor,
+                        eval_id,
+                    ),
+                )?
             } else {
                 t
             }
@@ -418,7 +421,7 @@ fn synthesize_expression_for_instantiation<'cx>(
     cx: &Context<'cx>,
     target_loc: Option<ALoc>,
     e: &ast::expression::Expression<ALoc, ALoc>,
-) -> ast::expression::Expression<ALoc, (ALoc, Type)> {
+) -> Result<ast::expression::Expression<ALoc, (ALoc, Type)>, CheckExprError> {
     let e_clone = e.dupe();
     try_cache_result(
         cx,
@@ -428,7 +431,6 @@ fn synthesize_expression_for_instantiation<'cx>(
             cx.node_cache().set_expression(e.dupe());
         },
     )
-    .expect("unexpected abnormal control flow in synthesize_expression_for_instantiation")
 }
 
 fn synthesize_jsx_children_for_instantiation<'cx>(
@@ -457,43 +459,49 @@ fn synth_arg_list<'cx>(
     cx: &Context<'cx>,
     target_loc: Option<ALoc>,
     arg_list: &ast::expression::ArgList<ALoc, ALoc>,
-) -> Vec<(ALoc, type_::CallArg)> {
+) -> Result<Vec<(ALoc, type_::CallArg)>, JobError> {
     let arguments = &arg_list.arguments;
     arguments
         .iter()
-        .map(|arg| {
+        .map(|arg| -> Result<_, JobError> {
             use ast::expression::ExpressionOrSpread;
             match arg {
                 ExpressionOrSpread::Expression(e) => {
-                    let result = synthesize_expression_for_instantiation(cx, target_loc.dupe(), e);
+                    let result = check_expr_error_to_job_error(
+                        synthesize_expression_for_instantiation(cx, target_loc.dupe(), e),
+                    )?;
                     let (loc, t) = result.loc().dupe();
-                    (loc, type_::CallArg::arg(t))
+                    Ok((loc, type_::CallArg::arg(t)))
                 }
                 ExpressionOrSpread::Spread(spread) => {
                     let e = &spread.argument;
-                    let result = synthesize_expression_for_instantiation(cx, target_loc.dupe(), e);
+                    let result = check_expr_error_to_job_error(
+                        synthesize_expression_for_instantiation(cx, target_loc.dupe(), e),
+                    )?;
                     let (loc, t) = result.loc().dupe();
-                    (loc, type_::CallArg::spread_arg(t))
+                    Ok((loc, type_::CallArg::spread_arg(t)))
                 }
             }
         })
         .collect()
 }
 
-fn flow_js_exception_to_job_error<T>(
-    r: Result<T, FlowJsException>,
-) -> Result<T, flow_utils_concurrency::job_error::JobError> {
+fn flow_js_exception_to_job_error<T>(r: Result<T, FlowJsException>) -> Result<T, JobError> {
     match r {
         Ok(v) => Ok(v),
-        Err(FlowJsException::WorkerCanceled(c)) => {
-            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
-        }
-        Err(FlowJsException::TimedOut(t)) => {
-            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
-        }
-        Err(FlowJsException::DebugThrow { loc }) => {
-            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
-        }
+        Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
+        Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
+        Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
+        Err(err) => panic!("Non speculating: {:?}", err),
+    }
+}
+
+fn check_expr_error_to_job_error<T>(r: Result<T, CheckExprError>) -> Result<T, JobError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(CheckExprError::Canceled(c)) => Err(JobError::Canceled(c)),
+        Err(CheckExprError::TimedOut(t)) => Err(JobError::TimedOut(t)),
+        Err(CheckExprError::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
         Err(err) => panic!("Non speculating: {:?}", err),
     }
 }
@@ -512,7 +520,7 @@ fn resolve_hint<'cx>(
         cx: &Context<'cx>,
         loc: ALoc,
         hint_node: HintNode,
-    ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<Type, JobError> {
         Ok(match hint_node {
             HintNode::AnnotationHint(tparams_map, anno) => {
                 resolve_annotation(cx, &tparams_map, None, &anno)?
@@ -652,7 +660,7 @@ fn resolve_hint<'cx>(
                             ))
                         }
                     })
-                    .collect::<Result<_, flow_utils_concurrency::job_error::JobError>>()?;
+                    .collect::<Result<_, JobError>>()?;
                 flow_typing_tvar::mk_where(cx, array_reason.dupe(), |cx, tout| {
                     let reason_op = array_reason.dupe();
                     let element_reason = reason_op.dupe().replace_desc(
@@ -674,13 +682,13 @@ fn resolve_hint<'cx>(
                             tout: tout.dupe(),
                         },
                     ))?;
-                    Ok::<(), flow_utils_concurrency::job_error::JobError>(())
+                    Ok::<(), JobError>(())
                 })?
             }
             HintNode::ComposedObjectPatternHint(hint_loc, properties) => {
                 let acc = properties.into_iter().try_fold(
                     statement::object_expression_acc::ObjectExpressionAcc::empty(),
-                    |acc, prop| -> Result<_, flow_utils_concurrency::job_error::JobError> {
+                    |acc, prop| -> Result<_, JobError> {
                         Ok(match prop {
                             ObjectPropPatternHint::ObjectPropPatternHint(n, l, h) => {
                                 let t = resolve_hint_node(cx, loc.dupe(), h)?;
@@ -742,12 +750,12 @@ fn resolve_hint<'cx>(
                     .get(&(l.dupe(), target_loc.dupe()))
                     .cloned()
                 {
-                    result
+                    Ok(result)
                 } else {
-                    let result = synth_arg_list(cx, target_loc.dupe(), &arg_list);
+                    let result = synth_arg_list(cx, target_loc.dupe(), &arg_list)?;
                     cx.hint_map_arglist_cache_mut()
                         .insert((l.dupe(), target_loc), result.clone());
-                    result
+                    Ok(result)
                 }
             })
         },
@@ -784,19 +792,21 @@ fn resolve_hint<'cx>(
                 let name_clone = name.dupe();
                 let lazy_props: type_hint::ConcrJsxProps<'cx> =
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
-                        let (jsx_props_t, _, _, _) = statement::jsx_mk_props(
-                            cx,
-                            jsx_reason_clone.dupe(),
-                            &|_hint, cx, expr| {
-                                Ok(synthesize_expression_for_instantiation(cx, None, expr))
-                            },
-                            &|cx, children| synthesize_jsx_children_for_instantiation(cx, children),
-                            &name_clone,
-                            &props_clone,
-                            &children_clone,
-                        )
-                        .expect("Non speculating");
-                        jsx_props_t
+                        let (jsx_props_t, _, _, _) =
+                            check_expr_error_to_job_error(statement::jsx_mk_props(
+                                cx,
+                                jsx_reason_clone.dupe(),
+                                &|_hint, cx, expr| {
+                                    synthesize_expression_for_instantiation(cx, None, expr)
+                                },
+                                &|cx, children| {
+                                    synthesize_jsx_children_for_instantiation(cx, children)
+                                },
+                                &name_clone,
+                                &props_clone,
+                                &children_clone,
+                            ))?;
+                        Ok(jsx_props_t)
                     })));
                 cx.reset_errors(original_errors);
                 cx.hint_map_jsx_cache_mut()
@@ -831,10 +841,7 @@ pub fn lazily_resolve_hints<'cx>(
                           expected_only: bool,
                           skip_optional: Option<bool>,
                           r: Reason|
-          -> Result<
-        type_::HintEvalResult,
-        flow_utils_concurrency::job_error::JobError,
-    > {
+          -> Result<type_::HintEvalResult, JobError> {
         let resolved = resolve_hints(cx, loc.dupe(), &hints_owned);
         type_hint::evaluate_hints(cx, expected_only, skip_optional, &r, resolved)
     };
@@ -847,15 +854,8 @@ pub fn resolve_pred_func<'cx>(
 ) -> Rc<
     flow_lazy::Lazy<
         Context<'cx>,
-        Result<type_::PredFuncallInfo, flow_utils_concurrency::job_error::JobError>,
-        Box<
-            dyn FnOnce(
-                    &Context<'cx>,
-                ) -> Result<
-                    type_::PredFuncallInfo,
-                    flow_utils_concurrency::job_error::JobError,
-                > + 'cx,
-        >,
+        Result<type_::PredFuncallInfo, JobError>,
+        Box<dyn FnOnce(&Context<'cx>) -> Result<type_::PredFuncallInfo, JobError> + 'cx>,
     >,
 > {
     let info = info.clone();
@@ -889,11 +889,11 @@ pub fn resolve_pred_func<'cx>(
         let arguments = &info.arguments.arguments;
         let argts: Rc<[type_::CallArg]> = arguments
             .iter()
-            .map(|e| {
-                let (t, _) = statement::expression_or_spread(cx, e).expect("Non speculating");
-                t
+            .map(|e| -> Result<_, JobError> {
+                let (t, _) = check_expr_error_to_job_error(statement::expression_or_spread(cx, e))?;
+                Ok(t)
             })
-            .collect();
+            .collect::<Result<_, JobError>>()?;
         let ex_loc = info.call_expr.loc();
         Ok(type_::PredFuncallInfo(
             use_op,
@@ -1105,7 +1105,7 @@ fn resolve_declared_function<'cx>(
     declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     namespace_types: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let first_decl = declarations
         .first()
         .expect("declared function definitions should be non-empty");
@@ -1138,7 +1138,7 @@ fn resolve_declared_function<'cx>(
                 _ => t,
             })
         })
-        .collect::<Result<Vec<_>, flow_utils_concurrency::job_error::JobError>>()?
+        .collect::<Result<Vec<_>, JobError>>()?
         .into_iter();
     let function_t = match (types.next(), types.next()) {
         (Some(t0), None) => t0,
@@ -1165,7 +1165,7 @@ fn resolve_annotated_component<'cx>(
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     component_loc: ALoc,
     component: &ast::statement::ComponentDeclaration<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     if !cx.component_syntax() {
         flow_js_utils::add_output_non_speculating(
             cx,
@@ -1471,7 +1471,7 @@ fn resolve_binding<'cx>(
                                 },
                             );
                             let elem_t = flow_typing_tvar::mk(cx, element_reason);
-                            flow_js::FlowJs::resolve_spread_list(
+                            flow_js_exception_to_job_error(flow_js::FlowJs::resolve_spread_list(
                                 cx,
                                 type_::unknown_use(),
                                 &reason_op,
@@ -1482,9 +1482,8 @@ fn resolve_binding<'cx>(
                                     elem_t,
                                     tout: tout.dupe(),
                                 },
-                            )
-                            .expect("Non speculating");
-                            Ok::<(), flow_utils_concurrency::job_error::JobError>(())
+                            ))?;
+                            Ok::<(), JobError>(())
                         })?
                     }
                     ast::expression::ExpressionInner::Assignment { .. }
@@ -1783,7 +1782,7 @@ fn resolve_binding<'cx>(
                 let elem_t = flow_typing_tvar::mk_where(
                     cx,
                     reason::mk_reason(reason::VirtualReasonDesc::REmptyArrayElement, loc.dupe()),
-                    |cx, tvar| -> Result<(), flow_utils_concurrency::job_error::JobError> {
+                    |cx, tvar| -> Result<(), JobError> {
                         for t in &ts {
                             let use_t = UseT::new(type_::UseTInner::UseT(
                                 type_::unknown_use(),
@@ -1852,7 +1851,7 @@ fn resolve_binding<'cx>(
                         flow_typing_tvar::mk_where(
                             cx,
                             ctx_reason.dupe(),
-                            |cx, tout| -> Result<(), flow_utils_concurrency::job_error::JobError> {
+                            |cx, tout| -> Result<(), JobError> {
                                 let use_t = UseT::new(type_::UseTInner::FilterOptionalT(
                                     type_::unknown_use(),
                                     tout.dupe(),
@@ -2026,22 +2025,24 @@ fn resolve_binding<'cx>(
                                                     type_::Selector::Prop(_, true) => {
                                                         // Concretize so eval_selector sees concrete types for the
                                                         // has_default exact-object check (lookup_ub vs getprop_ub).
-                                                        for ct in flow_js::FlowJs::possible_concrete_types_for_destructuring(
-                                                            cx, &reason_c2, &t,
-                                                        )
-                                                        .expect("Non speculating")
+                                                        for ct in flow_js_exception_to_job_error(
+                                                            flow_js::FlowJs::possible_concrete_types_for_destructuring(
+                                                                cx, &reason_c2, &t,
+                                                            ),
+                                                        )?
                                                         {
-                                                            flow_js::FlowJs::eval_selector(
-                                                                cx,
-                                                                None,
-                                                                annot,
-                                                                &reason_c2,
-                                                                &ct,
-                                                                &selector_c2,
-                                                                &tout,
-                                                                id,
-                                                            )
-                                                            .expect("Non speculating");
+                                                            flow_js_exception_to_job_error(
+                                                                flow_js::FlowJs::eval_selector(
+                                                                    cx,
+                                                                    None,
+                                                                    annot,
+                                                                    &reason_c2,
+                                                                    &ct,
+                                                                    &selector_c2,
+                                                                    &tout,
+                                                                    id,
+                                                                ),
+                                                            )?;
                                                         }
                                                     }
                                                     _ => {
@@ -2049,22 +2050,21 @@ fn resolve_binding<'cx>(
                                                         // original type. The flow mechanism will handle union
                                                         // distribution, matching the old DestructuringT behavior.
                                                         // Flow_js.eval_selector cx ~annot reason t selector tout id
-                                                        flow_js::FlowJs::eval_selector(
-                                                            cx,
-                                                            None,
-                                                            annot,
-                                                            &reason_c2,
-                                                            &t,
-                                                            &selector_c2,
-                                                            &tout,
-                                                            id,
-                                                        )
-                                                        .expect("Non speculating");
+                                                        flow_js_exception_to_job_error(
+                                                            flow_js::FlowJs::eval_selector(
+                                                                cx,
+                                                                None,
+                                                                annot,
+                                                                &reason_c2,
+                                                                &t,
+                                                                &selector_c2,
+                                                                &tout,
+                                                                id,
+                                                            ),
+                                                        )?;
                                                     }
                                                 }
-                                                Ok::<(), flow_utils_concurrency::job_error::JobError>(
-                                                    (),
-                                                )
+                                                Ok::<(), JobError>(())
                                             },
                                         )
                                     },
@@ -2205,10 +2205,9 @@ fn resolve_record<'cx>(
         dyn Fn(
                 &Context<'cx>,
                 Type,
-            ) -> Result<
-                ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
-                flow_utils_concurrency::job_error::JobError,
-            > + 'cx,
+            )
+                -> Result<ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>, JobError>
+            + 'cx,
     > = Rc::new(move |cx: &Context<'cx>, t| record_reconstruct_fn(cx, t));
     cache.set_record_sig(
         record_loc.dupe(),
@@ -2286,13 +2285,13 @@ fn resolve_op_assign<'cx>(
                 ast::expression::AssignmentOperator::NullishAssign => {
                     type_operation_utils::operators::logical_nullish_coalesce(
                         cx, &reason, lhs_t, &rhs_t,
-                    )
+                    )?
                 }
                 ast::expression::AssignmentOperator::AndAssign => {
-                    type_operation_utils::operators::logical_and(cx, &reason, lhs_t, &rhs_t)
+                    type_operation_utils::operators::logical_and(cx, &reason, lhs_t, &rhs_t)?
                 }
                 ast::expression::AssignmentOperator::OrAssign => {
-                    type_operation_utils::operators::logical_or(cx, &reason, lhs_t, &rhs_t)
+                    type_operation_utils::operators::logical_or(cx, &reason, lhs_t, &rhs_t)?
                 }
                 _ => unreachable!("Bad conditional guard"),
             })
@@ -2305,7 +2304,7 @@ fn resolve_update<'cx>(
     id_loc: ALoc,
     exp_loc: ALoc,
     id_reason: Reason,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let reason = reason::mk_reason(reason::VirtualReasonDesc::RUpdate, exp_loc);
     let id_t = type_env::ref_entry_exn(type_env::LookupMode::ForValue, cx, id_loc, id_reason)?;
     Ok(type_operation_utils::operators::unary_arith(
@@ -2320,7 +2319,7 @@ fn resolve_type_alias<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     alias: &ast::statement::TypeAlias<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let (t, ast) = statement::type_alias(cx, loc.dupe(), alias)?;
     cache.set_alias(loc, (t.dupe(), ast));
@@ -2331,7 +2330,7 @@ fn resolve_opaque_type<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     opaque: &ast::statement::OpaqueType<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let (t, ast) = statement::opaque_type(cx, loc.dupe(), opaque)?;
     cache.set_opaque(loc, (t.dupe(), ast));
@@ -2346,7 +2345,7 @@ fn resolve_import<'cx>(
     module_name: &FlowSmolStr,
     source_loc: ALoc,
     import: &Import,
-) -> Type {
+) -> Result<Type, JobError> {
     let module_name_userland = flow_import_specifier::Userland::from_smol_str(module_name.dupe());
     let source_module = {
         let import_kind_for_untyped_import_validation = match import_kind {
@@ -2354,16 +2353,15 @@ fn resolve_import<'cx>(
             ast::statement::ImportKind::ImportTypeof => Some(type_::ImportKind::ImportTypeof),
             ast::statement::ImportKind::ImportValue => Some(type_::ImportKind::ImportValue),
         };
-        flow_js_utils::import_export_utils::get_module_type_or_any(
+        flow_js_exception_to_job_error(flow_js_utils::import_export_utils::get_module_type_or_any(
             cx,
             false,
             import_kind_for_untyped_import_validation,
             source_loc,
             module_name_userland.dupe(),
-        )
-        .expect("Non speculating")
+        ))?
     };
-    match import {
+    Ok(match import {
         Import::Named {
             kind,
             remote,
@@ -2374,17 +2372,18 @@ fn resolve_import<'cx>(
                 |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                 };
-            let (_, t) = flow_js_utils::import_export_utils::import_named_specifier_type(
-                cx,
-                import_reason,
-                &singleton_concretize,
-                &import_kind,
-                module_name_userland.dupe(),
-                &source_module,
-                remote,
-                local,
-            )
-            .expect("Non speculating");
+            let (_, t) = flow_js_exception_to_job_error(
+                flow_js_utils::import_export_utils::import_named_specifier_type(
+                    cx,
+                    import_reason,
+                    &singleton_concretize,
+                    &import_kind,
+                    module_name_userland.dupe(),
+                    &source_module,
+                    remote,
+                    local,
+                ),
+            )?;
             if ast_utils::hook_name(local.as_str()) {
                 make_hooklike(cx, t)
             } else {
@@ -2394,16 +2393,17 @@ fn resolve_import<'cx>(
         Import::Namespace(name) => {
             let namespace_symbol =
                 flow_common::flow_symbol::Symbol::mk_namespace_symbol(name.dupe(), id_loc.dupe());
-            let t = flow_js_utils::import_export_utils::import_namespace_specifier_type(
-                cx,
-                import_reason,
-                &import_kind,
-                module_name_userland.dupe(),
-                namespace_symbol,
-                &source_module,
-                id_loc.dupe(),
-            )
-            .expect("Non speculating");
+            let t = flow_js_exception_to_job_error(
+                flow_js_utils::import_export_utils::import_namespace_specifier_type(
+                    cx,
+                    import_reason,
+                    &import_kind,
+                    module_name_userland.dupe(),
+                    namespace_symbol,
+                    &source_module,
+                    id_loc.dupe(),
+                ),
+            )?;
             if ast_utils::hook_name(name.as_str()) {
                 make_hooklike(cx, t)
             } else {
@@ -2415,23 +2415,24 @@ fn resolve_import<'cx>(
                 |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                 };
-            let (_, t) = flow_js_utils::import_export_utils::import_default_specifier_type(
-                cx,
-                import_reason,
-                &singleton_concretize,
-                &import_kind,
-                module_name_userland.dupe(),
-                &source_module,
-                local_name,
-            )
-            .expect("Non speculating");
+            let (_, t) = flow_js_exception_to_job_error(
+                flow_js_utils::import_export_utils::import_default_specifier_type(
+                    cx,
+                    import_reason,
+                    &singleton_concretize,
+                    &import_kind,
+                    module_name_userland.dupe(),
+                    &source_module,
+                    local_name,
+                ),
+            )?;
             if ast_utils::hook_name(local_name.as_str()) {
                 make_hooklike(cx, t)
             } else {
                 t
             }
         }
-    }
+    })
 }
 
 // Interface/declare-class merging copies property maps from the absorbed
@@ -2441,13 +2442,13 @@ fn resolve_import<'cx>(
 fn subst_merge_props<'cx>(
     cx: &Context<'cx>,
     tparam_subst_map: &FlowOrdMap<SubstName, Type>,
-    props: flow_typing_type::type_::properties::PropertiesMap,
-) -> flow_typing_type::type_::properties::PropertiesMap {
+    props: type_::properties::PropertiesMap,
+) -> type_::properties::PropertiesMap {
     if tparam_subst_map.is_empty() {
         return props;
     }
     props.ident_map(|prop| {
-        flow_typing_type::type_::property::map_t(
+        type_::property::map_t(
             |t| {
                 type_subst::subst(
                     cx,
@@ -2466,10 +2467,10 @@ fn subst_merge_props<'cx>(
 
 fn merge_props_by_id<'cx>(
     cx: &Context<'cx>,
-    target_own: &flow_typing_type::type_::properties::Id,
-    target_proto: &flow_typing_type::type_::properties::Id,
-    source_own: &flow_typing_type::type_::properties::Id,
-    source_proto: &flow_typing_type::type_::properties::Id,
+    target_own: &type_::properties::Id,
+    target_proto: &type_::properties::Id,
+    source_own: &type_::properties::Id,
+    source_proto: &type_::properties::Id,
     tparam_subst_map: &FlowOrdMap<SubstName, Type>,
 ) {
     use flow_typing_type::type_::Property;
@@ -2523,13 +2524,7 @@ fn merge_with_conflicts<'cx>(
     cx: &Context<'cx>,
     name_loc: &ALoc,
     merge_conflicts: &flow_data_structure_wrapper::ord_map::FlowOrdMap<ALoc, Vec<ALoc>>,
-    prop_ids: &std::collections::BTreeMap<
-        ALoc,
-        (
-            flow_typing_type::type_::properties::Id,
-            flow_typing_type::type_::properties::Id,
-        ),
-    >,
+    prop_ids: &std::collections::BTreeMap<ALoc, (type_::properties::Id, type_::properties::Id)>,
 ) {
     let is_good = merge_conflicts.contains_key(name_loc);
     let is_bad = !is_good
@@ -2581,7 +2576,7 @@ fn resolve_interface<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     inter: &ast::statement::Interface<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let name_loc = inter.id.loc.dupe();
     let (t, ast) = statement::interface(cx, loc.dupe(), inter)?;
@@ -2613,7 +2608,7 @@ fn resolve_declare_class<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     class_: &ast::statement::DeclareClass<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let name_loc = class_.id.loc.dupe();
     let (t, ast) = statement::declare_class(cx, loc.dupe(), class_)?;
@@ -2637,7 +2632,7 @@ fn resolve_declare_component<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     component: &ast::statement::DeclareComponent<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let (t, ast) = statement::declare_component(cx, loc.dupe(), component)?;
     cache.set_declared_component(loc, (t.dupe(), ast));
@@ -2648,7 +2643,7 @@ fn resolve_declare_namespace<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     ns: &ast::statement::DeclareNamespace<ALoc, ALoc>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let (t, ast) = statement::declare_namespace(cx, loc.dupe(), ns)?;
     cache.set_declared_namespace(loc, (t.dupe(), ast));
@@ -2737,7 +2732,7 @@ fn resolve_generator_next<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
     gen_info: Option<&name_def_types::GeneratorAnnot>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     match gen_info {
         None => {
             let r = reason
@@ -2963,7 +2958,7 @@ fn resolve<'cx>(
             source,
             source_loc.dupe(),
             import,
-        ),
+        )?,
         Def::Interface(loc, inter) => resolve_interface(cx, loc.dupe(), inter)?,
         Def::DeclaredClass(box DeclaredClassDefData {
             loc,
@@ -3178,13 +3173,12 @@ fn init_type_param<'cx>(
     cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     def_loc: ALoc,
-) -> Result<(SubstName, type_::TypeParam, Type), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
     fn get_type_param<'cx>(
         cx: &Context<'cx>,
         graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
         l: ALoc,
-    ) -> Result<(SubstName, type_::TypeParam, Type), flow_utils_concurrency::job_error::JobError>
-    {
+    ) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
         let cached = {
             let env = cx.environment();
             env.tparams.get_ordinary(&l).map(|entry| entry.dupe())
@@ -3199,7 +3193,7 @@ fn init_type_param<'cx>(
         cx: &Context<'cx>,
         graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
         tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
-    ) -> Result<FlowOrdMap<SubstName, Type>, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<FlowOrdMap<SubstName, Type>, JobError> {
         let mut subst_map = FlowOrdMap::new();
         for (l, _) in tparams_map.iter() {
             let (name, _, ty) = get_type_param(cx, graph, l.dupe())?;
@@ -3293,7 +3287,7 @@ fn resolve_component_type_params<'cx>(
     cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     component: &name_def_ordering::OrderingResult,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let resolve_illegal =
         |loc: ALoc, def: &(Def, ScopeKind, name_def_types::ClassStack, Reason)| {
             let (def, _, _, _) = def;
@@ -3372,8 +3366,7 @@ fn resolve_component_type_params<'cx>(
             }
         };
 
-    let resolve_element = |elt: &name_def_ordering::Element|
-     -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), JobError> {
         match elt {
             name_def_ordering::Element::Illegal(blame) => {
                 let key = &blame.payload;
@@ -3422,7 +3415,7 @@ pub fn resolve_component<'cx>(
     cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     component: &name_def_ordering::OrderingResult,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     cx.constraint_cache_mut().clear();
     cx.eval_repos_cache_mut().clear();
 
@@ -3440,13 +3433,14 @@ pub fn resolve_component<'cx>(
         }
     };
 
-    let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), JobError> {
         match elt {
             name_def_ordering::Element::Illegal(blame) => {
                 let key = &blame.payload;
                 resolve_illegal(&entries_of_def(graph, key.def_loc_type, key.loc.dupe()));
             }
-            name_def_ordering::Element::Normal(key) | name_def_ordering::Element::Resolvable(key) => {
+            name_def_ordering::Element::Normal(key)
+            | name_def_ordering::Element::Resolvable(key) => {
                 if let Some((def, scope_kind, class_stack, reason)) = graph.get(key) {
                     flow_typing_utils::abnormal::try_with_abnormal_exn(
                         || {
@@ -3477,11 +3471,7 @@ pub fn resolve_component<'cx>(
         )]
     });
 
-    let log_slow_to_check = |f: &mut dyn FnMut() -> Result<
-        (),
-        flow_utils_concurrency::job_error::JobError,
-    >|
-     -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let log_slow_to_check = |f: &mut dyn FnMut() -> Result<(), JobError>| -> Result<(), JobError> {
         let slow_to_check = cx.slow_to_check_logging();
         match slow_to_check.slow_components_logging_threshold {
             Some(threshold) => {
@@ -3502,7 +3492,7 @@ pub fn resolve_component<'cx>(
         }
     };
 
-    let mut f = || -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let mut f = || -> Result<(), JobError> {
         let entries_for_resolution = entries_of_component(graph, component);
         type_env::make_env_entries_under_resolution(cx, entries_for_resolution.dupe());
 

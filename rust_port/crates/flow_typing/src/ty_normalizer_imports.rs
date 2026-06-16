@@ -27,6 +27,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
+use flow_utils_concurrency::job_error::JobError;
 use once_cell::unsync::OnceCell;
 
 fn import_mode_to_import_kind(mode: ImportMode) -> AstImportKind {
@@ -61,35 +62,27 @@ fn add_bind_ident_from_imports<'a>(
     source: (&ALoc, &Userland, &Result<ModuleType, Type>),
     remote_name: &FlowSmolStr,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
-) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, JobError> {
     let (source_loc, module_name, source_module) = source;
     let import_reason = reason::mk_reason(
         reason::VirtualReasonDesc::RNamedImportedType(module_name.dupe(), local_name.dupe()),
         source_loc.dupe(),
     );
     let import_kind = import_mode_to_import_kind(import_mode);
-    let (_loc, t) = match flow_js_utils::import_export_utils::import_named_specifier_type(
-        cx,
-        import_reason,
-        &|cx, reason, t| {
-            flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
-        },
-        &import_kind,
-        module_name.dupe(),
-        source_module,
-        remote_name,
-        local_name,
-    ) {
-        Ok(v) => v,
-        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
-            return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
-        }
-        Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
-            return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
-        }
-        Err(err) => panic!("Should not be under speculation: {:?}", err),
-    };
+    let (_loc, t) = flow_js_utils::flow_js_result_to_job_error(
+        flow_js_utils::import_export_utils::import_named_specifier_type(
+            cx,
+            import_reason,
+            &|cx, reason, t| {
+                flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
+            },
+            &import_kind,
+            module_name.dupe(),
+            source_module,
+            remote_name,
+            local_name,
+        ),
+    )?;
     acc.push((local_name.dupe(), local_loc, import_mode, t));
     Ok(acc)
 }
@@ -101,8 +94,7 @@ fn add_imported_loc_map_bindings<'a>(
     source: &(Loc, FlowSmolStr),
     map: &BTreeMap<FlowSmolStr, BTreeMap<FlowSmolStr, vec1::Vec1<file_sig::ImportedLocs>>>,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
-) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, JobError> {
     let (source_loc, module_name) = source;
     let source_loc = ALoc::of_loc(source_loc.dupe());
     let source_module: OnceCell<Result<ModuleType, Type>> = OnceCell::new();
@@ -279,8 +271,7 @@ fn add_import_bindings<'a>(
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
     require: &Require,
-) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, JobError> {
     match require {
         Require::Require {
             source,
@@ -347,8 +338,7 @@ pub fn extract_types<'a>(
     cx: &Context<'a>,
     file_sig: &FileSig,
     typed_ast: Option<&ast::Program<ALoc, (ALoc, Type)>>,
-) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Vec<(FlowSmolStr, ALoc, ImportMode, Type)>, JobError> {
     let requires = file_sig.requires();
     let mut imports: Vec<(FlowSmolStr, ALoc, ImportMode, Type)> = Vec::new();
     for require in requires {

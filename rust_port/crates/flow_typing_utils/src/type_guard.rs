@@ -47,6 +47,7 @@ use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 use flow_typing_visitors::type_visitor::predicate_default;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::abnormal::CheckExprError;
 use crate::predicate_kit;
@@ -62,7 +63,7 @@ fn check_type_guard_consistency<'cx>(
     tg_param: &(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr),
     tg_reason: &Reason,
     type_guard: &Type,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let type_guard_consistency_maps = {
         let env = cx.environment();
         env.var_info.type_guard_consistency_maps.dupe()
@@ -142,8 +143,8 @@ fn check_type_guard_consistency<'cx>(
                                             );
                                             predicate_kit::run_predicate_for_filtering(
                                                 cx, type_guard, &neg_pred, &tvar,
-                                            );
-                                            Ok::<(), flow_utils_concurrency::job_error::JobError>(())
+                                            )?;
+                                            Ok::<(), JobError>(())
                                         },
                                     )?
                                 }
@@ -190,7 +191,7 @@ pub fn check_type_guard<'cx>(
     cx: &Context<'cx>,
     params: &function::Params<ALoc, ALoc>,
     type_guard_val: &TypeGuard,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     let TypeGuardInner {
         reason,
         inferred,
@@ -292,7 +293,7 @@ fn is_inferable_type_guard_predicate<'cx>(cx: &Context<'cx>, p: &Predicate) -> b
 fn is_inferable_type_guard_read<'cx>(
     cx: &Context<'cx>,
     read: &flow_env_builder::env_api::Read<ALoc>,
-) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+) -> Result<bool, JobError> {
     Ok(match type_env::read_to_predicate(cx, read)? {
         Some(p) => is_inferable_type_guard_predicate(cx, &p),
         None => false,

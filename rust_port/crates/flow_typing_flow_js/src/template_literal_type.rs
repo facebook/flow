@@ -35,6 +35,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_util;
+use flow_utils_concurrency::job_error::JobError;
 
 pub fn extract_strings_aux(expand_generics: bool, t: &Type) -> Option<Vec<FlowSmolStr>> {
     match t.deref() {
@@ -809,10 +810,13 @@ fn validate_placeholders<'cx>(cx: &Context<'cx>, loc: &ALoc, types: &[Type]) {
                 let concrete = match concrete {
                     Ok(c) => c,
                     Err(FlowJsException::WorkerCanceled(c)) => {
-                        return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+                        return Err(JobError::Canceled(c));
                     }
                     Err(FlowJsException::TimedOut(t)) => {
-                        return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+                        return Err(JobError::TimedOut(t));
+                    }
+                    Err(FlowJsException::DebugThrow { loc }) => {
+                        return Err(JobError::DebugThrow { loc });
                     }
                     // Other speculation-related errors are absorbed (the
                     // syntactic check is a best-effort soundness improvement).

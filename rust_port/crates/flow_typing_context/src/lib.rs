@@ -320,7 +320,7 @@ pub mod type_app_expansion {
     // handling here
     #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord)]
     pub enum Root {
-        Type(flow_typing_type::type_::Type),
+        Type(type_::Type),
         Array(flow_common::reason::Reason),
         ROArray(flow_common::reason::Reason),
         Tuple(flow_common::reason::Reason, usize),
@@ -335,11 +335,7 @@ pub mod type_app_expansion {
     }
 
     #[derive(Debug, Clone)]
-    pub struct Entry(
-        pub flow_typing_type::type_::Type,
-        pub Vec<RootSet>,
-        pub Bound,
-    );
+    pub struct Entry(pub type_::Type, pub Vec<RootSet>, pub Bound);
 }
 
 #[derive(Debug, Clone)]
@@ -436,17 +432,8 @@ pub struct ComponentT<'cx> {
     /// Flow_js is fully available), so a thunk can concretize types and emit
     /// context-specific errors that don't fit a simple subtyping flow. The
     /// thunk is expected to close over the [Context] it needs.
-    post_inference_validation_callbacks: RefCell<
-        Vec<
-            Box<
-                dyn for<'a> Fn(
-                        &'a Context<'cx>,
-                    )
-                        -> Result<(), flow_utils_concurrency::job_error::JobError>
-                    + 'cx,
-            >,
-        >,
-    >,
+    post_inference_validation_callbacks:
+        RefCell<Vec<Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>>>,
     /// Supports interface declaration merging. When two or more
     /// `interface Foo { ... }` declarations share a name in one scope,
     /// TS-style merging folds them into a single Foo. A consequence is that
@@ -575,7 +562,13 @@ struct ContextInner<'cx> {
     hint_map_jsx_cache: RefCell<
         HashMap<
             (Reason, String, Vec<ALoc>, ALoc),
-            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+            Rc<
+                flow_lazy::Lazy<
+                    Context<'cx>,
+                    Result<Type, JobError>,
+                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
+                >,
+            >,
         >,
     >,
     hint_eval_cache: RefCell<IntHashMap<i32, Option<Type>>>,
@@ -1462,18 +1455,8 @@ impl<'cx> Context<'cx> {
 
     pub fn post_inference_validation_callbacks(
         &self,
-    ) -> std::cell::Ref<
-        '_,
-        Vec<
-            Box<
-                dyn for<'a> Fn(
-                        &'a Context<'cx>,
-                    )
-                        -> Result<(), flow_utils_concurrency::job_error::JobError>
-                    + 'cx,
-            >,
-        >,
-    > {
+    ) -> std::cell::Ref<'_, Vec<Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>>>
+    {
         self.0.ccx.post_inference_validation_callbacks.borrow()
     }
 
@@ -1830,7 +1813,13 @@ impl<'cx> Context<'cx> {
         '_,
         HashMap<
             (Reason, String, Vec<ALoc>, ALoc),
-            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+            Rc<
+                flow_lazy::Lazy<
+                    Context<'cx>,
+                    Result<Type, JobError>,
+                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
+                >,
+            >,
         >,
     > {
         self.0.hint_map_jsx_cache.borrow()
@@ -1842,7 +1831,13 @@ impl<'cx> Context<'cx> {
         '_,
         HashMap<
             (Reason, String, Vec<ALoc>, ALoc),
-            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+            Rc<
+                flow_lazy::Lazy<
+                    Context<'cx>,
+                    Result<Type, JobError>,
+                    Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx>,
+                >,
+            >,
         >,
     > {
         self.0.hint_map_jsx_cache.borrow_mut()
@@ -2021,13 +2016,7 @@ impl<'cx> Context<'cx> {
 
     pub fn add_post_inference_validation_callback(
         &self,
-        f: Box<
-            dyn for<'a> Fn(
-                    &'a Context<'cx>,
-                )
-                    -> Result<(), flow_utils_concurrency::job_error::JobError>
-                + 'cx,
-        >,
+        f: Box<dyn for<'a> Fn(&'a Context<'cx>) -> Result<(), JobError> + 'cx>,
     ) {
         self.0
             .ccx

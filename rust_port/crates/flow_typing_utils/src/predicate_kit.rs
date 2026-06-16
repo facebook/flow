@@ -26,6 +26,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::BigIntLiteral;
@@ -69,6 +70,7 @@ use flow_typing_type::type_util;
 use flow_typing_type::type_util::desc_of_t;
 use flow_typing_type::type_util::loc_of_t;
 use flow_typing_type::type_util::reason_of_t;
+use flow_utils_concurrency::job_error::JobError;
 use vec1::Vec1;
 
 use crate::speculation_flow;
@@ -1143,24 +1145,14 @@ fn call_latent_this_pred<'cx>(
     )
 }
 
-fn intersect<'cx>(
-    cx: &Context<'cx>,
-    t1: Type,
-    t2: Type,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-    fn is_any<'cx>(
-        cx: &Context<'cx>,
-        t: &Type,
-    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobError> {
+    fn is_any<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
         let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t);
         match ts {
             Ok(ts) => Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..)))),
-            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
-                Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
-            }
-            Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
-                Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
-            }
+            Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
+            Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
+            Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
             Err(_) => Ok(false),
         }
     }
@@ -1296,7 +1288,7 @@ fn intersect<'cx>(
         reason1: &Reason,
         t1_conc: &ConcretizedType,
         t2: &Type,
-    ) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<Option<Type>, JobError> {
         let t1 = t1_conc.unwrap();
         if types_differ(cx, 0, t1_conc, t2) {
             let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
@@ -1377,8 +1369,19 @@ fn intersect<'cx>(
         None => {
             // No definitive refinement found. We fall back to more expensive
             //  concretization that breaks up all unions (including optimized ones)
-            let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason1, &t1)
-                .unwrap_or_default();
+            let ts = match FlowJs::possible_concrete_types_for_inspection(cx, reason1, &t1) {
+                Ok(ts) => ts,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(JobError::Canceled(c));
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(JobError::TimedOut(t));
+                }
+                Err(FlowJsException::DebugThrow { loc }) => {
+                    return Err(JobError::DebugThrow { loc });
+                }
+                Err(_) => Vec::new(),
+            };
             let mut mapped: Vec<Type> = Vec::new();
             for t1_inner in ts {
                 // t1 was just concretized
@@ -1409,11 +1412,7 @@ fn intersect<'cx>(
 /// with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
 /// This means that the positive branch will always be taken, and so we are left with
 /// `empty` in the negated case.
-fn type_guard_diff<'cx>(
-    cx: &Context<'cx>,
-    t1: &Type,
-    t2: &Type,
-) -> Result<FilterResult, flow_utils_concurrency::job_error::JobError> {
+fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<FilterResult, JobError> {
     let reason1 = reason_of_t(t1);
     if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
         || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)?
@@ -1424,8 +1423,19 @@ fn type_guard_diff<'cx>(
             changed: true,
         })
     } else {
-        let t1s_conc =
-            FlowJs::possible_concrete_types_for_inspection(cx, reason1, t1).unwrap_or_default();
+        let t1s_conc = match FlowJs::possible_concrete_types_for_inspection(cx, reason1, t1) {
+            Ok(ts) => ts,
+            Err(FlowJsException::WorkerCanceled(c)) => {
+                return Err(JobError::Canceled(c));
+            }
+            Err(FlowJsException::TimedOut(t)) => {
+                return Err(JobError::TimedOut(t));
+            }
+            Err(FlowJsException::DebugThrow { loc }) => {
+                return Err(JobError::DebugThrow { loc });
+            }
+            Err(_) => Vec::new(),
+        };
         let mut ts: Vec<Type> = Vec::new();
         let mut changed = false;
         for t1_inner in t1s_conc {
@@ -2008,8 +2018,7 @@ fn instanceof_test<'cx>(
             if let DefTInner::NullT = def_t.deref() =>
         {
             // We hit the root class, so C is not a subclass of A
-            let repositioned =
-                flow_typing_flow_js::flow_js::reposition(cx, r.loc().dupe(), a.dupe())?;
+            let repositioned = flow_js::reposition(cx, r.loc().dupe(), a.dupe())?;
             report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
         }
         // If we're refining `mixed` or `any` with instanceof A, then flow A to the result
@@ -2091,8 +2100,7 @@ fn instanceof_test<'cx>(
         (false, TypeInner::ObjProtoT(_), InstanceofRhs::InternalExtendsOperand(r, c, _)) => {
             // We hit the root class, so C is not a subclass of A.
             // In this case, we will refine the input to C
-            let repositioned =
-                flow_typing_flow_js::flow_js::reposition(cx, r.loc().dupe(), c.dupe())?;
+            let repositioned = flow_js::reposition(cx, r.loc().dupe(), c.dupe())?;
             report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
         }
         (false, _, _) => {
@@ -2668,7 +2676,7 @@ pub fn run_predicate_track_changes<'cx>(
     t: &Type,
     p: &Predicate,
     result_reason: Reason,
-) -> PredicateResult {
+) -> Result<PredicateResult, JobError> {
     let collector = TypeCollector::create();
     let changed = Rc::new(RefCell::new(false));
     let result_collector = PredicateResultCollector {
@@ -2676,15 +2684,14 @@ pub fn run_predicate_track_changes<'cx>(
         changed: changed.dupe(),
     };
     let p_clone = p.dupe();
-    concretize_and_run_predicate(
+    flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
         DepthTrace::unit_trace(),
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
         &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p_clone),
-    )
-    .expect("Non speculating");
+    ))?;
     let collected: Vec<Type> = result_collector
         .collector
         .collect()
@@ -2700,13 +2707,18 @@ pub fn run_predicate_track_changes<'cx>(
         .collect();
     let result_t = type_util::union_of_ts(result_reason, collected, None);
     if *changed.borrow() {
-        PredicateResult::TypeChanged(result_t)
+        Ok(PredicateResult::TypeChanged(result_t))
     } else {
-        PredicateResult::TypeUnchanged(result_t)
+        Ok(PredicateResult::TypeUnchanged(result_t))
     }
 }
 
-pub fn run_predicate_for_filtering<'cx>(cx: &Context<'cx>, t: &Type, p: &Predicate, tout: &Tvar) {
+pub fn run_predicate_for_filtering<'cx>(
+    cx: &Context<'cx>,
+    t: &Type,
+    p: &Predicate,
+    tout: &Tvar,
+) -> Result<(), JobError> {
     let collector = TypeCollector::create();
     let changed = Rc::new(RefCell::new(false));
     let result_collector = PredicateResultCollector {
@@ -2714,18 +2726,18 @@ pub fn run_predicate_for_filtering<'cx>(cx: &Context<'cx>, t: &Type, p: &Predica
         changed: changed.dupe(),
     };
     let p_clone = p.dupe();
-    concretize_and_run_predicate(
+    flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
         DepthTrace::unit_trace(),
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
         &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p_clone),
-    )
-    .expect("Non speculating");
+    ))?;
     let tout_type = Type::new(TypeInner::OpenT(tout.dupe()));
     let collected = result_collector.collector.collect_to_vec();
     for t in collected.iter() {
-        FlowJs::flow_t(cx, t, &tout_type).expect("Non speculating");
+        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_t(cx, t, &tout_type))?;
     }
+    Ok(())
 }

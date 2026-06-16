@@ -53,6 +53,7 @@ use flow_typing_type::type_::PredFuncallInfo;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
+use flow_utils_concurrency::job_error::JobError;
 
 use crate::predicate_kit;
 use crate::type_operation_utils;
@@ -521,7 +522,7 @@ fn phi<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
     states: Vec<PossiblyRefinedWriteState>,
-) -> Result<PossiblyRefinedWriteState, flow_utils_concurrency::job_error::JobError> {
+) -> Result<PossiblyRefinedWriteState, JobError> {
     match states.len() {
         1 => Ok(states.into_iter().next().unwrap()),
         _ => {
@@ -554,10 +555,7 @@ fn phi<'cx>(
 fn read_pred_func_info_exn<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
-) -> Result<
-    Box<flow_typing_type::type_::PredFuncallInfo>,
-    flow_utils_concurrency::job_error::JobError,
-> {
+) -> Result<Box<flow_typing_type::type_::PredFuncallInfo>, JobError> {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::PredFuncallInfo;
     use flow_typing_type::type_::any_t;
@@ -596,10 +594,7 @@ fn read_pred_func_info_exn<'cx>(
 }
 
 /// Returns [true] iff the input type is potentially a predicate function.
-fn maybe_predicate_function<'cx>(
-    cx: &Context<'cx>,
-    t: &Type,
-) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
     use std::ops::Deref;
 
     use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -607,10 +602,7 @@ fn maybe_predicate_function<'cx>(
     use flow_typing_type::type_::PolyTData;
     use flow_typing_type::type_::TypeInner;
 
-    fn simplify_callee<'cx>(
-        cx: &Context<'cx>,
-        func_t: &Type,
-    ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    fn simplify_callee<'cx>(cx: &Context<'cx>, func_t: &Type) -> Result<Type, JobError> {
         let errors = cx.errors();
         let result = cx.run_and_rolled_back_cache(|| {
             let reason = flow_typing_type::type_util::reason_of_t(func_t);
@@ -656,10 +648,7 @@ fn maybe_predicate_function<'cx>(
         }
     }
 
-    fn on_non_inter<'cx>(
-        cx: &Context<'cx>,
-        t: &Type,
-    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+    fn on_non_inter<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
         match t.deref() {
             TypeInner::DefT(_, _) => Ok(on_ground(t)),
             _ => {
@@ -672,10 +661,7 @@ fn maybe_predicate_function<'cx>(
         }
     }
 
-    fn on_concrete<'cx>(
-        cx: &Context<'cx>,
-        t: &Type,
-    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+    fn on_concrete<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
         match t.deref() {
             TypeInner::IntersectionT(_, rep) => {
                 for m in rep.members_iter() {
@@ -689,18 +675,18 @@ fn maybe_predicate_function<'cx>(
         }
     }
 
-    fn on_t<'cx>(
-        cx: &Context<'cx>,
-        t: &Type,
-    ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+    fn on_t<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
         let reason = flow_typing_type::type_util::reason_of_t(t);
         let cts = match FlowJs::possible_concrete_types_for_inspection(cx, reason, t) {
             Ok(v) => v,
             Err(FlowJsException::WorkerCanceled(c)) => {
-                return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
+                return Err(JobError::Canceled(c));
             }
             Err(FlowJsException::TimedOut(t)) => {
-                return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
+                return Err(JobError::TimedOut(t));
+            }
+            Err(FlowJsException::DebugThrow { loc }) => {
+                return Err(JobError::DebugThrow { loc });
             }
             Err(err) => panic!("Non speculating: {:?}", err),
         };
@@ -718,7 +704,7 @@ fn maybe_predicate_function<'cx>(
 fn predicate_of_refinement<'cx>(
     cx: &Context<'cx>,
     kind: &RefinementKind<ALoc>,
-) -> Result<Option<Predicate>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Predicate>, JobError> {
     use flow_common::reason::Name;
     use flow_common::reason::mk_reason;
     use flow_env_builder::env_api::InstanceofContext;
@@ -729,7 +715,7 @@ fn predicate_of_refinement<'cx>(
     fn pred<'cx>(
         cx: &Context<'cx>,
         kind: &RefinementKind<ALoc>,
-    ) -> Result<Option<Predicate>, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<Option<Predicate>, JobError> {
         Ok(match kind {
             RefinementKind::AndR(r1, r2) => match (pred(cx, r1)?, pred(cx, r2)?) {
                 (Some(p1), Some(p2)) => Some(Predicate::new(PredicateInner::AndP(p1, p2))),
@@ -960,7 +946,7 @@ fn refine<'cx>(
     loc: ALoc,
     refi: Option<&Refinement<ALoc>>,
     res: PossiblyRefinedWriteState,
-) -> Result<PossiblyRefinedWriteState, flow_utils_concurrency::job_error::JobError> {
+) -> Result<PossiblyRefinedWriteState, JobError> {
     use flow_common::reason::mk_reason;
 
     match refi {
@@ -988,7 +974,7 @@ fn refine<'cx>(
                         &t,
                         &predicate,
                         refined_reason,
-                    ) {
+                    )? {
                         predicate_kit::PredicateResult::TypeUnchanged(_) => (t, None),
                         predicate_kit::PredicateResult::TypeChanged(new_t) => {
                             (new_t, Some(refining_locs.dupe()))
@@ -1017,7 +1003,7 @@ fn possibly_refined_write_state_of_state<'cx>(
     write_locs: &[WriteLoc<ALoc>],
     val_id: Option<i32>,
     refi: Option<&Refinement<ALoc>>,
-) -> Result<PossiblyRefinedWriteState, flow_utils_concurrency::job_error::JobError> {
+) -> Result<PossiblyRefinedWriteState, JobError> {
     fn base(t: Type, errors: Vec<CacheableEnvError<ALoc>>) -> PossiblyRefinedWriteState {
         PossiblyRefinedWriteState {
             t,
@@ -1034,7 +1020,7 @@ fn possibly_refined_write_state_of_state<'cx>(
         states: &[WriteLoc<ALoc>],
         val_id: Option<i32>,
         refi: Option<&Refinement<ALoc>>,
-    ) -> Result<PossiblyRefinedWriteState, flow_utils_concurrency::job_error::JobError> {
+    ) -> Result<PossiblyRefinedWriteState, JobError> {
         use flow_common::reason::mk_reason;
         use flow_typing_type::type_::AnySource;
         use flow_typing_type::type_::TypeInner;
@@ -1309,7 +1295,7 @@ fn type_of_state<'cx>(
     write_locs: &[WriteLoc<ALoc>],
     val_id: Option<i32>,
     refi: Option<&Refinement<ALoc>>,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let PossiblyRefinedWriteState {
         t,
         errors,
@@ -1335,7 +1321,7 @@ fn read_entry<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
-) -> Result<Result<Type, ALoc>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Result<Type, ALoc>, JobError> {
     use flow_common::reason::Name;
     use flow_typing_errors::error_message::BindingError;
     use flow_typing_errors::error_message::ErrorMessage;
@@ -1510,7 +1496,7 @@ fn read_entry_exn<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::any_t;
     let loc_clone = loc.dupe();
@@ -1532,7 +1518,7 @@ fn read_entry_exn<'cx>(
 pub fn read_to_predicate<'cx>(
     cx: &Context<'cx>,
     read: &EnvRead<ALoc>,
-) -> Result<Option<Predicate>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Predicate>, JobError> {
     use flow_typing_type::type_::PredicateInner;
 
     let var_info = {
@@ -1570,8 +1556,7 @@ pub fn checked_type_guard_at_return<'cx>(
     return_loc: ALoc,
     pos_write_locs: &[WriteLoc<ALoc>],
     neg_refi: &EnvRead<ALoc>,
-) -> Result<Result<(Type, Option<Predicate>), Vec<ALoc>>, flow_utils_concurrency::job_error::JobError>
-{
+) -> Result<Result<(Type, Option<Predicate>), Vec<ALoc>>, JobError> {
     fn is_invalid(
         param_loc: &ALoc,
         acc: (bool, Vec<ALoc>),
@@ -1617,7 +1602,7 @@ pub fn inferred_type_guard_at_return<'cx>(
     reason: Reason,
     return_loc: ALoc,
     write_locs: &[WriteLoc<ALoc>],
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     type_of_state(
         LookupMode::ForValue,
         ValKind::Internal,
@@ -1635,7 +1620,7 @@ pub fn ref_entry_exn<'cx>(
     cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let t = read_entry_exn(lookup_mode, cx, loc.dupe(), reason)?;
     flow_js::reposition_non_speculating(cx, loc, t)
 }
@@ -1652,7 +1637,7 @@ pub fn get_refinement<'cx>(
     cx: &Context<'cx>,
     desc: ReasonDesc,
     loc: ALoc,
-) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Type>, JobError> {
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     match read_entry(LookupMode::ForValue, cx, loc.dupe(), reason)? {
         Ok(x) => Ok(Some(flow_js::reposition_non_speculating(
@@ -1676,7 +1661,7 @@ pub fn get_var<'cx>(
     cx: &Context<'cx>,
     name: &str,
     loc: ALoc,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let ord_name = Name::new(name);
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     read_entry_exn(
@@ -1693,7 +1678,7 @@ pub fn query_var<'cx>(
     name: Name,
     desc: Option<ReasonDesc>,
     loc: ALoc,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let desc = match desc {
         Some(d) => d,
         None => VirtualReasonDesc::RIdentifier(name),
@@ -1712,7 +1697,7 @@ pub fn intrinsic_ref<'cx>(
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
-) -> Result<Option<(Type, ALoc)>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<(Type, ALoc)>, JobError> {
     let desc = match desc {
         Some(d) => d,
         None => VirtualReasonDesc::RIdentifier(name),
@@ -1763,7 +1748,7 @@ pub fn var_ref<'cx>(
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     let t = query_var(Some(lookup_mode), cx, name, desc, loc.dupe())?;
     flow_js::reposition_non_speculating(cx, loc, t)
@@ -1775,7 +1760,7 @@ pub fn sig_var_ref<'cx>(
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Type, JobError> {
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     let desc = match desc {
         Some(d) => d,
@@ -1914,7 +1899,7 @@ fn subtype_against_providers<'cx>(
     potential_global_name: Option<&str>,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::UseT;
@@ -2136,7 +2121,7 @@ fn subtype_entry<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     use flow_typing_type::type_::UseT;
     use flow_typing_type::type_::UseTInner;
 
@@ -2161,12 +2146,7 @@ fn subtype_entry<'cx>(
 // init_entry is called on variable declarations (not assignments), and `t`
 // is the RHS type. If the variable is annotated, we just need to check t against
 // its type; but if it's not annotated, the RHS t becomes the variable's type.
-fn init_entry<'cx>(
-    cx: &Context<'cx>,
-    use_op: &UseOp,
-    t: &Type,
-    loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+fn init_entry<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) -> Result<(), JobError> {
     let env = cx.environment();
     let var_info = &env.var_info;
     if is_def_loc_annotated(var_info, &loc) {
@@ -2182,7 +2162,7 @@ pub fn set_var<'cx>(
     name: &str,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     subtype_against_providers(cx, use_op, Some(name), t, loc)
 }
 
@@ -2221,7 +2201,7 @@ pub fn init_var<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     init_entry(cx, use_op, t, loc)
 }
 
@@ -2230,7 +2210,7 @@ pub fn init_let<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     init_entry(cx, use_op, t, loc)
 }
 
@@ -2239,7 +2219,7 @@ pub fn init_implicit_let<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     init_entry(cx, use_op, t, loc)
 }
 
@@ -2248,7 +2228,7 @@ pub fn init_const<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     init_entry(cx, use_op, t, loc)
 }
 
@@ -2257,7 +2237,7 @@ pub fn init_implicit_const<'cx>(
     use_op: &UseOp,
     t: &Type,
     loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+) -> Result<(), JobError> {
     init_entry(cx, use_op, t, loc)
 }
 
@@ -2320,16 +2300,11 @@ pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
                     }));
                     let state = Rc::new(RefCell::new(initial_state));
                     let state_for_lazy = state.dupe();
-                    let lazy_t: Box<
-                        dyn FnOnce(
-                                &Context<'cx>,
-                            )
-                                -> Result<Type, flow_utils_concurrency::job_error::JobError>
-                            + 'cx,
-                    > = Box::new(move |cx: &Context<'cx>| {
-                        let current_state = state_for_lazy.borrow();
-                        Ok(current_state.get_forced(cx).dupe())
-                    });
+                    let lazy_t: Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx> =
+                        Box::new(move |cx: &Context<'cx>| {
+                            let current_state = state_for_lazy.borrow();
+                            Ok(current_state.get_forced(cx).dupe())
+                        });
                     // During initialization, all these lazy tvars are created, but not all of them are
                     // ready for forcing. The ones that are ready for forcing will be separately added to
                     // the list after each component resolution.
@@ -2362,16 +2337,11 @@ pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
                             as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>);
                         let state = Rc::new(RefCell::new(initial_state));
                         let state_for_lazy = state.dupe();
-                        let lazy_t: Box<
-                            dyn FnOnce(
-                                    &Context<'cx>,
-                                )
-                                    -> Result<Type, flow_utils_concurrency::job_error::JobError>
-                                + 'cx,
-                        > = Box::new(move |cx: &Context<'cx>| {
-                            let current_state = state_for_lazy.borrow();
-                            Ok(current_state.get_forced(cx).dupe())
-                        });
+                        let lazy_t: Box<dyn FnOnce(&Context<'cx>) -> Result<Type, JobError> + 'cx> =
+                            Box::new(move |cx: &Context<'cx>| {
+                                let current_state = state_for_lazy.borrow();
+                                Ok(current_state.get_forced(cx).dupe())
+                            });
                         let t = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason, false, lazy_t);
                         let mut current_env = cx.environment_mut();
                         current_env.initialize(def_loc_type, loc, TypeEntry { t, state });
@@ -2401,7 +2371,7 @@ pub fn discriminant_after_negated_cases<'cx>(
     cx: &Context<'cx>,
     switch_loc: ALoc,
     refinement_key_opt: Option<&Key>,
-) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+) -> Result<Option<Type>, JobError> {
     use flow_common::reason::mk_reason;
 
     let reason_desc = match refinement_key_opt {
@@ -2417,10 +2387,7 @@ pub fn discriminant_after_negated_cases<'cx>(
     .ok())
 }
 
-pub fn get_next<'cx>(
-    cx: &Context<'cx>,
-    loc: ALoc,
-) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+pub fn get_next<'cx>(cx: &Context<'cx>, loc: ALoc) -> Result<Type, JobError> {
     use flow_common::reason::mk_reason;
 
     read_entry_exn(

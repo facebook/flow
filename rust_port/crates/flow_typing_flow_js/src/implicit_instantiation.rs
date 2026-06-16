@@ -2278,6 +2278,9 @@ pub mod instantiation_solver {
                                 Err(FlowJsException::TimedOut(t)) => {
                                     return Err(FlowJsException::TimedOut(t));
                                 }
+                                Err(FlowJsException::DebugThrow { loc }) => {
+                                    return Err(FlowJsException::DebugThrow { loc });
+                                }
                                 Err(e) => Some(e),
                             };
 

@@ -12,6 +12,7 @@ use dupe::Dupe;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
+use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::map_on_resolved_type;
 use flow_typing_flow_common::flow_js_utils::value_to_type_reference_transform;
 use flow_typing_flow_js::flow_js;
@@ -34,6 +35,7 @@ use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util::reason_of_t;
+use flow_utils_concurrency::job_error::JobError;
 
 pub fn specialize<'a>(
     cx: &Context<'a>,
@@ -45,9 +47,7 @@ pub fn specialize<'a>(
 ) -> Type {
     let reason = reason_of_t(&c).dupe();
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  c: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    let f = move |cx: &Context<'_>, c: Type| -> Result<Type, JobError> {
         tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner.dupe(), move |cx, tvar| {
             let use_t = UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
                 use_op,
@@ -64,9 +64,7 @@ pub fn specialize<'a>(
 
 pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  i: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    let f = move |cx: &Context<'_>, i: Type| -> Result<Type, JobError> {
         let reason_for_mixin = reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
             let use_t = UseT::new(UseTInner::MixinT(reason_for_mixin, tout.dupe()));
@@ -78,9 +76,7 @@ pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
 
 pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  t: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    let f = move |cx: &Context<'_>, t: Type| -> Result<Type, JobError> {
         let reason_for_proto = reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
             let use_t = UseT::new(UseTInner::ObjTestProtoT(reason_for_proto, tout.dupe()));
@@ -121,9 +117,7 @@ pub fn get_prop<'a>(
 ) -> Type {
     let op_reason = op_reason.unwrap_or_else(|| reason.dupe());
     let op_reason_inner = op_reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  l: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    let f = move |cx: &Context<'_>, l: Type| -> Result<Type, JobError> {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
             cx,
@@ -160,9 +154,7 @@ pub fn qualify_type<'a>(
     l: Type,
 ) -> Type {
     let op_reason_inner = op_reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  l: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+    let f = move |cx: &Context<'_>, l: Type| -> Result<Type, JobError> {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
             cx,
@@ -194,20 +186,10 @@ pub fn mk_instance<'a>(
     let type_t_kind = type_t_kind.unwrap_or(TypeTKind::InstanceKind);
     let use_desc = use_desc.unwrap_or(false);
     let instance_reason_clone = instance_reason.dupe();
-    let f = move |cx: &Context<'_>,
-                  t: Type|
-          -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-        let concrete =
-            match FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t) {
-                Ok(v) => v,
-                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c)) => {
-                    return Err(flow_utils_concurrency::job_error::JobError::Canceled(c));
-                }
-                Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
-                    return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
-                }
-                Err(err) => panic!("Should not be under speculation: {:?}", err),
-            };
+    let f = move |cx: &Context<'_>, t: Type| -> Result<Type, JobError> {
+        let concrete = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t),
+        )?;
         match concrete.deref() {
             TypeInner::DefT(_, def_t)
                 if let DefTInner::PolyT(box PolyTData { tparams: ids, .. }) = def_t.deref()
@@ -239,22 +221,15 @@ pub fn mk_instance<'a>(
                 )
             }
             _ => {
-                let t = match value_to_type_reference_transform::run_on_concrete_type(
-                    cx,
-                    unknown_use(),
-                    &instance_reason_clone,
-                    type_t_kind,
-                    concrete,
-                ) {
-                    Ok(v) => v,
-                    Err(
-                        flow_typing_flow_common::flow_js_utils::FlowJsException::WorkerCanceled(c),
-                    ) => return Err(flow_utils_concurrency::job_error::JobError::Canceled(c)),
-                    Err(flow_typing_flow_common::flow_js_utils::FlowJsException::TimedOut(t)) => {
-                        return Err(flow_utils_concurrency::job_error::JobError::TimedOut(t));
-                    }
-                    Err(err) => panic!("Should not be under speculation: {:?}", err),
-                };
+                let t = flow_js_utils::flow_js_result_to_job_error(
+                    value_to_type_reference_transform::run_on_concrete_type(
+                        cx,
+                        unknown_use(),
+                        &instance_reason_clone,
+                        type_t_kind,
+                        concrete,
+                    ),
+                )?;
                 Ok(tvar_resolver::resolved_t(
                     tvar_resolver::default_no_lowers,
                     true,
