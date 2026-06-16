@@ -97,12 +97,11 @@ if [[ -f "$CARGO_CONFIG" ]]; then
   CARGO_ARGS+=(--config "$CARGO_CONFIG" --locked --offline)
 fi
 if [[ "$PROFILE" == "release" || "$PROFILE" == "opt" ]]; then
-  # Keep this in sync with Buck's target-platform wasm-emscripten Rust action.
-  # The release build also rebuilds std above so these flags apply to the
-  # sysroot, matching Buck's optimized wasm sysroot instead of rustup's prebuilt
-  # std.
+  # Keep this in sync with Buck's internal opt wasm-emscripten Rust action. The
+  # release build also rebuilds std above so these flags apply to the sysroot,
+  # matching Buck's optimized wasm sysroot instead of rustup's prebuilt std.
   CARGO_ARGS+=(
-    --config 'target.wasm32-unknown-emscripten.rustflags=["-Zunstable-options","-Crelocation-model=static","-Cpanic=abort","-Cpanic=immediate-abort","-Cembed-bitcode=no","-Cdebug-assertions=on","-Copt-level=0","-Copt-level=z"]'
+    --config 'target.wasm32-unknown-emscripten.rustflags=["-Zunstable-options","-Crelocation-model=static","-Cpanic=abort","-Cpanic=immediate-abort","-Cembed-bitcode=no","-Ccodegen-units=1","-Cdebug-assertions=off","-Cdebuginfo=0","-Copt-level=z"]'
   )
 fi
 
@@ -127,7 +126,37 @@ rm -f "$RAW_JS" "$RAW_JS_DIR/flow_dot_js_wasm.wasm"
 
 "$EMCC_BIN" \
   "$RUST_STATICLIB" \
-  -o "$RAW_JS"
+  -o "$RAW_JS" \
+  -sWASM=1 \
+  -sALLOW_MEMORY_GROWTH=1 \
+  -sASSERTIONS=0 \
+  -sDISABLE_EXCEPTION_CATCHING=1 \
+  -sENVIRONMENT=web,worker \
+  "-sEXPORTED_FUNCTIONS=['_flowDotJsAlloc','_flowDotJsFree','_flowDotJsStringFree','_flowDotJsCall']" \
+  "-sEXPORTED_RUNTIME_METHODS=[]" \
+  -sEXPORT_NAME=flow_dot_js_wasm \
+  -sFILESYSTEM=0 \
+  "-sINCOMING_MODULE_JS_API=['quit']" \
+  -sINVOKE_RUN=0 \
+  -sMALLOC=emmalloc \
+  -sNODEJS_CATCH_EXIT=0 \
+  -sNODEJS_CATCH_REJECTION=0 \
+  -sNODERAWFS=0 \
+  -sSINGLE_FILE=1 \
+  -sSTACK_SIZE=8MB \
+  -sSUPPORT_LONGJMP=0 \
+  -sWASM_ASYNC_COMPILATION=1 \
+  --no-entry \
+  -Wl,-u,flowDotJsAlloc \
+  -Wl,-u,flowDotJsFree \
+  -Wl,-u,flowDotJsStringFree \
+  -Wl,-u,flowDotJsCall \
+  -Wl,--export=flowDotJsAlloc \
+  -Wl,--export=flowDotJsFree \
+  -Wl,--export=flowDotJsStringFree \
+  -Wl,--export=flowDotJsCall \
+  -g0 \
+  -O1
 
 mkdir -p "$(dirname "$OUTPUT")"
 "${NODE:-node}" \
@@ -135,7 +164,5 @@ mkdir -p "$(dirname "$OUTPUT")"
   "$RAW_JS" \
   "$OUTPUT" \
   "$FLOW_DIR/src/flow_dot_js_wasm.js"
-
-rm -f "$RAW_JS_DIR/flow_dot_js_wasm.wasm"
 
 echo "Built $OUTPUT"
