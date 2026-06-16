@@ -240,7 +240,7 @@ fn speculative_subtyping_succeeds<'cx>(
     use_op: UseOp,
     l: &Type,
     u: &Type,
-) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+) -> Result<bool, FlowJsException> {
     match speculation_kit::try_singleton_throw_on_failure(
         cx,
         trace,
@@ -249,21 +249,7 @@ fn speculative_subtyping_succeeds<'cx>(
     ) {
         Ok(()) => Ok(true),
         Err(FlowJsException::SpeculationSingletonError) => Ok(false),
-        // WorkerCanceled, TimedOut, and DebugThrow must propagate past
-        // speculation; see plan.md §"JobError — unified error type for cancel +
-        // timeout".
-        Err(FlowJsException::WorkerCanceled(c)) => {
-            Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
-        }
-        Err(FlowJsException::TimedOut(t)) => {
-            Err(flow_utils_concurrency::job_error::JobError::TimedOut(t))
-        }
-        Err(FlowJsException::DebugThrow { loc }) => {
-            Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
-        }
-        // Other exceptions (LimitExceeded, Speculative) propagate in OCaml;
-        // here we treat them as false since the return type is bool
-        Err(FlowJsException::Speculative(_)) | Err(FlowJsException::LimitExceeded) => Ok(false),
+        Err(e) => Err(e),
     }
 }
 

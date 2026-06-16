@@ -807,18 +807,22 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let u_repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(
-                cx,
-                trace,
-                (l_inner, &UseT::new(UseTInner::UseT(use_op.dupe(), u_repos))),
-            )?;
+            return Ok(Some(TailCall::RecFlow(
+                l_inner.dupe(),
+                UseT::new(UseTInner::UseT(use_op.dupe(), u_repos)),
+                DepthTrace::rec_trace(trace),
+            )));
         }
 
         // The source component of an annotation flows out of the annotated
         // site to downstream uses.
         (TypeInner::AnnotT(r, t, use_desc), _) => {
             let t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, t)?;
-            rec_flow(cx, trace, (&t, u))?;
+            return Ok(Some(TailCall::RecFlow(
+                t,
+                u.dupe(),
+                DepthTrace::rec_trace(trace),
+            )));
         }
 
         // ******************
@@ -5035,7 +5039,11 @@ fn __flow_impl<'cx>(
                     use_desc: false,
                     use_t: Box::new(use_t),
                 });
-                rec_flow(cx, trace, (super_, &repos_use))?;
+                return Ok(Some(TailCall::RecFlow(
+                    super_.dupe(),
+                    repos_use,
+                    DepthTrace::rec_trace(trace),
+                )));
             }
         }
 
@@ -8452,7 +8460,11 @@ fn __flow_impl<'cx>(
             },
         ) => {
             let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            return Ok(Some(TailCall::RecFlow(
+                repos_l,
+                u_inner.as_ref().dupe(),
+                DepthTrace::rec_trace(trace),
+            )));
         }
 
         // ***********************************************************
@@ -9381,7 +9393,11 @@ fn __flow_impl<'cx>(
         (TypeInner::ObjProtoT(reason), _) => {
             let obj_proto =
                 helpers::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
-            rec_flow(cx, trace, (&obj_proto, u))?;
+            return Ok(Some(TailCall::RecFlow(
+                obj_proto,
+                u.dupe(),
+                DepthTrace::rec_trace(trace),
+            )));
         }
         // *************************
         // * Function library call *
@@ -9389,7 +9405,11 @@ fn __flow_impl<'cx>(
         (TypeInner::FunProtoT(reason), _) => {
             let fun_proto =
                 helpers::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
-            rec_flow(cx, trace, (&fun_proto, u))?;
+            return Ok(Some(TailCall::RecFlow(
+                fun_proto,
+                u.dupe(),
+                DepthTrace::rec_trace(trace),
+            )));
         }
         (
             _,

@@ -1584,7 +1584,9 @@ fn flow_obj_to_obj<'cx>(
                                     .dupe()
                                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
                             );
-                            if FlowJs::speculative_subtyping_succeeds(cx, &key_type, key)? {
+                            if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+                                cx, &key_type, key,
+                            )? {
                                 subtype_against_indexer(&mut polarity_mismatch_errs)?;
                             }
                         }
@@ -2046,7 +2048,9 @@ fn flow_obj_to_obj<'cx>(
                 for (name, lp) in cx.find_props(lflds.dupe()).iter() {
                     if !cx.has_prop(uflds.dupe(), name) {
                         let key_type = flow_js_utils::type_of_key_name(cx, name.dupe(), lreason);
-                        if FlowJs::speculative_subtyping_succeeds(cx, &key_type, key)? {
+                        if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+                            cx, &key_type, key,
+                        )? {
                             flow_prop_to_indexer(lp, name)?;
                         } else {
                             flow_js_utils::add_output(
@@ -3892,7 +3896,7 @@ pub fn rec_sub_t<'cx>(
                 intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
             )?;
             if union_contains_instantiable_tvars
-                || !FlowJs::speculative_subtyping_succeeds(cx, &node, u)?
+                || !FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, &node, u)?
             {
                 speculation_kit::try_union(cx, None, trace, use_op, l.dupe(), r.dupe(), rep)?;
             }

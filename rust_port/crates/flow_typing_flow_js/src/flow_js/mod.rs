@@ -460,6 +460,14 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+        helpers::speculative_subtyping_succeeds_non_speculating(cx, t1, t2)
+    }
+
+    pub fn speculative_subtyping_succeeds_with_flow_errors<'cx>(
+        cx: &Context<'cx>,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<bool, FlowJsException> {
         helpers::speculative_subtyping_succeeds(cx, t1, t2)
     }
 

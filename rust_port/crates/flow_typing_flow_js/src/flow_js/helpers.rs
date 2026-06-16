@@ -78,7 +78,7 @@ pub(super) fn speculative_subtyping_succeeds<'cx>(
     cx: &Context<'cx>,
     l: &Type,
     u: &Type,
-) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+) -> Result<bool, FlowJsException> {
     match speculation_kit::try_singleton_throw_on_failure(
         cx,
         DepthTrace::dummy_trace(),
@@ -86,6 +86,18 @@ pub(super) fn speculative_subtyping_succeeds<'cx>(
         UseT::new(UseTInner::UseT(unknown_use(), u.dupe())),
     ) {
         Ok(()) => Ok(true),
+        Err(FlowJsException::SpeculationSingletonError) => Ok(false),
+        Err(e) => Err(e),
+    }
+}
+
+pub(super) fn speculative_subtyping_succeeds_non_speculating<'cx>(
+    cx: &Context<'cx>,
+    l: &Type,
+    u: &Type,
+) -> Result<bool, flow_utils_concurrency::job_error::JobError> {
+    match speculative_subtyping_succeeds(cx, l, u) {
+        Ok(result) => Ok(result),
         Err(FlowJsException::SpeculationSingletonError) => Ok(false),
         Err(FlowJsException::WorkerCanceled(c)) => {
             Err(flow_utils_concurrency::job_error::JobError::Canceled(c))
@@ -96,6 +108,8 @@ pub(super) fn speculative_subtyping_succeeds<'cx>(
         Err(FlowJsException::DebugThrow { loc }) => {
             Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc })
         }
+        // JobError intentionally only carries cancellation-style failures. Preserve the existing
+        // compatibility behavior for callers that cannot propagate FlowJsException.
         Err(FlowJsException::Speculative(_)) | Err(FlowJsException::LimitExceeded) => Ok(false),
     }
 }

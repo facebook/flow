@@ -148,7 +148,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
     > {
         Some(|cx, name, reason_name, key| {
             let name_t = flow_js_utils::type_of_key_name(cx, name.dupe(), reason_name);
-            speculative_subtyping_succeeds(cx, &name_t, key)
+            speculative_subtyping_succeeds_non_speculating(cx, &name_t, key)
         })
     }
 }
