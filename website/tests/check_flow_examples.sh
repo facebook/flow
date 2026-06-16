@@ -127,6 +127,31 @@ for root_dir, exts, prefix in SOURCES:
                     doc_files.append((path, display))
 doc_files.sort(key=lambda pair: pair[1])
 
+# 1b. Reject malformed flow-check fences. The extractor below only matches the
+#     canonical ```js flow-check / ```jsx flow-check opener; a fence that
+#     mentions "flow-check" any other way (a stray space as in "``` js
+#     flow-check", a wrong/missing language, or "```flow-check") is silently
+#     skipped, leaving its examples unchecked. Fail eagerly on the first such
+#     fence, before the (slow) Flow server starts, so they can't rot unverified.
+CANONICAL_FENCE_RE = re.compile(r'```(?:js|jsx)\s+flow-check\b')
+for filepath, rel_path in doc_files:
+    with open(filepath) as fh:
+        for line_no, line in enumerate(fh, 1):
+            if not line.lstrip().startswith('```'):
+                continue
+            if 'flow-check' not in line:
+                continue
+            if not CANONICAL_FENCE_RE.search(line):
+                sys.exit(
+                    f'Malformed flow-check code fence at {rel_path}:{line_no}:\n'
+                    f'  {line.strip()}\n\n'
+                    "A code fence that mentions 'flow-check' must be written exactly as\n"
+                    '  ```js flow-check        (or ```jsx flow-check)\n'
+                    "optionally followed by options such as 'first-error'. Any other\n"
+                    'form (stray space, wrong language, missing language) is silently\n'
+                    'skipped by this snapshot test, leaving the example unverified.'
+                )
+
 # 2. Extract blocks and write each as its own file in WORK_DIR/snippets/.
 #    Map: display_rel_path -> [(block_idx, snippet_filename, code)]
 BLOCK_RE = re.compile(
