@@ -904,19 +904,16 @@
     box-shadow: none;
 }
 
-/* Phone widths: wrap long error text instead of forcing a horizontal scroll,
-   matching how the site's code blocks wrap at this same breakpoint. The cards
-   render in a <pre>, which defaults to white-space: pre (no wrap), so long
-   source-context lines and long error messages overflow the viewport. pre-wrap
-   plus overflow-wrap (both inherited down to the message divs/spans) lets them
-   break to fit. The caret arrow under a wrapped context line no longer aligns,
-   the same trade-off the code blocks make by hiding their squiggles when they
-   wrap. */
-@media (max-width: 600px) {
-    .errors {
-        white-space: pre-wrap;
-        overflow-wrap: break-word;
-    }
+/* Wrap long error text instead of forcing a horizontal scroll, at every pane
+   width. The cards render in a <pre>, which defaults to white-space: pre (no
+   wrap), so long source-context lines and long error messages would otherwise
+   overflow the pane and scroll sideways. pre-wrap plus overflow-wrap (both
+   inherited down to the message divs/spans) lets them break to fit. The caret
+   arrow under a wrapped context line no longer aligns, the same trade-off the
+   site's code blocks make by hiding their squiggles when they wrap. */
+.errors {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
 
 /* Empty state shown when there are no errors. Sits near the top, where the eye
