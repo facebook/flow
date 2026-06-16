@@ -280,6 +280,8 @@ jobs:
         components: rust-src
     - name: Install Emscripten
       uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: 3.1.44
     - uses: actions/setup-node@v4
       with:
         node-version: '22.x'
