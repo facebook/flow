@@ -2,7 +2,16 @@
 No errors!
 
 === block 2 ===
-No errors!
+Error --------------------------------------------------------------------- -:3:11
+
+The `as const` assertion can only be used on string, numeric, boolean, object, or array literals, or const-variables
+initialized with primitive literals. [unsupported-syntax]
+
+   3| const y = x as const; // Error
+                ^
+
+
+Found 1 error
 
 === block 3 ===
 No errors!

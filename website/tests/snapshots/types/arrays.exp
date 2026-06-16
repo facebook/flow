@@ -97,18 +97,123 @@ No errors!
 No errors!
 
 === block 10 ===
-No errors!
+Error -------------------------------------------------------------------------------- -:4:7
+
+Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
+
+   4| const arr2 = []; // Error
+            ^^^^
+
+Error ------------------------------------------------------------------------------- -:5:18
+
+Cannot call `takesStringArray` with `arr2` bound to `x` because in array element: `empty` [1] is not exactly the same as
+`string` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<empty>` [1] and `Array<string>` [3] exactly the same
+- Or make array type [3] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   -:5:18
+   5| takesStringArray(arr2); // Error
+                       ^^^^
+
+References:
+   -:4:7
+   4| const arr2 = []; // Error
+            ^^^^ [1]
+   -:2:36
+   2| function takesStringArray(x: Array<string>): void {}
+                                         ^^^^^^ [2]
+   -:2:30
+   2| function takesStringArray(x: Array<string>): void {}
+                                   ^^^^^^^^^^^^^ [3]
+
+
+Found 2 errors
 
 === block 11 ===
-No errors!
+Error ------------------------------------------------------------------------------- -:4:11
+
+Cannot call `arr3.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+
+   -:4:11
+   4| arr3.push("abc"); // Error!
+                ^^^^^ [1]
+
+References:
+   -:3:11
+   3| arr3.push(42); // arr3 is inferred as Array<number>
+                ^^ [2]
+
+
+Found 1 error
 
 === block 12 ===
-No errors!
+Error ------------------------------------------------------------------------------ -:12:11
+
+Cannot assign `true` to `arr4[0]` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   -:12:11
+   12| arr4[0] = true; // Error!
+                 ^^^^ [1]
+
+References:
+   -:6:13
+    6|   arr4[0] = 42;
+                   ^^ [2]
+   -:8:13
+    8|   arr4.push("abc");
+                   ^^^^^ [3]
+
+
+Found 1 error
 
 === block 13 ===
-No errors!
+Error ------------------------------------------------------------------------------- -:4:13
+
+Cannot call `arr5.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:4:13
+   4|   arr5.push(42); // Error!
+                  ^^ [1]
+
+References:
+   -:7:11
+   7| arr5.push("abc"); // This assignment wins. arr5 is inferred as Array<string>
+                ^^^^^ [2]
+
+Error ------------------------------------------------------------------------------- -:8:11
+
+Cannot call `arr5.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+
+   -:8:11
+   8| arr5.push(1); // Error!
+                ^ [1]
+
+References:
+   -:7:11
+   7| arr5.push("abc"); // This assignment wins. arr5 is inferred as Array<string>
+                ^^^^^ [2]
+
+
+Found 2 errors
 
 === block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
 Error ------------------------------------------------------------------------------- -:4:26
 
 Cannot assign array literal to `arr3` because in array element: null [1] is incompatible with number [2].
@@ -126,7 +231,7 @@ References:
 
 Found 1 error
 
-=== block 15 ===
+=== block 19 ===
 Error ------------------------------------------------------------------------------- -:2:27
 
 Cannot assign `null` to `arr1` because null [1] is incompatible with array type [2]. [incompatible-type]

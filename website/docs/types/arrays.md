@@ -128,11 +128,11 @@ Note that for the contextual information to work, the type needs to be available
 right at the definition of the array. This means that the last two lines in the following
 code will error:
 
-``` js flow-check
+```js flow-check
 function takesStringArray(x: Array<string>): void {}
 
-const arr2 = [];
-takesStringArray(arr2);
+const arr2 = []; // Error
+takesStringArray(arr2); // Error
 ```
 
 The second error is due to `arr2` being inferred as `Array<empty>` which leads to another error at the call
@@ -162,7 +162,7 @@ Once the first assignment has been found, the type of the array element is pinne
 assigned expression. Subsequent writes to array with elements of
 a different type are errors:
 
-``` js flow-check
+```js flow-check
 const arr3 = [];
 arr3.push(42); // arr3 is inferred as Array<number>
 arr3.push("abc"); // Error!
@@ -173,7 +173,7 @@ arr3.push("abc"); // Error!
 If the array is assigned in sibling branches of conditional statements, the type
 of the array element is pinned to the union of the assigned types:
 
-``` js flow-check
+```js flow-check
 declare const cond: boolean;
 
 const arr4 = [];
@@ -191,7 +191,7 @@ arr4[0] = true; // Error!
 
 Shallow scope of assignment is preferred when there are multiple scopes where assignments happen:
 
-``` js flow-check
+```js flow-check
 const arr5 = [];
 function f() {
   arr5.push(42); // Error!
@@ -201,15 +201,9 @@ arr5.push("abc"); // This assignment wins. arr5 is inferred as Array<string>
 arr5.push(1); // Error!
 ```
 
-## Array access is unsafe {#toc-array-access-is-unsafe}
+## Array access can be unsafe {#toc-array-access-is-unsafe}
 
-When you retrieve an element from an array there is always a possibility that
-it is `undefined`. You could have either accessed an index which is out of the
-bounds of the array, or the element could not exist because it is a "sparse
-array".
-
-For example, you could be accessing an element that is out of the bounds of the
-array:
+By default, accessing an element of an array gives you back the element type `T`, even though the value might actually be `undefined` at runtime. One way this happens is reading an index that is out of bounds:
 
 ```js flow-check
 const array: Array<number> = [0, 1, 2];
@@ -217,7 +211,7 @@ const value: number = array[3]; // Works
                          // ^ undefined
 ```
 
-Or you could be accessing an element that does not exist if it is a "sparse array":
+It also happens when the array is "sparse" and the element was never set:
 
 ```js flow-check
 const array: Array<number> = [];
@@ -229,12 +223,9 @@ const value: number = array[1]; // Works
                          // ^ undefined
 ```
 
-In order to make this safe, Flow would have to mark every single array access
-as "*possibly undefined"*.
+In both cases Flow accepts the code and types `value` as `number`, even though the value is `undefined` at runtime.
 
-Flow does not do this because it would be extremely inconvenient to use. You
-would be forced to refine the type of every value you get when accessing an
-array.
+To catch this, enable the [`no_unchecked_indexed_access`](../config/options.md#toc-no-unchecked-indexed-access) option. With it on, every array (and dictionary) element access returns `T | void` instead of `T`, so Flow makes you handle the `undefined` case before using the value:
 
 ```js flow-check
 const array: Array<number> = [0, 1, 2];

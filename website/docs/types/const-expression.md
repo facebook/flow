@@ -47,10 +47,10 @@ the type of `nonConstObject` will be `{g: number}` and the type of `constObject`
 be `{readonly f: {g: number}}`. In other words, only the top-level property `f` will
 be read-only.
 
-Finally, it is an error to apply `as const` to non-literal expressions:
+Finally, `as const` works on literals directly, and on `const` variables that are initialized with a primitive literal. Applying it to other expressions — for instance a value read from a `let` binding — is an error:
 ```js flow-check
-const x = 1;
-const y = x as const;
+let x = 1;
+const y = x as const; // Error
 ```
 
 ## Typical const-expression example {#toc-const-expression-example}

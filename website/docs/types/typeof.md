@@ -39,7 +39,7 @@ You can use any value with `typeof`, as long as the argument itself is a variabl
 ```js flow-check
 let obj1 = {foo: 1, bar: true, baz: 'three'};
 let obj2: typeof obj1 = {foo: 42, bar: false, baz: 'hello'};
-let num: typeof obj1.bar = 1;
+let num: typeof obj1.foo = 1;
 
 let arr1 = [1, 2, 3];
 let arr2: typeof arr1 = [3, 2, 1];
