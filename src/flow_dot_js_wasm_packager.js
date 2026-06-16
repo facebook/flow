@@ -92,14 +92,23 @@ function compressedWasmLoader(wasmPath) {
     }
     return flowDotJsCompressedWasmBinaryPromise;
   }
-  Module.instantiateWasm = function(imports, successCallback) {
-    flowDotJsGetCompressedWasmBinary()
-      .then(function(binary) {
-        return WebAssembly.instantiate(binary, imports);
+  // emcc 3.1.44 -O1 output has no Module.instantiateWasm hook, and its
+  // createWasm runs synchronously at load time -- too early for an async inflate
+  // to set wasmBinary first. But createWasm delegates to the (hoisted, global)
+  // instantiateAsync, which this prefix can reassign before createWasm runs. So
+  // we wrap instantiateAsync to ignore its fetch path and instead feed the
+  // inflated bytes, awaiting the (async) decompression first. This works in Node
+  // (zlib.inflateSync) and browsers (DecompressionStream) alike -- no vendored
+  // inflater, no sidecar fetch, single self-contained file.
+  var flowDotJsWasmBinaryPromise = flowDotJsGetCompressedWasmBinary();
+  instantiateAsync = function(binary, binaryFile, imports, callback) {
+    flowDotJsWasmBinaryPromise
+      .then(function(realBinary) {
+        return WebAssembly.instantiate(realBinary, imports);
       })
       .then(
         function(result) {
-          successCallback(result.instance);
+          callback({instance: result.instance, module: result.module});
         },
         function(error) {
           setTimeout(function() {
@@ -107,7 +116,6 @@ function compressedWasmLoader(wasmPath) {
           }, 0);
         }
       );
-    return {};
   };
 `;
 }

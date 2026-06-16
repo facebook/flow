@@ -27,6 +27,7 @@ flow.docdir
 /node_modules/
 /tests/*/*.err
 /bin
+/rust_port/target
 
 _build
 _site/
