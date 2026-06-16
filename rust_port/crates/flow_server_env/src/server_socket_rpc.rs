@@ -30,8 +30,6 @@ use crate::lsp_prot;
 use crate::server_prot;
 use crate::server_prot::response::LazyStats;
 
-const MAX_MESSAGE_BYTES: usize = 64 * 1024 * 1024;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SaveStateOut {
     File(String),
@@ -1683,15 +1681,6 @@ pub fn receive_message<R: Read, T: for<'de> Deserialize<'de>>(
     let mut len_buf = [0u8; 4];
     reader.read_exact(&mut len_buf)?;
     let len = u32::from_be_bytes(len_buf) as usize;
-    if len > MAX_MESSAGE_BYTES {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!(
-                "RPC frame too large: {} bytes exceeds limit {}",
-                len, MAX_MESSAGE_BYTES
-            ),
-        ));
-    }
     let mut buf = vec![0u8; len];
     reader.read_exact(&mut buf)?;
     flow_parser::loc::with_full_source_serde(|| {
@@ -1705,7 +1694,6 @@ mod tests {
     use std::io::Cursor;
 
     use super::CliResponse;
-    use super::MAX_MESSAGE_BYTES;
     use super::llm_context;
     use super::receive_message;
     use crate::server_prot;
@@ -1719,15 +1707,6 @@ mod tests {
 
         let value: serde_json::Value = receive_message(&mut Cursor::new(framed)).unwrap();
         assert_eq!(value, payload);
-    }
-
-    #[test]
-    fn receive_message_rejects_oversized_frame() {
-        let mut framed = ((MAX_MESSAGE_BYTES as u32) + 1).to_be_bytes().to_vec();
-        framed.extend_from_slice(b"{}");
-
-        let err = receive_message::<_, serde_json::Value>(&mut Cursor::new(framed)).unwrap_err();
-        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
     }
 
     #[test]

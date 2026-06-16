@@ -105,11 +105,6 @@ pub fn state() -> StateKind {
     }
 }
 
-// Cap any single inbound frame at 64 MiB. Mirrors `MAX_MESSAGE_BYTES` in
-// `flow_server_env::server_socket_rpc` (we can't share the constant because
-// `flow_monitor_rpc` is a lower layer than `flow_server_env`).
-const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
-
 // Read a single message from the monitor.
 //
 // Length-prefixed JSON, not bincode: `MonitorToServerMessage` /
@@ -134,15 +129,6 @@ fn receive_message<R: Read, T: for<'de> serde::Deserialize<'de>>(
     let mut len_buf = [0u8; 4];
     reader.read_exact(&mut len_buf)?;
     let len = u32::from_be_bytes(len_buf) as usize;
-    if len > MAX_FRAME_BYTES {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!(
-                "RPC frame too large: {} bytes exceeds limit {}",
-                len, MAX_FRAME_BYTES
-            ),
-        ));
-    }
     let mut buf = vec![0u8; len];
     reader.read_exact(&mut buf)?;
     serde_json::from_slice(&buf)

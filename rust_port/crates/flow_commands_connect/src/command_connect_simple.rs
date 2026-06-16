@@ -16,14 +16,10 @@ use flow_server_env::server_status;
 use flow_server_env::socket_handshake;
 use flow_server_files::server_files_js;
 
-// Same value as `flow_server_monitor::flow_server_monitor_connection::MAX_FRAME_BYTES`. The
-// monitor caps incoming bincode frames here to defend against pathologically-encoded length
-// fields; the LSP / `flow_cli` side mirrors the cap so the two ends stay symmetric.
-//
-// bincode 2.x's `with_limit::<N>()` is a const-generic over `usize`, so this constant is `usize`
-// (the monitor declares its own copy as `u64` because bincode 1.x's `with_limit` took a runtime
-// `u64` — the byte value is the same).
-pub const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
+// Same value as `flow_server_monitor::flow_server_monitor_connection::MAX_FRAME_BYTES`.
+// OCaml's `Marshal_tools` protocol uses a 4-byte payload-size preamble, so the Rust transport
+// must not impose a smaller cap: large `dump-types` responses can exceed 64 MiB.
+pub const MAX_FRAME_BYTES: usize = u32::MAX as usize;
 
 #[derive(Debug)]
 pub enum BusyReason {

@@ -38,10 +38,10 @@ use tokio::task::JoinHandle;
 // `Vec::with_capacity(N)` directly; if `N` is corrupt (e.g. framing got out of
 // sync), the std allocator's failure handler aborts the whole monitor process
 // without unwinding (so neither Tokio nor the connection's read loop can
-// recover). The 64 MiB ceiling matches `server_socket_rpc::MAX_MESSAGE_BYTES`.
-// `pub(crate)` so the handshake reads in `socket_acceptor` can share the same
-// limit. bincode 2.x's `with_limit::<N>()` is a const-generic over `usize`.
-pub(crate) const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
+// recover). The limit matches OCaml `Marshal_tools`' 4-byte payload-size
+// preamble rather than imposing a smaller cap. `pub(crate)` so the handshake
+// reads in `socket_acceptor` can share the same limit.
+pub(crate) const MAX_FRAME_BYTES: usize = u32::MAX as usize;
 
 // A `Channel` abstracts the wire I/O for a `Connection`. Each `ConnectionProcessor` chooses its
 // channel. All Flow monitor channels are bincode-framed (OCaml-faithful, matching
