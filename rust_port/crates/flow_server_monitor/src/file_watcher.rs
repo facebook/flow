@@ -910,7 +910,58 @@ pub mod edenfs_file_watcher {
                         format!("AsyncFd registration error: {}", e),
                     )),
                 };
-            #[cfg(not(unix))]
+            #[cfg(windows)]
+            let wait_result: Result<(), flow_edenfs_watcher::EdenfsWatcherError> = {
+                // On Windows the notification handle is an AF_INET/SOCK_STREAM socket
+                // created by `filedescriptor::socketpair` and owned by the EdenFS instance
+                // (it is also drained by `get_changes_async`). We must only poll it, never
+                // take ownership, so we wait with `filedescriptor::poll` (WSAPoll) on a
+                // blocking thread rather than wrapping it in a `tokio::net::TcpStream`,
+                // which would close the socket on drop. The finite timeout lets this task
+                // be cancelled (e.g. on watcher stop) between iterations.
+                let fd = env.notification_fd as filedescriptor::SocketDescriptor;
+                loop {
+                    let poll_outcome = tokio::task::spawn_blocking(move || {
+                        let mut pollfds = [filedescriptor::pollfd {
+                            fd,
+                            events: filedescriptor::POLLIN,
+                            revents: 0,
+                        }];
+                        filedescriptor::poll(&mut pollfds, Some(Duration::from_millis(250)))
+                            .map(|ready| (ready, pollfds[0].revents))
+                    })
+                    .await;
+                    match poll_outcome {
+                        // Timed out with nothing ready: loop so an aborted task can unwind.
+                        Ok(Ok((0, _))) => continue,
+                        Ok(Ok((_, revents))) => {
+                            if revents & filedescriptor::POLLIN != 0 {
+                                break Ok(());
+                            }
+                            break Err(
+                                flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
+                                    format!("Notification socket closed (revents={})", revents),
+                                ),
+                            );
+                        }
+                        Ok(Err(err)) => {
+                            break Err(
+                                flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
+                                    format!("Notification socket poll failed: {:?}", err),
+                                ),
+                            );
+                        }
+                        Err(join_err) => {
+                            break Err(
+                                flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
+                                    format!("Notification poll task failed: {}", join_err),
+                                ),
+                            );
+                        }
+                    }
+                }
+            };
+            #[cfg(not(any(unix, windows)))]
             let wait_result: Result<(), flow_edenfs_watcher::EdenfsWatcherError> =
                 Err(flow_edenfs_watcher::EdenfsWatcherError::EdenfsWatcherError(
                     "EdenFS notification fd polling is not supported on this platform".to_string(),
