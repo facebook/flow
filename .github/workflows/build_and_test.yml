@@ -606,6 +606,7 @@ jobs:
     needs:
     - build_rust_port_macos_arm64
     env:
+      FLOW_RUNTESTS_PARALLELISM: 8
       FLOW_RUST_PORT: 1
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
