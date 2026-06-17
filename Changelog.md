@@ -1,3 +1,17 @@
+### 0.319.0
+
+Likely to cause new Flow errors:
+* The config for `casting_syntax` is removed. The `as` casting syntax is the only supported casting syntax. See [Modernizing legacy syntax](https://flow.org/en/docs/modernizing-legacy-syntax/) for migration guidance.
+* Flow will now error on `T: B` in favor of `T extends B` in type parameters, and error on `+`/`-` in favor of `readonly`/`writeonly` . See [Modernizing legacy syntax](https://flow.org/en/docs/modernizing-legacy-syntax/) for migration guidance.
+
+New Features:
+* Support the global `NaN` as a `match` pattern
+
+Notable bug fixes:
+* Fixed negative bigint literal patterns in `match` being treated as their positive counterpart
+* `ConstructorParameters` and `InstanceType` now work on `Class<C>`, not just `typeof C`
+* `match` instance patterns whose constructor is a subclass of the scrutinee type are no longer incorrectly reported as unused.
+
 ### 0.318.0
 
 Likely to cause new Flow errors:
