@@ -76,7 +76,6 @@ jobs:
       working-directory: rust_port
       env:
         CARGO_PROFILE_RELEASE_STRIP: 'true'
-        CARGO_PROFILE_RELEASE_LTO: fat
         CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
