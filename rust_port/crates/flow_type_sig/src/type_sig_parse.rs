@@ -8195,6 +8195,13 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }));
             nominal_type(opts, scope, scopes, tbls, xs, loc, name, targs)
         }
+        "object" => match targs {
+            None => {
+                let def = interface_acc::InterfaceAcc::empty().interface_def(false, Vec::new());
+                Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
+            }
+            Some(_) => Parsed::Err(loc, Errno::CheckError),
+        },
         "Array" => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 let t = annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);

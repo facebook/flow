@@ -1652,6 +1652,15 @@ fn convert_inner<'a>(
                             &reconstruct_ast,
                         )?
                     }
+                    // Match the Flow libdef's TS compatibility alias: `type object = interface {}`.
+                    "object" => {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                            let interface_ast = empty_interface_annot(loc.dupe());
+                            let result = convert_inner(cx, env, &interface_ast)?;
+                            let (_, result_t) = result.loc();
+                            Ok(reconstruct_ast(result_t.dupe(), None, None))
+                        })?
+                    }
                     // NoInfer intrinsic that makes every GenericT inside it no_infer
                     "NoInfer" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {

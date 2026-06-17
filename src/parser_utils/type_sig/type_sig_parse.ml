@@ -4328,6 +4328,13 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   | name when (not opts.for_builtins) && Option.is_some (Scope.lookup_type scope name) ->
     let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
     nominal_type opts scope tbls xs loc name targs
+  | "object" -> begin
+    match targs with
+    | None ->
+      let def = InterfaceAcc.interface_def ~abstract:false [] InterfaceAcc.empty in
+      Annot (InlineInterface (loc, def))
+    | _ -> Err (loc, CheckError)
+  end
   | "Array" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->
