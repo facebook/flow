@@ -97,6 +97,14 @@ enum TailCall<'cx> {
     RecFlow(Type, UseT<Context<'cx>>, DepthTrace),
 }
 
+fn is_extends_use_t_root(t: &TypeInner) -> bool {
+    match t {
+        TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) => true,
+        TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
+        _ => false,
+    }
+}
+
 /// NOTE: Do not call this function directly. Instead, call the wrapper
 /// functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
 /// this module, and the function `flow` outside this module.
@@ -9204,7 +9212,7 @@ fn __flow_impl<'cx>(
             rec_flow(cx, trace, (&open_statics, u))?;
         }
         (
-            TypeInner::DefT(_, def_t),
+            root,
             UseTInner::ExtendsUseT(box ExtendsUseTData {
                 use_op,
                 reason: reason_ext,
@@ -9212,7 +9220,7 @@ fn __flow_impl<'cx>(
                 true_t: ext_l,
                 false_t: ext_u,
             }),
-        ) if matches!(def_t.deref(), DefTInner::NullT) && !try_ts.is_empty() => {
+        ) if is_extends_use_t_root(root) && !try_ts.is_empty() => {
             // When seaching for a nominal superclass fails, we always try to look it
             // up in the next element in the list try_ts_on_failure.
             let next = &try_ts[0];
@@ -9233,7 +9241,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            TypeInner::DefT(_, def_t),
+            root,
             UseTInner::ExtendsUseT(box ExtendsUseTData {
                 use_op,
                 reason: _,
@@ -9241,7 +9249,7 @@ fn __flow_impl<'cx>(
                 true_t: ext_l,
                 false_t: ext_u,
             }),
-        ) if matches!(def_t.deref(), DefTInner::NullT)
+        ) if is_extends_use_t_root(root)
             && try_ts.is_empty()
             && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
             && let DefTInner::InstanceT(inst_t) = inner_def.deref()
@@ -9303,14 +9311,19 @@ fn __flow_impl<'cx>(
                     inst_dict,
                 ),
             )?;
-            rec_flow(
-                cx,
-                trace,
-                (
-                    ext_l,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), super_.dupe())),
-                ),
-            )?;
+            match super_.deref() {
+                TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) | TypeInner::NullProtoT(_) => {}
+                _ => {
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            ext_l,
+                            &UseT::new(UseTInner::UseT(use_op.dupe(), super_.dupe())),
+                        ),
+                    )?;
+                }
+            }
         }
         // Unwrap deep readonly
         (_, UseTInner::DeepReadOnlyT(tout, _)) | (_, UseTInner::HooklikeT(tout)) => {

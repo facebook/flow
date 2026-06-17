@@ -5005,11 +5005,13 @@ struct
           let statics = (reason, Tvar.mk_no_wrap cx reason) in
           rec_flow cx trace (instance, GetStaticsT statics);
           rec_flow cx trace (OpenT statics, u)
-        | (DefT (_, NullT), ExtendsUseT (use_op, reason, next :: try_ts_on_failure, l, u)) ->
+        | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
+            ExtendsUseT (use_op, reason, next :: try_ts_on_failure, l, u)
+          ) ->
           (* When seaching for a nominal superclass fails, we always try to look it
              up in the next element in the list try_ts_on_failure. *)
           rec_flow cx trace (next, ExtendsUseT (use_op, reason, try_ts_on_failure, l, u))
-        | ( DefT (_, NullT),
+        | ( (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
             ExtendsUseT
               ( use_op,
                 _,
@@ -5075,7 +5077,12 @@ struct
             l
             reason_inst
             (own_props, proto_props, inst_call_t, inst_construct_t, inst_dict);
-          rec_flow cx trace (l, UseT (use_op, super))
+          (match super with
+          | ObjProtoT _
+          | FunProtoT _
+          | NullProtoT _ ->
+            ()
+          | _ -> rec_flow cx trace (l, UseT (use_op, super)))
         (* Unwrap deep readonly *)
         | (_, (DeepReadOnlyT (tout, _) | HooklikeT tout)) ->
           rec_flow_t ~use_op:unknown_use cx trace (l, OpenT tout)

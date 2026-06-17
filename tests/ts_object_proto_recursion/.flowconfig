@@ -1,0 +1,7 @@
+[options]
+all=true
+experimental.ts_syntax=true
+experimental.tslib_syntax=true
+experimental.typescript_library_definition_support=true
+module.file_ext=.js
+module.file_ext=.d.ts

@@ -1,0 +1,17 @@
+Error -------------------------------------------------------------------------------------- flow-typed/object.d.ts:9:13
+
+This name declaration overrides an existing binding `Object` [1]. Overriding in library definitions can lead to
+surprising behaviors. [libdef-override]
+
+   flow-typed/object.d.ts:9:13
+    9| declare var Object: Object; // ERROR: libdef override
+                   ^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:12:15
+   12| declare class Object {}
+                     ^^^^^^ [1]
+
+
+
+Found 1 error

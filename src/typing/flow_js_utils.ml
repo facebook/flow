@@ -77,23 +77,30 @@ let read_construct_t cx id = Context.find_call cx id |> TypeUtil.normalize_const
    [extract_class_ctor_t]. *)
 let collect_construct_ts ~concretize cx t =
   let rec go acc t =
-    Base.List.fold (concretize t) ~init:acc ~f:(fun acc t ->
-        match t with
-        | DefT (_, ClassT inner) -> go acc inner
-        | DefT (_, InstanceT { inst = { inst_kind; inst_construct_t; _ }; super; _ })
-        | ThisInstanceT (_, { inst = { inst_kind; inst_construct_t; _ }; super; _ }, _, _) ->
-          let acc =
-            match inst_construct_t with
-            | Some id -> read_construct_t cx id :: acc
-            | None -> acc
-          in
-          (match inst_kind with
-          | InterfaceKind _ -> go acc super
-          | _ -> acc)
-        | GenericT { bound; _ } -> go acc bound
-        | IntersectionT (_, rep) -> Base.List.fold (InterRep.members rep) ~init:acc ~f:go
-        | _ -> acc
-    )
+    match t with
+    | ObjProtoT _
+    | FunProtoT _
+    | NullProtoT _
+    | DefT (_, NullT) ->
+      acc
+    | _ ->
+      Base.List.fold (concretize t) ~init:acc ~f:(fun acc t ->
+          match t with
+          | DefT (_, ClassT inner) -> go acc inner
+          | DefT (_, InstanceT { inst = { inst_kind; inst_construct_t; _ }; super; _ })
+          | ThisInstanceT (_, { inst = { inst_kind; inst_construct_t; _ }; super; _ }, _, _) ->
+            let acc =
+              match inst_construct_t with
+              | Some id -> read_construct_t cx id :: acc
+              | None -> acc
+            in
+            (match inst_kind with
+            | InterfaceKind _ -> go acc super
+            | _ -> acc)
+          | GenericT { bound; _ } -> go acc bound
+          | IntersectionT (_, rep) -> Base.List.fold (InterRep.members rep) ~init:acc ~f:go
+          | _ -> acc
+      )
   in
   List.rev (go [] t)
 

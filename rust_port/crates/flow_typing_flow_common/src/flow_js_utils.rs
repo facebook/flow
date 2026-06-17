@@ -253,6 +253,15 @@ pub fn collect_construct_ts<'cx>(
         mut acc: Vec<Type>,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
+        match t.deref() {
+            TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) | TypeInner::NullProtoT(_) => {
+                return Ok(acc);
+            }
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::NullT) => {
+                return Ok(acc);
+            }
+            _ => {}
+        }
         for t in concretize(t)? {
             acc = match t.deref() {
                 TypeInner::DefT(_, def_t) if let DefTInner::ClassT(inner) = def_t.deref() => {
