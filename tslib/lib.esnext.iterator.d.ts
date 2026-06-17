@@ -43,13 +43,11 @@ declare global {
          * Returns this iterator.
          */
         [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
-
         /**
          * Creates an iterator whose values are the result of applying the callback to the values from this iterator.
          * @param callbackfn A function that accepts up to two arguments to be used to transform values from the underlying iterator.
          */
         map<U>(callbackfn: (value: T, index: number) => U): IteratorObject<U, undefined, unknown>;
-
         /**
          * Creates an iterator whose values are those from this iterator for which the provided predicate returns true.
          * @param predicate A function that accepts up to two arguments to be used to test values from the underlying iterator.
@@ -131,10 +129,8 @@ declare global {
          */
         find<S extends T>(predicate: (value: T, index: number) => value is S): S | undefined;
         find(predicate: (value: T, index: number) => unknown): T | undefined;
-
         readonly [Symbol.toStringTag]: string;
     }
-
     // Global `IteratorConstructor` interface that can be augmented by polyfills
     interface IteratorConstructor extends IteratorObjectConstructor {
         /**
@@ -144,6 +140,5 @@ declare global {
          */
         from<T>(value: Iterator<T, unknown, undefined> | Iterable<T, unknown, undefined>): IteratorObject<T, undefined, unknown>;
     }
-
     var Iterator: IteratorConstructor;
 }
