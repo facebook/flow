@@ -158,7 +158,10 @@ so Flow will ensure you update your mapping when you add or remove Flow Enum mem
 
 Replace this pattern
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+
 const STATUS_ICON: {[Status]: string} = {
   [Status.Active]: 'green-checkmark',
   [Status.Paused]: 'grey-pause',
@@ -169,7 +172,10 @@ const icon = STATUS_ICON[status];
 
 with
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+
 function statusIcon(status: Status): string {
   switch (status) {
     case Status.Active:

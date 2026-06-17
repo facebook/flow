@@ -10,7 +10,9 @@ You can [replace `switch` statements](./migration.md#replacing-switch) using `ma
 
 You can also [replace nested conditional ternary expressions](./migration.md#replacing-conditional-ternary-expressions) using `match` expressions, making your code much more readable while gaining the power of `match`.
 
-```js
+```js flow-check
+import * as React from 'react';
+
 component AgePane(
   maybeAge?: {type: 'valid', age: number} | {type: 'error', msg: string}
 ) {
@@ -22,6 +24,9 @@ component AgePane(
     undefined => <Err>Age is not defined.</Err>,
   };
 }
+
+component Err(children: React.Node) { return <div>{children}</div>; }
+component Pane(children: React.Node) { return <div>{children}</div>; }
 ```
 
 :::info TypeScript comparison
@@ -47,16 +52,22 @@ const e = match (<arg>) {
 
 The guard applies to the entire pattern, including ["or" patterns](./patterns.md#or-patterns), e.g. `1 | 2 if (cond)` will first match if the value is `1 | 2`, and then finally succeed if `cond` is also true. Guarded cases do not count toward [exhaustiveness checks](#exhaustive-checking), since they may or may not match based on the condition.
 
-You can initialize two or more variables using a `match`:
-```js
-// Using a tuple:
+You can initialize two or more variables using a `match`, either with a tuple:
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+
 const [color, size] = match (status) {
   Status.Active => ['green', 2],
   Status.Paused => ['yellow', 1],
   Status.Off => ['red', 0],
 };
+```
+or with an object (especially useful for more than two variables):
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
 
-// Using an object (especially useful for more than two variables):
 const {color, size} = match (status) {
   Status.Active => {color: 'green', size: 2},
   Status.Paused => {color: 'yellow', size: 1},

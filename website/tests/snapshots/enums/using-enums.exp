@@ -1,21 +1,24 @@
 === block 1 ===
-Error --------------------------------------------------------------------------- -:8:8
+Error -------------------------------------------------------------------------- -:13:8
 
 Cannot access `x` on enum `Status` [1] because computed access is not allowed on enums. [invalid-enum-access]
 
-   -:8:8
-   8| Status[x]; // Error: computed access on enums is not allowed
-             ^
+   -:13:8
+   13| Status[x]; // Error: computed access on enums is not allowed
+              ^
 
 References:
    -:2:6
-   2| enum Status {
-           ^^^^^^ [1]
+    2| enum Status {
+            ^^^^^^ [1]
 
 
 Found 1 error
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
 Error -------------------------------------------------------------------------- -:4:19
 
 Cannot assign `Status.Active` to `s` because `Status` [1] is incompatible with string [2]. [incompatible-type]
@@ -37,13 +40,40 @@ References:
 
 Found 1 error
 
-=== block 3 ===
-No errors!
-
 === block 4 ===
 No errors!
 
 === block 5 ===
+No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
 Error --------------------------------------------------------------------------- -:9:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
@@ -61,7 +91,7 @@ References:
 
 Found 1 error
 
-=== block 6 ===
+=== block 16 ===
 Error -------------------------------------------------------------------------- -:16:8
 
 Invalid exhaustive check: case checks for enum member `Paused` of `Status` [1], but member `Paused` was already checked
@@ -82,7 +112,7 @@ References:
 
 Found 1 error
 
-=== block 7 ===
+=== block 17 ===
 Error -------------------------------------------------------------------------- -:16:3
 
 Invalid exhaustive check: default case checks for additional enum members of `Status` [1], but all of its members have
@@ -102,7 +132,16 @@ References:
 
 Found 1 error
 
-=== block 8 ===
+=== block 18 ===
+No errors!
+
+=== block 19 ===
+No errors!
+
+=== block 20 ===
+No errors!
+
+=== block 21 ===
 Error --------------------------------------------------------------------------- -:9:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Status.Off` to match
@@ -120,7 +159,13 @@ References:
 
 Found 1 error
 
-=== block 9 ===
+=== block 22 ===
+No errors!
+
+=== block 23 ===
+No errors!
+
+=== block 24 ===
 Error -------------------------------------------------------------------------- -:11:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`. The
@@ -158,31 +203,43 @@ References:
 
 Found 2 errors
 
-=== block 10 ===
+=== block 25 ===
 No errors!
 
-=== block 11 ===
+=== block 26 ===
 No errors!
 
-=== block 12 ===
+=== block 27 ===
 No errors!
 
-=== block 13 ===
+=== block 28 ===
 No errors!
 
-=== block 14 ===
+=== block 29 ===
 No errors!
 
-=== block 15 ===
+=== block 30 ===
 No errors!
 
-=== block 16 ===
+=== block 31 ===
 No errors!
 
-=== block 17 ===
+=== block 32 ===
 No errors!
 
-=== block 18 ===
+=== block 33 ===
+No errors!
+
+=== block 34 ===
+No errors!
+
+=== block 35 ===
+No errors!
+
+=== block 36 ===
+No errors!
+
+=== block 37 ===
 Error --------------------------------------------------------------------------- -:6:1
 
 Cannot cast `Status.Active` to `EnumValue` because in the enum's representation type: string [1] is incompatible with
@@ -203,19 +260,19 @@ References:
 
 Found 1 error
 
-=== block 19 ===
+=== block 38 ===
 No errors!
 
-=== block 20 ===
+=== block 39 ===
 No errors!
 
-=== block 21 ===
+=== block 40 ===
 No errors!
 
-=== block 22 ===
+=== block 41 ===
 No errors!
 
-=== block 23 ===
+=== block 42 ===
 Error ------------------------------------------------------------------------- -:13:20
 
 Cannot assign `o[LegacyStatus.Active]` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -235,5 +292,5 @@ References:
 
 Found 1 error
 
-=== block 24 ===
+=== block 43 ===
 No errors!

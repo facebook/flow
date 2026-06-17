@@ -30,7 +30,11 @@ Most `switch` statements can be turned into match statements:
 * If multiple cases share a body, use an ["or" pattern](./patterns.md#or-patterns) `|`
 * Replace the `default` with a [wildcard](./patterns.md#wildcard-patterns) `_`
 
-```js
+```js flow-check
+declare const action: 'delete' | 'remove' | 'add' | 'show';
+declare const data: Array<number>;
+declare function show(data: Array<number>): void;
+
 // Before
 switch (action) {
   case 'delete':
@@ -99,62 +103,80 @@ For the assignment case, make the same changes as in the [to match statement](#t
 * Assign the entire match expression to the variable
 * If you no longer re-assign the variable, you can change it to a `const`
 
-```js
+```js flow-check
+declare const colorScheme: 'darker' | 'light' | 'unset';
+declare const colorSchemeDarker: string;
+declare const colorSchemeLight: string;
+declare const colorSchemeDefault: string;
+
 // Before
-let colorSchemeStyles;
-switch (colorScheme) {
-  case 'darker':
-    colorSchemeStyles = colorSchemeDarker;
-    break;
-  case 'light':
-    colorSchemeStyles = colorSchemeLight;
-    break;
-  case 'unset':
-    colorSchemeStyles = colorSchemeDefault;
-    break;
+{
+  let colorSchemeStyles;
+  switch (colorScheme) {
+    case 'darker':
+      colorSchemeStyles = colorSchemeDarker;
+      break;
+    case 'light':
+      colorSchemeStyles = colorSchemeLight;
+      break;
+    case 'unset':
+      colorSchemeStyles = colorSchemeDefault;
+      break;
+  }
 }
 
 // After
-const colorSchemeStyles = match (colorScheme) {
-  'darker' => colorSchemeDarker,
-  'light' => colorSchemeLight,
-  'unset' => colorSchemeDefault,
-};
+{
+  const colorSchemeStyles = match (colorScheme) {
+    'darker' => colorSchemeDarker,
+    'light' => colorSchemeLight,
+    'unset' => colorSchemeDefault,
+  };
+}
 ```
 
 You can replace multiple assignments with a single match expression:
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+
 // Before
-let color;
-let size;
-switch (status) {
-  case Status.Active:
-    color = 'green';
-    size = 2;
-    break;
-  case Status.Paused:
-    color = 'yellow';
-    size = 1;
-    break;
-  case Status.Off:
-    color = 'red';
-    size = 0;
-    break;
+{
+  let color;
+  let size;
+  switch (status) {
+    case Status.Active:
+      color = 'green';
+      size = 2;
+      break;
+    case Status.Paused:
+      color = 'yellow';
+      size = 1;
+      break;
+    case Status.Off:
+      color = 'red';
+      size = 0;
+      break;
+  }
 }
 
 // After (using a tuple):
-const [color, size] = match (status) {
-  Status.Active => ['green', 2],
-  Status.Paused => ['yellow', 1],
-  Status.Off => ['red', 0],
-};
+{
+  const [color, size] = match (status) {
+    Status.Active => ['green', 2],
+    Status.Paused => ['yellow', 1],
+    Status.Off => ['red', 0],
+  };
+}
 
 // After (using an object):
-const {color, size} = match (status) {
-  Status.Active => {color: 'green', size: 2},
-  Status.Paused => {color: 'yellow', size: 1},
-  Status.Off => {color: 'red', size: 0},
-};
+{
+  const {color, size} = match (status) {
+    Status.Active => {color: 'green', size: 2},
+    Status.Paused => {color: 'yellow', size: 1},
+    Status.Off => {color: 'red', size: 0},
+  };
+}
 ```
 Using an object is more verbose, but may be more readable, especially if dealing with more than two variables.
 

@@ -8,22 +8,8 @@ Flow Enums are not a syntax for [union types](../types/unions.md). They are thei
 Large union types can cause performance issues, as Flow has to consider each member as a separate type. With Flow Enums, no matter how large your enum is,
 Flow will always exhibit good performance as it only has one type to keep track of.
 
-We use the following enum in the examples below:
-```js
-enum Status {
-  Active,
-  Paused,
-  Off,
-}
-```
-
 ### Accessing enum members {#toc-accessing-enum-members}
-Access members with the dot syntax:
-
-```js
-const status = Status.Active;
-```
-You can’t use computed access:
+Access members with the dot syntax. You can’t use computed access:
 
 ```js flow-check
 enum Status {
@@ -31,6 +17,11 @@ enum Status {
   Paused,
   Off,
 }
+
+// Access members with the dot syntax:
+const status = Status.Active;
+
+// You can’t use computed access:
 const x = "Active";
 Status[x]; // Error: computed access on enums is not allowed
 ```
@@ -38,10 +29,10 @@ Status[x]; // Error: computed access on enums is not allowed
 ### Using as a type annotation {#toc-using-as-a-type-annotation}
 The enum declaration defines both a value (from which you can access the enum members and methods) and a type of the same name, which is the type of the enum members.
 
-```js
-function calculateStatus(): Status {
-  ...
-}
+```js flow-check
+enum Status {Active, Paused, Off}
+
+declare function calculateStatus(): Status;
 
 const status: Status = calculateStatus();
 ```
@@ -92,35 +83,40 @@ Below, `TEnum` is the type of the enum (e.g. `Status`), and `TRepresentationType
 #### .cast {#toc-cast}
 Type: `cast(input: ?TRepresentationType): TEnum | void`
 
-The `cast` method allows you to safely convert a primitive value, like a `string`, to the enum type (if it is a valid value of the enum), and `undefined` otherwise.
+The `cast` method allows you to safely convert a primitive value, like a `string`, to the enum type (if it is a valid value of the enum), and `undefined` otherwise. You can set a default value in one line with the `??` operator:
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare function getData(): string;
 const data: string = getData();
+
 const maybeStatus: Status | void = Status.cast(data);
 if (maybeStatus != null) {
   const status: Status = maybeStatus;
   // do stuff with status
 }
-```
 
-Set a default value in one line with the `??` operator:
-```js
-const status: Status = Status.cast(data) ?? Status.Off;
+// Set a default value in one line with the `??` operator:
+const statusWithDefault: Status = Status.cast(data) ?? Status.Off;
 ```
 
 The type of the argument of `cast` depends on the type of enum. If it is a [string enum](./defining-enums.md#toc-string-enums), the type of the argument will be `string`.
 If it is a [number enum](./defining-enums.md#toc-number-enums), the type of the argument will be `number`, and so on.
 If you wish to cast an `unknown` value, first use a `typeof` refinement:
-```js
-const data: unknown = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const data: unknown;
+
 if (typeof data === 'string') {
   const maybeStatus: Status | void = Status.cast(data);
 }
 ```
 
 `cast` uses `this` (representing the object of enum members), so if you want to pass the function itself as a value, you should use an arrow function. For example:
-```js
-const strings: Array<string> = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const strings: Array<string>;
+
 // WRONG: const statuses: Array<?Status> = strings.map(Status.cast);
 const statuses: Array<?Status> = strings.map((input) => Status.cast(input)); // Correct
 ```
@@ -134,15 +130,20 @@ Type: `isValid(input: ?TRepresentationType): boolean`
 
 The `isValid` method is like `cast`, but simply returns a boolean: `true` if the input supplied is a valid enum value, and `false` if it is not.
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare function getData(): string;
+
 const data: string = getData();
 const isStatus: boolean = Status.isValid(data);
 ```
 
 `isValid` uses `this` (representing the object of enum members), so if you want to pass the function itself as a value, you should use an arrow function. For example:
 
-```js
-const strings: Array<string> = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const strings: Array<string>;
+
 // WRONG: const statusStrings = strings.filter(Status.isValid);
 const statusStrings = strings.filter((input) => Status.isValid(input)); // Correct
 ```
@@ -154,10 +155,11 @@ Type: `members(): Iterator<TEnum>`
 
 The `members` method returns an [iterator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_generators#iterators) (that is iterable) of all the enum members.
 
-```js
-const buttons = [];
-function getButtonForStatus(status: Status) { ...  }
+```js flow-check
+enum Status {Active, Paused, Off}
+declare function getButtonForStatus(status: Status): string;
 
+const buttons = [];
 for (const status of Status.members()) {
   buttons.push(getButtonForStatus(status));
 }
@@ -170,7 +172,10 @@ You can convert the iterable into an `Array` using: `Array.from(Status.members()
 You can make use of [`Array.from`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)'s second argument to map over the values at
 the same time you construct the array: e.g.
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare function getButtonForStatus(status: Status): string;
+
 const buttonArray = Array.from(
   Status.members(),
   status => getButtonForStatus(status),
@@ -182,13 +187,13 @@ Type: `getName(value: TEnum): string`
 
 The `getName` method maps enum values to the string name of that value's enum member. When using `number`/`boolean`/`symbol` enums,
 this can be useful for debugging and for generating internal CRUD UIs. For example:
-```js
+```js flow-check
 enum Status {
   Active = 1,
   Paused = 2,
   Off = 3,
 }
-const status: Status = ...;
+declare const status: Status;
 
 console.log(Status.getName(status));
 // Will print a string, either "Active", "Paused", or "Off" depending on the value.
@@ -202,10 +207,12 @@ When checking an enum value in a `switch` statement, we enforce that you check a
 This helps ensure you consider all possibilities when writing code that uses enums. It especially helps with refactoring when adding or removing members,
 by pointing out the different places you need to update. If you have [match](../match/index.md) enabled, use `match` expressions and statements instead of `switch` statements.
 
-```js
-const status: Status = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
 
-switch (status) { // Good, all members checked
+// All members checked:
+switch (status) {
   case Status.Active:
     break;
   case Status.Paused:
@@ -213,20 +220,16 @@ switch (status) { // Good, all members checked
   case Status.Off:
     break;
 }
-```
 
-You can use `default` to match all members not checked so far:
-```js
+// You can use `default` to match all members not checked so far:
 switch (status) {
   case Status.Active:
     break;
   default: // When `Status.Paused` or `Status.Off`
     break;
 }
-```
 
-You can check multiple enum members in one switch case:
-```js
+// You can check multiple enum members in one switch case:
 switch (status) {
   case Status.Active:
   case Status.Paused:
@@ -306,42 +309,50 @@ switch (status) {
 Except if you are switching over an enum with [unknown members](./defining-enums.md#toc-flow-enums-with-unknown-members).
 
 If you nest exhaustively checked switches inside exhaustively checked switches, and are returning from each branch, you must add a `break;` after the nested switch:
-```js
-switch (status) {
-  case Status.Active:
-    return 1;
-  case Status.Paused:
-    return 2;
-  case Status.Off:
-    switch (otherStatus) {
-      case Status.Active:
-        return 1;
-      case Status.Paused:
-        return 2;
-      case Status.Off:
-        return 3;
-    }
-    break;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+declare const otherStatus: Status;
+
+function getCode(): number {
+  switch (status) {
+    case Status.Active:
+      return 1;
+    case Status.Paused:
+      return 2;
+    case Status.Off:
+      switch (otherStatus) {
+        case Status.Active:
+          return 1;
+        case Status.Paused:
+          return 2;
+        case Status.Off:
+          return 3;
+      }
+      break;
+  }
 }
 ```
 
 Remember, you can add blocks to your switch cases. They are useful if you want to use local variables:
 
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+declare function f(): number;
+declare function g(): number;
+
 switch (status) {
   case Status.Active: {
     const x = f();
-    ...
     break;
   }
   case Status.Paused: {
     const x = g();
-    ...
     break;
   }
   case Status.Off: {
-    const y = ...;
-    ...
+    const y = 3;
     break;
   }
 }
@@ -351,28 +362,26 @@ If you didn't add blocks in this example, the two declarations of `const x` woul
 Enums are not checked exhaustively in `if` statements, or other contexts other than `switch` statements and `match` expressions/statements.
 
 ### Exhaustively checking enums with a `match`
-All values are exhaustively checked in a [match](../match/index.md), including Flow Enums:
+All values are exhaustively checked in a [match](../match/index.md), including Flow Enums. You can use a [wildcard](../match/patterns.md#wildcard-patterns) `_` to match all members not checked so far, and check [multiple](../match/patterns.md#or-patterns) enum members in one `match` case using an "or" pattern:
 
-```js
-const status: Status = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
 
-match (status) { // Good, all members checked
+// All members checked:
+match (status) {
   Status.Active => {}
   Status.Paused => {}
   Status.Off => {}
 }
-```
 
-You can use a [wildcard](../match/patterns.md#wildcard-patterns) `_` to match all members not checked so far:
-```js
+// Using a wildcard `_` to match all members not checked so far:
 match (status) {
   Status.Active => {}
   _ => {} // When `Status.Paused` or `Status.Off`
 }
-```
 
-You can check [multiple](../match/patterns.md#or-patterns) enum members in one `match` case:
-```js
+// Checking multiple enum members in one `match` case:
 match (status) {
   Status.Active | Status.Paused => {}
   Status.Off => {}
@@ -397,7 +406,7 @@ match (status) { // Error: you haven't checked 'Status.Off' in the match
 ### Exhaustive checking with unknown members {#toc-exhaustive-checking-with-unknown-members}
 If your enum has [unknown members](./defining-enums.md#toc-flow-enums-with-unknown-members) (specified with the `...`), e.g.
 
-```js
+```js flow-check
 enum Status {
   Active,
   Paused,
@@ -408,7 +417,15 @@ enum Status {
 
 Then a `default` is always required when switching over the enum, and a wildcard `_` is always required when using a [`match`](../match/index.md). The `default`/`_` checks for "unknown" members you haven't explicitly listed.
 
-```js
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+  ...
+}
+declare const status: Status;
+
 switch (status) {
   case Status.Active:
     break;
@@ -502,7 +519,10 @@ There are a variety of reasons you may want to map an enum value to another valu
 With previous patterns, it was common to use object literals for this purpose, however with Flow Enums we prefer functions which contain a switch, or better yet [match](../match/index.md) expressions if enabled, as we can exhaustively check these.
 
 Instead of:
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: Status;
+
 const STATUS_ICON: {[Status]: string} = {
   [Status.Active]: 'green-checkmark',
   [Status.Paused]: 'grey-pause',
@@ -552,7 +572,8 @@ const icon = match(status) {
 In the future if you add or remove an enum member, Flow will tell you to update the `switch` or `match` as well so it's always accurate.
 
 If you actually want a dictionary which is not exhaustive, you can use a [`Map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map):
-```js
+```js flow-check
+enum Status {Active, Paused, Off}
 const counts = new Map<Status, number>([
   [Status.Active, 2],
   [Status.Off, 5],
@@ -566,8 +587,9 @@ You can use enum members as computed keys in object literals if you type the obj
 ### Enums in a union {#toc-enums-in-a-union}
 If your enum value is in a union (e.g. `?Status`), first refine to only the enum type:
 
-```js
-const status: ?Status = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const status: ?Status;
 
 if (status != null) {
   status as Status; // 'status' is refined to 'Status' at this point
@@ -580,8 +602,9 @@ if (status != null) {
 ```
 If you want to refine *to* the enum value, you can use `typeof` with the representation type, for example:
 
-```js
-const val: Status | number = ...;
+```js flow-check
+enum Status {Active, Paused, Off}
+declare const val: Status | number;
 
 // 'Status' is a string enum
 if (typeof val === 'string') {
@@ -698,19 +721,6 @@ Status as Enum<EnumValue<string>>; // OK
 With the `Enum<>` type you can use all the Flow Enum [methods](#toc-methods) like `.cast` and `.members`.
 This lets you craft code that generically handles Flow Enums, for example creating a full React selector component from only a Flow Enum:
 
-##### Usage
-
-```js
-enum Status {
-  Active,
-  Paused,
-  Off,
-}
-<Selector items={Status} callback={doStuff} />
-```
-
-##### Definition
-
 ```js flow-check
 import * as React from 'react';
 import {useCallback, useMemo, useState} from 'react';
@@ -750,6 +760,16 @@ component Selector<
     )}
   </ul>;
 }
+
+// Usage:
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+declare function doStuff(value: Status): void;
+
+<Selector items={Status} callback={doStuff} />;
 ```
 
 ### When to not use enums {#toc-when-to-not-use-enums}

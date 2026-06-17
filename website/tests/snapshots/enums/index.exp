@@ -8,6 +8,9 @@ No errors!
 No errors!
 
 === block 4 ===
+No errors!
+
+=== block 5 ===
 Error --------------------------------------------------------------------------------- -:9:9
 
 Incomplete exhaustive check: the member `Off` of enum `Status` [1] has not been considered in check of `status`.
@@ -25,11 +28,11 @@ References:
 
 Found 1 error
 
-=== block 5 ===
-No errors!
-
 === block 6 ===
 No errors!
 
 === block 7 ===
+No errors!
+
+=== block 8 ===
 No errors!

@@ -57,33 +57,33 @@ Values must be unique, literals, and all of the same type. Check out the [full d
 
 
 #### [Using enums](./using-enums.md) {#toc-using-enums-using-enums}
-To access an enum member, use dot access:
+Access enum members with dot access, use the enum name as a type annotation, and cast between an enum and its representation type:
 
-```js
-Status.Active
-```
-To use the enum type as an annotation, use the enum name:
+```js flow-check
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+declare const someString: string;
 
-```js
+// Access an enum member with dot access:
+Status.Active;
+
+// Use the enum name as a type annotation:
 const status: Status = Status.Active;
-```
-Cast from the representation type (in this case, a `string`) to the enum type:
 
-```js
-const status: Status | void = Status.cast(someString);
-```
-You can easily provide a default value with the `??` operator:
+// Cast from the representation type (in this case, a `string`) to the enum type:
+const maybeStatus: Status | void = Status.cast(someString);
 
-```js
-const status: Status = Status.cast(someString) ?? Status.Off;
-```
-Read more about the  [other methods enums provide](./using-enums.md#toc-methods), including `isValid`, `members`, and `getName`.
+// Provide a default value with the `??` operator:
+const statusWithDefault: Status = Status.cast(someString) ?? Status.Off;
 
-Cast an enum type to its representation type (must be done explicitly):
-
-```js
-status as string
+// Cast an enum type to its representation type (must be done explicitly):
+status as string;
 ```
+Read more about the [other methods enums provide](./using-enums.md#toc-methods), including `isValid`, `members`, and `getName`.
+
 Checks of enums in `switch` statements are exhaustive - we ensure you check all members:
 ```js flow-check
 enum Status {

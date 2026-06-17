@@ -1,4 +1,13 @@
 === block 1 ===
+No errors!
+
+=== block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
 Error --------------------------------------------------------------------------------- -:4:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'details'` to match
@@ -16,7 +25,7 @@ References:
 
 Found 1 error
 
-=== block 2 ===
+=== block 5 ===
 Error --------------------------------------------------------------------------------- -:4:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'ok', value: _}`
@@ -34,7 +43,7 @@ References:
 
 Found 1 error
 
-=== block 3 ===
+=== block 6 ===
 Error -------------------------------------------------------------------------------- -:6:10
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['end', 'below']` to
@@ -52,7 +61,7 @@ References:
 
 Found 1 error
 
-=== block 4 ===
+=== block 7 ===
 Error --------------------------------------------------------------------------------- -:8:3
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
