@@ -37,6 +37,10 @@ jobs:
       run: cargo test
     - name: Build Rust port binary
       working-directory: rust_port
+      env:
+        CARGO_PROFILE_RELEASE_STRIP: 'true'
+        CARGO_PROFILE_RELEASE_LTO: fat
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
@@ -70,6 +74,10 @@ jobs:
         workspaces: rust_port -> target
     - name: Build Rust port binary
       working-directory: rust_port
+      env:
+        CARGO_PROFILE_RELEASE_STRIP: 'true'
+        CARGO_PROFILE_RELEASE_LTO: fat
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
@@ -106,6 +114,10 @@ jobs:
         workspaces: rust_port -> target
     - name: Build Rust port binary
       working-directory: rust_port
+      env:
+        CARGO_PROFILE_RELEASE_STRIP: 'true'
+        CARGO_PROFILE_RELEASE_LTO: fat
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
@@ -139,6 +151,10 @@ jobs:
         workspaces: rust_port -> target
     - name: Build Rust port binary
       working-directory: rust_port
+      env:
+        CARGO_PROFILE_RELEASE_STRIP: 'true'
+        CARGO_PROFILE_RELEASE_LTO: fat
+        CARGO_PROFILE_RELEASE_CODEGEN_UNITS: '1'
       run: cargo build --release --bin flow_cli
     - name: Create artifacts
       run: |-
