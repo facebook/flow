@@ -209,7 +209,7 @@ function isString(x: unknown): x is string {
 
 ## Callable Objects
 
-Callable objects can be typed, for example:
+You can type functions with static properties as callable objects:
 
 ```js flow-check
 type CallableObj = {
@@ -227,11 +227,35 @@ add.bar = "hello world";
 add as CallableObj;
 ```
 
+Callable objects can also have multiple call signatures. A function assigned to this type must satisfy every signature:
+
+```js flow-check
+type Formatter = {
+  (value: string): string,
+  (value: number): string,
+  ...
+};
+
+const format: Formatter = (value: string | number): string => String(value);
+
+const badFormat: Formatter = (value: number): string => String(value); // Error!
+```
+
 In general, functions can have properties assigned to them if they are function declarations, or
 simple variable declarations of the form `const f = () => ...`. The properties must be assigned in
 the format `f.prop = <expr>;`, in the same statement list as the function definition (i.e. not conditionally).
 
 Note that the object representing the static properties assigned to the function is inexact.
+
+When you annotate a variable with a plain function type, Flow does not infer extra static properties:
+
+```js flow-check
+type Callback = () => void;
+
+const callback: Callback = () => {};
+
+callback.description = "runs later"; // Error!
+```
 
 ## Overloaded functions
 You can use intersection types to define [overloaded function types](./intersections.md#toc-intersection-of-function-types):

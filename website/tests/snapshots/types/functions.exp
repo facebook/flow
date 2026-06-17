@@ -124,10 +124,46 @@ No errors!
 No errors!
 
 === block 20 ===
-No errors!
+Error --------------------------------------------------------------------------- -:10:38
+
+Cannot assign function to `badFormat` because in the first parameter: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   -:10:38
+   10| const badFormat: Formatter = (value: number): string => String(value); // Error!
+                                            ^^^^^^ [1]
+
+References:
+   -:3:11
+    3|   (value: string): string,
+                 ^^^^^^ [2]
+
+
+Found 1 error
 
 === block 21 ===
-No errors!
+Error ---------------------------------------------------------------------------- -:6:10
+
+Cannot assign `"runs later"` to `callback.description` because property `description` is missing in statics of function
+type [1]. [prop-missing]
+
+   -:6:10
+   6| callback.description = "runs later"; // Error!
+               ^^^^^^^^^^^
+
+References:
+   -:4:17
+   4| const callback: Callback = () => {};
+                      ^^^^^^^^ [1]
+
+
+Found 1 error
 
 === block 22 ===
+No errors!
+
+=== block 23 ===
+No errors!
+
+=== block 24 ===
 No errors!
