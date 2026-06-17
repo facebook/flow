@@ -250,8 +250,6 @@ val node_resolver_dirnames : config -> string list
 
 val node_resolver_root_relative_dirnames : config -> (string option * string) list
 
-val opaque_type_new_bound_syntax : config -> bool
-
 val pattern_matching : config -> bool option
 
 val projects : config -> string Nel.t
@@ -316,11 +314,7 @@ val stylex_shorthand_prop : config -> string option
 
 val ts_syntax : config -> bool
 
-val deprecated_variance_sigils : config -> bool
-
 val deprecated_variance_sigils_excludes : config -> string list
-
-val deprecated_colon_extends : config -> string list
 
 val deprecated_colon_extends_excludes : config -> string list
 

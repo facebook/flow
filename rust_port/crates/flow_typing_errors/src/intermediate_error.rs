@@ -8931,16 +8931,6 @@ where
                     ObjectPropertyComputedGetSet => friendly::Message(vec![text(
                         "Computed getters and setters are not yet supported.",
                     )]),
-                    OpaqueTypeExtendsBound => friendly::Message(vec![
-                        text("Specifying opaque type upper bound using "),
-                        code("extends"),
-                        text(" keyword is not yet supported"),
-                    ]),
-                    OpaqueTypeSuperBound => friendly::Message(vec![
-                        text("Specifying opaque type lower bound using "),
-                        code("super"),
-                        text(" keyword is not yet supported"),
-                    ]),
                     PredicateFunction => friendly::Message(vec![text(
                         "Support for predicate functions is removed. `%checks` declaration is now ignored.",
                     )]),

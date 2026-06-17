@@ -169,7 +169,6 @@ pub mod opts {
         pub node_resolver_allow_root_relative: bool,
         pub node_resolver_dirnames: Vec<String>,
         pub node_resolver_root_relative_dirnames: Vec<(Option<String>, String)>,
-        pub opaque_type_new_bound_syntax: bool,
         pub pattern_matching: Option<bool>,
         pub projects: Vec<FlowSmolStr>,
         pub projects_overlap_mapping: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
@@ -341,7 +340,6 @@ pub mod opts {
             node_resolver_allow_root_relative: false,
             node_resolver_dirnames: vec!["node_modules".to_owned()],
             node_resolver_root_relative_dirnames: vec![(None, String::new())],
-            opaque_type_new_bound_syntax: false,
             pattern_matching: None,
             projects: vec![FlowSmolStr::new_inline("default")],
             projects_overlap_mapping: BTreeMap::new(),
@@ -2155,7 +2153,6 @@ pub mod opts {
             "experimental.multi_platform.ambient_supports_platform.project_overrides",
             "experimental.multi_platform.extension_group_mapping",
             "experimental.opaque_type_new_bound_syntax",
-            "experimental.pattern_matching",
             "experimental.projects",
             "experimental.projects.strict_boundary",
             "experimental.projects_path_mapping",
@@ -2163,9 +2160,7 @@ pub mod opts {
             "experimental.records.includes",
             "experimental.strict_es6_import_export",
             "experimental.ts_syntax",
-            "experimental.deprecated_variance_sigils",
             "experimental.deprecated_variance_sigils.excludes",
-            "experimental.deprecated_colon_extends",
             "experimental.deprecated_colon_extends.excludes",
             "experimental.tslib_syntax",
             "experimental.typescript_library_definition_support",
@@ -2457,14 +2452,6 @@ pub mod opts {
                         values, config,
                     ),
                 ),
-                "experimental.pattern_matching" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.pattern_matching = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
                 "experimental.projects" => Some(projects_parser(values, config)),
                 "experimental.projects_path_mapping" => {
                     Some(projects_path_mapping_parser(values, config))
@@ -2504,11 +2491,9 @@ pub mod opts {
                     Some(strict_es6_import_export_parser(values, config))
                 }
                 "experimental.assert_operator" => Some(assert_operator_parser(values, config)),
-                "experimental.opaque_type_new_bound_syntax" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.opaque_type_new_bound_syntax = v;
-                        Ok(())
-                    },
+                "experimental.opaque_type_new_bound_syntax" => Some(enum_parser(
+                    &[("true", ())],
+                    |_opts, ()| Ok(()),
                     values,
                     config,
                 )),
@@ -2517,12 +2502,6 @@ pub mod opts {
                         opts.ts_syntax = Some(v);
                         Ok(())
                     },
-                    values,
-                    config,
-                )),
-                "experimental.deprecated_variance_sigils" => Some(enum_parser(
-                    &[("true", ())],
-                    |_opts, ()| Ok(()),
                     values,
                     config,
                 )),
@@ -2554,9 +2533,6 @@ pub mod opts {
                     values,
                     config,
                 )),
-                "experimental.deprecated_colon_extends" => {
-                    Some(parse_string(|_opts, _v| Ok(()), None, true, values, config))
-                }
                 "experimental.deprecated_colon_extends.excludes" => Some(parse_string(
                     |opts, v| {
                         opts.deprecated_colon_extends_excludes.push(v);

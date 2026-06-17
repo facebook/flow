@@ -15,4 +15,3 @@
 [options]
 emoji=true
 component_syntax=true
-experimental.pattern_matching=true

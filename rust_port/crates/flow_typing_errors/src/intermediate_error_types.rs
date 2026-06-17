@@ -231,8 +231,6 @@ pub enum UnsupportedSyntax {
     DestructuringObjectPropertyInvalidLiteral,
     DestructuringExpressionPattern,
     JSXTypeArgs,
-    OpaqueTypeExtendsBound,
-    OpaqueTypeSuperBound,
     PredicateFunction,
     PredicateDeclarationAnonymousParameters,
     MatchExpression,

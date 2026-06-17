@@ -115,7 +115,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   no_implicit_override: bool;
   no_unchecked_indexed_access: bool;
-  opaque_type_new_bound_syntax: bool;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -318,8 +317,6 @@ val is_utility_type_deprecated : t -> string -> bool
 val assert_operator_enabled : t -> bool
 
 val assert_operator_specialized : t -> bool
-
-val opaque_type_new_bound_syntax : t -> bool
 
 val type_expansion_recursion_limit : t -> int
 

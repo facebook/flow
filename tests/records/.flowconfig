@@ -2,4 +2,3 @@
 all=true
 no_flowlib=false
 experimental.records=true
-experimental.pattern_matching=true

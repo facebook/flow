@@ -183,7 +183,6 @@ pub struct FrozenMetadata {
     pub missing_module_generators: Arc<[(Regex, String)]>,
     pub no_implicit_override: bool,
     pub no_unchecked_indexed_access: bool,
-    pub opaque_type_new_bound_syntax: bool,
     pub projects_options: Arc<ProjectsOptions>,
     pub react_custom_jsx_typing: bool,
     pub react_ref_as_prop: ReactRefAsProp,
@@ -245,7 +244,6 @@ impl Default for FrozenMetadata {
             missing_module_generators: Arc::from([]),
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
-            opaque_type_new_bound_syntax: false,
             projects_options: Arc::new(ProjectsOptions::default()),
             react_custom_jsx_typing: false,
             react_ref_as_prop: ReactRefAsProp::Legacy,
@@ -643,7 +641,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             missing_module_generators: options.missing_module_generators.dupe(),
             no_implicit_override: options.no_implicit_override,
             no_unchecked_indexed_access: options.no_unchecked_indexed_access,
-            opaque_type_new_bound_syntax: options.opaque_type_new_bound_syntax,
             projects_options: options.projects_options.dupe(),
             react_custom_jsx_typing: options.react_custom_jsx_typing,
             react_ref_as_prop: options.react_ref_as_prop,
@@ -1411,10 +1408,6 @@ impl<'cx> Context<'cx> {
 
     pub fn assert_operator_specialized(&self) -> bool {
         self.0.metadata.frozen.assert_operator.specialized()
-    }
-
-    pub fn opaque_type_new_bound_syntax(&self) -> bool {
-        self.0.metadata.frozen.opaque_type_new_bound_syntax
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {

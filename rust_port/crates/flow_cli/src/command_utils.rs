@@ -2113,7 +2113,6 @@ pub(super) fn make_options(
                 node_resolver_allow_root_relative,
                 node_resolver_dirnames,
                 node_resolver_root_relative_dirnames,
-                opaque_type_new_bound_syntax,
                 pattern_matching,
                 projects,
                 projects_overlap_mapping,
@@ -2752,7 +2751,6 @@ pub(super) fn make_options(
                 })
                 .collect::<Vec<_>>(),
         ),
-        opaque_type_new_bound_syntax,
         profile: profile_override,
         projects_options,
         quiet: quiet_override,

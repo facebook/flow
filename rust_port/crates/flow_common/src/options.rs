@@ -213,7 +213,6 @@ pub struct Options {
     pub node_package_export_conditions: Arc<[String]>,
     pub node_resolver_allow_root_relative: bool,
     pub node_resolver_root_relative_dirnames: Arc<[(Option<String>, String)]>,
-    pub opaque_type_new_bound_syntax: bool,
     pub profile: bool,
     pub projects_options: Arc<ProjectsOptions>,
     pub quiet: bool,

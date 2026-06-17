@@ -1666,7 +1666,6 @@ let make_options
             dirname
           )
       );
-    opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
     opt_records_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token_as_absolute ~root)
@@ -1720,19 +1719,11 @@ let make_options
     opt_stylex_shorthand_prop = FlowConfig.stylex_shorthand_prop flowconfig;
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
-    opt_deprecated_variance_sigils = FlowConfig.deprecated_variance_sigils flowconfig;
     opt_deprecated_variance_sigils_excludes =
       Base.List.map
         ~f:(fun pattern ->
           pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.deprecated_variance_sigils_excludes flowconfig);
-    opt_deprecated_colon_extends =
-      Base.List.map
-        ~f:(fun s ->
-          s
-          |> Files.expand_project_root_token_as_absolute ~root
-          |> Files.expand_builtin_root_token ~flowlib_dir)
-        (FlowConfig.deprecated_colon_extends flowconfig);
     opt_deprecated_colon_extends_excludes =
       Base.List.map
         ~f:(fun pattern ->

@@ -136,7 +136,6 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: (string option * string) list;
-    opaque_type_new_bound_syntax: bool;
     pattern_matching: bool option;
     projects: string list;
     projects_overlap_mapping: SSet.t SMap.t;
@@ -167,9 +166,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool option;
-    deprecated_variance_sigils: bool;
     deprecated_variance_sigils_excludes: string list;
-    deprecated_colon_extends: string list;
     deprecated_colon_extends_excludes: string list;
     tslib_syntax: bool option;
     typescript_library_definition_support: bool;
@@ -319,7 +316,6 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [(None, "")];
-      opaque_type_new_bound_syntax = false;
       pattern_matching = None;
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
@@ -356,9 +352,7 @@ module Opts = struct
       strict_es6_import_export = false;
       supported_operating_systems = [];
       ts_syntax = None;
-      deprecated_variance_sigils = false;
       deprecated_variance_sigils_excludes = [];
-      deprecated_colon_extends = [];
       deprecated_colon_extends_excludes = [];
       tslib_syntax = None;
       typescript_library_definition_support = false;
@@ -1178,12 +1172,7 @@ module Opts = struct
         multi_platform_extension_group_mapping_parser
       );
       ("no_implicit_override", boolean (fun opts v -> Ok { opts with no_implicit_override = v }));
-      ( "experimental.opaque_type_new_bound_syntax",
-        boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
-      );
-      ( "experimental.pattern_matching",
-        boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
-      );
+      ("experimental.opaque_type_new_bound_syntax", enum [("true", ())] (fun opts () -> Ok opts));
       ("experimental.projects", projects_parser);
       ( "experimental.projects.strict_boundary",
         boolean (fun opts v -> Ok { opts with projects_strict_boundary = v })
@@ -1198,7 +1187,6 @@ module Opts = struct
       );
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = Some v }));
-      ("experimental.deprecated_variance_sigils", enum [("true", ())] (fun opts () -> Ok opts));
       ( "experimental.deprecated_variance_sigils.excludes",
         string
           ~init:(fun opts -> { opts with deprecated_variance_sigils_excludes = [] })
@@ -1210,7 +1198,6 @@ module Opts = struct
                 deprecated_variance_sigils_excludes = v :: opts.deprecated_variance_sigils_excludes;
               })
       );
-      ("experimental.deprecated_colon_extends", string ~multiple:true (fun opts _v -> Ok opts));
       ( "experimental.deprecated_colon_extends.excludes",
         string
           ~init:(fun opts -> { opts with deprecated_colon_extends_excludes = [] })
@@ -2173,8 +2160,6 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
-let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
-
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
@@ -2240,11 +2225,7 @@ let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
 let ts_syntax c = Base.Option.value c.options.Opts.ts_syntax ~default:false
 
-let deprecated_variance_sigils c = c.options.Opts.deprecated_variance_sigils
-
 let deprecated_variance_sigils_excludes c = c.options.Opts.deprecated_variance_sigils_excludes
-
-let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
 
 let deprecated_colon_extends_excludes c = c.options.Opts.deprecated_colon_extends_excludes
 

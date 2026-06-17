@@ -1734,26 +1734,6 @@ pub fn opaque_type<'a>(
                 Option<Type>,
                 Option<ast::types::Type<ALoc, (ALoc, Type)>>,
             ) = type_annotation::convert_opt(cx, &tparams_map, otype.impl_type.as_ref())?;
-            if !cx.opaque_type_new_bound_syntax() {
-                if let Some(lb) = &otype.lower_bound {
-                    flow_js::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                            lb.loc().dupe(),
-                            UnsupportedSyntax::OpaqueTypeSuperBound,
-                        ))),
-                    );
-                }
-                if let Some(ub) = &otype.upper_bound {
-                    flow_js::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                            ub.loc().dupe(),
-                            UnsupportedSyntax::OpaqueTypeExtendsBound,
-                        ))),
-                    );
-                }
-            }
             let (lower_bound_t, lower_bound_ast): (
                 Option<Type>,
                 Option<ast::types::Type<ALoc, (ALoc, Type)>>,

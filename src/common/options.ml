@@ -164,7 +164,6 @@ type t = {
   opt_node_package_export_conditions: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
-  opt_opaque_type_new_bound_syntax: bool;
   opt_profile: bool;
   opt_records_includes: string list;
   opt_projects_options: Flow_projects.options;
@@ -197,9 +196,7 @@ type t = {
   opt_stylex_shorthand_prop: string option;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
-  opt_deprecated_variance_sigils: bool;
   opt_deprecated_variance_sigils_excludes: Str.regexp list;
-  opt_deprecated_colon_extends: string list;
   opt_deprecated_colon_extends_excludes: Str.regexp list;
   opt_tslib_syntax: bool;
   opt_typescript_library_definition_support: bool;
@@ -368,8 +365,6 @@ let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_r
 
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
-let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
-
 let projects_options opts = opts.opt_projects_options
 
 let records_includes opts = opts.opt_records_includes
@@ -439,11 +434,7 @@ let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
 
-let deprecated_variance_sigils opts = opts.opt_deprecated_variance_sigils
-
 let deprecated_variance_sigils_excludes opts = opts.opt_deprecated_variance_sigils_excludes
-
-let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 
 let deprecated_colon_extends_excludes opts = opts.opt_deprecated_colon_extends_excludes
 

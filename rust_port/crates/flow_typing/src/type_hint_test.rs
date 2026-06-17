@@ -134,7 +134,6 @@ mod tests {
         frozen.hook_compatibility = true;
         frozen.component_syntax = true;
         frozen.enable_enums = true;
-        frozen.opaque_type_new_bound_syntax = true;
         frozen.strip_root = true;
         frozen.recursion_limit = 10000;
         frozen.type_expansion_recursion_limit = 3;

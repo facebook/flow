@@ -9,7 +9,6 @@ jsx-intrinsics-mini.js
 
 [options]
 all=true
-experimental.pattern_matching=true
 no_flowlib=false
 
 [strict]

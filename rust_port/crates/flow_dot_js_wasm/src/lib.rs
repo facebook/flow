@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![feature(box_patterns)]
 #![feature(never_type)]
 
 use std::alloc::Layout;
@@ -182,7 +181,6 @@ fn config_options(config: Option<&Value>) -> Options {
         hook_compatibility: true,
         lint_severities,
         max_header_tokens: 10,
-        opaque_type_new_bound_syntax: true,
         react_ref_as_prop: ReactRefAsProp::FullSupport,
         react_rules: Arc::from([
             ReactRule::ValidateRefAccessDuringRender,
