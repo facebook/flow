@@ -149,3 +149,4 @@ Then enable the rule in your ESLint config:
 - [Mapped Types](./mapped-types.md) — transforming object types, often combined with indexed access
 - [Conditional Types](./conditional.md) — type-level conditionals, frequently used alongside indexed access
 - [Utility Types](./utilities.md) — `keyof`, `Pick`, and other built-in type helpers
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating the legacy `$PropertyType` / `$ElementType` utilities to `T[K]` indexed access

@@ -203,3 +203,4 @@ To use mapped types, you need to upgrade your infrastructure so that it supports
 - [Conditional Types](./conditional.md) — another advanced type feature for type-level logic
 - [Generics](./generics.md) — mapped types rely on generic type parameters
 - [Utility Types](./utilities.md) — built-in types like `Partial`, `Readonly`, and `Pick` (which mapped types generalize)
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating the legacy `$ObjMap` / `$TupleMap` utilities that mapped types replace

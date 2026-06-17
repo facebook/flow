@@ -369,3 +369,4 @@ function func2(value: Contravariant) {
 - [Objects](./objects.md) — structurally typed object types, which cannot describe class instances
 - [Nominal & Structural Typing](../lang/nominal-structural.md) — the difference between name-based and shape-based typing
 - [Variance](../lang/variance.md) — covariant (read-only) and contravariant (write-only) properties
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating the legacy `+` / `-` property variance sigils to the `readonly` / `writeonly` keywords

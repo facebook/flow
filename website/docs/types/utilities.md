@@ -770,3 +770,4 @@ const a: ExactUser = user;
 - [Conditional Types](./conditional.md) — type-level conditionals for more complex transformations
 - [Generics](./generics.md) — most utility types are generic; understanding generics helps use them effectively
 - [Indexed Access Types](./indexed-access.md) — extracting property types from objects and tuples
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating legacy `$`-prefixed utilities such as `$ObjMap`, `$PropertyType`, and `$NonMaybeType` to their modern equivalents
