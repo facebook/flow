@@ -5603,7 +5603,7 @@ pub fn rec_sub_t<'cx>(
                     | DefTInner::UniqueSymbolT(_)
             ) && (matches!(
                 ud.deref(),
-                DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })
+                DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
             ) || matches!(ud.deref(), DefTInner::ObjT(_)))
                 && flow_common::files::has_ts_ext(cx.file()) =>
         {

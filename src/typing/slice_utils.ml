@@ -46,7 +46,7 @@ let mk_object_type
               inst_dict;
               (* When an instance goes through an ObjKit operations, it should lose its nominal identity. *)
               class_id = ALoc.id_none;
-              inst_kind = InterfaceKind { inline = true };
+              inst_kind = InterfaceKind { inline = true; reject_primitives = false };
             }
           in
           let reason = replace_desc_reason RObjectType reason in

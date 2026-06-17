@@ -5515,6 +5515,12 @@ pub enum InstanceKind {
     ClassKind,
     InterfaceKind {
         inline: bool,
+        // When true, primitives flowing into this interface are rejected rather
+        // than promoted to their boxed wrappers (the .ts-only consumer-keyed
+        // promotion in subtyping_kit.rs). Set for the `object` builtin, which
+        // models TS's `object` type and must exclude every primitive value
+        // regardless of the consuming file.
+        reject_primitives: bool,
     },
     RecordKind {
         defaulted_props: FlowOrdSet<FlowSmolStr>,

@@ -1472,7 +1472,15 @@ module rec TypeTerm : sig
 
   and instance_kind =
     | ClassKind
-    | InterfaceKind of { inline: bool }
+    | InterfaceKind of {
+        inline: bool;
+        (* When true, primitives flowing into this interface are rejected rather
+           than promoted to their boxed wrappers (the .ts-only consumer-keyed
+           promotion in subtyping_kit.ml). Set for the `object` builtin, which
+           models TS's `object` type and must exclude every primitive value
+           regardless of the consuming file. *)
+        reject_primitives: bool;
+      }
     | RecordKind of { defaulted_props: SSet.t }
 
   and instance_t = {

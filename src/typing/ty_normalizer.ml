@@ -1175,9 +1175,9 @@ module Make (I : INPUT) : S = struct
       let { T.inst_kind; own_props; inst_call_t; inst_construct_t; inst_dict; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc) with
-      | (T.InterfaceKind { inline = true }, _) ->
+      | (T.InterfaceKind { inline = true; _ }, _) ->
         inline_interface ~env super own_props inst_call_t inst_construct_t inst_dict
-      | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
+      | (T.InterfaceKind { inline = false; _ }, _) -> to_generic ~env Ty.InterfaceKind r inst
       | (T.ClassKind, _) -> to_generic ~env Ty.ClassKind r inst
       | (T.RecordKind _, _) -> to_generic ~env Ty.RecordKind r inst
 
@@ -1352,7 +1352,7 @@ module Make (I : INPUT) : S = struct
                   DefT
                     ( _,
                       InstanceT
-                        { inst = { inst_kind = InterfaceKind { inline = true }; _ } as inst; _ }
+                        { inst = { inst_kind = InterfaceKind { inline = true; _ }; _ } as inst; _ }
                     )
                 )
             )
@@ -1912,10 +1912,10 @@ module Make (I : INPUT) : S = struct
         let { T.inst_kind; own_props; inst_call_t; inst_construct_t; inst_dict; _ } = inst in
         let desc = desc_of_reason ~unwrap:false r in
         match (inst_kind, desc) with
-        | (T.InterfaceKind { inline = false }, _) ->
+        | (T.InterfaceKind { inline = false; _ }, _) ->
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.InterfaceDecl (symbol, ps))
-        | (T.InterfaceKind { inline = true }, _) ->
+        | (T.InterfaceKind { inline = true; _ }, _) ->
           let%map ty =
             TypeConverter.convert_inline_interface
               ~env

@@ -3016,7 +3016,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ( BoolGeneralT | SingletonBoolT _ | NumGeneralT _ | SingletonNumT _ | StrGeneralT _
             | SingletonStrT _ | BigIntGeneralT _ | SingletonBigIntT _ | SymbolT | UniqueSymbolT _ )
           ),
-        DefT (_, (InstanceT { inst = { inst_kind = InterfaceKind _; _ }; _ } | ObjT _))
+        DefT
+          ( _,
+            ( InstanceT
+                { inst = { inst_kind = InterfaceKind { reject_primitives = false; _ }; _ }; _ }
+            | ObjT _ )
+          )
       )
       when Files.has_ts_ext (Context.file cx) ->
       let builtin_name =

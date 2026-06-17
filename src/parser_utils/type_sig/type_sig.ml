@@ -505,6 +505,9 @@ type ('loc, 'a) annot =
   | String of 'loc
   | Boolean of 'loc
   | Exists of 'loc
+  (* TS-only `object` builtin: a structurally-empty interface that rejects
+     primitives. See type_annotation.ml / subtyping_kit.ml. *)
+  | ObjectBuiltin of 'loc
   | Optional of 'a
   | Maybe of 'loc * 'a
   | Union of {

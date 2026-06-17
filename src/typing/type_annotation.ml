@@ -837,10 +837,40 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               reconstruct_ast t None
           )
         | _ when Type_env.local_scope_entry_exists cx name_loc -> local_generic_type ()
-        (* Match the Flow libdef's TS compatibility alias: `type object = interface {}`. *)
-        | "object" ->
+        (* TS-only: `object` is a TypeScript primitive denoting any non-primitive
+           value. Flow has no exact equivalent, but `.d.ts` library definitions
+           reference it pervasively. We accept the name only in .ts/.d.ts files
+           and model it as a structurally-empty interface. Defining it here
+           (rather than in core.js) scopes it to TS files -- the only place it is
+           meaningful -- and keeps it available when consuming TS lib defs that
+           do not load core.js. *)
+        | "object" when Files.has_ts_ext (Context.file cx) ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let ((_, t), _) = convert env (empty_interface_annot loc) in
+              (* Tag the empty interface as the `object` builtin so it rejects
+                 primitives (a normal empty interface promotes them to wrappers
+                 in .ts files; see subtyping_kit.ml). *)
+              let t =
+                match t with
+                | DefT
+                    ( r,
+                      InstanceT
+                        ({ inst = { inst_kind = InterfaceKind k; _ } as inst; _ } as instance_t)
+                    ) ->
+                  DefT
+                    ( r,
+                      InstanceT
+                        {
+                          instance_t with
+                          inst =
+                            {
+                              inst with
+                              inst_kind = InterfaceKind { k with reject_primitives = true };
+                            };
+                        }
+                    )
+                | _ -> t
+              in
               reconstruct_ast t None
           )
         (* NoInfer intrinsic that makes every GenericT inside it no_infer *)
@@ -4209,7 +4239,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let (_t_inner, t, (own_props, proto_props)) =
       Class_type_sig.classtype
         ~check_polarity:true
-        ~inst_kind:(InterfaceKind { inline = false })
+        ~inst_kind:(InterfaceKind { inline = false; reject_primitives = false })
         cx
         iface_sig
     in

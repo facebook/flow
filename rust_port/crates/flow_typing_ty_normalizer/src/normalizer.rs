@@ -2013,7 +2013,7 @@ mod type_converter {
     ) -> Result<ALocTy, Error> {
         use flow_typing_type::type_::InstanceKind;
         match &inst.inst_kind {
-            InstanceKind::InterfaceKind { inline: true } => inline_interface::<I>(
+            InstanceKind::InterfaceKind { inline: true, .. } => inline_interface::<I>(
                 env,
                 state,
                 super_,
@@ -2022,7 +2022,7 @@ mod type_converter {
                 inst.inst_construct_t,
                 &inst.inst_dict,
             ),
-            InstanceKind::InterfaceKind { inline: false } => {
+            InstanceKind::InterfaceKind { inline: false, .. } => {
                 to_generic::<I>(env, state, ty::GenKind::InterfaceKind, reason, inst)
             }
             InstanceKind::ClassKind => {
@@ -2383,7 +2383,7 @@ mod type_converter {
                             DefTInner::InstanceT(instance_t) => {
                                 let r = if matches!(
                                     instance_t.inst.inst_kind,
-                                    InstanceKind::InterfaceKind { inline: true }
+                                    InstanceKind::InterfaceKind { inline: true, .. }
                                 ) {
                                     r
                                 } else {
@@ -3612,14 +3612,14 @@ pub mod element_converter {
             let inst_dict = &inst.inst_dict;
 
             match inst_kind {
-                InstanceKind::InterfaceKind { inline: false } => {
+                InstanceKind::InterfaceKind { inline: false, .. } => {
                     let symbol = reason_utils::instance_symbol(env, r)?;
                     Ok(ty::Elt::Decl(ty::Decl::InterfaceDecl(Box::new((
                         symbol,
                         ps.map(Into::into),
                     )))))
                 }
-                InstanceKind::InterfaceKind { inline: true } => {
+                InstanceKind::InterfaceKind { inline: true, .. } => {
                     let ty = type_converter::convert_inline_interface::<I>(
                         env,
                         state,

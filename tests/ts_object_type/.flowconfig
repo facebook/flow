@@ -1,0 +1,6 @@
+[options]
+all=true
+no_flowlib=false
+experimental.typescript_library_definition_support=true
+module.file_ext=.ts
+module.file_ext=.js

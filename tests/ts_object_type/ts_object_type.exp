@@ -1,0 +1,171 @@
+Error ---------------------------------------------------------------------------------------------------- arity.ts:3:12
+
+Cannot apply type because it is not a polymorphic type. [nonpolymorphic-type-app]
+
+   3| type Bad = object<number>; // ERROR -- not a polymorphic type
+                 ^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:10:13
+
+Cannot call `takesObject` with `1` bound to `x` because number literal `1` [1], a primitive, cannot be used as a subtype
+of interface type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
+
+   consumer.js:10:13
+   10| takesObject(1); // ERROR -- number is not an object
+                   ^ [1]
+
+References:
+   object.ts:40:40
+   40| export declare function takesObject(x: object): void;
+                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:11:13
+
+Cannot call `takesObject` with `"x"` bound to `x` because string literal `x` [1], a primitive, cannot be used as a
+subtype of interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as
+a subtype of an interface. [incompatible-type]
+
+   consumer.js:11:13
+   11| takesObject("x"); // ERROR -- string is not an object
+                   ^^^ [1]
+
+References:
+   object.ts:40:40
+   40| export declare function takesObject(x: object): void;
+                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ js_unrecognized.js:5:10
+
+Cannot resolve name `object`. [cannot-resolve-name]
+
+   5| type T = object; // ERROR -- cannot-resolve-name
+               ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:24:20
+
+Cannot assign `null` to `p1` because null [1] is incompatible with interface type [2]. [incompatible-type]
+
+   object.ts:24:20
+   24| const p1: object = null; // ERROR -- null is not an object
+                          ^^^^ [1]
+
+References:
+   object.ts:24:11
+   24| const p1: object = null; // ERROR -- null is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:25:20
+
+Cannot assign `undefined` to `p2` because undefined [1] is incompatible with interface type [2]. [incompatible-type]
+
+   object.ts:25:20
+   25| const p2: object = undefined; // ERROR -- void is not an object
+                          ^^^^^^^^^ [1]
+
+References:
+   object.ts:25:11
+   25| const p2: object = undefined; // ERROR -- void is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:26:20
+
+Cannot assign `1` to `p3` because number literal `1` [1], a primitive, cannot be used as a subtype of interface
+type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an
+interface. [incompatible-type]
+
+   object.ts:26:20
+   26| const p3: object = 1; // ERROR -- number is not an object
+                          ^ [1]
+
+References:
+   object.ts:26:11
+   26| const p3: object = 1; // ERROR -- number is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:27:20
+
+Cannot assign `"x"` to `p4` because string literal `x` [1], a primitive, cannot be used as a subtype of interface
+type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an
+interface. [incompatible-type]
+
+   object.ts:27:20
+   27| const p4: object = "x"; // ERROR -- string is not an object
+                          ^^^ [1]
+
+References:
+   object.ts:27:11
+   27| const p4: object = "x"; // ERROR -- string is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:28:20
+
+Cannot assign `true` to `p5` because boolean literal `true` [1], a primitive, cannot be used as a subtype of interface
+type [2]. You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an
+interface. [incompatible-type]
+
+   object.ts:28:20
+   28| const p5: object = true; // ERROR -- boolean is not an object
+                          ^^^^ [1]
+
+References:
+   object.ts:28:11
+   28| const p5: object = true; // ERROR -- boolean is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:29:20
+
+Cannot assign `1n` to `p6` because bigint literal `1n` [1] is incompatible with interface type [2]. [incompatible-type]
+
+   object.ts:29:20
+   29| const p6: object = 1n; // ERROR -- bigint is not an object
+                          ^^ [1]
+
+References:
+   object.ts:29:11
+   29| const p6: object = 1n; // ERROR -- bigint is not an object
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.ts:30:20
+
+Cannot assign `Symbol()` to `p7` because symbol [1] is incompatible with interface type [2]. [incompatible-type]
+
+   object.ts:30:20
+    30| const p7: object = Symbol(); // ERROR -- symbol is not an object
+                           ^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:281:29
+   281|   static (value?: unknown): symbol;
+                                    ^^^^^^ [1]
+   object.ts:30:11
+    30| const p7: object = Symbol(); // ERROR -- symbol is not an object
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- object.ts:35:3
+
+Cannot get `o.foo` because property `foo` is missing in interface type [1]. [prop-missing]
+
+   object.ts:35:3
+   35| o.foo; // ERROR -- prop-missing
+         ^^^
+
+References:
+   object.ts:34:18
+   34| declare const o: object;
+                        ^^^^^^ [1]
+
+
+
+Found 12 errors

@@ -109,6 +109,7 @@ fn get_inst_kind<C: ConfigTypes>(x: &class_types::Class<C>) -> InstanceKind {
     match &x.super_ {
         class_types::Super::Interface(iface) => InstanceKind::InterfaceKind {
             inline: iface.inline,
+            reject_primitives: false,
         },
         class_types::Super::Class(_) => InstanceKind::ClassKind,
     }

@@ -5842,7 +5842,7 @@ struct
       } =
     any_prop_to_type_args cx trace ~use_op any ~covariant_flow ~contravariant_flow type_args;
     match inst_kind with
-    | InterfaceKind { inline = true } ->
+    | InterfaceKind { inline = true; _ } ->
       covariant_flow ~use_op static;
       covariant_flow ~use_op super;
       List.iter (covariant_flow ~use_op) implements;

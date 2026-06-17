@@ -2562,7 +2562,24 @@ fn merge_annot<'cx>(
         Annot::InlineInterface(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RInterfaceType, loc.dupe());
             let id = cx.make_aloc_id(loc);
-            merge_interface(env, cx, file, reason, None, id, def, true, vec![])
+            merge_interface(env, cx, file, reason, None, id, def, true, false, vec![])
+        }
+        Annot::ObjectBuiltin(box loc) => {
+            // TS-only `object`: an empty interface that rejects primitives. Built
+            // here (in the signature path) so it behaves identically to the
+            // checking-path builtin in type_annotation.rs.
+            let reason = reason::mk_annot_reason(RInterfaceType, loc.dupe());
+            let id = cx.make_aloc_id(loc);
+            let def = InterfaceSig {
+                extends: vec![],
+                props: Default::default(),
+                computed_props: vec![],
+                calls: vec![],
+                constructs: vec![],
+                dict: None,
+                abstract_: false,
+            };
+            merge_interface(env, cx, file, reason, None, id, &def, true, true, vec![])
         }
         Annot::MappedTypeAnnot(inner) => {
             let AnnotMappedTypeAnnot {
@@ -3622,6 +3639,7 @@ fn merge_interface<'cx>(
     id: flow_aloc::ALocId,
     def: &InterfaceSig<ALoc, Pack::Packed<ALoc>>,
     inline: bool,
+    reject_primitives: bool,
     targs: Vec<(SubstName, Reason, Type, Polarity)>,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
@@ -3797,7 +3815,10 @@ fn merge_interface<'cx>(
             inst_construct_t,
             initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
-            inst_kind: type_::InstanceKind::InterfaceKind { inline },
+            inst_kind: type_::InstanceKind::InterfaceKind {
+                inline,
+                reject_primitives,
+            },
             inst_dict,
             class_private_fields: cx.generate_property_map(type_::properties::PropertiesMap::new()),
             class_private_methods: cx
@@ -5017,6 +5038,7 @@ pub fn merge_def<'cx>(
                     Some(name.dupe()),
                     id.dupe(),
                     def,
+                    false,
                     false,
                     targs,
                 );

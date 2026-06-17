@@ -297,7 +297,7 @@ pub(super) fn any_prop_inst<'cx>(
         type_args,
     )?;
     match inst_kind {
-        InstanceKind::InterfaceKind { inline: true } => {
+        InstanceKind::InterfaceKind { inline: true, .. } => {
             covariant_flow(use_op, static_)?;
             covariant_flow(use_op, super_)?;
             for impl_t in implements.iter() {

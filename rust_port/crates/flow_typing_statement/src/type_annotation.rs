@@ -1652,13 +1652,60 @@ fn convert_inner<'a>(
                             &reconstruct_ast,
                         )?
                     }
-                    // Match the Flow libdef's TS compatibility alias: `type object = interface {}`.
-                    "object" => {
+                    // TS-only: `object` is a TypeScript primitive denoting any
+                    // non-primitive value. Flow has no exact equivalent, but
+                    // `.d.ts` library definitions reference it pervasively. We
+                    // accept the name only in .ts/.d.ts files and model it as a
+                    // structurally-empty interface. Defining it here (rather than
+                    // in core.js) scopes it to TS files -- the only place it is
+                    // meaningful -- and keeps it available when consuming TS lib
+                    // defs that do not load core.js.
+                    "object" if flow_common::files::has_ts_ext(cx.file()) => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
                             let interface_ast = empty_interface_annot(loc.dupe());
                             let result = convert_inner(cx, env, &interface_ast)?;
                             let (_, result_t) = result.loc();
-                            Ok(reconstruct_ast(result_t.dupe(), None, None))
+                            // Tag the empty interface as the `object` builtin so
+                            // it rejects primitives (a normal empty interface
+                            // promotes them to wrappers in .ts files; see
+                            // subtyping_kit.rs).
+                            let result_t = match result_t.deref() {
+                                type_::TypeInner::DefT(r, def) => match def.deref() {
+                                    type_::DefTInner::InstanceT(instance_t) => {
+                                        match &instance_t.inst.inst_kind {
+                                            type_::InstanceKind::InterfaceKind {
+                                                inline, ..
+                                            } => {
+                                                let inline = *inline;
+                                                let inst =
+                                                    type_::InstType::new(type_::InstTypeInner {
+                                                        inst_kind:
+                                                            type_::InstanceKind::InterfaceKind {
+                                                                inline,
+                                                                reject_primitives: true,
+                                                            },
+                                                        ..(*instance_t.inst).clone()
+                                                    });
+                                                let instance_t =
+                                                    type_::InstanceT::new(type_::InstanceTInner {
+                                                        inst,
+                                                        ..(***instance_t).clone()
+                                                    });
+                                                Type::new(type_::TypeInner::DefT(
+                                                    r.dupe(),
+                                                    type_::DefT::new(type_::DefTInner::InstanceT(
+                                                        Rc::new(instance_t),
+                                                    )),
+                                                ))
+                                            }
+                                            _ => result_t.dupe(),
+                                        }
+                                    }
+                                    _ => result_t.dupe(),
+                                },
+                                _ => result_t.dupe(),
+                            };
+                            Ok(reconstruct_ast(result_t, None, None))
                         })?
                     }
                     // NoInfer intrinsic that makes every GenericT inside it no_infer
@@ -7895,7 +7942,10 @@ pub fn mk_interface_sig<'a>(
     let (_t_internal, t, (own_props, proto_props)) = class_sig::classtype(
         cx,
         true,
-        type_::InstanceKind::InterfaceKind { inline: false },
+        type_::InstanceKind::InterfaceKind {
+            inline: false,
+            reject_primitives: false,
+        },
         &iface_sig,
     );
     cx.add_interface_prop_ids(id_loc.dupe(), own_props, proto_props);

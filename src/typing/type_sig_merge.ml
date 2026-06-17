@@ -1308,6 +1308,25 @@ and merge_annot env file = function
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
     let id = Context.make_aloc_id file.cx loc in
     merge_interface ~inline:true env file reason None id def []
+  | ObjectBuiltin loc ->
+    (* TS-only `object`: an empty interface that rejects primitives. Built here
+       (in the signature path) so it behaves identically to the checking-path
+       builtin in type_annotation.ml. *)
+    let reason = Reason.(mk_annot_reason RInterfaceType loc) in
+    let id = Context.make_aloc_id file.cx loc in
+    let def =
+      InterfaceSig
+        {
+          extends = [];
+          props = SMap.empty;
+          computed_props = [];
+          calls = [];
+          constructs = [];
+          dict = None;
+          abstract = false;
+        }
+    in
+    merge_interface ~inline:true ~reject_primitives:true env file reason None id def []
   | MappedTypeAnnot
       {
         loc;
@@ -1871,7 +1890,7 @@ and merge_interface_extends ~bind_this env file packed =
           (t, false, None)))
     | t -> (merge env file t, false, None)
 
-and merge_interface ~inline env file reason class_name id def =
+and merge_interface ~inline ?(reject_primitives = false) env file reason class_name id def =
   let (InterfaceSig { extends; props; computed_props; calls; constructs; dict; abstract }) = def in
   let static =
     let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
@@ -1977,7 +1996,7 @@ and merge_interface ~inline env file reason class_name id def =
         inst_construct_t;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        inst_kind = InterfaceKind { inline };
+        inst_kind = InterfaceKind { inline; reject_primitives };
         inst_dict;
         class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;

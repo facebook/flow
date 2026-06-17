@@ -8195,11 +8195,9 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }));
             nominal_type(opts, scope, scopes, tbls, xs, loc, name, targs)
         }
-        "object" => match targs {
-            None => {
-                let def = interface_acc::InterfaceAcc::empty().interface_def(false, Vec::new());
-                Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
-            }
+        // TS-only: lowercase `object` is the builtin that rejects primitives.
+        "object" if opts.is_ts_file => match targs {
+            None => Parsed::Annot(Box::new(ParsedAnnot::ObjectBuiltin(Box::new(loc)))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
         "Array" => match targs {

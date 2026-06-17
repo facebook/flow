@@ -78,7 +78,7 @@ module Make
 
   let get_inst_kind x =
     match x.super with
-    | Interface { inline; _ } -> Type.InterfaceKind { inline }
+    | Interface { inline; _ } -> Type.InterfaceKind { inline; reject_primitives = false }
     | Class _ -> Type.ClassKind
 
   let map_sig ~static f s =

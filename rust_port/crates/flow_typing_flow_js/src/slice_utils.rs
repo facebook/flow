@@ -116,7 +116,10 @@ pub fn mk_object_type<'cx>(
                     own_props: id,
                     inst_dict,
                     class_id: flow_aloc::ALocId::none(),
-                    inst_kind: InstanceKind::InterfaceKind { inline: true },
+                    inst_kind: InstanceKind::InterfaceKind {
+                        inline: true,
+                        reject_primitives: false,
+                    },
                     ..(*inst).clone()
                 });
                 let reason = reason.dupe().replace_desc(VirtualReasonDesc::RObjectType);
