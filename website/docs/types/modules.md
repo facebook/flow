@@ -56,7 +56,7 @@ that it does not add a runtime dependency on the other module.
 
 When the imported value is generic — for example, a function or React hook with type parameters — the imported type stays parameterizable. You can write `useState<number>` against an `import typeof {useState} from 'react'`-imported type to obtain the `number`-specialization:
 
-```js
+```js flow-check
 import typeof {useState} from 'react';
 
 hook useCounter(useStateNum: useState<number>): number {

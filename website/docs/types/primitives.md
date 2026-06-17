@@ -317,7 +317,7 @@ acceptsObject({foo: null});      // Error!
 Functions can have optional parameters where a question mark `?` comes after
 the parameter name.
 
-```js
+```js flow-check
 function func(param?: string) { /* ... */ }
 ```
 
@@ -338,7 +338,7 @@ acceptsOptionalString(null);      // Error!
 
 Function parameters can also have defaults. This is a feature of ES2015.
 
-```js
+```js flow-check
 function func(value: string = "default") { /* ... */ }
 ```
 

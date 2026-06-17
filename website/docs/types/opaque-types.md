@@ -20,7 +20,7 @@ Use opaque types over regular [type aliases](./aliases.md) when you need to enfo
 
 **`exports.js`**
 
-```js
+```js flow-check
 export type TransparentID = string;
 
 export opaque type OpaqueID = string;
@@ -101,7 +101,7 @@ underlying type.
 
 **`exports.js`**
 
-```js
+```js flow-check
 export opaque type NumberAlias = number;
 ```
 

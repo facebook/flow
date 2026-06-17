@@ -85,6 +85,9 @@ References:
 Found 2 errors
 
 === block 5 ===
+No errors!
+
+=== block 6 ===
 Error ----------------------------------------------------------------------------- -:4:22
 
 Cannot assign `42` to `topLevelAssigned` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -132,7 +135,7 @@ References:
 
 Found 2 errors
 
-=== block 6 ===
+=== block 7 ===
 Error ---------------------------------------------------------------------------- -:11:20
 
 Cannot assign `false` to `myNumberOrString` because: [incompatible-type]
@@ -166,7 +169,7 @@ References:
 
 Found 1 error
 
-=== block 7 ===
+=== block 8 ===
 Error ----------------------------------------------------------------------------- -:7:19
 
 Cannot call `oneBranchAssigned.toUpperCase` because property `toUpperCase` is missing in possibly uninitialized
@@ -206,8 +209,8 @@ References:
 
 Found 2 errors
 
-=== block 8 ===
+=== block 9 ===
 No errors!
 
-=== block 9 ===
+=== block 10 ===
 No errors!

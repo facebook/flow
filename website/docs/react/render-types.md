@@ -38,7 +38,7 @@ component LargeBlueHeader() renders Header {
 }
 ```
 
-Components can specify props that render specific elements:
+Components can specify props that render specific elements. You can pass an element of `Header`, or of any component that renders `Header`, to such a prop, but not a component that does not render a `Header`:
 
 ```js flow-check
 import * as React from 'react';
@@ -47,6 +47,17 @@ component Header(size: string, color: string, message: string) {
   return <h1 style={{color}}>{message}</h1>;
 }
 
+// Renders a Header in its renders chain.
+component LargeBlueHeader() renders Header {
+  return <Header size="large" color="blue" message="Hello" />;
+}
+
+// Does not render a Header.
+component Footer() {
+  return <footer />;
+}
+
+// The header prop only accepts elements that render a Header.
 component Layout(header: renders Header) {
   return (
     <div>
@@ -55,32 +66,10 @@ component Layout(header: renders Header) {
     </div>
   );
 }
-```
 
-And you can pass an element of either Header, or an element of a component that renders `Header`, to that prop:
-
-```js
-<Layout header={<LargeBlueHeader />} />;
-```
-
-You cannot pass a component that does not render a header to a render type expecting a header:
-
-```js flow-check
-import * as React from 'react';
-
-component Footer() {
-  return <footer />;
-}
-
-component Header(size: string, color: string, message: string) {
-  return <h1 style={{color}}>{message}</h1>;
-}
-
-component Layout(header: renders Header) {
-  return <div>{header}</div>;
-}
-
-<Layout header={<Footer />} />; // ERROR Footer does not render Header
+<Layout header={<Header size="large" color="blue" message="Hi" />} />; // OK
+<Layout header={<LargeBlueHeader />} />; // OK: LargeBlueHeader renders Header
+<Layout header={<Footer />} />; // Error: Footer does not render Header
 ```
 
 ## Integrating with a design system

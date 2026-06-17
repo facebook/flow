@@ -23,6 +23,9 @@ No errors!
 No errors!
 
 === block 9 ===
+No errors!
+
+=== block 10 ===
 Error --------------------------------------------------------------------- -:5:10
 
 Cannot return `new Object()` because: [incompatible-type]

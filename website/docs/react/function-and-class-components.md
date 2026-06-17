@@ -179,7 +179,11 @@ type DefaultProps = {
 };
 ```
 and spread that into the `Props` type:
-```js
+```js flow-check
+type DefaultProps = {
+  foo: number,
+};
+
 type Props = {
   ...DefaultProps,
   bar: string,

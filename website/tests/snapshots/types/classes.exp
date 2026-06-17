@@ -255,6 +255,26 @@ No errors!
 No errors!
 
 === block 26 ===
+Error ------------------------------------------------------------------------------ -:5:20
+
+Cannot assign `MyClass` to `a` because class `MyClass` [1] is incompatible with `MyClass` [2]. [incompatible-type]
+
+   -:5:20
+   5| const a: MyClass = MyClass; // Error!
+                         ^^^^^^^
+
+References:
+   -:2:7
+   2| class MyClass {}
+            ^^^^^^^ [1]
+   -:5:10
+   5| const a: MyClass = MyClass; // Error!
+               ^^^^^^^ [2]
+
+
+Found 1 error
+
+=== block 27 ===
 Error ------------------------------------------------------------------------------ -:7:36
 
 Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
@@ -272,7 +292,7 @@ References:
 
 Found 1 error
 
-=== block 27 ===
+=== block 28 ===
 Error ------------------------------------------------------------------------------- -:4:8
 
 property `method` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]

@@ -112,10 +112,10 @@ let test2: typeof MyClass = MyClass;   // Works!
 
 JavaScript's runtime `typeof` operator returns a string like `"number"` or `"object"`, but it can't distinguish many types — for example, objects, arrays, and `null` all produce `"object"`:
 
-```js
-typeof {foo: true} === 'object'
-typeof [true, false] === 'object'
-typeof null === 'object'
+```js flow-check
+typeof {foo: true} === 'object';
+typeof [true, false] === 'object';
+typeof null === 'object';
 ```
 
 Flow's `typeof` is a type-level operator that gives you the full Flow type of a value, preserving its exact structure. It is not used at runtime — it only exists in type annotations.

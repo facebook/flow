@@ -5,25 +5,25 @@ No errors!
 No errors!
 
 === block 3 ===
-No errors!
-
-=== block 4 ===
-Error ------------------------------------------------------------------------ -:16:17
+Error ------------------------------------------------------------------------ -:30:17
 
 Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
 [incompatible-type]
 
-   -:16:17
-   16| <Layout header={<Footer />} />; // ERROR Footer does not render Header
+   -:30:17
+   30| <Layout header={<Footer />} />; // Error: Footer does not render Header
                        ^^^^^^^^^^ [1]
 
 References:
-   -:12:26
-   12| component Layout(header: renders Header) {
+   -:19:26
+   19| component Layout(header: renders Header) {
                                 ^^^^^^^^^^^^^^ [2]
 
 
 Found 1 error
+
+=== block 4 ===
+No errors!
 
 === block 5 ===
 No errors!
@@ -41,9 +41,6 @@ No errors!
 No errors!
 
 === block 10 ===
-No errors!
-
-=== block 11 ===
 Error ------------------------------------------------------------------------- -:16:1
 
 Cannot cast `rendersMaybeHeader` to renders `Header` because a value that renders nothing [1] does not render
@@ -115,5 +112,5 @@ References:
 
 Found 4 errors
 
-=== block 12 ===
+=== block 11 ===
 No errors!

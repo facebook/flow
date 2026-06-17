@@ -67,6 +67,9 @@ No errors!
 No errors!
 
 === block 7 ===
+No errors!
+
+=== block 8 ===
 Error -------------------------------------------------------------------------- -:11:22
 
 Cannot assign `a.method(...)` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
@@ -86,9 +89,6 @@ References:
 
 Found 1 error
 
-=== block 8 ===
-No errors!
-
 === block 9 ===
 No errors!
 
@@ -102,6 +102,9 @@ No errors!
 No errors!
 
 === block 13 ===
+No errors!
+
+=== block 14 ===
 Error ---------------------------------------------------------------------------- -:7:8
 
 Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
@@ -123,9 +126,6 @@ References:
 
 Found 1 error
 
-=== block 14 ===
-No errors!
-
 === block 15 ===
 No errors!
 
@@ -133,6 +133,9 @@ No errors!
 No errors!
 
 === block 17 ===
+No errors!
+
+=== block 18 ===
 Error -------------------------------------------------------------------------- -:12:27
 
 Cannot assign `x` to `value1` because in property `property`: `number` [1] is not exactly the same as
@@ -167,7 +170,7 @@ References:
 
 Found 1 error
 
-=== block 18 ===
+=== block 19 ===
 Error --------------------------------------------------------------------------- -:16:9
 
 Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writable. [cannot-write]
@@ -178,10 +181,10 @@ Cannot assign `3.14` to `value.readOnly` because property `readOnly` is not writ
 
 Found 1 error
 
-=== block 19 ===
+=== block 20 ===
 No errors!
 
-=== block 20 ===
+=== block 21 ===
 Error -------------------------------------------------------------------------- -:11:42
 
 Cannot assign object literal to `value1` because in property `property`: string [1] is incompatible with number [2].
@@ -202,7 +205,7 @@ References:
 
 Found 1 error
 
-=== block 21 ===
+=== block 22 ===
 Error --------------------------------------------------------------------------- -:15:9
 
 Cannot get `value.writeOnly` because property `writeOnly` is not readable. [cannot-read]

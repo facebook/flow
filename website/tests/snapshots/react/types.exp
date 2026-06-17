@@ -42,3 +42,199 @@ No errors!
 
 === block 5 ===
 No errors!
+
+=== block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
+No errors!
+
+=== block 10 ===
+No errors!
+
+=== block 11 ===
+No errors!
+
+=== block 12 ===
+No errors!
+
+=== block 13 ===
+No errors!
+
+=== block 14 ===
+No errors!
+
+=== block 15 ===
+No errors!
+
+=== block 16 ===
+No errors!
+
+=== block 17 ===
+No errors!
+
+=== block 18 ===
+Error --------------------------------------------------------------------------------- -:6:2
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: `div` [2] is
+incompatible with string literal `span` [3]. [incompatible-type]
+
+   -:6:2
+    6| <div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
+        ^^^ [2]
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:6:41
+    6| <div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
+                                               ^^^^^^ [3]
+
+Error --------------------------------------------------------------------------------- -:6:2
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1]: properties `onAbort`,
+`onAbortCapture`, `onAnimationEnd`, `onAnimationEndCapture`, `onAnimationIteration`, `onAnimationIterationCapture`,
+`onAnimationStart`, `onAnimationStartCapture`, `onAuxClick`, `onAuxClickCapture`, `onBeforeInput`,
+`onBeforeInputCapture`, `onBlur`, `onBlurCapture`, `onCanPlay`, `onCanPlayCapture`, `onCanPlayThrough`,
+`onCanPlayThroughCapture`, `onChange`, `onChangeCapture`, `onClick`, `onClickCapture`, `onCompositionEnd`,
+`onCompositionEndCapture`, `onCompositionStart`, `onCompositionStartCapture`, `onCompositionUpdate`,
+`onCompositionUpdateCapture`, `onContextMenu`, `onContextMenuCapture`, `onCopy`, `onCopyCapture`, `onCut`,
+`onCutCapture`, `onDoubleClick`, `onDoubleClickCapture`, `onDrag`, `onDragCapture`, `onDragEnd`, `onDragEndCapture`,
+`onDragEnter`, `onDragEnterCapture`, `onDragExit`, `onDragExitCapture`, `onDragLeave`, `onDragLeaveCapture`,
+`onDragOver`, `onDragOverCapture`, `onDragStart`, `onDragStartCapture`, `onDrop`, `onDropCapture`, `onDurationChange`,
+`onDurationChangeCapture`, `onEmptied`, `onEmptiedCapture`, `onEncrypted`, `onEncryptedCapture`, `onEnded`,
+`onEndedCapture`, `onError`, `onErrorCapture`, `onFocus`, `onFocusCapture`, `onGotPointerCapture`,
+`onGotPointerCaptureCapture`, `onInput`, `onInputCapture`, `onInvalid`, `onInvalidCapture`, `onKeyDown`,
+`onKeyDownCapture`, `onKeyPress`, `onKeyPressCapture`, `onKeyUp`, `onKeyUpCapture`, `onLoad`, `onLoadCapture`,
+`onLoadStart`, `onLoadStartCapture`, `onLoadedData`, `onLoadedDataCapture`, `onLoadedMetadata`,
+`onLoadedMetadataCapture`, `onLostPointerCapture`, `onLostPointerCaptureCapture`, `onMouseDown`, `onMouseDownCapture`,
+`onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseMoveCapture`, `onMouseOut`, `onMouseOutCapture`, `onMouseOver`,
+`onMouseOverCapture`, `onMouseUp`, `onMouseUpCapture`, `onPaste`, `onPasteCapture`, `onPause`, `onPauseCapture`,
+`onPlay`, `onPlayCapture`, `onPlaying`, `onPlayingCapture`, `onPointerCancel`, `onPointerCancelCapture`,
+`onPointerDown`, `onPointerDownCapture`, `onPointerEnter`, `onPointerLeave`, `onPointerMove`, `onPointerMoveCapture`,
+`onPointerOut`, `onPointerOutCapture`, `onPointerOver`, `onPointerOverCapture`, `onPointerUp`, `onPointerUpCapture`,
+`onProgress`, `onProgressCapture`, `onRateChange`, `onRateChangeCapture`, `onReset`, `onResetCapture`, `onResize`,
+`onResizeCapture`, `onScroll`, `onScrollCapture`, `onSeeked`, `onSeekedCapture`, `onSeeking`, `onSeekingCapture`,
+`onSelect`, `onSelectCapture`, `onStalled`, `onStalledCapture`, `onSubmit`, `onSubmitCapture`, `onSuspend`,
+`onSuspendCapture`, `onTimeUpdate`, `onTimeUpdateCapture`, `onToggle`, `onToggleCapture`, `onTouchCancel`,
+`onTouchCancelCapture`, `onTouchEnd`, `onTouchEndCapture`, `onTouchMove`, `onTouchMoveCapture`, `onTouchStart`,
+`onTouchStartCapture`, `onTransitionCancel`, `onTransitionCancelCapture`, `onTransitionEnd`, `onTransitionEndCapture`,
+`onTransitionRun`, `onTransitionRunCapture`, `onTransitionStart`, `onTransitionStartCapture`, `onVolumeChange`,
+`onVolumeChangeCapture`, `onWaiting`, `onWaitingCapture`, `onWheel`, `onWheelCapture`, and `ref` of
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [2] are not
+exactly the same as those of
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [3].
+[incompatible-type]
+
+The above-mentioned two types must be the same because properties `onAbort`, `onAbortCapture`, `onAnimationEnd`,
+`onAnimationEndCapture`, `onAnimationIteration`, `onAnimationIterationCapture`, `onAnimationStart`,
+`onAnimationStartCapture`, `onAuxClick`, `onAuxClickCapture`, `onBeforeInput`, `onBeforeInputCapture`, `onBlur`,
+`onBlurCapture`, `onCanPlay`, `onCanPlayCapture`, `onCanPlayThrough`, `onCanPlayThroughCapture`, `onChange`,
+`onChangeCapture`, `onClick`, `onClickCapture`, `onCompositionEnd`, `onCompositionEndCapture`, `onCompositionStart`,
+`onCompositionStartCapture`, `onCompositionUpdate`, `onCompositionUpdateCapture`, `onContextMenu`,
+`onContextMenuCapture`, `onCopy`, `onCopyCapture`, `onCut`, `onCutCapture`, `onDoubleClick`, `onDoubleClickCapture`,
+`onDrag`, `onDragCapture`, `onDragEnd`, `onDragEndCapture`, `onDragEnter`, `onDragEnterCapture`, `onDragExit`,
+`onDragExitCapture`, `onDragLeave`, `onDragLeaveCapture`, `onDragOver`, `onDragOverCapture`, `onDragStart`,
+`onDragStartCapture`, `onDrop`, `onDropCapture`, `onDurationChange`, `onDurationChangeCapture`, `onEmptied`,
+`onEmptiedCapture`, `onEncrypted`, `onEncryptedCapture`, `onEnded`, `onEndedCapture`, `onError`, `onErrorCapture`,
+`onFocus`, `onFocusCapture`, `onGotPointerCapture`, `onGotPointerCaptureCapture`, `onInput`, `onInputCapture`,
+`onInvalid`, `onInvalidCapture`, `onKeyDown`, `onKeyDownCapture`, `onKeyPress`, `onKeyPressCapture`, `onKeyUp`,
+`onKeyUpCapture`, `onLoad`, `onLoadCapture`, `onLoadStart`, `onLoadStartCapture`, `onLoadedData`, `onLoadedDataCapture`,
+`onLoadedMetadata`, `onLoadedMetadataCapture`, `onLostPointerCapture`, `onLostPointerCaptureCapture`, `onMouseDown`,
+`onMouseDownCapture`, `onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseMoveCapture`, `onMouseOut`,
+`onMouseOutCapture`, `onMouseOver`, `onMouseOverCapture`, `onMouseUp`, `onMouseUpCapture`, `onPaste`, `onPasteCapture`,
+`onPause`, `onPauseCapture`, `onPlay`, `onPlayCapture`, `onPlaying`, `onPlayingCapture`, `onPointerCancel`,
+`onPointerCancelCapture`, `onPointerDown`, `onPointerDownCapture`, `onPointerEnter`, `onPointerLeave`, `onPointerMove`,
+`onPointerMoveCapture`, `onPointerOut`, `onPointerOutCapture`, `onPointerOver`, `onPointerOverCapture`, `onPointerUp`,
+`onPointerUpCapture`, `onProgress`, `onProgressCapture`, `onRateChange`, `onRateChangeCapture`, `onReset`,
+`onResetCapture`, `onResize`, `onResizeCapture`, `onScroll`, `onScrollCapture`, `onSeeked`, `onSeekedCapture`,
+`onSeeking`, `onSeekingCapture`, `onSelect`, `onSelectCapture`, `onStalled`, `onStalledCapture`, `onSubmit`,
+`onSubmitCapture`, `onSuspend`, `onSuspendCapture`, `onTimeUpdate`, `onTimeUpdateCapture`, `onToggle`,
+`onToggleCapture`, `onTouchCancel`, `onTouchCancelCapture`, `onTouchEnd`, `onTouchEndCapture`, `onTouchMove`,
+`onTouchMoveCapture`, `onTouchStart`, `onTouchStartCapture`, `onTransitionCancel`, `onTransitionCancelCapture`,
+`onTransitionEnd`, `onTransitionEndCapture`, `onTransitionRun`, `onTransitionRunCapture`, `onTransitionStart`,
+`onTransitionStartCapture`, `onVolumeChange`, `onVolumeChangeCapture`, `onWaiting`, `onWaitingCapture`, `onWheel`,
+`onWheelCapture`, and `ref` are invariantly typed. To fix the error,
+- Either make
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [2] and
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [4] exactly
+the same
+- Or make properties `onAbort`, `onAbortCapture`, `onAnimationEnd`, `onAnimationEndCapture`, `onAnimationIteration`,
+`onAnimationIterationCapture`, `onAnimationStart`, `onAnimationStartCapture`, `onAuxClick`, `onAuxClickCapture`,
+`onBeforeInput`, `onBeforeInputCapture`, `onBlur`, `onBlurCapture`, `onCanPlay`, `onCanPlayCapture`, `onCanPlayThrough`,
+`onCanPlayThroughCapture`, `onChange`, `onChangeCapture`, `onClick`, `onClickCapture`, `onCompositionEnd`,
+`onCompositionEndCapture`, `onCompositionStart`, `onCompositionStartCapture`, `onCompositionUpdate`,
+`onCompositionUpdateCapture`, `onContextMenu`, `onContextMenuCapture`, `onCopy`, `onCopyCapture`, `onCut`,
+`onCutCapture`, `onDoubleClick`, `onDoubleClickCapture`, `onDrag`, `onDragCapture`, `onDragEnd`, `onDragEndCapture`,
+`onDragEnter`, `onDragEnterCapture`, `onDragExit`, `onDragExitCapture`, `onDragLeave`, `onDragLeaveCapture`,
+`onDragOver`, `onDragOverCapture`, `onDragStart`, `onDragStartCapture`, `onDrop`, `onDropCapture`, `onDurationChange`,
+`onDurationChangeCapture`, `onEmptied`, `onEmptiedCapture`, `onEncrypted`, `onEncryptedCapture`, `onEnded`,
+`onEndedCapture`, `onError`, `onErrorCapture`, `onFocus`, `onFocusCapture`, `onGotPointerCapture`,
+`onGotPointerCaptureCapture`, `onInput`, `onInputCapture`, `onInvalid`, `onInvalidCapture`, `onKeyDown`,
+`onKeyDownCapture`, `onKeyPress`, `onKeyPressCapture`, `onKeyUp`, `onKeyUpCapture`, `onLoad`, `onLoadCapture`,
+`onLoadStart`, `onLoadStartCapture`, `onLoadedData`, `onLoadedDataCapture`, `onLoadedMetadata`,
+`onLoadedMetadataCapture`, `onLostPointerCapture`, `onLostPointerCaptureCapture`, `onMouseDown`, `onMouseDownCapture`,
+`onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseMoveCapture`, `onMouseOut`, `onMouseOutCapture`, `onMouseOver`,
+`onMouseOverCapture`, `onMouseUp`, `onMouseUpCapture`, `onPaste`, `onPasteCapture`, `onPause`, `onPauseCapture`,
+`onPlay`, `onPlayCapture`, `onPlaying`, `onPlayingCapture`, `onPointerCancel`, `onPointerCancelCapture`,
+`onPointerDown`, `onPointerDownCapture`, `onPointerEnter`, `onPointerLeave`, `onPointerMove`, `onPointerMoveCapture`,
+`onPointerOut`, `onPointerOutCapture`, `onPointerOver`, `onPointerOverCapture`, `onPointerUp`, `onPointerUpCapture`,
+`onProgress`, `onProgressCapture`, `onRateChange`, `onRateChangeCapture`, `onReset`, `onResetCapture`, `onResize`,
+`onResizeCapture`, `onScroll`, `onScrollCapture`, `onSeeked`, `onSeekedCapture`, `onSeeking`, `onSeekingCapture`,
+`onSelect`, `onSelectCapture`, `onStalled`, `onStalledCapture`, `onSubmit`, `onSubmitCapture`, `onSuspend`,
+`onSuspendCapture`, `onTimeUpdate`, `onTimeUpdateCapture`, `onToggle`, `onToggleCapture`, `onTouchCancel`,
+`onTouchCancelCapture`, `onTouchEnd`, `onTouchEndCapture`, `onTouchMove`, `onTouchMoveCapture`, `onTouchStart`,
+`onTouchStartCapture`, `onTransitionCancel`, `onTransitionCancelCapture`, `onTransitionEnd`, `onTransitionEndCapture`,
+`onTransitionRun`, `onTransitionRunCapture`, `onTransitionStart`, `onTransitionStartCapture`, `onVolumeChange`,
+`onVolumeChangeCapture`, `onWaiting`, `onWaitingCapture`, `onWheel`, `onWheelCapture`, and `ref` in props of string
+literal `span` [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   -:6:2
+    6| <div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
+        ^^^ [2]
+
+References:
+   <BUILTINS>/react.js:58:91
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                 ^ [1]
+   <BUILTINS>/react.js:58:95
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   -:6:41
+    6| <div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
+                                               ^^^^^^ [4]
+
+
+Found 2 errors
+
+=== block 19 ===
+Error --------------------------------------------------------------------------------- -:9:2
+
+Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: function [2] is
+incompatible with class `Bar` [3]. [incompatible-type]
+
+   -:9:2
+    9| <Foo /> as ExactReactElement_DEPRECATED<typeof Bar>; // Error: Foo is not Bar
+        ^^^
+
+References:
+   <BUILTINS>/react.js:58:51
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [1]
+   -:4:1
+    4| function Foo(props: {}) {}
+       ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   -:9:41
+    9| <Foo /> as ExactReactElement_DEPRECATED<typeof Bar>; // Error: Foo is not Bar
+                                               ^^^^^^^^^^ [3]
+
+
+Found 1 error

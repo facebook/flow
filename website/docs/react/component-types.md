@@ -21,12 +21,13 @@ declare const Component: ComponentType;
 ```
 
 Like [Component Syntax](./component-syntax.md#rest-parameters), Component Types also accept a rest parameter:
-```js
+```js flow-check
 import * as React from 'react';
 
-import type {Props as StarProps} from './Star';
-import Star from './Star';
+type StarProps = {color: string, size: number};
 
+// The ...StarProps rest parameter spreads in every prop of StarProps, so
+// BlueStarType accepts specificProp plus color and size.
 type BlueStarType = component(specificProp: string, ...StarProps);
 ```
 

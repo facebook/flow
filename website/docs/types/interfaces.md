@@ -93,7 +93,10 @@ class Bar implements Serializable {
 
 You can also use `implements` with multiple interfaces.
 
-```js
+```js flow-check
+interface Bar {}
+interface Baz {}
+
 class Foo implements Bar, Baz {
   // ...
 }

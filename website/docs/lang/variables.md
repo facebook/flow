@@ -115,10 +115,12 @@ If you want these examples to typecheck, and for Flow to realize that different
 kinds of values can be written to these variables, you must add a type
 annotation reflecting this more general type to their declarations:
 
-```js
-let product: number | string = ...
-let Component: unknown = ... // No good type to represent this! Consider restructuring
-let element: React.Node = ...
+```js flow-check
+import * as React from 'react';
+
+let product: number | string = 1;
+let Component: unknown = null; // No good type to represent this! Consider restructuring
+let element: React.Node = <div />;
 ```
 
 ### Variables declared without initializers {#toc-variables-declared-without-initializers}

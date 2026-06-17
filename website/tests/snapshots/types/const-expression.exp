@@ -2,6 +2,15 @@
 No errors!
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
+No errors!
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
 Error --------------------------------------------------------------------- -:3:11
 
 The `as const` assertion can only be used on string, numeric, boolean, object, or array literals, or const-variables
@@ -13,16 +22,16 @@ initialized with primitive literals. [unsupported-syntax]
 
 Found 1 error
 
-=== block 3 ===
-No errors!
-
-=== block 4 ===
-No errors!
-
-=== block 5 ===
-No errors!
-
 === block 6 ===
+No errors!
+
+=== block 7 ===
+No errors!
+
+=== block 8 ===
+No errors!
+
+=== block 9 ===
 Error --------------------------------------------------------------------- -:9:20
 
 Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]:
@@ -146,11 +155,11 @@ References:
 
 Found 6 errors
 
-=== block 7 ===
+=== block 10 ===
 No errors!
 
-=== block 8 ===
+=== block 11 ===
 No errors!
 
-=== block 9 ===
+=== block 12 ===
 No errors!

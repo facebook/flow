@@ -557,11 +557,15 @@ obj[key]; // Works!
 
 When you spread multiple conditional expressions into an object, Flow computes all possible combinations, which can grow exponentially. This causes an error when it exceeds Flow's limit:
 
-```js
+```js flow-check
+declare const cond1: boolean;
+declare const cond2: boolean;
+declare const cond3: boolean;
+
 // Each conditional spread doubles the number of possible types
 const obj = {
   ...cond1 ? {a: 1} : {},
-  ...cond2 ? {b: 2} : {},
+  ...cond2 ? {b: 2} : {}, // Error: too many combinations to reason about
   ...cond3 ? {c: 3} : {},
   // Flow must consider 2^3 = 8 possible object types
 };

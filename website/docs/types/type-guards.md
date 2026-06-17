@@ -158,17 +158,21 @@ function area(shape: Shape): number {
 ```
 
 **Note:** The `this` type guard annotation is only allowed in the return annotation on non-static declare class and interface methods. For example the following are invalid forms:
-```js
+```js flow-check
+declare class A {}
+declare class B {}
+declare class D {}
+
 declare class InvalidStatic {
-  static m(): this is D;
+  static m(): this is D; // Error
 }
 
-type InvalidTypeAlias = (x: unknown) => this is A;
+type InvalidTypeAlias = (x: unknown) => this is A; // Error
 
-declare function invalidFunction(this: unknown): this is A;
+declare function invalidFunction(this: unknown): this is A; // Error
 
 class InvalidNonDeclareClass {
-  m(): this is B { return this instanceof B; }
+  m(): this is B { return this instanceof B; } // Error
 }
 ```
 

@@ -60,12 +60,16 @@ component RenamedParameter(
 
 Sometimes you do not want to list out every prop explicitly because you do not intend to reference them individually in your component. This is common when you are writing a component that wraps another and need to pass props from your component to the inner one:
 
-```jsx
+```js flow-check
 import * as React from 'react';
 
-import type {Props as StarProps} from './Star';
-import Star from './Star';
+// star.js
+component Star(color: string, size: number) {
+  return <div />;
+}
+type StarProps = React.PropsOf<Star>;
 
+// blue_star.js
 component BlueStar(...props: StarProps) {
   return <Star {...props} color="blue" />;
 }

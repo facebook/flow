@@ -16,7 +16,7 @@ TypeScript infers types across module boundaries by default, while Flow requires
 ## Variable declarations
 
 Take for example the following variable definition
-```js
+```js flow-check
 const len = "abc".length;
 ```
 All information necessary to infer the type of `len` is included in the initializer
@@ -95,7 +95,7 @@ class WrappedString {
 Function parameters do not always need to be explicitly annotated. In the case of a
 callback function to a function call, the parameter type can easily
 be inferred from the immediate context. Consider for example the following code
-```js
+```js flow-check
 const arr = [0, 1, 2];
 const arrPlusOne = arr.find(x => x % 2 === 1);
 ```
@@ -167,15 +167,13 @@ depend on the types of the values passed in as arguments.
 This section discusses how this result is computed, when type arguments are not
 explicitly provided.
 
-Consider for example the definition
-```js
+Consider for example the definition of `map`, together with a potential call with arguments `x => x + 1` and `[1, 2, 3]`:
+```js flow-check
 declare function map<T, U>(
   f: (T) => U,
   array: ReadonlyArray<T>,
 ): Array<U>;
-```
-and a potential call with arguments `x => x + 1` and `[1, 2, 3]`:
-```js
+
 map(x => x + 1, [1, 2, 3]);
 ```
 Here Flow infers that the type of `x` is `number`.
@@ -184,9 +182,10 @@ Some other common examples of generic calls are calling the constructor of the g
 [`Set` class](https://github.com/facebook/flow/blob/82f88520f2bfe0fa13748b5ead711432941f4cb9/lib/core.js#L1799-L1801)
 or calling `useState` from the React library:
 ```js flow-check
+import {useState} from 'react';
+
 const set = new Set([1, 2, 3]);
 
-import {useState} from 'react';
 component Example() {
   const [num, setNum] = useState(42);
   return null;
@@ -298,6 +297,7 @@ call is correct for the call itself, but not indicative of the expected use late
 For example, consider
 ```js flow-check
 import {useState} from 'react';
+
 component Example() {
   const [str, setStr] = useState("");
 
@@ -312,8 +312,13 @@ and therefore passing a `?string` will be an error.
 
 Again, to fix this error it suffices to annotate the expected "wider" type of state
 when calling `useState`:
-```js
-const [str, setStr] = useState<?string>("");
+```js flow-check
+import {useState} from 'react';
+
+component Example() {
+  const [str, setStr] = useState<?string>("");
+  return null;
+}
 ```
 
 ## Module Exports {#toc-module-exports}
@@ -342,7 +347,9 @@ export function getLength2(x) { // Error: Flow cannot determine the parameter or
 Exported variables typically don't need annotations when their type can be
 determined from the initializer:
 
-```js
+```js flow-check
+declare const items: Array<string>;
+
 export const name = "Alice"; // OK: type is clearly 'string'
 export const count = items.length; // OK: type determined from .length
 ```

@@ -2,6 +2,9 @@
 No errors!
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
 Error ---------------------------------------------------------------- -:2:20
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -12,10 +15,10 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Found 1 error
 
-=== block 3 ===
+=== block 4 ===
 No errors!
 
-=== block 4 ===
+=== block 5 ===
 Error ---------------------------------------------------------------- -:4:25
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -26,10 +29,13 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Found 1 error
 
-=== block 5 ===
+=== block 6 ===
 No errors!
 
-=== block 6 ===
+=== block 7 ===
+No errors!
+
+=== block 8 ===
 Error ---------------------------------------------------------------- -:2:22
 
 An annotation on `x` is required because Flow cannot infer its type from local context. [missing-local-annot]
@@ -40,7 +46,7 @@ An annotation on `x` is required because Flow cannot infer its type from local c
 
 Found 1 error
 
-=== block 7 ===
+=== block 9 ===
 Error ---------------------------------------------------------------- -:2:48
 
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -60,7 +66,7 @@ References:
 
 Found 1 error
 
-=== block 8 ===
+=== block 10 ===
 Error ---------------------------------------------------------------- -:4:23
 
 Missing an annotation on return. [missing-local-annot]
@@ -70,7 +76,7 @@ Missing an annotation on return. [missing-local-annot]
 
 Found 1 error
 
-=== block 9 ===
+=== block 11 ===
 Error ----------------------------------------------------------------- -:2:1
 
 The following definitions recursively depend on each other, and Flow cannot compute their types:
@@ -102,10 +108,13 @@ References:
 
 Found 1 error
 
-=== block 10 ===
+=== block 12 ===
 No errors!
 
-=== block 11 ===
+=== block 13 ===
+No errors!
+
+=== block 14 ===
 Error ---------------------------------------------------------------- -:2:17
 
 Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either add explicit type arguments or cast the
@@ -126,7 +135,7 @@ References:
 
 Found 1 error
 
-=== block 12 ===
+=== block 15 ===
 Error ---------------------------------------------------------------- -:3:10
 
 Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
@@ -146,32 +155,35 @@ References:
 
 Found 1 error
 
-=== block 13 ===
-Error ---------------------------------------------------------------- -:7:10
+=== block 16 ===
+Error ---------------------------------------------------------------- -:8:10
 
 Cannot call `setStr` with `maybeString` bound to the first parameter because: [incompatible-type]
  - Either null or undefined [1] is incompatible with function type [2].
  - Or null or undefined [1] is incompatible with string [3].
 
-   -:7:10
-      7|   setStr(maybeString); // Error
+   -:8:10
+      8|   setStr(maybeString); // Error
                   ^^^^^^^^^^^
 
 References:
-   -:6:30
-      6|   declare const maybeString: ?string;
+   -:7:30
+      7|   declare const maybeString: ?string;
                                       ^^^^^^^ [1]
    <BUILTINS>/react.js:1370:39
    1370|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
                                                ^^^^^^ [2]
-   -:4:34
-      4|   const [str, setStr] = useState("");
+   -:5:34
+      5|   const [str, setStr] = useState("");
                                           ^^ [3]
 
 
 Found 1 error
 
-=== block 14 ===
+=== block 17 ===
+No errors!
+
+=== block 18 ===
 Error ---------------------------------------------------------------- -:7:28
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -197,7 +209,10 @@ annotation at function return: [signature-verification-failure]
 
 Found 3 errors
 
-=== block 15 ===
+=== block 19 ===
+No errors!
+
+=== block 20 ===
 Error ---------------------------------------------------------------- -:3:22
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
@@ -209,7 +224,7 @@ simple key in object: [signature-verification-failure]
 
 Found 1 error
 
-=== block 16 ===
+=== block 21 ===
 Error ---------------------------------------------------------------- -:3:21
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
@@ -221,7 +236,7 @@ spread in array: [signature-verification-failure]
 
 Found 1 error
 
-=== block 17 ===
+=== block 22 ===
 Error ---------------------------------------------------------------- -:2:22
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
@@ -233,7 +248,7 @@ array hole: [signature-verification-failure]
 
 Found 1 error
 
-=== block 18 ===
+=== block 23 ===
 Error ---------------------------------------------------------------- -:2:16
 
 Cannot determine type of empty array literal. Please provide an annotation. [missing-empty-array-annot]
@@ -253,7 +268,7 @@ expression. [signature-verification-failure]
 
 Found 2 errors
 
-=== block 19 ===
+=== block 24 ===
 Error ---------------------------------------------------------------- -:3:24
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -266,7 +281,7 @@ expression. [signature-verification-failure]
 
 Found 1 error
 
-=== block 20 ===
+=== block 25 ===
 Error ----------------------------------------------------------------- -:2:5
 
 Variable `lastSeen` [1] should be annotated, because it is only initialized in a generic context [2]
@@ -284,10 +299,10 @@ References:
 
 Found 1 error
 
-=== block 21 ===
+=== block 26 ===
 No errors!
 
-=== block 22 ===
+=== block 27 ===
 Error ----------------------------------------------------------------- -:2:5
 
 Variable `cached` [1] should be annotated, because it is only ever assigned to by `null` and in generic context [2]
@@ -327,5 +342,5 @@ References:
 
 Found 2 errors
 
-=== block 23 ===
+=== block 28 ===
 No errors!

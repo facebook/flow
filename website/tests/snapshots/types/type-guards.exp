@@ -66,6 +66,42 @@ No errors!
 No errors!
 
 === block 9 ===
+Error -------------------------------------------------------------------------- -:7:15
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   7|   static m(): this is D; // Error
+                    ^^^^ [1]
+
+Error ------------------------------------------------------------------------- -:10:41
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   10| type InvalidTypeAlias = (x: unknown) => this is A; // Error
+                                               ^^^^ [1]
+
+Error ------------------------------------------------------------------------- -:12:50
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   12| declare function invalidFunction(this: unknown): this is A; // Error
+                                                        ^^^^ [1]
+
+Error -------------------------------------------------------------------------- -:15:8
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   15|   m(): this is B { return this instanceof B; } // Error
+              ^^^^ [1]
+
+
+Found 4 errors
+
+=== block 10 ===
 Error ------------------------------------------------------------------------- -:19:10
 
 Cannot return `result` because in array element: `Success` [1] is not exactly the same as `Error` [2].
@@ -187,10 +223,10 @@ References:
 
 Found 5 errors
 
-=== block 10 ===
+=== block 11 ===
 No errors!
 
-=== block 11 ===
+=== block 12 ===
 Error -------------------------------------------------------------------------- -:2:35
 
 Cannot find type guard parameter `prop` [1] in the parameters of this function (type). [function-predicate]
@@ -201,7 +237,7 @@ Cannot find type guard parameter `prop` [1] in the parameters of this function (
 
 Found 1 error
 
-=== block 12 ===
+=== block 13 ===
 Error -------------------------------------------------------------------------- -:2:50
 
 A type guard parameter `prop` [1] cannot reference pattern parameter `prop` [2]. [function-predicate]
@@ -218,7 +254,7 @@ References:
 
 Found 1 error
 
-=== block 13 ===
+=== block 14 ===
 Error -------------------------------------------------------------------------- -:2:42
 
 A type guard parameter `value` [1] cannot reference rest parameter `value` [2]. [function-predicate]
@@ -235,7 +271,7 @@ References:
 
 Found 1 error
 
-=== block 14 ===
+=== block 15 ===
 Error -------------------------------------------------------------------------- -:2:36
 
 The type predicate number [1] needs to be compatible with parameter `x`'s type: number [1] is incompatible with
@@ -253,7 +289,7 @@ References:
 
 Found 1 error
 
-=== block 15 ===
+=== block 16 ===
 Error -------------------------------------------------------------------------- -:2:39
 
 Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
@@ -271,7 +307,7 @@ References:
 
 Found 1 error
 
-=== block 16 ===
+=== block 17 ===
 Error -------------------------------------------------------------------------- -:3:10
 
 Cannot return `x` because null or undefined [1] is incompatible with boolean [2]. [incompatible-type]
@@ -307,13 +343,13 @@ References:
 
 Found 2 errors
 
-=== block 17 ===
-No errors!
-
 === block 18 ===
 No errors!
 
 === block 19 ===
+No errors!
+
+=== block 20 ===
 Error -------------------------------------------------------------------------- -:3:36
 
 Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because: [incompatible-type-guard]
@@ -364,10 +400,10 @@ References:
 
 Found 2 errors
 
-=== block 20 ===
+=== block 21 ===
 No errors!
 
-=== block 21 ===
+=== block 22 ===
 Error -------------------------------------------------------------------------- -:3:12
 
 Cannot return `((typeof x) === 'number') && (x > 0)` because the negation of the predicate encoded in this expression
@@ -387,7 +423,7 @@ References:
 
 Found 1 error
 
-=== block 22 ===
+=== block 23 ===
 Error -------------------------------------------------------------------------- -:4:10
 
 Cannot use type guard parameter `x` [1] because at this return point it is written to in [2]. [function-predicate]
@@ -407,7 +443,7 @@ References:
 
 Found 1 error
 
-=== block 23 ===
+=== block 24 ===
 Error -------------------------------------------------------------------------- -:2:38
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
@@ -427,10 +463,10 @@ References:
 
 Found 1 error
 
-=== block 24 ===
+=== block 25 ===
 No errors!
 
-=== block 25 ===
+=== block 26 ===
 Error -------------------------------------------------------------------------- -:7:10
 
 Cannot return `x.tag === 'known'` because property `data` is extra in `Dynamic` [1] but missing in `Known` [2]. Exact
@@ -516,5 +552,5 @@ References:
 
 Found 3 errors
 
-=== block 26 ===
+=== block 27 ===
 No errors!

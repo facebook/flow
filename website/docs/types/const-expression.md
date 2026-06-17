@@ -22,24 +22,24 @@ The inferred type of const-expressions is the [singleton type](./literals.md) fo
 and the read-only versions for container types. Array literals are inferred as tuple types.
 
 Here are some examples of primitive values:
-```js
+```js flow-check
 42 as const; // inferred type is 42
 
 "hello" as const; // inferred type is "hello"
 ```
 
 Containers become read-only and the modifier is applied deeply
-```js
-{ f: 42 } as const; // {readonly f: 42}
+```js flow-check
+const o1 = {f: 42} as const; // {readonly f: 42}
 
-[42, "hello"] as const; // Readonly<[42, "hello"]>
+const t1 = [42, "hello"] as const; // Readonly<[42, "hello"]>
 
-{ f: { g: 42 } } as const; // {readonly f: {readonly g: 42}}
+const o2 = {f: {g: 42}} as const; // {readonly f: {readonly g: 42}}
 ```
 
 Note that the effect of the modifier does not persist through variables. For example
 in
-```js
+```js flow-check
 const nonConstObject = { g: 42 };
 const constObject = { f: nonConstObject } as const;
 ```

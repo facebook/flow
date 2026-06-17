@@ -31,21 +31,21 @@ import React from 'react';
 
 If you are using CommonJS you can also require React:
 
-```js
+```js flow-check
 const React = require('react');
 ```
 
 You can also use named type imports in either an ES module environment or a
 CommonJS environment:
 
-```js
+```js flow-check
 import type {Node} from 'react';
 ```
 
 We will refer to all the types in the following reference as if we imported them
 with:
 
-```js
+```js flow-check
 import * as React from 'react';
 ```
 
@@ -60,14 +60,18 @@ and class render methods. You can also use it to type elements your component ta
 
 Here is an example of `React.Node` being used as the return type to a function component:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 function MyComponent(props: {}): React.Node {
   // ...
 }
 ```
 
 It may also be used as the return type of a class `render` method:
-```js
+```js flow-check
+import * as React from 'react';
+
 class MyComponent extends React.Component<{}> {
   render(): React.Node {
     // ...
@@ -77,7 +81,9 @@ class MyComponent extends React.Component<{}> {
 
 Here is an example of `React.Node` as the prop type for children:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 function MyComponent({ children }: { children: React.Node }) {
   return <div>{children}</div>;
 }
@@ -91,7 +97,9 @@ All `react-dom` JSX intrinsics have `React.Node` as their children type.
 The most general type of all React elements (similar to `unknown` for all values).
 
 A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
-```js
+```js flow-check
+import * as React from 'react';
+
 const element: React.MixedElement = <div />;
 ```
 
@@ -103,16 +111,16 @@ It is designed to be used with the [`React.Children` API](https://react.dev/refe
 For example if you want to get a normal JavaScript array from a
 `React.ChildrenArray<T>` see the following example:
 
-```js
+```js flow-check
 import * as React from 'react';
 
 // A children array can be a single value...
-const children: React.ChildrenArray<number> = 42;
+const childrenSingle: React.ChildrenArray<number> = 42;
 // ...or an arbitrarily nested array.
-const children: React.ChildrenArray<number> = [[1, 2], 3, [4, 5]];
+const childrenNested: React.ChildrenArray<number> = [[1, 2], 3, [4, 5]];
 
-// Using the `React.Children` API can flatten the array.
-const array: Array<number> = React.Children.toArray(children);
+// Using the `React.Children` API can flatten a single value into an array.
+const array: Array<number> = React.Children.toArray(childrenSingle);
 ```
 
 ## `React.ComponentType<Props>` {#toc-react-componenttype}
@@ -126,7 +134,9 @@ includes JSX intrinsics (strings).
 
 The definition for `React.ElementType` is roughly:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 type ElementType =
   | string
   | React.ComponentType<empty>;
@@ -137,7 +147,7 @@ type ElementType =
 The type of the key prop on React elements. It is a union of strings and
 numbers defined as:
 
-```js
+```js flow-check
 type Key = string | number;
 ```
 
@@ -170,13 +180,15 @@ instance which is retrieved using
 
 The definition for `React.RefSetter<T>` is roughly:
 
-```js
-type RefSetter<-T> =
+```js flow-check
+type RefSetter<in T> =
   | { writeonly current: T | null, ... }
   | ((T | null) => unknown)
   | null
   | void;
 ```
+
+Here `in` and `writeonly` are [contravariance](../lang/variance.md#toc-contravariance) annotations, which are rarely seen in everyday code.
 
 ## `React.PropsOf<Component>` {#toc-react-propsof}
 When `Component` is written using [Component Syntax](./component-syntax.md), `React.PropsOf<Component>`
@@ -257,7 +269,9 @@ If you want to enforce design system constraints, use [render types](./render-ty
 
 A React element is the type for the value of a JSX element:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 const element: ExactReactElement_DEPRECATED<'div'> = <div />;
 ```
 
@@ -269,7 +283,9 @@ A `ExactReactElement_DEPRECATED` takes a single type argument,
 element. For an intrinsic element, `typeof Component` will be the string literal
 for the intrinsic you used. Here are a few examples with DOM intrinsics:
 
-```js
+```js flow-check
+import * as React from 'react';
+
 <div /> as ExactReactElement_DEPRECATED<'div'>; // OK
 <span /> as ExactReactElement_DEPRECATED<'span'>; // OK
 <div /> as ExactReactElement_DEPRECATED<'span'>; // Error: div is not a span.
@@ -277,7 +293,9 @@ for the intrinsic you used. Here are a few examples with DOM intrinsics:
 
 `typeof Component` can also be your React class component or function component.
 
-```js
+```js flow-check
+import * as React from 'react';
+
 function Foo(props: {}) {}
 class Bar extends React.Component<{}> {}
 

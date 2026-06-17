@@ -382,7 +382,7 @@ const val: MyClass<number, boolean, string> = new MyClass(1, true, 'three');
 
 When you use the name of your class in an annotation, it means an _instance_ of your class:
 
-```js
+```js flow-check
 class MyClass {}
 
 const b: MyClass = new MyClass(); // Works!

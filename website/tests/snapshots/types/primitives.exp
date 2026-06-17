@@ -232,6 +232,9 @@ References:
 Found 1 error
 
 === block 21 ===
+No errors!
+
+=== block 22 ===
 Error --------------------------------------------------------------------------- -:8:23
 
 Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
@@ -249,7 +252,10 @@ References:
 
 Found 1 error
 
-=== block 22 ===
+=== block 23 ===
+No errors!
+
+=== block 24 ===
 Error --------------------------------------------------------------------------- -:8:23
 
 Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
@@ -267,7 +273,7 @@ References:
 
 Found 1 error
 
-=== block 23 ===
+=== block 25 ===
 Error --------------------------------------------------------------------------- -:7:15
 
 Cannot call `acceptsSymbol` with `false` bound to `value` because boolean [1] is incompatible with symbol [2].
@@ -285,10 +291,10 @@ References:
 
 Found 1 error
 
-=== block 24 ===
+=== block 26 ===
 No errors!
 
-=== block 25 ===
+=== block 27 ===
 Error --------------------------------------------------------------------------- -:5:15
 
 Cannot call `acceptsBigInt` with `42` bound to `value` because number [1] is incompatible with bigint [2].
@@ -306,5 +312,5 @@ References:
 
 Found 1 error
 
-=== block 26 ===
+=== block 28 ===
 No errors!
