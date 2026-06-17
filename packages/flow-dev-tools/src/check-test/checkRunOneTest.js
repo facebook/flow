@@ -160,7 +160,7 @@ async function runOneTest(opts: {
         flowconfigPath,
         'utf8',
       );
-      if (/no_flowlib/.test(flowconfigContent)) {
+      if (/no_flowlib|builtin_lib/.test(flowconfigContent)) {
         noFlowlib = false;
       }
 

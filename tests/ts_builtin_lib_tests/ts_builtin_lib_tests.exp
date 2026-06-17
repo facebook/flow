@@ -1,0 +1,917 @@
+Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
+
+Cannot instantiate `Record` because in type argument `K`: number [1] is incompatible with key set [2].
+[incompatible-type]
+
+   <BUILTINS>/lib.decorators.d.ts:37:39
+     37| type DecoratorMetadataObject = Record<PropertyKey, unknown> & object;
+                                               ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/lib.es5.d.ts:1614:23
+   1614| type Record<K extends keyof any, T> = {
+                               ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
+
+Cannot instantiate `Record` because in type argument `K`: symbol [1] is incompatible with key set [2].
+[incompatible-type]
+
+   <BUILTINS>/lib.decorators.d.ts:37:39
+     37| type DecoratorMetadataObject = Record<PropertyKey, unknown> & object;
+                                               ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/lib.es5.d.ts:1614:23
+   1614| type Record<K extends keyof any, T> = {
+                               ^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.dom.d.ts:14164:5
+
+Multiple indexers are not supported. [unsupported-syntax]
+
+   14164|     [name: string]: any;
+              ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.generator.d.ts:24:5
+
+Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `TNext` [2] is incompatible with tuple
+type [3]. [incompatible-type]
+
+   <BUILTINS>/lib.es2015.generator.d.ts:24:5
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.generator.d.ts:22:70
+   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
+   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
+                                 ^^^^^ [2]
+   <BUILTINS>/lib.es2015.generator.d.ts:24:22
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                            ^^ [3]
+
+
+Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.generator.d.ts:24:5
+
+Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `TNext` [2] is incompatible with tuple
+type [3]. [incompatible-type]
+
+   <BUILTINS>/lib.es2015.generator.d.ts:24:5
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.generator.d.ts:22:70
+   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
+   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
+                                 ^^^^^ [2]
+   <BUILTINS>/lib.es2015.generator.d.ts:24:27
+   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+                                 ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:25:19
+
+Cannot extend `IteratorObject` [1] with `Generator` because in property `return` > the first parameter: `TReturn` [2] is
+incompatible with undefined [3]. [incompatible-type]
+
+   <BUILTINS>/lib.es2015.generator.d.ts:25:19
+   25|     return(value: TReturn): IteratorResult<T, TReturn>;
+                         ^^^^^^^ [2]
+
+References:
+   <BUILTINS>/lib.es2015.generator.d.ts:22:70
+   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.d.ts:45:21
+   45|     return?(value?: TReturn): IteratorResult<T, TReturn>;
+                           ^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------- <BUILTINS>/lib.es2015.iterable.d.ts:56:1
+
+Non-`abstract` class `IterableIterator` does not implement inherited `abstract` member next [1]. [invalid-abstract]
+
+   <BUILTINS>/lib.es2015.iterable.d.ts:56:1
+       v----------------------------------------------------------------------------------------------
+   56| interface IterableIterator<T, TReturn = any, TNext = any> extends Iterator<T, TReturn, TNext> {
+   57|     [Symbol.iterator](): IterableIterator<T, TReturn, TNext>;
+   58| }
+       ^
+
+References:
+   <BUILTINS>/lib.es2015.iterable.d.ts:44:5
+   44|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+           ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------- <BUILTINS>/lib.es2015.iterable.d.ts:63:1
+
+Non-`abstract` class `IteratorObject` does not implement inherited `abstract` member next [1]. [invalid-abstract]
+
+   <BUILTINS>/lib.es2015.iterable.d.ts:63:1
+       v----------------------------------------------------------------------------------------------------
+   63| interface IteratorObject<T, TReturn = unknown, TNext = unknown> extends Iterator<T, TReturn, TNext> {
+   64|     [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
+   65| }
+       ^
+
+References:
+   <BUILTINS>/lib.es2015.iterable.d.ts:44:5
+   44|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
+           ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.iterable.d.ts:71:30
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   71| type BuiltinIteratorReturn = intrinsic;
+                                    ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:88:5
+
+Illegal name. [unsupported-syntax]
+
+   88|     [Symbol.toPrimitive](hint: string): symbol;
+           ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:90:5
+
+Illegal name. [unsupported-syntax]
+
+   90|     readonly [Symbol.toStringTag]: string;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:98:5
+
+Illegal name. [unsupported-syntax]
+
+   98|     readonly [Symbol.unscopables]: {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:108:5
+
+Illegal name. [unsupported-syntax]
+
+   108|     readonly [Symbol.unscopables]: {
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:117:5
+
+Illegal name. [unsupported-syntax]
+
+   117|     [Symbol.toPrimitive](hint: "default"): string;
+            ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:121:5
+
+Illegal name. [unsupported-syntax]
+
+   121|     [Symbol.toPrimitive](hint: "string"): string;
+            ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:125:5
+
+Illegal name. [unsupported-syntax]
+
+   125|     [Symbol.toPrimitive](hint: "number"): number;
+            ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:134:5
+
+Illegal name. [unsupported-syntax]
+
+   134|     [Symbol.toPrimitive](hint: string): string | number;
+            ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:138:5
+
+Illegal name. [unsupported-syntax]
+
+   138|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:142:5
+
+Illegal name. [unsupported-syntax]
+
+   142|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:146:5
+
+Illegal name. [unsupported-syntax]
+
+   146|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:150:5
+
+Illegal name. [unsupported-syntax]
+
+   150|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:154:5
+
+Illegal name. [unsupported-syntax]
+
+   154|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:165:5
+
+Illegal name. [unsupported-syntax]
+
+   165|     [Symbol.hasInstance](value: any): boolean;
+            ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:169:5
+
+Illegal name. [unsupported-syntax]
+
+   169|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:173:5
+
+Illegal name. [unsupported-syntax]
+
+   173|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:177:5
+
+Illegal name. [unsupported-syntax]
+
+   177|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:181:5
+
+Illegal name. [unsupported-syntax]
+
+   181|     readonly [Symbol.species]: PromiseConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:190:5
+
+Illegal name. [unsupported-syntax]
+
+   190|     [Symbol.match](string: string): RegExpMatchArray | null;
+            ^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:199:5
+
+Illegal name. [unsupported-syntax]
+
+   199|     [Symbol.replace](string: string, replaceValue: string): string;
+            ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:207:5
+
+Illegal name. [unsupported-syntax]
+
+   207|     [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string;
+            ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:215:5
+
+Illegal name. [unsupported-syntax]
+
+   215|     [Symbol.search](string: string): number;
+            ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:229:5
+
+Illegal name. [unsupported-syntax]
+
+   229|     [Symbol.split](string: string, limit?: number): string[];
+            ^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:233:5
+
+Illegal name. [unsupported-syntax]
+
+   233|     readonly [Symbol.species]: RegExpConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:242:22
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   242|     match(matcher: { [Symbol.match](string: string): RegExpMatchArray | null; }): RegExpMatchArray | null;
+                             ^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:249:28
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   249|     replace(searchValue: { [Symbol.replace](string: string, replaceValue: string): string; }, replaceValue: string): string;
+                                   ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:256:28
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   256|     replace(searchValue: { [Symbol.replace](string: string, replacer: (substring: string, ...args: any[]) => string): string; }, replacer: (substring: string, ...args: any[]) => string): string;
+                                   ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:262:24
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   262|     search(searcher: { [Symbol.search](string: string): number; }): number;
+                               ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:269:23
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   269|     split(splitter: { [Symbol.split](string: string, limit?: number): string[]; }, limit?: number): string[];
+                              ^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:273:5
+
+Illegal name. [unsupported-syntax]
+
+   273|     readonly [Symbol.toStringTag]: "ArrayBuffer";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:277:5
+
+Illegal name. [unsupported-syntax]
+
+   277|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:281:5
+
+Illegal name. [unsupported-syntax]
+
+   281|     readonly [Symbol.toStringTag]: "Int8Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:285:5
+
+Illegal name. [unsupported-syntax]
+
+   285|     readonly [Symbol.toStringTag]: "Uint8Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:289:5
+
+Illegal name. [unsupported-syntax]
+
+   289|     readonly [Symbol.toStringTag]: "Uint8ClampedArray";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:293:5
+
+Illegal name. [unsupported-syntax]
+
+   293|     readonly [Symbol.toStringTag]: "Int16Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:297:5
+
+Illegal name. [unsupported-syntax]
+
+   297|     readonly [Symbol.toStringTag]: "Uint16Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:301:5
+
+Illegal name. [unsupported-syntax]
+
+   301|     readonly [Symbol.toStringTag]: "Int32Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:305:5
+
+Illegal name. [unsupported-syntax]
+
+   305|     readonly [Symbol.toStringTag]: "Uint32Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:309:5
+
+Illegal name. [unsupported-syntax]
+
+   309|     readonly [Symbol.toStringTag]: "Float32Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:313:5
+
+Illegal name. [unsupported-syntax]
+
+   313|     readonly [Symbol.toStringTag]: "Float64Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:317:5
+
+Illegal name. [unsupported-syntax]
+
+   317|     readonly [Symbol.species]: ArrayConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:320:5
+
+Illegal name. [unsupported-syntax]
+
+   320|     readonly [Symbol.species]: MapConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:323:5
+
+Illegal name. [unsupported-syntax]
+
+   323|     readonly [Symbol.species]: SetConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:326:5
+
+Illegal name. [unsupported-syntax]
+
+   326|     readonly [Symbol.species]: ArrayBufferConstructor;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------- <BUILTINS>/lib.es2017.sharedmemory.d.ts:33:5
+
+Illegal name. [unsupported-syntax]
+
+   33|     readonly [Symbol.toStringTag]: "SharedArrayBuffer";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------- <BUILTINS>/lib.es2017.sharedmemory.d.ts:39:5
+
+Illegal name. [unsupported-syntax]
+
+   39|     readonly [Symbol.species]: SharedArrayBufferConstructor;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------- <BUILTINS>/lib.es2017.sharedmemory.d.ts:133:5
+
+Illegal name. [unsupported-syntax]
+
+   133|     readonly [Symbol.toStringTag]: "Atomics";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------- <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:5
+
+Cannot extend `AsyncIteratorObject` [1] with `AsyncGenerator` because in the first parameter of property `return`:
+[incompatible-type]
+ - Either undefined [2] is incompatible with `TReturn` [3].
+ - Or undefined [2] is incompatible with `PromiseLike` [4].
+
+   <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:5
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2018.asyncgenerator.d.ts:22:75
+   22| interface AsyncGenerator<T = unknown, TReturn = any, TNext = any> extends AsyncIteratorObject<T, TReturn, TNext> {
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2018.asynciterable.d.ts:34:21
+   34|     return?(value?: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:19
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                         ^^^^^^^ [3]
+   <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:29
+   25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;
+                                   ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2020.bigint.d.ts:121:5
+
+Illegal name. [unsupported-syntax]
+
+   121|     readonly [Symbol.toStringTag]: "BigInt";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2020.bigint.d.ts:386:5
+
+Illegal name. [unsupported-syntax]
+
+   386|     readonly [Symbol.toStringTag]: "BigInt64Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2020.bigint.d.ts:677:5
+
+Illegal name. [unsupported-syntax]
+
+   677|     readonly [Symbol.toStringTag]: "BigUint64Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:142:27
+
+Cannot resolve name `NumberFormatPartTypes`. [cannot-resolve-name]
+
+   142|             type: Exclude<NumberFormatPartTypes, "literal">;
+                                  ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:452:51
+
+Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
+
+   452|         new (locales?: LocalesArgument, options?: CollatorOptions): Collator;
+                                                          ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:452:69
+
+Cannot resolve name `Collator`. [cannot-resolve-name]
+
+   452|         new (locales?: LocalesArgument, options?: CollatorOptions): Collator;
+                                                                            ^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:453:47
+
+Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
+
+   453|         (locales?: LocalesArgument, options?: CollatorOptions): Collator;
+                                                      ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:453:65
+
+Cannot resolve name `Collator`. [cannot-resolve-name]
+
+   453|         (locales?: LocalesArgument, options?: CollatorOptions): Collator;
+                                                                        ^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:454:64
+
+Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
+
+   454|         supportedLocalesOf(locales: LocalesArgument, options?: CollatorOptions): string[];
+                                                                       ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:458:75
+
+Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
+
+   458|         new (locales?: LocalesArgument, options?: DateTimeFormatOptions): DateTimeFormat;
+                                                                                  ^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:459:71
+
+Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
+
+   459|         (locales?: LocalesArgument, options?: DateTimeFormatOptions): DateTimeFormat;
+                                                                              ^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:464:73
+
+Cannot resolve name `NumberFormat`. [cannot-resolve-name]
+
+   464|         new (locales?: LocalesArgument, options?: NumberFormatOptions): NumberFormat;
+                                                                                ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:465:69
+
+Cannot resolve name `NumberFormat`. [cannot-resolve-name]
+
+   465|         (locales?: LocalesArgument, options?: NumberFormatOptions): NumberFormat;
+                                                                            ^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:470:51
+
+Cannot resolve name `PluralRulesOptions`. [cannot-resolve-name]
+
+   470|         new (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
+                                                          ^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:470:72
+
+Cannot resolve name `PluralRules`. [cannot-resolve-name]
+
+   470|         new (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
+                                                                               ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:471:47
+
+Cannot resolve name `PluralRulesOptions`. [cannot-resolve-name]
+
+   471|         (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
+                                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:471:68
+
+Cannot resolve name `PluralRules`. [cannot-resolve-name]
+
+   471|         (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
+                                                                           ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------- <BUILTINS>/lib.es2020.symbol.wellknown.d.ts:41:5
+
+Illegal name. [unsupported-syntax]
+
+   41|     [Symbol.matchAll](str: string): RegExpStringIterator<RegExpMatchArray>;
+           ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:33:47
+
+Cannot resolve name `DateTimeFormatPart`. [cannot-resolve-name]
+
+   33|     interface DateTimeRangeFormatPart extends DateTimeFormatPart {
+                                                     ^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:147:24
+
+Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
+
+   147|         new (locales?: LocalesArgument, options?: ListFormatOptions): ListFormat;
+                               ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:165:37
+
+Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
+
+   165|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<ListFormatOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
+                                            ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:165:107
+
+Cannot resolve name `UnicodeBCP47LocaleIdentifier`. [cannot-resolve-name]
+
+   165|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<ListFormatOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
+                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2021.weakref.d.ts:23:5
+
+Illegal name. [unsupported-syntax]
+
+   23|     readonly [Symbol.toStringTag]: "WeakRef";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2021.weakref.d.ts:47:5
+
+Illegal name. [unsupported-syntax]
+
+   47|     readonly [Symbol.toStringTag]: "FinalizationRegistry";
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:121:24
+
+Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
+
+   121|         new (locales?: LocalesArgument, options?: SegmenterOptions): Segmenter;
+                               ^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:135:37
+
+Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
+
+   135|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<SegmenterOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
+                                            ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:135:106
+
+Cannot resolve name `UnicodeBCP47LocaleIdentifier`. [cannot-resolve-name]
+
+   135|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<SegmenterOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
+                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2023.intl.d.ts:45:45
+
+Cannot resolve name `NumberFormatPart`. [cannot-resolve-name]
+
+   45|     interface NumberRangeFormatPart extends NumberFormatPart {
+                                                   ^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2023.intl.d.ts:53:71
+
+Cannot resolve name `NumberFormatPart`. [cannot-resolve-name]
+
+   53|         formatToParts(value: number | bigint | StringNumericLiteral): NumberFormatPart[];
+                                                                             ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------- <BUILTINS>/lib.es2024.sharedmemory.d.ts:41:27
+
+Cannot use `BigInt64Array` [1] without 1 type argument. [missing-type-arg]
+
+   <BUILTINS>/lib.es2024.sharedmemory.d.ts:41:27
+    41|     waitAsync(typedArray: BigInt64Array, index: number, value: bigint, timeout?: number): { async: false; value: "not-equal" | "timed-out"; } | { async: true; value: Promise<"ok" | "timed-out">; };
+                                  ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2023.array.d.ts:783:24
+   783| interface BigInt64Array<TArrayBuffer extends ArrayBufferLike> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:229:39
+
+Cannot resolve name `U`. [cannot-resolve-name]
+
+   229|     freeze<T extends { [idx: string]: U | null | undefined | object; }, U extends string | bigint | number | boolean | symbol>(o: T): Readonly<T>;
+                                              ^
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1661:36
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   1661| type Uppercase<S extends string> = intrinsic;
+                                            ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1666:36
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   1666| type Lowercase<S extends string> = intrinsic;
+                                            ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1671:37
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   1671| type Capitalize<S extends string> = intrinsic;
+                                             ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1676:39
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   1676| type Uncapitalize<S extends string> = intrinsic;
+                                               ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1681:19
+
+Cannot resolve name `intrinsic`. [cannot-resolve-name]
+
+   1681| type NoInfer<T> = intrinsic;
+                           ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------- <BUILTINS>/lib.esnext.decorators.d.ts:28:5
+
+Illegal name. [unsupported-syntax]
+
+   28|     [Symbol.metadata]: DecoratorMetadata | null;
+           ^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------- <BUILTINS>/lib.esnext.disposable.d.ts:114:5
+
+Illegal name. [unsupported-syntax]
+
+   114|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------- <BUILTINS>/lib.esnext.disposable.d.ts:181:5
+
+Illegal name. [unsupported-syntax]
+
+   181|     readonly [Symbol.toStringTag]: string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- <BUILTINS>/lib.esnext.float16.d.ts:370:5
+
+Illegal name. [unsupported-syntax]
+
+   370|     readonly [Symbol.toStringTag]: "Float16Array";
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- <BUILTINS>/lib.esnext.iterator.d.ts:26:1
+
+Cannot use value export statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+   26| export {};
+       ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- <BUILTINS>/lib.esnext.iterator.d.ts:39:1
+
+Cannot use declare global statements in a library file. The statement will be ignored. [unsupported-syntax]
+
+        v---------------
+    39| declare global {
+    40|     // Global `IteratorObject<T, TReturn, TNext>` interface that can be augmented by polyfills
+    41|     interface IteratorObject<T, TReturn, TNext> {
+    42|         /**
+    43|          * Returns this iterator.
+    44|          */
+    45|         [Symbol.iterator](): IteratorObject<T, TReturn, TNext>;
+    46|         /**
+    47|          * Creates an iterator whose values are the result of applying the callback to the values from this iterator.
+    48|          * @param callbackfn A function that accepts up to two arguments to be used to transform values from the underlying iterator.
+    49|          */
+    50|         map<U>(callbackfn: (value: T, index: number) => U): IteratorObject<U, undefined, unknown>;
+    51|         /**
+    52|          * Creates an iterator whose values are those from this iterator for which the provided predicate returns true.
+    53|          * @param predicate A function that accepts up to two arguments to be used to test values from the underlying iterator.
+      :
+   130|         find<S extends T>(predicate: (value: T, index: number) => value is S): S | undefined;
+   131|         find(predicate: (value: T, index: number) => unknown): T | undefined;
+   132|         readonly [Symbol.toStringTag]: string;
+   133|     }
+   134|     // Global `IteratorConstructor` interface that can be augmented by polyfills
+   135|     interface IteratorConstructor extends IteratorObjectConstructor {
+   136|         /**
+   137|          * Creates a native iterator from an iterator or iterable object.
+   138|          * Returns its input if the input already inherits from the built-in Iterator class.
+   139|          * @param value An iterator or iterable object to convert a native iterator.
+   140|          */
+   141|         from<T>(value: Iterator<T, unknown, undefined> | Iterable<T, unknown, undefined>): IteratorObject<T, undefined, unknown>;
+   142|     }
+   143|     var Iterator: IteratorConstructor;
+   144| }
+        ^
+
+
+
+Found 99 errors
