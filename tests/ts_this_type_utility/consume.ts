@@ -7,6 +7,7 @@ import {
   makeObject,
   withVoidThis,
   Repo,
+  needsBox,
 } from "./decls";
 
 // Object literal -- a plain object satisfies `... & ThisType<any>`.
@@ -43,3 +44,9 @@ r.extend({
 // ThisType<T> standalone admits any object value (it's an empty interface).
 const empty: ThisType<{a: number}> = {}; // OK
 const withExtras: ThisType<{a: number}> = {a: 1, b: "x"}; // OK
+
+// Signature-path discriminator. `needsBox`'s parameter is `M & ThisType<T>`,
+// imported cross-file (so only the signature path runs on `decls.d.ts`). With
+// the fix, `ThisType<T>` reduces to `{}` and `M`'s required props are enforced.
+needsBox({tag: "box", size: 1}); // OK -- satisfies M
+needsBox({tag: "nope"}); // ERROR -- wrong tag and missing `size`; before the fix the param degraded to `any` and this was wrongly accepted

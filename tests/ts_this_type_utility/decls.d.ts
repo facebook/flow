@@ -28,3 +28,11 @@ export declare function withVoidThis<P>(props: P & ThisType<void>): P;
 export declare class Repo {
   extend<C>(customs: C & ThisType<this & C>): this & C;
 }
+
+// Signature-path discriminator: a non-generic parameter `M & ThisType<T>` where
+// `M` has required props. Only meaningful cross-file if the signature path
+// reduces `ThisType<T>` to an empty interface (so the param is `M`); if it
+// degraded to `any`, callers passing the wrong shape would be wrongly accepted.
+export declare function needsBox(
+  arg: { tag: "box"; size: number } & ThisType<unknown>,
+): void;

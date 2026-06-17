@@ -4334,6 +4334,19 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
     | None -> Annot (ObjectBuiltin loc)
     | _ -> Err (loc, CheckError)
   end
+  (* TS-only: `ThisType<T>` is a marker that Flow reduces to a structurally-empty
+     interface; the type argument is irrelevant (see type_annotation.ml). We parse
+     the argument so any types it references still resolve, then discard it. This
+     mirrors the checking path so cross-file consumers of a `.d.ts` see `M &
+     ThisType<T>` as `M` rather than degrading to `any`. *)
+  | "ThisType" when opts.is_ts_file -> begin
+    match targs with
+    | Some (_, { arguments = [t]; _ }) ->
+      ignore (annot opts scope tbls xs t);
+      let def = InterfaceAcc.interface_def ~abstract:false [] InterfaceAcc.empty in
+      Annot (InlineInterface (loc, def))
+    | _ -> Err (loc, CheckError)
+  end
   | "Array" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) ->

@@ -14,6 +14,36 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
                  ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- consume.ts:52:10
+
+Cannot call `needsBox` with object literal bound to `arg` because property `size` is missing in object literal [1] but
+exists in object type [2]. [incompatible-type]
+
+   consume.ts:52:10
+   52| needsBox({tag: "nope"}); // ERROR -- wrong tag and missing `size`; before the fix the param degraded to `any` and this was wrongly accepted
+                ^^^^^^^^^^^^^ [1]
+
+References:
+   decls.d.ts:37:8
+   37|   arg: { tag: "box"; size: number } & ThisType<unknown>,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consume.ts:52:16
+
+Cannot call `needsBox` with object literal bound to `arg` because in property `tag`: string literal `nope` [1] is
+incompatible with string literal `box` [2]. [incompatible-type]
+
+   consume.ts:52:16
+   52| needsBox({tag: "nope"}); // ERROR -- wrong tag and missing `size`; before the fix the param degraded to `any` and this was wrongly accepted
+                      ^^^^^^ [1]
+
+References:
+   decls.d.ts:37:15
+   37|   arg: { tag: "box"; size: number } & ThisType<unknown>,
+                     ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ js_unrecognized.js:4:10
 
 Cannot resolve name `ThisType`. [cannot-resolve-name]
@@ -23,4 +53,4 @@ Cannot resolve name `ThisType`. [cannot-resolve-name]
 
 
 
-Found 3 errors
+Found 5 errors
