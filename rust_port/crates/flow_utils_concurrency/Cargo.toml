@@ -12,7 +12,7 @@ dupe = "0.9.1"
 equivalent = "1.0.2"
 flow_aloc = { path = "../flow_aloc" }
 flow_common_utils = { path = "../flow_common_utils" }
-itertools = "0.14.0"
+itertools = "0.15.0"
 lock_free_hashtable = "0.1.4"
 starlark_map = "0.14.2"
 
