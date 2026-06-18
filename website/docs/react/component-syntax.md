@@ -36,6 +36,52 @@ There are a few important details to notice here:
 
 ## Parameters
 
+### Children
+
+`children` is the most common prop, and with Component Syntax it is just an ordinary parameter; declare it like any other. Its type is usually [`React.Node`](./types.md#toc-react-node), which covers anything renderable (elements, strings, arrays, `null`, and more):
+
+```js flow-check
+import * as React from 'react';
+
+component Card(title: string, children: React.Node) {
+  return (
+    <section>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+<Card title="Welcome">
+  <p>Hello!</p>
+</Card>;
+```
+
+:::info TypeScript comparison
+There is no need for a `React.PropsWithChildren` helper or for adding `children` to a props object type. `children` is just a parameter, and `React.Node` is the type to give it.
+:::
+
+Sometimes you want children to be more specific than "anything renderable". To restrict which elements can be passed, give `children` a [render type](./render-types.md) instead of `React.Node`. For example, a `Menu` whose children must be `MenuItem`s can require them with `renders*`:
+
+```js flow-check
+import * as React from 'react';
+
+component MenuItem(label: string) {
+  return <li>{label}</li>;
+}
+
+component Menu(children: renders* MenuItem) {
+  return <ul>{children}</ul>;
+}
+
+<Menu>
+  <MenuItem label="Home" />
+  <MenuItem label="Profile" />
+</Menu>;
+```
+
+[Render Types](./render-types.md) cover the full set of constraints: `renders` for a single required element, `renders?` for an optional one, and `renders*` for any number of children.
+
 ### String Parameters/Renaming Parameters
 
 Components also allow you to rename parameters, which is useful when your parameter name is not a valid JavaScript identifier:
@@ -81,7 +127,7 @@ Rest parameters use an object type as an annotation, which means you can use exi
 import * as React from 'react';
 
 component OtherComponent(foo: string, bar: number) {
-  return foo + bar;
+  return <div>{foo} {bar}</div>;
 }
 
 component FancyProps(
@@ -169,7 +215,9 @@ component ComponentWithARef(ref: React.RefSetter<HTMLElement>) {
 }
 ```
 
-Behind the scenes Component Syntax will wrap the component in the required [React.forwardRef call](https://react.dev/reference/react/forwardRef) to ensure the component works as expected at runtime. The one restriction for refs is they must be defined as an inline parameter, refs within rest params are not supported. This is due to the need to compile in the `forwardRef` call, for this to work correctly we need to be able to statically determine the ref from the component definition.
+Behind the scenes, Component Syntax generates the right code for your target React version: when targeting React 18 it wraps the component in the required [`React.forwardRef`](https://react.dev/reference/react/forwardRef) call, and when targeting React 19 it passes `ref` through as an ordinary prop (React 19 no longer needs `forwardRef`). You declare the `ref` parameter the same way regardless of target. The one restriction for refs is that they must be defined as an inline parameter; refs within rest params are not supported, because Component Syntax needs to statically determine the ref from the component definition.
+
+See [Refs](./refs.md) for more on typing refs, including the `useRef` hook, `React.RefObject`, `React.RefSetter`, callback refs, and reading `ref.current`.
 
 ## Rules for Components
 

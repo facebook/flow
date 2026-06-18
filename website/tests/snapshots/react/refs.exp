@@ -3,3 +3,26 @@ No errors!
 
 === block 2 ===
 No errors!
+
+=== block 3 ===
+Error --------------------------------------------------------------------------------- -:9:22
+
+Cannot call `inputRef.current.focus` because property `focus` is missing in null [1]. [incompatible-use]
+
+   -:9:22
+   9|     inputRef.current.focus(); // ERROR: `current` may be null
+                           ^^^^^
+
+References:
+   -:6:27
+   6|   const inputRef = useRef<null | HTMLInputElement>(null);
+                                ^^^^ [1]
+
+
+Found 1 error
+
+=== block 4 ===
+No errors!
+
+=== block 5 ===
+No errors!

@@ -191,6 +191,36 @@ type Props = {
 ```
 This way you avoid duplicating the properties that happen to have a default value.
 
+### Refs in Class Components {#toc-refs-in-class-components}
+
+To use a ref in a class component, add a property to your class and assign the
+result of `React.createRef` to it.
+
+```js flow-check
+import * as React from 'react';
+
+class MyComponent extends React.Component<{}> {
+  // The `null` here is important because you may not always have the instance.
+  buttonRef: {current: null | HTMLButtonElement};
+
+  constructor() {
+    super({});
+    this.buttonRef = React.createRef<HTMLButtonElement>();
+  }
+
+  render(): React.Node {
+    return <button ref={this.buttonRef}>Toggle</button>;
+  }
+}
+```
+
+One notable difference between `useRef` and `createRef` is that `createRef` does not accept
+a default value. It will initialize the ref with the value `null`. This is because
+DOM elements will not exist until the first render of `MyComponent` and so a `null` value
+must be used.
+
+Note that the ref value is wrapped in an object with a `current` property.
+
 ## See Also {#toc-see-also}
 
 - [Classes](../types/classes.md) — how class types work in Flow (relevant for class components)
