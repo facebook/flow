@@ -110,6 +110,3 @@ members = [
   "crates/flow_watchman",
 ]
 resolver = "2"
-
-[workspace.lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fbcode_build)"]}

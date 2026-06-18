@@ -4,3 +4,6 @@
 name = "flow_event_logger_common"
 version = "0.0.0"
 edition = "2024"
+
+[lints]
+rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
