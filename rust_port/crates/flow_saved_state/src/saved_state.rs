@@ -759,16 +759,15 @@ fn deserialize_file_table(bytes: &[u8]) -> Result<SavedStateEnvFileTable, Invali
                 "Invalid file table prefix length".to_string(),
             ));
         }
-        let mut suffix = Vec::with_capacity(prefix_len + tail.len());
-        suffix.extend_from_slice(&previous[..prefix_len]);
-        suffix.extend_from_slice(tail);
+        previous.truncate(prefix_len);
+        previous.extend_from_slice(tail);
         let file = file_key_from_tag(
             tag,
-            String::from_utf8(suffix.clone())
-                .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?,
+            std::str::from_utf8(&previous)
+                .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?
+                .to_owned(),
         )?;
         files.push(file);
-        previous = suffix;
         offset = tail_end;
     }
     Ok(SavedStateEnvFileTable { files })
@@ -1422,61 +1421,70 @@ pub fn load(
             flow_hh_logger::info!("Reading env metadata from saved-state file");
             let file_table = read_serialized(&mut file)?;
             let file_table_thread = std::thread::spawn(move || unmarshal_file_table(&file_table));
-            let env_data = read_serialized(&mut file)?;
-            let sig_dependency_graph = read_serialized(&mut file)?;
-            let implementation_dependency_graph = read_serialized(&mut file)?;
-            flow_hh_logger::info!("Deserializing env metadata + loading heap in parallel");
-            let file_table = file_table_thread.join().map_err(|_| {
-                InvalidReason::Failed_to_decompress("thread panicked".to_string())
-            })??;
-            let files = Arc::new(file_table.files);
             let env_start = Instant::now();
-            let env_data: SavedStateEnvBaseData = unmarshal_serialized("base", &env_data)?;
+            let env_data = read_serialized(&mut file)?;
+            let env_data_unmarshal_thread = std::thread::spawn(move || {
+                unmarshal_serialized::<SavedStateEnvBaseData>("base", &env_data)
+            });
+            let sig_dependency_graph = read_serialized(&mut file)?;
+            let sig_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
+                unmarshal_serialized::<SerializedIndexedGraph>("sig graph", &sig_dependency_graph)
+            });
+            let implementation_dependency_graph = read_serialized(&mut file)?;
+            let implementation_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
+                unmarshal_serialized::<SerializedIndexedGraph>(
+                    "implementation graph",
+                    &implementation_dependency_graph,
+                )
+            });
+            flow_hh_logger::info!("Deserializing env metadata + loading heap in parallel");
+            let thread_panicked =
+                || InvalidReason::Failed_to_decompress("thread panicked".to_string());
+            let file_table = file_table_thread.join().map_err(|_| thread_panicked())??;
+            let files = Arc::new(file_table.files);
             let env_data_files = files.clone();
             let env_data_thread = std::thread::spawn(move || {
-                deserialize_saved_state_base_data(&env_data_files, env_data)
-            });
-            let sig_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
-                unmarshal_serialized("sig graph", &sig_dependency_graph)
-            });
-            let implementation_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
-                unmarshal_serialized("implementation graph", &implementation_dependency_graph)
-            });
-            let sig_dependency_graph: SerializedIndexedGraph =
-                sig_dependency_graph_unmarshal_thread.join().map_err(|_| {
+                let env_data = env_data_unmarshal_thread.join().map_err(|_| {
                     InvalidReason::Failed_to_decompress("thread panicked".to_string())
                 })??;
-            let implementation_dependency_graph: SerializedIndexedGraph =
-                implementation_dependency_graph_unmarshal_thread
-                    .join()
-                    .map_err(|_| {
-                        InvalidReason::Failed_to_decompress("thread panicked".to_string())
-                    })??;
+                deserialize_saved_state_base_data(&env_data_files, env_data)
+            });
             let sig_dependency_graph_files = files.clone();
             let sig_dependency_graph_thread = std::thread::spawn(move || {
-                graph_from_indexed_graph(&sig_dependency_graph_files, sig_dependency_graph)
+                let sig_dependency_graph: SerializedIndexedGraph =
+                    sig_dependency_graph_unmarshal_thread.join().map_err(|_| {
+                        InvalidReason::Failed_to_decompress("thread panicked".to_string())
+                    })??;
+                Ok::<_, InvalidReason>(graph_from_indexed_graph(
+                    &sig_dependency_graph_files,
+                    sig_dependency_graph,
+                ))
             });
             let implementation_dependency_graph_files = files.clone();
             let implementation_dependency_graph_thread = std::thread::spawn(move || {
-                graph_from_indexed_graph(
+                let implementation_dependency_graph: SerializedIndexedGraph =
+                    implementation_dependency_graph_unmarshal_thread
+                        .join()
+                        .map_err(|_| {
+                            InvalidReason::Failed_to_decompress("thread panicked".to_string())
+                        })??;
+                Ok::<_, InvalidReason>(graph_from_indexed_graph(
                     &implementation_dependency_graph_files,
                     implementation_dependency_graph,
-                )
+                ))
             });
             let heap_start = Instant::now();
             shared_mem
                 .load_heap_with_file_table(&mut file, files.clone())
                 .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
             flow_hh_logger::info!("Loaded heap in {:?}", heap_start.elapsed());
-            let data = env_data_thread.join().map_err(|_| {
-                InvalidReason::Failed_to_decompress("thread panicked".to_string())
-            })??;
+            let data = env_data_thread.join().map_err(|_| thread_panicked())??;
             let sig_dependency_graph = sig_dependency_graph_thread
                 .join()
-                .map_err(|_| InvalidReason::Failed_to_decompress("thread panicked".to_string()))?;
+                .map_err(|_| thread_panicked())??;
             let implementation_dependency_graph = implementation_dependency_graph_thread
                 .join()
-                .map_err(|_| InvalidReason::Failed_to_decompress("thread panicked".to_string()))?;
+                .map_err(|_| thread_panicked())??;
             let data = join_saved_state_env_data(
                 data,
                 sig_dependency_graph,
