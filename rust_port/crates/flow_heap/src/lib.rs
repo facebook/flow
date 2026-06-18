@@ -10,3 +10,4 @@ pub mod haste_module;
 pub mod parse;
 pub mod parsing_heaps;
 pub mod resolved_requires;
+pub mod shared_mem;

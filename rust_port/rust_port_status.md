@@ -1235,7 +1235,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] heapIdent.ml → `irrelevant` (subsumed by `tvar_id` integer counters in `flow_typing_context`)
   - [x] localCache.ml → `irrelevant` (OCaml signatures only; no concrete implementation needed in Rust)
   - [x] prefix.ml → `irrelevant` (Rust uses typed map keys instead of string prefix namespacing)
-  - [x] sharedMem.ml → `flow_heap/src/parsing_heaps.rs` (`SharedMem`); OCaml C bindings replaced by `LockedMap`-based store
+  - [x] sharedMem.ml → `flow_heap/src/shared_mem.rs` (`SharedMem`); OCaml C bindings replaced by Rust sharded heap store
   - [x] workerCancel.ml → `flow_utils_concurrency/src/worker_cancel.rs`
 - [x] lsp/
   - [x] __tests__/

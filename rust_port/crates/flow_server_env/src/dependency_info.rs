@@ -8,12 +8,11 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
-use dupe::Dupe;
 use flow_common_utils::graph::Graph;
 use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct DependencyInfo {
     sig_dependency_graph: Graph<FileKey>,
     implementation_dependency_graph: Graph<FileKey>,
@@ -53,7 +52,33 @@ impl PartialDependencyGraph {
     }
 }
 
+fn extract_sig_map(
+    map: BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
+) -> BTreeMap<FileKey, BTreeSet<FileKey>> {
+    map.into_iter()
+        .map(|(file, (sig_deps, _impl_deps))| (file, sig_deps))
+        .collect()
+}
+
+fn extract_impl_map(
+    map: BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
+) -> BTreeMap<FileKey, BTreeSet<FileKey>> {
+    map.into_iter()
+        .map(|(file, (_sig_deps, impl_deps))| (file, impl_deps))
+        .collect()
+}
+
 impl DependencyInfo {
+    pub fn from_graphs(
+        sig_dependency_graph: Graph<FileKey>,
+        implementation_dependency_graph: Graph<FileKey>,
+    ) -> Self {
+        Self {
+            sig_dependency_graph,
+            implementation_dependency_graph,
+        }
+    }
+
     pub fn empty() -> Self {
         Self {
             sig_dependency_graph: Graph::new(),
@@ -62,21 +87,11 @@ impl DependencyInfo {
     }
 
     pub fn of_map(pool: &ThreadPool, map: PartialDependencyGraph) -> Self {
-        let mut sig_dependency_map = BTreeMap::new();
-        let mut implementation_dependency_map = BTreeMap::new();
-
-        for (k, (sig_deps, impl_deps)) in map.inner {
-            sig_dependency_map.insert(k.dupe(), sig_deps);
-            implementation_dependency_map.insert(k, impl_deps);
-        }
-
-        let (implementation_dependency_graph, sig_dependency_graph) = pool.install(|| {
-            rayon::join(
-                || Graph::of_map(implementation_dependency_map),
-                || Graph::of_map(sig_dependency_map),
-            )
-        });
-
+        let _ = pool;
+        let sig_dependency_map = extract_sig_map(map.inner.clone());
+        let sig_dependency_graph = Graph::of_map(sig_dependency_map);
+        let implementation_dependency_map = extract_impl_map(map.inner);
+        let implementation_dependency_graph = Graph::of_map(implementation_dependency_map);
         Self {
             sig_dependency_graph,
             implementation_dependency_graph,
@@ -88,20 +103,16 @@ impl DependencyInfo {
         partial_dep_graph: PartialDependencyGraph,
         to_remove: BTreeSet<FileKey>,
     ) -> Self {
-        let mut updated_sig_map = BTreeMap::new();
-        let mut updated_impl_map = BTreeMap::new();
-
-        for (k, (sig_deps, impl_deps)) in partial_dep_graph.inner {
-            updated_sig_map.insert(k.dupe(), sig_deps);
-            updated_impl_map.insert(k, impl_deps);
-        }
-
+        let DependencyInfo {
+            sig_dependency_graph: old_sig_graph,
+            implementation_dependency_graph: old_impl_graph,
+        } = old_dep_info;
+        let updated_map = partial_dep_graph.inner;
+        let updated_sig_map = extract_sig_map(updated_map.clone());
+        let updated_impl_map = extract_impl_map(updated_map);
         Self {
-            sig_dependency_graph: old_dep_info
-                .sig_dependency_graph
-                .update_from_map(updated_sig_map, to_remove.clone()),
-            implementation_dependency_graph: old_dep_info
-                .implementation_dependency_graph
+            sig_dependency_graph: old_sig_graph.update_from_map(updated_sig_map, to_remove.clone()),
+            implementation_dependency_graph: old_impl_graph
                 .update_from_map(updated_impl_map, to_remove),
         }
     }
@@ -115,10 +126,15 @@ impl DependencyInfo {
     }
 
     pub fn debug_to_string(&self) -> String {
+        let DependencyInfo {
+            sig_dependency_graph,
+            implementation_dependency_graph,
+        } = self;
+        let sig_map = sig_dependency_graph.to_map();
+        let impl_map = implementation_dependency_graph.to_map();
         format!(
             "Sig dependency graph:\n{:?}\nImplementation dependency graph:\n{:?}",
-            self.sig_dependency_graph.to_map(),
-            self.implementation_dependency_graph.to_map()
+            sig_map, impl_map
         )
     }
 }

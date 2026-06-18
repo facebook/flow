@@ -18,10 +18,10 @@ pub struct Compressed {
 }
 
 pub fn marshal_and_compress<T: Serialize>(data: &T) -> Result<Compressed, InvalidReason> {
-    let serialized = bincode::serde::encode_to_vec(data, bincode::config::legacy())
+    let serialized = postcard::to_stdvec(data)
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     let uncompressed_size = serialized.len();
-    let compressed_data = lz4_flex::compress_prepend_size(&serialized);
+    let compressed_data = lz4_flex::block::compress(&serialized);
     let compressed_size = compressed_data.len();
     Ok(Compressed {
         compressed_data,
@@ -33,10 +33,15 @@ pub fn marshal_and_compress<T: Serialize>(data: &T) -> Result<Compressed, Invali
 pub fn decompress_and_unmarshal<T: DeserializeOwned>(
     compressed: &Compressed,
 ) -> Result<T, InvalidReason> {
-    let decompressed = lz4_flex::decompress_size_prepended(&compressed.compressed_data)
-        .map_err(|err| InvalidReason::Failed_to_decompress(err.to_string()))?;
-    bincode::serde::decode_from_slice(&decompressed, bincode::config::legacy())
-        .map(|(v, _)| v)
+    let decompressed =
+        lz4_flex::block::decompress(&compressed.compressed_data, compressed.uncompressed_size)
+            .map_err(|err| InvalidReason::Failed_to_decompress(err.to_string()))?;
+    if decompressed.len() != compressed.uncompressed_size {
+        return Err(InvalidReason::Failed_to_decompress(
+            "Failed to decompress".to_string(),
+        ));
+    }
+    postcard::from_bytes(&decompressed)
         .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))
 }
 

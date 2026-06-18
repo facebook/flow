@@ -11,6 +11,7 @@ dupe = "0.9.1"
 flow_common = { path = "../flow_common" }
 flow_common_build_id = { path = "../flow_common_build_id" }
 flow_common_modulename = { path = "../flow_common_modulename" }
+flow_common_utils = { path = "../flow_common_utils" }
 flow_config = { path = "../flow_config" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_heap = { path = "../flow_heap" }
@@ -25,4 +26,5 @@ flow_services_export = { path = "../flow_services_export" }
 flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 lz4_flex = "0.13.1"
+postcard = { version = "1.0.8", features = ["use-crc", "use-std"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }

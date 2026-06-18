@@ -25,7 +25,15 @@ pub use im::ordset::Iter;
 /// This type provides the same functionality as im::OrdSet but also implements
 /// the Dupe trait, making it consistent with other types in the Flow codebase
 /// that use `.dupe()` for cheap copies.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Eq,
+    Hash
+)]
 pub struct FlowOrdSet<T: Ord + Clone>(im::OrdSet<T>);
 
 impl<T: Ord + Clone> PartialOrd for FlowOrdSet<T> {

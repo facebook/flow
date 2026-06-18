@@ -12,16 +12,17 @@ use std::collections::BTreeSet;
 use std::hash::Hash;
 
 use dupe::Dupe;
+use dupe::IterDupedExt;
 
-#[derive(Clone)]
-struct Node<K> {
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct Node<K: Ord> {
     forward: BTreeSet<K>,
     // These edges are mutable *only* for efficiency during construction. Once the graph is
     // constructed these should never be mutated.
     backward: BTreeSet<K>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Graph<K: Eq + Ord + Hash + Dupe> {
     nodes: BTreeMap<K, Node<K>>,
 }
@@ -154,6 +155,36 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
     #[allow(dead_code)]
     pub fn node_count(&self) -> usize {
         self.nodes.len()
+    }
+
+    pub fn from_indexed_edges(
+        keys: &[K],
+        graph_keys: Vec<u32>,
+        forward: Vec<Vec<u32>>,
+        backward: Vec<Vec<u32>>,
+    ) -> Self {
+        let mut nodes = BTreeMap::new();
+        for (i, key_index) in graph_keys.into_iter().enumerate() {
+            let Some(key) = keys.get(key_index as usize) else {
+                continue;
+            };
+            let forward = forward
+                .get(i)
+                .into_iter()
+                .flat_map(|edges| edges.iter())
+                .filter_map(|idx| keys.get(*idx as usize))
+                .duped()
+                .collect::<BTreeSet<_>>();
+            let backward = backward
+                .get(i)
+                .into_iter()
+                .flat_map(|edges| edges.iter())
+                .filter_map(|idx| keys.get(*idx as usize))
+                .duped()
+                .collect::<BTreeSet<_>>();
+            nodes.insert(key.dupe(), Node { forward, backward });
+        }
+        Self { nodes }
     }
 
     pub fn find(&self, elt: &K) -> &BTreeSet<K> {

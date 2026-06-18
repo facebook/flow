@@ -37,6 +37,28 @@ impl HasteModule {
         }
     }
 
+    pub(crate) fn new_committed(
+        transaction: EntityTransaction,
+        module_info: HasteModuleInfo,
+        provider: Option<FileKey>,
+        dependents: Vec<FileKey>,
+        all_providers: Vec<FileKey>,
+    ) -> Self {
+        let dependents_set = LockedSet::new();
+        for dependent in dependents {
+            dependents_set.insert(dependent);
+        }
+        Self {
+            module_info: Arc::new(module_info),
+            provider: Arc::new(match provider {
+                Some(provider) => Entity::new_committed(transaction, provider),
+                None => Entity::empty_committed(transaction),
+            }),
+            dependents: Arc::new(dependents_set),
+            all_providers: Arc::new(RwLock::new(all_providers.into_iter().collect())),
+        }
+    }
+
     pub fn module_name(&self) -> &FlowSmolStr {
         self.module_info.module_name()
     }

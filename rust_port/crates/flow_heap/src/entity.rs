@@ -67,8 +67,32 @@ impl<T> Entity<T> {
         }
     }
 
+    pub(crate) fn new_committed(transaction: EntityTransaction, value: T) -> Self {
+        let version = transaction.next_version().saturating_sub(2);
+        Self {
+            transaction,
+            slots: [
+                Arc::new(parking_lot::RwLock::new(Some(value))),
+                Arc::new(parking_lot::RwLock::new(None)),
+            ],
+            version: Arc::new(AtomicU64::new(version)),
+        }
+    }
+
     pub(crate) fn empty(transaction: EntityTransaction) -> Self {
         let version = transaction.next_version();
+        Self {
+            transaction,
+            slots: [
+                Arc::new(parking_lot::RwLock::new(None)),
+                Arc::new(parking_lot::RwLock::new(None)),
+            ],
+            version: Arc::new(AtomicU64::new(version)),
+        }
+    }
+
+    pub(crate) fn empty_committed(transaction: EntityTransaction) -> Self {
+        let version = transaction.next_version().saturating_sub(2);
         Self {
             transaction,
             slots: [

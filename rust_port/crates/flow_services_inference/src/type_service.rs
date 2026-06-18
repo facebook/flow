@@ -748,11 +748,6 @@ fn merge(
     )?;
 
     if options.profile && !options.quiet {
-        // OCaml:
-        // if Options.should_profile options then
-        //   with_memory_timer_lwt ~options "PrintGCStats" profiling (fun () ->
-        //       Lwt.return (Gc.print_stat stderr)
-        //   )
         with_memory_timer(options, "PrintGCStats", || {});
     }
 
@@ -2289,54 +2284,6 @@ fn assert_valid_hashes(updates: &CheckedSet, invalid_hashes: Vec<FileKey>) {
     }
 }
 
-fn get_saved_state_local_errors(
-    pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
-    options: &Arc<Options>,
-    unparsed: &FlowOrdSet<FileKey>,
-    package_json_files: &FlowOrdSet<FileKey>,
-) -> BTreeMap<FileKey, ErrorSet> {
-    let files = FlowOrdSet::from(
-        unparsed
-            .dupe()
-            .into_inner()
-            .union(package_json_files.dupe().into_inner()),
-    );
-    if files.is_empty() {
-        return BTreeMap::new();
-    }
-    let files: Vec<FileKey> = files.iter().map(|file| file.dupe()).collect();
-    let next: parsing_service::Next = {
-        let mut files = Some(files);
-        Box::new(move || files.take())
-    };
-    let results =
-        parsing_service::reparse_with_defaults(pool, shared_mem, options, &[Loc::default()], next);
-    let CollatedParseResults {
-        local_errors,
-        package_json: (package_json_files_list, package_json_errors),
-        ..
-    } = collate_parse_results(results);
-    let package_errors = package_json_files_list
-        .iter()
-        .zip(package_json_errors.iter())
-        .fold(
-            BTreeMap::new(),
-            |mut acc, (source_file, parse_error)| match parse_error {
-                None => acc,
-                Some((loc, err)) => {
-                    let error_set = inference_utils::set_of_parse_error(
-                        source_file.dupe(),
-                        (loc.dupe(), err.clone()),
-                    );
-                    update_errset(&mut acc, source_file.dupe(), error_set);
-                    acc
-                }
-            },
-        );
-    merge_error_maps(package_errors, local_errors)
-}
-
 fn is_incompatible_package_json(
     options: &Options,
     shared_mem: &SharedMem,
@@ -2944,10 +2891,7 @@ pub fn init_from_legacy_saved_state(
     if verify {
         assert_valid_hashes(updates, invalid_hashes);
     }
-    let local_errors = merge_error_maps(
-        saved_local_errors,
-        get_saved_state_local_errors(pool, shared_mem, options, &unparsed, &package_json_files),
-    );
+    let local_errors = saved_local_errors;
 
     let (env, libs_ok) = init_with_initial_state(
         pool,
@@ -3001,11 +2945,9 @@ pub fn init_from_direct_saved_state(
     // 3. Optionally verify file hashes
     // Files.node_modules_containers := node_modules_containers;
     *files::node_modules_containers.write().unwrap() = saved_node_modules_containers;
-    let parsed = parsed_files.into_iter().collect::<FlowOrdSet<_>>();
-    let unparsed = unparsed_files.into_iter().collect::<FlowOrdSet<_>>();
-    let package_json_files = saved_package_json_files
-        .into_iter()
-        .collect::<FlowOrdSet<_>>();
+    let parsed = parsed_files;
+    let unparsed = unparsed_files;
+    let package_json_files = saved_package_json_files;
     let dirty_modules =
         clear_deleted_heaps(shared_mem, env, &parsed, &unparsed, &package_json_files);
     let invalid_hashes = if options.saved_state_verify {
@@ -3027,10 +2969,7 @@ pub fn init_from_direct_saved_state(
     if options.saved_state_verify {
         assert_valid_hashes(updates, invalid_hashes);
     }
-    let local_errors = merge_error_maps(
-        saved_local_errors,
-        get_saved_state_local_errors(pool, shared_mem, options, &unparsed, &package_json_files),
-    );
+    let local_errors = saved_local_errors;
 
     let (env, libs_ok) = init_with_initial_state(
         pool,
@@ -3348,15 +3287,6 @@ pub fn load_saved_state(
     options: &Arc<Options>,
 ) -> Result<(LoadedSavedState, CheckedSet), String> {
     // Does a best-effort job to load a saved state. If it fails, returns None
-    // OCaml:
-    // let%lwt (fetch_profiling, fetch_result) =
-    //   match Options.saved_state_fetcher options with
-    //   | Options.Dummy_fetcher -> Saved_state_dummy_fetcher.fetch ~options
-    //   | Options.Local_fetcher -> Saved_state_local_fetcher.fetch ~options
-    //   | Options.Scm_fetcher -> Saved_state_scm_fetcher.fetch ~options
-    //   | Options.Fb_fetcher -> Saved_state_fb_fetcher.fetch ~options
-    // in
-    // Profiling_js.merge ~from:fetch_profiling ~into:profiling;
     let (fetch_profiling, fetch_result) =
         flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
             match options.saved_state_fetcher {

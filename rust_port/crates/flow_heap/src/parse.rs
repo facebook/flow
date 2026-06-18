@@ -144,7 +144,7 @@ impl FileEntry {
 /// In Rust, we store them separately since our type_sig is immutable.
 /// These hashes incorporate transitive dependency information and are
 /// read by acyclic_dep when a subsequent component depends on this file.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum MergeHashes {
     CJS {
         type_export_hashes: Vec<(FlowSmolStr, u64)>,
