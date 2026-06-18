@@ -126,6 +126,11 @@ impl<P: ConnectionProcessor> Connection<P> {
         send_command(self, Command::Write(msg))
     }
 
+    pub fn write_sync(&self, msg: <P::Ch as Channel>::OutMessage) -> io::Result<()> {
+        let mut writer = self.writer.lock().unwrap();
+        P::Ch::write(&mut *writer, &msg)
+    }
+
     pub fn write_and_close(&self, msg: <P::Ch as Channel>::OutMessage) -> bool {
         let result = send_command(self, Command::WriteAndClose(msg));
         close_stream(self);

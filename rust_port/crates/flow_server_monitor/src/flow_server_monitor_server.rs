@@ -432,8 +432,12 @@ pub mod server_instance {
         let msg = monitor_prot::MonitorToServerMessage::PleaseDie(
             monitor_prot::PleaseDieReason::MonitorExiting(exit_status, exit_msg.to_string()),
         );
-        if !connection.write(msg) {
-            // Connection to the server has already closed. The server is likely already dead
+        if let Err(e) = connection.write_sync(msg) {
+            flow_hh_logger::debug!(
+                "Failed to synchronously tell server process ({}) to exit: {}",
+                pid,
+                e
+            );
         }
         // The monitor waits 1 second before exiting. So let's give the server .75 seconds to shutdown
         // gracefully.
@@ -707,9 +711,6 @@ pub mod server_instance {
 
         let (start_fn, connection) =
             ServerConnection::create(name.clone(), in_stream, out_stream, close, handle_response);
-        start_fn();
-
-        flow_hh_logger::info!("Spawned {} (pid={})", name, pid);
 
         // Close the connection to the server when we're about to exit
         let on_exit_connection = connection.clone();
@@ -724,6 +725,10 @@ pub mod server_instance {
                 &on_exit_daemon_handle,
             );
         }));
+
+        start_fn();
+
+        flow_hh_logger::info!("Spawned {} (pid={})", name, pid);
 
         if !already_initialized {
             // This may block for quite awhile. No messages will be sent to the server process until the
