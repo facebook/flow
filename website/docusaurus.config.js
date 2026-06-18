@@ -13,9 +13,7 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const allFlowVersions = require('./src/js/flow-versions');
 
 const defaultFlowVersion =
-  allFlowVersions.find(
-    version => version !== 'master' && version !== 'master (rust port)',
-  ) || 'master';
+  allFlowVersions.find(version => version !== 'master') || 'master';
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = async () => {

@@ -31,7 +31,7 @@ endif
 
 DUNE_PROFILE=$(if $(FLOW_RELEASE),opt,dev)
 
-FLOW_JS_IMPL?=js-of-ocaml
+FLOW_JS_IMPL?=rust-wasm
 
 NPM?=npm
 NODE?=node
@@ -105,16 +105,11 @@ test: bin/flow$(EXE) bin/flow.js
 	${MAKE} do-test do-test-js
 
 .PHONY: bin/flow.js
-ifeq ($(FLOW_JS_IMPL),js-of-ocaml)
-bin/flow.js:
-	@mkdir -p $(@D)
-	dune build --profile $(DUNE_PROFILE) src/flow_dot_js.bc.js
-	install -C _build/default/src/flow_dot_js.bc.js "$@"
-else ifeq ($(FLOW_JS_IMPL),rust-wasm)
+ifeq ($(FLOW_JS_IMPL),rust-wasm)
 bin/flow.js:
 	FLOW_RELEASE="$(FLOW_RELEASE)" scripts/build-flow-dot-js-wasm.sh --output "$@"
 else
-$(error Unknown FLOW_JS_IMPL '$(FLOW_JS_IMPL)'. Expected js-of-ocaml or rust-wasm)
+$(error Unknown FLOW_JS_IMPL '$(FLOW_JS_IMPL)'. Expected rust-wasm)
 endif
 
 # Run `make js FLOW_RELEASE=1` to do an optimized build

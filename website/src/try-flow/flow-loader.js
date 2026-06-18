@@ -19,7 +19,6 @@ declare function requirejs(
 const versionCache /*: Map<string, Promise<FlowJs>> */ = new Map();
 
 const MASTER_VERSION = 'master';
-const MASTER_RUST_PORT_VERSION = 'master (rust port)';
 const FLOW_RELEASE_VERSION =
   /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/;
 
@@ -90,8 +89,6 @@ function masterVersionBasePath(version: string): ?string {
   switch (version) {
     case MASTER_VERSION:
       return '/flow/master';
-    case MASTER_RUST_PORT_VERSION:
-      return '/flow/master-rust-port';
     default:
       return null;
   }

@@ -11,12 +11,6 @@ $ ../scripts/serve-website.sh
 This command builds Flow binary and starts a local development server and opens up a browser window.
 Most changes are reflected live without having to restart the server.
 
-To serve the website with the Rust-port `flow.js`, run:
-
-```bash
-$ ../scripts/serve-website.sh --flow-js=rust-wasm
-```
-
 If you don't care about inline Flow errors in code blocks and try-flow page, you can run the following command instead:
 
 ```bash

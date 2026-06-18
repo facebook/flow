@@ -43,14 +43,6 @@ function getCachedReleases() /*: Array<string> */ {
   }
 }
 
-const masterFlowVersions =
-  process.env.FLOW_WEBSITE_INCLUDE_RUST_PORT === '1'
-    ? ['master', 'master (rust port)']
-    : ['master'];
-
-const allFlowVersions /*: Array<string> */ = [
-  ...masterFlowVersions,
-  ...getCachedReleases(),
-];
+const allFlowVersions /*: Array<string> */ = ['master', ...getCachedReleases()];
 
 module.exports = allFlowVersions;

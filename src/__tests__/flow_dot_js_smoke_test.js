@@ -8,11 +8,7 @@
  */
 
 const flowJSPath = process.argv[2];
-// js_of_ocaml uses the existence of process global to decide whether we are in node or browser
-// environment.
-// See https://github.com/ocsigen/js_of_ocaml/blob/3feaa1c6bf1647e670ebc8a8fabfda61a66aff8e/runtime/fs_node.js#L21-L26
-// We want to smoke test behavior of flow.js in browser environment, so we trick it into believing
-// that we are in browser.
+// Exercise flow.js without Node's process global, matching how the website loads it.
 global.process = undefined;
 const flow = require(flowJSPath);
 

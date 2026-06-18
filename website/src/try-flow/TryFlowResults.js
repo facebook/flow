@@ -268,12 +268,10 @@ export default component TryFlowResults(
   }
 
   const latestReleaseVersion = flowVersions.find(
-    version => version !== 'master' && version !== 'master (rust port)',
+    version => version !== 'master',
   );
   const isOldFlowVersion =
-    flowVersion !== 'master' &&
-    flowVersion !== 'master (rust port)' &&
-    flowVersion !== latestReleaseVersion;
+    flowVersion !== 'master' && flowVersion !== latestReleaseVersion;
 
   return (
     <div className={clsx(styles.results, collapsed && styles.collapsed)}>
