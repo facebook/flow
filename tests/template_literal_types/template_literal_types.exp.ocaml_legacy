@@ -2224,8 +2224,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
  - Either string [1] is incompatible with string literal `age` [2].
- - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `lastName` [2].
+ - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `address` [2].
  - Or string [1] is incompatible with template literal type [3].
  - Or an index signature declaring the expected key / value type is missing in `Obj` [4].
@@ -2250,8 +2250,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
  - Either string [1] is incompatible with string literal `age` [2].
- - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `lastName` [2].
+ - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `address` [2].
  - Or string [1] is incompatible with template literal type [3].
  - Or an index signature declaring the expected key / value type is missing in `Obj` [4].

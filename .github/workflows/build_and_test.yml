@@ -308,7 +308,6 @@ jobs:
     - build_and_test
     env:
       FLOW_RUNTESTS_PARALLELISM: 8
-      FLOW_RUST_PORT: 1
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
@@ -324,7 +323,6 @@ jobs:
     - build_macos_arm64
     env:
       FLOW_RUNTESTS_PARALLELISM: 8
-      FLOW_RUST_PORT: 1
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
@@ -341,8 +339,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
     - build_and_test
-    env:
-      FLOW_RUST_PORT: 1
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
@@ -358,8 +354,6 @@ jobs:
     runs-on: macos-15
     needs:
     - build_macos_arm64
-    env:
-      FLOW_RUST_PORT: 1
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
@@ -378,8 +372,6 @@ jobs:
     runs-on: windows-2022
     needs:
     - build_win
-    env:
-      FLOW_RUST_PORT: 1
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7

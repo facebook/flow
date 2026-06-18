@@ -81,11 +81,11 @@ annotation to these definitions [3] [4] [5] [recursive-definition]
              ^^^^^
 
 References:
-   a.js:90:12
-   90|     return math2.odd(x - 1);
-                  ^^^^^ [1]
    a.js:84:12
    84|     return math2.even(x - 1);
+                  ^^^^^ [1]
+   a.js:90:12
+   90|     return math2.odd(x - 1);
                   ^^^^^ [2]
    a.js:76:20
    76|     meth(x: number) {

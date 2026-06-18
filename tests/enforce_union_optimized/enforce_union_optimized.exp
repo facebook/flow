@@ -78,11 +78,11 @@ Flow cannot use these keys to quickly check this union because the same supporte
        ^
 
 References:
-   file.js:44:5
-   44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    file.js:43:5
    43|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   file.js:44:5
+   44|   | { f: 1, g: "a", h: true, k: void, l: null, m: 1n }
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

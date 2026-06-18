@@ -135,7 +135,7 @@ The core per-test executor, replacing `scripts/run-one-test`.
 **Flow of execution:**
 
 1. **Pre-checks:** Verifies `.exp` file and `.flowconfig`/`.testconfig` exist.
-   Checks for `rust_port` variant. Handles Windows symlink skips.
+   Checks for the `ocaml_legacy` variant. Handles Windows symlink skips.
 
 2. **Temp directory setup:** Creates a temp directory, copies the test directory
    into it, moves the `.exp` file out of the working copy.

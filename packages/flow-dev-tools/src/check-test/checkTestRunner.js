@@ -69,7 +69,7 @@ async function shouldListTest(
 ): Promise<boolean> {
   const {checkOnly, savedState} = opts;
   const name = basename(testDir);
-  const rustPort = (process.env.FLOW_RUST_PORT || '0') === '1';
+  const ocamlLegacy = (process.env.FLOW_OCAML_LEGACY || '0') === '1';
 
   if (
     process.platform === 'win32' &&
@@ -79,8 +79,8 @@ async function shouldListTest(
   }
 
   let expFileName = name + '.exp';
-  if (rustPort && existsSync(join(testDir, name + '.exp.rust_port'))) {
-    expFileName = name + '.exp.rust_port';
+  if (ocamlLegacy && existsSync(join(testDir, name + '.exp.ocaml_legacy'))) {
+    expFileName = name + '.exp.ocaml_legacy';
   }
 
   const hasExpFile = existsSync(join(testDir, expFileName));
@@ -100,7 +100,7 @@ async function shouldListTest(
   if (!process.env.FLOW_GIT_BINARY && config.git) {
     return false;
   }
-  if (rustPort && config.skip_rust_port) {
+  if (!ocamlLegacy && config.skip_rust_port) {
     return false;
   }
   if (process.platform === 'win32' && config.skip_windows) {
