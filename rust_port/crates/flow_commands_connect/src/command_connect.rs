@@ -158,9 +158,9 @@ fn reset_retries_if_necessary(
 
 fn rate_limit(retries: &RetryInfo) {
     // Make sure there is at least 1 second between retries
-    let elapsed = retries.last_connect_time.elapsed();
-    if elapsed < Duration::from_secs(1) {
-        std::thread::sleep(Duration::from_secs(1) - elapsed);
+    let sleep_time = (1.0 - retries.last_connect_time.elapsed().as_secs_f64()).ceil() as i64;
+    if sleep_time > 0 {
+        std::thread::sleep(Duration::from_secs(sleep_time as u64));
     }
 }
 
