@@ -7,3 +7,6 @@ edition = "2024"
 
 [dependencies]
 flow_common = { path = "../flow_common" }
+
+[lints]
+rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
