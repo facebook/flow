@@ -9,6 +9,10 @@
 
 import {spawn} from 'child_process';
 
+const MAX_UNRESOLVED_CHECK_CONTENTS = 10;
+let unresolvedCheckContents = 0;
+const checkContentsQueue /*: Array<() => void> */ = [];
+
 async function checkContents(input /*: string */) {
   const flowProcess = spawn(process.env.FLOW_BIN_PATH || 'flow', [
     'check-contents',
@@ -24,6 +28,31 @@ async function checkContents(input /*: string */) {
   return JSON.parse(json);
 }
 
+async function rateLimitedCheckContents(input /*: string */) {
+  return new Promise((resolve, reject) => {
+    const run = async () => {
+      unresolvedCheckContents++;
+      try {
+        resolve(await checkContents(input));
+      } catch (error) {
+        reject(error);
+      } finally {
+        unresolvedCheckContents--;
+        const next = checkContentsQueue.shift();
+        if (next != null) {
+          next();
+        }
+      }
+    };
+
+    if (unresolvedCheckContents < MAX_UNRESOLVED_CHECK_CONTENTS) {
+      run();
+    } else {
+      checkContentsQueue.push(run);
+    }
+  });
+}
+
 export default async function getFlowMeta(
   code /*: string */,
   options /*: {[string]: boolean} */ = {},
@@ -31,7 +60,7 @@ export default async function getFlowMeta(
   if (process.env.NO_INLINE_FLOW_ERRORS) {
     return JSON.stringify({errors: [], options});
   }
-  const errors = (await checkContents(code)).errors.map(
+  const errors = (await rateLimitedCheckContents(code)).errors.map(
     ({message, error_codes}) => {
       const errorCode = (error_codes && error_codes[0]) || null;
       let fullDescription = message.map(({descr}) => descr).join(' ');
