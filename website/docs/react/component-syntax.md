@@ -4,7 +4,7 @@ slug: /react/component-syntax
 description: "How to use Flow's component syntax to declare React components with built-in type system support for props, refs, and render types."
 ---
 
-[Components](https://react.dev/learn/your-first-component) are the foundation for building UIs in React. While components are typically expressed using JavaScript functions, Component Syntax provides component primitive values that provide several advantages over function components:
+[Components](https://react.dev/learn/your-first-component) are the foundation for building UIs in React. Component Syntax is the standard way to write them in Flow: a dedicated component primitive, enabled by default, with several advantages over plain function components:
 
 - **Individual named params instead of a props object.** Removes the destructuring-and-typing duplication of `({name}: {name: string})` and the need to wrap props in `Readonly<{...}>` — component params are read-only by default.
 - **No return type annotation.** Flow infers and enforces `React.Node`, and rejects components that implicitly return on any branch.
@@ -238,9 +238,9 @@ import typeof * as GenericCompModule from './GenericComp';
 type CompType = GenericCompModule['default']; // Declaration works, but CompType is no longer polymorphic
 ```
 
-## Enable Component Syntax {#toc-enable-component-syntax}
+## Availability {#toc-enable-component-syntax}
 
-Enabled by default since Flow v0.317. Before that, add `component_syntax=true` in your `.flowconfig` under the `[options]` heading.
+Component Syntax is enabled by default since Flow v0.317. On older versions, add `component_syntax=true` to the `[options]` section of your `.flowconfig`.
 
 ## See Also {#toc-see-also}
 

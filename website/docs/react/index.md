@@ -1,5 +1,5 @@
 ---
-title: Getting Started
+title: Using React with Flow
 slug: /react
 description: Learn how to use Flow to effectively type common and advanced React patterns.
 ---
@@ -13,17 +13,23 @@ types for patterns you are already familiar with. We will be using examples
 based on `react-dom`, but all of these patterns work in other environments
 like `react-native` as well.
 
+## Component and Hook Syntax {#toc-component-and-hook-syntax}
+
+Flow has dedicated [`component`](./component-syntax.md) and [`hook`](./hook-syntax.md) syntax for
+writing React components and hooks, and it is the standard way to write React with Flow. The syntax is
+enabled by default, gives components and hooks first-class type system support, and lets Flow enforce
+the [Rules of React](https://react.dev/reference/rules) directly.
+
+Make sure your toolchain is set up using the [installation instructions](../getting-started.md#toc-installation),
+then read the [Component Syntax](./component-syntax.md) and [Hook Syntax](./hook-syntax.md) docs. The older
+[function and class component](./function-and-class-components.md) patterns still type-check, but are legacy:
+prefer component and hook syntax for new code.
+
 ## Setup Flow with React {#toc-setup-flow-with-react}
 
 Flow and Babel work well together, so it doesn't take much to adopt Flow as a
 React user who already uses Babel. If you need to setup Babel with Flow, you can
 follow [this guide](../tools/babel.md).
-
-## Check Out Component Syntax
-Flow supports a dedicated syntax for writing React components and hooks that we recommend instead of using regular
-function/class components. Ensure you are set up using our [most up-to-date instructions to
-configure your toolchain](../getting-started.md#toc-installation) and then take a look at the [Component Syntax](./component-syntax.md)
-and [Hook Syntax](./hook-syntax.md) docs.
 
 ## React Runtimes
 
@@ -47,5 +53,5 @@ react.runtime=automatic
 - [Event Handling](./events.md) — typing event handlers and synthetic events
 - [Refs](./refs.md) — typing `useRef`, `createRef`, and callback refs
 - [React Types](./types.md) — `React.Node`, `React.MixedElement`, and other built-in types
-- [Function and Class Components](./function-and-class-components.md) — typing components without component syntax
+- [Function and Class Components](./function-and-class-components.md) — legacy patterns for typing components without component syntax
 - [Higher-Order Components](./hoc.md) — typing HOC patterns

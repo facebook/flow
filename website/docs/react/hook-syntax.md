@@ -168,6 +168,10 @@ component Component() {
 }
 ```
 
+## Availability {#toc-availability}
+
+Hook Syntax is enabled by default since Flow v0.317, by the same option that enables [Component Syntax](./component-syntax.md). On older versions, add `component_syntax=true` to the `[options]` section of your `.flowconfig`.
+
 ## See Also {#toc-see-also}
 
 - [Generics](../types/generics.md) — generic type parameters used in hook signatures
