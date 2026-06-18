@@ -1,4 +1,0 @@
-(library
- (name asserter)
- (modules asserter)
- (libraries hh_json str unix))

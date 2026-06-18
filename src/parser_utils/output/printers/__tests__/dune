@@ -1,3 +1,0 @@
-(test
- (name parser_utils_output_printers_tests)
- (libraries ounit2 flow_parser_utils_output_printers))

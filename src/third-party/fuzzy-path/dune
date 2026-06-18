@@ -1,8 +1,0 @@
-(rule
- (targets libfuzzy-path.a)
- (deps
-  (source_tree .))
- (action
-  (no-infer
-   (progn
-    (run make libfuzzy-path.a)))))

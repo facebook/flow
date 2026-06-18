@@ -1,4 +1,0 @@
-(library
- (name flow_server_watchman_expression_terms)
- (wrapped false)
- (libraries flow_common flow_server_file_watcher_spec hh_json))

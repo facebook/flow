@@ -1,8 +1,0 @@
-(test
- (name parser_utils_output_tests)
- (libraries
-  ounit2
-  flow_parser_utils_output
-  flow_parser_utils_output_printers))
-
-(include_subdirs unqualified)

@@ -1,3 +1,0 @@
-(test
- (name semver_tests)
- (libraries ounit2 semver))

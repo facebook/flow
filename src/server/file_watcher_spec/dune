@@ -1,4 +1,0 @@
-(library
- (name flow_server_file_watcher_spec)
- (wrapped false)
- (libraries flow_common flow_server_files))

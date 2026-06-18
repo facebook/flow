@@ -1,4 +1,0 @@
-(library
- (name common)
- (wrapped false)
- (libraries base))

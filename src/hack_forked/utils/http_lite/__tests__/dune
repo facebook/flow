@@ -1,4 +1,0 @@
-(test
- (name http_lite_test)
- (libraries http_lite ounit2)
- (preprocess (pps ppx_deriving.show)))
