@@ -5,16 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
-use flow_aloc::LazyALocTable;
 use flow_aloc::PackedALocTable;
 use flow_common::docblock::Docblock;
 use flow_common::files;
@@ -45,6 +42,11 @@ impl SharedMem {
     pub fn clear_reader_cache(&self) {
         self.reader_cache.clear();
     }
+
+    pub fn remove_reader_cache_batch(&self, keys: &[FileKey]) {
+        self.reader_cache.remove_batch(keys);
+    }
+
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
         self.file_heap
             .get(file)
@@ -284,19 +286,27 @@ impl SharedMem {
         })
     }
 
+    fn get_unpacked_aloc_table(&self, file: &FileKey) -> Option<Arc<ALocTable>> {
+        if let Some(cached) = self.reader_cache.get_aloc_table(file) {
+            return Some(cached);
+        }
+        self.get_aloc_table(file).map(|packed| {
+            let table = Arc::new(ALocTable::unpack(file.dupe(), &packed));
+            self.reader_cache.add_aloc_table(file.dupe(), table.dupe());
+            table
+        })
+    }
+
     pub fn loc_of_aloc(&self, aloc: &ALoc) -> Loc {
+        if !aloc.is_keyed() {
+            return aloc.to_loc_exn().dupe();
+        }
         let source = match aloc.source() {
             Some(s) => s.dupe(),
             None => return aloc.to_loc_exn().dupe(),
         };
-        match self.get_aloc_table(&source) {
-            Some(packed) => {
-                let lazy_table: LazyALocTable = Rc::new(LazyCell::new(Box::new(move || {
-                    Rc::new(ALocTable::unpack(source, &packed))
-                })
-                    as Box<dyn FnOnce() -> Rc<ALocTable>>));
-                aloc.to_loc(&lazy_table)
-            }
+        match self.get_unpacked_aloc_table(&source) {
+            Some(table) => aloc.to_loc_with_table(&table),
             None => aloc.to_loc_exn().dupe(),
         }
     }

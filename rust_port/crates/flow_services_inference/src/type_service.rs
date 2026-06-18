@@ -1311,6 +1311,7 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
+        transaction: &mut Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
         mut env: Env,
@@ -1368,6 +1369,23 @@ pub(crate) mod recheck {
             package_json: _,
         } = reparse(pool, shared_mem, options, def_info, modified_next);
         check_recheck_canceled()?;
+
+        let changed_files: Vec<FileKey> = modified_set
+            .iter()
+            .filter(|file| !unchanged_parse.contains(file))
+            .map(|file| file.dupe())
+            .collect();
+        let shared_mem_for_reparse_commit = shared_mem.dupe();
+        transaction::add(
+            transaction,
+            move || {
+                flow_hh_logger::info!("Committing reparse");
+                shared_mem_for_reparse_commit.remove_reader_cache_batch(&changed_files);
+            },
+            || {
+                flow_hh_logger::info!("Rolling back reparse");
+            },
+        );
 
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
@@ -1867,6 +1885,7 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
+        transaction: &mut Transaction,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         files_to_force: CheckedSet,
         changed_mergebase: Option<bool>,
@@ -1888,6 +1907,7 @@ pub(crate) mod recheck {
             shared_mem,
             options,
             updates,
+            transaction,
             def_info,
             files_to_force,
             env,
@@ -1914,6 +1934,7 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
+        transaction: &mut Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
         env: Env,
@@ -1923,6 +1944,7 @@ pub(crate) mod recheck {
             shared_mem,
             options,
             updates,
+            transaction,
             def_info,
             files_to_force,
             env,
@@ -1984,12 +2006,13 @@ pub(crate) fn recheck_impl(
 > {
     check_recheck_canceled()?;
     let (env, stats, record_recheck_time, find_ref_results, first_internal_error) =
-        match with_transaction_result("recheck", |_transaction| {
+        match with_transaction_result("recheck", |transaction| {
             recheck::full(
                 pool,
                 shared_mem,
                 options,
                 updates,
+                transaction,
                 find_ref_request,
                 files_to_force,
                 changed_mergebase,
@@ -2174,15 +2197,18 @@ pub fn parse_and_update_dependency_info(
     files_to_force: CheckedSet,
     env: Env,
 ) -> Result<Env, RecheckError> {
-    recheck::parse_and_update_dependency_info(
-        pool,
-        shared_mem,
-        options,
-        updates,
-        def_info,
-        files_to_force,
-        env,
-    )
+    with_transaction_result("parse and update dependency info", |transaction| {
+        recheck::parse_and_update_dependency_info(
+            pool,
+            shared_mem,
+            options,
+            updates,
+            transaction,
+            def_info,
+            files_to_force,
+            env,
+        )
+    })
 }
 
 pub fn make_next_files(
@@ -3057,12 +3083,13 @@ pub fn handle_updates_since_saved_state(
         // anything yet.
         let mut updated_files = updates.dupe();
         loop {
-            match with_transaction_result("lazy init update deps", |_transaction| {
+            match with_transaction_result("lazy init update deps", |transaction| {
                 recheck::parse_and_update_dependency_info(
                     pool,
                     shared_mem,
                     options,
                     &updated_files,
+                    transaction,
                     &DefInfo::NoDefinition(None),
                     CheckedSet::empty(),
                     env.clone(),

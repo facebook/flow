@@ -193,7 +193,7 @@ fn errors_of_file_artifacts(
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,
-        errors,
+        &errors,
         &mut unused,
     );
     // Filter out suppressed warnings
@@ -205,7 +205,7 @@ fn errors_of_file_artifacts(
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,
-        warnings,
+        &warnings,
         &mut unused2,
     );
     let warnings = if options.include_warnings {

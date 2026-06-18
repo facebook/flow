@@ -611,7 +611,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                     &unsuppressable_error_codes,
                     loc_of_aloc,
                     get_ast,
-                    flow_typing_errors::flow_error::ErrorSet::singleton(error.clone()),
+                    &flow_typing_errors::flow_error::ErrorSet::singleton(error.clone()),
                     &mut unused,
                 );
                 errors.is_empty()

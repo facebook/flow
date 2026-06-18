@@ -278,7 +278,7 @@ impl ALoc {
     //
     // In Rust, we use a sentinel value (i32::MIN) in start.column to distinguish keyed from
     // concrete, since real column values are always non-negative byte offsets.
-    fn is_keyed(&self) -> bool {
+    pub fn is_keyed(&self) -> bool {
         self.0.start.column == KEYED_SENTINEL
     }
 
@@ -320,10 +320,18 @@ impl ALoc {
 
     pub fn to_loc(&self, table: &LazyALocTable) -> Loc {
         if self.is_keyed() {
-            let source = self.source();
-            let key = self.get_key_exn();
             // let table = Lazy.force table in
             let table: &Rc<ALocTable> = LazyCell::force(&**table);
+            self.to_loc_with_table(table)
+        } else {
+            self.to_loc_exn().dupe()
+        }
+    }
+
+    pub fn to_loc_with_table(&self, table: &ALocTable) -> Loc {
+        if self.is_keyed() {
+            let source = self.source();
+            let key = self.get_key_exn();
             if source.map(|s| s == &table.file) == Some(true) {
                 table.locs[key.0 as usize].dupe()
             } else {

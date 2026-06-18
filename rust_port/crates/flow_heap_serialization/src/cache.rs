@@ -10,7 +10,7 @@ use std::collections::VecDeque;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use flow_aloc::PackedALocTable;
+use flow_aloc::ALocTable;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -18,13 +18,13 @@ use parking_lot::Mutex;
 
 const CACHE_CAPACITY: usize = 1000;
 
-struct LruCache<V> {
+struct LocalCache<V> {
     map: HashMap<FileKey, V>,
     order: VecDeque<FileKey>,
     capacity: usize,
 }
 
-impl<V> LruCache<V> {
+impl<V> LocalCache<V> {
     fn new(capacity: usize) -> Self {
         Self {
             map: HashMap::with_capacity(capacity),
@@ -34,21 +34,15 @@ impl<V> LruCache<V> {
     }
 
     fn get(&mut self, key: &FileKey) -> Option<&V> {
-        if self.map.contains_key(key) {
-            // Move to front (most recently used)
-            self.order.retain(|k| k != key);
-            self.order.push_front(key.dupe());
-            self.map.get(key)
-        } else {
-            None
-        }
+        self.map.get(key)
     }
 
     fn insert(&mut self, key: FileKey, value: V) {
         if self.map.contains_key(&key) {
-            self.order.retain(|k| k != &key);
+            self.map.insert(key, value);
+            return;
         } else if self.map.len() >= self.capacity {
-            // Evict least recently used
+            // Evict the oldest cached entry.
             if let Some(evicted) = self.order.pop_back() {
                 self.map.remove(&evicted);
             }
@@ -71,15 +65,15 @@ impl<V> LruCache<V> {
 /// Deserialization cache mirroring OCaml's Reader_cache.
 /// Capacity: 1000 entries per cache type.
 pub struct ReaderCache {
-    ast_cache: Mutex<LruCache<Arc<Program<Loc, Loc>>>>,
-    aloc_table_cache: Mutex<LruCache<Arc<PackedALocTable>>>,
+    ast_cache: Mutex<LocalCache<Arc<Program<Loc, Loc>>>>,
+    aloc_table_cache: Mutex<LocalCache<Arc<ALocTable>>>,
 }
 
 impl ReaderCache {
     pub fn new() -> Self {
         Self {
-            ast_cache: Mutex::new(LruCache::new(CACHE_CAPACITY)),
-            aloc_table_cache: Mutex::new(LruCache::new(CACHE_CAPACITY)),
+            ast_cache: Mutex::new(LocalCache::new(CACHE_CAPACITY)),
+            aloc_table_cache: Mutex::new(LocalCache::new(CACHE_CAPACITY)),
         }
     }
 
@@ -91,11 +85,11 @@ impl ReaderCache {
         self.ast_cache.lock().insert(key, ast);
     }
 
-    pub fn get_aloc_table(&self, key: &FileKey) -> Option<Arc<PackedALocTable>> {
+    pub fn get_aloc_table(&self, key: &FileKey) -> Option<Arc<ALocTable>> {
         self.aloc_table_cache.lock().get(key).map(|v| v.dupe())
     }
 
-    pub fn add_aloc_table(&self, key: FileKey, table: Arc<PackedALocTable>) {
+    pub fn add_aloc_table(&self, key: FileKey, table: Arc<ALocTable>) {
         self.aloc_table_cache.lock().insert(key, table);
     }
 

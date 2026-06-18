@@ -143,7 +143,7 @@ pub fn update_local_collated_errors<F, G>(
             unsuppressable_error_codes,
             loc_of_aloc,
             get_ast,
-            file_errs.dupe(),
+            file_errs,
             &mut unused,
         );
         acc.collated_local_errors.insert(filename.dupe(), file_errs);
@@ -196,7 +196,7 @@ pub fn update_collated_errors<F, G>(
                 &unsuppressable_error_codes,
                 loc_of_aloc,
                 get_ast,
-                file_errs.clone(),
+                file_errs,
                 unused,
             );
             errors.insert(filename.dupe(), file_errs);
