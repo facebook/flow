@@ -17,8 +17,8 @@
 #   ./website/tests/check_flow_examples.sh -r FLOW_BINARY       # re-record snapshot
 #
 # Examples:
-#   ./website/tests/check_flow_examples.sh facebook/flowd
-#   ./website/tests/check_flow_examples.sh -r $(buck build //flow:flow --show-full-output | awk '{print $2}')
+#   ./website/tests/check_flow_examples.sh $(buck build //flow/rust_port/crates/flow_cli:flow_cli --show-full-output | awk '{print $2}')
+#   ./website/tests/check_flow_examples.sh -r $(buck build //flow/rust_port/crates/flow_cli:flow_cli --show-full-output | awk '{print $2}')
 #
 # Buck:
 #   buck test //flow:website_docs_flow_check
@@ -67,7 +67,7 @@ fi
 
 if ! "$FLOW" version >/dev/null 2>&1; then
   echo "Flow binary not working: $FLOW" >&2
-  echo "Did you build it first? Try: buck build //flow" >&2
+  echo "Did you build it first? Try: buck build //flow/rust_port/crates/flow_cli:flow_cli" >&2
   exit 1
 fi
 
