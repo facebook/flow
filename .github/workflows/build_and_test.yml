@@ -14,7 +14,7 @@ env:
   FLOW_BOT_TOKEN: ${{ secrets.FLOW_BOT_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 jobs:
-  build_and_test_rust_port:
+  build_and_test:
     runs-on: ubuntu-22.04
     env:
       CARGO_INCREMENTAL: 0
@@ -56,7 +56,7 @@ jobs:
       with:
         name: build_and_test_rust_port_dist
         path: dist/flow-linux64.zip
-  build_rust_port_linux_arm64:
+  build_linux_arm64:
     runs-on: 4-core-ubuntu-arm
     env:
       CARGO_INCREMENTAL: 0
@@ -92,7 +92,7 @@ jobs:
       with:
         name: build_rust_port_linux_arm64_dist
         path: dist/flow-linux64-arm64.zip
-  build_rust_port_macos_arm64:
+  build_macos_arm64:
     runs-on: macos-15
     env:
       CARGO_INCREMENTAL: 0
@@ -132,7 +132,7 @@ jobs:
       with:
         name: build_rust_port_macos_arm64_dist
         path: dist/flow-osx-arm64.zip
-  build_rust_port_win:
+  build_win:
     runs-on: windows-2022
     env:
       CARGO_INCREMENTAL: 0
@@ -271,7 +271,7 @@ jobs:
           packages/flow-parser/flow_parser.js
           packages/flow-parser/oxidized
           packages/flow-estree/dist
-  build_js_rust_port:
+  build_flow_js:
     runs-on: ubuntu-22.04
     env:
       CARGO_INCREMENTAL: 0
@@ -302,10 +302,10 @@ jobs:
       with:
         name: build_js_rust_port_bin
         path: bin/flow.js
-  runtests_rust_port_linux:
+  runtests_linux:
     runs-on: ubuntu-22.04
     needs:
-    - build_and_test_rust_port
+    - build_and_test
     env:
       FLOW_RUNTESTS_PARALLELISM: 8
       FLOW_RUST_PORT: 1
@@ -318,10 +318,10 @@ jobs:
     - run: chmod +x bin/rust-port-linux/flow
     - name: Run Rust port tests
       run: ./runtests.sh bin/rust-port-linux/flow
-  runtests_rust_port_macos_arm:
+  runtests_macos_arm:
     runs-on: macos-15
     needs:
-    - build_rust_port_macos_arm64
+    - build_macos_arm64
     env:
       FLOW_RUNTESTS_PARALLELISM: 8
       FLOW_RUST_PORT: 1
@@ -337,10 +337,10 @@ jobs:
     - run: chmod +x bin/rust-port-macos-arm64/flow
     - name: Run Rust port tests
       run: ./runtests.sh bin/rust-port-macos-arm64/flow
-  tool_test_rust_port_linux:
+  tool_test_linux:
     runs-on: ubuntu-22.04
     needs:
-    - build_and_test_rust_port
+    - build_and_test
     env:
       FLOW_RUST_PORT: 1
     steps:
@@ -354,10 +354,10 @@ jobs:
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run Rust port newtests
       run: ./tool test -p 4 --check check --bin bin/rust-port-linux/flow
-  tool_test_rust_port_macos:
+  tool_test_macos:
     runs-on: macos-15
     needs:
-    - build_rust_port_macos_arm64
+    - build_macos_arm64
     env:
       FLOW_RUST_PORT: 1
     steps:
@@ -374,10 +374,10 @@ jobs:
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run Rust port newtests
       run: ./tool test --check check --bin bin/rust-port-macos-arm64/flow
-  tool_test_rust_port_win:
+  tool_test_win:
     runs-on: windows-2022
     needs:
-    - build_rust_port_win
+    - build_win
     env:
       FLOW_RUST_PORT: 1
     steps:
@@ -457,8 +457,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     needs:
-    - build_and_test_rust_port
-    - build_js_rust_port
+    - build_and_test
+    - build_flow_js
     steps:
     - uses: actions/checkout@v3.6.0
       with:
@@ -497,10 +497,10 @@ jobs:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-22.04
     needs:
-    - build_and_test_rust_port
-    - build_rust_port_linux_arm64
-    - build_rust_port_macos_arm64
-    - build_rust_port_win
+    - build_and_test
+    - build_linux_arm64
+    - build_macos_arm64
+    - build_win
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
@@ -546,7 +546,7 @@ jobs:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
     runs-on: ubuntu-22.04
     needs:
-    - build_js_rust_port
+    - build_flow_js
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
