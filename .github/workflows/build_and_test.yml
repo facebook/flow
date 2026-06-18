@@ -469,12 +469,12 @@ jobs:
     - uses: actions/download-artifact@v4.1.7
       with:
         name: build_and_test_rust_port_bin
-        path: bin/linux
+        path: bin/rust-port-linux
     - uses: actions/download-artifact@v4.1.7
       with:
         name: build_js_rust_port_bin
         path: dist
-    - run: chmod +x bin/linux/flow
+    - run: chmod +x bin/rust-port-linux/flow
     - uses: actions/setup-node@v4
       with:
         node-version: '22.x'
@@ -486,7 +486,7 @@ jobs:
     - name: Install yarn deps
       run: cd website && yarn install
     - name: Build website
-      run: PATH=${{ github.workspace }}/bin/linux:$PATH .circleci/build_website.sh
+      run: PATH=${{ github.workspace }}/bin/rust-port-linux:$PATH .circleci/build_website.sh
     - name: Publish website to GitHub Pages
       run: |-
         cd website
