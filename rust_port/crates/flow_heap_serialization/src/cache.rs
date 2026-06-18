@@ -38,8 +38,8 @@ impl<V> LocalCache<V> {
     }
 
     fn insert(&mut self, key: FileKey, value: V) {
-        if self.map.contains_key(&key) {
-            self.map.insert(key, value);
+        if let Some(cached) = self.map.get_mut(&key) {
+            *cached = value;
             return;
         } else if self.map.len() >= self.capacity {
             // Evict the oldest cached entry.

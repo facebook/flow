@@ -2157,44 +2157,42 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for FindProviders<L> {
                     }
                 }
             }
-            ExpressionInner::Assignment { inner, .. } => {
-                if inner.operator.is_none() {
-                    if let ast::pattern::Pattern::Expression {
-                        inner: left_expr, ..
-                    } = &inner.left
+            ExpressionInner::Assignment { inner, .. } if inner.operator.is_none() => {
+                if let ast::pattern::Pattern::Expression {
+                    inner: left_expr, ..
+                } = &inner.left
+                {
+                    if let ExpressionInner::Member {
+                        inner: member_inner,
+                        ..
+                    } = &***left_expr
                     {
-                        if let ExpressionInner::Member {
-                            inner: member_inner,
-                            ..
-                        } = &***left_expr
+                        if let ExpressionInner::Identifier {
+                            inner: obj_ident, ..
+                        } = &*member_inner.object
                         {
-                            if let ExpressionInner::Identifier {
-                                inner: obj_ident, ..
-                            } = &*member_inner.object
-                            {
+                            if matches!(
+                                &member_inner.property,
+                                ast::expression::member::Property::PropertyExpression(_)
+                            ) {
+                                let name = &obj_ident.name;
+                                let arg_loc = inner.right.loc().dupe();
+                                let state = state_of_var(name, &self.env);
                                 if matches!(
-                                    &member_inner.property,
-                                    ast::expression::member::Property::PropertyExpression(_)
+                                    state,
+                                    Some(
+                                        IntermediateState::EmptyArrInitialized
+                                            | IntermediateState::ArrInitialized(_)
+                                    )
                                 ) {
-                                    let name = &obj_ident.name;
-                                    let arg_loc = inner.right.loc().dupe();
-                                    let state = state_of_var(name, &self.env);
-                                    if matches!(
-                                        state,
-                                        Some(
-                                            IntermediateState::EmptyArrInitialized
-                                                | IntermediateState::ArrInitialized(_)
-                                        )
-                                    ) {
-                                        self.in_context(
-                                            Some(&|_cx| FindProvidersContext {
-                                                mk_state: |n| WriteState::ArrWrite(n),
-                                            }),
-                                            |inner| {
-                                                inner.add_provider(name, arg_loc);
-                                            },
-                                        );
-                                    }
+                                    self.in_context(
+                                        Some(&|_cx| FindProvidersContext {
+                                            mk_state: |n| WriteState::ArrWrite(n),
+                                        }),
+                                        |inner| {
+                                            inner.add_provider(name, arg_loc);
+                                        },
+                                    );
                                 }
                             }
                         }

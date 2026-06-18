@@ -263,9 +263,9 @@ fn __unify_inner<'cx>(
                                             let ts_safe_direction =
                                                 Polarity::equal(p1, Polarity::Neutral)
                                                     && Polarity::equal(p2, Polarity::Positive);
-                                            if !(flow_common::files::has_ts_ext(cx.file())
-                                                && ts_safe_direction)
-                                                && !Polarity::equal(p1, p2)
+                                            if !(Polarity::equal(p1, p2)
+                                                || (flow_common::files::has_ts_ext(cx.file())
+                                                    && ts_safe_direction))
                                             {
                                                 add_output(
                                                     cx,

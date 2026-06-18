@@ -67,13 +67,11 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, Found> for Mapper {
             (
                 Some((body_loc, _)),
                 ComponentRendersAnnotation::MissingRenders(missing_renders_loc),
-            ) => {
-                if id_loc.contains(&self.target) {
-                    return Err(Found {
-                        missing_renders_loc: missing_renders_loc.dupe(),
-                        body_loc: body_loc.dupe(),
-                    });
-                }
+            ) if id_loc.contains(&self.target) => {
+                return Err(Found {
+                    missing_renders_loc: missing_renders_loc.dupe(),
+                    body_loc: body_loc.dupe(),
+                });
             }
             _ => {}
         }

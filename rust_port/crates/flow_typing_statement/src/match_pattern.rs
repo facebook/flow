@@ -29,7 +29,6 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::MatchDuplicateObjectPropertyData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
-use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::MatchObjPatternKind;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_::Type;

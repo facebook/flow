@@ -264,10 +264,9 @@ impl<A> MergeStream<A> {
         // NB: num_workers can be zero
         let ready_files = self.ready_files.load(Ordering::Relaxed);
         let max_bucket_size = if ready_files < self.num_workers * MAX_BUCKET_SIZE {
-            if self.num_workers == 0 {
-                MAX_BUCKET_SIZE
-            } else {
-                1 + (ready_files / self.num_workers)
+            match ready_files.checked_div(self.num_workers) {
+                Some(bucket_size) => 1 + bucket_size,
+                None => MAX_BUCKET_SIZE,
             }
         } else {
             MAX_BUCKET_SIZE

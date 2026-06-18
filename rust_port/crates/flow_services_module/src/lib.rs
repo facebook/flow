@@ -1640,7 +1640,7 @@ mod haste {
         shared_mem: &SharedMem,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
-        mut phantom_acc: Option<&mut PhantomAcc>,
+        phantom_acc: Option<&mut PhantomAcc>,
         import_specifier: &FlowImportSpecifier,
     ) -> Result<Dependency, Option<FlowImportSpecifier>> {
         match import_specifier {
@@ -1653,7 +1653,7 @@ mod haste {
                     shared_mem,
                     node_modules_containers,
                     importing_file,
-                    phantom_acc.as_deref_mut(),
+                    phantom_acc,
                     first_candidate,
                 ) {
                     return Ok(m);

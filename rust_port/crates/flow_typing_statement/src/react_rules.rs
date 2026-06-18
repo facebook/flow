@@ -958,17 +958,16 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                     self.effects.extend(new_effects);
                 }
                 ExpressionInner::ArrowFunction { loc, inner: func }
-                | ExpressionInner::Function { loc, inner: func } => {
-                    if !self.seen.contains(loc) {
-                        self.seen.insert(loc.dupe());
-                        let new_effects = {
-                            let mut visitor =
-                                EffectVisitor::new(self.ev_cx, false, &mut *self.seen);
-                            visitor.function_entry(&func.body)?
-                        };
-                        self.effects.extend(new_effects);
-                        self.seen.remove(loc);
-                    }
+                | ExpressionInner::Function { loc, inner: func }
+                    if !self.seen.contains(loc) =>
+                {
+                    self.seen.insert(loc.dupe());
+                    let new_effects = {
+                        let mut visitor = EffectVisitor::new(self.ev_cx, false, &mut *self.seen);
+                        visitor.function_entry(&func.body)?
+                    };
+                    self.effects.extend(new_effects);
+                    self.seen.remove(loc);
                 }
                 _ => {}
             }
@@ -1723,47 +1722,48 @@ impl<'b, 'cx, 't>
         };
 
         match hook_callee(self.cx, callee_ty) {
-            HookResult::HookCallee(_) | HookResult::MaybeHookCallee { .. } => {
+            HookResult::HookCallee(_) | HookResult::MaybeHookCallee { .. }
                 if !(ast_utils::hook_call(expr)
                     && bare_use(expr)
-                    && self.under_function_or_class_body)
-                {
-                    match self.hook_call_context.get_forced(self.cx) {
-                        Ok(HookCallContext::HookCallDefinitelyNotAllowed) => {
-                            hook_error(
-                                self.cx,
-                                call_loc.dupe(),
-                                callee_loc.dupe(),
-                                error_message::HookRule::HookDefinitelyNotInComponentOrHook,
-                            );
-                        }
-                        Ok(HookCallContext::HookCallNotAllowedUnderUnknownContext) => {
-                            hook_error(
-                                self.cx,
-                                call_loc.dupe(),
-                                callee_loc.dupe(),
-                                error_message::HookRule::HookInUnknownContext,
-                            );
-                        }
-                        Ok(HookCallContext::HookCallNotAllowedUnderNormalFunctionInComponentOrHooks) => {
-                            hook_error(
-                                self.cx,
-                                call_loc.dupe(),
-                                callee_loc.dupe(),
-                                error_message::HookRule::ConditionalHook,
-                            );
-                        }
-                        Ok(HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode) => {
-                            hook_error(
-                                self.cx,
-                                call_loc.dupe(),
-                                callee_loc.dupe(),
-                                error_message::HookRule::HookNotInComponentSyntaxComponentOrHookSyntaxHook,
-                            );
-                        }
-                        Ok(HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode) => {}
-                        Err(c) => return Err(c.dupe()),
+                    && self.under_function_or_class_body) =>
+            {
+                match self.hook_call_context.get_forced(self.cx) {
+                    Ok(HookCallContext::HookCallDefinitelyNotAllowed) => {
+                        hook_error(
+                            self.cx,
+                            call_loc.dupe(),
+                            callee_loc.dupe(),
+                            error_message::HookRule::HookDefinitelyNotInComponentOrHook,
+                        );
                     }
+                    Ok(HookCallContext::HookCallNotAllowedUnderUnknownContext) => {
+                        hook_error(
+                            self.cx,
+                            call_loc.dupe(),
+                            callee_loc.dupe(),
+                            error_message::HookRule::HookInUnknownContext,
+                        );
+                    }
+                    Ok(
+                        HookCallContext::HookCallNotAllowedUnderNormalFunctionInComponentOrHooks,
+                    ) => {
+                        hook_error(
+                            self.cx,
+                            call_loc.dupe(),
+                            callee_loc.dupe(),
+                            error_message::HookRule::ConditionalHook,
+                        );
+                    }
+                    Ok(HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode) => {
+                        hook_error(
+                            self.cx,
+                            call_loc.dupe(),
+                            callee_loc.dupe(),
+                            error_message::HookRule::HookNotInComponentSyntaxComponentOrHookSyntaxHook,
+                        );
+                    }
+                    Ok(HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode) => {}
+                    Err(c) => return Err(c.dupe()),
                 }
             }
             _ => {}

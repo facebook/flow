@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![feature(box_patterns)]
 #![feature(never_type)]
 
 pub mod env_api;

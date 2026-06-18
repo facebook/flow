@@ -67,13 +67,12 @@ impl<'a> ImportedDefCollector<'a> {
     fn collect_relevant_def_loc_of_imported_identifier(&mut self, use_loc: &Loc) {
         if self.loc_within_range(use_loc) {
             match self.scope.def_of_use_opt(use_loc) {
-                Some(def) => {
-                    if !def.locs.iter().any(|l| self.loc_within_range(l)) {
-                        self.import_def_locs
-                            .push((def.actual_name.to_string(), def.locs.clone()));
-                    }
+                Some(def) if !def.locs.iter().any(|l| self.loc_within_range(l)) => {
+                    self.import_def_locs
+                        .push((def.actual_name.to_string(), def.locs.clone()));
                 }
                 None => {}
+                _ => {}
             }
         }
     }

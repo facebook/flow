@@ -1029,10 +1029,10 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         match key {
             ast::expression::object::Key::StringLiteral((annot, _))
             | ast::expression::object::Key::NumberLiteral((annot, _))
-            | ast::expression::object::Key::BigIntLiteral((annot, _)) => {
-                if self.annot_covers_target(annot) {
-                    self.found_empty("object key (literal)")?;
-                }
+            | ast::expression::object::Key::BigIntLiteral((annot, _))
+                if self.annot_covers_target(annot) =>
+            {
+                self.found_empty("object key (literal)")?;
             }
             _ => {}
         }
