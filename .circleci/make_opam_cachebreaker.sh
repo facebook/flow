@@ -13,5 +13,4 @@ cat flowtype.opam
 cat flow_parser.opam
 cat .circleci/config.yml
 cat .github/workflows/build_and_test.yml
-cat .github/actions/install-opam-mac/action.yml
 cat .github/actions/install-opam-linux/action.yml
