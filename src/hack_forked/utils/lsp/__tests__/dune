@@ -1,3 +1,0 @@
-(test
- (name lsp_fmt_test)
- (libraries hh_json lsp ounit2))

@@ -1,7 +1,0 @@
-(library
- (name flow_search_types)
- (wrapped false)
- (libraries
-  flow_index)
- (preprocess
-  (pps ppx_deriving.std)))

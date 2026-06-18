@@ -1,6 +1,0 @@
-(library
- (name flow_common_transaction)
- (wrapped false)
- (libraries collections lwt utils_core)
- (preprocess
-  (pps lwt_ppx)))

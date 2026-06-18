@@ -1,5 +1,0 @@
-(library
- (name socket)
- (wrapped false)
- (modules socket)
- (libraries flow_exit opaque_digest sys_utils))

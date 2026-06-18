@@ -1,7 +1,0 @@
-(library
- (name dirent)
- (wrapped false)
- (libraries unix)
- (foreign_stubs
-  (language c)
-  (names dirent_stubs)))

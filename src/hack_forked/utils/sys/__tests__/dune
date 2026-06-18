@@ -1,3 +1,0 @@
-(test
- (name sys_utils_tests)
- (libraries ounit2 sys_utils))
