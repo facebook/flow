@@ -30,6 +30,8 @@ import type {
   QualifiedTypeIdentifier,
   QualifiedTypeofIdentifier,
   AFunction,
+  BindingName,
+  VariableDeclarator,
 } from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
@@ -71,22 +73,39 @@ function createAnyTypeAnnotation(node: ESNode): AnyTypeAnnotation {
   };
 }
 
+function declareVariableDeclarator(
+  id: BindingName,
+  node: ESNode,
+): VariableDeclarator {
+  return {
+    type: 'VariableDeclarator',
+    id,
+    init: null,
+    loc: node.loc,
+    range: node.range,
+    parent: EMPTY_PARENT,
+  };
+}
+
 /**
  * Convert DeclareEnum nodes to DeclareVariable
  */
 function mapDeclareEnum(node: DeclareEnum): DeclareVariable {
+  const id = nodeWith(node.id, {
+    typeAnnotation: {
+      type: 'TypeAnnotation',
+      typeAnnotation: createAnyTypeAnnotation(node.body),
+      loc: node.body.loc,
+      range: node.body.range,
+      parent: EMPTY_PARENT,
+    },
+  });
+
   return {
     type: 'DeclareVariable',
     kind: 'const',
-    id: nodeWith(node.id, {
-      typeAnnotation: {
-        type: 'TypeAnnotation',
-        typeAnnotation: createAnyTypeAnnotation(node.body),
-        loc: node.body.loc,
-        range: node.body.range,
-        parent: EMPTY_PARENT,
-      },
-    }),
+    declarations: [declareVariableDeclarator(id, node)],
+    implicitDeclare: false,
     loc: node.loc,
     range: node.range,
     parent: node.parent,
@@ -97,18 +116,21 @@ function mapDeclareEnum(node: DeclareEnum): DeclareVariable {
  * Convert DeclareNamespace nodes to DeclareVariable
  */
 function mapDeclareNamespace(node: DeclareNamespace): DeclareVariable {
+  const id = nodeWith(node.id, {
+    typeAnnotation: {
+      type: 'TypeAnnotation',
+      typeAnnotation: createAnyTypeAnnotation(node.body),
+      loc: node.body.loc,
+      range: node.body.range,
+      parent: EMPTY_PARENT,
+    },
+  });
+
   return {
     type: 'DeclareVariable',
     kind: 'const',
-    id: nodeWith(node.id, {
-      typeAnnotation: {
-        type: 'TypeAnnotation',
-        typeAnnotation: createAnyTypeAnnotation(node.body),
-        loc: node.body.loc,
-        range: node.body.range,
-        parent: EMPTY_PARENT,
-      },
-    }),
+    declarations: [declareVariableDeclarator(id, node)],
+    implicitDeclare: false,
     loc: node.loc,
     range: node.range,
     parent: node.parent,

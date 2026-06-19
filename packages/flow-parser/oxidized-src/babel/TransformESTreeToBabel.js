@@ -68,6 +68,7 @@ const FlowESTreeAndBabelVisitorKeys: VisitorKeys = {
   ClassPrivateMethod: ['key', 'params', 'body', 'returnType', 'typeParameters'],
   ClassProperty: ['key', 'value', 'typeAnnotation', 'variance'],
   ClassPrivateProperty: ['key', 'value', 'typeAnnotation', 'variance'],
+  DeclareVariable: ['id'],
   Directive: ['value'],
   DirectiveLiteral: [],
   ExportNamespaceSpecifier: ['exported'],
@@ -778,11 +779,18 @@ function mapTypeofTypeAnnotation(
 }
 
 function mapDeclareVariable(node: DeclareVariable): DeclareVariable {
-  if (node.kind != null) {
-    // $FlowExpectedError[cannot-write]
-    delete node.kind;
+  const babelNode: $FlowFixMe = node;
+  if (
+    babelNode.id == null &&
+    Array.isArray(babelNode.declarations) &&
+    babelNode.declarations[0]?.id != null
+  ) {
+    babelNode.id = babelNode.declarations[0].id;
   }
-  return node;
+  delete babelNode.declarations;
+  delete babelNode.kind;
+  delete babelNode.implicitDeclare;
+  return babelNode;
 }
 
 function mapJSXElement(node: JSXElement): JSXElement {

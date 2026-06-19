@@ -1850,8 +1850,9 @@ export interface DeclareHook extends BaseNode {
 
 export interface DeclareVariable extends BaseNode {
   +type: 'DeclareVariable';
-  +id: Identifier;
+  +declarations: ReadonlyArray<VariableDeclarator>;
   +kind: 'var' | 'let' | 'const';
+  +implicitDeclare: boolean;
 }
 
 export interface DeclareEnum extends BaseNode {

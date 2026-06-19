@@ -559,6 +559,28 @@ mod tests {
     }
 
     #[test]
+    fn declare_variable_serializes_all_declarators() {
+        let buf = parse_and_serialize("declare const A: number, B: string = \"x\";");
+        let declare_variable_idx = buf
+            .iter()
+            .position(|v| *v == encoded_kind(NodeKind::DeclareVariable))
+            .expect("expected DeclareVariable node header in buffer");
+
+        // DeclareVariable serializes as:
+        // kind, loc, declarations_count, ...declarations, kind_string.
+        assert_eq!(
+            buf[declare_variable_idx + 2],
+            2,
+            "DeclareVariable.declarations should include every declarator"
+        );
+        assert_eq!(
+            buf[declare_variable_idx + 3],
+            encoded_kind(NodeKind::VariableDeclarator),
+            "DeclareVariable.declarations should contain VariableDeclarator nodes"
+        );
+    }
+
+    #[test]
     fn declare_export_class_serializes_declare_class_fields_in_schema_order() {
         let buf = parse_and_serialize("declare export class Foo {}");
         let declare_export_idx = buf

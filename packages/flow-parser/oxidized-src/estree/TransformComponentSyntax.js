@@ -47,6 +47,7 @@ import type {
   BindingName,
   ObjectTypePropertySignature,
   ObjectTypeSpreadProperty,
+  VariableDeclarator,
 } from 'flow-estree';
 
 import {SimpleTransform} from '../transform/SimpleTransform';
@@ -66,24 +67,41 @@ function createDefaultPosition(): Position {
   };
 }
 
-function mapDeclareComponent(node: DeclareComponent): DeclareVariable {
+function declareVariableDeclarator(
+  id: BindingName,
+  node: ESNode,
+): VariableDeclarator {
   return {
-    type: 'DeclareVariable',
-    id: nodeWith(node.id, {
+    type: 'VariableDeclarator',
+    id,
+    init: null,
+    loc: node.loc,
+    range: node.range,
+    parent: EMPTY_PARENT,
+  };
+}
+
+function mapDeclareComponent(node: DeclareComponent): DeclareVariable {
+  const id = nodeWith(node.id, {
+    typeAnnotation: {
+      type: 'TypeAnnotation',
       typeAnnotation: {
-        type: 'TypeAnnotation',
-        typeAnnotation: {
-          type: 'AnyTypeAnnotation',
-          loc: node.loc,
-          range: node.range,
-          parent: EMPTY_PARENT,
-        },
+        type: 'AnyTypeAnnotation',
         loc: node.loc,
         range: node.range,
         parent: EMPTY_PARENT,
       },
-    }),
+      loc: node.loc,
+      range: node.range,
+      parent: EMPTY_PARENT,
+    },
+  });
+
+  return {
+    type: 'DeclareVariable',
+    declarations: [declareVariableDeclarator(id, node)],
     kind: 'const',
+    implicitDeclare: false,
     loc: node.loc,
     range: node.range,
     parent: node.parent,

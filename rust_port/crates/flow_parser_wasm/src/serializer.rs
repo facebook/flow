@@ -230,6 +230,50 @@ impl<'a> Serializer<'a> {
         }
     }
 
+    fn token_start_offset_at_loc(&self, loc: &Loc) -> Option<usize> {
+        let mut start = self.byte_offset_at_position(loc.start)?;
+        let bytes = self.source.as_bytes();
+        while start < bytes.len() {
+            match bytes[start] {
+                b' ' | b'\t' | b'\n' | b'\r' | 0x0b | 0x0c => start += 1,
+                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'/' => {
+                    start += 2;
+                    while start < bytes.len() && bytes[start] != b'\n' && bytes[start] != b'\r' {
+                        start += 1;
+                    }
+                }
+                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'*' => {
+                    start += 2;
+                    while start + 1 < bytes.len()
+                        && !(bytes[start] == b'*' && bytes[start + 1] == b'/')
+                    {
+                        start += 1;
+                    }
+                    start = (start + 2).min(bytes.len());
+                }
+                _ => break,
+            }
+        }
+        Some(start)
+    }
+
+    fn loc_starts_with_keyword(&self, loc: &Loc, keyword: &str) -> bool {
+        let Some(start) = self.token_start_offset_at_loc(loc) else {
+            return false;
+        };
+        let bytes = self.source.as_bytes();
+        let keyword_bytes = keyword.as_bytes();
+        let end = start + keyword_bytes.len();
+        if end > bytes.len() || &bytes[start..end] != keyword_bytes {
+            return false;
+        }
+        end == bytes.len() || !is_identifier_continue(bytes[end])
+    }
+
+    fn implicit_declare_from_loc(&self, loc: &Loc) -> bool {
+        !self.loc_starts_with_keyword(loc, "declare")
+    }
+
     fn write_null_node(&mut self) {
         self.buf.push(0);
     }
@@ -501,6 +545,16 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
         self.serialize_pattern(&decl.id);
+    }
+
+    fn serialize_variable_declarator_list(
+        &mut self,
+        declarations: &[ast::statement::variable::Declarator<Loc, Loc>],
+    ) {
+        self.buf.push(declarations.len() as u32);
+        for declarator in declarations.iter() {
+            self.serialize_variable_declarator(declarator);
+        }
     }
 
     fn serialize_for_init(&mut self, init: &Option<ast::statement::for_::Init<Loc, Loc>>) {
@@ -3046,11 +3100,9 @@ impl<'a> Serializer<'a> {
                 match d {
                     Declaration::Variable { loc, declaration } => {
                         self.write_node_header(NodeKind::DeclareVariable, loc);
-                        match declaration.declarations.first() {
-                            Some(declarator) => self.serialize_pattern(&declarator.id),
-                            None => self.write_null_node(),
-                        }
+                        self.serialize_variable_declarator_list(&declaration.declarations);
                         self.write_str(declaration.kind.as_str());
+                        self.write_bool(self.implicit_declare_from_loc(loc));
                     }
                     Declaration::Function { loc, declaration } => {
                         // Defer entirely to serialize_declare_function, which
@@ -3288,13 +3340,11 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareVariable<Loc, Loc>,
     ) {
-        // 98: DeclareVariable — id(Node) kind(String)
+        // 98: DeclareVariable — declarations(NodeList) kind(String) implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareVariable, loc);
-        match inner.declarations.first() {
-            Some(declarator) => self.serialize_pattern(&declarator.id),
-            None => self.write_null_node(),
-        }
+        self.serialize_variable_declarator_list(&inner.declarations);
         self.write_str(inner.kind.as_str());
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_declare_function(

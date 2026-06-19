@@ -282,11 +282,22 @@ class TypeVisitor extends Visitor {
   }
 
   DeclareVariable(node: DeclareVariable): void {
-    this._referencer
-      .currentScope()
-      .defineIdentifier(node.id, new VariableDefinition(node.id, node, node));
-
-    this.visit(node.id.typeAnnotation);
+    for (const decl of node.declarations) {
+      this.visitPattern(
+        decl.id,
+        pattern => {
+          this._referencer
+            .currentScope()
+            .defineIdentifier(
+              pattern,
+              new VariableDefinition(pattern, decl, node),
+            );
+        },
+        typeAnnotation => {
+          this.visit(typeAnnotation);
+        },
+      );
+    }
   }
 
   FunctionTypeAnnotation(node: FunctionTypeAnnotation): void {

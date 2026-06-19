@@ -39,17 +39,24 @@ describe('DeclareNamespace', () => {
            "body": {
              "body": [
                {
-                 "id": {
-                   "name": "foo",
-                   "optional": false,
-                   "type": "Identifier",
-                   "typeAnnotation": {
-                     "type": "TypeAnnotation",
-                     "typeAnnotation": {
-                       "type": "StringTypeAnnotation",
+                 "declarations": [
+                   {
+                     "id": {
+                       "name": "foo",
+                       "optional": false,
+                       "type": "Identifier",
+                       "typeAnnotation": {
+                         "type": "TypeAnnotation",
+                         "typeAnnotation": {
+                           "type": "StringTypeAnnotation",
+                         },
+                       },
                      },
+                     "init": null,
+                     "type": "VariableDeclarator",
                    },
-                 },
+                 ],
+                 "implicitDeclare": false,
                  "kind": "const",
                  "type": "DeclareVariable",
                },
@@ -77,27 +84,27 @@ describe('DeclareNamespace', () => {
   test('Babel', () => {
     expect(parseForSnapshot(testCase.code, {babel: true}))
       .toMatchInlineSnapshot(`
-      {
-        "body": [
-          {
-            "id": {
-              "name": "NS",
-              "type": "Identifier",
-              "typeAnnotation": {
-                "type": "TypeAnnotation",
-                "typeAnnotation": {
-                  "type": "AnyTypeAnnotation",
-                },
-              },
-            },
-            "type": "DeclareVariable",
-          },
-          {
-            "type": "EmptyStatement",
-          },
-        ],
-        "type": "Program",
-      }
+     {
+       "body": [
+         {
+           "id": {
+             "name": "NS",
+             "type": "Identifier",
+             "typeAnnotation": {
+               "type": "TypeAnnotation",
+               "typeAnnotation": {
+                 "type": "AnyTypeAnnotation",
+               },
+             },
+           },
+           "type": "DeclareVariable",
+         },
+         {
+           "type": "EmptyStatement",
+         },
+       ],
+       "type": "Program",
+     }
     `);
     expectBabelAlignment(testCase);
   });

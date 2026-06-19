@@ -1070,8 +1070,9 @@ define_nodes! {
     // Flow Declarations
     // ---------------------------------------------------------------
     DeclareVariable = 98 {
-        id: Node,
+        declarations: NodeList,
         kind: String,
+        implicitDeclare: Boolean,
     } from Statement::DeclareVariable { loc, inner }
         {=> self.serialize_declare_variable(loc, inner)},
     DeclareFunction = 99 {

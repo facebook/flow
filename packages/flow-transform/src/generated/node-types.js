@@ -468,8 +468,11 @@ export type DeclareTypeAliasProps = {
 };
 
 export type DeclareVariableProps = {
-  +id: MaybeDetachedNode<DeclareVariableType['id']>,
+  +declarations: ReadonlyArray<
+    MaybeDetachedNode<DeclareVariableType['declarations'][number]>,
+  >,
   +kind: DeclareVariableType['kind'],
+  +implicitDeclare: DeclareVariableType['implicitDeclare'],
 };
 
 export type DecoratorProps = {
@@ -1949,8 +1952,9 @@ export function DeclareVariable(props: {
 }): DetachedNode<DeclareVariableType> {
   const node = detachedProps<DeclareVariableType>(props.parent as $FlowFixMe, {
     type: 'DeclareVariable',
-    id: asDetachedNodeForCodeGen(props.id),
+    declarations: props.declarations.map(n => asDetachedNodeForCodeGen(n)),
     kind: props.kind,
+    implicitDeclare: props.implicitDeclare,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;

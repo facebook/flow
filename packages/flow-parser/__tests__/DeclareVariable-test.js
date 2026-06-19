@@ -38,17 +38,24 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "id": {
-               "name": "T1",
-               "optional": false,
-               "type": "Identifier",
-               "typeAnnotation": {
-                 "type": "TypeAnnotation",
-                 "typeAnnotation": {
-                   "type": "NumberTypeAnnotation",
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
                  },
+                 "init": null,
+                 "type": "VariableDeclarator",
                },
-             },
+             ],
+             "implicitDeclare": false,
              "kind": "var",
              "type": "DeclareVariable",
            },
@@ -62,24 +69,24 @@ describe('DeclareVariable', () => {
     test('Babel', () => {
       expect(parseForSnapshot(testCase.code, {babel: true}))
         .toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "id": {
+               "name": "T1",
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
+                 },
+               },
+             },
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectBabelAlignment(testCase);
     });
@@ -105,17 +112,24 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "id": {
-               "name": "T1",
-               "optional": false,
-               "type": "Identifier",
-               "typeAnnotation": {
-                 "type": "TypeAnnotation",
-                 "typeAnnotation": {
-                   "type": "NumberTypeAnnotation",
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
                  },
+                 "init": null,
+                 "type": "VariableDeclarator",
                },
-             },
+             ],
+             "implicitDeclare": false,
              "kind": "let",
              "type": "DeclareVariable",
            },
@@ -129,24 +143,24 @@ describe('DeclareVariable', () => {
     test('Babel', () => {
       expect(parseForSnapshot(testCase.code, {babel: true}))
         .toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "id": {
+               "name": "T1",
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
+                 },
+               },
+             },
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectBabelAlignment(testCase);
     });
@@ -172,17 +186,24 @@ describe('DeclareVariable', () => {
        {
          "body": [
            {
-             "id": {
-               "name": "T1",
-               "optional": false,
-               "type": "Identifier",
-               "typeAnnotation": {
-                 "type": "TypeAnnotation",
-                 "typeAnnotation": {
-                   "type": "NumberTypeAnnotation",
+             "declarations": [
+               {
+                 "id": {
+                   "name": "T1",
+                   "optional": false,
+                   "type": "Identifier",
+                   "typeAnnotation": {
+                     "type": "TypeAnnotation",
+                     "typeAnnotation": {
+                       "type": "NumberTypeAnnotation",
+                     },
+                   },
                  },
+                 "init": null,
+                 "type": "VariableDeclarator",
                },
-             },
+             ],
+             "implicitDeclare": false,
              "kind": "const",
              "type": "DeclareVariable",
            },
@@ -196,26 +217,84 @@ describe('DeclareVariable', () => {
     test('Babel', () => {
       expect(parseForSnapshot(testCase.code, {babel: true}))
         .toMatchInlineSnapshot(`
-        {
-          "body": [
-            {
-              "id": {
-                "name": "T1",
-                "type": "Identifier",
-                "typeAnnotation": {
-                  "type": "TypeAnnotation",
-                  "typeAnnotation": {
-                    "type": "NumberTypeAnnotation",
-                  },
-                },
-              },
-              "type": "DeclareVariable",
-            },
-          ],
-          "type": "Program",
-        }
+       {
+         "body": [
+           {
+             "id": {
+               "name": "T1",
+               "type": "Identifier",
+               "typeAnnotation": {
+                 "type": "TypeAnnotation",
+                 "typeAnnotation": {
+                   "type": "NumberTypeAnnotation",
+                 },
+               },
+             },
+             "type": "DeclareVariable",
+           },
+         ],
+         "type": "Program",
+       }
       `);
       expectBabelAlignment(testCase);
     });
+  });
+
+  test('ESTree keeps extra declarators and initializers', () => {
+    expect(parseForSnapshot(`declare const A: number = 1, B: string = 'x';`))
+      .toMatchInlineSnapshot(`
+     {
+       "body": [
+         {
+           "declarations": [
+             {
+               "id": {
+                 "name": "A",
+                 "optional": false,
+                 "type": "Identifier",
+                 "typeAnnotation": {
+                   "type": "TypeAnnotation",
+                   "typeAnnotation": {
+                     "type": "NumberTypeAnnotation",
+                   },
+                 },
+               },
+               "init": {
+                 "literalType": "numeric",
+                 "raw": "1",
+                 "type": "Literal",
+                 "value": 1,
+               },
+               "type": "VariableDeclarator",
+             },
+             {
+               "id": {
+                 "name": "B",
+                 "optional": false,
+                 "type": "Identifier",
+                 "typeAnnotation": {
+                   "type": "TypeAnnotation",
+                   "typeAnnotation": {
+                     "type": "StringTypeAnnotation",
+                   },
+                 },
+               },
+               "init": {
+                 "literalType": "string",
+                 "raw": "'x'",
+                 "type": "Literal",
+                 "value": "x",
+               },
+               "type": "VariableDeclarator",
+             },
+           ],
+           "implicitDeclare": false,
+           "kind": "const",
+           "type": "DeclareVariable",
+         },
+       ],
+       "type": "Program",
+     }
+    `);
   });
 });

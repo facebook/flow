@@ -1123,8 +1123,9 @@ module.exports = [
     return {
       type: 'DeclareVariable',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
+      declarations: this.deserializeNodeList(),
       kind: this.deserializeString(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
