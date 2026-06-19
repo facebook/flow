@@ -132,7 +132,6 @@ pub mod opts {
         pub hook_compatibility_includes: Vec<String>,
         pub hook_compatibility_excludes: Vec<String>,
         pub ignore_non_literal_requires: bool,
-        pub instance_t_objkit_fix: bool,
         pub include_warnings: bool,
         pub jest_integration: bool,
         pub lazy_mode: Option<LazyMode>,
@@ -301,7 +300,6 @@ pub mod opts {
             hook_compatibility_includes: Vec::new(),
             hook_compatibility_excludes: Vec::new(),
             ignore_non_literal_requires: false,
-            instance_t_objkit_fix: false,
             include_warnings: false,
             jest_integration: false,
             lazy_mode: None,
@@ -1513,9 +1511,15 @@ pub mod opts {
 
     fn instance_t_objkit_fix_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         parse_boolean(
-            |opts, v| {
-                opts.instance_t_objkit_fix = v;
-                Ok(())
+            |_opts, v| {
+                if v {
+                    Ok(())
+                } else {
+                    Err(
+                        "Support for experimental.instance_t_objkit_fix=false is removed."
+                            .to_string(),
+                    )
+                }
             },
             values,
             config,

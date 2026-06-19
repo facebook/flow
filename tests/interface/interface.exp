@@ -1389,7 +1389,8 @@ Cannot assign `3` to `x.foo` because property `foo` is not writable. [cannot-wri
 
 Error -------------------------------------------------------------------------------------------------- utility.js:33:1
 
-Cannot cast `b` to `Readonly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [incompatible-type]
+Cannot cast `b` to `Readonly` because property `qux` is missing in `B` [1] but exists in object type [2].
+[incompatible-type]
 
    utility.js:33:1
    33| b as Readonly<K>; // error

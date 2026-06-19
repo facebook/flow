@@ -9,9 +9,9 @@ class Foo1 {
 
 class Foo2 {
   bar(
-    baz: Readonly<this>, // ok due to unsoundness
+    baz: Readonly<this>,
   ): Readonly<this> { // ok
-    baz.bar(baz);
+    baz.bar(baz); // ERROR: Readonly<this> is a plain object, not `this`
     return this
   }
 }

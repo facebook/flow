@@ -70,7 +70,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:30:9
 
-Cannot get `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot get `noFoo.foo` because property `foo` is missing in object type [1]. [prop-missing]
 
    omit.js:30:9
    30|   noFoo.foo; // ERROR: omitted
@@ -84,7 +84,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:31:3
 
-Cannot cast `noFoo` to object type because `Omit` [1] is not a subtype of object type [2]. Class instances are not
+Cannot cast `noFoo` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
 subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    omit.js:31:3
@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:46:9
 
-Cannot get `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot get `noFoo.foo` because property `foo` is missing in object type [1]. [prop-missing]
 
    omit.js:46:9
    46|   noFoo.foo; // ERROR: omitted
@@ -116,7 +116,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:47:3
 
-Cannot cast `noFoo` to object type because `Omit` [1] is not a subtype of object type [2]. Class instances are not
+Cannot cast `noFoo` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
 subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    omit.js:47:3
@@ -300,7 +300,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- pick.js:24:10
 
-Cannot get `picked.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+Cannot get `picked.bar` because property `bar` is missing in object type [1]. [prop-missing]
 
    pick.js:24:10
    24|   picked.bar; // ERROR: wasn't picked
@@ -314,7 +314,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- pick.js:36:10
 
-Cannot get `picked.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+Cannot get `picked.bar` because property `bar` is missing in object type [1]. [prop-missing]
 
    pick.js:36:10
    36|   picked.bar; // ERROR: wasn't picked

@@ -2078,7 +2078,6 @@ pub(super) fn make_options(
                 hook_compatibility_includes,
                 hook_compatibility_excludes,
                 ignore_non_literal_requires,
-                instance_t_objkit_fix,
                 include_warnings,
                 jest_integration,
                 lazy_mode,
@@ -2715,7 +2714,6 @@ pub(super) fn make_options(
         include_warnings: include_warnings_override
             || max_warnings_override.is_some()
             || include_warnings,
-        instance_t_objkit_fix,
         lazy_mode,
         llm_context_include_imports,
         log_per_error_typing_telemetry,

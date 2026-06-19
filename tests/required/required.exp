@@ -247,7 +247,7 @@ Cannot instantiate required of number because number [1] is not an object. [not-
 Error ----------------------------------------------------------------------------------------------------- test.js:51:2
 
 Cannot cast object literal to required of `IFace` because properties `x` and `y` are missing in object literal [1] but
-exist in `IFace` [2]. [incompatible-type]
+exist in object type [2]. [incompatible-type]
 
    test.js:51:2
    51| ({}) as Required<IFace>; // ERROR
@@ -262,7 +262,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:52:2
 
 Cannot cast object literal to required of `IFace` because property `y` is missing in object literal [1] but exists in
-`IFace` [2]. [incompatible-type]
+object type [2]. [incompatible-type]
 
    test.js:52:2
    52| ({x: 1}) as Required<IFace>; // ERROR
@@ -277,7 +277,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:53:2
 
 Cannot cast object literal to required of `IFace` because property `x` is missing in object literal [1] but exists in
-`IFace` [2]. [incompatible-type]
+object type [2]. [incompatible-type]
 
    test.js:53:2
    53| ({y: 1}) as Required<IFace>; // ERROR
@@ -322,7 +322,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:68:2
 
 Cannot cast object literal to required of `JFace` because properties `x`, `y`, and `z` are missing in object literal [1]
-but exist in `JFace` [2]. [incompatible-type]
+but exist in object type [2]. [incompatible-type]
 
    test.js:68:2
    68| ({}) as Required<JFace>; // ERROR
@@ -337,7 +337,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:69:2
 
 Cannot cast object literal to required of `JFace` because properties `y` and `z` are missing in object literal [1] but
-exist in `JFace` [2]. [incompatible-type]
+exist in object type [2]. [incompatible-type]
 
    test.js:69:2
    69| ({x: 1}) as Required<JFace>; // ERROR
@@ -352,7 +352,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:70:2
 
 Cannot cast object literal to required of `JFace` because property `z` is missing in object literal [1] but exists in
-`JFace` [2]. [incompatible-type]
+object type [2]. [incompatible-type]
 
    test.js:70:2
    70| ({x: 1, y: 1}) as Required<JFace>; // ERROR

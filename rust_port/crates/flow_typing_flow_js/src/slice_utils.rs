@@ -111,27 +111,17 @@ pub fn mk_object_type<'cx>(
                 ObjKind::Indexed(dict) => Some(dict.clone()),
                 _ => None,
             };
-            let (inst, reason) = if cx.metadata().frozen.instance_t_objkit_fix {
-                let inst = InstType::new(InstTypeInner {
-                    own_props: id,
-                    inst_dict,
-                    class_id: flow_aloc::ALocId::none(),
-                    inst_kind: InstanceKind::InterfaceKind {
-                        inline: true,
-                        reject_primitives: false,
-                    },
-                    ..(*inst).clone()
-                });
-                let reason = reason.dupe().replace_desc(VirtualReasonDesc::RObjectType);
-                (inst, reason)
-            } else {
-                let inst = InstType::new(InstTypeInner {
-                    own_props: id,
-                    inst_dict,
-                    ..(*inst).clone()
-                });
-                (inst, reason.dupe())
-            };
+            let inst = InstType::new(InstTypeInner {
+                own_props: id,
+                inst_dict,
+                class_id: flow_aloc::ALocId::none(),
+                inst_kind: InstanceKind::InterfaceKind {
+                    inline: true,
+                    reject_primitives: false,
+                },
+                ..(*inst).clone()
+            });
+            let reason = reason.dupe().replace_desc(VirtualReasonDesc::RObjectType);
             // Implemented/super interfaces are folded into the property map computed by the slice,
             // so we effectively flatten the hierarchy in the output
             Type::new(TypeInner::DefT(

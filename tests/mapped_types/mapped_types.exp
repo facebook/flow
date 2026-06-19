@@ -1193,7 +1193,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- instancet.js:9:3
 
-Cannot cast `i` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
+Cannot cast `i` to interface type because property `foo` is read-only in object type [1] but writable in interface
 type [2]. [incompatible-variance]
 
    instancet.js:9:3
@@ -1211,7 +1211,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:10:3
 
-Cannot cast `i` to object type because mapped type [1] is not a subtype of object type [2]. Class instances are not
+Cannot cast `i` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
 subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    instancet.js:10:3
@@ -1230,7 +1230,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instancet.js:21:3
 
 Cannot cast `i` to interface type because an index signature declaring the expected key / value type is read-only in
-mapped type [1] but writable in interface type [2]. [incompatible-variance]
+object type [1] but writable in interface type [2]. [incompatible-variance]
 
    instancet.js:21:3
    21|   i as interface {readonly foo: number, [string]: boolean}; // ERROR
@@ -1247,7 +1247,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:33:3
 
-Cannot cast `inst` to interface type because property `foo` is read-only in mapped type [1] but writable in interface
+Cannot cast `inst` to interface type because property `foo` is read-only in object type [1] but writable in interface
 type [2]. [incompatible-variance]
 
    instancet.js:33:3
@@ -1265,7 +1265,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:34:9
 
-Cannot get `inst['bar']` because property `bar` is missing in mapped type [1]. [prop-missing]
+Cannot get `inst['bar']` because property `bar` is missing in object type [1]. [prop-missing]
 
    instancet.js:34:9
    34|   (inst['bar']); // ERROR

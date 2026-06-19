@@ -178,7 +178,6 @@ pub struct FrozenMetadata {
     pub hook_compatibility_includes: Arc<[Regex]>,
     pub ignore_non_literal_requires: bool,
     pub records_includes: Arc<[Regex]>,
-    pub instance_t_objkit_fix: bool,
     pub max_workers: i32,
     pub missing_module_generators: Arc<[(Regex, String)]>,
     pub no_implicit_override: bool,
@@ -239,7 +238,6 @@ impl Default for FrozenMetadata {
             hook_compatibility_includes: Arc::from([]),
             ignore_non_literal_requires: false,
             records_includes: Arc::from([]),
-            instance_t_objkit_fix: false,
             max_workers: 0,
             missing_module_generators: Arc::from([]),
             no_implicit_override: false,
@@ -617,7 +615,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             hook_compatibility_excludes: options.hook_compatibility_excludes.dupe(),
             hook_compatibility_includes: options.hook_compatibility_includes.dupe(),
             hook_compatibility: options.hook_compatibility,
-            instance_t_objkit_fix: options.instance_t_objkit_fix,
             records_includes: options
                 .records_includes
                 .iter()
