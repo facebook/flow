@@ -1077,6 +1077,7 @@ define_nodes! {
         {=> self.serialize_declare_variable(loc, inner)},
     DeclareFunction = 99 {
         id: Node,
+        implicitDeclare: Boolean,
         predicate: Node,
     } from Statement::DeclareFunction { loc, inner }
         {=> self.serialize_declare_function(loc, inner)},
@@ -1087,6 +1088,7 @@ define_nodes! {
         implements: NodeList,
         mixins: NodeList,
         body: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareClass { loc, inner }
         {=> self.serialize_declare_class(loc, inner)},
     DeclareComponent = 101 {
@@ -1095,10 +1097,12 @@ define_nodes! {
         rest: Node,
         rendersType: Node,
         typeParameters: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareComponent { loc, inner }
         {=> self.serialize_declare_component(loc, inner)},
     DeclareHook = 102 {
         id: Node,
+        implicitDeclare: Boolean,
     },
     DeclareModule = 103 {
         id: Node,
@@ -1115,38 +1119,49 @@ define_nodes! {
         declaration: Node,
         specifiers: NodeList,
         source: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareExportDeclaration { loc, inner }
         {=> self.serialize_declare_export_declaration(loc, inner)},
     DeclareExportAllDeclaration = 106 {
         source: Node,
+        implicitDeclare: Boolean,
     },
     DeclareNamespace = 107 {
+        global: Boolean,
         id: Node,
         body: Node,
-    } from Statement::DeclareNamespace { loc, inner }
+        implicitDeclare: Boolean,
+        keyword: String,
+    }
+        from Statement::DeclareNamespace { loc, inner }
         {=> self.serialize_declare_namespace(loc, inner)},
     DeclareInterface = 108 {
         id: Node,
         typeParameters: Node,
         body: Node,
         extends: NodeList,
+        implicitDeclare: Boolean,
     } from Statement::DeclareInterface { loc, inner }
         {=> self.serialize_declare_interface(loc, inner)},
     DeclareTypeAlias = 109 {
         id: Node,
         typeParameters: Node,
         right: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareTypeAlias { loc, inner } {
             self.serialize_identifier_node(&inner.id),
             self.serialize_type_params_opt(&inner.tparams),
             self.serialize_type(&inner.right),
+            self.write_bool(self.implicit_declare_from_loc(loc)),
         },
     DeclareEnum = 110 {
         id: Node,
         body: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareEnum { loc, inner } {
             self.serialize_identifier_node(&inner.id),
             self.serialize_enum_body(&inner.body),
+            self.write_bool(self.implicit_declare_from_loc(loc)),
         },
 
     // ---------------------------------------------------------------
@@ -1695,6 +1710,7 @@ define_nodes! {
         lowerBound: Node,
         upperBound: Node,
         supertype: Node,
+        implicitDeclare: Boolean,
     } from Statement::DeclareOpaqueType { loc, inner }
         {=> self.serialize_declare_opaque_type(loc, inner)},
     EnumBody = 223 {

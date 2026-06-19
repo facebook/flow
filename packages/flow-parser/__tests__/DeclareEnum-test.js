@@ -67,6 +67,7 @@ describe('DeclareEnum', () => {
              "type": "Identifier",
              "typeAnnotation": null,
            },
+           "implicitDeclare": false,
            "type": "DeclareEnum",
          },
          {

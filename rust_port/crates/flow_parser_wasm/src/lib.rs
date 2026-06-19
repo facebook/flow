@@ -507,10 +507,19 @@ fn comment_has_flow_pragma(bytes: &[u8], start: usize, end: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::node_kinds::NodeKind;
+    use crate::node_kinds::PropType;
+    use crate::node_kinds::SCHEMA;
     use crate::serializer::Serializer;
 
     /// Parse `source`, serialize it, and return the program_buffer.
     fn parse_and_serialize(source: &str) -> Vec<u32> {
+        parse_and_serialize_with_filename(source, "").program_buffer
+    }
+
+    fn parse_and_serialize_with_filename(
+        source: &str,
+        filename: &str,
+    ) -> crate::serializer::SerializerBuffers {
         let parse_options = flow_parser::ParseOptions {
             components: true,
             enums: true,
@@ -527,7 +536,7 @@ mod tests {
             allow_return_outside_function: false,
         };
         let file_key = flow_parser::file_key::FileKey::new(
-            flow_parser::file_key::FileKeyInner::SourceFile(String::new()),
+            flow_parser::file_key::FileKeyInner::SourceFile(filename.to_string()),
         );
         let (program, errors) = flow_parser::parse_program_file::<()>(
             false,
@@ -543,8 +552,91 @@ mod tests {
             errors
         );
         let ser = Serializer::new(source);
-        let buffers = ser.serialize_program(&program, &[], None);
-        buffers.program_buffer
+        ser.serialize_program(&program, &[], None)
+    }
+
+    fn skip_string(buf: &[u32], idx: usize) -> usize {
+        if buf[idx] == 0 { idx + 1 } else { idx + 2 }
+    }
+
+    fn skip_property(buf: &[u32], idx: usize, prop_type: PropType) -> usize {
+        match prop_type {
+            PropType::Node => skip_node(buf, idx),
+            PropType::NodeList => {
+                let len = buf[idx] as usize;
+                (0..len).fold(idx + 1, |cursor, _| skip_node(buf, cursor))
+            }
+            PropType::String => skip_string(buf, idx),
+            PropType::Boolean => idx + 1,
+            PropType::Number => {
+                let aligned = if idx.is_multiple_of(2) { idx } else { idx + 1 };
+                aligned + 2
+            }
+        }
+    }
+
+    fn skip_node(buf: &[u32], idx: usize) -> usize {
+        if buf[idx] == 0 {
+            return idx + 1;
+        }
+
+        let kind_id = buf[idx] - 1;
+        let def = SCHEMA
+            .iter()
+            .find(|def| def.kind_id == kind_id)
+            .expect("serialized node kind should exist in schema");
+        let mut cursor = idx + 2;
+        for (_, prop_type) in def
+            .extra_pre_props
+            .iter()
+            .chain(def.properties.iter())
+            .chain(def.extra_post_props.iter())
+        {
+            cursor = skip_property(buf, cursor, *prop_type);
+        }
+        cursor
+    }
+
+    fn node_property_idx(buf: &[u32], kind: NodeKind, prop_name: &str) -> usize {
+        let node_idx = buf
+            .iter()
+            .position(|v| *v == encoded_kind(kind))
+            .expect("expected declaration node header in buffer");
+        let def = SCHEMA
+            .iter()
+            .find(|def| def.kind_id == kind as u32)
+            .expect("serialized node kind should exist in schema");
+        let props = def
+            .extra_pre_props
+            .iter()
+            .chain(def.properties.iter())
+            .chain(def.extra_post_props.iter());
+        let mut cursor = node_idx + 2;
+        for (name, prop_type) in props {
+            if *name == prop_name {
+                return cursor;
+            }
+            cursor = skip_property(buf, cursor, *prop_type);
+        }
+        panic!("{kind:?}.{prop_name} should exist in schema");
+    }
+
+    fn bool_prop(buf: &[u32], kind: NodeKind, prop_name: &str) -> bool {
+        buf[node_property_idx(buf, kind, prop_name)] == 1
+    }
+
+    fn string_prop<'a>(
+        buffers: &'a crate::serializer::SerializerBuffers,
+        kind: NodeKind,
+        prop_name: &str,
+    ) -> &'a str {
+        let idx = node_property_idx(&buffers.program_buffer, kind, prop_name);
+        let offset = buffers.program_buffer[idx]
+            .checked_sub(1)
+            .expect("string property should be non-null") as usize;
+        let len = buffers.program_buffer[idx + 1] as usize;
+        std::str::from_utf8(&buffers.string_buffer[offset..offset + len])
+            .expect("serialized strings should be UTF-8")
     }
 
     /// Returns true if any u32 in the buffer equals (kind as u32 + 1),
@@ -581,6 +673,112 @@ mod tests {
     }
 
     #[test]
+    fn declare_function_serializes_explicit_declare_marker() {
+        let buf = parse_and_serialize("declare function foo(): void;");
+        assert!(
+            !bool_prop(&buf, NodeKind::DeclareFunction, "implicitDeclare"),
+            "explicit `declare function` should serialize implicitDeclare=false"
+        );
+    }
+
+    #[test]
+    fn declare_function_serializes_ambient_declare_marker() {
+        let buf = parse_and_serialize_with_filename("function foo(): void;", "test.js.flow")
+            .program_buffer;
+        assert!(
+            bool_prop(&buf, NodeKind::DeclareFunction, "implicitDeclare"),
+            "ambient `function` should serialize implicitDeclare=true"
+        );
+    }
+
+    #[test]
+    fn declare_hook_serializes_explicit_declare_marker() {
+        let buf = parse_and_serialize("declare hook useFoo(): void;");
+        assert!(
+            !bool_prop(&buf, NodeKind::DeclareHook, "implicitDeclare"),
+            "explicit `declare hook` should serialize implicitDeclare=false"
+        );
+    }
+
+    #[test]
+    fn declare_namespace_serializes_explicit_namespace_markers() {
+        let buffers = parse_and_serialize_with_filename("declare namespace Foo {}", "test.js");
+        let buf = &buffers.program_buffer;
+        assert!(
+            !bool_prop(buf, NodeKind::DeclareNamespace, "global"),
+            "local `declare namespace` should serialize global=false"
+        );
+        assert!(
+            !bool_prop(buf, NodeKind::DeclareNamespace, "implicitDeclare"),
+            "explicit `declare namespace` should serialize implicitDeclare=false"
+        );
+        assert_eq!(
+            string_prop(&buffers, NodeKind::DeclareNamespace, "keyword"),
+            "namespace",
+            "`declare namespace` should serialize keyword=\"namespace\""
+        );
+    }
+
+    #[test]
+    fn declare_namespace_serializes_ambient_module_markers() {
+        let buffers = parse_and_serialize_with_filename("module Foo {}", "test.d.ts");
+        let buf = &buffers.program_buffer;
+        assert!(
+            !bool_prop(buf, NodeKind::DeclareNamespace, "global"),
+            "local ambient module namespace should serialize global=false"
+        );
+        assert!(
+            bool_prop(buf, NodeKind::DeclareNamespace, "implicitDeclare"),
+            "ambient `module` namespace should serialize implicitDeclare=true"
+        );
+        assert_eq!(
+            string_prop(&buffers, NodeKind::DeclareNamespace, "keyword"),
+            "module",
+            "`module` namespace should serialize keyword=\"module\""
+        );
+    }
+
+    #[test]
+    fn declare_namespace_serializes_global_marker() {
+        let buf = parse_and_serialize("declare global {}");
+        assert!(
+            bool_prop(&buf, NodeKind::DeclareNamespace, "global"),
+            "`declare global` should serialize global=true"
+        );
+    }
+
+    #[test]
+    fn quoted_declare_nodes_serialize_explicit_declare_marker() {
+        let cases = [
+            ("declare class Foo {}", NodeKind::DeclareClass),
+            ("declare component Foo();", NodeKind::DeclareComponent),
+            ("declare const foo: number;", NodeKind::DeclareVariable),
+            ("declare function foo(): void;", NodeKind::DeclareFunction),
+            ("declare hook useFoo(): void;", NodeKind::DeclareHook),
+            (
+                "declare export const foo: number;",
+                NodeKind::DeclareExportDeclaration,
+            ),
+            (
+                "declare export * from \"foo\";",
+                NodeKind::DeclareExportAllDeclaration,
+            ),
+            ("declare opaque type Foo;", NodeKind::DeclareOpaqueType),
+            ("declare type Foo = string;", NodeKind::DeclareTypeAlias),
+            ("declare enum Foo { A }", NodeKind::DeclareEnum),
+            ("declare interface Foo {}", NodeKind::DeclareInterface),
+        ];
+
+        for (source, kind) in cases {
+            let buf = parse_and_serialize(source);
+            assert!(
+                !bool_prop(&buf, kind, "implicitDeclare"),
+                "{kind:?} from {source:?} should serialize implicitDeclare=false"
+            );
+        }
+    }
+
+    #[test]
     fn declare_export_class_serializes_declare_class_fields_in_schema_order() {
         let buf = parse_and_serialize("declare export class Foo {}");
         let declare_export_idx = buf
@@ -595,7 +793,8 @@ mod tests {
         );
 
         // DeclareClass serializes as:
-        // kind, loc, id, typeParameters, extends, implements, mixins, body.
+        // kind, loc, id, typeParameters, extends, implements, mixins, body,
+        // implicitDeclare.
         // The `Foo` Identifier payload is six u32 values:
         // kind, loc, string offset, string length, null typeAnnotation, optional=false.
         let extends_count_idx = declare_class_idx + 2 + 6 + 1;

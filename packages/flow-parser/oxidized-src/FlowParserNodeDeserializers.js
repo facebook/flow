@@ -1135,6 +1135,7 @@ module.exports = [
       type: 'DeclareFunction',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
       predicate: this.deserializeNode(),
     };
   },
@@ -1150,6 +1151,7 @@ module.exports = [
       implements: this.deserializeNodeList(),
       mixins: this.deserializeNodeList(),
       body: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1163,6 +1165,7 @@ module.exports = [
       rest: this.deserializeNode(),
       rendersType: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1172,6 +1175,7 @@ module.exports = [
       type: 'DeclareHook',
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1203,6 +1207,7 @@ module.exports = [
       declaration: this.deserializeNode(),
       specifiers: this.deserializeNodeList(),
       source: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1212,6 +1217,7 @@ module.exports = [
       type: 'DeclareExportAllDeclaration',
       loc: this.addEmptyLoc(),
       source: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1220,8 +1226,11 @@ module.exports = [
     return {
       type: 'DeclareNamespace',
       loc: this.addEmptyLoc(),
+      global: this.deserializeBoolean(),
       id: this.deserializeNode(),
       body: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
+      keyword: this.deserializeString(),
     };
   },
 
@@ -1234,6 +1243,7 @@ module.exports = [
       typeParameters: this.deserializeNode(),
       body: this.deserializeNode(),
       extends: this.deserializeNodeList(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1245,6 +1255,7 @@ module.exports = [
       id: this.deserializeNode(),
       typeParameters: this.deserializeNode(),
       right: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -1255,6 +1266,7 @@ module.exports = [
       loc: this.addEmptyLoc(),
       id: this.deserializeNode(),
       body: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 
@@ -2378,6 +2390,7 @@ module.exports = [
       lowerBound: this.deserializeNode(),
       upperBound: this.deserializeNode(),
       supertype: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
     };
   },
 

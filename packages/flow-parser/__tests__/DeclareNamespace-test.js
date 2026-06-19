@@ -14,7 +14,7 @@ import {
   expectBabelAlignment,
   expectEspreeAlignment,
 } from '../__test_utils__/alignment-utils';
-import {parseForSnapshot} from '../__test_utils__/parse';
+import {parse, parseForSnapshot} from '../__test_utils__/parse';
 
 describe('DeclareNamespace', () => {
   const testCase: AlignmentCase = {
@@ -63,12 +63,15 @@ describe('DeclareNamespace', () => {
              ],
              "type": "BlockStatement",
            },
+           "global": false,
            "id": {
              "name": "NS",
              "optional": false,
              "type": "Identifier",
              "typeAnnotation": null,
            },
+           "implicitDeclare": false,
+           "keyword": "namespace",
            "type": "DeclareNamespace",
          },
          {
@@ -107,5 +110,33 @@ describe('DeclareNamespace', () => {
      }
     `);
     expectBabelAlignment(testCase);
+  });
+
+  test('ambient module namespace markers', () => {
+    expect(parse('module Baz {}', {sourceFilename: 'test.d.ts'})).toMatchObject(
+      {
+        body: [
+          expect.objectContaining({
+            type: 'DeclareNamespace',
+            global: false,
+            implicitDeclare: true,
+            keyword: 'module',
+          }),
+        ],
+      },
+    );
+  });
+
+  test('global namespace marker', () => {
+    expect(parse('declare global {}')).toMatchObject({
+      body: [
+        expect.objectContaining({
+          type: 'DeclareNamespace',
+          global: true,
+          implicitDeclare: false,
+          keyword: 'namespace',
+        }),
+      ],
+    });
   });
 });

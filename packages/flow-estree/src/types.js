@@ -1846,6 +1846,7 @@ export interface DeclareHook extends BaseNode {
       +typeAnnotation: HookTypeAnnotation,
     },
   };
+  +implicitDeclare: boolean;
 }
 
 export interface DeclareVariable extends BaseNode {
@@ -1869,6 +1870,7 @@ export interface DeclareFunction extends BaseNode {
       +typeAnnotation: FunctionTypeAnnotation,
     },
   };
+  +implicitDeclare: boolean;
   +predicate: InferredPredicate | DeclaredPredicate | null;
 }
 
@@ -1880,8 +1882,11 @@ export interface DeclareModule extends BaseNode {
 
 export interface DeclareNamespace extends BaseNode {
   +type: 'DeclareNamespace';
+  +global: boolean;
   +id: Identifier;
   +body: BlockStatement;
+  +implicitDeclare: boolean;
+  +keyword: 'namespace' | 'module';
 }
 
 export interface DeclareInterface extends BaseInterfaceDeclaration {

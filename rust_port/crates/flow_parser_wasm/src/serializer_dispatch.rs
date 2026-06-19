@@ -224,11 +224,13 @@ impl<'a> Serializer<'a> {
                 self.serialize_identifier_node(&inner.id);
                 self.serialize_type_params_opt(&inner.tparams);
                 self.serialize_type(&inner.right);
+                self.write_bool(self.implicit_declare_from_loc(loc));
             }
             StatementInner::DeclareEnum { loc, inner } => {
                 self.write_node_header(NodeKind::DeclareEnum, loc);
                 self.serialize_identifier_node(&inner.id);
                 self.serialize_enum_body(&inner.body);
+                self.write_bool(self.implicit_declare_from_loc(loc));
             }
             StatementInner::NamespaceExportDeclaration { loc, inner } => {
                 self.write_node_header(NodeKind::NamespaceExportDeclaration, loc);

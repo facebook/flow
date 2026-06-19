@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DeclareFunction ambient export function 1`] = `
+{
+  "body": [
+    {
+      "declaration": {
+        "id": {
+          "name": "foo",
+          "optional": false,
+          "type": "Identifier",
+          "typeAnnotation": {
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "params": [],
+              "rest": null,
+              "returnType": {
+                "type": "VoidTypeAnnotation",
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null,
+            },
+          },
+        },
+        "implicitDeclare": true,
+        "predicate": null,
+        "type": "DeclareFunction",
+      },
+      "default": false,
+      "implicitDeclare": true,
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration",
+    },
+  ],
+  "type": "Program",
+}
+`;
+
+exports[`DeclareFunction explicit declare 1`] = `
+{
+  "body": [
+    {
+      "id": {
+        "name": "foo",
+        "optional": false,
+        "type": "Identifier",
+        "typeAnnotation": {
+          "type": "TypeAnnotation",
+          "typeAnnotation": {
+            "params": [],
+            "rest": null,
+            "returnType": {
+              "type": "VoidTypeAnnotation",
+            },
+            "this": null,
+            "type": "FunctionTypeAnnotation",
+            "typeParameters": null,
+          },
+        },
+      },
+      "implicitDeclare": false,
+      "predicate": null,
+      "type": "DeclareFunction",
+    },
+  ],
+  "type": "Program",
+}
+`;

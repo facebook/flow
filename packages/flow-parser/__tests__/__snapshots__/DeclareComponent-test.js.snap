@@ -31,6 +31,7 @@ exports[`DeclareComponent Basic ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [],
       "rendersType": null,
       "rest": null,
@@ -60,6 +61,7 @@ exports[`DeclareComponent Export Babel 1`] = `
         "type": "DeclareVariable",
       },
       "default": false,
+      "implicitDeclare": false,
       "source": null,
       "specifiers": [],
       "type": "DeclareExportDeclaration",
@@ -79,6 +81,7 @@ exports[`DeclareComponent Export Babel 1`] = `
         "type": "DeclareVariable",
       },
       "default": true,
+      "implicitDeclare": false,
       "source": null,
       "specifiers": [],
       "type": "DeclareExportDeclaration",
@@ -99,6 +102,7 @@ exports[`DeclareComponent Export ESTree 1`] = `
           "type": "Identifier",
           "typeAnnotation": null,
         },
+        "implicitDeclare": true,
         "params": [],
         "rendersType": null,
         "rest": null,
@@ -106,6 +110,7 @@ exports[`DeclareComponent Export ESTree 1`] = `
         "typeParameters": null,
       },
       "default": false,
+      "implicitDeclare": false,
       "source": null,
       "specifiers": [],
       "type": "DeclareExportDeclaration",
@@ -118,6 +123,7 @@ exports[`DeclareComponent Export ESTree 1`] = `
           "type": "Identifier",
           "typeAnnotation": null,
         },
+        "implicitDeclare": true,
         "params": [],
         "rendersType": null,
         "rest": null,
@@ -125,6 +131,7 @@ exports[`DeclareComponent Export ESTree 1`] = `
         "typeParameters": null,
       },
       "default": true,
+      "implicitDeclare": false,
       "source": null,
       "specifiers": [],
       "type": "DeclareExportDeclaration",
@@ -165,6 +172,7 @@ exports[`DeclareComponent Params and renders ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "local": {
@@ -242,6 +250,7 @@ exports[`DeclareComponent Rest param ESTree 1`] = `
         "type": "Identifier",
         "typeAnnotation": null,
       },
+      "implicitDeclare": false,
       "params": [
         {
           "argument": {

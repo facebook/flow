@@ -3082,15 +3082,17 @@ impl<'a> Serializer<'a> {
             && decl.source.is_some();
 
         if is_export_all {
-            // 106: DeclareExportAllDeclaration — source(Node)
+            // 106: DeclareExportAllDeclaration — source(Node) implicitDeclare(Boolean)
             self.write_node_header(NodeKind::DeclareExportAllDeclaration, loc);
             if let Some((src_loc, src_lit)) = &decl.source {
                 self.write_string_literal(src_loc, &src_lit.value, &src_lit.raw);
             }
+            self.write_bool(self.implicit_declare_from_loc(loc));
             return;
         }
 
         // 105: DeclareExportDeclaration — default declaration specifiers source
+        // implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareExportDeclaration, loc);
         self.write_bool(decl.default.is_some());
         // declaration
@@ -3113,28 +3115,7 @@ impl<'a> Serializer<'a> {
                         self.serialize_declare_class(loc, declaration);
                     }
                     Declaration::Component { loc, declaration } => {
-                        // 101: DeclareComponent — id params rest rendersType
-                        // typeParameters. Same shape as `serialize_declare_component`.
-                        self.write_node_header(NodeKind::DeclareComponent, loc);
-                        self.serialize_identifier_node(&declaration.id);
-                        let rest_count = if declaration.params.rest.is_some() {
-                            1
-                        } else {
-                            0
-                        };
-                        self.buf
-                            .push((declaration.params.params.len() + rest_count) as u32);
-                        for param in declaration.params.params.iter() {
-                            self.serialize_component_declaration_param(param);
-                        }
-                        if let Some(rest) = &declaration.params.rest {
-                            self.write_node_header(NodeKind::RestElement, &rest.loc);
-                            self.serialize_pattern(&rest.argument);
-                        }
-                        // rest: always null (rest is in params list above)
-                        self.write_null_node();
-                        self.serialize_renders_annotation(&declaration.renders);
-                        self.serialize_type_params_opt(&declaration.tparams);
+                        self.serialize_declare_component(loc, declaration);
                     }
                     Declaration::DefaultType { type_ } => {
                         self.serialize_type(type_);
@@ -3166,18 +3147,10 @@ impl<'a> Serializer<'a> {
                         self.write_node_header(NodeKind::DeclareEnum, loc);
                         self.serialize_identifier_node(&declaration.id);
                         self.serialize_enum_body(&declaration.body);
+                        self.write_bool(self.implicit_declare_from_loc(loc));
                     }
                     Declaration::Namespace { loc, declaration } => {
-                        self.write_node_header(NodeKind::DeclareNamespace, loc);
-                        match &declaration.id {
-                            ast::statement::declare_namespace::Id::Global(id) => {
-                                self.serialize_identifier_node(id);
-                            }
-                            ast::statement::declare_namespace::Id::Local(id) => {
-                                self.serialize_identifier_node(id);
-                            }
-                        };
-                        self.serialize_block_statement(&declaration.body.0, &declaration.body.1);
+                        self.serialize_declare_namespace(loc, declaration);
                     }
                 }
             }
@@ -3218,6 +3191,7 @@ impl<'a> Serializer<'a> {
             }
             None => self.write_null_node(),
         }
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     // ---------------------------------------------------------------
@@ -3361,13 +3335,15 @@ impl<'a> Serializer<'a> {
                 if f.effect == ast::function::Effect::Hook
         );
         if is_hook {
-            // 102: DeclareHook — id(Node)
+            // 102: DeclareHook — id(Node) implicitDeclare(Boolean)
             self.write_node_header(NodeKind::DeclareHook, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
+            self.write_bool(inner.implicit_declare);
         } else {
-            // 99: DeclareFunction — id(Node) predicate(Node)
+            // 99: DeclareFunction — id(Node) implicitDeclare(Boolean) predicate(Node)
             self.write_node_header(NodeKind::DeclareFunction, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
+            self.write_bool(inner.implicit_declare);
             match &inner.predicate {
                 Some(pred) => self.serialize_predicate(pred),
                 None => self.write_null_node(),
@@ -3381,6 +3357,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareClass<Loc, Loc>,
     ) {
         // 100: DeclareClass — id typeParameters extends implements mixins body
+        // implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareClass, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
@@ -3411,6 +3388,7 @@ impl<'a> Serializer<'a> {
             self.serialize_interface_extends(mixin_loc, mixin);
         }
         self.serialize_type_object(&inner.body.0, &inner.body.1);
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_declare_component(
@@ -3418,7 +3396,8 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareComponent<Loc, Loc>,
     ) {
-        // 101: DeclareComponent — id params rest rendersType typeParameters.
+        // 101: DeclareComponent — id params rest rendersType typeParameters
+        // implicitDeclare(Boolean).
         // The OCaml parser emits value-position ComponentParameter for declare
         // component params (same shape as ComponentDeclaration), with rest
         // appended as RestElement in the params list.
@@ -3440,6 +3419,7 @@ impl<'a> Serializer<'a> {
         self.serialize_renders_annotation(&inner.renders);
         // typeParameters
         self.serialize_type_params_opt(&inner.tparams);
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_declare_module(
@@ -3465,8 +3445,13 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareNamespace<Loc, Loc>,
     ) {
-        // 107: DeclareNamespace — id(Node) body(Node)
+        // 107: DeclareNamespace — global(Boolean) id(Node) body(Node)
+        // implicitDeclare(Boolean) keyword(String)
         self.write_node_header(NodeKind::DeclareNamespace, loc);
+        self.write_bool(matches!(
+            &inner.id,
+            ast::statement::declare_namespace::Id::Global(_)
+        ));
         match &inner.id {
             ast::statement::declare_namespace::Id::Global(id) => {
                 self.serialize_identifier_node(id);
@@ -3476,6 +3461,11 @@ impl<'a> Serializer<'a> {
             }
         }
         self.serialize_block_statement(&inner.body.0, &inner.body.1);
+        self.write_bool(inner.implicit_declare);
+        self.write_str(match inner.keyword {
+            ast::statement::declare_namespace::Keyword::Namespace => "namespace",
+            ast::statement::declare_namespace::Keyword::Module => "module",
+        });
     }
 
     fn serialize_declare_interface(
@@ -3483,7 +3473,7 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::Interface<Loc, Loc>,
     ) {
-        // 108: DeclareInterface — id typeParameters body extends
+        // 108: DeclareInterface — id typeParameters body extends implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareInterface, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
@@ -3492,6 +3482,7 @@ impl<'a> Serializer<'a> {
         for (ext_loc, ext) in inner.extends.iter() {
             self.serialize_interface_extends(ext_loc, ext);
         }
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_declare_opaque_type(
@@ -3499,9 +3490,11 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::OpaqueType<Loc, Loc>,
     ) {
-        // DeclareOpaqueType — id typeParameters impltype lowerBound upperBound supertype
+        // DeclareOpaqueType — id typeParameters impltype lowerBound upperBound
+        // supertype implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareOpaqueType, loc);
         self.serialize_opaque_type_payload(inner);
+        self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_array_expression(&mut self, loc: &Loc, inner: &ast::expression::Array<Loc, Loc>) {
