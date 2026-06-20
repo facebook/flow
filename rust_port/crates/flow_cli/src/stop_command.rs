@@ -47,7 +47,9 @@ fn main(args: &arg_spec::Values) {
     // via `default_temp_dir`), otherwise `stop` looks for the server's lock and
     // socket files in the wrong place (e.g. the Unix `/tmp/flow` on Windows) and
     // reports "no server to kill" even when a server is running.
-    let tmp_dir = command_utils::get_temp_dir(&temp_dir);
+    let tmp_dir = command_utils::normalize_temp_dir(&temp_dir)
+        .to_string_lossy()
+        .to_string();
 
     if !quiet {
         eprintln!("Trying to connect to server for `{}`", root.display());

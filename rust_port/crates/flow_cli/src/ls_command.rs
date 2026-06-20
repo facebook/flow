@@ -192,12 +192,12 @@ fn make_options(
     let untyped = command_utils::list_of_string_arg(untyped_flag);
     let declarations = command_utils::list_of_string_arg(declaration_flag);
     let libs: Vec<String> = vec![];
-    let temp_dir = command_utils::get_temp_dir(&None);
+    let temp_dir = command_utils::normalize_temp_dir(&None);
     command_utils::file_options(
         flowconfig,
         root,
         true,
-        Path::new(&temp_dir),
+        temp_dir.as_path(),
         ignores,
         includes,
         libs,

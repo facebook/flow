@@ -836,15 +836,13 @@ mod node {
         }
 
         let initial_char = specifier.chars().next().unwrap();
-        let dir_sep = std::path::MAIN_SEPARATOR;
-
-        let first_separator_index = specifier.find(dir_sep);
+        let first_separator_index = specifier.find('/');
 
         let separator_index = if initial_char == '@'
             && let Some(first_separator_index) = first_separator_index
         {
             specifier[first_separator_index + 1..]
-                .find(dir_sep)
+                .find('/')
                 .map(|i| first_separator_index + 1 + i)
         } else {
             first_separator_index

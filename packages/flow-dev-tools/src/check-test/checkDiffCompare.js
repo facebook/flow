@@ -47,12 +47,15 @@ function normalizeWindowsPaths(text: string): string {
 }
 
 function normalizeWindowsPointers(text: string): string {
-  if (process.platform !== 'win32') {
+  if (
+    process.platform !== 'win32' ||
+    (process.env.FLOW_OCAML_LEGACY || '0') !== '1'
+  ) {
     return text;
   }
-  // On Windows, builtins files have \r\n line endings. Flow counts the
-  // \r as a visible character, so pointer lines (v, ^, ~, -) that span
-  // to the end of a builtins source line get one extra trailing dash.
+  // The legacy OCaml binary counts the \r in builtins files with \r\n line
+  // endings as a visible character. Rust is the default and already matches
+  // the expected pointer width.
   //
   // Only strip the extra dash when the pointer references builtins
   // content (indicated by a nearby <BUILTINS> line). Non-builtins

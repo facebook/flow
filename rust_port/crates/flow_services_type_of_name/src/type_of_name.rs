@@ -625,7 +625,8 @@ fn resolve_name_from_index(
                 export_index::Kind::NamedType => format!("type {{{}}}", actual_name),
                 export_index::Kind::Namespace => actual_name.to_string(),
             };
-            Ok(format!("import {} from '{}';", thing, s.to_absolute()))
+            let specifier = s.to_absolute().replace('\\', "/");
+            Ok(format!("import {} from '{}';", thing, specifier))
         }
         (export_index::Source::Global, export_index::Kind::DefaultType)
         | (export_index::Source::Global, export_index::Kind::NamedType) => {

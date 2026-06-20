@@ -13,6 +13,7 @@ use std::io::IsTerminal;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command as ProcessCommand;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -1211,8 +1212,7 @@ pub(crate) fn file_options_of_flowconfig(
     root: &Path,
     flowconfig: &FlowConfig,
 ) -> Arc<flow_common::files::FileOptions> {
-    let temp_dir = flow_server_files::server_files_js::default_temp_dir();
-    let temp_dir = flow_common::files::cached_canonicalize(&temp_dir).unwrap_or(temp_dir);
+    let temp_dir = normalize_temp_dir(&None);
     file_options(
         flowconfig,
         root,
@@ -2009,6 +2009,20 @@ pub fn get_temp_dir(cli_value: &Option<String>) -> String {
     }
 }
 
+pub fn normalize_temp_dir(cli_value: &Option<String>) -> PathBuf {
+    let temp_dir = get_temp_dir(cli_value);
+    flow_common::files::cached_canonicalize(Path::new(&temp_dir)).unwrap_or_else(|_| {
+        #[cfg(windows)]
+        {
+            PathBuf::from(temp_dir.replace('/', "\\"))
+        }
+        #[cfg(not(windows))]
+        {
+            PathBuf::from(temp_dir)
+        }
+    })
+}
+
 pub(super) fn make_options(
     flowconfig_name: String,
     flowconfig_hash: String,
@@ -2211,9 +2225,7 @@ pub(super) fn make_options(
     } = flowconfig_flags;
 
     let temp_dir = {
-        let temp_dir = get_temp_dir(&temp_dir_override);
-        flow_common::files::cached_canonicalize(std::path::Path::new(&temp_dir))
-            .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir))
+        normalize_temp_dir(&temp_dir_override)
             .to_string_lossy()
             .to_string()
     };
@@ -3236,12 +3248,10 @@ fn connect_and_make_request_inner(
     let flowconfig = read_config_or_exit(&path, enforce_warnings);
 
     // connect handles timeouts itself
-    let tmp_dir_string = get_temp_dir(&connect_flags.temp_dir);
     // OCaml:
     // let normalize dir = File_path.(dir |> make |> to_string) in
     // let tmp_dir = get_temp_dir connect_flags.temp_dir |> normalize in
-    let tmp_dir_normalized = flow_common::files::cached_canonicalize(Path::new(&tmp_dir_string))
-        .unwrap_or_else(|_| std::path::PathBuf::from(&tmp_dir_string));
+    let tmp_dir_normalized = normalize_temp_dir(&connect_flags.temp_dir);
     let tmp_dir_str = tmp_dir_normalized.to_string_lossy();
     let env = make_env(
         &flowconfig,
@@ -3309,9 +3319,7 @@ pub(crate) fn connect_and_make_request(
     // contain File_key.t values with relative suffixes; to_string needs
     // the roots to reconstruct absolute paths.
     flow_parser::file_key::set_project_root(&root.to_string_lossy());
-    let temp_dir_string = get_temp_dir(&connect_flags.temp_dir);
-    let temp_dir = flow_common::files::cached_canonicalize(std::path::Path::new(&temp_dir_string))
-        .unwrap_or_else(|_| std::path::PathBuf::from(&temp_dir_string));
+    let temp_dir = normalize_temp_dir(&connect_flags.temp_dir);
     match flow_flowlib::libdir(flow_flowlib::BuiltinLib::Flowlib, &temp_dir) {
         flow_flowlib::LibDir::Prelude(ref path) => {
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());

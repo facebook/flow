@@ -45,7 +45,11 @@ use flow_utils_concurrency::thread_pool::ThreadCount;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 use flow_utils_concurrency::worker_cancel;
 
-const SERVER_THREAD_STACK_SIZE: usize = 32 * 1024 * 1024;
+const SERVER_THREAD_STACK_SIZE: usize = if cfg!(windows) {
+    64 * 1024 * 1024
+} else {
+    32 * 1024 * 1024
+};
 const CONNECTION_THREAD_STACK_SIZE: usize = 2 * 1024 * 1024;
 const MAX_CONNECTION_THREADS: usize = 128;
 const INITIAL_CONNECTION_READ_TIMEOUT_SECS: u64 = 5;

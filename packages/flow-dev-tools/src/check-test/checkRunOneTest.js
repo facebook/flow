@@ -490,7 +490,20 @@ async function runOneTest(opts: {
           'bash',
           '-c',
           `set -e
-export FLOW="$_CT_FLOW_BIN"
+to_bash_path() {
+  if command -v cygpath > /dev/null 2>&1; then
+    cygpath -u "$1"
+  else
+    printf "%s\\n" "$1"
+  fi
+}
+
+FLOW="$(to_bash_path "$_CT_FLOW_BIN")"
+ERR_FILE="$(to_bash_path "$_CT_ERR_FILE")"
+SCRIPT_PATH="$(to_bash_path "$_CT_SCRIPT_PATH")"
+THIS_DIR="$(to_bash_path "$_CT_THIS_DIR")"
+
+export FLOW
 export EXIT_OK=0
 export EXIT_ONE=1
 export EXIT_ERRS=2
@@ -512,7 +525,6 @@ abs_monitor_log_file="$_CT_MONITOR_LOG_FILE"
 wait_for_recheck="$_CT_WAIT_FOR_RECHECK"
 file_watcher="$_CT_FILE_WATCHER"
 long_lived_workers="$_CT_LONG_LIVED_WORKERS"
-THIS_DIR="$_CT_THIS_DIR"
 
 SAVED_OPTION="$(set +o | grep errexit)"
 
@@ -655,7 +667,7 @@ start_flow() {
 auto_start_enabled=$_CT_AUTO_START
 if [ "$auto_start_enabled" -eq 1 ]; then
   set +e
-  start_flow_unsafe . $_CT_START_ARGS > /dev/null 2>> "$_CT_ERR_FILE"
+  start_flow_unsafe . $_CT_START_ARGS > /dev/null 2>> "$ERR_FILE"
   code=$?
   set -e
   if [ $code -ne 0 ]; then
@@ -669,7 +681,7 @@ fi
 set +e
 (
   set -e
-  source "$_CT_SCRIPT_PATH" "$FLOW"
+  source "$SCRIPT_PATH" "$FLOW"
 )
 _script_exit=$?
 set -e

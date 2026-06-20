@@ -11,6 +11,23 @@
 static malloc_conf: &str = "metadata_thp:always\0";
 
 fn main() {
+    #[cfg(windows)]
+    {
+        let handle = std::thread::Builder::new()
+            .name("flow_cli_main".to_string())
+            .stack_size(64 * 1024 * 1024)
+            .spawn(main_)
+            .expect("failed to spawn flow_cli_main thread");
+        if let Err(payload) = handle.join() {
+            std::panic::resume_unwind(payload);
+        }
+    }
+
+    #[cfg(not(windows))]
+    main_();
+}
+
+fn main_() {
     #[cfg(fbcode_build)]
     {
         flow_cli_support::register_extra_commands(|| {

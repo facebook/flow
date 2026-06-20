@@ -36,10 +36,14 @@ use flow_typing_errors::intermediate_error::to_printable_error;
 use crate::server_daemon;
 use crate::server_env_build;
 
-const SERVER_MAIN_THREAD_STACK_SIZE: usize = if cfg!(debug_assertions) {
-    256 * 1024 * 1024
-} else {
-    32 * 1024 * 1024
+const SERVER_MAIN_THREAD_STACK_SIZE: usize = {
+    if cfg!(debug_assertions) {
+        256 * 1024 * 1024
+    } else if cfg!(windows) {
+        64 * 1024 * 1024
+    } else {
+        32 * 1024 * 1024
+    }
 };
 
 pub type CheckOnceSuppressedErrors = Vec<(PrintableError<Loc>, BTreeSet<Loc>)>;
