@@ -10,4 +10,4 @@ flow_parser = { path = "../flow_parser" }
 prettyplease = "0.2.29"
 proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
 quote = "1.0.45"
-syn = { version = "2.0.117", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
+syn = { version = "2.0.118", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
