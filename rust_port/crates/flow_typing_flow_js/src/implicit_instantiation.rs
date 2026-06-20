@@ -2386,6 +2386,15 @@ pub mod instantiation_solver {
             subst_map.insert(tp.name.dupe(), targ.dupe());
             inferred_targ_list.push((tp.name.dupe(), targ, tp.bound.dupe()));
         }
+        // OCaml builds this list with `::` (prepend) inside a left fold and does
+        // not reverse it afterwards, so the list ends up in reverse tparam order
+        // and is pinned in that order below. We push forward (keeping `mk_targ`'s
+        // tvar-creation order identical to OCaml's left fold) and reverse once to
+        // get that same pinning order in O(n). The order is significant: e.g. for
+        // `then(cb: infer F, ...args: infer _)`, pinning the rest tparam `_` first
+        // reverse-solves its spread to `[]`, which unblocks the multiflow so the
+        // regular param `F` gets its real bound.
+        inferred_targ_list.reverse();
 
         //   if speculative_subtyping_succeeds cx trace ~use_op check_t
         //        (Type_subst.subst cx ~use_op:unknown_use subst_map extends_t) then

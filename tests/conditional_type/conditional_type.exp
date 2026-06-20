@@ -976,6 +976,57 @@ References:
              ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- rest_param_infer.js:15:1
+
+Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   rest_param_infer.js:15:1
+   15| a as empty; // error: string ~> empty
+       ^
+
+References:
+   rest_param_infer.js:13:18
+   13| declare const a: NoRest<Thenable<string>>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_param_infer.js:15:6
+   15| a as empty; // error: string ~> empty
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- rest_param_infer.js:22:1
+
+Cannot cast `b` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   rest_param_infer.js:22:1
+   22| b as empty; // error: string ~> empty
+       ^
+
+References:
+   rest_param_infer.js:20:18
+   20| declare const b: RestInMethod<Thenable<string>>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_param_infer.js:22:6
+   22| b as empty; // error: string ~> empty
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- rest_param_infer.js:29:1
+
+Cannot cast `c` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   rest_param_infer.js:29:1
+   29| c as empty; // error: string ~> empty
+       ^
+
+References:
+   rest_param_infer.js:27:18
+   27| declare const c: RestInFn<Thenable<string>>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   rest_param_infer.js:29:6
+   29| c as empty; // error: string ~> empty
+            ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- subst.js:4:3
 
 Cannot cast `num` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
@@ -1117,4 +1168,4 @@ References:
 
 
 
-Found 74 errors
+Found 77 errors
