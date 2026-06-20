@@ -648,6 +648,7 @@ dependencies = [
  "lazy_static",
  "nix",
  "regex",
+ "rustix",
  "serde",
  "serde_json",
  "vec1",

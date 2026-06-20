@@ -6,219 +6,111 @@
  */
 
 use std::collections::HashMap;
-#[cfg(unix)]
-use std::os::unix::fs::MetadataExt;
-#[cfg(windows)]
-use std::os::windows::fs::FileExt;
+use std::fs::File;
+use std::fs::OpenOptions;
 use std::path::Path;
 use std::sync::Mutex;
-use std::sync::atomic::AtomicI32;
-use std::sync::atomic::Ordering;
 
-struct LockEntry {
-    file: std::fs::File,
-    raw_id: i32,
-    #[cfg(unix)]
-    stat_dev: u64,
-    #[cfg(unix)]
-    stat_ino: u64,
-}
+#[cfg(all(unix, not(target_arch = "wasm32")))]
+mod platform {
+    use std::fs::File;
 
-static LOCK_FDS: Mutex<Option<HashMap<String, LockEntry>>> = Mutex::new(None);
-static NEXT_LOCK_ID: AtomicI32 = AtomicI32::new(0);
+    use rustix::fs::FlockOperation;
+    use rustix::process::Flock;
+    use rustix::process::FlockOffsetType;
+    use rustix::process::FlockType;
 
-fn lock_fds_with<R>(f: impl FnOnce(&mut HashMap<String, LockEntry>) -> R) -> R {
-    let mut guard = LOCK_FDS.lock().unwrap();
-    if guard.is_none() {
-        *guard = Some(HashMap::new());
+    pub fn grab(file: &File) -> bool {
+        rustix::fs::fcntl_lock(file, FlockOperation::NonBlockingLockExclusive).is_ok()
     }
-    f(guard.as_mut().unwrap())
+
+    pub fn check(file: &File) -> bool {
+        let lock = Flock {
+            start: 0,
+            length: 1,
+            pid: None,
+            typ: FlockType::WriteLock,
+            offset_type: FlockOffsetType::Current,
+        };
+        rustix::process::fcntl_getlk(file, &lock)
+            .map(|blocking_lock| blocking_lock.is_none())
+            .unwrap_or(false)
+    }
 }
 
-fn open_lock_file(lock_file: &str) -> std::io::Result<std::fs::File> {
-    std::fs::OpenOptions::new()
+#[cfg(not(all(unix, not(target_arch = "wasm32"))))]
+mod platform {
+    use std::fs::File;
+
+    pub fn grab(file: &File) -> bool {
+        file.try_lock().is_ok()
+    }
+
+    pub fn check(file: &File) -> bool {
+        match file.try_lock() {
+            Ok(()) => file.unlock().is_ok(),
+            Err(_) => false,
+        }
+    }
+}
+
+static LOCKS: Mutex<Option<HashMap<String, File>>> = Mutex::new(None);
+
+// Grabs the file lock and returns true if it the lock was grabbed
+pub fn grab(lock_file: &str) -> bool {
+    let mut locks = LOCKS.lock().unwrap();
+    let locks = locks.get_or_insert_with(HashMap::new);
+    if locks.contains_key(lock_file) {
+        return true;
+    }
+
+    if let Some(parent) = Path::new(lock_file).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    let file = match OpenOptions::new()
+        .read(true)
         .write(true)
         .create(true)
         .truncate(false)
         .open(lock_file)
-}
-
-fn next_lock_id() -> i32 {
-    NEXT_LOCK_ID.fetch_add(1, Ordering::Relaxed) + 1
-}
-
-fn make_lock_entry(file: std::fs::File) -> std::io::Result<LockEntry> {
-    // We must capture `dev`/`ino` from the *open file descriptor*, not from a
-    // path lookup, so the values reflect the inode the lock is actually
-    // attached to. `File::metadata` calls `fstat(2)` under the hood, which
-    // does not affect the lock state of any fd.
-    #[cfg(unix)]
     {
-        let metadata = file.metadata()?;
-        let stat_dev = metadata.dev();
-        let stat_ino = metadata.ino();
-        Ok(LockEntry {
-            raw_id: next_lock_id(),
-            file,
-            stat_dev,
-            stat_ino,
-        })
+        Ok(file) => file,
+        Err(_) => return false,
+    };
+    if platform::grab(&file) {
+        locks.insert(lock_file.to_string(), file);
+        true
+    } else {
+        false
     }
-    #[cfg(not(unix))]
-    {
-        Ok(LockEntry {
-            raw_id: next_lock_id(),
-            file,
-        })
-    }
-}
-
-fn normalize_try_lock_error(err: std::fs::TryLockError) -> std::io::Result<()> {
-    match err {
-        std::fs::TryLockError::WouldBlock => Err(std::io::Error::new(
-            std::io::ErrorKind::WouldBlock,
-            "would block",
-        )),
-        std::fs::TryLockError::Error(e) => Err(e),
-    }
-}
-
-// Basic lock operations.
-//
-// We use these for two reasons:
-// 1. making sure we are only running one instance of hh_server per person on a given dev box
-// 2. giving a way to hh_client to check if a server is running.
-fn register_lock(lock_file: &str) -> std::io::Result<()> {
-    if let Some(parent) = Path::new(lock_file).parent() {
-        let _mkdir_result = std::fs::create_dir_all(parent);
-    }
-    let file = open_lock_file(lock_file)?;
-    let entry = make_lock_entry(file)?;
-    lock_fds_with(|map| {
-        map.insert(lock_file.to_string(), entry);
-    });
-    Ok(())
-}
-
-// Grab or check if a file lock is available.
-//
-// Returns true if the lock is/was available, false otherwise.
-fn _operations(lock_file: &str, op: LockOp) -> bool {
-    let result: Result<(), ()> = (|| {
-        let already_registered = lock_fds_with(|map| map.contains_key(lock_file));
-        match (already_registered, Path::new(lock_file).exists()) {
-            (false, _) => register_lock(lock_file).map_err(|_| ())?,
-            (true, false) => {
-                #[cfg(not(windows))]
-                {
-                    return Err(());
-                }
-            }
-            (true, true) => {
-                #[cfg(unix)]
-                {
-                    let current = match std::fs::metadata(lock_file) {
-                        Ok(m) => m,
-                        Err(_) => return Err(()),
-                    };
-                    let identical_file = lock_fds_with(|map| -> Result<bool, ()> {
-                        let entry = map.get(lock_file).ok_or(())?;
-                        Ok(entry.stat_dev == current.dev() && entry.stat_ino == current.ino())
-                    })?;
-                    if !identical_file {
-                        // dead in the water
-                        return Err(());
-                    }
-                }
-            }
-        }
-        // F_TEST checks whether the lock is available without acquiring or
-        // releasing a lock this process already owns.
-        if already_registered && matches!(op, LockOp::Test) {
-            return Ok(());
-        }
-        lock_fds_with(|map| -> Result<(), ()> {
-            let entry = map.get_mut(lock_file).ok_or(())?;
-            apply_lock_op(entry, op).map_err(|_| ())
-        })
-    })();
-    result.is_ok()
-}
-
-#[derive(Clone, Copy)]
-enum LockOp {
-    TLock,
-    ULock,
-    Lock,
-    Test,
-}
-
-fn try_lock_or_test(entry: &mut LockEntry, op: LockOp) -> std::io::Result<()> {
-    // OCaml:
-    // try Unix.lockf fd op 1 with
-    match entry.file.try_lock() {
-        Ok(()) => {
-            if let LockOp::Test = op {
-                entry.file.unlock()?;
-            }
-            Ok(())
-        }
-        Err(err) => {
-            #[cfg(windows)]
-            if matches!(op, LockOp::TLock | LockOp::Test) {
-                // On Windows, F_TLOCK and F_TEST fail if we have the lock ourself
-                // However, we then are the only one to be able to write there.
-                let wb = entry.file.seek_write(&[b' '], 0)?;
-                if wb == 1 {
-                    return Ok(());
-                }
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::WriteZero,
-                    "failed to verify owned lock",
-                ));
-            }
-            normalize_try_lock_error(err)
-        }
-    }
-}
-
-fn apply_lock_op(entry: &mut LockEntry, op: LockOp) -> std::io::Result<()> {
-    match op {
-        LockOp::TLock => try_lock_or_test(entry, op),
-        LockOp::ULock => {
-            // OCaml: Unix.F_ULOCK
-            entry.file.unlock()
-        }
-        LockOp::Lock => entry.file.lock(),
-        LockOp::Test => try_lock_or_test(entry, op),
-    }
-}
-
-// Grabs the file lock and returns true if it the lock was grabbed
-pub fn grab(lock_file: &str) -> bool {
-    _operations(lock_file, LockOp::TLock)
-}
-
-// Releases a file lock.
-pub fn release(lock_file: &str) -> bool {
-    _operations(lock_file, LockOp::ULock)
-}
-
-pub fn blocking_grab_then_release(lock_file: &str) {
-    let _grabbed = _operations(lock_file, LockOp::Lock);
-    let _released = release(lock_file);
-}
-
-// Gets the server instance-unique integral fd for a given lock file.
-pub fn fd_of(lock_file: &str) -> i32 {
-    lock_fds_with(|map| match map.get(lock_file) {
-        None => -1,
-        Some(entry) => entry.raw_id,
-    })
 }
 
 // Check if the file lock is available without grabbing it.
 // Returns true if the lock is free.
 pub fn check(lock_file: &str) -> bool {
-    _operations(lock_file, LockOp::Test)
+    if LOCKS
+        .lock()
+        .unwrap()
+        .as_ref()
+        .is_some_and(|locks| locks.contains_key(lock_file))
+    {
+        return true;
+    }
+
+    if let Some(parent) = Path::new(lock_file).parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    let file = match OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(lock_file)
+    {
+        Ok(file) => file,
+        Err(_) => return false,
+    };
+    platform::check(&file)
 }
