@@ -14,8 +14,8 @@
     "esquery": "^1.4.0",
     "flow-enums-runtime": "^0.0.6",
     "flow-eslint": "0.0.1",
-    "flow-estree": "0.319.0",
-    "flow-parser": "0.319.0",
+    "flow-estree": "0.320.0",
+    "flow-parser": "0.320.0",
     "string-width": "4.2.3"
   },
   "peerDependencies": {

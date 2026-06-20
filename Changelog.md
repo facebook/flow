@@ -1,3 +1,8 @@
+### 0.320.0
+
+Likely to cause new Flow errors:
+* Object operations on class instance types now produce plain object types instead of preserving the class instance's nominal identity. This affects object type spreads and utilities such as `Partial`, `Required`, `Readonly`, `Pick`, and `Omit`. [Example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgWOFJIAAIAMI84AAHSgPJ58mQPOEIj2PIAvDyAAwAbhFYpEAAoAJSSooQOBsQXMkXGqAi+pclg8nR6HmGSiRbiSgAKVEduAAPHyAHyqqD2908in85U8gD0YZ5AFFqPTJQADV0Osqen3xnn4oOiiBoABWQwkPMmsilEELGB58b56eyeleYGwmhFIuLPIAyoN2AKFcBNH2+bweX3NMy-RbcFRsNboLamJ42JKO-O+X656xDcGV+HIzHKHGeWv2NkEFmM7oNEcp63cWwhA3ea8eTn894i+cm2anOceQApOISAANeUeWdKIki9QcAHJ5Eg31zSGCcrRtQtc3-ADJT-PQAL9VCsM0TUtVDCNo1jSgE1AsBwIHHloNg9NmloacyVrIt8inRgwNGJ8MjtPdiXaD8YhAIplBIOBoECIpFU0ABmABGABOTRFRAZkgA)
+
 ### 0.319.0
 
 Likely to cause new Flow errors:

@@ -1,6 +1,6 @@
 {
   "name": "flow-parser",
-  "version": "0.319.0",
+  "version": "0.320.0",
   "description": "JavaScript parser written in OCaml. Produces ESTree AST",
   "homepage": "https://flow.org",
   "license": "MIT",
@@ -23,7 +23,7 @@
     "build": "make js"
   },
   "dependencies": {
-    "flow-estree": "0.319.0"
+    "flow-estree": "0.320.0"
   },
   "devDependencies": {
     "@babel/generator": "7.7.4",
