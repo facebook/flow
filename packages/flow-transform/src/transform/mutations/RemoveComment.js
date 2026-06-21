@@ -10,7 +10,7 @@
 
 import type {Comment, Program} from 'flow-estree';
 
-import {SimpleTraverser, SimpleTraverserBreak} from 'flow-parser/oxidized';
+import {SimpleTraverser, SimpleTraverserBreak} from 'flow-parser';
 import {getCommentsForNode, setCommentsOnNode} from '../comments/comments';
 
 export type RemoveCommentMutation = Readonly<{

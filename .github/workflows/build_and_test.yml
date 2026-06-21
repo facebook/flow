@@ -175,8 +175,6 @@ jobs:
   build_js:
     runs-on: ubuntu-22.04
     env:
-      TERM: dumb
-      OPAMYES: true
       NODE_VERSION: 24.14.1
       NPM_VERSION: 11.11.0
       YARN_VERSION: 1.22.21
@@ -189,32 +187,6 @@ jobs:
       RUST_MIN_STACK: 5242880
     steps:
     - uses: actions/checkout@v3.6.0
-    - name: Install OPAM
-      uses: ./.github/actions/install-opam-linux
-      with:
-        arch: x86_64
-    - name: Create cache breaker
-      run: .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
-      shell: bash
-    - name: opam cache
-      uses: actions/cache@v4
-      with:
-        path: |-
-          ~/.opam
-          _opam
-        key: v1-opam-cache-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.circleci/opamcachebreaker') }}
-    - name: Init opam
-      run: .circleci/opam_init.sh
-    - name: Install deps from opam
-      run: make deps
-      shell: bash
-    - name: Install extra deps from opam
-      run: make deps-js
-    - name: Build flow_parser.js
-      run: opam exec -- make -C src/parser js
-    - name: Create package artifact inputs
-      run: |-
-        cp src/parser/flow_parser.js packages/flow-parser/flow_parser.js
     - name: Install Node
       uses: actions/setup-node@v4.4.0
       with:
@@ -264,13 +236,15 @@ jobs:
     - name: Test packages
       working-directory: packages
       run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform'
+    - name: Create package artifact
+      run: |
+        mkdir -p "${RUNNER_TEMP}/build_js_packages/flow-parser" "${RUNNER_TEMP}/build_js_packages/flow-estree"
+        cp -R packages/flow-parser/dist "${RUNNER_TEMP}/build_js_packages/flow-parser/dist"
+        cp -R packages/flow-estree/dist "${RUNNER_TEMP}/build_js_packages/flow-estree/dist"
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_packages
-        path: |
-          packages/flow-parser/flow_parser.js
-          packages/flow-parser/oxidized
-          packages/flow-estree/dist
+        path: ${{ runner.temp }}/build_js_packages
   build_flow_js:
     runs-on: ubuntu-22.04
     env:
@@ -400,14 +374,11 @@ jobs:
         path: ${{ runner.temp }}/build_js_packages
     - name: Install generated package artifacts
       run: |
-        test -f "${RUNNER_TEMP}/build_js_packages/flow-parser/flow_parser.js"
-        test -d "${RUNNER_TEMP}/build_js_packages/flow-parser/oxidized"
+        test -f "${RUNNER_TEMP}/build_js_packages/flow-parser/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-estree/dist/index.js"
-        test ! -e packages/flow-parser/flow_parser.js
-        test ! -e packages/flow-parser/oxidized
+        test ! -e packages/flow-parser/dist
         test ! -e packages/flow-estree/dist
-        cp "${RUNNER_TEMP}/build_js_packages/flow-parser/flow_parser.js" packages/flow-parser/flow_parser.js
-        cp -R "${RUNNER_TEMP}/build_js_packages/flow-parser/oxidized" packages/flow-parser/oxidized
+        cp -R "${RUNNER_TEMP}/build_js_packages/flow-parser/dist" packages/flow-parser/dist
         cp -R "${RUNNER_TEMP}/build_js_packages/flow-estree/dist" packages/flow-estree/dist
     - name: Pack flow-estree
       run: |
@@ -415,8 +386,7 @@ jobs:
         make dist/npm-flow-estree.tgz
     - name: Pack flow-parser
       run: |
-        test -f packages/flow-parser/flow_parser.js
-        test -d packages/flow-parser/oxidized
+        test -f packages/flow-parser/dist/index.js
         make dist/npm-flow-parser.tgz
     - name: Pack flow-remove-types and flow-node
       run: |

@@ -13,7 +13,7 @@
 import type {ESNode, Program} from 'flow-estree';
 
 import {parseForESLint} from 'flow-eslint';
-import {SimpleTraverser} from 'flow-parser/oxidized';
+import {SimpleTraverser} from 'flow-parser';
 import {SafeEmitter} from '../../src/traverse/SafeEmitter';
 import {NodeEventGenerator} from '../../src/traverse/NodeEventGenerator';
 

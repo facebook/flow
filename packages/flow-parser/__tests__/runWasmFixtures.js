@@ -15,17 +15,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 const util = require('node:util');
 
-// Bypasses the public `../oxidized` (i.e. `index.js`) entry on purpose. The
+// Bypasses the public `../dist/index.js` entry on purpose. The
 // fixtures under flow/src/parser/test/flow/ exercise the parser boundary with
 // fixture-supplied parser options, so we go straight to the underlying
-// deserializer here. Don't "fix" this back to `require('../oxidized')`.
-// We reach into the babel-stripped oxidized/ build (populated by the workspace
+// deserializer here. Don't "fix" this back to `require('..')`.
+// We reach into the babel-stripped dist/ build (populated by the workspace
 // `yarn build` step in runWasmFixtures.sh) because oxidized-src/FlowParser.js
 // uses ES module + `import type` syntax and node's native `--test` runner has
 // no babel transform. Drop-in / contract parity with hermes-parser is
 // exercised separately by the jest tests under this directory; that suite goes
 // through index.js.
-const FlowParser = require('../oxidized/FlowParser');
+const FlowParser = require('../dist/FlowParser');
 
 // Upstream hermes-parser package tests snapshot the public package AST surface
 // directly and record public parse errors explicitly. This full Flow

@@ -12,11 +12,7 @@ import type {ESNode} from 'flow-estree';
 import type {MutationContext} from '../MutationContext';
 import type {DetachedNode} from '../../detachedNode';
 
-import {
-  getVisitorKeys,
-  isNode,
-  astArrayMutationHelpers,
-} from 'flow-parser/oxidized';
+import {getVisitorKeys, isNode, astArrayMutationHelpers} from 'flow-parser';
 import {moveCommentsToNewNode} from '../comments/comments';
 import {InvalidReplacementError} from '../Errors';
 import {getOriginalNode} from '../../detachedNode';

@@ -10,9 +10,9 @@
 
 'use strict';
 
-import type {ParserOptions} from 'flow-parser/oxidized';
+import type {ParserOptions} from 'flow-parser';
 
-import * as HermesParser from 'flow-parser/oxidized';
+import * as HermesParser from 'flow-parser';
 
 type Options = {
   /**

@@ -35,7 +35,7 @@ module.exports = {
   overrides: overrideEnabled()
     ? [
         {
-          // Use flow-parser/oxidized as Babel's parser so it understands newer
+          // Use flow-parser as Babel's parser so it understands newer
           // Flow syntax (e.g. `as` casts) beyond what the bundled @babel/parser
           // supports. Disabled by `SKIP_HERMES_PARSER_OVERRIDE=1` during the
           // build's bootstrap phase — `babel-plugin-syntax-flow-parser`

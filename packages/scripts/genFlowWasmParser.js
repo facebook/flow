@@ -14,7 +14,7 @@ const path = require('path');
 
 const OUTPUT_FILE = path.resolve(
   __dirname,
-  '../flow-parser/oxidized/FlowParserWASM.js',
+  '../flow-parser/dist/FlowParserWASM.js',
 );
 
 const HEADER = `/**
@@ -51,4 +51,5 @@ module.exports.default = module.exports;
 const wasmParserContents = fs.readFileSync(process.argv[2]).toString();
 const fileContents = HEADER + wasmParserContents + FOOTER;
 
+fs.mkdirSync(path.dirname(OUTPUT_FILE), {recursive: true});
 fs.writeFileSync(OUTPUT_FILE, fileContents);

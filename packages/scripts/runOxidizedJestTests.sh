@@ -37,8 +37,8 @@ for arg in "$@"; do
 done
 
 # Serialize dist/ rebuilds + reads against runContractTests.sh, which also
-# rebuilds the oxidized parser output and then `require()`s
-# `flow-parser/oxidized`. Buck
+# rebuilds the generated parser output and then `require()`s
+# `flow-parser`. Buck
 # schedules `oxidized_jest_test` and `wasm_parser_contract_test` in
 # parallel; without this flock, target A's jest can read a torn
 # `dist/index.js` (un-stripped Flow `import type` lines from the cp -r
@@ -46,7 +46,7 @@ done
 #   `SyntaxError: Cannot use import statement outside a module` or
 #   `TypeError: FlowParserWASMModule is not a function`.
 # Hold the lock through both `yarn build` AND the jest run so a concurrent
-# target can't clobber `dist/` while we're reading from it.
+# target can't clobber generated output while we're reading from it.
 DIST_FLOCK="$PARSER_DIR/.dist.flock"
 exec 9> "$DIST_FLOCK"
 echo "==> waiting for exclusive lock on $DIST_FLOCK"
@@ -61,8 +61,8 @@ cd "$WORKSPACE_DIR"
 yarn install --offline
 
 # Build output for each package (and embed the WASM parser into
-# flow-parser/oxidized/FlowParserWASM.js). The unified jest config maps
-# `*/FlowParserWASM` -> flow-parser/oxidized/FlowParserWASM.js so tests can
+# flow-parser/dist/FlowParserWASM.js). The unified jest config maps
+# `*/FlowParserWASM` -> flow-parser/dist/FlowParserWASM.js so tests can
 # resolve the wasm wrapper from src-level imports.
 yarn build
 

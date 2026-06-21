@@ -11,10 +11,10 @@
 'use strict';
 
 import type {Program} from 'flow-estree';
-import type {VisitorKeysType} from 'flow-parser/oxidized';
+import type {VisitorKeysType} from 'flow-parser';
 import type {PartialAnalyzeOptions, ScopeManager} from './scope-manager';
 
-import * as HermesParser from 'flow-parser/oxidized';
+import * as HermesParser from 'flow-parser';
 import {analyze} from './scope-manager';
 
 type ParseForESLintOptions = Readonly<{
