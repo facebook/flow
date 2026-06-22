@@ -1476,7 +1476,7 @@ fn should_send_status(ienv: &InitializedEnv, status: &lsp::show_status::Params) 
 }
 
 fn show_status(
-    mut ienv: InitializedEnv,
+    ienv: &mut InitializedEnv,
     type_: MessageType,
     message: &str,
     short_message: Option<&str>,
@@ -1485,7 +1485,7 @@ fn show_status(
     titles: &[&str],
     handler: Option<Box<dyn FnOnce(&str, &mut ServerState)>>,
     background_color: Option<lsp::show_status::ShowStatusBackgroundColor>,
-) -> InitializedEnv {
+) {
     let use_status = lsp_helpers::supports_status(&ienv.i_initialize_params);
     let actions: Vec<lsp_types::MessageActionItem> = titles
         .iter()
@@ -1505,7 +1505,7 @@ fn show_status(
         total,
         background_color,
     };
-    let (will_dismiss_old, will_show_new) = should_send_status(&ienv, &params);
+    let (will_dismiss_old, will_show_new) = should_send_status(ienv, &params);
     // dismiss the old one
     if will_dismiss_old {
         if let ShowStatusT::Shown(Some(id), existing_params) = &ienv.i_status {
@@ -1514,7 +1514,7 @@ fn show_status(
             let notification =
                 lsp::LspNotification::CancelRequestNotification(lsp_types::CancelParams { id });
             let json = {
-                let key = command_key_of_ienv(&ienv);
+                let key = command_key_of_ienv(ienv);
                 lsp_fmt::print_lsp(
                     true,
                     &key,
@@ -1527,7 +1527,7 @@ fn show_status(
     }
     // show the new one
     if !will_show_new {
-        return ienv;
+        return;
     }
     let id = NumberOrString::Number(get_next_request_id());
     let request = if use_status {
@@ -1571,9 +1571,8 @@ fn show_status(
     } else {
         LspResultHandler::ShowMessageHandler(handle_result)
     };
-    send_request_to_client(&mut ienv, id.clone(), request, on_response, on_error);
+    send_request_to_client(ienv, id.clone(), request, on_response, on_error);
     ienv.i_status = ShowStatusT::Shown(Some(id), params);
-    ienv
 }
 
 // calls realpath on every DocumentUri
@@ -1807,7 +1806,7 @@ fn message_with_flow_and_root_name_prefix(flowconfig: &FlowConfig, msg: &str) ->
     }
 }
 
-fn show_connected_status(mut cenv: ConnectedEnv) -> ConnectedEnv {
+fn show_connected_status(cenv: &mut ConnectedEnv) {
     let flowconfig = cenv.c_ienv.i_flowconfig.clone();
     let message_with_prefix = |msg: &str| message_with_flow_and_root_name_prefix(&flowconfig, msg);
     let (type_, message, short_message, progress, total) = if cenv.c_is_rechecking {
@@ -1864,8 +1863,8 @@ fn show_connected_status(mut cenv: ConnectedEnv) -> ConnectedEnv {
             }
         }
     };
-    let c_ienv = show_status(
-        cenv.c_ienv,
+    show_status(
+        &mut cenv.c_ienv,
         type_,
         &message,
         short_message.as_deref(),
@@ -1875,8 +1874,6 @@ fn show_connected_status(mut cenv: ConnectedEnv) -> ConnectedEnv {
         None,
         None,
     );
-    cenv.c_ienv = c_ienv;
-    cenv
 }
 
 fn show_connected(mut env: ConnectedEnv) -> ServerState {
@@ -1889,7 +1886,7 @@ fn show_connected(mut env: ConnectedEnv) -> ServerState {
     );
     env.c_ienv.i_is_connected = i_is_connected;
     // show green status
-    let env = show_connected_status(env);
+    show_connected_status(&mut env);
     ServerState::Connected(env)
 }
 
@@ -1947,8 +1944,8 @@ fn show_connecting(reason: &ConnectError, mut env: DisconnectedEnv) -> ServerSta
             }
         }
     };
-    let d_ienv = show_status(
-        env.d_ienv,
+    show_status(
+        &mut env.d_ienv,
         MessageType::WARNING,
         &message,
         short_message.as_deref(),
@@ -1958,7 +1955,6 @@ fn show_connecting(reason: &ConnectError, mut env: DisconnectedEnv) -> ServerSta
         None,
         None,
     );
-    env.d_ienv = d_ienv;
     ServerState::Disconnected(env)
 }
 
@@ -1997,8 +1993,8 @@ fn show_disconnected(
                 }
             }
         });
-    let d_ienv = show_status(
-        env.d_ienv,
+    show_status(
+        &mut env.d_ienv,
         MessageType::ERROR,
         &message,
         None,
@@ -2008,7 +2004,6 @@ fn show_disconnected(
         Some(handler),
         Some(lsp::show_status::ShowStatusBackgroundColor::Error),
     );
-    env.d_ienv = d_ienv;
     ServerState::Disconnected(env)
 }
 
@@ -2231,17 +2226,15 @@ fn parse_and_cache(
         )
     };
 
-    let open_files = get_open_files(state);
-    let existing_open_file_info = open_files.get(uri).cloned();
-    match existing_open_file_info {
-        Some(OpenFileInfo {
-            o_ast: Some(o_ast), ..
-        }) => Ok(o_ast),
-        Some(OpenFileInfo {
-            o_open_doc,
-            o_unsaved,
-            ..
-        }) => {
+    let open_file_info_to_parse = match get_open_files(state).get(uri) {
+        Some(info) => match &info.o_ast {
+            Some(o_ast) => return Ok(o_ast.clone()),
+            None => Some((info.o_open_doc.clone(), info.o_unsaved)),
+        },
+        None => None,
+    };
+    match open_file_info_to_parse {
+        Some((o_open_doc, o_unsaved)) => {
             let file = lsp_document_item_to_flow(&o_open_doc)?;
             let o_ast = parse(&file);
             let open_file_info = Some(OpenFileInfo {
@@ -3391,57 +3384,20 @@ fn main_handle_initialized_unsafe(
         )) => {
             let start_state = collect_interaction_state(state);
             lsp_interaction::recheck_start(start_state);
-            // To take cenv by value from &mut state, we build a cheap placeholder
-            // DisconnectedEnv from a clone of c_ienv (with handler-swap to avoid the Clone-panic),
-            // swap it into *state, extract the original cenv, run show_connected_status by value,
-            // then put the new ConnectedEnv back into *state.
-            if let ServerState::Connected(cenv_ref) = &mut *state {
-                let saved_handlers =
-                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
-                let cloned_ienv = cenv_ref.c_ienv.clone();
-                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
-                let placeholder = ServerState::Disconnected(DisconnectedEnv {
-                    d_ienv: cloned_ienv,
-                    d_autostart: false,
-                    d_server_status: None,
-                });
-                let owned_state = std::mem::replace(state, placeholder);
-                let mut cenv = match owned_state {
-                    ServerState::Connected(c) => c,
-                    ServerState::Disconnected(_) => unreachable!(),
-                };
+            if let ServerState::Connected(cenv) = state {
                 cenv.c_is_rechecking = true;
                 cenv.c_lazy_stats = None;
-                let cenv = show_connected_status(cenv);
-                *state = ServerState::Connected(cenv);
+                show_connected_status(cenv);
             }
             Ok(LogNeeded::LogNotNeeded)
         }
         Event::ServerMessage(MessageFromServer::NotificationFromServer(
             NotificationFromServer::EndRecheck(lazy_stats),
         )) => {
-            // OCaml: let cenv = { cenv with c_is_rechecking = false; c_lazy_stats = Some lazy_stats } in
-            //        let cenv = show_connected_status cenv in Connected cenv
-            // Same take-ownership trick as StartRecheck above.
-            if let ServerState::Connected(cenv_ref) = &mut *state {
-                let saved_handlers =
-                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
-                let cloned_ienv = cenv_ref.c_ienv.clone();
-                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
-                let placeholder = ServerState::Disconnected(DisconnectedEnv {
-                    d_ienv: cloned_ienv,
-                    d_autostart: false,
-                    d_server_status: None,
-                });
-                let owned_state = std::mem::replace(state, placeholder);
-                let mut cenv = match owned_state {
-                    ServerState::Connected(c) => c,
-                    ServerState::Disconnected(_) => unreachable!(),
-                };
+            if let ServerState::Connected(cenv) = state {
                 cenv.c_is_rechecking = false;
                 cenv.c_lazy_stats = Some(lazy_stats);
-                let cenv = show_connected_status(cenv);
-                *state = ServerState::Connected(cenv);
+                show_connected_status(cenv);
             }
             let open_file_uris: Vec<DocumentUri> = get_open_files(state).keys().cloned().collect();
             let method_name = "synthetic/endRecheck";
@@ -3473,24 +3429,9 @@ fn main_handle_initialized_unsafe(
         Event::ServerMessage(MessageFromServer::NotificationFromServer(
             NotificationFromServer::PleaseHold(server_status, watcher_status),
         )) => {
-            if let ServerState::Connected(cenv_ref) = &mut *state {
-                let saved_handlers =
-                    std::mem::take(&mut cenv_ref.c_ienv.i_outstanding_local_handlers);
-                let cloned_ienv = cenv_ref.c_ienv.clone();
-                cenv_ref.c_ienv.i_outstanding_local_handlers = saved_handlers;
-                let placeholder = ServerState::Disconnected(DisconnectedEnv {
-                    d_ienv: cloned_ienv,
-                    d_autostart: false,
-                    d_server_status: None,
-                });
-                let owned_state = std::mem::replace(state, placeholder);
-                let mut cenv = match owned_state {
-                    ServerState::Connected(c) => c,
-                    ServerState::Disconnected(_) => unreachable!(),
-                };
+            if let ServerState::Connected(cenv) = state {
                 cenv.c_server_status = (server_status, Some(watcher_status));
-                let cenv = show_connected_status(cenv);
-                *state = ServerState::Connected(cenv);
+                show_connected_status(cenv);
             }
             Ok(LogNeeded::LogNotNeeded)
         }

@@ -197,7 +197,7 @@ pub fn invalidate_client_cache_entry(
     autocomplete: bool,
 ) {
     let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
-    let Some(generation) = with_registry_mut(client_id, |entry| {
+    let Some(()) = with_registry_mut(client_id, |entry| {
         entry.cache_invalidation_generation += 1;
         let generation = entry.cache_invalidation_generation;
         entry.cache_invalidations.push_back(CacheInvalidation {
@@ -208,16 +208,13 @@ pub fn invalidate_client_cache_entry(
         if entry.cache_invalidations.len() > MAX_CACHE_INVALIDATIONS {
             entry.cache_invalidations.pop_front();
         }
-        generation
     }) else {
         return;
     };
 
     LOCAL_CLIENTS.with(|clients| {
-        if let Some(client) = clients.borrow_mut().get_mut(&client_id) {
-            let mut client = client.borrow_mut();
-            remove_cache_entry_from_client(&mut client, &file_key, autocomplete);
-            client.cache_invalidation_generation = generation;
+        if let Some(client) = clients.borrow().get(&client_id) {
+            sync_client_cache_invalidations(client_id, client);
         }
     });
 }
@@ -225,14 +222,18 @@ pub fn invalidate_client_cache_entry(
 fn sync_client_cache_invalidations(client_id: Prot::ClientId, client: &SingleClientRef) {
     let applied_generation = client.borrow().cache_invalidation_generation;
     let Some((latest_generation, invalidations)) = with_registry(client_id, |entry| {
-        (
-            entry.cache_invalidation_generation,
+        let latest_generation = entry.cache_invalidation_generation;
+        let invalidations = if applied_generation == latest_generation {
+            Vec::new()
+        } else {
             entry
                 .cache_invalidations
                 .iter()
+                .filter(|invalidation| invalidation.generation > applied_generation)
                 .cloned()
-                .collect::<Vec<_>>(),
-        )
+                .collect::<Vec<_>>()
+        };
+        (latest_generation, invalidations)
     }) else {
         return;
     };
@@ -248,10 +249,7 @@ fn sync_client_cache_invalidations(client_id: Prot::ClientId, client: &SingleCli
             }
         }
         _ => {
-            for invalidation in invalidations
-                .iter()
-                .filter(|invalidation| invalidation.generation > applied_generation)
-            {
+            for invalidation in invalidations.iter() {
                 remove_cache_entry_from_client(
                     &mut client,
                     &invalidation.file_key,
@@ -264,21 +262,16 @@ fn sync_client_cache_invalidations(client_id: Prot::ClientId, client: &SingleCli
 }
 
 pub fn get_client(client_id: Prot::ClientId) -> Option<SingleClientRef> {
-    let (generation, active_generations) = {
-        let clients = ACTIVE_CLIENTS.lock().unwrap();
-        let generation = clients.get(&client_id).map(|entry| entry.generation)?;
-        let active_generations = clients
-            .iter()
-            .map(|(client_id, entry)| (*client_id, entry.generation))
-            .collect::<BTreeMap<_, _>>();
-        Some((generation, active_generations))
-    }?;
+    let clients_guard = ACTIVE_CLIENTS.lock().unwrap();
+    let generation = clients_guard
+        .get(&client_id)
+        .map(|entry| entry.generation)?;
     LOCAL_CLIENTS.with(|clients| {
         let mut clients = clients.borrow_mut();
         clients.retain(|cached_client_id, client| {
-            active_generations
+            clients_guard
                 .get(cached_client_id)
-                .is_some_and(|generation| client.borrow().generation == *generation)
+                .is_some_and(|entry| client.borrow().generation == entry.generation)
         });
         let client = match clients.get(&client_id) {
             Some(client) if client.borrow().generation == generation => client.clone(),
@@ -288,17 +281,6 @@ pub fn get_client(client_id: Prot::ClientId) -> Option<SingleClientRef> {
                 client
             }
         };
-        sync_client_cache_invalidations(client_id, &client);
-        {
-            let mut client = client.borrow_mut();
-            let cache_epoch = current_cache_epoch();
-            if client.cache_epoch != cache_epoch {
-                for cache in client.filename_caches.values() {
-                    cache.clear();
-                }
-                client.cache_epoch = cache_epoch;
-            }
-        }
         Some(client)
     })
 }
@@ -729,7 +711,7 @@ pub fn client_did_change(
 ) -> Result<(), (String, String)> {
     let client_id = get_id(client);
     invalidate_client_cache_entry(client_id, filename, false);
-    let result = with_registry_mut(client_id, |entry| {
+    with_registry_mut(client_id, |entry| {
         let Some(content) = entry.opened_files.get(filename) else {
             return Err((
                 format!("File {} wasn't open to change", filename),
@@ -751,11 +733,7 @@ pub fn client_did_change(
             format!("File {} wasn't open to change", filename),
             String::new(),
         ))
-    });
-    if result.is_ok() {
-        invalidate_client_cache_entry(client_id, filename, false);
-    }
-    result
+    })
 }
 
 pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool {
@@ -867,6 +845,13 @@ fn filename_cache_for<V: Clone + 'static>(
     let client_id = get_id(client);
     sync_client_cache_invalidations(client_id, client);
     let mut client = client.borrow_mut();
+    let cache_epoch = current_cache_epoch();
+    if client.cache_epoch != cache_epoch {
+        for cache in client.filename_caches.values() {
+            cache.clear();
+        }
+        client.cache_epoch = cache_epoch;
+    }
     let type_id = TypeId::of::<V>();
     let cache = client
         .filename_caches

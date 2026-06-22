@@ -671,7 +671,11 @@ fn completion_item_json(
     if let Some(detail) = &item.itemDetail {
         props.insert("detail".to_string(), Value::String(detail.clone()));
     }
-    if let Some(documentation) = &item.documentation_and_tags.0 {
+    if let flow_services_autocomplete::autocomplete_service_js::DocumentationAndTags::Value((
+        Some(documentation),
+        _,
+    )) = &item.documentation_and_tags
+    {
         props.insert(
             "documentation".to_string(),
             json!({ "value": documentation }),

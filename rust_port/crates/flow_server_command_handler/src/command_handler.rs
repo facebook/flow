@@ -800,7 +800,8 @@ fn json_of_autocomplete_result(
                         items: items
                             .into_iter()
                             .map(|item| {
-                                let (documentation, tags) = item.documentation_and_tags;
+                                let (documentation, tags) =
+                                    item.documentation_and_tags.into_value();
                                 server_prot::response::completion::CompletionItem {
                                     kind: item.kind,
                                     name: item.name,
@@ -6764,12 +6765,9 @@ fn get_persistent_handler(
             LspNotification::DidChangeNotification(params),
         )) => {
             let params = params.clone();
-            let filename = lsp_uri_to_flow_path(&params.text_document.uri);
-            let (response, metadata) =
-                handle_persistent_did_change_notification(client_id, params, metadata.clone());
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |_env| {
-                persistent_connection::invalidate_client_cache_entry(client_id, &filename, false);
-                Ok((response, metadata))
+            let metadata = metadata.clone();
+            PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
+                handle_persistent_did_change_notification(client_id, params, metadata)
             }))
         }
 

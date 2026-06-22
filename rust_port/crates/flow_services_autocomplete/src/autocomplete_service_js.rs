@@ -83,11 +83,31 @@ use crate::keywords;
 use crate::lsp_import_edits;
 use crate::module_system_info::LspModuleSystemInfo;
 
+pub type DocumentationAndTagsValue = (Option<String>, Option<Vec<lsp_types::CompletionItemTag>>);
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DocumentationAndTags {
+    Empty,
+    Value(DocumentationAndTagsValue),
+    DefLoc(ALoc),
+    Loc(Loc),
+}
+
+impl DocumentationAndTags {
+    pub fn into_value(self) -> DocumentationAndTagsValue {
+        match self {
+            DocumentationAndTags::Empty => (None, None),
+            DocumentationAndTags::Value(documentation_and_tags) => documentation_and_tags,
+            DocumentationAndTags::DefLoc(_) | DocumentationAndTags::Loc(_) => (None, None),
+        }
+    }
+}
+
 pub mod ac_completion {
     use flow_parser::loc::Loc;
 
+    use super::DocumentationAndTags;
     use super::LspCompletionItemKind;
-    use super::LspCompletionItemTag;
     use super::LspInsertTextFormat;
 
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -110,7 +130,7 @@ pub mod ac_completion {
         pub additional_text_edits: Vec<(Loc, String)>,
         pub sort_text: Option<String>,
         pub preselect: bool,
-        pub documentation_and_tags: (Option<String>, Option<Vec<LspCompletionItemTag>>),
+        pub documentation_and_tags: DocumentationAndTags,
         pub log_info: String,
         pub insert_text_format: LspInsertTextFormat,
     }
@@ -121,8 +141,8 @@ pub mod ac_completion {
         pub is_incomplete: bool,
     }
 
-    pub fn empty_documentation_and_tags() -> (Option<String>, Option<Vec<LspCompletionItemTag>>) {
-        (None, None)
+    pub fn empty_documentation_and_tags() -> DocumentationAndTags {
+        DocumentationAndTags::Empty
     }
 
     pub fn of_keyword(edit_locs: &(Loc, Loc), keyword: &str) -> CompletionItem {
@@ -155,8 +175,6 @@ pub struct AcOptions {
     pub imports_ranked_usage_boost_exact_match_min_length: usize,
     pub show_ranking_info: bool,
 }
-
-type DocumentationAndTags = (Option<String>, Option<Vec<LspCompletionItemTag>>);
 
 fn printer_options(prefer_single_quotes: bool) -> ty_printer::PrinterOptions {
     ty_printer::PrinterOptions {
@@ -483,16 +501,6 @@ fn jsdoc_of_def_loc(typing: &Typing<'_, '_>, def_loc: &ALoc) -> Option<flow_pars
     find_documentation::jsdoc_of_getdef_loc(&typing.ast, &*typing.get_ast_from_shared_mem, def_loc)
 }
 
-fn jsdoc_of_member(
-    typing: &Typing<'_, '_>,
-    info: &ty_members::MemberInfo<Arc<Ty<ALoc>>>,
-) -> Option<flow_parser::jsdoc::Jsdoc> {
-    match info.def_locs.as_slice() {
-        [def_loc] => jsdoc_of_def_loc(typing, def_loc),
-        _ => None,
-    }
-}
-
 fn jsdoc_of_loc(
     typing: &Typing<'_, '_>,
     loc: &Loc,
@@ -525,20 +533,24 @@ fn documentation_and_tags_of_jsdoc(jsdoc: &flow_parser::jsdoc::Jsdoc) -> Documen
     let tags = jsdoc
         .deprecated()
         .map(|_| vec![LspCompletionItemTag::DEPRECATED]);
-    (docs, tags)
+    DocumentationAndTags::Value((docs, tags))
 }
 
 fn documentation_and_tags_of_member(
-    typing: &Typing<'_, '_>,
+    _typing: &Typing<'_, '_>,
     info: &ty_members::MemberInfo<Arc<Ty<ALoc>>>,
 ) -> DocumentationAndTags {
-    jsdoc_of_member(typing, info)
-        .as_ref()
-        .map(documentation_and_tags_of_jsdoc)
-        .unwrap_or_else(ac_completion::empty_documentation_and_tags)
+    match info.def_locs.as_slice() {
+        [def_loc] => DocumentationAndTags::DefLoc(def_loc.dupe()),
+        _ => ac_completion::empty_documentation_and_tags(),
+    }
 }
 
-fn documentation_and_tags_of_loc(
+fn documentation_and_tags_of_loc(loc: &Loc) -> DocumentationAndTags {
+    DocumentationAndTags::Loc(loc.clone())
+}
+
+fn force_documentation_and_tags_of_loc(
     typing: &Typing<'_, '_>,
     loc: &Loc,
 ) -> Result<DocumentationAndTags, flow_utils_concurrency::job_error::JobError> {
@@ -548,7 +560,7 @@ fn documentation_and_tags_of_loc(
         .unwrap_or_else(ac_completion::empty_documentation_and_tags))
 }
 
-fn documentation_and_tags_of_def_loc(
+fn force_documentation_and_tags_of_def_loc(
     typing: &Typing<'_, '_>,
     def_loc: &ALoc,
 ) -> DocumentationAndTags {
@@ -752,7 +764,7 @@ fn local_value_identifiers(
             Some(t) => t,
             None => continue,
         };
-        let documentation_and_tags = documentation_and_tags_of_loc(typing, &loc)?;
+        let documentation_and_tags = documentation_and_tags_of_loc(&loc);
         let ac_id_type = match is_record_type(typing.cx, &type_) {
             Some(defaulted_props) => AcIdType::AcIdTypeRecord {
                 record_type: type_.dupe(),
@@ -1705,7 +1717,7 @@ fn make_builtin_type_operator(
         additional_text_edits: Vec::new(),
         sort_text: sort_text_of_rank(100),
         preselect: false,
-        documentation_and_tags: (docs.map(str::to_string), None),
+        documentation_and_tags: DocumentationAndTags::Value((docs.map(str::to_string), None)),
         log_info: "builtin type operators".to_string(),
         insert_text_format: if snippet {
             LspInsertTextFormat::SNIPPET
@@ -1867,8 +1879,7 @@ fn autocomplete_unqualified_type(
     let type_identifiers = local_type_identifiers(typing)?;
     let mut errors_to_log: Vec<String> = Vec::new();
     for ((name, aloc), ty_result) in type_identifiers {
-        let documentation_and_tags =
-            documentation_and_tags_of_loc(typing, &(typing.loc_of_aloc)(&aloc))?;
+        let documentation_and_tags = documentation_and_tags_of_loc(&(typing.loc_of_aloc)(&aloc));
         match ty_result {
             Ok(elt) => items_rev.push_front(autocomplete_create_result_elt(
                 None,
@@ -2593,7 +2604,7 @@ fn autocomplete_module_exports(
     module_type_opt: Option<ModuleTypeOrType>,
 ) -> AutocompleteServiceResult {
     let documentation_and_tags_of_module_member =
-        |def_loc: &ALoc| documentation_and_tags_of_def_loc(typing, def_loc);
+        |def_loc: &ALoc| DocumentationAndTags::DefLoc(def_loc.dupe());
     let (items, errors_to_log) = match module_type_opt {
         None => (Vec::new(), Vec::new()),
         Some(ModuleTypeOrType::Module(module_type)) => {
@@ -2977,6 +2988,63 @@ trait Pipe: Sized {
 
 impl<T> Pipe for T {}
 
+fn force_documentation_and_tags(
+    typing: &Typing<'_, '_>,
+    documentation_and_tags: DocumentationAndTags,
+) -> Result<DocumentationAndTags, flow_utils_concurrency::job_error::JobError> {
+    match documentation_and_tags {
+        DocumentationAndTags::Empty => Ok(documentation_and_tags),
+        DocumentationAndTags::Value(_) => Ok(documentation_and_tags),
+        DocumentationAndTags::DefLoc(def_loc) => {
+            Ok(force_documentation_and_tags_of_def_loc(typing, &def_loc))
+        }
+        DocumentationAndTags::Loc(loc) => force_documentation_and_tags_of_loc(typing, &loc),
+    }
+}
+
+fn force_completion_item_documentation(
+    typing: &Typing<'_, '_>,
+    mut item: ac_completion::CompletionItem,
+) -> Result<ac_completion::CompletionItem, flow_utils_concurrency::job_error::JobError> {
+    item.documentation_and_tags =
+        force_documentation_and_tags(typing, item.documentation_and_tags)?;
+    Ok(item)
+}
+
+fn force_autocomplete_result_documentation(
+    typing: &Typing<'_, '_>,
+    result: AutocompleteServiceResult,
+) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
+    match result {
+        AutocompleteServiceResultGeneric::AcResult(AcResult {
+            result,
+            errors_to_log,
+        }) => {
+            let ac_completion::T {
+                items,
+                is_incomplete,
+            } = result;
+            let items = items
+                .into_iter()
+                .map(|item| force_completion_item_documentation(typing, item))
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(AutocompleteServiceResultGeneric::AcResult(AcResult {
+                result: ac_completion::T {
+                    items,
+                    is_incomplete,
+                },
+                errors_to_log,
+            }))
+        }
+        AutocompleteServiceResultGeneric::AcEmpty(reason) => {
+            Ok(AutocompleteServiceResultGeneric::AcEmpty(reason))
+        }
+        AutocompleteServiceResultGeneric::AcFatalError(err) => {
+            Ok(AutocompleteServiceResultGeneric::AcFatalError(err))
+        }
+    }
+}
+
 pub fn autocomplete_get_results(
     typing: &Typing<'_, '_>,
     ac_options: &AcOptions,
@@ -3267,6 +3335,7 @@ pub fn autocomplete_get_results(
                     )
                 }
             };
+            let result = force_autocomplete_result_documentation(typing, result)?;
             Ok((Some(token), Some(ac_loc), autocomplete_type_string, result))
         }
     }

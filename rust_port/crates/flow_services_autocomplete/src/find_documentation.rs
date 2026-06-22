@@ -927,19 +927,13 @@ pub fn jsdoc_of_getdef_loc(
     def_loc: Loc,
 ) -> Option<jsdoc::Jsdoc> {
     let source = def_loc.source()?.clone();
-    let current_ast_if_should_use = {
-        let current_file_source = ast.loc.source()?;
-        if *current_file_source == source {
-            Some(ast.clone())
-        } else {
-            None
-        }
-    };
-    let ast = match current_ast_if_should_use {
-        Some(ast) => ast,
-        None => get_ast_from_shared_mem(&source)?,
-    };
-    search_jsdoc(&def_loc, &ast)
+    let current_file_source = ast.loc.source()?;
+    if *current_file_source == source {
+        search_jsdoc(&def_loc, ast)
+    } else {
+        let ast = get_ast_from_shared_mem(&source)?;
+        search_jsdoc(&def_loc, &ast)
+    }
 }
 
 pub fn documentation_of_jsdoc(jsdoc: &jsdoc::Jsdoc) -> Option<String> {

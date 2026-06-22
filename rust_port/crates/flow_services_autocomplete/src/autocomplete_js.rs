@@ -313,12 +313,24 @@ impl Inference {
     }
 }
 
+#[derive(Clone)]
+enum EnclosingClass {
+    ClassId {
+        loc: ALoc,
+        class_: Arc<ast::class::Class<ALoc, ALoc>>,
+    },
+    ClassExpression {
+        loc: ALoc,
+        class_: Arc<ast::class::Class<ALoc, ALoc>>,
+    },
+}
+
 struct ProcessRequestSearcher<'a, 'cx> {
     cx: &'a Context<'cx>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     from_trigger_character: bool,
     cursor: &'a Loc,
-    enclosing_classes: Vec<Type>,
+    enclosing_classes: Vec<EnclosingClass>,
     rev_bound_tparams: Vec<String>,
     enclosing_node_stack: Vec<EnclosingNode<ALoc, ALoc>>,
     class_key_depth: usize,
@@ -351,8 +363,23 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         tparam.name.name.to_string()
     }
 
-    fn get_enclosing_class(&self) -> Option<Type> {
-        self.enclosing_classes.last().cloned()
+    fn get_enclosing_class(&self) -> Result<Option<Type>, Found> {
+        match self.enclosing_classes.last() {
+            None => Ok(None),
+            Some(EnclosingClass::ClassId { loc, class_ }) => {
+                Ok(Some(Inference::type_of_class_id(self.cx, loc, class_)?))
+            }
+            Some(EnclosingClass::ClassExpression { loc, class_ }) => {
+                Ok(Inference::type_of_expression(
+                    self.cx,
+                    &expression::Expression::new(expression::ExpressionInner::Class {
+                        loc: loc.dupe(),
+                        inner: class_.as_ref().clone().into(),
+                    }),
+                )
+                .ok())
+            }
+        }
     }
 
     fn check_closest_enclosing_statement(&self) -> Result<(), Found> {
@@ -414,13 +441,13 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         }
     }
 
-    fn default_ac_id(&self, type_: Type) -> AutocompleteType {
-        AutocompleteType::AcId {
+    fn default_ac_id(&self, type_: Type) -> Result<AutocompleteType, Found> {
+        Ok(AutocompleteType::AcId {
             include_super: false,
             include_this: false,
             type_,
-            enclosing_class_t: self.get_enclosing_class(),
-        }
+            enclosing_class_t: self.get_enclosing_class()?,
+        })
     }
 
     fn default_bracket_syntax(&self, type_: Type) -> BracketSyntax {
@@ -462,11 +489,11 @@ impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
         })
     }
 
-    fn with_enclosing_class_t<F>(&mut self, class_t: Type, f: F) -> Result<(), Found>
+    fn with_enclosing_class<F>(&mut self, class_: EnclosingClass, f: F) -> Result<(), Found>
     where
         F: FnOnce(&mut Self) -> Result<(), Found>,
     {
-        self.enclosing_classes.push(class_t);
+        self.enclosing_classes.push(class_);
         let result = f(self);
         self.enclosing_classes.pop();
         result
@@ -690,10 +717,13 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             .push(EnclosingNode::EnclosingStatement(stmt.dupe()));
         let result = match stmt.deref() {
             statement::StatementInner::ClassDeclaration { loc, inner } if inner.id.is_some() => {
-                let class_t = Inference::type_of_class_id(self.cx, loc, inner)?;
-                self.with_enclosing_class_t(class_t, |this| {
-                    ast_visitor::statement_default(this, stmt)
-                })
+                self.with_enclosing_class(
+                    EnclosingClass::ClassId {
+                        loc: loc.dupe(),
+                        class_: inner.clone(),
+                    },
+                    |this| ast_visitor::statement_default(this, stmt),
+                )
             }
             _ => ast_visitor::statement_default(self, stmt),
         };
@@ -746,7 +776,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             self.find(
                 ident.loc.dupe(),
                 ident.name.to_string(),
-                self.default_ac_id(t),
+                self.default_ac_id(t)?,
             )
         } else {
             ast_visitor::identifier_default(self, ident)
@@ -762,7 +792,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             self.find(
                 ident.loc.dupe(),
                 ident.name.to_string(),
-                self.default_ac_id(t),
+                self.default_ac_id(t)?,
             )
         } else {
             ast_visitor::jsx_element_name_identifier_default(self, ident)
@@ -978,7 +1008,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                 id.loc.dupe(),
                 id.name.to_string(),
                 AutocompleteType::AcClassKey {
-                    enclosing_class_t: self.get_enclosing_class(),
+                    enclosing_class_t: self.get_enclosing_class()?,
                 },
             )
         } else {
@@ -995,7 +1025,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                     id.loc.dupe(),
                     id.name.to_string(),
                     AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class(),
+                        enclosing_class_t: self.get_enclosing_class()?,
                     },
                 )
             }
@@ -1006,7 +1036,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                     loc.dupe(),
                     lit.raw.to_string(),
                     AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class(),
+                        enclosing_class_t: self.get_enclosing_class()?,
                     },
                 )
             }
@@ -1017,7 +1047,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
                     name.loc.dupe(),
                     format!("#{}", name.name),
                     AutocompleteType::AcClassKey {
-                        enclosing_class_t: self.get_enclosing_class(),
+                        enclosing_class_t: self.get_enclosing_class()?,
                     },
                 )
             }
@@ -1239,7 +1269,7 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         match &typeof_.argument {
             types::typeof_::Target::Unqualified(id) if self.covers_target(&id.loc) => {
                 let t = self.type_from_enclosing_node(&id.loc)?;
-                self.find(id.loc.dupe(), id.name.to_string(), self.default_ac_id(t))
+                self.find(id.loc.dupe(), id.name.to_string(), self.default_ac_id(t)?)
             }
             types::typeof_::Target::Qualified(q) if self.covers_target(&q.id.loc) => {
                 let obj_type = self.type_from_enclosing_node(&loc_of_typeof(&q.qualification))?;
@@ -1511,20 +1541,15 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
         loc: &'ast ALoc,
         cls: &'ast ast::class::Class<ALoc, ALoc>,
     ) -> Result<(), Found> {
-        // Save original, push "this", get class_t and with_enclosing_class_t, restore
         let original = self.rev_bound_tparams.clone();
         self.rev_bound_tparams.push("this".to_string());
-        let result = match Inference::type_of_expression(
-            self.cx,
-            &expression::Expression::new(expression::ExpressionInner::Class {
+        let result = self.with_enclosing_class(
+            EnclosingClass::ClassExpression {
                 loc: loc.dupe(),
-                inner: cls.clone().into(),
-            }),
-        ) {
-            Ok(class_t) => self
-                .with_enclosing_class_t(class_t, |this| ast_visitor::class_default(this, loc, cls)),
-            Err(_) => ast_visitor::class_default(self, loc, cls),
-        };
+                class_: Arc::new(cls.clone()),
+            },
+            |this| ast_visitor::class_default(this, loc, cls),
+        );
         self.rev_bound_tparams = original;
         result
     }
