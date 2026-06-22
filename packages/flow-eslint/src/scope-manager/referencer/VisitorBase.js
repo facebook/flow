@@ -11,9 +11,9 @@
 'use strict';
 
 import type {ESNode} from 'flow-estree';
-import type {VisitorKeysType} from 'flow-parser/oxidized';
+import type {VisitorKeysType} from 'flow-parser';
 
-import {FlowVisitorKeys} from 'flow-parser/oxidized';
+import {FlowVisitorKeys} from 'flow-parser';
 
 type VisitorOptions = Readonly<{
   childVisitorKeys?: VisitorKeysType | null,

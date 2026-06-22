@@ -14,7 +14,7 @@
 import {transformSync} from '@babel/core';
 
 import hermesParserPlugin from '../src';
-import * as HermesParser from 'flow-parser/oxidized';
+import * as HermesParser from 'flow-parser';
 
 const MODULE_PREAMBLE = '// @flow\n\n"use strict";\n\n';
 const NON_FLOW_MODULE_PREAMBLE = '"use strict";\n\n';

@@ -7,9 +7,9 @@
 # Drives the parser fixture suite under flow/src/parser/test/flow against the
 # wasm-built Flow parser. After the workspace consolidation, src/ files use ES
 # module syntax (matching upstream xplat/static_h hermes-parser shape), so the
-# JS driver must require the babel-transformed oxidized/ build. oxidized/ is populated
+# JS driver must require the babel-transformed dist/ build. dist/ is populated
 # by the workspace-root `yarn build`, which itself invokes the FB-only wasm
-# build script and writes flow-parser/oxidized/FlowParserWASM.js.
+# build script and writes flow-parser/dist/FlowParserWASM.js.
 
 set -e -o pipefail
 
@@ -25,12 +25,12 @@ PKG_DIR="$WORKSPACE_DIR/flow-parser"
 cd "$WORKSPACE_DIR"
 
 # Serialize dist/ rebuilds + reads against runOxidizedJestTests.sh and
-# runContractTests.sh, which also rebuild the oxidized parser output
+# runContractTests.sh, which also rebuild the generated parser output
 # under `yarn build`. Buck schedules these targets in parallel; without this
-# flock, target A's node test can read a torn `oxidized/FlowParser.js` while
+# flock, target A's node test can read a torn `dist/FlowParser.js` while
 # target B's `yarn build` is mid-flight. Hold the lock through both
-# `yarn build` AND the node run so a concurrent target can't clobber `oxidized/`
-# while we're reading from it.
+# `yarn build` AND the node run so a concurrent target can't clobber generated
+# output while we're reading from it.
 DIST_FLOCK="$PKG_DIR/.dist.flock"
 exec 9> "$DIST_FLOCK"
 echo "==> waiting for exclusive lock on $DIST_FLOCK"
@@ -43,9 +43,9 @@ echo "==> acquired lock on $DIST_FLOCK"
 yarn install --offline
 
 # Build output for each package (and embed the WASM parser into
-# flow-parser/oxidized/FlowParserWASM.js). The fixture runner requires
-# `../oxidized/FlowParser` directly so it can pass fixture-specific parser
-# options without the public `oxidized/index.js` defaults.
+# flow-parser/dist/FlowParserWASM.js). The fixture runner requires
+# `../dist/FlowParser` directly so it can pass fixture-specific parser options
+# without the public `index.js` defaults.
 yarn build
 
 # Use the fbsource third-party Node toolchain (24.x). The system Node may be

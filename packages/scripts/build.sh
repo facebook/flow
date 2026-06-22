@@ -7,6 +7,7 @@
 set -xe -o pipefail
 
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FLOW_PARSER_SRC_DIR="$THIS_DIR/../flow-parser/oxidized-src"
 
 PACKAGES=(
   flow-estree
@@ -44,7 +45,7 @@ fi
 package_src_dir() {
   local package="$1"
   if [[ "$package" == "flow-parser" ]]; then
-    echo "$THIS_DIR/../$package/oxidized-src"
+    echo "$FLOW_PARSER_SRC_DIR"
   else
     echo "$THIS_DIR/../$package/src"
   fi
@@ -52,11 +53,7 @@ package_src_dir() {
 
 package_dist_dir() {
   local package="$1"
-  if [[ "$package" == "flow-parser" ]]; then
-    echo "$THIS_DIR/../$package/oxidized"
-  else
-    echo "$THIS_DIR/../$package/dist"
-  fi
+  echo "$THIS_DIR/../$package/dist"
 }
 
 # Create fresh dist directory for each package, and copy source files in
@@ -87,7 +84,11 @@ for package in "${PACKAGES[@]}"; do
   done
 
   # Copy just the JS files again
-  rsync -a --include="*/" --include="*.js" --exclude="*" "$SRC_DIR" "$DIST_DIR"
+  if [[ "$package" == "flow-parser" ]]; then
+    rsync -a --include="*/" --include="*.js" --exclude="*" "$SRC_DIR/" "$DIST_DIR/"
+  else
+    rsync -a --include="*/" --include="*.js" --exclude="*" "$SRC_DIR" "$DIST_DIR"
+  fi
 done
 
 # Generate source code that only applies to dist directory
@@ -106,7 +107,7 @@ for package in "${BOOTSTRAP_PACKAGES[@]}"; do
   if [[ "$package" == "flow-parser" ]]; then
     BABEL_IGNORE_ARGS=(
       --ignore
-      "$PACKAGE_DIST_DIR/transform/print/**,$PACKAGE_DIST_DIR/oxidized-src/transform/print/**"
+      "$PACKAGE_DIST_DIR/transform/print/**"
     )
   fi
   yarn babel \
@@ -117,7 +118,7 @@ for package in "${BOOTSTRAP_PACKAGES[@]}"; do
 done
 
 # Re-enable the override so the remaining packages can be parsed with
-# flow-parser/oxidized (they contain Flow `as` cast syntax).
+# flow-parser (they contain Flow `as` cast syntax).
 unset SKIP_HERMES_PARSER_OVERRIDE
 
 for package in "${PACKAGES[@]}"; do
@@ -138,4 +139,6 @@ done
 
 # Validate that the generated flow files are sane
 # We don't bother validating the raw-js files as they are validated by babel first
-yarn eslint "*/dist/**/*.js.flow" "flow-parser/oxidized/**/*.js.flow" --no-ignore
+yarn eslint \
+  "*/dist/**/*.js.flow" \
+  --no-ignore

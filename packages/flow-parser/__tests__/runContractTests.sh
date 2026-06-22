@@ -74,14 +74,14 @@ trap '
 cd "$WORKSPACE_DIR"
 
 # Serialize dist/ rebuilds + reads against runOxidizedJestTests.sh, which
-# rebuilds the oxidized parser output and then `require()`s
-# `flow-parser/oxidized`. Buck
+# rebuilds the generated parser output and then `require()`s
+# `flow-parser`. Buck
 # schedules `wasm_parser_contract_test` and `oxidized_jest_test` in
 # parallel; without this flock, target A's jest can read a torn
-# `oxidized/index.js` (un-stripped Flow `import type` lines from the copy
+# `index.js` (un-stripped Flow `import type` lines from the copy
 # step) while target B's `yarn build` is mid-flight. Hold the lock through
 # both `yarn build` AND the jest run so a concurrent target can't clobber
-# `oxidized/` while we're reading from it.
+# generated parser output while we're reading from it.
 DIST_FLOCK="$PKG_DIR/.dist.flock"
 exec 9> "$DIST_FLOCK"
 echo "==> waiting for exclusive lock on $DIST_FLOCK"
@@ -93,8 +93,8 @@ echo "==> acquired lock on $DIST_FLOCK"
 # right mode here.
 yarn install --offline
 
-# Build oxidized/ from oxidized-src/: contract tests `require()` the public
-# entry `flow-parser/oxidized`. Without this build, jest sees the ESM
+# Build dist/ output from oxidized-src/: contract tests `require()` the
+# public entry `flow-parser`. Without this build, jest sees the ESM
 # `oxidized-src/` files directly and node can't `require()` them.
 yarn build
 

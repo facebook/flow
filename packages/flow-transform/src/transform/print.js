@@ -13,10 +13,10 @@
 import type {MaybeDetachedNode} from '../detachedNode';
 import type {Program} from 'flow-estree';
 
-import {mutateESTreeASTForPrettier} from 'flow-parser/oxidized';
+import {mutateESTreeASTForPrettier} from 'flow-parser';
 import * as prettier from 'prettier';
 import {mutateESTreeASTCommentsForPrettier} from './comments/comments';
-import type {VisitorKeysType} from 'flow-parser/oxidized';
+import type {VisitorKeysType} from 'flow-parser';
 
 export async function print(
   ast: MaybeDetachedNode<Program>,

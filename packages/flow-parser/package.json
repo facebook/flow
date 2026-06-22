@@ -9,10 +9,10 @@
     "email": "flow@fb.com"
   },
   "files": [
-    "flow_parser.js",
-    "oxidized"
+    "dist",
+    "README.md"
   ],
-  "main": "flow_parser.js",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/facebook/flow.git",

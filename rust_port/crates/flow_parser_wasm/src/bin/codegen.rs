@@ -27,7 +27,7 @@
 //!
 //! ## ESTree visitor keys (`--estree-visitor-keys`)
 //!
-//! Generates `ESTreeVisitorKeys.js` for `flow-parser/oxidized`:
+//! Generates `ESTreeVisitorKeys.js` for `flow-parser`:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
@@ -891,7 +891,7 @@ const DEFAULT_HERMES_ESTREE_TYPES_PATH: &str =
 /// - **TS-only nodes** — upstream Hermes parses TypeScript; these kinds
 ///   exist in our SCHEMA only because the Rust serializer kind list mirrors
 ///   the OCaml binary protocol's full type space. Flow-only consumers will
-///   never see them via the flow-parser/oxidized adapter.
+///   never see them via the flow-parser adapter.
 /// - **Custom-encoded** — `Literal` (the only `custom_emit` kind) is
 ///   modeled upstream as the `Literal` union over BigInt/Boolean/Null/
 ///   Numeric/RegExp/StringLiteral, not as a standalone interface.
@@ -1146,7 +1146,7 @@ const PREDICATE_SPECIAL_NODES: &[&str] = &["Identifier", "JSXIdentifier", "JSXTe
 /// - **TS-only kinds** — upstream Hermes parses TypeScript; these kinds exist
 ///   in our SCHEMA only because the Rust serializer kind list mirrors the
 ///   OCaml binary protocol's full type space. Flow-only consumers will never
-///   see them via the flow-parser/oxidized adapter.
+///   see them via the flow-parser adapter.
 const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     // Optional-chain refinements collapsed into Call/Member by upstream.
     "OptionalCallExpression",

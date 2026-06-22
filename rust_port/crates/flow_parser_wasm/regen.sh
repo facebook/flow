@@ -85,11 +85,11 @@ run_arc_f() {
     arc f "${out}"
 }
 
-# 1. JS deserializer (default) — for flow-parser/oxidized
+# 1. JS deserializer (default) — for flow-parser
 run_codegen "JS deserializer" "${parser_pkg}/FlowParserNodeDeserializers.js"
 run_arc_f "${parser_pkg}/FlowParserNodeDeserializers.js"
 
-# 2. ESTree visitor keys (--estree-visitor-keys) — for flow-parser/oxidized
+# 2. ESTree visitor keys (--estree-visitor-keys) — for flow-parser
 run_codegen "ESTree visitor keys" \
     "${parser_pkg}/generated/ESTreeVisitorKeys.js" \
     --estree-visitor-keys

@@ -45,26 +45,24 @@ module.exports = {
     // the modules themselves
     ...workspaceModuleNameMappers,
 
-    '^flow-parser$': path.resolve(__dirname, 'flow-parser', 'flow_parser.js'),
-
-    '^flow-parser/oxidized$': path.resolve(
+    '^flow-parser$': path.resolve(
       __dirname,
       'flow-parser',
       'oxidized-src',
       'index.js',
     ),
 
-    '^flow-parser/oxidized/(.*)$': path.resolve(
-      __dirname,
-      'flow-parser',
-      'oxidized-src',
-      '$1',
-    ),
-
     '^flow-parser/__test_utils__/(.*)$': path.resolve(
       __dirname,
       'flow-parser',
       '__test_utils__',
+      '$1',
+    ),
+
+    '^flow-parser/(.*)$': path.resolve(
+      __dirname,
+      'flow-parser',
+      'oxidized-src',
       '$1',
     ),
 
@@ -75,11 +73,11 @@ module.exports = {
       'index.mjs',
     ),
 
-    // flow-parser/oxidized
+    // flow-parser
     '.*/FlowParserWASM$': path.resolve(
       __dirname,
       'flow-parser',
-      'oxidized',
+      'dist',
       'FlowParserWASM.js',
     ),
   },

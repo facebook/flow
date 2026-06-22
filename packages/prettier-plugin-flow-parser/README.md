@@ -2,7 +2,7 @@
 
 Forked from `xplat/static_h/tools/hermes-parser/js/prettier-plugin-hermes-parser`.
 A Prettier plugin that consumes the hermes/flow ESTree AST shape — intended to
-pair with the Flow Rust parser stack (`flow-parser/oxidized`,
+pair with the Flow Rust parser stack (`flow-parser`,
 `flow-estree`).
 
 ## Bundle status
