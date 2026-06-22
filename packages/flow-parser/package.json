@@ -19,8 +19,7 @@
     "directory": "packages/flow-parser"
   },
   "scripts": {
-    "test": "node test/run_tests.js",
-    "build": "make js"
+    "test": "node test/run_tests.js"
   },
   "dependencies": {
     "flow-estree": "0.320.0"

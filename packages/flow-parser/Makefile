@@ -12,13 +12,14 @@ clean:
 
 # copies flow_parser.js into place, either using a copy that was put in
 # dist/flow_parser.js externally (e.g. during a Circle CI build), or by
-# building it.
+# building it outside of internal builds.
 .PHONY: flow_parser.js
 flow_parser.js:
 	if [ -e dist/flow_parser.js ]; then \
 		[ $@ -nt dist/flow_parser.js ] || cp dist/flow_parser.js $@; \
 	elif [[ "${INTERNAL_BUILD}" -eq 1 ]]; then \
-		buck2 build @//mode/opt //flow/src/parser:flow_parser.js --out $@; \
+		echo "dist/flow_parser.js is required for internal builds"; \
+		exit 1; \
 	else \
 		$(MAKE) -C ../../src/parser js; \
 		cp ../../src/parser/flow_parser.js $@; \
