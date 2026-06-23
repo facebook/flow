@@ -10,13 +10,13 @@ declare class Point {
 
 // Object literal with the right shape: OK. The class's `constructor`
 // proto-prop must be ignored, otherwise this would error for missing it.
-({x: 1, y: 2}) as Point; // OK
+({x: 1, y: 2}) satisfies Point; // OK
 
 // Missing a required field is still an error.
-({x: 1}) as Point; // ERROR: missing `y`
+({x: 1}) satisfies Point; // ERROR: missing `y`
 
 // Wrong type on a field is still an error.
-({x: 1, y: "two"}) as Point; // ERROR: string vs number
+({x: 1, y: "two"}) satisfies Point; // ERROR: string vs number
 
 // Class with methods: methods on the class are checked structurally too.
 declare class Greeter {
@@ -30,10 +30,10 @@ declare class Greeter {
   greet(): string {
     return "hi";
   },
-}) as Greeter; // OK
+}) satisfies Greeter; // OK
 
 // Object literal missing the method: still ERROR.
-({name: "x"}) as Greeter; // ERROR: missing `greet`
+({name: "x"}) satisfies Greeter; // ERROR: missing `greet`
 
 // Regression: the InterfaceKind branch of `structural_subtype` was already
 // reachable before this change. Verify it still accepts an object literal.
@@ -41,5 +41,5 @@ interface IPoint {
   x: number;
   y: number;
 }
-({x: 1, y: 2}) as IPoint; // OK
-({x: 1}) as IPoint; // ERROR: missing `y`
+({x: 1, y: 2}) satisfies IPoint; // OK
+({x: 1}) satisfies IPoint; // ERROR: missing `y`

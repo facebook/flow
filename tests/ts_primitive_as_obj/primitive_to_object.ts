@@ -13,18 +13,18 @@ declare const bi: bigint;
 declare const sym: symbol;
 
 // Empty object type: accepted via wrapper promotion.
-s as {}; // OK
-n as {}; // OK
-b as {}; // OK
-bi as {}; // OK
-sym as {}; // OK
+s satisfies {}; // OK
+n satisfies {}; // OK
+b satisfies {}; // OK
+bi satisfies {}; // OK
+sym satisfies {}; // OK
 
 // Object type that the wrapper structurally satisfies.
-s as {length: number}; // OK -- String wrapper has `length`
+s satisfies {length: number}; // OK -- String wrapper has `length`
 
 // Object type the wrapper does not satisfy: structural subtyping still
 // rejects, but with a missing-prop error rather than a generic primitive-vs-
 // object-type incompatibility.
-s as {foo: number}; // ERROR: `foo` missing on String wrapper
-bi as {foo: number}; // ERROR: `foo` missing on BigInt wrapper
-sym as {foo: number}; // ERROR: `foo` missing on Symbol wrapper
+s satisfies {foo: number}; // ERROR: `foo` missing on String wrapper
+bi satisfies {foo: number}; // ERROR: `foo` missing on BigInt wrapper
+sym satisfies {foo: number}; // ERROR: `foo` missing on Symbol wrapper

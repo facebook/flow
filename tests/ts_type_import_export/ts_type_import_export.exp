@@ -11,16 +11,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    importer.ts:13:1
-   13| x as string; // ERROR: number ~> string (proves the type was resolved)
+   13| x satisfies string; // ERROR: number ~> string (proves the type was resolved)
        ^
 
 References:
    importer.ts:11:18
    11| declare const x: MyType;
                         ^^^^^^ [1]
-   importer.ts:13:6
-   13| x as string; // ERROR: number ~> string (proves the type was resolved)
-            ^^^^^^ [2]
+   importer.ts:13:13
+   13| x satisfies string; // ERROR: number ~> string (proves the type was resolved)
+                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- importer.ts:16:1
@@ -28,16 +28,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `y.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.ts:16:1
-   16| y.x as number; // ERROR: string ~> number (proves the interface resolved)
+   16| y.x satisfies number; // ERROR: string ~> number (proves the interface resolved)
        ^^^
 
 References:
    exporter.ts:9:35
     9| export interface MyInterface { x: string }
                                          ^^^^^^ [1]
-   importer.ts:16:8
-   16| y.x as number; // ERROR: string ~> number (proves the interface resolved)
-              ^^^^^^ [2]
+   importer.ts:16:15
+   16| y.x satisfies number; // ERROR: string ~> number (proves the interface resolved)
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ importer.ts:17:11
@@ -87,16 +87,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `lt` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer.ts:25:1
-   25| lt as number; // ERROR
+   25| lt satisfies number; // ERROR
        ^^
 
 References:
    importer.ts:23:19
    23| declare const lt: LocalType;
                          ^^^^^^^^^ [1]
-   importer.ts:25:7
-   25| lt as number; // ERROR
-             ^^^^^^ [2]
+   importer.ts:25:14
+   25| lt satisfies number; // ERROR
+                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ importer.ts:30:27
@@ -132,16 +132,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    importer_reexport.ts:14:1
-   14| a as string; // ERROR: number ~> string
+   14| a satisfies string; // ERROR: number ~> string
        ^
 
 References:
    importer_reexport.ts:12:18
    12| declare const a: FromType;
                         ^^^^^^^^ [1]
-   importer_reexport.ts:14:6
-   14| a as string; // ERROR: number ~> string
-            ^^^^^^ [2]
+   importer_reexport.ts:14:13
+   14| a satisfies string; // ERROR: number ~> string
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:17:1
@@ -149,16 +149,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `b.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer_reexport.ts:17:1
-   17| b.x as number; // ERROR: string ~> number
+   17| b.x satisfies number; // ERROR: string ~> number
        ^^^
 
 References:
    exporter.ts:9:35
     9| export interface MyInterface { x: string }
                                          ^^^^^^ [1]
-   importer_reexport.ts:17:8
-   17| b.x as number; // ERROR: string ~> number
-              ^^^^^^ [2]
+   importer_reexport.ts:17:15
+   17| b.x satisfies number; // ERROR: string ~> number
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- importer_reexport.ts:18:14
@@ -208,16 +208,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `fromValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    importer_reexport.ts:25:1
-   25| fromValue as string; // ERROR: number ~> string
+   25| fromValue satisfies string; // ERROR: number ~> string
        ^^^^^^^^^
 
 References:
    exporter.ts:21:23
    21| export const myValue: number = 42;
                              ^^^^^^ [1]
-   importer_reexport.ts:25:14
-   25| fromValue as string; // ERROR: number ~> string
-                    ^^^^^^ [2]
+   importer_reexport.ts:25:21
+   25| fromValue satisfies string; // ERROR: number ~> string
+                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:38:1
@@ -225,16 +225,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `c` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    importer_reexport.ts:38:1
-   38| c as string; // ERROR: number ~> string
+   38| c satisfies string; // ERROR: number ~> string
        ^
 
 References:
    importer_reexport.ts:36:18
    36| declare const c: ImpType;
                         ^^^^^^^ [1]
-   importer_reexport.ts:38:6
-   38| c as string; // ERROR: number ~> string
-            ^^^^^^ [2]
+   importer_reexport.ts:38:13
+   38| c satisfies string; // ERROR: number ~> string
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:41:1
@@ -242,16 +242,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `d.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
 
    importer_reexport.ts:41:1
-   41| d.x as number; // ERROR: string ~> number
+   41| d.x satisfies number; // ERROR: string ~> number
        ^^^
 
 References:
    exporter.ts:9:35
     9| export interface MyInterface { x: string }
                                          ^^^^^^ [1]
-   importer_reexport.ts:41:8
-   41| d.x as number; // ERROR: string ~> number
-              ^^^^^^ [2]
+   importer_reexport.ts:41:15
+   41| d.x satisfies number; // ERROR: string ~> number
+                     ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- importer_reexport.ts:42:14
@@ -301,16 +301,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `impValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
 
    importer_reexport.ts:48:1
-   48| impValue as string; // ERROR: number ~> string
+   48| impValue satisfies string; // ERROR: number ~> string
        ^^^^^^^^
 
 References:
    exporter.ts:21:23
    21| export const myValue: number = 42;
                              ^^^^^^ [1]
-   importer_reexport.ts:48:13
-   48| impValue as string; // ERROR: number ~> string
-                   ^^^^^^ [2]
+   importer_reexport.ts:48:20
+   48| impValue satisfies string; // ERROR: number ~> string
+                          ^^^^^^ [2]
 
 
 

@@ -53,16 +53,16 @@ Cannot cast `a` to object type because property `missing` is missing in `Animal`
 [incompatible-type]
 
    class_to_object.ts:18:1
-   18| a as {name: string; missing: boolean}; // ERROR: `missing` not in Animal
+   18| a satisfies {name: string; missing: boolean}; // ERROR: `missing` not in Animal
        ^
 
 References:
    class_to_object.ts:11:18
    11| declare const a: Animal;
                         ^^^^^^ [1]
-   class_to_object.ts:18:6
-   18| a as {name: string; missing: boolean}; // ERROR: `missing` not in Animal
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   class_to_object.ts:18:13
+   18| a satisfies {name: string; missing: boolean}; // ERROR: `missing` not in Animal
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:21:1
@@ -71,26 +71,26 @@ Cannot cast `a` to object type because in property `name`: string [1] is incompa
 [incompatible-type]
 
    class_to_object.ts:21:1
-   21| a as {name: number}; // ERROR: number vs string
+   21| a satisfies {name: number}; // ERROR: number vs string
        ^
 
 References:
    class_to_object.ts:7:9
     7|   name: string;
                ^^^^^^ [1]
-   class_to_object.ts:21:13
-   21| a as {name: number}; // ERROR: number vs string
-                   ^^^^^^ [2]
+   class_to_object.ts:21:20
+   21| a satisfies {name: number}; // ERROR: number vs string
+                          ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- exact_constraint.ts:28:20
+Error ---------------------------------------------------------------------------------------- exact_constraint.ts:28:27
 
 Cannot instantiate `Constrained` because in type argument `T`: property `a` is missing in `NoA` [1] but exists in object
 type [2]. [incompatible-type]
 
-   exact_constraint.ts:28:20
-   28| noA as Constrained<NoA>; // ERROR: `a` missing in NoA
-                          ^^^ [1]
+   exact_constraint.ts:28:27
+   28| noA satisfies Constrained<NoA>; // ERROR: `a` missing in NoA
+                                 ^^^ [1]
 
 References:
    exact_constraint.ts:6:28
@@ -150,16 +150,16 @@ Cannot cast `f` to object type because function type [1] is incompatible with ob
 Functions without statics are not compatible with objects.
 
    function_to_object.ts:15:1
-   15| f as {x: number}; // ERROR: missing `x` on function
+   15| f satisfies {x: number}; // ERROR: missing `x` on function
        ^
 
 References:
    function_to_object.ts:7:19
     7| declare function f(): void;
                          ^^^^^^^^ [1]
-   function_to_object.ts:15:6
-   15| f as {x: number}; // ERROR: missing `x` on function
-            ^^^^^^^^^^^ [2]
+   function_to_object.ts:15:13
+   15| f satisfies {x: number}; // ERROR: missing `x` on function
+                   ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- function_to_object.ts:19:1
@@ -168,16 +168,16 @@ Cannot cast `f` to object type because function type [1] is incompatible with in
 [incompatible-function-indexer]
 
    function_to_object.ts:19:1
-   19| f as {[k: string]: number}; // ERROR: function vs indexed object
+   19| f satisfies {[k: string]: number}; // ERROR: function vs indexed object
        ^
 
 References:
    function_to_object.ts:7:19
     7| declare function f(): void;
                          ^^^^^^^^ [1]
-   function_to_object.ts:19:6
-   19| f as {[k: string]: number}; // ERROR: function vs indexed object
-            ^^^^^^^^^^^^^^^^^^^^^ [2]
+   function_to_object.ts:19:13
+   19| f satisfies {[k: string]: number}; // ERROR: function vs indexed object
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- function_usage.js:14:1
@@ -334,13 +334,13 @@ Cannot cast object literal to `Point` because property `y` is missing in object 
 [incompatible-type]
 
    object_to_class.ts:16:2
-   16| ({x: 1}) as Point; // ERROR: missing `y`
+   16| ({x: 1}) satisfies Point; // ERROR: missing `y`
         ^^^^^^ [1]
 
 References:
-   object_to_class.ts:16:13
-   16| ({x: 1}) as Point; // ERROR: missing `y`
-                   ^^^^^ [2]
+   object_to_class.ts:16:20
+   16| ({x: 1}) satisfies Point; // ERROR: missing `y`
+                          ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- object_to_class.ts:19:12
@@ -349,7 +349,7 @@ Cannot cast object literal to `Point` because in property `y`: string [1] is inc
 [incompatible-type]
 
    object_to_class.ts:19:12
-   19| ({x: 1, y: "two"}) as Point; // ERROR: string vs number
+   19| ({x: 1, y: "two"}) satisfies Point; // ERROR: string vs number
                   ^^^^^ [1]
 
 References:
@@ -364,13 +364,13 @@ Cannot cast object literal to `Greeter` because property `greet` is missing in o
 `Greeter` [2]. [incompatible-type]
 
    object_to_class.ts:36:2
-   36| ({name: "x"}) as Greeter; // ERROR: missing `greet`
+   36| ({name: "x"}) satisfies Greeter; // ERROR: missing `greet`
         ^^^^^^^^^^^ [1]
 
 References:
-   object_to_class.ts:36:18
-   36| ({name: "x"}) as Greeter; // ERROR: missing `greet`
-                        ^^^^^^^ [2]
+   object_to_class.ts:36:25
+   36| ({name: "x"}) satisfies Greeter; // ERROR: missing `greet`
+                               ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:45:2
@@ -379,13 +379,13 @@ Cannot cast object literal to `IPoint` because property `y` is missing in object
 [incompatible-type]
 
    object_to_class.ts:45:2
-   45| ({x: 1}) as IPoint; // ERROR: missing `y`
+   45| ({x: 1}) satisfies IPoint; // ERROR: missing `y`
         ^^^^^^ [1]
 
 References:
-   object_to_class.ts:45:13
-   45| ({x: 1}) as IPoint; // ERROR: missing `y`
-                   ^^^^^^ [2]
+   object_to_class.ts:45:20
+   45| ({x: 1}) satisfies IPoint; // ERROR: missing `y`
+                          ^^^^^^ [2]
 
 
 

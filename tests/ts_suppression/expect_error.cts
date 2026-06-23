@@ -1,2 +1,2 @@
 // @ts-expect-error
-3 as string;
+3 satisfies string;

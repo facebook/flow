@@ -11,14 +11,14 @@ declare class Animal {
 declare const a: Animal;
 
 // Subset of class shape: OK via structural subtyping.
-a as {name: string}; // OK
-a as {name: string; age: number}; // OK
+a satisfies {name: string}; // OK
+a satisfies {name: string; age: number}; // OK
 
 // Missing-required: still an error -- structural subtyping must reject.
-a as {name: string; missing: boolean}; // ERROR: `missing` not in Animal
+a satisfies {name: string; missing: boolean}; // ERROR: `missing` not in Animal
 
 // Wrong-type prop: structural subtyping still catches type mismatches.
-a as {name: number}; // ERROR: number vs string
+a satisfies {name: number}; // ERROR: number vs string
 
 // Interfaces already worked structurally; verify the same shape with an
 // interface still behaves the same (no regression).
@@ -26,4 +26,4 @@ interface IAnimal {
   name: string;
 }
 declare const i: IAnimal;
-i as {name: string}; // OK
+i satisfies {name: string}; // OK

@@ -20,18 +20,18 @@ declare const bi: bigint;
 declare const sym: symbol;
 
 // Empty interface: accepted via wrapper promotion.
-s as Empty; // OK
-n as Empty; // OK
-b as Empty; // OK
-bi as Empty; // OK
-sym as Empty; // OK
+s satisfies Empty; // OK
+n satisfies Empty; // OK
+b satisfies Empty; // OK
+bi satisfies Empty; // OK
+sym satisfies Empty; // OK
 
 // Interface that the wrapper structurally satisfies.
-s as HasLength; // OK -- String wrapper has `length`
+s satisfies HasLength; // OK -- String wrapper has `length`
 
 // Interface the wrapper does not satisfy: structural subtyping still rejects,
 // but with a missing-prop error rather than the blanket primitive-as-interface
 // error.
-s as HasFoo; // ERROR: `foo` missing on String wrapper
-bi as HasFoo; // ERROR: `foo` missing on BigInt wrapper
-sym as HasFoo; // ERROR: `foo` missing on Symbol wrapper
+s satisfies HasFoo; // ERROR: `foo` missing on String wrapper
+bi satisfies HasFoo; // ERROR: `foo` missing on BigInt wrapper
+sym satisfies HasFoo; // ERROR: `foo` missing on Symbol wrapper

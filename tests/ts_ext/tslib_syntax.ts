@@ -3,4 +3,4 @@ declare class Foo {
 }
 
 declare const foo: Foo;
-foo.a as string | void; // OK
+foo.a satisfies string | void; // OK

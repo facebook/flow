@@ -13,23 +13,23 @@ declare const i: I;
 
 // Unbinding class methods is OK in .ts (would be method-unbinding error in .js)
 a.m; // OK
-a.m as () => void; // OK
-a.m as empty; // ERROR: proves type is not any
+a.m satisfies () => void; // OK
+a.m satisfies empty; // ERROR: proves type is not any
 
 const {m} = a; // OK
-m as () => void; // OK
-m as empty; // ERROR: proves type is not any
+m satisfies () => void; // OK
+m satisfies empty; // ERROR: proves type is not any
 
 if (a.m) {} // OK
 
 // Unbinding interface methods is OK in .ts
 i.m; // OK
-i.m as () => void; // OK
-i.m as empty; // ERROR: proves type is not any
+i.m satisfies () => void; // OK
+i.m satisfies empty; // ERROR: proves type is not any
 
 const {m: im} = i; // OK
-im as () => void; // OK
-im as empty; // ERROR: proves type is not any
+im satisfies () => void; // OK
+im satisfies empty; // ERROR: proves type is not any
 
 // `this` type is unbound (becomes any) — matches TypeScript semantics
 class B {
@@ -37,8 +37,8 @@ class B {
 }
 declare const b: B;
 const {self} = b; // OK
-self as () => B; // OK — any is compatible with B
-self as empty; // ERROR: function type is not empty
+self satisfies () => B; // OK — any is compatible with B
+self satisfies empty; // ERROR: function type is not empty
 
 // Calling unbound methods should work in .ts
 const f = a.m;

@@ -7,13 +7,13 @@
 declare function f(): void;
 
 // Exact target (`{}` is exact under exact_by_default): accepted in .ts.
-f as {}; // OK
+f satisfies {}; // OK
 
 // Exact target with required props the function does not have: must still
 // error -- the relaxation only suppresses the exact/inexact mismatch, not
 // missing-prop checks.
-f as {x: number}; // ERROR: missing `x` on function
+f satisfies {x: number}; // ERROR: missing `x` on function
 
 // Indexed target: still an error in .ts -- the relaxation does not cover
 // indexed signatures.
-f as {[k: string]: number}; // ERROR: function vs indexed object
+f satisfies {[k: string]: number}; // ERROR: function vs indexed object

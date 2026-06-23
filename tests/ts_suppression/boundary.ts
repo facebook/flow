@@ -2,10 +2,10 @@
 // They must NOT suppress and must NOT produce EUnusedSuppression.
 
 // @ts-ignoree
-3 as string; // ERROR: not suppressed
+3 satisfies string; // ERROR: not suppressed
 
 // @ts-expect-error-foo
-3 as string; // ERROR: not suppressed
+3 satisfies string; // ERROR: not suppressed
 
 // @ts-ignorebar
-3 as string; // ERROR: not suppressed
+3 satisfies string; // ERROR: not suppressed

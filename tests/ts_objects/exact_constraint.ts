@@ -17,7 +17,7 @@ declare const rgb: RGB;
 // `c`. The constraint `{a: number}` is checked as an exact-object upper.
 // In .js this would error with "incompatible-exact"; in .ts it is
 // accepted because the upper-side Exact extra-prop check is skipped.
-rgb as Constrained<RGB>; // OK
+rgb satisfies Constrained<RGB>; // OK
 
 // Negative: missing the required `a` is still an error -- only the
 // extra-prop direction is relaxed.
@@ -25,4 +25,4 @@ interface NoA {
   b: number;
 }
 declare const noA: NoA;
-noA as Constrained<NoA>; // ERROR: `a` missing in NoA
+noA satisfies Constrained<NoA>; // ERROR: `a` missing in NoA
