@@ -87,6 +87,18 @@ const props = {name: 'Alice'};
 
 The default value for `ban_spread_key_props` is `false`.
 
+### component_syntax {#toc-component-syntax}
+
+Type: `boolean`
+
+Enables Flow's [Component Syntax](../react/component-syntax.md) and
+[Hook Syntax](../react/hook-syntax.md), the dedicated `component` and `hook`
+primitives for writing React components and hooks. Enabling this option also
+turns on Flow's React rules, which catch misuses of components and hooks.
+Setting it to `false` disables both the syntax and those rules.
+
+The default value for `component_syntax` is `true`.
+
 ### emoji {#toc-emoji}
 
 Type: `boolean`
@@ -100,31 +112,12 @@ The default value for `emoji` is `false`.
 
 Type: `boolean`
 
-Set this to `true` to enable [Flow Enums](../enums/index.md).
-[Additional setup steps](../enums/index.md#toc-enabling-enums) are required beyond just
-enabling the `.flowconfig` option.
+Enables [Flow Enums](../enums/index.md). When enabled, Flow understands `enum`
+declarations. [Additional setup steps](../enums/index.md#toc-enabling-enums) are
+required beyond just this `.flowconfig` option (a Babel transform and a runtime
+package). Set this to `false` to disable enum support.
 
-The default value for `enums` is `false`.
-
-### exact_by_default {#toc-exact-by-default}
-
-Type: `boolean`
-
-When set to `true` (the default), Flow interprets object types as exact by default:
-
-```js flow-check
-type O1 = {foo: number}; // exact
-type O2 = {|foo: number|}; // exact
-type O3 = {foo: number, ...}; // inexact
-```
-
-When this flag is `false`, Flow has the following behavior:
-
-```js flow-check
-type O1 = {foo: number}; // inexact
-type O2 = {|foo: number|}; // exact
-type O3 = {foo: number, ...}; // inexact
-```
+The default value for `enums` is `true`.
 
 ### experimental.const_params {#toc-experimental-const-params}
 
@@ -467,6 +460,20 @@ by Meta.
 
 The default is `node`.
 
+### module.system.node.allow_root_relative {#toc-module-system-node-allow-root-relative}
+
+Type: `boolean`
+
+Set this to `true` to let Flow resolve imports relative to the project root, so
+`require('foo/bar.js')` is resolved starting from the root directory. This
+matches the behavior of bundlers like Webpack that can be configured to resolve
+modules from the root.
+
+Use `module.system.node.root_relative_dirname` to control which directories
+under the root are searched. By default the root itself is used.
+
+The default value for `module.system.node.allow_root_relative` is `false`.
+
 ### module.system.node.main_field {#toc-module-system-node-main-field}
 
 Type: `string`
@@ -500,6 +507,28 @@ If this option is unspecified, Flow will always use the `"main"` field.
 
 See
 [this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
+
+### module.system.node.package_export_condition {#toc-module-system-node-package-export-condition}
+
+Type: `string`
+
+Specify an export condition that Flow uses when resolving the
+[`"exports"` field](https://nodejs.org/api/packages.html#conditional-exports) of
+a `package.json`. Conditional exports let a package map the same module specifier
+to different files depending on the active conditions (for example `import`,
+`require`, `node`, or `default`).
+
+For example, if you do:
+
+```
+[options]
+module.system.node.package_export_condition=import
+module.system.node.package_export_condition=node
+```
+
+Then Flow resolves `"exports"` entries using the `import` and `node` conditions.
+
+> **Note:** you can specify `module.system.node.package_export_condition` multiple times.
 
 ### module.system.node.resolve_dirname {#toc-module-system-node-resolve-dirname}
 
@@ -652,6 +681,16 @@ The default value for `no_unchecked_indexed_access` is `false`.
 :::info TypeScript comparison
 TypeScript's `noUncheckedIndexedAccess` and Flow's `no_unchecked_indexed_access` are direct equivalents. See [Config options aligned with TypeScript](../flow-vs-typescript.md#toc-shared-options) for the full comparison.
 :::
+
+### pattern_matching {#toc-pattern-matching}
+
+Type: `boolean`
+
+Enables Flow's [`match` expressions and statements](../match/index.md), which
+match an input value against a series of patterns to conditionally check its
+structure and extract values. Set this to `false` to disable `match` support.
+
+The default value for `pattern_matching` is `true`.
 
 ### react.custom_jsx_typing {#toc-react-custom-jsx-typing}
 
@@ -838,6 +877,20 @@ relay_integration.excludes=<PROJECT_ROOT>/dirA
 relay_integration.excludes=<PROJECT_ROOT>/dirB
 ```
 
+### unsuppressable_error_codes {#toc-unsuppressable-error-codes}
+
+Type: `string`
+
+Specify an [error code](../errors/index.md) that cannot be silenced with a suppression
+comment (such as `$FlowFixMe`). Errors with these codes are always reported,
+even when a suppression comment would otherwise apply. This is useful for
+enforcing that certain classes of errors are never ignored. See
+[Unsuppressable Errors](../errors/index.md#toc-unsuppressable-errors) for an example.
+
+> **Note:** you can specify `unsuppressable_error_codes` multiple times.
+
+By default, no error codes are unsuppressable.
+
 ### use_unknown_in_catch_variables {#toc-use-unknown-in-catch-variables}
 
 Type: `boolean`
@@ -856,3 +909,59 @@ in the above example, if the option is `true`, `catch` will be typed as
 :::info TypeScript comparison
 TypeScript's `useUnknownInCatchVariables` and Flow's `use_unknown_in_catch_variables` are direct equivalents. See [Config options aligned with TypeScript](../flow-vs-typescript.md#toc-shared-options) for the full comparison.
 :::
+
+## Deprecated and removed options {#toc-deprecated-and-removed-options}
+
+:::warning
+If your `.flowconfig` still sets any of the options below, remove or update
+those settings. They are deprecated or no longer supported, and some now cause
+Flow to error on startup.
+:::
+
+The following `[options]` settings are listed here so existing `.flowconfig`
+files can be migrated. Each entry notes the Flow version in which it changed.
+
+### exact_by_default {#toc-exact-by-default}
+
+Type: `boolean`
+
+Objects are exact by default, which is now the only supported behavior:
+
+```js flow-check
+type O1 = {foo: number}; // exact
+type O2 = {| foo: number |}; // exact (explicit syntax)
+type O3 = {foo: number, ...}; // inexact (explicit `...`)
+```
+
+`exact_by_default=true` has been the default since 2023. Setting
+`exact_by_default=false` (which made object types inexact unless written with the
+explicit exact `{| |}` syntax) was **deprecated in Flow 0.314.0** and is now
+rejected. Delete the option from your `.flowconfig` when migrating. See the
+[objects documentation](../types/objects.md) for more.
+
+### casting_syntax {#toc-casting-syntax}
+
+Type: `as | colon | both`
+
+**Removed in Flow 0.319.0.** The [`as` casting syntax](../types/casting.md) is
+now the only supported casting syntax, so this option no longer has any effect
+(the `colon` value, for the legacy `(x: T)` syntax, was removed earlier in Flow
+0.281.0). See [Modernizing legacy syntax](../modernizing-legacy-syntax.md) for
+migration guidance.
+
+### suppress_type {#toc-suppress-type}
+
+Type: `string`
+
+**Removed in Flow 0.280.0.** The supported suppression comments are now fixed
+(`$FlowFixMe` and `$FlowExpectedError`, each with an error code); custom
+suppression identifiers are no longer configurable. See
+[error suppressions](../errors/index.md) for the current syntax.
+
+### max_literal_length {#toc-max-literal-length}
+
+Type: `unsigned integer`
+
+**Removed in Flow 0.288.0.** Flow now decides whether to infer a precise or
+general type for a string literal using its natural inference algorithm, so this
+length threshold no longer applies.

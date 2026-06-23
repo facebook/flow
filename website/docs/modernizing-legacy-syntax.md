@@ -77,3 +77,4 @@ A few `$`-prefixed types remain first-class Flow utilities — the `$` is just p
 - [Mapped Types](./types/mapped-types.md) — the modern replacement for `$ObjMap` / `$TupleMap` and friends.
 - [Type Casting](./types/casting.md) — the `as` cast syntax that replaces `(x: T)`.
 - [Indexed Access Types](./types/indexed-access.md) — the `T[K]` form that replaces `$PropertyType` / `$ElementType`.
+- [Deprecated and removed `.flowconfig` options](./config/options.md#toc-deprecated-and-removed-options) — the `[options]` side of these migrations, including `casting_syntax` and `exact_by_default`, with the version each changed in.
