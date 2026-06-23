@@ -1412,6 +1412,7 @@ dependencies = [
  "filedescriptor",
  "flow_common",
  "flow_common_exit_status",
+ "flow_common_semver",
  "flow_common_socket",
  "flow_common_vcs",
  "flow_daemon",
@@ -1433,7 +1434,6 @@ dependencies = [
  "libc",
  "lsp-types",
  "nix",
- "semver",
  "serde",
  "serde_json",
  "signal-hook",
@@ -3136,10 +3136,6 @@ name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
-dependencies = [
- "serde",
- "serde_core",
-]
 
 [[package]]
 name = "serde"

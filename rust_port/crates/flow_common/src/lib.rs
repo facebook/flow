@@ -9,6 +9,7 @@
 
 pub mod alpha_rename;
 pub mod bitset;
+pub mod build_id;
 pub mod cli_overrides;
 pub mod docblock;
 pub mod enclosing_context;

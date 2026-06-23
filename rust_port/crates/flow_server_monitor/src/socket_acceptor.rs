@@ -434,17 +434,17 @@ fn perform_handshake_and_get_client_handshake(
                 );
             }
             VersionMismatchStrategy::StopServerIfOlder => {
-                let cmp: std::cmp::Ordering = match (
-                    semver::Version::parse(flow_common::flow_version::version()),
-                    semver::Version::parse(&client_version),
-                ) {
-                    (Ok(server_v), Ok(client_v)) => Ord::cmp(&server_v, &client_v),
-                    _ => Ord::cmp(
+                let cmp = flow_common_semver::semver::compare(
+                    flow_common::flow_version::version(),
+                    client_version.as_str(),
+                )
+                .unwrap_or_else(|_| {
+                    Ord::cmp(
                         flow_common::flow_version::version(),
                         client_version.as_str(),
-                    ),
-                };
-                if cmp < std::cmp::Ordering::Equal {
+                    ) as i64
+                });
+                if cmp < 0 {
                     respond(client_stream, ServerIntent::ServerWillExit, None);
                     let msg = "Client and server are different builds. Flow server is out of date. Exiting";
                     flow_hh_logger::error!("{}", msg);

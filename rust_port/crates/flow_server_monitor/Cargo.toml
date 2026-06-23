@@ -15,6 +15,7 @@ crossbeam = "0.8"
 dupe = "0.9.1"
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
+flow_common_semver = { path = "../flow_common_semver" }
 flow_common_socket = { path = "../flow_common_socket" }
 flow_common_vcs = { path = "../flow_common_vcs" }
 flow_daemon = { path = "../flow_daemon" }
@@ -36,7 +37,6 @@ futures = { version = "0.3.31", features = ["async-await", "compat"] }
 libc = "0.2.186"
 lsp-types = "0.97"
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
-semver = { version = "1.0.28", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 signal-hook = "0.3.18"
