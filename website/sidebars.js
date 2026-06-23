@@ -155,6 +155,7 @@ module.exports = {
       items: [
         'editors/index',
         'tools/babel',
+        'tools/swc',
         'tools/prettier',
         'tools/eslint',
         'tools/flow-remove-types',
