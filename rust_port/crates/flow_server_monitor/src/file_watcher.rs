@@ -1253,7 +1253,6 @@ pub mod edenfs_file_watcher {
                 throttle_time_ms: *edenfs_throttle_time_ms as isize,
                 report_telemetry: true,
                 state_tracking: true,
-                sync_queries_obey_deferral: false,
                 defer_states: edenfs_defer_states.clone(),
                 max_commit_distance: *edenfs_max_commit_distance as isize,
                 mergebase_with: self.mergebase_with.clone(),

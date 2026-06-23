@@ -9,9 +9,8 @@
 // In fbcode builds the public API is provided by
 // `flow_facebook_edenfs_watcher`, which re-exports the underlying
 // `rust_edenfs_watcher` types. `rust_edenfs_watcher` is cross-platform:
-// its OCaml-FFI surface is cfg-gated to Linux internally, and its
-// notification mechanism uses `filedescriptor::socketpair` + `poll` (which
-// works on Linux, macOS, and Windows via `WSAPoll`). Only OSS builds
+// its notification mechanism uses `filedescriptor::socketpair` + `poll`
+// (which works on Linux, macOS, and Windows via `WSAPoll`). Only OSS builds
 // (where `crates/facebook/` is stripped by ShipIt) fall back to the
 // in-file stub whose `is_available()` returns `false`.
 
@@ -28,15 +27,9 @@ pub use flow_facebook_edenfs_watcher::EdenfsWatcherError;
 #[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Instance;
 #[cfg(fbcode_build)]
-pub use flow_facebook_edenfs_watcher::InstanceGetAllFilesTelemetry;
-#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::InstanceGetChangesAsyncTelemetry;
 #[cfg(fbcode_build)]
-pub use flow_facebook_edenfs_watcher::InstanceGetChangesSyncTelemetry;
-#[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::Settings;
-#[cfg(fbcode_build)]
-pub use flow_facebook_edenfs_watcher::StandaloneGetChangesSinceTelemetry;
 #[cfg(fbcode_build)]
 pub use flow_facebook_edenfs_watcher::TranslationTelemetry;
 #[cfg(fbcode_build)]
@@ -89,31 +82,9 @@ mod stub {
         pub aggregated_apply_incoming_changes_telemetry: ApplyIncomingChangesTelemetry,
     }
 
-    pub struct InstanceGetChangesSyncTelemetry {
-        pub duration: isize,
-        pub eden_get_changes_since_duration: isize,
-        pub async_telemetry: AsyncTelemetry,
-        pub worker_reset_duration: isize,
-        pub translation_telemetry: Option<TranslationTelemetry>,
-        pub apply_incoming_changes_telemetry: ApplyIncomingChangesTelemetry,
-    }
-
     pub struct InstanceGetChangesAsyncTelemetry {
         pub duration: isize,
         pub async_telemetry: AsyncTelemetry,
-    }
-
-    pub struct InstanceGetAllFilesTelemetry {
-        pub duration: isize,
-        pub eden_glob_files_duration: isize,
-        pub post_processing_duration: isize,
-    }
-
-    pub struct StandaloneGetChangesSinceTelemetry {
-        pub duration: isize,
-        pub setup_duration: isize,
-        pub eden_get_changes_since_duration: isize,
-        pub translation_telemetry: Option<TranslationTelemetry>,
     }
 
     pub struct WatchSpec {
@@ -131,7 +102,6 @@ mod stub {
         pub throttle_time_ms: isize,
         pub report_telemetry: bool,
         pub state_tracking: bool,
-        pub sync_queries_obey_deferral: bool,
         pub defer_states: Vec<String>,
         pub max_commit_distance: isize,
         pub mergebase_with: String,
@@ -226,15 +196,9 @@ pub use stub::EdenfsWatcherError;
 #[cfg(not(fbcode_build))]
 pub use stub::Instance;
 #[cfg(not(fbcode_build))]
-pub use stub::InstanceGetAllFilesTelemetry;
-#[cfg(not(fbcode_build))]
 pub use stub::InstanceGetChangesAsyncTelemetry;
 #[cfg(not(fbcode_build))]
-pub use stub::InstanceGetChangesSyncTelemetry;
-#[cfg(not(fbcode_build))]
 pub use stub::Settings;
-#[cfg(not(fbcode_build))]
-pub use stub::StandaloneGetChangesSinceTelemetry;
 #[cfg(not(fbcode_build))]
 pub use stub::TranslationTelemetry;
 #[cfg(not(fbcode_build))]
