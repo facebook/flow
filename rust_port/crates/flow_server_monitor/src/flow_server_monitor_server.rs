@@ -76,6 +76,19 @@ pub fn exit(
     }
     flow_hh_logger::info!("Monitor is exiting code {:?} ({})", exit_status, msg);
 
+    // Destroy the EdenFS watcher instance before broadcasting to threads.
+    // This must happen synchronously, before Lwt_unix.sleep yields to the event loop,
+    // to ensure the EdenFsInstance (and its Thrift client backed by Folly's
+    // IOThreadPoolExecutor) is fully dropped before Stdlib.exit triggers Folly's
+    // atexit handlers. Otherwise, the atexit handlers may abort() due to EBADF
+    // when Folly's IO threads are still blocked on epoll_wait.
+    {
+        let hooks = flow_edenfs_watcher::hooks_upon_clean_exit()
+            .lock()
+            .expect("edenfs hooks mutex poisoned");
+        hooks.iter().for_each(|hook| hook());
+    }
+
     flow_hh_logger::info!("Broadcasting to threads and waiting 1 second for them to exit");
     crate::exit_signal::SIGNAL.broadcast(exit_status, msg.to_string());
     signal_exit_to_loops();
