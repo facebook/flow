@@ -9,7 +9,6 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
-use dupe::Dupe;
 use flow_common::options::SavedStateFetcher;
 use flow_common::verbose::Verbose;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -17,12 +16,8 @@ use flow_common_errors::error_utils::PrintableError;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_errors::error_utils::json_output;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
-use flow_services_inference::type_service;
-use flow_utils_concurrency::thread_pool::ThreadCount;
-use flow_utils_concurrency::thread_pool::ThreadPool;
 
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -37,19 +32,20 @@ enum Printer<'a> {
 }
 
 // helper - print errors. used in check-and-die runs
-fn format_errors<'a>(
-    printer: &'a Printer<'a>,
+fn format_errors(
+    printer: &Printer<'_>,
     client_include_warnings: bool,
     offset_kind: flow_parser::offset_utils::OffsetKind,
-    options: &'a flow_common::options::Options,
+    options: &flow_common::options::Options,
     (errors, warnings, suppressed_errors): (
-        &'a ConcreteLocPrintableErrorSet,
-        &'a ConcreteLocPrintableErrorSet,
-        &'a [(PrintableError<Loc>, BTreeSet<Loc>)],
+        &ConcreteLocPrintableErrorSet,
+        &ConcreteLocPrintableErrorSet,
+        &[(PrintableError<Loc>, BTreeSet<Loc>)],
     ),
     lazy_msg: Option<String>,
-) -> Box<dyn FnOnce(Option<serde_json::Value>) + 'a> {
+) -> Box<dyn FnOnce(Option<serde_json::Value>)> {
     let include_warnings = client_include_warnings || options.include_warnings;
+    let should_include_profile = options.profile;
     let empty = ConcreteLocPrintableErrorSet::empty();
     let warnings = if include_warnings { warnings } else { &empty };
     let strip_root = if options.strip_root {
@@ -65,7 +61,7 @@ fn format_errors<'a>(
     // We use this trick in order to actually profile this work. So, the
     // annotation on the `print_errors` binding below serves to ensure that the
     // error functions are applied enough that this expensive work happens.
-    let print_errors: Box<dyn FnOnce(Option<serde_json::Value>) + 'a> = match printer {
+    let print_errors: Box<dyn FnOnce(Option<serde_json::Value>)> = match printer {
         Printer::Json { pretty, version } => {
             let strip_root = strip_root.map(|path| path.to_string_lossy().into_owned());
             let pretty = *pretty;
@@ -128,7 +124,7 @@ fn format_errors<'a>(
     };
 
     Box::new(move |profiling| {
-        if options.profile {
+        if should_include_profile {
             print_errors(profiling)
         } else {
             print_errors(None)
@@ -182,7 +178,7 @@ fn check_main(
     // code actions). Foreground check commands never serve those requests, so
     // skip building the export index to save time and memory.
     Arc::make_mut(&mut options).autoimports = false;
-    let _init_id = flow_common_utils::random_id::short_string();
+    let init_id = flow_common_utils::random_id::short_string();
     let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
@@ -211,49 +207,31 @@ fn check_main(
     } else {
         Printer::Cli(&error_flags)
     };
-    let shared_mem = Arc::new(SharedMem::new());
-    let pool = ThreadPool::with_thread_count(ThreadCount::NumThreads(
-        std::num::NonZeroUsize::new(options.max_workers as usize)
-            .expect("max_workers should be positive"),
-    ));
-    let profiling = flow_profiling::profiling_js::Running::new("Init");
-    let (errors, warnings, suppressed_errors, lazy_msg) =
-        flow_profiling::profiling_js::with_current(&profiling, || {
-            flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
-                let result = type_service::check_once(
-                    options.dupe(),
-                    &pool,
-                    &shared_mem,
-                    root.as_path(),
-                    None,
-                );
-                flow_profiling::memory_utils::sample_init_memory(&profiling);
-                result
-            })
-        });
-    let format_errors = flow_profiling::profiling_js::with_current(&profiling, || {
-        profiling.with_timer(false, "FormatErrors", || {
-            format_errors(
+
+    let (errors, warnings) = flow_server::server::check_once(
+        &init_id,
+        options.clone(),
+        |(errors, warnings, suppressed_errors, lazy_msg)| {
+            let should_include_profile = options.profile;
+            let print_errors = format_errors(
                 &printer,
                 client_include_warnings,
                 offset_kind,
                 &options,
-                (&errors, &warnings, &suppressed_errors),
+                (errors, warnings, &suppressed_errors),
                 lazy_msg,
-            )
-        })
-    });
-    let finished_profile = profiling.finish();
-    let should_print_summary = options.profile && !options.quiet;
-    if should_print_summary {
-        flow_profiling::profiling_js::print_summary(&finished_profile);
-    }
-    let profiling_props = if options.profile {
-        Some(finished_profile.to_json_properties())
-    } else {
-        None
-    };
-    format_errors(profiling_props);
+            );
+            Box::new(move |profiling| {
+                let profiling_props = if should_include_profile {
+                    Some(profiling.to_json_properties())
+                } else {
+                    None
+                };
+                print_errors(profiling_props);
+            })
+        },
+        None,
+    );
     flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
         &errors,
         &warnings,
@@ -404,7 +382,7 @@ mod focus_check_command {
             };
             Arc::make_mut(&mut options).verbose = Some(opt_verbose);
         }
-        let _init_id = flow_common_utils::random_id::short_string();
+        let init_id = flow_common_utils::random_id::short_string();
         let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
         // initialize loggers before doing too much, especially anything that might exit
         flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
@@ -447,50 +425,31 @@ mod focus_check_command {
         } else {
             Printer::Cli(&error_flags)
         };
-        let shared_mem = Arc::new(SharedMem::new());
-        let pool = ThreadPool::with_thread_count(ThreadCount::NumThreads(
-            std::num::NonZeroUsize::new(options.max_workers as usize)
-                .expect("max_workers should be positive"),
-        ));
-        let profiling = flow_profiling::profiling_js::Running::new("Init");
-        let (errors, warnings, suppressed_errors, lazy_msg) =
-            flow_profiling::profiling_js::with_current(&profiling, || {
-                flow_profiling::memory_utils::with_shared_mem(shared_mem.dupe(), || {
-                    let result = type_service::check_once(
-                        options.dupe(),
-                        &pool,
-                        &shared_mem,
-                        root.as_path(),
-                        Some(focus_targets),
-                    );
-                    flow_profiling::memory_utils::sample_init_memory(&profiling);
-                    result
-                })
-            });
-        let format_errors = flow_profiling::profiling_js::with_current(&profiling, || {
-            profiling.with_timer(false, "FormatErrors", || {
-                format_errors(
+
+        let (errors, warnings) = flow_server::server::check_once(
+            &init_id,
+            options.clone(),
+            |(errors, warnings, suppressed_errors, lazy_msg)| {
+                let should_include_profile = options.profile;
+                let print_errors = format_errors(
                     &printer,
                     client_include_warnings,
                     offset_kind,
                     &options,
-                    (&errors, &warnings, &suppressed_errors),
-                    // ~lazy_msg
+                    (errors, warnings, &suppressed_errors),
                     lazy_msg,
-                )
-            })
-        });
-        let finished_profile = profiling.finish();
-        let should_print_summary = options.profile && !options.quiet;
-        if should_print_summary {
-            flow_profiling::profiling_js::print_summary(&finished_profile);
-        }
-        let profiling_props = if options.profile {
-            Some(finished_profile.to_json_properties())
-        } else {
-            None
-        };
-        format_errors(profiling_props);
+                );
+                Box::new(move |profiling| {
+                    let profiling_props = if should_include_profile {
+                        Some(profiling.to_json_properties())
+                    } else {
+                        None
+                    };
+                    print_errors(profiling_props);
+                })
+            },
+            Some(focus_targets),
+        );
         flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
             &errors,
             &warnings,

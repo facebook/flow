@@ -25,6 +25,7 @@ flow_heap = { path = "../flow_heap" }
 flow_hh_logger = { path = "../flow_hh_logger" }
 flow_logging_utils = { path = "../flow_logging_utils" }
 flow_parser = { path = "../flow_parser" }
+flow_profiling = { path = "../flow_profiling" }
 flow_saved_state = { path = "../flow_saved_state" }
 flow_server_command_handler = { path = "../flow_server_command_handler" }
 flow_server_env = { path = "../flow_server_env" }

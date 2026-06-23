@@ -894,6 +894,7 @@ pub(super) fn read_config_or_exit(flowconfig_path: &str, enforce_warnings: bool)
                 flowconfig_multi_error(&[(line, message)]);
             }
         };
+    flow_event_logger::set_root_name(flowconfig.options.root_name.clone());
     if warnings.is_empty() {
         flowconfig
     } else {
@@ -921,6 +922,7 @@ pub(super) fn read_config_and_hash_or_exit(
                 flowconfig_multi_error(&[(line, message)]);
             }
         };
+    flow_event_logger::set_root_name(flowconfig.options.root_name.clone());
     if warnings.is_empty() {
         return (flowconfig, flowconfig_hash);
     }

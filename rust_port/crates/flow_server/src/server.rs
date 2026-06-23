@@ -23,6 +23,7 @@ use flow_parser::ast::Program;
 use flow_parser::file_key;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use flow_profiling::profiling_js;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -55,60 +56,28 @@ pub type CheckOnceCollatedErrors<'a> = (
 );
 pub type CheckOncePrintErrors<'a> = Box<dyn FnOnce(&ProfilingFinished) + 'a>;
 
-struct ProfilingRunning {
-    start: std::time::Instant,
-}
-
-pub struct ProfilingFinished {
-    duration: f64,
-}
-
-impl ProfilingRunning {
-    fn new() -> Self {
-        ProfilingRunning {
-            start: std::time::Instant::now(),
-        }
-    }
-
-    fn legacy_sample_memory(&self, _metric: &str, _value: f64) {}
-
-    fn sample_memory(&self, _metric: &str, _value: f64) {}
-
-    fn with_timer<F, R>(&self, _timer: &str, f: F) -> R
-    where
-        F: FnOnce() -> R,
-    {
-        f()
-    }
-
-    fn finish(self) -> ProfilingFinished {
-        ProfilingFinished {
-            duration: self.start.elapsed().as_secs_f64(),
-        }
-    }
-}
-
-impl ProfilingFinished {
-    pub fn get_profiling_duration(&self) -> f64 {
-        self.duration
-    }
-}
+type ProfilingRunning = profiling_js::Running;
+pub type ProfilingFinished = profiling_js::Finished;
 
 fn with_profiling<F, R>(label: &str, should_print_summary: bool, f: F) -> (ProfilingFinished, R)
 where
     F: FnOnce(&ProfilingRunning) -> R,
 {
-    let running = ProfilingRunning::new();
-    let ret = f(&running);
-    let finished = running.finish();
-    if should_print_summary {
-        flow_hh_logger::info!(
-            "{}: wall duration {:.3}s",
-            label,
-            finished.get_profiling_duration()
+    profiling_js::with_profiling_sync(label, should_print_summary, f)
+}
+
+fn profiling_to_event_logger_json(profiling: &ProfilingFinished) -> serde_json::Value {
+    let mut profiling_props = profiling.to_json_properties();
+    if let Some(timing) = profiling_props
+        .get_mut("timing")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        timing.insert(
+            "total_wall_duration".to_string(),
+            serde_json::json!(profiling.get_profiling_duration()),
         );
     }
-    (finished, ret)
+    profiling_props
 }
 
 fn sample_init_memory(
@@ -216,12 +185,15 @@ fn init(
 
     extract_flowlibs_or_exit(options);
 
-    let (env, first_internal_error) = flow_services_inference::type_service::init(
-        options,
-        workers,
-        &genv.shared_mem,
-        focus_targets,
-    )?;
+    let (env, first_internal_error) =
+        flow_profiling::memory_utils::with_shared_mem(Arc::clone(&genv.shared_mem), || {
+            flow_services_inference::type_service::init(
+                options,
+                workers,
+                &genv.shared_mem,
+                focus_targets,
+            )
+        })?;
 
     sample_init_memory(profiling, &genv.shared_mem);
     flow_event_logger::sharedmem_init_done(genv.shared_mem.heap_size() as u64);
@@ -245,18 +217,18 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
                 file,
                 shmem,
             }) => {
-                profiling.sample_memory("cgroup_total", total as f64);
-                profiling.sample_memory("cgroup_swap", total_swap as f64);
-                profiling.sample_memory("cgroup_anon", anon as f64);
-                profiling.sample_memory("cgroup_shmem", shmem as f64);
-                profiling.sample_memory("cgroup_file", file as f64);
+                profiling.sample_memory(None, "cgroup_total", total as f64);
+                profiling.sample_memory(None, "cgroup_swap", total_swap as f64);
+                profiling.sample_memory(None, "cgroup_anon", anon as f64);
+                profiling.sample_memory(None, "cgroup_shmem", shmem as f64);
+                profiling.sample_memory(None, "cgroup_file", file as f64);
             }
         }
     }
 
-    let should_print_summary = _options.profile;
+    let should_print_summary = _options.profile && !_options.quiet;
     loop {
-        let profiling = ProfilingRunning::new();
+        let profiling = ProfilingRunning::new("Idle");
         tokio::select! {
             _ = async {
                 loop {
@@ -268,10 +240,7 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
 
         let profiling = profiling.finish();
         if should_print_summary {
-            flow_hh_logger::info!(
-                "Idle: wall duration {:.3}s",
-                profiling.get_profiling_duration()
-            );
+            profiling_js::print_summary(&profiling);
         }
 
         let idle_time = std::time::SystemTime::now()
@@ -279,7 +248,8 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
             .unwrap_or_default()
             .as_secs_f64()
             - _start_time;
-        flow_event_logger::idle_heartbeat(idle_time, &serde_json::Value::Null);
+        let profiling_props = profiling.to_json_properties();
+        flow_event_logger::idle_heartbeat(idle_time, &profiling_props);
         flow_tokio_runtime::spawn(async {
             if let Err(err) = flow_event_logger_lwt::flush().await {
                 flow_hh_logger::error!("Failed to flush Flow event logs: {}", err);
@@ -516,7 +486,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Initializing Server (This might take some time)");
 
-    let should_print_summary = _options.profile;
+    let should_print_summary = _options.profile && !_options.quiet;
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         init(profiling, None, &genv_arc)
     });
@@ -536,11 +506,12 @@ fn run(
     let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
     let init_trigger = string_of_init_trigger(start_cause);
 
+    let profiling_props = profiling_to_event_logger_json(&profiling);
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
         init_trigger,
         saved_state_fetcher,
-        &serde_json::json!({ "duration": init_duration }),
+        &profiling_props,
     );
 
     flow_hh_logger::info!("Server is READY");
@@ -634,7 +605,7 @@ where
     flow_logging_utils::set_server_options(&options);
 
     let genv = create_program_init(init_id, Arc::clone(&options));
-    let should_print_summary = options.profile;
+    let should_print_summary = options.profile && !options.quiet;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         let (env, first_internal_error) = init(profiling, focus_targets, &genv)?;
@@ -655,7 +626,7 @@ where
             None
         };
 
-        let print_errors = profiling.with_timer("FormatErrors", || {
+        let print_errors = profiling.with_timer(false, "FormatErrors", || {
             let shared_mem = &genv.shared_mem;
             let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
             let get_ast =
@@ -702,11 +673,12 @@ where
     // `check_once` backs `flow full-check`; it's always invoked by the user.
     let init_trigger = string_of_init_trigger(server_status::StartCause::UserInitiated);
 
+    let profiling_props = profiling_to_event_logger_json(&profiling);
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
         init_trigger,
         saved_state_fetcher,
-        &serde_json::json!({ "duration": profiling.get_profiling_duration() }),
+        &profiling_props,
     );
 
     (errors, warnings)
