@@ -29,6 +29,8 @@ use flow_type_sig::packed_type_sig::Module as TypeSigModule;
 use flow_type_sig::signature_error::TolerableError;
 
 use crate::entity::Dependency;
+use crate::entity::DependencyTarget;
+use crate::entity::ResolvedModule;
 use crate::entity::ResolvedRequires;
 use crate::haste_module::HasteModule;
 use crate::parse::FileEntry;
@@ -50,7 +52,7 @@ impl SharedMem {
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
         self.file_heap
             .get(file)
-            .and_then(|entry| entry.haste_info.read_latest_clone())
+            .and_then(|entry| entry.get_haste_info_latest())
     }
 
     pub fn get_haste_info_committed(&self, file: &FileKey) -> Option<HasteModuleInfo> {
@@ -76,40 +78,70 @@ impl SharedMem {
         match modulename {
             Modulename::Haste(haste_module_info) => self
                 .get_haste_module(haste_module_info)
-                .map(|_| Dependency::HasteModule(modulename.clone())),
-            Modulename::Filename(file_key) => self
-                .file_heap
-                .get(file_key)
-                .map(|_| Dependency::File(file_key.clone())),
+                .map(|module| module.dependency()),
+            Modulename::Filename(file_key) => {
+                self.file_heap.get(file_key).map(|entry| entry.dependency())
+            }
         }
     }
 
     pub fn get_dependency_unsafe(&self, modulename: &Modulename) -> Dependency {
         match modulename {
-            Modulename::Haste(haste_module_info) => {
-                if self.get_haste_module(haste_module_info).is_some() {
-                    Dependency::HasteModule(modulename.clone())
-                } else {
-                    panic!("Haste module not found: {:?}", haste_module_info)
-                }
+            Modulename::Haste(haste_module_info) => self
+                .get_haste_module(haste_module_info)
+                .map(|module| module.dependency())
+                .unwrap_or_else(|| panic!("Haste module not found: {:?}", haste_module_info)),
+            Modulename::Filename(file_key) => self
+                .file_heap
+                .get(file_key)
+                .map(|entry| entry.dependency())
+                .unwrap_or_else(|| panic!("File not found: {}", file_key.as_str())),
+        }
+    }
+
+    pub fn intern_dependency(&self, dependency: Dependency) -> Dependency {
+        self.intern_dependency_target(dependency.target_dupe())
+    }
+
+    pub fn intern_dependency_from_modulename(&self, modulename: Modulename) -> Dependency {
+        self.intern_dependency_target(match modulename {
+            Modulename::Haste(info) => DependencyTarget::HasteModule(info),
+            Modulename::Filename(file_key) => DependencyTarget::File(file_key),
+        })
+    }
+
+    pub fn intern_resolved_module(&self, module: ResolvedModule) -> ResolvedModule {
+        if let Some(dependency) = module.as_dependency() {
+            self.resolved_module_for_dependency(&dependency)
+        } else {
+            module
+        }
+    }
+
+    pub fn resolved_module_for_dependency(&self, dependency: &Dependency) -> ResolvedModule {
+        ResolvedModule::dependency(self.intern_dependency(dependency.dupe()))
+    }
+
+    pub(crate) fn intern_dependency_target(&self, target: DependencyTarget) -> Dependency {
+        match target {
+            DependencyTarget::HasteModule(haste_info) => {
+                self.get_or_create_haste_module(haste_info).dependency()
             }
-            Modulename::Filename(file_key) => {
-                if self.file_heap.get(file_key).is_some() {
-                    Dependency::File(file_key.clone())
-                } else {
-                    panic!("File not found: {}", file_key.as_str())
-                }
+            DependencyTarget::File(file_key) => {
+                let (entry, _) = self.file_heap.ensure(&file_key, || {
+                    FileEntry::new_phantom(file_key.dupe(), self.entity_transaction.dupe())
+                });
+                entry.dependency()
             }
         }
     }
 
     pub fn get_provider(&self, dependency: &Dependency) -> Option<FileKey> {
-        match dependency {
-            Dependency::HasteModule(Modulename::Haste(haste_info)) => self
+        match dependency.target() {
+            DependencyTarget::HasteModule(haste_info) => self
                 .get_haste_module(haste_info)
                 .and_then(|module| module.get_provider()),
-            Dependency::HasteModule(Modulename::Filename(_)) => None,
-            Dependency::File(file_key) => {
+            DependencyTarget::File(file_key) => {
                 if let Some(file_entry) = self.file_heap.get(file_key) {
                     if let Some(alternate) = file_entry.get_alternate_file() {
                         if self.get_parse(&alternate).is_some() {
@@ -129,12 +161,11 @@ impl SharedMem {
     }
 
     pub fn get_provider_committed(&self, dependency: &Dependency) -> Option<FileKey> {
-        match dependency {
-            Dependency::HasteModule(Modulename::Haste(haste_info)) => self
+        match dependency.target() {
+            DependencyTarget::HasteModule(haste_info) => self
                 .get_haste_module(haste_info)
                 .and_then(|module| module.get_provider_committed()),
-            Dependency::HasteModule(Modulename::Filename(_)) => None,
-            Dependency::File(file_key) => {
+            DependencyTarget::File(file_key) => {
                 if let Some(file_entry) = self.file_heap.get(file_key) {
                     if let Some(alternate) = file_entry.get_alternate_file() {
                         if self.get_parse_committed(&alternate).is_some() {
@@ -518,7 +549,7 @@ impl SharedMem {
     pub fn file_has_changed(&self, file: &FileKey) -> bool {
         self.file_heap
             .get(file)
-            .is_some_and(|entry| entry.parse.has_changed())
+            .is_some_and(|entry| entry.parse_has_changed())
     }
 
     pub fn get_alternate_file(&self, file: &FileKey) -> Option<FileKey> {
@@ -589,7 +620,7 @@ impl SharedMem {
         if self.file_heap.get(&impl_key).is_none() {
             self.file_heap.insert(
                 impl_key.dupe(),
-                FileEntry::new_phantom(self.entity_transaction.dupe()),
+                FileEntry::new_phantom(impl_key.dupe(), self.entity_transaction.dupe()),
             );
         }
         self.set_alternate_file(&impl_key, file.dupe());
@@ -675,6 +706,7 @@ impl SharedMem {
             );
 
             let file_entry = FileEntry::new(
+                file.dupe(),
                 self.entity_transaction.dupe(),
                 Parse::Typed(typed_parse.dupe()),
                 haste_module_info.clone(),
@@ -739,6 +771,7 @@ impl SharedMem {
         } else {
             let untyped_parse = UntypedParse::new(file_hash);
             let file_entry = FileEntry::new(
+                file.dupe(),
                 self.entity_transaction.dupe(),
                 Parse::Untyped(untyped_parse.dupe()),
                 haste_module_info.clone(),
@@ -833,6 +866,7 @@ impl SharedMem {
         } else {
             let package_parse = PackageParse::new(file_hash, package_info);
             let file_entry = FileEntry::new(
+                file.dupe(),
                 self.entity_transaction.dupe(),
                 Parse::Package(package_parse.dupe()),
                 haste_module_info.clone(),
@@ -884,13 +918,13 @@ impl SharedMem {
 
                 let mut new_alloc_size = 0;
                 for dep in &old_deps {
-                    if !new_deps.contains(dep) {
+                    if new_deps.binary_search(dep).is_err() {
                         self.remove_dependent_from(file, dep);
                     }
                 }
 
                 for dep in &new_deps {
-                    if !old_deps.contains(dep) {
+                    if old_deps.binary_search(dep).is_err() {
                         new_alloc_size += self.add_dependent_to(file, dep);
                     }
                 }
@@ -900,14 +934,13 @@ impl SharedMem {
     }
 
     fn remove_dependent_from(&self, file: &FileKey, dep: &Dependency) {
-        match dep {
-            Dependency::HasteModule(Modulename::Haste(haste_info)) => {
+        match dep.target() {
+            DependencyTarget::HasteModule(haste_info) => {
                 if let Some(module) = self.get_haste_module(haste_info) {
                     module.remove_dependent(file);
                 }
             }
-            Dependency::HasteModule(Modulename::Filename(dep_file))
-            | Dependency::File(dep_file) => {
+            DependencyTarget::File(dep_file) => {
                 if let Some(dep_entry) = self.file_heap.get(dep_file) {
                     dep_entry.remove_dependent(file);
                 }
@@ -916,16 +949,15 @@ impl SharedMem {
     }
 
     fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) -> usize {
-        match dep {
-            Dependency::HasteModule(Modulename::Haste(haste_info)) => {
+        match dep.target() {
+            DependencyTarget::HasteModule(haste_info) => {
                 let module = self.get_or_create_haste_module(haste_info.dupe());
                 module.add_dependent(file.dupe());
                 0
             }
-            Dependency::HasteModule(Modulename::Filename(dep_file))
-            | Dependency::File(dep_file) => {
+            DependencyTarget::File(dep_file) => {
                 let (dep_entry, inserted) = self.file_heap.ensure(dep_file, || {
-                    FileEntry::new_phantom(self.entity_transaction.dupe())
+                    FileEntry::new_phantom(dep_file.dupe(), self.entity_transaction.dupe())
                 });
                 dep_entry.add_dependent(file.dupe());
                 usize::from(inserted)
@@ -1213,6 +1245,7 @@ mod tests {
             merge_hashes: Arc::new(parking_lot::RwLock::new(None)),
         };
         let entry = FileEntry::new(
+            file.dupe(),
             shared_mem.entity_transaction.dupe(),
             Parse::Typed(typed_parse),
             None,

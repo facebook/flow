@@ -1433,7 +1433,7 @@ mod haste {
         let file_options = &options.file_options;
         if file_options.multi_platform {
             if let Some(dep) = &dependency {
-                if let Dependency::HasteModule(Modulename::Haste(haste_module_info)) = dep {
+                if let Some(haste_module_info) = dep.as_haste_module_info() {
                     let module_name = haste_module_info.module_name();
                     let multi_platform_extensions = &file_options.multi_platform_extensions;
 
@@ -1442,13 +1442,11 @@ mod haste {
                         .any(|ext| module_name.ends_with(ext.as_str()));
 
                     if is_platform_specific {
-                        if let Dependency::HasteModule(mname) = dep {
-                            record_phantom_dependency(
-                                mname.clone(),
-                                dependency.clone(),
-                                phantom_acc,
-                            );
-                        }
+                        record_phantom_dependency(
+                            dep.to_modulename(),
+                            dependency.clone(),
+                            phantom_acc,
+                        );
                         return None;
                     }
                 }
@@ -1770,12 +1768,9 @@ pub fn add_parsed_resolved_requires(
                 Some(&mut phantom_acc),
                 import_specifier,
             ) {
-                Ok(dependency) => match dependency {
-                    Dependency::HasteModule(m) => ResolvedModule::HasteModule(m),
-                    Dependency::File(f) => ResolvedModule::File(f),
-                },
-                Err(None) => ResolvedModule::Null,
-                Err(Some(spec)) => ResolvedModule::String(spec),
+                Ok(dependency) => shared_mem.resolved_module_for_dependency(&dependency),
+                Err(None) => ResolvedModule::null(),
+                Err(Some(spec)) => ResolvedModule::from_result(Err(Some(spec))),
             }
         })
         .collect();
@@ -1785,7 +1780,7 @@ pub fn add_parsed_resolved_requires(
         .into_iter()
         .map(|(mname, dep_opt)| match dep_opt {
             Some(dep) => dep,
-            None => Dependency::from_modulename(mname),
+            None => shared_mem.intern_dependency_from_modulename(mname),
         })
         .collect();
 

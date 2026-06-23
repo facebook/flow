@@ -16,7 +16,6 @@ use flow_common::flow_import_specifier::Userland;
 use flow_common_modulename::ModulenameSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_heap::parsing_heaps::SharedMem;
-use flow_heap::resolved_requires::Dependency;
 use flow_heap::resolved_requires::ResolvedModule;
 use flow_parser::file_key::FileKey;
 use flow_server_env::DependencyInfo;
@@ -133,27 +132,14 @@ fn implementation_file(
     shared_mem: &SharedMem,
     resolved_module: &ResolvedModule,
 ) -> Option<FileKey> {
-    match resolved_module {
-        ResolvedModule::HasteModule(modulename) => {
-            let dependency = Dependency::HasteModule(modulename.clone());
-            if let Some(f) = shared_mem.get_provider(&dependency) {
-                if shared_mem.is_typed_file(&f) {
-                    return Some(f);
-                }
+    if let Some(dependency) = resolved_module.as_dependency() {
+        if let Some(f) = shared_mem.get_provider(&dependency) {
+            if shared_mem.is_typed_file(&f) {
+                return Some(f);
             }
-            None
         }
-        ResolvedModule::File(f) => {
-            let dependency = Dependency::File(f.dupe());
-            if let Some(f) = shared_mem.get_provider(&dependency) {
-                if shared_mem.is_typed_file(&f) {
-                    return Some(f);
-                }
-            }
-            None
-        }
-        ResolvedModule::String(_) | ResolvedModule::Null => None,
     }
+    None
 }
 
 fn file_dependencies(

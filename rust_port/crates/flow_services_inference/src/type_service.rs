@@ -2510,9 +2510,13 @@ fn restore_resolved_requires(
     resolved_modules: Vec<flow_heap::entity::ResolvedModule>,
     phantom_dependencies: Vec<Modulename>,
 ) {
+    let resolved_modules = resolved_modules
+        .into_iter()
+        .map(|module| shared_mem.intern_resolved_module(module))
+        .collect();
     let phantom_dependencies = phantom_dependencies
         .into_iter()
-        .map(flow_heap::entity::Dependency::from_modulename)
+        .map(|module| shared_mem.intern_dependency_from_modulename(module))
         .collect();
     let resolved_requires =
         flow_heap::entity::ResolvedRequires::new(resolved_modules, phantom_dependencies);

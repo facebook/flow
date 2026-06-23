@@ -16,12 +16,15 @@ use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::locked_set::LockedSet;
 use parking_lot::RwLock;
 
+use crate::entity::Dependency;
+use crate::entity::DependencyTarget;
 use crate::entity::Entity;
 use crate::entity::EntityTransaction;
 
 #[derive(Debug, Clone, Dupe)]
 pub struct HasteModule {
     module_info: Arc<HasteModuleInfo>,
+    dependency: Dependency,
     provider: Arc<Entity<FileKey>>,
     dependents: Arc<LockedSet<FileKey>>,
     all_providers: Arc<RwLock<BTreeSet<FileKey>>>,
@@ -29,7 +32,9 @@ pub struct HasteModule {
 
 impl HasteModule {
     pub(crate) fn new(transaction: EntityTransaction, module_info: HasteModuleInfo) -> Self {
+        let dependency = Dependency::new(DependencyTarget::HasteModule(module_info.dupe()));
         Self {
+            dependency,
             module_info: Arc::new(module_info),
             provider: Arc::new(Entity::empty(transaction)),
             dependents: Arc::new(LockedSet::new()),
@@ -48,7 +53,9 @@ impl HasteModule {
         for dependent in dependents {
             dependents_set.insert(dependent);
         }
+        let dependency = Dependency::new(DependencyTarget::HasteModule(module_info.dupe()));
         Self {
+            dependency,
             module_info: Arc::new(module_info),
             provider: Arc::new(match provider {
                 Some(provider) => Entity::new_committed(transaction, provider),
@@ -65,6 +72,10 @@ impl HasteModule {
 
     pub fn module_info(&self) -> &HasteModuleInfo {
         &self.module_info
+    }
+
+    pub(crate) fn dependency(&self) -> Dependency {
+        self.dependency.dupe()
     }
 
     pub fn get_provider(&self) -> Option<FileKey> {

@@ -17,6 +17,7 @@ use std::sync::atomic::Ordering;
 use dupe::Dupe;
 
 pub use crate::resolved_requires::Dependency;
+pub use crate::resolved_requires::DependencyTarget;
 pub use crate::resolved_requires::ResolvedModule;
 pub use crate::resolved_requires::ResolvedRequires;
 
@@ -47,11 +48,11 @@ impl Default for EntityTransaction {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Entity<T> {
     transaction: EntityTransaction,
-    slots: [Arc<parking_lot::RwLock<Option<T>>>; 2],
-    version: Arc<AtomicU64>,
+    slots: [parking_lot::RwLock<Option<Box<T>>>; 2],
+    version: AtomicU64,
 }
 
 impl<T> Entity<T> {
@@ -60,10 +61,10 @@ impl<T> Entity<T> {
         Self {
             transaction,
             slots: [
-                Arc::new(parking_lot::RwLock::new(Some(value))),
-                Arc::new(parking_lot::RwLock::new(None)),
+                parking_lot::RwLock::new(Some(Box::new(value))),
+                parking_lot::RwLock::new(None),
             ],
-            version: Arc::new(AtomicU64::new(version)),
+            version: AtomicU64::new(version),
         }
     }
 
@@ -72,10 +73,10 @@ impl<T> Entity<T> {
         Self {
             transaction,
             slots: [
-                Arc::new(parking_lot::RwLock::new(Some(value))),
-                Arc::new(parking_lot::RwLock::new(None)),
+                parking_lot::RwLock::new(Some(Box::new(value))),
+                parking_lot::RwLock::new(None),
             ],
-            version: Arc::new(AtomicU64::new(version)),
+            version: AtomicU64::new(version),
         }
     }
 
@@ -84,10 +85,10 @@ impl<T> Entity<T> {
         Self {
             transaction,
             slots: [
-                Arc::new(parking_lot::RwLock::new(None)),
-                Arc::new(parking_lot::RwLock::new(None)),
+                parking_lot::RwLock::new(None),
+                parking_lot::RwLock::new(None),
             ],
-            version: Arc::new(AtomicU64::new(version)),
+            version: AtomicU64::new(version),
         }
     }
 
@@ -96,10 +97,10 @@ impl<T> Entity<T> {
         Self {
             transaction,
             slots: [
-                Arc::new(parking_lot::RwLock::new(None)),
-                Arc::new(parking_lot::RwLock::new(None)),
+                parking_lot::RwLock::new(None),
+                parking_lot::RwLock::new(None),
             ],
-            version: Arc::new(AtomicU64::new(version)),
+            version: AtomicU64::new(version),
         }
     }
 
@@ -108,6 +109,7 @@ impl<T> Entity<T> {
     }
 
     pub(crate) fn advance(&self, new_value_opt: Option<T>) {
+        let new_value_opt = new_value_opt.map(Box::new);
         let next_version = self.transaction.next_version();
         let entity_version = self.version.load(Ordering::Acquire);
         let slot = if entity_version < next_version {
@@ -134,7 +136,7 @@ impl<T> Entity<T> {
             entity_version
         };
         let slot = (committed_version & 1) as usize;
-        self.slots[slot].read().as_ref().map(|v| v.dupe())
+        self.slots[slot].read().as_deref().map(|v| v.dupe())
     }
 
     pub(crate) fn read_latest(&self) -> Option<T>
@@ -142,7 +144,7 @@ impl<T> Entity<T> {
         T: Dupe,
     {
         let slot = (self.version.load(Ordering::Acquire) & 1) as usize;
-        self.slots[slot].read().as_ref().map(|v| v.dupe())
+        self.slots[slot].read().as_deref().map(|v| v.dupe())
     }
 
     pub(crate) fn read_latest_clone(&self) -> Option<T>
@@ -188,7 +190,7 @@ impl<T> Entity<T> {
         let slot = (self.version.load(Ordering::Acquire) & 1) as usize;
         self.slots[slot]
             .read()
-            .as_ref()
+            .as_deref()
             .expect("Entity new value should be set")
             .dupe()
     }

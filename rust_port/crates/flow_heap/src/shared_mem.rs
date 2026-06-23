@@ -30,6 +30,7 @@ use parking_lot::Mutex;
 use rayon::prelude::*;
 
 use crate::entity::Dependency;
+use crate::entity::DependencyTarget;
 use crate::entity::EntityTransaction;
 use crate::entity::ResolvedModule;
 use crate::entity::ResolvedRequires;
@@ -636,18 +637,10 @@ impl SharedMem {
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid file index"))
     }
 
-    fn collect_modulename_file_keys(module: &Modulename, file_keys: &mut BTreeSet<FileKey>) {
-        if let Modulename::Filename(file) = module {
-            file_keys.insert(file.dupe());
-        }
-    }
-
     fn collect_dependency_file_keys(dependency: &Dependency, file_keys: &mut BTreeSet<FileKey>) {
-        match dependency {
-            Dependency::HasteModule(module) => {
-                Self::collect_modulename_file_keys(module, file_keys)
-            }
-            Dependency::File(file) => {
+        match dependency.target() {
+            DependencyTarget::HasteModule(_) => {}
+            DependencyTarget::File(file) => {
                 file_keys.insert(file.dupe());
             }
         }
@@ -657,14 +650,8 @@ impl SharedMem {
         module: &crate::entity::ResolvedModule,
         file_keys: &mut BTreeSet<FileKey>,
     ) {
-        match module {
-            crate::entity::ResolvedModule::HasteModule(module) => {
-                Self::collect_modulename_file_keys(module, file_keys)
-            }
-            crate::entity::ResolvedModule::File(file) => {
-                file_keys.insert(file.dupe());
-            }
-            crate::entity::ResolvedModule::String(_) | crate::entity::ResolvedModule::Null => {}
+        if let Some(dependency) = module.as_dependency() {
+            Self::collect_dependency_file_keys(&dependency, file_keys);
         }
     }
 
@@ -1067,15 +1054,17 @@ impl SharedMem {
         module: &ResolvedModule,
         file_to_index: &BTreeMap<FileKey, u32>,
     ) -> SerializedResolvedModule {
-        match module {
-            ResolvedModule::HasteModule(module) => {
-                SerializedResolvedModule::HasteModule(module.clone())
-            }
-            ResolvedModule::File(file) => {
-                SerializedResolvedModule::File(Self::file_index(file_to_index, file))
-            }
-            ResolvedModule::String(specifier) => SerializedResolvedModule::String(specifier.dupe()),
-            ResolvedModule::Null => SerializedResolvedModule::Null,
+        match module.to_result() {
+            Ok(dependency) => match dependency.target() {
+                DependencyTarget::HasteModule(info) => {
+                    SerializedResolvedModule::HasteModule(Modulename::Haste(info.dupe()))
+                }
+                DependencyTarget::File(file) => {
+                    SerializedResolvedModule::File(Self::file_index(file_to_index, file))
+                }
+            },
+            Err(Some(specifier)) => SerializedResolvedModule::String(specifier),
+            Err(None) => SerializedResolvedModule::Null,
         }
     }
 
@@ -1083,9 +1072,11 @@ impl SharedMem {
         dependency: &Dependency,
         file_to_index: &BTreeMap<FileKey, u32>,
     ) -> SerializedDependency {
-        match dependency {
-            Dependency::HasteModule(module) => SerializedDependency::HasteModule(module.clone()),
-            Dependency::File(file) => {
+        match dependency.target() {
+            DependencyTarget::HasteModule(info) => {
+                SerializedDependency::HasteModule(Modulename::Haste(info.dupe()))
+            }
+            DependencyTarget::File(file) => {
                 SerializedDependency::File(Self::file_index(file_to_index, file))
             }
         }
@@ -1190,34 +1181,41 @@ impl SharedMem {
     }
 
     fn resolved_module_from_serialized(
+        &self,
         serialized: SerializedResolvedModule,
         files: &[FileKey],
     ) -> io::Result<ResolvedModule> {
         match serialized {
-            SerializedResolvedModule::HasteModule(module) => {
-                Ok(ResolvedModule::HasteModule(module))
-            }
+            SerializedResolvedModule::HasteModule(module) => Ok(ResolvedModule::dependency(
+                self.intern_dependency_from_modulename(module),
+            )),
             SerializedResolvedModule::File(file) => {
-                Ok(ResolvedModule::File(Self::file_from_index(files, file)?))
+                Ok(ResolvedModule::dependency(self.intern_dependency_target(
+                    DependencyTarget::File(Self::file_from_index(files, file)?),
+                )))
             }
-            SerializedResolvedModule::String(specifier) => Ok(ResolvedModule::String(specifier)),
-            SerializedResolvedModule::Null => Ok(ResolvedModule::Null),
+            SerializedResolvedModule::String(specifier) => Ok(ResolvedModule::string(specifier)),
+            SerializedResolvedModule::Null => Ok(ResolvedModule::null()),
         }
     }
 
     fn dependency_from_serialized(
+        &self,
         serialized: SerializedDependency,
         files: &[FileKey],
     ) -> io::Result<Dependency> {
         match serialized {
-            SerializedDependency::HasteModule(module) => Ok(Dependency::HasteModule(module)),
-            SerializedDependency::File(file) => {
-                Ok(Dependency::File(Self::file_from_index(files, file)?))
+            SerializedDependency::HasteModule(module) => {
+                Ok(self.intern_dependency_from_modulename(module))
             }
+            SerializedDependency::File(file) => Ok(self.intern_dependency_target(
+                DependencyTarget::File(Self::file_from_index(files, file)?),
+            )),
         }
     }
 
     fn resolved_requires_from_serialized(
+        &self,
         serialized: SerializedResolvedRequires,
         files: &[FileKey],
     ) -> io::Result<ResolvedRequires> {
@@ -1225,12 +1223,12 @@ impl SharedMem {
             serialized
                 .resolved_modules
                 .into_iter()
-                .map(|module| Self::resolved_module_from_serialized(module, files))
+                .map(|module| self.resolved_module_from_serialized(module, files))
                 .collect::<io::Result<Vec<_>>>()?,
             serialized
                 .phantom_dependencies
                 .into_iter()
-                .map(|dependency| Self::dependency_from_serialized(dependency, files))
+                .map(|dependency| self.dependency_from_serialized(dependency, files))
                 .collect::<io::Result<Vec<_>>>()?,
         ))
     }
@@ -1272,7 +1270,7 @@ impl SharedMem {
                 requires: Arc::from(typed.requires.into_boxed_slice()),
                 resolved_requires: Arc::new(crate::entity::Entity::new_committed(
                     self.entity_transaction.dupe(),
-                    Self::resolved_requires_from_serialized(typed.resolved_requires, files)?,
+                    self.resolved_requires_from_serialized(typed.resolved_requires, files)?,
                 )),
                 imports: Arc::from(typed.imports.into_boxed_slice()),
                 leader: self.optional_entity(
@@ -1307,38 +1305,36 @@ impl SharedMem {
 
     fn file_entry_from_serialized(
         &self,
+        file_key: FileKey,
         serialized: SerializedFileEntry,
         files: &[FileKey],
     ) -> io::Result<FileEntry> {
-        Ok(FileEntry {
-            parse: match serialized.parse {
-                Some(parse) => Arc::new(crate::entity::Entity::new_committed(
-                    self.entity_transaction.dupe(),
-                    self.parse_from_serialized(parse, files)?,
-                )),
-                None => Arc::new(crate::entity::Entity::empty_committed(
-                    self.entity_transaction.dupe(),
-                )),
-            },
-            haste_info: self.optional_entity(serialized.haste_info),
-            dependents: serialized
-                .dependents
-                .map(|dependents| {
-                    dependents
-                        .into_iter()
-                        .map(|file| Self::file_from_index(files, file))
-                        .collect::<io::Result<Vec<_>>>()
-                })
-                .transpose()?
-                .map(Self::locked_set_from_serialized)
-                .map(Arc::new),
-            alternate_file: Arc::new(parking_lot::RwLock::new(
-                serialized
-                    .alternate_file
+        let parse = serialized
+            .parse
+            .map(|parse| self.parse_from_serialized(parse, files))
+            .transpose()?;
+        let dependents = serialized
+            .dependents
+            .map(|dependents| {
+                dependents
+                    .into_iter()
                     .map(|file| Self::file_from_index(files, file))
-                    .transpose()?,
-            )),
-        })
+                    .collect::<io::Result<Vec<_>>>()
+            })
+            .transpose()?
+            .map(Self::locked_set_from_serialized);
+        let alternate_file = serialized
+            .alternate_file
+            .map(|file| Self::file_from_index(files, file))
+            .transpose()?;
+        Ok(FileEntry::new_committed(
+            file_key,
+            self.entity_transaction.dupe(),
+            parse,
+            serialized.haste_info,
+            dependents,
+            alternate_file,
+        ))
     }
 
     fn haste_module_from_serialized(
@@ -1405,9 +1401,10 @@ impl SharedMem {
         let map = entries
             .into_iter()
             .map(|(file, entry)| {
+                let file = Self::file_from_index(files, file)?;
                 Ok((
-                    Self::file_from_index(files, file)?,
-                    self.file_entry_from_serialized(entry, files)?,
+                    file.dupe(),
+                    self.file_entry_from_serialized(file, entry, files)?,
                 ))
             })
             .collect::<io::Result<BTreeMap<_, _>>>()?;

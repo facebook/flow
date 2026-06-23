@@ -29,7 +29,6 @@ use flow_codemods::utils::codemod_utils::MakeMain;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
-use flow_common_modulename::Modulename;
 use flow_common_ty::ty_printer;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_heap::parsing_heaps::SharedMem;
@@ -135,27 +134,14 @@ fn implementation_file(
     shared_mem: &flow_heap::parsing_heaps::SharedMem,
     resolved_module: &ResolvedModule,
 ) -> Option<FileKey> {
-    match resolved_module {
-        ResolvedModule::HasteModule(modulename) => {
-            let dependency = Dependency::HasteModule(modulename.clone());
-            if let Some(file) = shared_mem.get_provider(&dependency) {
-                if shared_mem.is_typed_file(&file) {
-                    return Some(file);
-                }
+    if let Some(dependency) = resolved_module.as_dependency() {
+        if let Some(file) = shared_mem.get_provider(&dependency) {
+            if shared_mem.is_typed_file(&file) {
+                return Some(file);
             }
-            None
         }
-        ResolvedModule::File(file_key) => {
-            let dependency = Dependency::File(file_key.clone());
-            if let Some(file) = shared_mem.get_provider(&dependency) {
-                if shared_mem.is_typed_file(&file) {
-                    return Some(file);
-                }
-            }
-            None
-        }
-        ResolvedModule::String(_) | ResolvedModule::Null => None,
     }
+    None
 }
 
 pub(crate) mod documentation_fullspan_map {
@@ -319,10 +305,7 @@ pub(crate) fn module_of_module_ref(
     let key = FlowImportSpecifier::Userland(module_ref.dupe());
     match resolved_modules.get(&key) {
         Some(Ok(dep)) => {
-            let m = match dep {
-                Dependency::HasteModule(modulename) => modulename.clone(),
-                Dependency::File(file_key) => Modulename::Filename(file_key.dupe()),
-            };
+            let m = dep.to_modulename();
             module_::of_modulename(root, write_root, &m)
         }
         Some(Err(mapped_name)) => {

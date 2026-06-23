@@ -2227,6 +2227,7 @@ dependencies = [
  "lock_free_hashtable",
  "nix",
  "num_cpus",
+ "parking_lot",
  "rayon",
  "starlark_map",
  "tracing",
