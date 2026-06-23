@@ -69,7 +69,6 @@ async function shouldListTest(
 ): Promise<boolean> {
   const {checkOnly, savedState} = opts;
   const name = basename(testDir);
-  const ocamlLegacy = (process.env.FLOW_OCAML_LEGACY || '0') === '1';
 
   if (
     process.platform === 'win32' &&
@@ -78,12 +77,7 @@ async function shouldListTest(
     return false;
   }
 
-  let expFileName = name + '.exp';
-  if (ocamlLegacy && existsSync(join(testDir, name + '.exp.ocaml_legacy'))) {
-    expFileName = name + '.exp.ocaml_legacy';
-  }
-
-  const hasExpFile = existsSync(join(testDir, expFileName));
+  const hasExpFile = existsSync(join(testDir, name + '.exp'));
   const hasFlowconfig = existsSync(join(testDir, '.flowconfig'));
   const hasTestconfig = existsSync(join(testDir, '.testconfig'));
   if (!hasExpFile || (!hasFlowconfig && !hasTestconfig)) {
@@ -98,9 +92,6 @@ async function shouldListTest(
     return false;
   }
   if (!process.env.FLOW_GIT_BINARY && config.git) {
-    return false;
-  }
-  if (!ocamlLegacy && config.skip_rust_port) {
     return false;
   }
   if (process.platform === 'win32' && config.skip_windows) {

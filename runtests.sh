@@ -181,16 +181,10 @@ print_failure() {
         cat "$diff_file"
       fi
     fi
-    # Default expected file extension is .exp
-    ext=".exp"
-    if [[ "${FLOW_OCAML_LEGACY:-0}" -eq 1 ]] && [ -f "${dir}${name}.exp.ocaml_legacy" ]; then
-        ext=".exp.ocaml_legacy"
-    fi
-
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with
       # <VERSION>, so that the .exp doesn't have to be updated on each release.
-      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}${ext}"
+      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}.exp"
       rm "${dir}${name}.out"
       rm -f "$err_file"
       rm "$diff_file"

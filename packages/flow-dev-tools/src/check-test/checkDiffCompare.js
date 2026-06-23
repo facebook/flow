@@ -46,40 +46,6 @@ function normalizeWindowsPaths(text: string): string {
   return text.replace(/\\/g, '/');
 }
 
-function normalizeWindowsPointers(text: string): string {
-  if (
-    process.platform !== 'win32' ||
-    (process.env.FLOW_OCAML_LEGACY || '0') !== '1'
-  ) {
-    return text;
-  }
-  // The legacy OCaml binary counts the \r in builtins files with \r\n line
-  // endings as a visible character. Rust is the default and already matches
-  // the expected pointer width.
-  //
-  // Only strip the extra dash when the pointer references builtins
-  // content (indicated by a nearby <BUILTINS> line). Non-builtins
-  // pointer lines are left unchanged — their width is already correct.
-  const pointerRe = /^(\s*[\^v~][\^v~-]*)-(\s*(?:\[\d+\])?\s*)$/;
-  const lines = text.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const m = pointerRe.exec(lines[i]);
-    if (m == null) continue;
-    // Look within 5 lines above for a <BUILTINS> reference.
-    let nearBuiltins = false;
-    for (let j = Math.max(0, i - 5); j < i; j++) {
-      if (lines[j].includes('<BUILTINS>')) {
-        nearBuiltins = true;
-        break;
-      }
-    }
-    if (nearBuiltins) {
-      lines[i] = m[1] + m[2];
-    }
-  }
-  return lines.join('\n');
-}
-
 function substituteVersion(text: string, version: string): string {
   return text.replace(/<VERSION>/g, version);
 }
@@ -113,10 +79,8 @@ async function diffOutput(
       normalizeLineEndings(substituteVersion(expRaw, version)),
     ),
   );
-  const out = normalizeWindowsPointers(
-    normalizeWindowsPaths(
-      normalizeWindowsEscapes(normalizeLineEndings(outRaw)),
-    ),
+  const out = normalizeWindowsPaths(
+    normalizeWindowsEscapes(normalizeLineEndings(outRaw)),
   );
 
   if (exp === out) {
@@ -144,10 +108,8 @@ async function recordOutput(
 ): Promise<void> {
   const outRaw = await fs.promises.readFile(outFile, 'utf8');
   const recorded = substituteVersionForRecord(
-    normalizeWindowsPointers(
-      normalizeWindowsPaths(
-        normalizeWindowsEscapes(normalizeLineEndings(outRaw)),
-      ),
+    normalizeWindowsPaths(
+      normalizeWindowsEscapes(normalizeLineEndings(outRaw)),
     ),
     version,
   );
@@ -160,7 +122,6 @@ module.exports = {
   normalizeLineEndings,
   normalizeWindowsEscapes,
   normalizeWindowsPaths,
-  normalizeWindowsPointers,
   substituteVersion,
   substituteVersionForRecord,
 };

@@ -24,7 +24,6 @@ export type TestConfig = {
   skip_saved_state: boolean,
   saved_state_only: boolean,
   git: boolean,
-  skip_rust_port: boolean,
   skip_windows: boolean,
   ...
 };
@@ -43,7 +42,6 @@ async function parseTestConfig(testDir: string): Promise<TestConfig> {
     skip_saved_state: false,
     saved_state_only: false,
     git: false,
-    skip_rust_port: false,
     skip_windows: false,
   };
 
@@ -123,9 +121,6 @@ async function parseTestConfig(testDir: string): Promise<TestConfig> {
         break;
       case 'git':
         config.git = value === 'true';
-        break;
-      case 'skip_rust_port':
-        config.skip_rust_port = value === 'true';
         break;
       case 'skip_windows':
         config.skip_windows = value === 'true';

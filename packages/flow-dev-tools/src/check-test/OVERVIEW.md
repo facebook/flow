@@ -117,7 +117,6 @@ wait_for_recheck: false
 skip_saved_state: true
 saved_state_only: true
 git: true
-skip_rust_port: true
 ```
 
 **Behavioral match with bash:**
@@ -135,7 +134,7 @@ The core per-test executor, replacing `scripts/run-one-test`.
 **Flow of execution:**
 
 1. **Pre-checks:** Verifies `.exp` file and `.flowconfig`/`.testconfig` exist.
-   Checks for the `ocaml_legacy` variant. Handles Windows symlink skips.
+   Handles Windows symlink skips.
 
 2. **Temp directory setup:** Creates a temp directory, copies the test directory
    into it, moves the `.exp` file out of the working copy.
@@ -147,7 +146,7 @@ The core per-test executor, replacing `scripts/run-one-test`.
    `all=(true|false)` requirement.
 
 5. **Skip conditions:** Checks `skip_saved_state`, `saved_state_only`, `git`,
-   `skip_rust_port`, and `check_only`.
+   and `check_only`.
 
 6. **Environment setup:** Builds an env object with `FLOW_TEMP_DIR`, `IN_FLOW_TEST`,
    `FLOW_LOG_LEVEL`, `FLOW_LOG_FILE`, `FLOW_MONITOR_LOG_FILE`, `FLOW`, `VERSION`,
