@@ -7,6 +7,7 @@
 
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::sync::LazyLock;
 
 use dupe::Dupe;
 use flow_common::docblock::Docblock;
@@ -25,17 +26,14 @@ use flow_parser::loc::Position;
 use flow_parser::logos_tokens::MainToken;
 use flow_parser::parse_jsx_pragma_expression;
 use flow_parser::token::TokenKind;
-use lazy_static::lazy_static;
 use logos::Logos;
 use regex::Regex;
 
 // Avoid lexing unbounded in perverse cases
 pub const DOCBLOCK_MAX_TOKENS: usize = 10;
 
-lazy_static! {
-    static ref ATTRIBUTES_RX: Regex = Regex::new(r"[ \t\r\n\\*/]+").unwrap();
-    static ref LINES_RX: Regex = Regex::new(r"(\r\n|\n|\r)").unwrap();
-}
+static ATTRIBUTES_RX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[ \t\r\n\\*/]+").unwrap());
+static LINES_RX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\r\n|\n|\r)").unwrap());
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DocblockErrorKind {

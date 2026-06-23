@@ -16,7 +16,6 @@ flow_analysis = { path = "../flow_analysis" }
 flow_common = { path = "../flow_common" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
-lazy_static = "1.5"
 regex = "1.12.4"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 vec1 = { version = "1.12.1", features = ["serde"] }

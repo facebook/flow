@@ -20,7 +20,6 @@ flow_parser_utils = { path = "../flow_parser_utils" }
 flow_services_module = { path = "../flow_services_module" }
 flow_type_sig = { path = "../flow_type_sig" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-lazy_static = "1.5"
 logos = "0.15"
 regex = "1.12.4"
 vec1 = { version = "1.12.1", features = ["serde"] }

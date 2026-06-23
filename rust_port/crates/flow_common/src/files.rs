@@ -23,7 +23,6 @@ use std::sync::RwLock;
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
-use lazy_static::lazy_static;
 use regex::Regex;
 
 use crate::path_matcher::PathMatcher;
@@ -526,9 +525,8 @@ pub fn make_path_absolute(root: &Path, path_str: &str) -> PathBuf {
     cached_canonicalize(&joined).unwrap_or(joined)
 }
 
-lazy_static! {
-    pub static ref ABSOLUTE_PATH_REGEXP: Regex = Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap();
-}
+pub static ABSOLUTE_PATH_REGEXP: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap());
 
 pub const PROJECT_ROOT_TOKEN: &str = "<PROJECT_ROOT>";
 pub const BUILTIN_ROOT_TOKEN: &str = "<BUILTINS>";
@@ -725,17 +723,11 @@ pub fn get_all(next: &mut dyn FnMut() -> Vec<String>) -> BTreeSet<String> {
     }
 }
 
-lazy_static! {
-    pub static ref DIR_SEP: Regex = Regex::new(r"[/\\]").unwrap();
-}
+pub static DIR_SEP: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[/\\]").unwrap());
 
-lazy_static! {
-    pub static ref CURRENT_DIR_NAME: Regex = Regex::new(r"\.").unwrap();
-}
+pub static CURRENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\.").unwrap());
 
-lazy_static! {
-    pub static ref PARENT_DIR_NAME: Regex = Regex::new(r"\.\.").unwrap();
-}
+pub static PARENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\.\.").unwrap());
 
 pub fn watched_paths(options: &FileOptions) -> Vec<PathBuf> {
     let mut stems = options.includes.stems().to_vec();

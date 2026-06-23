@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::sync::LazyLock;
+
 use dupe::Dupe;
 use flow_parser::ast;
-use lazy_static::lazy_static;
 use regex::Regex;
 
 #[derive(
@@ -45,10 +46,10 @@ pub fn extract_module_name<Loc: Dupe>(
     quasi: &ast::expression::TemplateLiteral<Loc, Loc>,
     module_prefix: Option<&str>,
 ) -> Result<String, GraphqlError> {
-    lazy_static! {
-        static ref COMMENT_REGEXP: Regex = Regex::new(COMMENT_REGEXP_STR).unwrap();
-        static ref NAME_REGEXP: Regex = Regex::new(NAME_REGEXP_STR).unwrap();
-    }
+    static COMMENT_REGEXP: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(COMMENT_REGEXP_STR).unwrap());
+    static NAME_REGEXP: LazyLock<Regex> = LazyLock::new(|| Regex::new(NAME_REGEXP_STR).unwrap());
+
     if quasi.quasis.len() != 1 || !quasi.expressions.is_empty() {
         return Err(GraphqlError::InvalidTaggedTemplate);
     }

@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::sync::LazyLock;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
@@ -22,7 +23,6 @@ use flow_heap::parse::Parse;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::file_key::FileKey;
 use flow_parser_utils::package_json::PackageJson;
-use lazy_static::lazy_static;
 use regex::Regex;
 use vec1::Vec1;
 
@@ -292,11 +292,10 @@ impl PhantomAcc {
     }
 }
 
-lazy_static! {
-    static ref CURRENT_DIR_NAME: Regex = Regex::new(r"^\.").unwrap();
-    static ref PARENT_DIR_NAME: Regex = Regex::new(r"^\.\.").unwrap();
-    static ref ABSOLUTE_PATH_REGEXP: Regex = Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap();
-}
+static CURRENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\.").unwrap());
+static PARENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\.\.").unwrap());
+static ABSOLUTE_PATH_REGEXP: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap());
 
 fn is_relative_or_absolute(r: &str) -> bool {
     CURRENT_DIR_NAME.is_match(r) || PARENT_DIR_NAME.is_match(r) || ABSOLUTE_PATH_REGEXP.is_match(r)
@@ -1215,8 +1214,6 @@ mod haste {
     use flow_heap::parsing_heaps::SharedMem;
     use flow_parser::file_key::FileKey;
     use flow_parser::file_key::FileKeyInner;
-    use lazy_static::lazy_static;
-    use regex::Regex;
     use vec1::Vec1;
 
     use super::*;
@@ -1276,10 +1273,6 @@ mod haste {
     }
 
     fn is_mock(file: &FileKey) -> bool {
-        lazy_static! {
-            static ref MOCK_PATH: Regex = Regex::new(r".*/__mocks__/.*").unwrap();
-        }
-
         let path = file.as_str();
         path.replace('\\', "/").contains("/__mocks__/")
     }
