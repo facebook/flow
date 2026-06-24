@@ -890,10 +890,13 @@ impl<'a> flow_parser::ast_visitor::AstVisitor<'_, Loc> for RequiresCalculator<'a
 
     fn declare_module(
         &mut self,
-        _loc: &Loc,
-        _m: &ast::statement::DeclareModule<Loc, Loc>,
+        loc: &Loc,
+        m: &ast::statement::DeclareModule<Loc, Loc>,
     ) -> Result<(), !> {
-        // Skip declare module
+        // A `declare module` body can contain imports; those are module
+        // dependencies that type_sig records as module refs, so file_sig must
+        // collect them too or resolve_require will miss them during merge.
+        let Ok(()) = ast_visitor::declare_module_default(self, loc, m);
         Ok(())
     }
 }
