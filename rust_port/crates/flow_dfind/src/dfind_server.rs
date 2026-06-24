@@ -49,6 +49,20 @@ pub enum Msg {
     Updates(BTreeSet<String>),
 }
 
+/// Poll request sent monitor -> daemon to ask for accumulated changes.
+///
+/// This is deliberately an enum rather than `()`: bincode encodes the unit type
+/// as zero bytes, so `from_channel::<()>` returns immediately without ever
+/// reading from (and thus blocking on) the socket. That made the daemon's main
+/// loop busy-spin — draining the empty accumulator millions of times and
+/// flooding the response channel with empty `Updates`, which buried real change
+/// notifications behind an unbounded backlog. Encoding a real discriminant makes
+/// the read block until the monitor actually polls.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub enum PollRequest {
+    GetChanges,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Param {
     pub scuba_table: String,
@@ -56,7 +70,7 @@ pub struct Param {
     pub log_file: PathBuf,
 }
 
-fn run_daemon(param: Param, pair: ChannelPair<(), Msg>) {
+fn run_daemon(param: Param, pair: ChannelPair<PollRequest, Msg>) {
     let ChannelPair(mut in_chan, mut out_chan) = pair;
     let Param {
         scuba_table,
@@ -122,7 +136,7 @@ fn run_daemon(param: Param, pair: ChannelPair<(), Msg>) {
     flow_hh_logger::log_duration("Initialization", t);
 
     loop {
-        let _: () = from_channel(&mut in_chan, None);
+        let _: PollRequest = from_channel(&mut in_chan, None);
         let updates = {
             let mut g = acc.lock().expect("dfind acc mutex poisoned");
             std::mem::take(&mut *g)
@@ -191,8 +205,8 @@ fn record_event(acc: &Arc<Mutex<BTreeSet<String>>>, event: Event) {
     }
 }
 
-pub fn entry_point() -> &'static Entry<Param, (), Msg> {
-    static ENTRY: OnceLock<Entry<Param, (), Msg>> = OnceLock::new();
+pub fn entry_point() -> &'static Entry<Param, PollRequest, Msg> {
+    static ENTRY: OnceLock<Entry<Param, PollRequest, Msg>> = OnceLock::new();
     ENTRY.get_or_init(|| register_entry_point("dfind", run_daemon))
 }
 

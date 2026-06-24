@@ -1415,19 +1415,64 @@ pub use edenfs_file_watcher::EdenFS;
 pub mod dfind_file_watcher {
     use super::*;
 
-    struct DFindFields {
-        instance: Option<Arc<flow_dfind::Dfind>>,
-        is_initial: bool,
-        watch_paths: Vec<PathBuf>,
-        files: BTreeSet<String>,
+    // dfind exposes a poll-based protocol: each `get_changes` call returns the
+    // changes accumulated since the previous call (or empty), and never blocks
+    // waiting for new ones. So unlike Watchman / EdenFS, the listen loop polls
+    // on a fixed interval rather than blocking on a push.
+    const POLL_INTERVAL: Duration = Duration::from_secs(1);
+
+    pub struct EnvShared {
+        pub files: BTreeSet<String>,
+        pub is_initial: bool,
+    }
+
+    pub struct Env {
+        pub instance: Arc<flow_dfind::Dfind>,
+        pub shared: Arc<std::sync::Mutex<EnvShared>>,
+        pub listening_thread: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<ExitReason>>>>,
+        pub changes_condition: Arc<ChangesCondition>,
+    }
+
+    /// Poll the dfind daemon, draining its pending changes into `shared.files`
+    /// and signalling waiters. This mirrors the Watchman / EdenFS listen loops:
+    /// it is spawned once during init and the command loop never aborts it, so
+    /// the destructive drain always lands in `shared.files` before any waiter is
+    /// woken. (Driving the drain from inside the abortable `wait_for_changed_files`
+    /// instead — as a naive poll would — drops the drained batch whenever the
+    /// command loop cancels the wait, silently losing the change.)
+    pub async fn listen(env: Arc<Env>) -> ExitReason {
+        loop {
+            match flow_dfind::get_changes(&env.instance).await {
+                Ok(new_files) => {
+                    if !new_files.is_empty() {
+                        {
+                            let mut shared = env.shared.lock().unwrap();
+                            shared.files.extend(new_files);
+                        }
+                        env.changes_condition.notify_changed();
+                    }
+                }
+                // dfind only reports Stopped once its handle is gone, i.e. after
+                // `stop` took the instance. Treat it as the daemon going away.
+                Err(flow_dfind::Error::Stopped) => {
+                    flow_hh_logger::debug!("Connection to dfind broke");
+                    return ExitReason::WatcherDied;
+                }
+                Err(err) => {
+                    flow_hh_logger::debug!("dfind get_changes failed: {}", err);
+                }
+            }
+            tokio::time::sleep(POLL_INTERVAL).await;
+        }
     }
 
     pub struct DFind {
-        fields: std::sync::Mutex<DFindFields>,
-        // OCaml: val dfind_mutex = Lwt_mutex.create ()
-        // "We don't want two threads to talk to dfind at the same time. And we
-        // don't want those two threads to get the same file change events"
-        dfind_mutex: tokio::sync::Mutex<()>,
+        // Built in `wait_for_init` once the daemon is ready; holds the listen
+        // loop and the shared buffer it feeds.
+        env: std::sync::Mutex<Option<Arc<Env>>>,
+        // Set by `start_init`, consumed by `wait_for_init` when building `Env`.
+        instance: std::sync::Mutex<Option<Arc<flow_dfind::Dfind>>>,
+        watch_paths: std::sync::Mutex<Vec<PathBuf>>,
         mergebase_with: String,
         server_options: flow_common::options::Options,
     }
@@ -1435,42 +1480,18 @@ pub mod dfind_file_watcher {
     impl DFind {
         pub fn new(mergebase_with: String, server_options: flow_common::options::Options) -> Self {
             DFind {
-                fields: std::sync::Mutex::new(DFindFields {
-                    instance: None,
-                    is_initial: true,
-                    watch_paths: Vec::new(),
-                    files: BTreeSet::new(),
-                }),
-                dfind_mutex: tokio::sync::Mutex::new(()),
+                env: std::sync::Mutex::new(None),
+                instance: std::sync::Mutex::new(None),
+                watch_paths: std::sync::Mutex::new(Vec::new()),
                 mergebase_with,
                 server_options,
             }
         }
 
-        fn get_dfind(&self) -> Arc<flow_dfind::Dfind> {
-            let fields = self.fields.lock().unwrap();
-            match &fields.instance {
+        fn get_env(&self) -> Arc<Env> {
+            match self.env.lock().unwrap().as_ref() {
                 None => panic!("Dfind was not initialized"),
-                Some(d) => d.clone(),
-            }
-        }
-
-        async fn fetch(&self) {
-            // Lwt_mutex.with_lock dfind_mutex (fun () -> ...)
-            let _guard = self.dfind_mutex.lock().await;
-            let dfind = self.get_dfind();
-            match flow_dfind::get_changes(&dfind).await {
-                Ok(new_files) => {
-                    let mut fields = self.fields.lock().unwrap();
-                    fields.files.extend(new_files);
-                }
-                // ignore the dfind server dying. use waitpid to detect this instead
-                Err(flow_dfind::Error::Stopped) => {
-                    flow_hh_logger::debug!("Connection to dfind broke");
-                }
-                Err(err) => {
-                    flow_hh_logger::debug!("dfind get_changes failed: {}", err);
-                }
+                Some(env) => env.clone(),
             }
         }
     }
@@ -1500,11 +1521,10 @@ pub mod dfind_file_watcher {
             let fds = flow_dfind::DaemonFds {
                 log_file: PathBuf::from(log_file),
             };
-            let mut fields = self.fields.lock().unwrap();
-            fields.watch_paths = watch_paths;
+            *self.watch_paths.lock().unwrap() = watch_paths;
             match flow_dfind::init(fds, init_args) {
                 Ok(d) => {
-                    fields.instance = Some(Arc::new(d));
+                    *self.instance.lock().unwrap() = Some(Arc::new(d));
                 }
                 Err(err) => {
                     flow_hh_logger::error!("Failed to initialize dfind: {}", err);
@@ -1513,50 +1533,56 @@ pub mod dfind_file_watcher {
         }
 
         async fn wait_for_init(&self, _timeout: Option<f64>) -> Result<(), String> {
-            let dfind = {
-                let fields = self.fields.lock().unwrap();
-                match &fields.instance {
-                    None => return Err("Failed to initialize dfind".to_string()),
-                    Some(d) => d.clone(),
-                }
+            let instance = match self.instance.lock().unwrap().clone() {
+                None => return Err("Failed to initialize dfind".to_string()),
+                Some(d) => d,
             };
-            flow_dfind::wait_until_ready(&dfind).await;
+            flow_dfind::wait_until_ready(&instance).await;
+            let mut initial_files = BTreeSet::new();
             if self.server_options.lazy_mode {
-                let watch_paths = self.fields.lock().unwrap().watch_paths.clone();
+                let watch_paths = self.watch_paths.lock().unwrap().clone();
                 let changes = changes_since_mergebase(&self.mergebase_with, &watch_paths).await;
-                self.fields.lock().unwrap().files.extend(changes);
+                initial_files.extend(changes);
             }
+            let shared = Arc::new(std::sync::Mutex::new(EnvShared {
+                files: initial_files,
+                is_initial: true,
+            }));
+            let new_env = Arc::new(Env {
+                instance,
+                shared,
+                listening_thread: Arc::new(tokio::sync::Mutex::new(None)),
+                changes_condition: Arc::new(ChangesCondition::new()),
+            });
+            let listen_env = new_env.clone();
+            let listening = handle().spawn(async move { listen(listen_env).await });
+            *new_env.listening_thread.lock().await = Some(listening);
+            *self.env.lock().unwrap() = Some(new_env);
             Ok(())
         }
 
         async fn get_and_clear_changed_files(
             &self,
         ) -> (BTreeSet<String>, Option<FileWatcherMetadata>, bool) {
-            self.fetch().await;
-            let mut fields = self.fields.lock().unwrap();
-            let ret = (std::mem::take(&mut fields.files), None, fields.is_initial);
-            fields.is_initial = false;
+            let env = self.get_env();
+            let mut shared = env.shared.lock().unwrap();
+            let ret = (std::mem::take(&mut shared.files), None, shared.is_initial);
+            shared.is_initial = false;
             ret
         }
 
         async fn wait_for_changed_files(&self) {
-            loop {
-                self.fetch().await;
-                {
-                    let fields = self.fields.lock().unwrap();
-                    if !fields.files.is_empty() {
-                        return;
-                    }
-                }
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
+            let env = self.get_env();
+            env.changes_condition.wait().await;
         }
 
         async fn stop(&self) {
-            let instance = self.fields.lock().unwrap().instance.take();
-            if let Some(dfind) = instance {
-                flow_dfind::stop(&dfind);
+            let env = self.get_env();
+            flow_hh_logger::info!("Canceling dfind listening thread");
+            if let Some(handle) = env.listening_thread.lock().await.take() {
+                handle.abort();
             }
+            flow_dfind::stop(&env.instance);
         }
 
         async fn waitpid(&self) -> ExitReason {

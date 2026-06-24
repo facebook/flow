@@ -22,6 +22,7 @@ pub mod dfind_server;
 
 use crate::dfind_server::Msg;
 use crate::dfind_server::Param;
+use crate::dfind_server::PollRequest;
 
 // ---------------------------------------------------------------------------
 // Public surface (must remain backwards-compatible with the existing callers
@@ -79,7 +80,7 @@ pub struct InitArgs {
 }
 
 pub struct Dfind {
-    inner: Arc<Mutex<Option<Handle<Msg, ()>>>>,
+    inner: Arc<Mutex<Option<Handle<Msg, PollRequest>>>>,
 }
 
 pub fn init(fds: DaemonFds, args: InitArgs) -> Result<Dfind, Error> {
@@ -153,7 +154,7 @@ pub async fn get_changes(d: &Dfind) -> Result<BTreeSet<String>, Error> {
         loop {
             let mut g = inner.lock().expect("dfind handle mutex poisoned");
             let h = g.as_mut().ok_or(Error::Stopped)?;
-            to_channel(&mut h.channels.1, &(), true);
+            to_channel(&mut h.channels.1, &PollRequest::GetChanges, true);
             let msg: Msg = from_channel(&mut h.channels.0, None);
             drop(g);
             let diff = match msg {
