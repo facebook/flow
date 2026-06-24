@@ -1,3 +1,8 @@
+### 0.321.0
+
+Parser:
+* `flow-parser` is now backed by the Rust port parser. It will have public API similar to that of `hermes-parser`.
+
 ### 0.320.0
 
 Likely to cause new Flow errors:

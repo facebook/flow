@@ -10,7 +10,7 @@
     "url": "https://github.com/facebook/flow.git"
   },
   "dependencies": {
-    "flow-parser": "0.320.0"
+    "flow-parser": "0.321.0"
   },
   "files": [
     "dist",
