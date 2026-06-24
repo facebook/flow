@@ -130,14 +130,6 @@ References:
            ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.iterable.d.ts:71:30
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   71| type BuiltinIteratorReturn = intrinsic;
-                                    ^^^^^^^^^
-
-
 Error ----------------------------------------------------------------- <BUILTINS>/lib.es2015.symbol.wellknown.d.ts:88:5
 
 Illegal name. [unsupported-syntax]
@@ -794,46 +786,6 @@ Cannot resolve name `U`. [cannot-resolve-name]
                                               ^
 
 
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1661:36
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   1661| type Uppercase<S extends string> = intrinsic;
-                                            ^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1666:36
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   1666| type Lowercase<S extends string> = intrinsic;
-                                            ^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1671:37
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   1671| type Capitalize<S extends string> = intrinsic;
-                                             ^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1676:39
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   1676| type Uncapitalize<S extends string> = intrinsic;
-                                               ^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:1681:19
-
-Cannot resolve name `intrinsic`. [cannot-resolve-name]
-
-   1681| type NoInfer<T> = intrinsic;
-                           ^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------- <BUILTINS>/lib.esnext.decorators.d.ts:28:5
 
 Illegal name. [unsupported-syntax]
@@ -914,4 +866,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 99 errors
+Found 93 errors

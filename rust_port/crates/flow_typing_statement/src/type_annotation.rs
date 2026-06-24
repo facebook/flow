@@ -1708,6 +1708,16 @@ fn convert_inner<'a>(
                             Ok(reconstruct_ast(result_t, None, None))
                         })?
                     }
+                    // `intrinsic` marks a type alias whose value is supplied by the
+                    // type-checker rather than written in source (e.g.
+                    // `type Uppercase<S> = intrinsic`). Flow intercepts such aliases at
+                    // their use sites, so this body is never consulted; we accept the name
+                    // in library definitions and model it as `empty`.
+                    "intrinsic" if cx.is_lib_file() => {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
+                            Ok(reconstruct_ast(empty_t::at(loc.dupe()), None, None))
+                        })?
+                    }
                     // NoInfer intrinsic that makes every GenericT inside it no_infer
                     "NoInfer" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
