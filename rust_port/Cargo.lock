@@ -832,6 +832,7 @@ dependencies = [
 name = "flow_dfind"
 version = "0.0.0"
 dependencies = [
+ "ctor",
  "flow_daemon",
  "flow_hh_logger",
  "notify",

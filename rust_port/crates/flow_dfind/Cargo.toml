@@ -5,10 +5,6 @@ name = "flow_dfind"
 version = "0.0.0"
 edition = "2024"
 
-[lib]
-test = false
-doctest = false
-
 [dependencies]
 flow_daemon = { path = "../flow_daemon" }
 flow_hh_logger = { path = "../flow_hh_logger" }
@@ -17,3 +13,6 @@ regex = "1.12.4"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }
+
+[dev-dependencies]
+ctor = "1.0.7"

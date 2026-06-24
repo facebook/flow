@@ -20,6 +20,9 @@ use flow_daemon::to_channel;
 
 pub mod dfind_server;
 
+#[cfg(test)]
+mod cross_process_tests;
+
 use crate::dfind_server::Msg;
 use crate::dfind_server::Param;
 use crate::dfind_server::PollRequest;
