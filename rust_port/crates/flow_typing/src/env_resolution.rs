@@ -1945,7 +1945,7 @@ fn resolve_binding<'cx>(
             )?;
             Ok(match kind {
                 name_def_types::ForKind::In => {
-                    type_operation_utils::type_assertions::assert_for_in_rhs(cx, &right_t);
+                    type_operation_utils::type_assertions::assert_for_in_rhs(cx, &right_t)?;
                     type_::str_module_t::at(loc)
                 }
                 name_def_types::ForKind::Of { await_ } => {
@@ -2253,7 +2253,7 @@ fn resolve_op_assign<'cx>(
             let lhs_t = if assertion {
                 let reason =
                     reason::mk_reason(reason::VirtualReasonDesc::RNonnullAssert, lhs_loc.dupe());
-                type_operation_utils::operators::non_maybe(cx, &reason, lhs_t)
+                type_operation_utils::operators::non_maybe(cx, &reason, lhs_t)?
             } else {
                 lhs_t.dupe()
             };
@@ -2264,7 +2264,7 @@ fn resolve_op_assign<'cx>(
                 &type_::arith_kind::ArithKind::of_assignment_operator(op),
                 &lhs_t,
                 &rhs_t,
-            ))
+            )?)
         }
         ast::expression::AssignmentOperator::AndAssign
         | ast::expression::AssignmentOperator::OrAssign
@@ -2307,12 +2307,7 @@ fn resolve_update<'cx>(
 ) -> Result<Type, JobError> {
     let reason = reason::mk_reason(reason::VirtualReasonDesc::RUpdate, exp_loc);
     let id_t = type_env::ref_entry_exn(type_env::LookupMode::ForValue, cx, id_loc, id_reason)?;
-    Ok(type_operation_utils::operators::unary_arith(
-        cx,
-        &reason,
-        &type_::UnaryArithKind::Update,
-        &id_t,
-    ))
+    type_operation_utils::operators::unary_arith(cx, &reason, &type_::UnaryArithKind::Update, &id_t)
 }
 
 fn resolve_type_alias<'cx>(

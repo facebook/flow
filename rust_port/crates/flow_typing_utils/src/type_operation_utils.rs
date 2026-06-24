@@ -271,31 +271,34 @@ pub mod operators {
         kind: &ArithKind,
         t1: &Type,
         t2: &Type,
-    ) -> Type {
+    ) -> Result<Type, JobError> {
         let kind = kind.clone();
         let reason = reason.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, tout| {
-            distribute_union_intersection::distribute_2(
-                cx,
-                None,
-                &|cx, reason, t| {
-                    FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
-                },
-                &|_, _| reason.loc().dupe(),
-                &|cx, (t1, t2)| {
-                    // Flow.flow_t cx (Flow_js_utils.flow_arith cx reason t1 t2 kind, tout)
-                    let arith_result =
-                        flow_js_utils::flow_arith(cx, reason.dupe(), t1, t2, kind.clone())?;
-                    flow_js::flow_t(cx, (&arith_result, tout))?;
-                    Ok(())
-                },
-                (t1, t2),
-            )
-        })
-        .unwrap()
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
+            cx,
+            reason.dupe(),
+            |cx, tout| {
+                distribute_union_intersection::distribute_2(
+                    cx,
+                    None,
+                    &|cx, reason, t| {
+                        FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
+                    },
+                    &|_, _| reason.loc().dupe(),
+                    &|cx, (t1, t2)| {
+                        // Flow.flow_t cx (Flow_js_utils.flow_arith cx reason t1 t2 kind, tout)
+                        let arith_result =
+                            flow_js_utils::flow_arith(cx, reason.dupe(), t1, t2, kind.clone())?;
+                        flow_js::flow_t(cx, (&arith_result, tout))?;
+                        Ok(())
+                    },
+                    (t1, t2),
+                )
+            },
+        ))
     }
 
-    pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) {
+    pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), JobError> {
         fn check_base<'cx>(
             cx: &Context<'cx>,
             (l, r): (&Type, &Type),
@@ -359,7 +362,7 @@ pub mod operators {
             }
         }
 
-        distribute_union_intersection::distribute_2(
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute_2(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
@@ -371,8 +374,7 @@ pub mod operators {
             },
             &check_base,
             (t1, t2),
-        )
-        .unwrap()
+        ))
     }
 
     fn eq_needs_concretization(t: &Type) -> bool {
@@ -391,7 +393,7 @@ pub mod operators {
         }
     }
 
-    pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) {
+    pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) -> Result<(), JobError> {
         fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
             flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
                 .0
@@ -584,14 +586,14 @@ pub mod operators {
         }
 
         let (t1, t2) = pair;
-        distribute(cx, t1, t2).unwrap()
+        flow_js_utils::flow_js_result_to_job_error(distribute(cx, t1, t2))
     }
 
     pub fn check_strict_eq<'cx>(
         encl_ctx: &EnclosingContext,
         cx: &Context<'cx>,
         pair: (&Type, &Type),
-    ) {
+    ) -> Result<(), JobError> {
         fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
             flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
                 .0
@@ -862,7 +864,7 @@ pub mod operators {
         }
 
         let (t1, t2) = pair;
-        distribute_strict(cx, encl_ctx, t1, t2).unwrap()
+        flow_js_utils::flow_js_result_to_job_error(distribute_strict(cx, encl_ctx, t1, t2))
     }
 
     pub fn unary_arith<'cx>(
@@ -870,26 +872,29 @@ pub mod operators {
         reason: &Reason,
         kind: &UnaryArithKind,
         t: &Type,
-    ) -> Type {
+    ) -> Result<Type, JobError> {
         let reason = reason.dupe();
         let kind = *kind;
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, tout| {
-            distribute_union_intersection::distribute(
-                cx,
-                None,
-                &|cx, reason, t| {
-                    FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
-                },
-                &|r| r.loc().dupe(),
-                &|cx, t| {
-                    let result = flow_js_utils::flow_unary_arith(cx, t, reason.dupe(), kind)?;
-                    flow_js::flow_t(cx, (&result, tout))?;
-                    Ok(())
-                },
-                t,
-            )
-        })
-        .unwrap()
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
+            cx,
+            reason.dupe(),
+            |cx, tout| {
+                distribute_union_intersection::distribute(
+                    cx,
+                    None,
+                    &|cx, reason, t| {
+                        FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
+                    },
+                    &|r| r.loc().dupe(),
+                    &|cx, t| {
+                        let result = flow_js_utils::flow_unary_arith(cx, t, reason.dupe(), kind)?;
+                        flow_js::flow_t(cx, (&result, tout))?;
+                        Ok(())
+                    },
+                    t,
+                )
+            },
+        ))
     }
 
     fn mk_tvar_and_resolve_to_logical_union<'cx>(
@@ -1144,7 +1149,7 @@ pub mod operators {
         ))
     }
 
-    pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
+    pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
         fn f(reason: &Reason, t: &Type) -> Type {
             match t.deref() {
                 TypeInner::AnyT(_, src) => type_::any_t::why(*src, reason.dupe()),
@@ -1233,24 +1238,27 @@ pub mod operators {
         }
 
         let reason = reason.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, tout| {
-            distribute_union_intersection::distribute(
-                cx,
-                None,
-                &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
-                &|r| r.loc().dupe(),
-                &|cx, t| {
-                    let result = f(&reason, t);
-                    flow_js::flow_t(cx, (&result, tout))?;
-                    Ok(())
-                },
-                t,
-            )
-        })
-        .unwrap()
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
+            cx,
+            reason.dupe(),
+            |cx, tout| {
+                distribute_union_intersection::distribute(
+                    cx,
+                    None,
+                    &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
+                    &|r| r.loc().dupe(),
+                    &|cx, t| {
+                        let result = f(&reason, t);
+                        flow_js::flow_t(cx, (&result, tout))?;
+                        Ok(())
+                    },
+                    t,
+                )
+            },
+        ))
     }
 
-    pub fn non_maybe<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
+    pub fn non_maybe<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
         fn f(t: &Type) -> Type {
             match t.deref() {
                 TypeInner::DefT(r, def_t)
@@ -1277,21 +1285,24 @@ pub mod operators {
             }
         }
 
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason.dupe(), |cx, tout| {
-            distribute_union_intersection::distribute(
-                cx,
-                None,
-                &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
-                &|r| r.loc().dupe(),
-                &|cx, t| {
-                    let result = f(t);
-                    flow_js::flow_t(cx, (&result, tout))?;
-                    Ok(())
-                },
-                t,
-            )
-        })
-        .unwrap()
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
+            cx,
+            reason.dupe(),
+            |cx, tout| {
+                distribute_union_intersection::distribute(
+                    cx,
+                    None,
+                    &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
+                    &|r| r.loc().dupe(),
+                    &|cx, t| {
+                        let result = f(t);
+                        flow_js::flow_t(cx, (&result, tout))?;
+                        Ok(())
+                    },
+                    t,
+                )
+            },
+        ))
     }
 }
 
@@ -1336,7 +1347,7 @@ pub mod special_cased_functions {
         reason: &Reason,
         target_t: &Type,
         rest_arg_ts: &[CallArg],
-    ) -> Type {
+    ) -> Result<Type, JobError> {
         use std::cell::RefCell;
         use std::collections::HashMap;
 
@@ -1764,7 +1775,7 @@ pub mod special_cased_functions {
 
         let reason = reason.dupe();
         let use_op = use_op.clone();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
             cx,
             reason.dupe(),
             |cx, tout| -> Result<(), FlowJsException> {
@@ -1861,8 +1872,7 @@ pub mod special_cased_functions {
                 flow_js::flow(cx, (&repositioned, &use_t))?;
                 Ok(())
             },
-        )
-        .unwrap()
+        ))
     }
 }
 
@@ -1888,15 +1898,21 @@ pub fn perform_type_cast<'cx>(
                 TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EnumValueT(_)) => {
                     false
                 }
-                TypeInner::UnionT(_, rep) => rep.members_iter().all(|member| {
-                    let member = FlowJs::singleton_concrete_type_for_inspection(
-                        cx,
-                        reason_of_t(member),
-                        member,
-                    )
-                    .unwrap();
-                    flow_js_utils::object_like(&member)
-                }),
+                TypeInner::UnionT(_, rep) => {
+                    let mut all_object_like = true;
+                    for member in rep.members_iter() {
+                        let member = FlowJs::singleton_concrete_type_for_inspection(
+                            cx,
+                            reason_of_t(member),
+                            member,
+                        )?;
+                        if !flow_js_utils::object_like(&member) {
+                            all_object_like = false;
+                            break;
+                        }
+                    }
+                    all_object_like
+                }
                 _ => true,
             }
         }
@@ -2030,8 +2046,8 @@ pub fn perform_type_cast<'cx>(
 pub mod type_assertions {
     use super::*;
 
-    pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) {
-        distribute_union_intersection::distribute(
+    pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
@@ -2059,12 +2075,11 @@ pub mod type_assertions {
                 }
             },
             t,
-        )
-        .unwrap()
+        ))
     }
 
-    pub fn assert_binary_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
-        distribute_union_intersection::distribute(
+    pub fn assert_binary_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
@@ -2084,13 +2099,16 @@ pub mod type_assertions {
                 }
             },
             t,
-        )
-        .unwrap()
+        ))
     }
 
-    pub fn assert_export_is_type<'cx>(cx: &Context<'cx>, name: &Name, t: &Type) -> Type {
+    pub fn assert_export_is_type<'cx>(
+        cx: &Context<'cx>,
+        name: &Name,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         let reason = reason_of_t(t).dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(
+        flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
             cx,
             reason.dupe(),
             |cx, tout| -> Result<(), FlowJsException> {
@@ -2103,12 +2121,11 @@ pub mod type_assertions {
                 flow_js::flow_t(cx, (&t, tout))?;
                 Ok(())
             },
-        )
-        .unwrap()
+        ))
     }
 
-    pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
-        distribute_union_intersection::distribute(
+    pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
@@ -2142,8 +2159,7 @@ pub mod type_assertions {
                 }
             },
             t,
-        )
-        .unwrap()
+        ))
     }
 
     pub fn assert_non_component_like_base<'cx>(
@@ -2151,7 +2167,7 @@ pub mod type_assertions {
         def_loc: ALoc,
         use_reason: &Reason,
         t: &Type,
-    ) {
+    ) -> Result<(), JobError> {
         fn check_base<'cx>(
             def_loc: &ALoc,
             use_reason: &Reason,
@@ -2202,19 +2218,18 @@ pub mod type_assertions {
             }
         }
 
-        distribute_union_intersection::distribute(
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
             &|_| use_reason.loc().dupe(),
             &|cx, t| check_base(&def_loc, use_reason, cx, t),
             t,
-        )
-        .unwrap()
+        ))
     }
 
-    pub fn assert_instanceof_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
-        distribute_union_intersection::distribute(
+    pub fn assert_instanceof_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
             cx,
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
@@ -2238,20 +2253,21 @@ pub mod type_assertions {
                 }
             },
             t,
-        )
-        .unwrap()
+        ))
     }
 
-    pub fn assert_match_instance_pattern_constructor<'cx>(cx: &Context<'cx>, t: &Type) {
+    pub fn assert_match_instance_pattern_constructor<'cx>(
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<(), JobError> {
         match crate::exhaustive::get_class_info(cx, t) {
-            Some(_) => {}
-            None => flow_js_utils::add_output(
+            Some(_) => Ok(()),
+            None => flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidInstancePattern(
                     reason_of_t(t).loc().dupe(),
                 )),
-            )
-            .unwrap(),
+            )),
         }
     }
 

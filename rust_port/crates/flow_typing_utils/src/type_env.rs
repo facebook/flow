@@ -744,10 +744,10 @@ fn predicate_of_refinement<'cx>(
                 let t = checked_find_loc_env_write(cx, DefLocType::ExpressionLoc, loc.dupe());
                 match context {
                     InstanceofContext::InstanceOfExpr => {
-                        type_operation_utils::type_assertions::assert_instanceof_rhs(cx, &t);
+                        type_operation_utils::type_assertions::assert_instanceof_rhs(cx, &t)?;
                     }
                     InstanceofContext::MatchInstancePattern => {
-                        type_operation_utils::type_assertions::assert_match_instance_pattern_constructor(cx, &t);
+                        type_operation_utils::type_assertions::assert_match_instance_pattern_constructor(cx, &t)?;
                     }
                 }
                 Some(Predicate::new(PredicateInner::BinaryP(

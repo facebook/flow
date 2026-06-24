@@ -1870,7 +1870,7 @@ fn export_specifiers<'a>(
                     None,
                     type_operation_utils::type_assertions::assert_export_is_type(
                         cx, local_name, &t,
-                    ),
+                    )?,
                 )
             }
             statement::ExportKind::ExportValue if flow_common::files::has_ts_ext(cx.file()) => {
@@ -1893,7 +1893,7 @@ fn export_specifiers<'a>(
                             None,
                             type_operation_utils::type_assertions::assert_export_is_type(
                                 cx, local_name, &t,
-                            ),
+                            )?,
                         )
                     }
                     Some(type_env::LocalExportBinding {
@@ -1914,7 +1914,7 @@ fn export_specifiers<'a>(
                             None,
                             type_operation_utils::type_assertions::assert_export_is_type(
                                 cx, local_name, &t,
-                            ),
+                            )?,
                         )
                     }
                     _ => {
@@ -3030,7 +3030,7 @@ fn statement_<'a>(
                 }
             };
             let (_, right_t) = right_ast.loc();
-            type_operation_utils::type_assertions::assert_for_in_rhs(cx, right_t);
+            type_operation_utils::type_assertions::assert_for_in_rhs(cx, right_t)?;
             let body_ast = statement(cx, &inner.body)?;
             statement::Statement::new(StatementInner::ForIn {
                 loc,
@@ -10502,7 +10502,7 @@ fn unary<'a>(
                     RUnaryOperator(FlowSmolStr::from("not"), Arc::new(desc_of_t(&arg).clone())),
                     loc.dupe(),
                 );
-                type_operation_utils::operators::unary_not(cx, &reason, &arg)
+                type_operation_utils::operators::unary_not(cx, &reason, &arg)?
             };
             (
                 tout,
@@ -10530,7 +10530,7 @@ fn unary<'a>(
                 &reason,
                 &type_::UnaryArithKind::Plus,
                 &argt,
-            );
+            )?;
             (
                 tout,
                 expression::Unary {
@@ -10564,7 +10564,7 @@ fn unary<'a>(
                 &reason,
                 &type_::UnaryArithKind::Minus,
                 &argt,
-            );
+            )?;
             (
                 tout,
                 expression::Unary {
@@ -10591,7 +10591,7 @@ fn unary<'a>(
                 &reason,
                 &type_::UnaryArithKind::BitNot,
                 &argt,
-            );
+            )?;
             (
                 tout,
                 expression::Unary {
@@ -10693,7 +10693,7 @@ fn unary<'a>(
             )?;
             let argt = argument.loc().1.dupe();
             let reason = mk_reason(RNonnullAssert, loc.dupe());
-            let tout = type_operation_utils::operators::non_maybe(cx, &reason, &argt);
+            let tout = type_operation_utils::operators::non_maybe(cx, &reason, &argt)?;
             (
                 tout,
                 expression::Unary {
@@ -10728,7 +10728,7 @@ fn update<'a>(
         &reason,
         &type_::UnaryArithKind::Update,
         &arg_t,
-    );
+    )?;
     let arg_ast = match expr.argument.deref() {
         expression::ExpressionInner::Identifier { inner, .. } => {
             let id_loc = inner.loc.dupe();
@@ -10873,7 +10873,7 @@ fn binary<'a>(
             let t1 = left.loc().1.dupe();
             let right = reconstruct_ast(cx, &expr.right)?;
             let t2 = right.loc().1.dupe();
-            type_operation_utils::operators::check_eq(cx, (&t1, &t2));
+            type_operation_utils::operators::check_eq(cx, (&t1, &t2))?;
             (
                 type_::bool_module_t::at(loc.dupe()),
                 expression::Binary {
@@ -10905,8 +10905,8 @@ fn binary<'a>(
                 &expr.right,
             )?;
             let t2 = right.loc().1.dupe();
-            type_operation_utils::type_assertions::assert_binary_in_lhs(cx, &t1);
-            type_operation_utils::type_assertions::assert_binary_in_rhs(cx, &t2);
+            type_operation_utils::type_assertions::assert_binary_in_lhs(cx, &t1)?;
+            type_operation_utils::type_assertions::assert_binary_in_rhs(cx, &t2)?;
             (
                 type_::bool_module_t::at(loc.dupe()),
                 expression::Binary {
@@ -10927,7 +10927,7 @@ fn binary<'a>(
             let t1 = left.loc().1.dupe();
             let right = reconstruct_ast(cx, &expr.right)?;
             let t2 = right.loc().1.dupe();
-            type_operation_utils::operators::check_strict_eq(&encl_ctx, cx, (&t1, &t2));
+            type_operation_utils::operators::check_strict_eq(&encl_ctx, cx, (&t1, &t2))?;
             cx.add_strict_comparison((loc.dupe(), (left.clone(), right.clone())));
             (
                 type_::bool_module_t::at(loc.dupe()),
@@ -10959,7 +10959,7 @@ fn binary<'a>(
                 &expr.right,
             )?;
             let right_t = right.loc().1.dupe();
-            type_operation_utils::type_assertions::assert_instanceof_rhs(cx, &right_t);
+            type_operation_utils::type_assertions::assert_instanceof_rhs(cx, &right_t)?;
             (
                 type_::bool_module_t::at(loc.dupe()),
                 expression::Binary {
@@ -10994,7 +10994,7 @@ fn binary<'a>(
                 &expr.right,
             )?;
             let t2 = right.loc().1.dupe();
-            type_operation_utils::operators::check_comparator(cx, &t1, &t2);
+            type_operation_utils::operators::check_comparator(cx, &t1, &t2)?;
             (
                 type_::bool_module_t::at(loc.dupe()),
                 expression::Binary {
@@ -11044,7 +11044,7 @@ fn binary<'a>(
             )));
             let reason = mk_reason(desc, loc.dupe());
             let arith_kind = type_::arith_kind::ArithKind::of_binary_operator(expr.operator);
-            let tout = type_operation_utils::operators::arith(cx, &reason, &arith_kind, &t1, &t2);
+            let tout = type_operation_utils::operators::arith(cx, &reason, &arith_kind, &t1, &t2)?;
             (
                 tout,
                 expression::Binary {
@@ -11319,7 +11319,8 @@ pub fn assignment_lhs<'a>(
                         }),
                         &|loc: ALoc| -> (ALoc, Type) {
                             let reason = mk_reason(RNonnullAssert, loc.dupe());
-                            let t = type_operation_utils::operators::non_maybe(cx, &reason, &t);
+                            let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
+                                .unwrap();
                             (loc, t)
                         },
                     );
@@ -11336,7 +11337,8 @@ pub fn assignment_lhs<'a>(
                     let typed_expr =
                         reconstruct_ast.call(typed_expr, &|loc: ALoc| -> (ALoc, Type) {
                             let reason = mk_reason(RNonnullAssert, loc.dupe());
-                            let t = type_operation_utils::operators::non_maybe(cx, &reason, &t);
+                            let t = type_operation_utils::operators::non_maybe(cx, &reason, &t)
+                                .unwrap();
                             (loc, t)
                         });
                     let t = typed_expr.loc().1.dupe();
@@ -11960,7 +11962,7 @@ fn op_assignment<'a>(
             let rhs_t = rhs_ast.loc().1.dupe();
             let arith_kind = type_::arith_kind::ArithKind::of_assignment_operator(op);
             let result_t =
-                type_operation_utils::operators::arith(cx, &reason, &arith_kind, &lhs_t, &rhs_t);
+                type_operation_utils::operators::arith(cx, &reason, &arith_kind, &lhs_t, &rhs_t)?;
             // enforce state-based guards for binding update, e.g., const
             update_env(&result_t)?;
             (lhs_t, lhs_ast, rhs_ast)
@@ -12590,7 +12592,7 @@ fn jsx_title<'a>(
                             def_loc,
                             &ref_reason,
                             &ref_t,
-                        );
+                        )?;
                     }
                     let ident_reason = mk_reason(
                         VirtualReasonDesc::RIdentifier(Name::new(id_name.dupe())),
@@ -14063,7 +14065,7 @@ fn static_method_call_object<'a>(
                 &reason,
                 &target_t,
                 &rest_arg_ts,
-            );
+            )?;
             (t, None, typed_args)
         }
         ("getPrototypeOf", None, [ExpressionOrSpread::Expression(e)]) => {
