@@ -591,6 +591,7 @@ pub fn ordered_and_unordered_lib_paths(
                 let mut symlink_ancestor_cache = HashMap::new();
                 if lib.exists() {
                     for entry in jwalk::WalkDir::new(lib)
+                        .skip_hidden(false)
                         .parallelism(jwalk::Parallelism::RayonNewPool(2))
                         .into_iter()
                         .filter_map(|e| e.ok())
@@ -913,6 +914,7 @@ pub fn make_next_files(
         let duped_options = options.dupe();
         let duped_all_unordered_libs = all_unordered_libs.dupe();
         for entry in jwalk::WalkDir::new(starting_point_path)
+            .skip_hidden(false)
             .sort(sort)
             .follow_links(true)
             .parallelism(jwalk::Parallelism::RayonNewPool(2))
