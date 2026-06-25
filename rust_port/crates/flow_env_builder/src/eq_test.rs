@@ -6,8 +6,6 @@
  */
 
 //! This module provides equality test analysis for refinements.
-//! It is parameterized by Env_api in OCaml via a functor, but in Rust we use
-//! concrete ALoc types directly.
 
 use std::collections::BTreeMap;
 use std::ops::Deref;
@@ -223,7 +221,6 @@ pub fn object_properties_possible_sentinel_refinements(
     acc
 }
 
-/// OCaml: let visit_eq_test ...
 #[allow(clippy::too_many_arguments)]
 pub fn visit_eq_test<
     'a,

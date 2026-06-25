@@ -93,7 +93,6 @@ pub mod this_finder {
 
     use super::*;
 
-    // OCaml: class ['a] finder
     struct Finder {
         acc: bool,
     }

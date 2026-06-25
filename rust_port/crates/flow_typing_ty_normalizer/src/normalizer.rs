@@ -910,7 +910,6 @@ fn type_variable<'cx>(
             let ty_result = cont(env, state, Some(IdKey::TVarKey(id)), t)?;
             result.extend(ty::bk_union(&ty_result));
         }
-        // OCaml: >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
         result.sort();
         result.dedup();
         Ok(result)

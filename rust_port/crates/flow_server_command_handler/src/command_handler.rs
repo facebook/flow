@@ -140,8 +140,7 @@ use flow_services_get_def::get_def_types::Purpose;
 
 const DOCBLOCK_MAX_TOKENS: usize = 10;
 
-// Mirrors OCaml's `Lwt.t` returning `(response, json_data) option` or raising
-// `Lwt.Canceled`. The Err variant carries `WorkloadCanceled`, which the
+// The Err variant carries `WorkloadCanceled`, which the
 // `run_command_in_parallel`/`run_command_in_serial` functions translate into
 // either a workload deferral or an inline recheck-and-retry.
 pub type EphemeralParallelizableResult =
@@ -1392,8 +1391,6 @@ fn check_file(
         Err(ErrorsOfFileError::NotCovered) => {
             Ok(server_prot::response::StatusResponse::NOT_COVERED)
         }
-        // OCaml: `Lwt.Canceled` propagates out of `check_file`. The Rust port
-        // surfaces it via the typed Err so that the workload wrapper can defer.
         Err(ErrorsOfFileError::Canceled) => Err(WorkloadCanceled),
         Ok((errors, warnings)) => Ok(convert_errors(
             &shared_mem,

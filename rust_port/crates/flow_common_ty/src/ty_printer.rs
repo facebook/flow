@@ -205,12 +205,9 @@ where
 (*************************/
 
 fn layout_of_elt<L: Dupe>(opts: &PrinterOptions, elt: &Elt<L>) -> LayoutNode {
-    // OCaml: let size = ref size in
     let mut size = opts.size;
     match elt {
-        // OCaml: | Type t -> type_ ~depth:0 t
         Elt::Type(t) => type_(opts, 0, t, &mut size),
-        // OCaml: | Decl d -> decl ~depth:0 d
         Elt::Decl(d) => decl(opts, 0, d, &mut size),
     }
 }
@@ -1290,7 +1287,6 @@ fn class_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            // OCaml: option ~f:(type_parameter ~depth) typeParameters
             |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
         ),
@@ -1309,7 +1305,6 @@ fn interface_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            // OCaml: option ~f:(type_parameter ~depth) typeParameters
             |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
         ),
@@ -1328,7 +1323,6 @@ fn record_decl<L: Dupe>(
         layout::space(),
         identifier(&local_name_of_symbol(s)),
         option(
-            // OCaml: option ~f:(type_parameter ~depth) tparams
             |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
             tparams,
         ),
@@ -1349,10 +1343,8 @@ fn nominal_component_decl<L: Dupe>(
     if is_type {
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            // OCaml: | Some ts -> type_args ~depth ts
             Some(ts) => type_args(opts, depth, ts, size),
             None => option(
-                // OCaml: | None -> option ~f:(type_parameter ~depth) typeParameters
                 |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
                 type_parameters,
             ),
@@ -1382,10 +1374,8 @@ fn nominal_component_decl<L: Dupe>(
         // component ComponentName<...>(props) renders Type
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
-            // OCaml: | Some ts -> type_args ~depth ts
             Some(ts) => type_args(opts, depth, ts, size),
             None => option(
-                // OCaml: | None -> option ~f:(type_parameter ~depth) typeParameters
                 |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
                 type_parameters,
             ),
@@ -1396,7 +1386,6 @@ fn nominal_component_decl<L: Dupe>(
             layout::space(),
             identifier(&local_name_of_symbol(s)),
             type_args_or_params,
-            // OCaml: type_component_sig ~depth ~regular_props ~renders
             type_component_sig(
                 opts,
                 depth,
@@ -1418,7 +1407,6 @@ fn type_alias<L: Dupe>(
 ) -> LayoutNode {
     let name_str = &name.sym_name;
     let tparams_node = option(
-        // OCaml: let tparams = option ~f:(type_parameter ~depth) tparams
         |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
     );
@@ -1427,7 +1415,6 @@ fn type_alias<L: Dupe>(
             layout::pretty_space(),
             LayoutNode::atom("=".to_string()),
             layout::pretty_space(),
-            // OCaml: Some t -> fuse [pretty_space; Atom "="; pretty_space; type_ ~depth t]
             type_(opts, depth, t, size),
         ]),
         None => LayoutNode::empty(),
@@ -1457,7 +1444,6 @@ fn variable_decl<L: Dupe>(
         identifier(name),
         LayoutNode::atom(":".to_string()),
         layout::space(),
-        // OCaml: type_ ~depth t
         type_(opts, depth, t, size),
     ])
 }

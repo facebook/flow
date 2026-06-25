@@ -1496,12 +1496,10 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RConstructor => "constructor".to_string(),
         RDefaultConstructor => "default constructor".to_string(),
         RConstructorCall(d) => match &**d {
-            // OCaml: RConstructorCall (RPolyType (RClass d)) -> string_of_desc d
             RPolyType(inner) => match &**inner {
                 RClass(innermost) => string_of_desc(innermost),
                 _ => string_of_desc(d),
             },
-            // OCaml: RConstructorCall (RClass d) -> string_of_desc d
             RClass(inner) => string_of_desc(inner),
             _ => format!("new {}", string_of_desc(d)),
         },

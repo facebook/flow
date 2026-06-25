@@ -88,7 +88,6 @@ where
     for (i, loc) in locs.iter().enumerate() {
         loc_string.push_str(&i.to_string());
         loc_string.push_str(". ");
-        // Use mk_pp_loc algorithm from OCaml
         if loc.start == loc.end {
             loc_string.push_str(&format!("[{}:{}]", loc.start.line, loc.start.column));
         } else if loc.start.line == loc.end.line {
@@ -144,7 +143,6 @@ fn print_builtins(contents_list: Vec<&str>) -> String {
     for (i, loc) in locs.iter().enumerate() {
         loc_string.push_str(&i.to_string());
         loc_string.push_str(". ");
-        // Use mk_pp_loc algorithm from OCaml
         if loc.start == loc.end {
             loc_string.push_str(&format!("[{}:{}]", loc.start.line, loc.start.column));
         } else if loc.start.line == loc.end.line {

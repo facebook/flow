@@ -110,10 +110,6 @@ pub fn ecma_string_of_float(v: f64) -> String {
 
 /// Produces the shortest decimal string representation of a float value.
 ///
-/// This is the Rust equivalent of OCaml's `Dtoa.shortest_string_of_float`, which
-/// uses Google's double-conversion library in "ToShortest" mode. It finds the
-/// shortest string representation that uniquely identifies the float value.
-///
 /// Unlike `ecma_string_of_float` which follows ECMAScript's `Number::toString()`
 /// formatting rules, this function actively tries all possible representations
 /// (fixed notation, exponential with various coefficient/exponent splits) and
@@ -124,7 +120,6 @@ pub fn ecma_string_of_float(v: f64) -> String {
 /// - `shortest_string_of_float(1000.0)` -> `"1e3"` (not `"1000"`)
 /// - `shortest_string_of_float(100.0)` -> `"100"` (same length as `"1e2"`, prefers fixed)
 /// - `shortest_string_of_float(2592000000.0)` -> `"2592e6"`
-// OCaml: external shortest_string_of_float: float -> string = "flow_shortest_string_of_float"
 pub fn shortest_string_of_float(v: f64) -> String {
     // Handle special values
     if v.is_nan() {

@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// =============================================================================
-// OCaml: Renders_kit from renders_kit.rs
-// =============================================================================
-
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;

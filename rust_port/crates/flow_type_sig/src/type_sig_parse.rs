@@ -2627,8 +2627,6 @@ pub(super) mod scope {
                     ) = (e.get(), new_prop)
                     {
                         // merge overloads
-                        // OCaml: Some (InterfaceMethod (Nel.append old_sigs new_sigs))
-                        // Method Vecs store the OCaml Nel reversed, so append is new then old.
                         let mut merged: Vec<_> = new_sigs.iter().cloned().collect();
                         merged.extend(old_sigs.iter().cloned());
                         let merged = Vec1::try_from_vec(merged).unwrap();

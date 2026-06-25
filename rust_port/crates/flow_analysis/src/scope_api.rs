@@ -42,7 +42,6 @@ impl<Loc: PartialOrd> PartialOrd for Def<Loc> {
 
 impl<Loc: Ord> Ord for Def<Loc> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // OCaml: | ([], []) -> 0 | ([], _) -> -1 | (_, []) -> 1
         for (t1, t2) in self.locs.iter().zip(other.locs.iter()) {
             let i = t1.cmp(t2);
             if i != std::cmp::Ordering::Equal {

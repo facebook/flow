@@ -27,11 +27,6 @@ use crate::lock::Mutex;
 use crate::thread_pool::ThreadPool;
 
 /// Work bucket returned by a `Next` function.
-///
-/// Similar to OCaml's `Bucket.bucket`:
-/// ```ocaml
-/// type 'a bucket = Job of 'a | Wait | Done
-/// ```
 #[derive(Debug)]
 pub enum Bucket<W> {
     /// A batch of work items to process.
@@ -76,8 +71,6 @@ fn wait_for_progress_since(wait_signal: &Condvar, wait_state: &Mutex<WaitState>,
 }
 
 /// A function that produces work batches on-demand.
-///
-/// Similar to OCaml's `'a next = unit -> 'a bucket`.
 ///
 /// This trait allows lazy/streaming work generation:
 /// - Work items can be generated on-demand
@@ -211,13 +204,6 @@ fn sample_worker_idle<T>(f: impl FnOnce() -> T) -> T {
 }
 
 fn sample_worker_done(done_start_times: &Arc<Mutex<Vec<Instant>>>) {
-    // OCaml:
-    // let%lwt idle_start_times = LwtUtils.all worker_threads in
-    // let idle_end_wall_time = Unix.gettimeofday () in
-    // List.iter
-    //   (fun idle_start_wall_time ->
-    //     Measure.sample "worker_done" (idle_end_wall_time -. idle_start_wall_time))
-    //   idle_start_times;
     if !measure::is_enabled() {
         return;
     }
@@ -679,11 +665,6 @@ pub fn make_next<W: Send + 'static>(
 }
 
 /// Parallel iteration over work items using a `Next` function.
-///
-/// Similar to OCaml's `MultiWorkerLwt.iter`:
-/// ```ocaml
-/// val iter : worker list option -> job:('a -> unit) -> next:'a list Hh_bucket.next -> unit Lwt.t
-/// ```
 ///
 /// This function processes batches of work items in parallel without accumulating results.
 /// It's useful when you want side effects (like writing to shared memory) rather than collecting values.

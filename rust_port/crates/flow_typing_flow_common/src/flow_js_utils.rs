@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// =============================================================================
-// OCaml: Flow_js_utils from flow_js_utils.rs
-// =============================================================================
-
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::VecDeque;
@@ -84,7 +80,6 @@ use vec1::Vec1;
 // bounds of the solution, or a singleton containing the solution itself.
 pub fn types_of<'cx>(cx: &Context<'cx>, constraints: &Constraints<'cx, Context<'cx>>) -> Vec<Type> {
     match constraints {
-        // OCaml: | Unresolved { lower; _ } -> TypeMap.keys lower
         Constraints::Unresolved(bounds) => bounds.borrow().lower.keys().duped().collect(),
         Constraints::Resolved(t) => vec![t.dupe()],
         Constraints::FullyResolved(s) => vec![cx.force_fully_resolved_tvar(s)],
@@ -2340,8 +2335,6 @@ pub fn enum_proto<'cx>(
 
 // Determines whether a property name should be considered "munged"/private when
 // the `munge_underscores` config option is set.
-// OCaml: let is_munged_prop_name_with_munge name ~should_munge_underscores =
-//   Signature_utils.is_munged_property_name name && should_munge_underscores
 pub fn is_munged_prop_name_with_munge(name: &Name, should_munge_underscores: bool) -> bool {
     signature_utils::is_munged_property_name(name) && should_munge_underscores
 }

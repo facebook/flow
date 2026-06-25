@@ -425,25 +425,15 @@ pub struct ReactAbstractComponentTData {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DefTInner {
-    // OCaml: | NumGeneralT of literal
     NumGeneralT(Literal),
-    // OCaml: | StrGeneralT of literal
     StrGeneralT(Literal),
-    // OCaml: | BoolGeneralT
     BoolGeneralT,
-    // OCaml: | BigIntGeneralT of literal
     BigIntGeneralT(Literal),
-    // OCaml: | EmptyT
     EmptyT,
-    // OCaml: | MixedT of mixed_flavor
     MixedT(MixedFlavor),
-    // OCaml: | NullT
     NullT,
-    // OCaml: | VoidT
     VoidT,
-    // OCaml: | SymbolT
     SymbolT,
-    // OCaml: | UniqueSymbolT of ALoc.id
     UniqueSymbolT(ALocId),
     FunT(Type, Rc<FunType>),
     ObjT(Rc<ObjType>),
@@ -7383,11 +7373,8 @@ pub mod union_rep {
         serde::Deserialize
     )]
     pub enum OptimizedError<L: Dupe> {
-        // OCaml: | ContainsUnresolved of 'loc virtual_reason
         ContainsUnresolved(VirtualReason<L>),
-        // OCaml: | NoCandidateMembers
         NoCandidateMembers,
-        // OCaml: | NoCommonKeys
         NoCommonKeys,
     }
 

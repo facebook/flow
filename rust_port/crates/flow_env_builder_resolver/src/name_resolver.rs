@@ -5504,7 +5504,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                         env_api::WriteLoc::Undeclared { .. } => undeclared = true,
                                         env_api::WriteLoc::Write(r) => locs.push(r.loc().dupe()),
                                         _ => {
-                                            // OCaml: raise Env_api.(Env_invariant (Some component_loc, Impossible "Unexpected env state for maybe_exhaustively_checked"))
                                             panic!(
                                                 "Env invariant: Unexpected env state for maybe_exhaustively_checked at {:?}",
                                                 loc

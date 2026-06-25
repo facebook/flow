@@ -1720,7 +1720,7 @@ pub(crate) fn add_saved_state_flags(spec: command_spec::Spec) -> command_spec::S
         "If saved state fails to load, exit (normally fallback is to initialize from scratch)",
         None,
     )
-    // This is really unsafe! Saved state is marshal'd OCaml data and it's
+    // This is really unsafe! Saved state is marshal'd data and it's
     // easy to introduce serialization differences that would lead to
     // segfaults. This is only for debugging.
     .flag(
@@ -3250,9 +3250,6 @@ fn connect_and_make_request_inner(
     let flowconfig = read_config_or_exit(&path, enforce_warnings);
 
     // connect handles timeouts itself
-    // OCaml:
-    // let normalize dir = File_path.(dir |> make |> to_string) in
-    // let tmp_dir = get_temp_dir connect_flags.temp_dir |> normalize in
     let tmp_dir_normalized = normalize_temp_dir(&connect_flags.temp_dir);
     let tmp_dir_str = tmp_dir_normalized.to_string_lossy();
     let env = make_env(

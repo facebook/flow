@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// =============================================================================
-// OCaml: Match_pattern_ir from match_pattern_ir.rs
-// =============================================================================
-
-// open Loc_collections
 use std::rc::Rc;
 use std::sync::Arc;
 

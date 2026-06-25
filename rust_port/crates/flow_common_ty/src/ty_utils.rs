@@ -554,7 +554,6 @@ pub mod simplify {
             let flattened = flatten_union(&all_types);
             let len2 = flattened.len();
 
-            // OCaml: if len1 <> len2 then (ts2, len2) else (ts1, len1)
             let (ts2, len2) = if len1 != len2 {
                 (flattened, len2)
             } else {
@@ -572,7 +571,6 @@ pub mod simplify {
 
             let deduplicated = self.deduplicate(&simplified);
 
-            // OCaml: if sort || len2 <> Nel.length ts3 then ts3 else ts2
             // Use deduplicated result if:
             // 1. sort is true, OR
             // 2. simplify_list + dedup removed elements (length changed)
@@ -608,7 +606,6 @@ pub mod simplify {
             let flattened = flatten_inter(&all_types);
             let len2 = flattened.len();
 
-            // OCaml: if len1 <> len2 then (ts2, len2) else (ts1, len1)
             let (ts2, len2) = if len1 != len2 {
                 (flattened, len2)
             } else {
@@ -626,7 +623,6 @@ pub mod simplify {
 
             let deduplicated = self.deduplicate(&simplified);
 
-            // OCaml: if sort || len2 <> Nel.length ts3 then ts3 else ts2
             // Use deduplicated result if:
             // 1. sort is true, OR
             // 2. simplify_list + dedup removed elements (length changed)

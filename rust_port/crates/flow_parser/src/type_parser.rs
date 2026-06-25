@@ -4184,7 +4184,6 @@ fn add_comments(
             loc: loc.dupe(),
             comments: ast_utils::merge_comments(comments.dupe(), outer),
         }),
-        // OCaml: UniqueSymbol comments -> UniqueSymbol (merge_comments comments)
         TypeInner::UniqueSymbol { loc, comments } => types::Type::new(TypeInner::UniqueSymbol {
             loc: loc.dupe(),
             comments: ast_utils::merge_comments(comments.dupe(), outer),

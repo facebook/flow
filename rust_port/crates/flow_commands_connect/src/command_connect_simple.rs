@@ -150,7 +150,6 @@ fn open_connection(
 pub fn close_connection(sockaddr: &Addr) {
     with_connections(|conns| {
         if let Some(stream) = conns.remove(sockaddr) {
-            // OCaml: try Timeout.shutdown_connection ic with | _ -> ()
             // Errors from shutdown are intentionally ignored.
             match stream.shutdown() {
                 Ok(()) | Err(_) => (),
@@ -338,7 +337,6 @@ pub fn connect_once(
         ) {
             Ok(Ok(())) => Ok(Ok((sockaddr, stream))),
             Ok(Err(ccs_err)) => Ok(Err(ccs_err)),
-            // OCaml: `failwith ...` raised inside `verify_handshake`, caught by `| _ ->`.
             Err(MonitorMisbehaved) => Err(BroadCatch::TimeoutOrOther),
         }
     };

@@ -195,17 +195,6 @@ pub fn is_provider<'cx>(cx: &Context<'cx>, id_loc: ALoc) -> bool {
     env.var_info.providers.is_provider(&id_loc)
 }
 
-// OCaml: let with_debug_exn cx loc f =
-// OCaml:   try f () with
-// OCaml:   | exn ->
-// OCaml:     let exn = Exception.wrap exn in
-// OCaml:     if Build_mode.dev then
-// OCaml:       Exception.reraise exn
-// OCaml:     else (
-// OCaml:       Flow_js_utils.add_output cx (Error_message.EInternal (loc, Error_message.MissingEnvWrite loc));
-// OCaml:       AnyT.at (AnyError None) loc
-// OCaml:     )
-//
 // We don't want the new-env to throw if we encounter some new case in the wild
 // for which we did not adequately prepare. Instead, we return `any` in prod
 // mode, but still crash in build mode.
@@ -220,8 +209,6 @@ fn with_debug_exn<'cx>(_cx: &Context<'cx>, _loc: ALoc, f: impl FnOnce() -> Type)
     f()
 }
 
-// OCaml: let with_debug_exn_error cx loc ~f ~error = ...
-//
 // See `with_debug_exn` above for the rationale: cancel/timeout uses Result;
 // `f`'s remaining panics are real bugs we let crash.
 fn with_debug_exn_error<'cx, A: 'static>(

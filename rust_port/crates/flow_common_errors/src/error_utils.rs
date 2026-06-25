@@ -2496,7 +2496,6 @@ pub mod cli_output {
     }
 
     /// Get the style function for a given severity
-    /// OCaml: let severity_fragment_style = function
     fn severity_fragment_style(severity: Severity) -> fn(&str) -> (tty::Style, String) {
         match severity {
             Severity::Err => error_fragment_style,

@@ -173,7 +173,6 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                     // - as inherited if all of its constituent members are.
                     // - as from a nullable object if any of its constituent members are.
                     // - as defined at the definition locations of any of its constituent members.
-                    // OCaml: ty = Nel.cons ty tys (prepend ty_opt's ty to tys_opt's tys)
                     let mut new_tys = vec![ty_info.ty.clone()];
                     new_tys.extend(tys_info.ty);
                     let mut new_def_locs = ty_info.def_locs.clone();

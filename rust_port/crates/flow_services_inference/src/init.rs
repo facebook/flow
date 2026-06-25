@@ -173,7 +173,6 @@ pub struct InitResult {
     pub master_cx: Arc<MasterContext>,
 }
 
-// OCaml: let error_set_to_filemap ~init err_set =
 fn error_set_to_filemap(map: &mut BTreeMap<FileKey, ErrorSet>, err_set: ErrorSet) {
     err_set.fold((), |(), error: FlowError<ALoc>| {
         let file = error.source_file().dupe();

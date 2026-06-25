@@ -521,9 +521,6 @@ pub mod imports_helper {
         F: Fn(&import_info::T, A) -> A,
     {
         for lst in m.values() {
-            // OCaml stores infos in a `Nel.t` and uses `Nel.cons` to add,
-            // so `Nel.fold_left` walks newest-inserted first. Our `Vec`
-            // is push-ordered, so iterate in reverse to match.
             for info in lst.iter().rev() {
                 acc = f(info, acc);
             }
@@ -843,8 +840,6 @@ pub mod imports_helper {
                     let named_specifier = &import_declaration.named_specifier;
                     match (default, named_specifier) {
                         (None, Some(named_specifier)) => {
-                            // OCaml: `named_specifier :: named_specifiers` — prepend
-                            // (`Insert_type_imports.to_import_stmts`).
                             named_acc
                                 .entry((import_kind, source.clone()))
                                 .or_insert_with(Vec::new)
@@ -852,7 +847,6 @@ pub mod imports_helper {
                             (default_acc, named_acc)
                         }
                         _ => {
-                            // OCaml: `import_declaration :: default_acc` — prepend.
                             default_acc.insert(0, import_declaration.clone());
                             (default_acc, named_acc)
                         }
@@ -905,7 +899,6 @@ pub mod imports_helper {
                             comments: None,
                         }),
                     });
-                // OCaml: `import_stmt :: acc` — prepend, so iteration over
                 // `BatchImportMap` (asc-sorted) yields desc-sorted output.
                 import_stmts.insert(0, import_stmt);
             }

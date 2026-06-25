@@ -836,7 +836,6 @@ where
 }
 
 /// Formats an ALoc directly (its keyed-or-concrete representation) without concretizing.
-/// OCaml: `Ty_debug.Make (struct let aloc_to_loc = None end)` (ty_debug.rs).
 pub struct AlocOnlyConverter;
 
 impl ALocToLoc<flow_aloc::ALoc> for AlocOnlyConverter {

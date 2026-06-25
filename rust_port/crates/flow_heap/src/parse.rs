@@ -256,7 +256,6 @@ impl TypedParse {
         }
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.read_ast_unsafe file_key parse
     pub fn ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
         match &self.ast {
             Some(bytes) => flow_heap_serialization::deserialize_ast(file, bytes),
@@ -268,7 +267,6 @@ impl TypedParse {
         self.ast.is_some()
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.read_tolerable_file_sig_unsafe file_key parse
     pub fn tolerable_file_sig_unsafe(
         &self,
         file: &FileKey,
@@ -279,7 +277,6 @@ impl TypedParse {
         }
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.read_aloc_table_unsafe file_key parse
     pub fn aloc_table_unsafe(&self, file: &FileKey) -> Arc<PackedALocTable> {
         match &self.aloc_table {
             Some(bytes) => flow_heap_serialization::deserialize_aloc_table(bytes),
@@ -287,7 +284,6 @@ impl TypedParse {
         }
     }
 
-    /// Equivalent to OCaml's Heap.get_type_sig parse
     pub fn type_sig_unsafe(&self, file: &FileKey) -> Arc<Module<Loc>> {
         match &self.type_sig {
             Some(bytes) => flow_heap_serialization::deserialize_type_sig(file, bytes),
@@ -295,24 +291,20 @@ impl TypedParse {
         }
     }
 
-    /// Equivalent to OCaml's accessing requires from parse
     pub fn requires(&self) -> Arc<[FlowImportSpecifier]> {
         self.requires.dupe()
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe
     pub fn resolved_requires_unsafe(&self) -> ResolvedRequires {
         self.resolved_requires
             .read_latest_clone()
             .expect("ResolvedRequires should be set")
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.Reader_dispatcher.get_leader_unsafe
     pub fn leader_unsafe(&self) -> FileKey {
         self.leader.get()
     }
 
-    /// Equivalent to OCaml's Parsing_heaps.read_docblock_unsafe file_key parse
     pub fn docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
         match &self.docblock {
             Some(bytes) => flow_heap_serialization::deserialize_docblock(file, bytes),

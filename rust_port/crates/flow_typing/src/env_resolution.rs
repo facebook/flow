@@ -176,9 +176,6 @@ fn expression<'cx>(
         _ => None,
     };
     let exp_clone = exp.dupe();
-    // OCaml: let ((_, t), _) = try_cache cx ~target_loc
-    //   ~check:(fun () -> Statement.expression ?encl_ctx ?decl ?as_const cx exp)
-    //   ~cache:(Node_cache.set_expression cache) in t
     let result = try_cache_result(
         cx,
         target_loc,

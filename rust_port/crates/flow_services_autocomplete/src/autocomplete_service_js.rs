@@ -1198,7 +1198,7 @@ fn append_completion_items_of_autoimports(
                 auto_import,
                 rank,
             );
-            acc.push_front(item); // OCaml: item :: acc
+            acc.push_front(item);
             acc
         });
     if ac_options.imports_ranked_usage {
@@ -1255,7 +1255,6 @@ fn autocomplete_id(
              ((name, documentation_and_tags, ac_id_type), elt_result)| {
                 match elt_result {
                     Ok(elt) => {
-                        // OCaml: let items_rev = match ac_id_type with ...
                         match ac_id_type {
                             AcIdType::AcIdTypeRecord {
                                 record_type,
@@ -1269,7 +1268,7 @@ fn autocomplete_id(
                                     &record_type,
                                     &defaulted_props,
                                 ) {
-                                    items_rev.push_front(item); // OCaml: item :: items_rev
+                                    items_rev.push_front(item);
                                 }
                             }
                             AcIdType::AcIdTypeNormal => {}
@@ -1310,7 +1309,6 @@ fn autocomplete_id(
             insert_text_format: LspInsertTextFormat::PLAIN_TEXT,
         });
     }
-    // OCaml: if include_super then { ... } :: items_rev else items_rev
     if include_super {
         items_rev.push_front(ac_completion::CompletionItem {
             kind: Some(LspCompletionItemKind::VARIABLE),
@@ -3218,12 +3216,6 @@ pub fn autocomplete_get_results(
                                 AutocompleteServiceResultGeneric::AcResult(result_id)
                             }
                             AutocompleteServiceResultGeneric::AcResult(result_member) => {
-                                // OCaml: Base.List.fold ~init:(List.rev result_id.result.items)
-                                //          ~f:(fun acc item -> { item with name; ... } :: acc)
-                                //          result_member.result.items
-                                // The :: prepend means each transformed member item ends up
-                                // at the FRONT of the accumulator (so items appear in reverse
-                                // of their original order in result_member.result.items).
                                 let init_rev_items = result_id.result.items.iter().rev().cloned();
                                 let rev_items: Vec<_> = result_member
                                     .result

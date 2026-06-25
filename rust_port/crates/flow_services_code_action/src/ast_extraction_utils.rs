@@ -36,7 +36,6 @@ pub mod insertion_point_collectors {
         !tp.is_this
     }
 
-    // OCaml: method in Typed_ast_finder.type_parameter_mapper (uses class inheritance).
     // Extracted as a standalone function since Rust lacks class/multiple inheritance.
     pub fn make_typeparam(tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
         use flow_common::reason;
@@ -71,8 +70,6 @@ pub mod insertion_point_collectors {
         })
     }
 
-    // OCaml: method in Typed_ast_finder.type_parameter_mapper (uses class inheritance).
-    // Extracted as a standalone function since Rust lacks class/multiple inheritance.
     pub fn make_class_this(cls: &ast::class::Class<ALoc, (ALoc, Type)>) -> TypeParam {
         use flow_common::polarity::Polarity;
         use flow_common::reason;
@@ -136,7 +133,6 @@ pub mod insertion_point_collectors {
                 };
                 let saved_tparams = self.rev_bound_tparams.clone();
                 // Process type params: add them to rev_bound_tparams
-                // OCaml uses :: (prepend), forward iteration + insert(0,..) matches this
                 if let Some(tp) = tparams {
                     for param in tp.params.iter() {
                         let tparam = make_typeparam(param);
@@ -145,7 +141,6 @@ pub mod insertion_point_collectors {
                 }
                 let body_loc = (self.loc_of_aloc)(block_loc);
                 if body_loc.contains(&self.extracted_loc) {
-                    // OCaml uses :: acc (prepend), so insert at front
                     self.acc.insert(
                         0,
                         FunctionInsertionPoint {
@@ -1053,7 +1048,6 @@ pub mod ast_extractor {
             }
         }
 
-        // OCaml: type_params_opt is identity for (Loc.t, Loc.t) AST
         fn function_with_name(
             &mut self,
             name: Option<&ast::Identifier<Loc, Loc>>,
