@@ -382,19 +382,22 @@ fn mk_check<'a, A>(
     options: &'a Options,
     _metadata: Metadata,
     master_cx: &'a flow_typing_context::MasterContext,
-) -> impl FnMut(
-    FileKey,
-) -> Result<
-    UnitResult<Option<((), A)>>,
-    flow_utils_concurrency::worker_cancel::WorkerCanceled,
-> + 'a {
-    let (mut check, _cache) = flow_services_inference::merge_service::mk_check(
+) -> (
+    impl FnMut(
+        FileKey,
+    ) -> Result<
+        UnitResult<Option<((), A)>>,
+        flow_utils_concurrency::worker_cancel::WorkerCanceled,
+    > + 'a,
+    flow_services_inference::merge_service::CheckCacheRef,
+) {
+    let (mut check, cache) = flow_services_inference::merge_service::mk_check(
         reader.clone(),
         Arc::new(options.clone()),
         master_cx,
         flow_services_references::find_refs_types::empty_request(),
     );
-    move |file: FileKey| {
+    let check = move |file: FileKey| {
         let result = match check(file.clone()) {
             flow_services_inference::merge_service::CheckJobOutcome::Ok(opt) => Ok(opt),
             flow_services_inference::merge_service::CheckJobOutcome::PerFileError(e) => Err(e),
@@ -403,7 +406,8 @@ fn mk_check<'a, A>(
         Ok(post_check(
             _visit, _iteration, reader, options, &_metadata, &file, result,
         ))
-    }
+    };
+    (check, cache)
 }
 
 struct CheckJobResults<A> {
@@ -515,14 +519,17 @@ fn check_all_files_sequential<A>(
         UnitResult<Option<((), A)>>,
         flow_utils_concurrency::worker_cancel::WorkerCanceled,
     >,
+    cache: &flow_services_inference::merge_service::CheckCacheRef,
     options: &Options,
     mut files: Vec<FileKey>,
 ) -> Result<ResultList<A>, flow_utils_concurrency::worker_cancel::WorkerCanceled> {
     let mut result = Vec::new();
     while !files.is_empty() {
         let files_len = files.len();
-        let (mut job_results, unfinished) =
-            flow_services_inference::job_utils::mk_job(check, options, files)?;
+        cache.borrow_mut().clear();
+        let job_result = flow_services_inference::job_utils::mk_job(check, options, files);
+        cache.borrow_mut().clear();
+        let (mut job_results, unfinished) = job_result?;
         result.append(&mut job_results);
 
         if unfinished.is_empty() {
@@ -534,7 +541,9 @@ fn check_all_files_sequential<A>(
             let file = unfinished
                 .next()
                 .expect("unfinished files should be nonempty");
+            cache.borrow_mut().clear();
             result.push(check_one_file(check, file)?);
+            cache.borrow_mut().clear();
             files = unfinished.collect();
         } else {
             files = unfinished;
@@ -551,7 +560,7 @@ fn check_all_files<A, MakeCheck, Check>(
 ) -> Result<ResultList<A>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
 where
     A: Send + Sync + 'static,
-    MakeCheck: Fn() -> Check + Send + Sync,
+    MakeCheck: Fn() -> (Check, flow_services_inference::merge_service::CheckCacheRef) + Send + Sync,
     Check: FnMut(
         FileKey,
     ) -> Result<
@@ -560,8 +569,8 @@ where
     >,
 {
     let Some(workers) = workers else {
-        let mut check = make_check();
-        return check_all_files_sequential(&mut check, options, files);
+        let (mut check, cache) = make_check();
+        return check_all_files_sequential(&mut check, &cache, options, files);
     };
 
     let canceled = Arc::new(AtomicBool::new(false));
@@ -569,9 +578,12 @@ where
     let max_size = options.max_files_checked_per_worker as usize;
     let (next, merge) = mk_next_for_check(max_size, num_workers, files, canceled.clone());
     let job = |acc: &mut CheckJobResults<A>, batch: Vec<FileKey>| {
-        let mut check = make_check();
+        let (mut check, cache) = make_check();
         let batch_len = batch.len();
-        match flow_services_inference::job_utils::mk_job(&mut check, options, batch) {
+        cache.borrow_mut().clear();
+        let job_result = flow_services_inference::job_utils::mk_job(&mut check, options, batch);
+        cache.borrow_mut().clear();
+        match job_result {
             Ok((mut finished, unfinished)) => {
                 acc.finished.append(&mut finished);
                 if unfinished.len() == batch_len {
@@ -579,6 +591,7 @@ where
                     let file = unfinished
                         .next()
                         .expect("unfinished files should be nonempty");
+                    cache.borrow_mut().clear();
                     match check_one_file(&mut check, file) {
                         Ok(result) => acc.finished.push(result),
                         Err(err) => {
@@ -586,6 +599,7 @@ where
                             acc.canceled = Some(err);
                         }
                     }
+                    cache.borrow_mut().clear();
                     acc.unfinished.extend(unfinished);
                 } else {
                     acc.unfinished = unfinished;
@@ -1078,7 +1092,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         ) -> Self::Accumulator
                  + Sync
          ) = &C::visit;
-        let mut check_fn = mk_check(
+        let (mut check_fn, cache) = mk_check(
             visit_fn,
             _iteration,
             &reader,
@@ -1087,7 +1101,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             &_env.master_cx,
         );
         let files: Vec<FileKey> = _roots.iter().cloned().collect();
-        let result = check_all_files_sequential(&mut check_fn, &options, files)?;
+        let result = check_all_files_sequential(&mut check_fn, &cache, &options, files)?;
         flow_hh_logger::info!("Checking+Codemodding Done");
         Ok(result)
     }
