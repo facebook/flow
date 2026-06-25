@@ -61,7 +61,6 @@ use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_type::type_::Type;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 use flow_utils_concurrency::worker_cancel;
-use once_cell::unsync::Lazy;
 use vec1::Vec1;
 
 use crate::check_cache::CheckCache;
@@ -444,12 +443,12 @@ pub fn sig_hash(
                             Some(dep_parse) => {
                                 if let Some(&i) = component_map.get(&dep_file) {
                                     let component_rec = component_rec.dupe();
-                                    Dependency::Cyclic(Lazy::new(Box::new(move || {
+                                    Dependency::Cyclic(LazyCell::new(Box::new(move || {
                                         component_rec.get().unwrap()[i].dupe()
                                     })))
                                 } else {
                                     let dep_key = dep_file.dupe();
-                                    Dependency::Acyclic(Lazy::new(Box::new(move || {
+                                    Dependency::Acyclic(LazyCell::new(Box::new(move || {
                                         acyclic_dep(&dep_key, &dep_parse)
                                     })))
                                 }

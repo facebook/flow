@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
 use dupe::Dupe;
@@ -28,7 +29,6 @@ use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
 use flow_utils_concurrency::job_error::JobError;
-use once_cell::unsync::OnceCell;
 
 fn import_mode_to_import_kind(mode: ImportMode) -> AstImportKind {
     match mode {

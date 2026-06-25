@@ -15,6 +15,7 @@ use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::LazyLock;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
@@ -5581,8 +5582,8 @@ pub fn check_method_unbinding<'cx>(
     }
 }
 
-static INT_REGEX: once_cell::sync::Lazy<regex::Regex> =
-    once_cell::sync::Lazy::new(|| regex::Regex::new(r"^-?(0|[1-9][0-9]*)$").unwrap());
+static INT_REGEX: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r"^-?(0|[1-9][0-9]*)$").unwrap());
 
 pub fn is_str_intlike(s: &str) -> bool {
     INT_REGEX.is_match(s)

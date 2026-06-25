@@ -1674,7 +1674,6 @@ dependencies = [
  "flow_typing_utils",
  "flow_utils_concurrency",
  "linked-hash-map",
- "once_cell",
  "serde_json",
  "vec1",
 ]
@@ -1745,7 +1744,6 @@ dependencies = [
  "flow_typing_utils",
  "flow_utils_concurrency",
  "lsp-types",
- "once_cell",
  "vec1",
 ]
 
@@ -1816,7 +1814,6 @@ dependencies = [
  "flow_data_structure_wrapper",
  "flow_parser",
  "flow_parser_utils",
- "once_cell",
  "pretty_assertions",
  "serde",
  "vec1",
@@ -1861,7 +1858,6 @@ dependencies = [
  "flow_utils_concurrency",
  "flow_utils_find",
  "flow_utils_union_find",
- "once_cell",
  "serde_json",
  "vec1",
 ]
@@ -1985,7 +1981,6 @@ dependencies = [
  "flow_typing_visitors",
  "flow_utils_concurrency",
  "flow_utils_union_find",
- "once_cell",
  "regex",
  "vec1",
 ]

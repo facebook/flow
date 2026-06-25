@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -400,7 +401,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
             .collect(),
     );
     potential_ordinary_refs_search::search(cx, name, &mut potential_refs, typed_ast)?;
-    let prop_loc_map = once_cell::unsync::Lazy::new(|| literal_to_prop_loc::make(ast, name));
+    let prop_loc_map = LazyCell::new(|| literal_to_prop_loc::make(ast, name));
     let literal_prop_refs_result: Vec<SingleRef> = add_ref_kind(
         RefKind::PropertyDefinition,
         get_loc_of_def_info(cx, loc_of_aloc, obj_to_obj_map, props_info)

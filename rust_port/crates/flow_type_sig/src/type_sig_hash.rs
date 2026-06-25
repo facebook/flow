@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_common_cycle_hash as cycle_hash;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use once_cell::unsync::Lazy;
 
 use crate::compact_table::Index;
 use crate::compact_table::Table;
@@ -38,8 +38,8 @@ pub enum CheckedDep<A> {
 }
 
 pub enum Dependency {
-    Cyclic(Lazy<Rc<CheckedDep<Rc<Node>>>, Box<dyn FnOnce() -> Rc<CheckedDep<Rc<Node>>>>>),
-    Acyclic(Lazy<CheckedDep<ReadHash>, Box<dyn FnOnce() -> CheckedDep<ReadHash>>>),
+    Cyclic(LazyCell<Rc<CheckedDep<Rc<Node>>>, Box<dyn FnOnce() -> Rc<CheckedDep<Rc<Node>>>>>),
+    Acyclic(LazyCell<CheckedDep<ReadHash>, Box<dyn FnOnce() -> CheckedDep<ReadHash>>>),
     Resource(ReadHash),
     Unchecked,
 }
@@ -158,12 +158,12 @@ fn edge_require<Loc>(
 ) {
     match file.dependencies.get(index) {
         Dependency::Cyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             let edge = &|n: &Rc<Node>| edge(n.dupe());
             require(edge, dep_edge, dep);
         }
         Dependency::Acyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             require(dep_edge, dep_edge, dep);
         }
         Dependency::Resource(dep) => dep_edge(dep),
@@ -183,12 +183,12 @@ fn edge_import<Loc>(
 ) {
     match file.dependencies.get(index) {
         Dependency::Cyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             let edge = &|n: &Rc<Node>| edge(n.dupe());
             import(name, edge, dep_edge, dep);
         }
         Dependency::Acyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             import(name, dep_edge, dep_edge, dep);
         }
         Dependency::Resource(dep) => dep_edge(dep),
@@ -207,12 +207,12 @@ pub fn edge_import_ns<Loc>(
 ) {
     match file.dependencies.get(index) {
         Dependency::Cyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             let edge = &|n: &Rc<Node>| edge(n.dupe());
             import_ns(edge, dep_edge, dep);
         }
         Dependency::Acyclic(lazy_dep) => {
-            let dep = Lazy::force(lazy_dep);
+            let dep = LazyCell::force(lazy_dep);
             import_ns(dep_edge, dep_edge, dep);
         }
         Dependency::Resource(dep) => dep_edge(dep),

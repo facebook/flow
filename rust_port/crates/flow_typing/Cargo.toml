@@ -37,7 +37,6 @@ flow_typing_utils = { path = "../flow_typing_utils" }
 flow_typing_visitors = { path = "../flow_typing_visitors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 flow_utils_union_find = { path = "../flow_utils_union_find" }
-once_cell = "1.21.4"
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 vec1 = { version = "1.12.1", features = ["serde"] }
 

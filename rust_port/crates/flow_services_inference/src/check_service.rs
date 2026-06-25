@@ -56,7 +56,6 @@ use flow_typing_type::type_::Type;
 use flow_typing_utils::annotation_inference;
 use flow_typing_utils::type_sig_merge;
 use flow_typing_utils::type_sig_merge::Exports;
-use once_cell::unsync::Lazy;
 
 use crate::check_cache::CheckCache;
 
@@ -241,8 +240,8 @@ pub fn mk_check_file(
         let cache_for_find = cache.dupe();
         let file_key_for_closure = file_key.dupe();
         let parse_for_leader = parse.dupe();
-        let leader: Lazy<FileKey, Box<dyn FnOnce() -> FileKey>> =
-            Lazy::new(Box::new(move || parse_for_leader.leader_unsafe()));
+        let leader: LazyCell<FileKey, Box<dyn FnOnce() -> FileKey>> =
+            LazyCell::new(Box::new(move || parse_for_leader.leader_unsafe()));
         Rc::new(move |cx: &Context<'static>, _dst_cx: &Context<'static>| {
             let budget = cx.budget();
             let create_file = |ccx: Rc<ComponentT<'static>>| {
@@ -259,7 +258,7 @@ pub fn mk_check_file(
             };
             cx.add_reachable_dep(file_key_for_closure.dupe());
             let (file, dep_cx) = cache_for_find.borrow_mut().find_or_create(
-                || Lazy::force(&leader).dupe(),
+                || LazyCell::force(&leader).dupe(),
                 create_file,
                 file_key_for_closure.dupe(),
             );
