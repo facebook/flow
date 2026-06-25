@@ -37,7 +37,7 @@ Flow is a static typechecker for JavaScript. To find out more about Flow, check 
 
 Flow works with:
 
-* macOS (x86_64)
+* macOS (arm64)
 * Linux (x86_64 and arm64)
 * Windows (x86_64, Windows 10 recommended)
 
@@ -49,75 +49,57 @@ Check out the [installation instructions](https://flow.org/en/docs/getting-start
 
 ## Using Flow's parser from JavaScript
 
-While Flow is written in OCaml, its parser is available as a compiled-to-JavaScript module published to npm, named [flow-parser](https://www.npmjs.com/package/flow-parser). **Most end users of Flow
+Flow's parser is available as a compiled-to-JavaScript module published to npm, named [flow-parser](https://www.npmjs.com/package/flow-parser). **Most end users of Flow
 will not need to use this parser directly**, but JavaScript packages which make use of parsing
 Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated types attached.
 
 ## Building Flow from source
 
-Flow is written in OCaml (OCaml 5.2.0 is required).
+Flow is written in Rust. GitHub CI builds Flow from the `rust_port` workspace with nightly Rust.
 
 1. Install system dependencies:
 
-    - Mac: `brew install opam`
-    - Debian: `sudo apt-get install opam`
-    - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
-    - Windows: [cygwin](https://cygwin.com/) and a number of dependencies like `make`, `gcc` and `g++` are required.
+    - Install [Rust via rustup](https://rustup.rs/).
+    - Install the nightly Rust toolchain:
 
-      One way to install everything is to install [Chocolatey](https://chocolatey.org/) and then run `.\scripts\windows\install_deps.ps1` and `.\scripts\windows\install_opam.ps1`. Otherwise, see the "Manual Installation" section of [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/) and install all of the packages listed in our `install_deps.ps1`.
+      ```sh
+      rustup toolchain install nightly
+      ```
 
-      The remainder of these instructions should be run inside the Cygwin shell: `C:\tools\cygwin\Cygwin`. Then `cd /cygdrive/c/Users/you/path/to/checkout`.
-
-2. Validate the `opam` version is `2.x.x`:
+2. Build the Rust workspace:
 
     ```sh
-    opam --version
+    cd rust_port
+    cargo +nightly build
     ```
 
-    The following instructions expect `2.x.x`. Should your package manager have installed a `1.x.x` version, please refer to the [opam docs](https://opam.ocaml.org/doc/Install.html) to install a newer version manually.
-
-3. Initialize `opam`:
+3. Run the Rust tests:
 
     ```sh
-    # on Mac and Linux:
-    opam init
-
-    # on Windows:
-    scripts/windows/init_opam.sh
+    cargo +nightly test
     ```
 
-4. Install Flow's OCaml dependencies:
+4. Build an optimized `flow` binary:
 
     ```sh
-    # from within this git checkout
-    make deps
+    cargo +nightly build --release --bin flow_cli
     ```
 
-    **note**: If you find that you get an error looking for `ocaml-base-compiler` version, your local dependency repo may be out of date and you need to run `opam update` + `opam upgrade`
+5. Build `flow.js` (optional):
 
-5. Build the `flow` binary:
+    The `flow.js` build also uses the Rust port. Install Emscripten, Node, Yarn, and a Rust nightly toolchain with the `wasm32-unknown-emscripten` target and `rust-src` component first. GitHub CI uses Emscripten 3.1.44 and nightly Rust for this build.
 
     ```sh
-    eval $(opam env)
-    make
+    rustup toolchain install nightly-2026-04-14 --target wasm32-unknown-emscripten --component rust-src
+    RUSTUP_TOOLCHAIN=nightly-2026-04-14 make js FLOW_JS_IMPL=rust-wasm
     ```
 
-    This produces the `bin/flow` binary.
-
-6. Build `flow.js` (optional):
-
-    ```sh
-    make js
-    ```
-
-    This produces `bin/flow.js` from the Rust port. Install Emscripten and a
-    Rust toolchain with the `wasm32-unknown-emscripten` target and `rust-src`
-    component first.
+    This produces `bin/flow.js`.
 
     To build a faster, larger local development version instead, run:
 
     ```sh
-    make js FLOW_JS_IMPL=rust-wasm FLOW_DOT_JS_WASM_PROFILE=dev
+    RUSTUP_TOOLCHAIN=nightly-2026-04-14 make js FLOW_JS_IMPL=rust-wasm FLOW_DOT_JS_WASM_PROFILE=dev
     ```
 
     The Flow parser can also be compiled to JavaScript. [Read how here](src/parser/README.md).
