@@ -14,7 +14,6 @@ use flow_aloc::ALocFuzzy;
 use flow_aloc::ALocFuzzySet;
 use flow_aloc::ALocMap;
 use flow_aloc::ALocSet;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_env_builder::env_api;
@@ -1221,13 +1220,7 @@ impl<'ast>
                     // the typed AST records the type of the overload we've selected, so we
                     // never see the intersection to realize we need to bail! Instead in this
                     // case we read from the environment.
-                    type_env::var_ref(
-                        None,
-                        self.ev_cx.cx,
-                        None,
-                        Name::new(ident.name.dupe()),
-                        callee_loc.dupe(),
-                    )
+                    type_env::var_ref(None, self.ev_cx.cx, None, &ident.name, callee_loc.dupe())
                 }
                 _ => Ok(self
                     .ev_cx
@@ -1710,13 +1703,7 @@ impl<'b, 'cx, 't>
                 // the typed AST records the type of the overload we've selected, so we
                 // never see the intersection to realize we need to bail! Instead in this
                 // case we read from the environment.
-                type_env::var_ref(
-                    None,
-                    self.cx,
-                    None,
-                    Name::new(ident.name.dupe()),
-                    callee_loc.dupe(),
-                )?
+                type_env::var_ref(None, self.cx, None, &ident.name, callee_loc.dupe())?
             }
             _ => callee_ty.dupe(),
         };
@@ -2070,13 +2057,7 @@ impl<'b, 'cx, 't>
                 // the typed AST records the type of the overload we've selected, so we
                 // never see the intersection to realize we need to bail! Instead in this
                 // case we read from the environment.
-                type_env::var_ref(
-                    None,
-                    self.cx,
-                    None,
-                    Name::new(ident.name.dupe()),
-                    callee_loc.dupe(),
-                )?
+                type_env::var_ref(None, self.cx, None, &ident.name, callee_loc.dupe())?
             }
             _ => callee_ty.dupe(),
         };

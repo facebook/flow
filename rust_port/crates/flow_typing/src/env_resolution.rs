@@ -1284,7 +1284,7 @@ fn resolve_binding<'cx>(
                 None,
                 cx,
                 None,
-                reason::Name::new(FlowSmolStr::new("<match_root>")),
+                &FlowSmolStr::new_inline("<match_root>"),
                 case_match_root_loc.dupe(),
             )?;
             let node_cache = cx.node_cache();

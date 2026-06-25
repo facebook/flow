@@ -12,7 +12,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReasonDesc;
@@ -1683,13 +1682,13 @@ pub fn get_var<'cx>(
 pub fn query_var<'cx>(
     lookup_mode: Option<LookupMode>,
     cx: &Context<'cx>,
-    name: Name,
+    name: &FlowSmolStr,
     desc: Option<ReasonDesc>,
     loc: ALoc,
 ) -> Result<Type, JobError> {
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+        None => VirtualReasonDesc::RIdentifier(name.dupe()),
     };
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     read_entry_exn(
@@ -1703,12 +1702,12 @@ pub fn query_var<'cx>(
 pub fn intrinsic_ref<'cx>(
     cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
-    name: Name,
+    name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Option<(Type, ALoc)>, JobError> {
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+        None => VirtualReasonDesc::RIdentifier(name.dupe()),
     };
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     let read = {
@@ -1754,7 +1753,7 @@ pub fn var_ref<'cx>(
     lookup_mode: Option<LookupMode>,
     cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
-    name: Name,
+    name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, JobError> {
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
@@ -1766,13 +1765,13 @@ pub fn sig_var_ref<'cx>(
     lookup_mode: Option<LookupMode>,
     cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
-    name: Name,
+    name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, JobError> {
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+        None => VirtualReasonDesc::RIdentifier(name.dupe()),
     };
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     let t = query_var(Some(lookup_mode), cx, name, None, loc)?;
@@ -1815,7 +1814,6 @@ pub fn get_var_declared_type<'cx>(
     lookup_mode: Option<LookupMode>,
     is_declared_function: Option<bool>,
     cx: &Context<'cx>,
-    name: Name,
     loc: ALoc,
 ) -> Type {
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
@@ -1826,8 +1824,8 @@ pub fn get_var_declared_type<'cx>(
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::any_t;
 
-    match (name, lookup_mode) {
-        (_name, LookupMode::ForType) => {
+    match lookup_mode {
+        LookupMode::ForType => {
             match checked_find_loc_env_write_opt(cx, DefLocType::OrdinaryNameLoc, loc.dupe()) {
                 Some(t) => t,
                 None => {

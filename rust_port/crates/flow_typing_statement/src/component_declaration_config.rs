@@ -7,7 +7,6 @@
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
@@ -35,7 +34,7 @@ pub fn read_react<'a>(
     type_env::query_var(
         Some(type_env::LookupMode::ForValue),
         cx,
-        Name::new(FlowSmolStr::new_inline("React")),
+        &FlowSmolStr::new_inline("React"),
         None,
         loc,
     )?;

@@ -1344,7 +1344,7 @@ fn identifier_<'a>(
             Some(type_env::LookupMode::ForValue),
             cx,
             None,
-            Name::new(name.dupe()),
+            name,
             loc.dupe(),
         )?;
         let t = natural_inference::try_generalize(cx, syntactic_flags, &loc, t);
@@ -1851,7 +1851,7 @@ fn export_specifiers<'a>(
     // [declare] export [type] {[type] foo [as bar]};
     let export_ref = |kind: statement::ExportKind,
                       loc: ALoc,
-                      local_name: &Name|
+                      local_name: &FlowSmolStr|
      -> Result<(Option<ALoc>, Type), JobError> {
         Ok(match kind {
             statement::ExportKind::ExportType => {
@@ -1859,13 +1859,15 @@ fn export_specifiers<'a>(
                     Some(type_env::LookupMode::ForType),
                     cx,
                     None,
-                    local_name.dupe(),
+                    local_name,
                     loc,
                 )?;
                 (
                     None,
                     type_operation_utils::type_assertions::assert_export_is_type(
-                        cx, local_name, &t,
+                        cx,
+                        &Name::new(local_name.dupe()),
+                        &t,
                     )?,
                 )
             }
@@ -1882,13 +1884,15 @@ fn export_specifiers<'a>(
                             Some(type_env::LookupMode::ForType),
                             cx,
                             None,
-                            local_name.dupe(),
+                            local_name,
                             loc,
                         )?;
                         (
                             None,
                             type_operation_utils::type_assertions::assert_export_is_type(
-                                cx, local_name, &t,
+                                cx,
+                                &Name::new(local_name.dupe()),
+                                &t,
                             )?,
                         )
                     }
@@ -1903,13 +1907,15 @@ fn export_specifiers<'a>(
                             Some(type_env::LookupMode::ForType),
                             cx,
                             None,
-                            local_name.dupe(),
+                            local_name,
                             loc,
                         )?;
                         (
                             None,
                             type_operation_utils::type_assertions::assert_export_is_type(
-                                cx, local_name, &t,
+                                cx,
+                                &Name::new(local_name.dupe()),
+                                &t,
                             )?,
                         )
                     }
@@ -1918,7 +1924,7 @@ fn export_specifiers<'a>(
                             Some(type_env::LookupMode::ForValue),
                             cx,
                             None,
-                            local_name.dupe(),
+                            local_name,
                             loc,
                         )?;
                         (None, t)
@@ -1930,7 +1936,7 @@ fn export_specifiers<'a>(
                     Some(type_env::LookupMode::ForValue),
                     cx,
                     None,
-                    local_name.dupe(),
+                    local_name,
                     loc,
                 )?;
                 (None, t)
@@ -1942,12 +1948,9 @@ fn export_specifiers<'a>(
                        module_name: flow_import_specifier::Userland,
                        source_module: &Result<type_::ModuleType, Type>,
                        loc: ALoc,
-                       local_name: &Name|
+                       local_name: &FlowSmolStr|
      -> Result<(Option<ALoc>, Type), JobError> {
-        let reason = mk_reason(
-            VirtualReasonDesc::RIdentifier(local_name.as_smol_str().dupe()),
-            loc,
-        );
+        let reason = mk_reason(VirtualReasonDesc::RIdentifier(local_name.dupe()), loc);
         let import_kind = match kind {
             statement::ExportKind::ExportType => statement::ImportKind::ImportType,
             statement::ExportKind::ExportValue => statement::ImportKind::ImportValue,
@@ -1959,8 +1962,8 @@ fn export_specifiers<'a>(
             &import_kind,
             module_name.dupe(),
             source_module,
-            local_name.as_smol_str(),
-            local_name.as_smol_str(),
+            local_name,
+            local_name,
         ) {
             Ok(v) => Ok(v),
             Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
@@ -1972,7 +1975,7 @@ fn export_specifiers<'a>(
         |make_export: &dyn Fn(
             statement::ExportKind,
             ALoc,
-            &Name,
+            &FlowSmolStr,
         ) -> Result<(Option<ALoc>, Type), JobError>,
          spec: &statement::export_named_declaration::ExportSpecifier<ALoc, ALoc>|
          -> Result<
@@ -1983,7 +1986,7 @@ fn export_specifiers<'a>(
             let kind = effective_kind(specifier_export_kind);
             let local = &spec.local;
             let local_loc = local.loc.dupe();
-            let local_name = Name::new(local.name.dupe());
+            let local_name = local.name.dupe();
             let reconstruct_remote = |t: &Type| {
                 spec.exported.as_ref().map(|remote| {
                     ast::Identifier::new(ast::IdentifierInner {
@@ -2349,7 +2352,7 @@ fn statement_<'a>(
         let generator = func.generator;
         let ast::IdentifierInner {
             loc: name_loc,
-            name,
+            name: _,
             ..
         } = &**id;
         let reason = func_reason(async_, generator, sig_loc);
@@ -2357,7 +2360,6 @@ fn statement_<'a>(
             Some(type_env::LookupMode::ForValue),
             Some(is_declared_function),
             cx,
-            Name::new(name.dupe()),
             name_loc.dupe(),
         );
         let (fn_type, func_ast) =
@@ -2419,7 +2421,6 @@ fn statement_<'a>(
                     Some(type_env::LookupMode::ForValue),
                     Some(true),
                     cx,
-                    Name::new(id_name.name.dupe()),
                     id_name.loc.dupe(),
                 );
                 statement::DeclareFunction {
@@ -2634,7 +2635,7 @@ fn statement_<'a>(
                 Some(type_env::LookupMode::ForValue),
                 cx,
                 None,
-                Name::new(flow_parser::ast_utils::MATCH_ROOT_NAME),
+                &FlowSmolStr::new_inline(flow_parser::ast_utils::MATCH_ROOT_NAME),
                 inner.match_keyword_loc.dupe(),
             )?;
             statement::Statement::new(StatementInner::Match {
@@ -3989,7 +3990,6 @@ fn statement_<'a>(
                                 Some(type_env::LookupMode::ForValue),
                                 None,
                                 cx,
-                                Name::new(id.name.dupe()),
                                 id.loc.dupe(),
                             );
                             (
@@ -6068,13 +6068,7 @@ fn variable<'a>(
                     } else {
                         init_var(cx, use_op, &t, name_loc.dupe())?;
                         type_env::constraining_type(
-                            type_env::get_var_declared_type(
-                                None,
-                                None,
-                                cx,
-                                Name::new(name.dupe()),
-                                name_loc.dupe(),
-                            ),
+                            type_env::get_var_declared_type(None, None, cx, name_loc.dupe()),
                             cx,
                             name,
                             name_loc.dupe(),
@@ -6337,12 +6331,12 @@ fn this_<'a>(cx: &Context<'a>, loc: ALoc, this: &expression::This<ALoc>) -> Resu
     });
     match refinement::get(true, cx, &expr, loc.dupe())? {
         Some(t) => Ok(t),
-        None => type_env::var_ref(None, cx, None, Name::new("this"), loc),
+        None => type_env::var_ref(None, cx, None, &FlowSmolStr::new_inline("this"), loc),
     }
 }
 
 fn super_<'a>(cx: &Context<'a>, loc: ALoc) -> Result<Type, JobError> {
-    type_env::var_ref(None, cx, None, Name::new("super"), loc)
+    type_env::var_ref(None, cx, None, &FlowSmolStr::new_inline("super"), loc)
 }
 
 // Walk the super chain leaf→root looking for [name]. A concrete impl
@@ -6802,7 +6796,7 @@ fn expression_<'a>(
                     Some(type_env::LookupMode::ForValue),
                     cx,
                     None,
-                    Name::new(flow_parser::ast_utils::MATCH_ROOT_NAME),
+                    &FlowSmolStr::new_inline(flow_parser::ast_utils::MATCH_ROOT_NAME),
                     inner.match_keyword_loc.dupe(),
                 )?;
                 let match_t = union_of_ts(reason, ts, None);
@@ -12350,7 +12344,7 @@ fn jsx_fragment<'a>(
                 Some(type_env::LookupMode::ForValue),
                 cx,
                 None,
-                Name::new(FlowSmolStr::from("React")),
+                &FlowSmolStr::new_inline("React"),
                 expr_loc.dupe(),
             )?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(reason.dupe())));
@@ -12558,7 +12552,7 @@ fn jsx_title<'a>(
                     identifier_inner(cx, &syntactic_flags, &ident, id_loc.dupe())?
                 } else {
                     if let Some((ref_t, def_loc)) =
-                        type_env::intrinsic_ref(cx, None, Name::new(id_name.dupe()), id_loc.dupe())?
+                        type_env::intrinsic_ref(cx, None, &id_name, id_loc.dupe())?
                     {
                         let ref_reason = mk_reason(
                             VirtualReasonDesc::RIdentifier(id_name.dupe()),
@@ -12997,7 +12991,7 @@ pub fn jsx_mk_props<'a>(
             Some(type_env::LookupMode::ForValue),
             cx,
             None,
-            Name::new(FlowSmolStr::new("stylex")),
+            &FlowSmolStr::new_inline("stylex"),
             id_loc.dupe(),
         )?;
         // Get stylex.props
@@ -13375,7 +13369,7 @@ fn react_jsx_desugar<'a>(
                 Some(type_env::LookupMode::ForValue),
                 cx,
                 None,
-                Name::new(FlowSmolStr::from("React")),
+                &FlowSmolStr::new_inline("React"),
                 loc_element.dupe(),
             )?;
             let create_element_t = get_prop(
@@ -13521,7 +13515,7 @@ fn jsx_pragma_expression<'a>(
                 Some(type_env::LookupMode::ForValue),
                 cx,
                 Some(desc),
-                Name::new(name.dupe()),
+                name,
                 loc,
             )?
         }
@@ -15123,13 +15117,8 @@ pub fn mk_class_sig<'a>(
                         ExpressionInner::Identifier { inner, .. } => {
                             let id_loc = inner.loc.dupe();
                             let id = inner.clone();
-                            let t = type_env::sig_var_ref(
-                                None,
-                                cx,
-                                None,
-                                Name::new(inner.name.dupe()),
-                                id_loc.dupe(),
-                            )?;
+                            let t =
+                                type_env::sig_var_ref(None, cx, None, &inner.name, id_loc.dupe())?;
                             let t_c = t.dupe();
                             (
                                 t,
@@ -20867,13 +20856,7 @@ pub fn match_pattern<'a>(
                               t: Type|
              -> Result<Type, JobError> {
                 init_var(kind)(cx, use_op, &t, name_loc.dupe())?;
-                let default = type_env::get_var_declared_type(
-                    None,
-                    None,
-                    cx,
-                    Name::new(name.dupe()),
-                    name_loc.dupe(),
-                );
+                let default = type_env::get_var_declared_type(None, None, cx, name_loc.dupe());
                 Ok(type_env::constraining_type(default, cx, name, name_loc))
             };
             let p = crate::match_pattern::pattern(

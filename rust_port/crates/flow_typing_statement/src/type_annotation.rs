@@ -6114,7 +6114,7 @@ fn type_identifier<'a>(
     let t = type_env::query_var(
         Some(type_env::LookupMode::ForType),
         cx,
-        Name::new(name.dupe()),
+        name,
         None,
         loc.dupe(),
     )?;
