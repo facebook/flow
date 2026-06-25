@@ -25,5 +25,5 @@ vec1 = { version = "1.12.1", features = ["serde"] }
 nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
 rustix = { version = "1.1.4", features = ["event", "fs", "mm", "mount", "net", "pipe", "process", "thread", "time", "use-libc"] }
 
-[lints]
-rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fbcode_build)"]}

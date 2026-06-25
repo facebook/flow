@@ -45,5 +45,5 @@ tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
 [target.'cfg(target_os = "windows")'.dependencies]
 filedescriptor = "0.8"
 
-[lints]
-rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fbcode_build)"]}

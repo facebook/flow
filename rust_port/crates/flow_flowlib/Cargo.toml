@@ -11,5 +11,5 @@ flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_common_xx = { path = "../flow_common_xx" }
 libc = "0.2.186"
 
-[lints]
-rust = { unexpected_cfgs = { check-cfg = ["cfg(fbcode_build)"], level = "warn" } }
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fbcode_build)"]}
