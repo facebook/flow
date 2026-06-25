@@ -1174,6 +1174,36 @@ pub enum EnumRep {
     BigIntRep { truthy: bool },
 }
 
+// The literal value of a TypeScript enum member, retained so consumers of a
+// .ts/.d.ts signature can type the member as its singleton literal. TypeScript
+// enum members are only number or string literals; boolean/bigint initializers
+// are rejected (see [ts_enum_sig.rs's ts_enum_member_error]) and never reach this
+// representation.
+// [TSEnumMemberComputed] is used for a member with no statically-known literal:
+// an uninitialized member of an *ambient* enum (a `declare enum` or any enum in a
+// .d.ts file), and any member we have flagged as an error (so it is typed as its
+// numeric representation rather than a bogus literal).
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum TsEnumMemberValue {
+    TSEnumMemberNumber(f64, FlowSmolStr),
+    TSEnumMemberString(FlowSmolStr),
+    TSEnumMemberComputed,
+}
+
+impl std::hash::Hash for TsEnumMemberValue {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            TsEnumMemberValue::TSEnumMemberNumber(v, raw) => {
+                v.to_bits().hash(state);
+                raw.hash(state);
+            }
+            TsEnumMemberValue::TSEnumMemberString(s) => s.hash(state),
+            TsEnumMemberValue::TSEnumMemberComputed => {}
+        }
+    }
+}
+
 // Definitions represent the structure of things which can be found when
 // resolving a name, or as in the case of exports, a module reference.
 //
@@ -1297,6 +1327,10 @@ pub struct DefEnumBinding<Loc> {
     pub name: FlowSmolStr,
     pub rep: Option<EnumRep>,
     pub members: BTreeMap<FlowSmolStr, Loc>,
+    // Present for TS enums (.ts/.d.ts); carries each member's literal value so
+    // the enum can be modeled as an object of literal members + union type.
+    // None for Flow Enums, which are modeled nominally.
+    pub member_values: Option<BTreeMap<FlowSmolStr, TsEnumMemberValue>>,
     pub has_unknown_members: bool,
 }
 
@@ -1646,6 +1680,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                     .iter()
                     .map(|(k, loc)| (k.dupe(), f_loc(cx, loc)))
                     .collect(),
+                member_values: inner.member_values.clone(),
                 has_unknown_members: inner.has_unknown_members,
             })),
             Def::DisabledEnumBinding(inner) => {

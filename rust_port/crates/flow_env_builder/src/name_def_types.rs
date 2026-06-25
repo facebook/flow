@@ -368,13 +368,14 @@ pub enum Def {
     OpaqueType(ALoc, ast::statement::OpaqueType<ALoc, ALoc>),
     TypeParam(Box<TypeParamData>),
     Interface(ALoc, ast::statement::Interface<ALoc, ALoc>),
-    Enum(
-        Box<(
-            ALoc,
-            FlowSmolStr,
-            ast::statement::enum_declaration::Body<ALoc>,
-        )>,
-    ),
+    Enum {
+        loc: ALoc,
+        name: FlowSmolStr,
+        /// Whether this is a `declare enum` (ambient regardless of file
+        /// extension), which affects TS enum member numbering.
+        declared: bool,
+        body: ast::statement::enum_declaration::Body<ALoc>,
+    },
     Import(Box<ImportData>),
     GeneratorNext(Box<Option<GeneratorAnnot>>),
     DeclaredNamespace(ALoc, ast::statement::DeclareNamespace<ALoc, ALoc>),
@@ -583,8 +584,7 @@ pub mod print {
                 let (loc, _) = &data.tparam;
                 format!("tparam {}", loc.debug_to_string(false))
             }
-            Def::Enum(data) => {
-                let (loc, name, _) = &**data;
+            Def::Enum { loc, name, .. } => {
                 format!("enum {} {}", name, loc.debug_to_string(false))
             }
             Def::Interface(_, _) => "interface".to_string(),

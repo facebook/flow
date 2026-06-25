@@ -6853,6 +6853,61 @@ where
                     ),
                 ])
             }
+            MessageTSEnumInvalidMember {
+                member_name,
+                enum_reason,
+                kind,
+            } => match kind {
+                super::intermediate_error_types::TsEnumInvalidMemberKind::TSEnumMemberInvalidLiteral => {
+                    friendly::Message(vec![
+                        text("The enum member initializer for "),
+                        code(member_name),
+                        text(" in "),
+                        ref_(enum_reason),
+                        text(
+                            " must be a number or string literal, the only member types TypeScript enums allow.",
+                        ),
+                    ])
+                }
+                super::intermediate_error_types::TsEnumInvalidMemberKind::TSEnumMemberMissingInitializer => {
+                    friendly::Message(vec![
+                        text("The enum member "),
+                        code(member_name),
+                        text(" in "),
+                        ref_(enum_reason),
+                        text(
+                            " must have an initializer because the preceding member is not a numeric constant, so it cannot be auto-numbered.",
+                        ),
+                    ])
+                }
+                super::intermediate_error_types::TsEnumInvalidMemberKind::TSEnumMemberNumericName => {
+                    friendly::Message(vec![
+                        text("The enum member "),
+                        code(member_name),
+                        text(" in "),
+                        ref_(enum_reason),
+                        text(" cannot have a numeric name, which TypeScript does not allow."),
+                    ])
+                }
+            },
+            MessageTSEnumInvalidSyntax { enum_reason, kind } => match kind {
+                super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumUnknownMembers => {
+                    friendly::Message(vec![
+                        ref_(enum_reason),
+                        text(
+                            " cannot have unknown members (`...`), which is a Flow Enums feature that TypeScript enums do not support.",
+                        ),
+                    ])
+                }
+                super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumExplicitType => {
+                    friendly::Message(vec![
+                        ref_(enum_reason),
+                        text(
+                            " cannot have an explicit representation type (`of ...`), which is a Flow Enums feature that TypeScript enums do not support.",
+                        ),
+                    ])
+                }
+            },
             MessageExponentialSpread(box MessageExponentialSpreadData {
                 reason,
                 reasons_for_operand1,

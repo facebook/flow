@@ -1,0 +1,353 @@
+Error --------------------------------------------------------------------------------------------- declare_enum.ts:12:1
+
+Cannot cast `E.A` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-type]
+
+   declare_enum.ts:12:1
+   12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
+       ^^^
+
+References:
+   declare_enum.ts:4:3
+    4|   A,
+         ^ [1]
+   declare_enum.ts:12:15
+   12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
+                     ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declare_enum.ts:21:1
+
+Cannot cast `F.B` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   declare_enum.ts:21:1
+   21| F.B satisfies 2; // ERROR: B is computed in an ambient enum
+       ^^^
+
+References:
+   declare_enum.ts:17:3
+   17|   B, // computed (no auto-numbered literal in an ambient enum)
+         ^ [1]
+   declare_enum.ts:21:15
+   21| F.B satisfies 2; // ERROR: B is computed in an ambient enum
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- empty.ts:8:16
+
+Cannot assign `0` to `bad` because number [1] is incompatible with `E` [2]. [incompatible-type]
+
+   empty.ts:8:16
+   8| const bad: E = 0; // ERROR
+                     ^ [1]
+
+References:
+   empty.ts:8:12
+   8| const bad: E = 0; // ERROR
+                 ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- exhaustive.ts:25:7
+
+Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+
+   exhaustive.ts:25:7
+   25|       d satisfies never; // ERROR: Down (2) not handled
+             ^
+
+References:
+   exhaustive.ts:20:21
+   20| function missing(d: Dir): string {
+                           ^^^ [1]
+   exhaustive.ts:25:19
+   25|       d satisfies never; // ERROR: Down (2) not handled
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- flow_only.ts:8:3
+
+enum `WithUnknown` [1] cannot have unknown members (`...`), which is a Flow Enums feature that TypeScript enums do not
+support. [invalid-enum]
+
+   flow_only.ts:8:3
+   8|   ... // ERROR: unknown members not allowed in a TS enum
+        ^^^
+
+References:
+   flow_only.ts:6:6
+   6| enum WithUnknown {
+           ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- flow_only.ts:13:18
+
+enum `OfString` [1] cannot have an explicit representation type (`of ...`), which is a Flow Enums feature that
+TypeScript enums do not support. [invalid-enum]
+
+   flow_only.ts:13:18
+   13| enum OfString of string { // ERROR: explicit representation type not allowed in a TS enum
+                        ^^^^^^
+
+References:
+   flow_only.ts:13:6
+   13| enum OfString of string { // ERROR: explicit representation type not allowed in a TS enum
+            ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:14:20
+
+Cannot assign `99` to `bad` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+
+   importer.ts:14:20
+   14| const bad: Color = 99; // ERROR
+                          ^^ [1]
+
+References:
+   importer.ts:14:12
+   14| const bad: Color = 99; // ERROR
+                  ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ importer.ts:18:23
+
+Cannot assign `Color.Green` to `mbad` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   importer.ts:18:23
+   18| let mbad: Color.Red = Color.Green; // ERROR
+                             ^^^^^^^^^^^
+
+References:
+   exporter.ts:4:3
+    4|   Green, // 2
+         ^^^^^ [1]
+   importer.ts:18:11
+   18| let mbad: Color.Red = Color.Green; // ERROR
+                 ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- importer_type.ts:15:21
+
+Cannot assign `99` to `xbad` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+
+   importer_type.ts:15:21
+   15| const xbad: Color = 99; // ERROR
+                           ^^ [1]
+
+References:
+   importer_type.ts:15:13
+   15| const xbad: Color = 99; // ERROR
+                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- importer_type.ts:17:11
+
+Cannot use type `Color` [1] as a value. Types are erased and don't exist at runtime. If the exported binding can also be
+used as a value, try importing it using `import Color` instead of `import type Color` and `import {Color}` instead of
+`import type {Color}`. [type-as-value]
+
+   importer_type.ts:17:11
+   17| const v = Color.Red; // ERROR: `Color` was imported with `import type`
+                 ^^^^^
+
+References:
+   importer_type.ts:5:15
+    5| import type { Color } from "./exporter";
+                     ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- invalid.ts:8:7
+
+The enum member initializer for `A` in enum `Bool` [1] must be a number or string literal, the only member types
+TypeScript enums allow. [invalid-enum]
+
+   invalid.ts:8:7
+   8|   A = true, // ERROR: must be a number or string literal
+            ^^^^
+
+References:
+   invalid.ts:7:6
+   7| enum Bool {
+           ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.ts:13:7
+
+The enum member initializer for `A` in enum `Big` [1] must be a number or string literal, the only member types
+TypeScript enums allow. [invalid-enum]
+
+   invalid.ts:13:7
+   13|   A = 1n, // ERROR: must be a number or string literal
+             ^^
+
+References:
+   invalid.ts:12:6
+   12| enum Big {
+            ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.ts:19:3
+
+The enum member `B` in enum `Mixed` [1] must have an initializer because the preceding member is not a numeric constant,
+so it cannot be auto-numbered. [invalid-enum]
+
+   invalid.ts:19:3
+   19|   B, // ERROR: must have initializer (previous member is not numeric)
+         ^
+
+References:
+   invalid.ts:17:6
+   17| enum Mixed {
+            ^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.ts:25:1
+
+Cannot cast `Mixed.B` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-type]
+
+   invalid.ts:25:1
+   25| Mixed.B satisfies 0; // ERROR: B is computed, not the literal `0`
+       ^^^^^^^
+
+References:
+   invalid.ts:19:3
+   19|   B, // ERROR: must have initializer (previous member is not numeric)
+         ^ [1]
+   invalid.ts:25:19
+   25| Mixed.B satisfies 0; // ERROR: B is computed, not the literal `0`
+                         ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.ts:41:3
+
+The enum member `1` in enum `Numeric` [1] cannot have a numeric name, which TypeScript does not allow. [invalid-enum]
+
+   invalid.ts:41:3
+   41|   "1" = 5, // ERROR: numeric name
+         ^^^^^^^
+
+References:
+   invalid.ts:40:6
+   40| enum Numeric {
+            ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- member_type.ts:11:21
+
+Cannot assign `Color.Green` to `r2` because number literal `2` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   member_type.ts:11:21
+   11| let r2: Color.Red = Color.Green; // ERROR
+                           ^^^^^^^^^^^
+
+References:
+   member_type.ts:4:3
+    4|   Green = 2,
+         ^^^^^^^^^ [1]
+   member_type.ts:11:9
+   11| let r2: Color.Red = Color.Green; // ERROR
+               ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- numeric.ts:21:18
+
+Cannot assign `99` to `c` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+
+   numeric.ts:21:18
+   21| const c: Color = 99; // ERROR
+                        ^^ [1]
+
+References:
+   numeric.ts:21:10
+   21| const c: Color = 99; // ERROR
+                ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- reverse.ts:14:1
+
+Cannot cast `Color[1]` to string literal `Red` because string [1] is incompatible with string literal `Red` [2].
+[incompatible-type]
+
+   reverse.ts:14:1
+   14| Color[1] satisfies "Red"; // ERROR
+       ^^^^^^^^
+
+References:
+   reverse.ts:4:3
+    4|   Red = 1,
+         ^^^^^^^ [1]
+   reverse.ts:14:20
+   14| Color[1] satisfies "Red"; // ERROR
+                          ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- reverse.ts:28:8
+
+Cannot get `Status["active"]` because property `active` (did you mean `Active`?) is missing in enum `Status` [1].
+[prop-missing]
+
+   reverse.ts:28:8
+   28| Status["active"]; // ERROR: no reverse mapping for string enums
+              ^^^^^^^^
+
+References:
+   reverse.ts:25:6
+   25| enum Status {
+            ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- string.ts:19:20
+
+Cannot assign `"nope"` to `s3` because string literal `nope` [1] is incompatible with `Status` [2]. [incompatible-type]
+
+   string.ts:19:20
+   19| const s3: Status = "nope"; // ERROR
+                          ^^^^^^ [1]
+
+References:
+   string.ts:19:11
+   19| const s3: Status = "nope"; // ERROR
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- use_ambient.ts:12:1
+
+Cannot cast `E.A` to number literal `0` because number [1] is incompatible with number literal `0` [2].
+[incompatible-type]
+
+   use_ambient.ts:12:1
+   12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
+       ^^^
+
+References:
+   ambient.d.ts:5:3
+    5|   A,
+         ^ [1]
+   use_ambient.ts:12:15
+   12| E.A satisfies 0; // ERROR: A is computed, not the literal `0`
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- use_ambient.ts:17:1
+
+Cannot cast `F.B` to number literal `2` because number [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   use_ambient.ts:17:1
+   17| F.B satisfies 2; // ERROR: B is computed in an ambient enum
+       ^^^
+
+References:
+   ambient.d.ts:11:3
+   11|   B, // computed in an ambient enum (no auto-numbered literal)
+         ^ [1]
+   use_ambient.ts:17:15
+   17| F.B satisfies 2; // ERROR: B is computed in an ambient enum
+                     ^ [2]
+
+
+
+Found 22 errors

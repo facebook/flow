@@ -154,6 +154,8 @@ use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
 use flow_typing_errors::error_message::MatchNotExhaustiveData;
 use flow_typing_errors::error_message::MatchUnusedPatternData;
 use flow_typing_errors::error_message::RecordErrorKind;
+use flow_typing_errors::error_message::TSEnumInvalidMemberData;
+use flow_typing_errors::error_message::TSEnumInvalidSyntaxData;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_errors::error_message::string_of_invalid_render_type_kind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -3582,6 +3584,30 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             ) => {
                 format!(
                     "EEnumError (EnumStringMemberInconsistentlyInitialized ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::TSEnumInvalidMember(box TSEnumInvalidMemberData {
+                loc,
+                enum_reason,
+                member_name,
+                kind: _,
+            }) => {
+                format!(
+                    "EEnumError (TSEnumInvalidMember ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData {
+                loc,
+                enum_reason,
+                kind: _,
+            }) => {
+                format!(
+                    "EEnumError (TSEnumInvalidSyntax ({}) ({}))",
                     string_of_aloc(None, loc),
                     dump_reason(cx, enum_reason)
                 )

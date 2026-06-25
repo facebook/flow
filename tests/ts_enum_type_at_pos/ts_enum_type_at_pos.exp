@@ -1,0 +1,20 @@
+test.ts:6:6
+Flags:
+1 | 2
+test.ts:6:6,6:10
+
+test.ts:12:17
+Flags:
+1
+test.ts:12:17,12:19
+
+test.ts:15:10
+Flags:
+1 | 2
+test.ts:15:10,15:14
+
+test.ts:18:16
+Flags:
+1
+test.ts:18:16,18:18
+

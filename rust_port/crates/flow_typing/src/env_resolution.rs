@@ -2648,13 +2648,24 @@ fn resolve_declare_namespace<'cx>(
 fn resolve_enum<'cx>(
     cx: &Context<'cx>,
     id_loc: ALoc,
+    declared: bool,
     enum_reason: Reason,
     enum_loc: ALoc,
-    name: &str,
+    name: &FlowSmolStr,
     enum_: &ast::statement::enum_declaration::Body<ALoc>,
 ) -> Type {
-    if cx.enable_enums() {
-        let enum_info = statement::mk_enum(cx, enum_reason.dupe(), id_loc, name, enum_);
+    if flow_common::files::has_ts_ext(cx.file()) {
+        // TS enum: object value of literal members + union type (see ts_enum.rs).
+        flow_typing_flow_common::ts_enum::mk_ts_enum_namespace(
+            cx,
+            declared,
+            enum_reason,
+            id_loc,
+            name.dupe(),
+            enum_,
+        )
+    } else if cx.enable_enums() {
+        let enum_info = statement::mk_enum(cx, enum_reason.dupe(), id_loc, name.as_str(), enum_);
         type_::mk_enum_object_type(
             enum_reason,
             type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
@@ -2966,12 +2977,18 @@ fn resolve<'cx>(
             wrap_with_namespace_types(cx, id_name, id_loc, class_t, namespace_types)
         }
         Def::DeclaredComponent(loc, comp) => resolve_declare_component(cx, loc.dupe(), comp)?,
-        Def::Enum(box (enum_loc, name, enum_)) => resolve_enum(
+        Def::Enum {
+            loc: enum_loc,
+            name,
+            declared,
+            body: enum_,
+        } => resolve_enum(
             cx,
             id_loc.dupe(),
+            *declared,
             def_reason,
             enum_loc.dupe(),
-            name.as_str(),
+            name,
             enum_,
         ),
         Def::TypeParam(_) => resolve_type_param(cx, &id_loc),

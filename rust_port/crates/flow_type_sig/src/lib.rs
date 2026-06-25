@@ -11,6 +11,7 @@ pub mod compact_table;
 pub mod expected_annotation_sort;
 pub mod packed_type_sig;
 pub mod signature_error;
+pub mod ts_enum_sig;
 pub mod type_sig;
 pub mod type_sig_hash;
 mod type_sig_mark;

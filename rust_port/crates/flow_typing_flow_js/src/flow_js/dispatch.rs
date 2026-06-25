@@ -2108,6 +2108,20 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(cx, trace, (&ns.values_type, &new_u))?;
         }
+        // Preserve a TS enum namespace through inspection-concretization so that
+        // ValueToTypeReferenceTransform can turn it into the union of member
+        // literals (see run_on_concrete_type). Without this, the generic unwrap
+        // below would strip it to its values_type before the conversion runs.
+        (
+            TypeInner::NamespaceT(ns),
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForInspection,
+                collector,
+                ..
+            }),
+        ) if flow_js_utils::is_ts_enum_symbol(&ns.namespace_symbol) => {
+            collector.add(l.dupe());
+        }
         // unwrap namespace type into object type, drop all information about types in the namespace
         (TypeInner::NamespaceT(ns), _) => {
             rec_flow(cx, trace, (&ns.values_type, u))?;

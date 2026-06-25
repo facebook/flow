@@ -655,6 +655,41 @@ pub struct EnumStringMemberInconsistentlyInitializedData<
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct TSEnumInvalidMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub member_name: String,
+    pub kind: crate::intermediate_error_types::TsEnumInvalidMemberKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct TSEnumInvalidSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub enum_reason: VirtualReason<L>,
+    pub kind: crate::intermediate_error_types::TsEnumInvalidSyntaxKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumsNotEnabled(L),
     EnumConstNotSupported(L),
@@ -686,6 +721,8 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumStringMemberInconsistentlyInitialized(
         Box<EnumStringMemberInconsistentlyInitializedData<L>>,
     ),
+    TSEnumInvalidMember(Box<TSEnumInvalidMemberData<L>>),
+    TSEnumInvalidSyntax(Box<TSEnumInvalidSyntaxData<L>>),
 }
 
 #[derive(
@@ -4446,6 +4483,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             enum_reason: map_reason(enum_reason),
                         },
                     )),
+                    TSEnumInvalidMember(box TSEnumInvalidMemberData {
+                        loc,
+                        enum_reason,
+                        member_name,
+                        kind,
+                    }) => TSEnumInvalidMember(Box::new(TSEnumInvalidMemberData {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                        kind,
+                    })),
+                    TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData {
+                        loc,
+                        enum_reason,
+                        kind,
+                    }) => TSEnumInvalidSyntax(Box::new(TSEnumInvalidSyntaxData {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        kind,
+                    })),
                 })
             }
             EIndeterminateModuleType(loc) => EIndeterminateModuleType(f(loc)),
@@ -6040,7 +6097,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 )
                 | EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
                     box EnumStringMemberInconsistentlyInitializedData { loc, .. },
-                ),
+                )
+                | EnumErrorKind::TSEnumInvalidMember(box TSEnumInvalidMemberData { loc, .. })
+                | EnumErrorKind::TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData { loc, .. }),
             )
             | Self::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, .. })
             | Self::EBuiltinModuleLookupFailed(box EBuiltinModuleLookupFailedData {
@@ -7413,6 +7472,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
                 box EnumStringMemberInconsistentlyInitializedData { enum_reason, .. },
             )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(
+                box TSEnumInvalidMemberData {
+                    enum_reason,
+                    member_name,
+                    kind,
+                    ..
+                },
+            )) => Normal(Message::MessageTSEnumInvalidMember {
+                member_name,
+                enum_reason,
+                kind,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(
+                box TSEnumInvalidSyntaxData {
+                    enum_reason, kind, ..
+                },
+            )) => Normal(Message::MessageTSEnumInvalidSyntax { enum_reason, kind }),
 
             ErrorMessage::EDuplicateClassMember(box EDuplicateClassMemberData {
                 name,
@@ -9402,6 +9478,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Some(InvalidEnum),
             ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
                 box EnumStringMemberInconsistentlyInitializedData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(
+                box TSEnumInvalidMemberData { .. },
+            )) => Some(InvalidEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(
+                box TSEnumInvalidSyntaxData { .. },
             )) => Some(InvalidEnum),
             ErrorMessage::EExponentialSpread(box EExponentialSpreadData { .. }) => {
                 Some(ExponentialSpread)

@@ -56,6 +56,7 @@ fn default_sig_options() -> TypeSigOptions {
         for_builtins: false,
         locs_to_dirtify: vec![],
         is_ts_file: false,
+        is_dts_file: false,
         tslib_syntax: false,
     }
 }
@@ -13354,6 +13355,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13419,6 +13421,7 @@ Module {
                     "A": 2,
                     "B": 3,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13487,6 +13490,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13548,6 +13552,7 @@ Module {
                 members: {
                     "A": 1,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13609,6 +13614,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13670,6 +13676,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13731,6 +13738,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13792,6 +13800,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13851,6 +13860,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -13912,6 +13922,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: true,
             },
         ),
@@ -13973,6 +13984,7 @@ Module {
                     "A": 1,
                     "B": 2,
                 },
+                member_values: None,
                 has_unknown_members: false,
             },
         ),
@@ -14039,6 +14051,236 @@ Module {
             input,
             Some(|opts: &mut TypeSigOptions| {
                 opts.enable_enums = false;
+            })
+        ))
+    )
+}
+
+#[test]
+fn ts_enum_member_values() {
+    // In a .ts/.d.ts file, the enum signature additionally retains each member's
+    // literal value (member_values = Some ...), so consumers can model the enum as
+    // an object of literal members + union type.
+    let input = r#"
+            export enum Color { Red = 1, Green = 2 }
+            export enum S { A = "a", B = "b" }
+        "#;
+    let expected_output = r#"
+Locs:
+0. [1:12-17]
+1. [1:20-27]
+2. [1:29-38]
+3. [2:12-13]
+4. [2:16-23]
+5. [2:25-32]
+Type Sig:
+Module {
+    module_kind: ESModule {
+        type_exports: [],
+        exports: [
+            ExportBinding(
+                0,
+            ),
+            ExportBinding(
+                1,
+            ),
+        ],
+        ts_pending: [],
+        info: ESModuleInfo {
+            type_export_keys: [],
+            type_stars: [],
+            export_keys: [
+                "Color",
+                "S",
+            ],
+            stars: [],
+            ts_pending_keys: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "Color",
+                rep: Some(
+                    NumberRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "Green": 2,
+                    "Red": 1,
+                },
+                member_values: Some(
+                    {
+                        "Green": TSEnumMemberNumber(
+                            2.0,
+                            "2",
+                        ),
+                        "Red": TSEnumMemberNumber(
+                            1.0,
+                            "1",
+                        ),
+                    },
+                ),
+                has_unknown_members: false,
+            },
+        ),
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 3,
+                name: "S",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 4,
+                    "B": 5,
+                },
+                member_values: Some(
+                    {
+                        "A": TSEnumMemberString(
+                            "a",
+                        ),
+                        "B": TSEnumMemberString(
+                            "b",
+                        ),
+                    },
+                ),
+                has_unknown_members: false,
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_sig_with_options(
+            input,
+            Some(|opts: &mut TypeSigOptions| {
+                opts.is_ts_file = true;
+            })
+        ))
+    )
+}
+
+#[test]
+fn ts_enum_ambient_member_values() {
+    // In an ambient TS file (.d.ts), uninitialized members are computed rather than
+    // auto-numbered literals, so they are recorded as TSEnumMemberComputed. Explicit
+    // initializers are still retained.
+    let input = r#"
+            export enum E { A, B }
+            export enum F { A = 1, B }
+        "#;
+    let expected_output = r#"
+Locs:
+0. [1:12-13]
+1. [1:16-17]
+2. [1:19-20]
+3. [2:12-13]
+4. [2:16-21]
+5. [2:23-24]
+Type Sig:
+Module {
+    module_kind: ESModule {
+        type_exports: [],
+        exports: [
+            ExportBinding(
+                0,
+            ),
+            ExportBinding(
+                1,
+            ),
+        ],
+        ts_pending: [],
+        info: ESModuleInfo {
+            type_export_keys: [],
+            type_stars: [],
+            export_keys: [
+                "E",
+                "F",
+            ],
+            stars: [],
+            ts_pending_keys: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 0,
+                name: "E",
+                rep: Some(
+                    StringRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 1,
+                    "B": 2,
+                },
+                member_values: Some(
+                    {
+                        "A": TSEnumMemberComputed,
+                        "B": TSEnumMemberComputed,
+                    },
+                ),
+                has_unknown_members: false,
+            },
+        ),
+        EnumBinding(
+            DefEnumBinding {
+                id_loc: 3,
+                name: "F",
+                rep: Some(
+                    NumberRep {
+                        truthy: true,
+                    },
+                ),
+                members: {
+                    "A": 4,
+                    "B": 5,
+                },
+                member_values: Some(
+                    {
+                        "A": TSEnumMemberNumber(
+                            1.0,
+                            "1",
+                        ),
+                        "B": TSEnumMemberComputed,
+                    },
+                ),
+                has_unknown_members: false,
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_sig_with_options(
+            input,
+            Some(|opts: &mut TypeSigOptions| {
+                opts.is_ts_file = true;
+                opts.is_dts_file = true;
             })
         ))
     )
@@ -19187,6 +19429,7 @@ Local defs:
         members: {
             "B": 16,
         },
+        member_values: None,
         has_unknown_members: false,
     },
 )
@@ -21378,6 +21621,7 @@ Local defs:
             "C": 18,
             "D": 19,
         },
+        member_values: None,
         has_unknown_members: false,
     },
 )

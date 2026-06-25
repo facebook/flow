@@ -3485,7 +3485,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             ns,
         ),
         Def::GeneratorNext(box None) => EnvMap::empty(),
-        Def::Enum(_) => EnvMap::empty(),
+        Def::Enum { .. } => EnvMap::empty(),
         Def::Import(_) => EnvMap::empty(),
         Def::MissingThisAnnot => EnvMap::empty(),
     }
@@ -3610,7 +3610,7 @@ fn recursively_resolvable(def: &Def) -> bool {
         | Def::MemberAssign(_)
         | Def::OpAssign(_)
         | Def::Function(_)
-        | Def::Enum(_)
+        | Def::Enum { .. }
         | Def::Import(_) => false,
     }
 }
@@ -3739,7 +3739,7 @@ fn annotation_locs(
         | Def::TypeParam(_)
         | Def::Function(_)
         | Def::Interface(..)
-        | Def::Enum(_)
+        | Def::Enum { .. }
         | Def::Import(_)
         | Def::Class(_)
         | Def::Record(_)

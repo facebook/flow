@@ -326,6 +326,50 @@ pub enum TsLibSyntaxKind {
     Satisfies,
 }
 
+// A TypeScript enum member that Flow parses but TypeScript rejects.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum TsEnumInvalidMemberKind {
+    // A boolean or bigint initializer (TS enum members must be number or string).
+    TSEnumMemberInvalidLiteral,
+    // A defaulted member that cannot be auto-numbered (its predecessor is not a
+    // numeric constant) in a non-ambient enum.
+    TSEnumMemberMissingInitializer,
+    // A member with a numeric name, e.g. `enum E { "1" = 5 }` (TS2452).
+    TSEnumMemberNumericName,
+}
+
+// Enum-level syntax that Flow Enums allow but a TypeScript enum (in a .ts/.d.ts
+// file) does not.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum TsEnumInvalidSyntaxKind {
+    // Unknown members (`...`).
+    TSEnumUnknownMembers,
+    // An explicit representation type (`enum E of string {...}`).
+    TSEnumExplicitType,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1975,6 +2019,17 @@ pub enum Message<L: Dupe> {
 
     MessageEnumStringMemberInconsistentlyInitialized {
         enum_reason: VirtualReason<L>,
+    },
+
+    MessageTSEnumInvalidMember {
+        member_name: String,
+        enum_reason: VirtualReason<L>,
+        kind: TsEnumInvalidMemberKind,
+    },
+
+    MessageTSEnumInvalidSyntax {
+        enum_reason: VirtualReason<L>,
+        kind: TsEnumInvalidSyntaxKind,
     },
 
     MessageEnumNonIdentifierMemberName {

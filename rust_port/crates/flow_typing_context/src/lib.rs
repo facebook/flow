@@ -734,6 +734,9 @@ pub fn docblock_overrides(
         frozen.ts_syntax = true;
         frozen.tslib_syntax = true;
         frozen.ts_utility_syntax = true;
+        // TS `enum`s are a distinct feature from Flow Enums and are always available
+        // in .ts files, regardless of the `enums` option (which gates Flow Enums).
+        frozen.enable_enums = true;
     }
 
     metadata

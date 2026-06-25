@@ -67,6 +67,7 @@ fn sig_opts() -> TypeSigOptions {
         for_builtins: false,
         locs_to_dirtify: vec![],
         is_ts_file: false,
+        is_dts_file: false,
         tslib_syntax: false,
     }
 }

@@ -87,6 +87,7 @@ use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_common::ts_enum;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::natural_inference;
@@ -3306,7 +3307,7 @@ fn statement_<'a>(
             }
         }
         StatementInner::EnumDeclaration { inner, .. } => {
-            let enum_ast = enum_declaration(cx, loc.dupe(), inner)?;
+            let enum_ast = enum_declaration(cx, false, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::EnumDeclaration {
                 loc,
                 inner: enum_ast.into(),
@@ -3488,7 +3489,8 @@ fn statement_<'a>(
             })
         }
         StatementInner::DeclareEnum { inner, .. } => {
-            let decl_ast = enum_declaration(cx, loc.dupe(), inner)?;
+            // `declare enum` is ambient regardless of file extension.
+            let decl_ast = enum_declaration(cx, true, loc.dupe(), inner)?;
             statement::Statement::new(StatementInner::DeclareEnum {
                 loc,
                 inner: decl_ast.into(),
@@ -3643,7 +3645,8 @@ fn statement_<'a>(
                             loc: d_loc,
                             declaration: e,
                         } => {
-                            let enum_ast = enum_declaration(cx, d_loc.dupe(), e)?;
+                            // `declare export enum` is ambient regardless of file extension.
+                            let enum_ast = enum_declaration(cx, true, d_loc.dupe(), e)?;
                             D::Enum {
                                 loc: d_loc.dupe(),
                                 declaration: enum_ast.into(),
@@ -20585,6 +20588,7 @@ fn enum_exhaustive_check_of_switch_cases(
 
 fn enum_declaration<'a>(
     cx: &Context<'a>,
+    declared: bool,
     loc: ALoc,
     enum_decl: &statement::EnumDeclaration<ALoc, ALoc>,
 ) -> Result<statement::EnumDeclaration<ALoc, (ALoc, Type)>, JobError> {
@@ -20596,39 +20600,56 @@ fn enum_declaration<'a>(
     } = *enum_decl;
     let name_loc = ident.loc.dupe();
     let name = &ident.name;
-    if const_ {
-        flow_js_utils::add_output_non_speculating(
-            cx,
-            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported(loc.dupe())),
-        );
-    }
     let reason = mk_reason(
         VirtualReasonDesc::REnum {
             name: Some(name.dupe()),
         },
         name_loc.dupe(),
     );
-    let t = if cx.enable_enums() {
-        let concrete_info = mk_enum(cx, reason.dupe(), name_loc.dupe(), name.as_str(), body);
-        let enum_info = Rc::new(type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
-            type_::EnumConcreteInfo::new(concrete_info),
-        )));
-        let t = type_::mk_enum_object_type(reason.dupe(), enum_info);
-        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
-            var: Some(mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                name_loc.dupe(),
-            )),
-            init: reason.dupe(),
-        }));
+    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
+        var: Some(mk_reason(
+            VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+            name_loc.dupe(),
+        )),
+        init: reason.dupe(),
+    }));
+    let t = if flow_common::files::has_ts_ext(cx.file()) {
+        // TS enums are modeled as an object value of literal members plus a type
+        // that is the union of those member literals (see ts_enum.rs's
+        // mk_ts_enum_namespace). `const enum` type-checks the same as a regular
+        // enum here.
+        let t = ts_enum::mk_ts_enum_namespace(
+            cx,
+            declared,
+            reason.dupe(),
+            name_loc.dupe(),
+            name.dupe(),
+            body,
+        );
         type_env::init_implicit_const(cx, &use_op, &t, name_loc.dupe())?;
         t
     } else {
-        flow_js_utils::add_output_non_speculating(
-            cx,
-            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(loc.dupe())),
-        );
-        any_t::error(reason)
+        if const_ {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported(loc.dupe())),
+            );
+        }
+        if cx.enable_enums() {
+            let concrete_info = mk_enum(cx, reason.dupe(), name_loc.dupe(), name.as_str(), body);
+            let enum_info = Rc::new(type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
+                type_::EnumConcreteInfo::new(concrete_info),
+            )));
+            let t = type_::mk_enum_object_type(reason.dupe(), enum_info);
+            type_env::init_implicit_const(cx, &use_op, &t, name_loc.dupe())?;
+            t
+        } else {
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(loc.dupe())),
+            );
+            any_t::error(reason)
+        }
     };
     Ok(statement::EnumDeclaration {
         id: ast::Identifier::new(ast::IdentifierInner {

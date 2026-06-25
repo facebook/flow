@@ -193,7 +193,8 @@ pub fn parse_file_sig(
     .map(FlowSmolStr::new);
 
     let file_sig_opts = FileSigOptions {
-        enable_enums: options.enums,
+        // TS enums in .ts files are always enabled, independent of the `enums` option.
+        enable_enums: options.enums || flow_common::files::has_ts_ext(file),
         enable_jest_integration: options.enable_jest_integration,
         enable_relay_integration,
         explicit_available_platforms: docblock.supports_platform.clone(),

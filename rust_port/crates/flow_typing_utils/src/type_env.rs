@@ -1451,6 +1451,15 @@ fn read_entry<'cx>(
                                     flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
                                 }
                             },
+                            // A TS enum is a NamespaceT tagged with SymbolEnum that has a runtime
+                            // value (its object of members), so it is not type-only.
+                            TypeInner::NamespaceT(ns)
+                                if flow_typing_flow_common::flow_js_utils::is_ts_enum_symbol(
+                                    &ns.namespace_symbol,
+                                ) =>
+                            {
+                                false
+                            }
                             _ => {
                                 flow_typing_flow_common::flow_js_utils::import_type_t_kit::canonicalize_imported_type(cx, reason.dupe(), &resolved).is_some()
                             }

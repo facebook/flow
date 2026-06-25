@@ -352,6 +352,7 @@ pub(super) enum LocalBinding<'arena, 'ast> {
                 (
                     Option<EnumRep>,
                     BTreeMap<FlowSmolStr, LocNode<'arena>>,
+                    Option<BTreeMap<FlowSmolStr, TsEnumMemberValue>>,
                     bool,
                 ),
             >,
@@ -3178,6 +3179,7 @@ pub(super) mod scope {
                 (
                     Option<EnumRep>,
                     BTreeMap<FlowSmolStr, LocNode<'arena>>,
+                    Option<BTreeMap<FlowSmolStr, TsEnumMemberValue>>,
                     bool,
                 ),
             >,
@@ -12352,6 +12354,7 @@ fn enum_decl<'arena: 'ast, 'ast>(
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
     decl: &'ast ast::statement::EnumDeclaration<Loc, Loc>,
+    declared: bool,
     k: &dyn Fn(&mut scope::Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
 ) {
     fn enum_rep_to_type_sig_rep(rep: &enum_validate::EnumRep) -> EnumRep {
@@ -12365,12 +12368,15 @@ fn enum_decl<'arena: 'ast, 'ast>(
     }
 
     fn enum_def<'arena, 'ast>(
+        is_ts_file: bool,
+        ambient: bool,
         tbls: &mut Tables<'arena, 'ast>,
         body_loc: &Loc,
         body: &ast::statement::enum_declaration::Body<Loc>,
     ) -> (
         Option<EnumRep>,
         BTreeMap<FlowSmolStr, LocNode<'arena>>,
+        Option<BTreeMap<FlowSmolStr, TsEnumMemberValue>>,
         bool,
     ) {
         let result = enum_validate::classify_enum_body(body, body_loc);
@@ -12382,14 +12388,37 @@ fn enum_decl<'arena: 'ast, 'ast>(
                 acc.insert(FlowSmolStr::new(name), loc);
                 acc
             });
+        // The parsed signature retains each member's literal value (auto-numbered
+        // per TS, see ts_enum_sig.rs's ts_enum_member_values) so cross-module consumers
+        // can model the enum as an object of literal members + a union type. The
+        // locs are unused here; the merge step recovers them from [members].
+        // The signature ignores per-member errors; they are reported by the
+        // local-checking path (ts_enum.rs's mk_ts_enum_namespace). An errored
+        // member is still recorded, degraded to a computed value.
+        let member_values = if is_ts_file {
+            Some(
+                crate::ts_enum_sig::ts_enum_member_values(ambient, &body.members)
+                    .into_iter()
+                    .fold(
+                        BTreeMap::new(),
+                        |mut acc, (name, _member_loc, _init_loc, value, _error)| {
+                            acc.insert(name, value);
+                            acc
+                        },
+                    ),
+            )
+        } else {
+            None
+        };
         let has_unknown_members = result.has_unknown_members.is_some();
         match &result.rep {
             Some(rep) => (
                 Some(enum_rep_to_type_sig_rep(rep)),
                 members,
+                member_values,
                 has_unknown_members,
             ),
-            None => (None, members, has_unknown_members),
+            None => (None, members, member_values, has_unknown_members),
         }
     }
 
@@ -12398,9 +12427,15 @@ fn enum_decl<'arena: 'ast, 'ast>(
     let body_loc = body.loc.dupe();
     let id_loc_node = tbls.push_loc(decl.id.loc.dupe());
     let splice_loc = id_loc_node.dupe();
+    // A `declare enum` is ambient regardless of file extension, like any enum in a
+    // .d.ts file.
+    let ambient = opts.is_dts_file || declared;
+    let is_ts_file = opts.is_ts_file;
     let def = if opts.enable_enums {
         Some(Lazy::new(Box::new(move |_, _, tbls| {
-            tbls.splice(splice_loc, |tbls| enum_def(tbls, &body_loc, body))
+            tbls.splice(splice_loc, |tbls| {
+                enum_def(is_ts_file, ambient, tbls, &body_loc, body)
+            })
         })))
     } else {
         None
@@ -12451,7 +12486,7 @@ fn export_named_decl<'arena: 'ast, 'ast>(
             variable_decls(opts, scope, scopes, tbls, inner, &export_binding_fn)
         }
         StatementInner::EnumDeclaration { inner, .. } => {
-            enum_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
+            enum_decl(opts, scope, scopes, tbls, inner, false, &export_binding_fn)
         }
         StatementInner::ComponentDeclaration { inner, .. } => {
             component_decl(opts, scope, scopes, tbls, inner, &export_binding_fn)
@@ -12535,12 +12570,14 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
             loc: _,
             declaration: enum_,
         } => {
+            // `declare export enum` is ambient regardless of file extension.
             enum_decl(
                 opts,
                 scope,
                 scopes,
                 tbls,
                 enum_,
+                true,
                 &|scopes, name, binding| {
                     scope::export_binding(
                         scopes,
@@ -12737,15 +12774,23 @@ fn export_default_decl<'arena: 'ast, 'ast>(
                 loc: _,
                 inner: decl,
             } => {
-                enum_decl(opts, scope, scopes, tbls, decl, &|scopes, name, binding| {
-                    scope::export_default_binding(
-                        scopes,
-                        scope,
-                        &default_loc,
-                        name.clone(),
-                        binding,
-                    );
-                });
+                enum_decl(
+                    opts,
+                    scope,
+                    scopes,
+                    tbls,
+                    decl,
+                    false,
+                    &|scopes, name, binding| {
+                        scope::export_default_binding(
+                            scopes,
+                            scope,
+                            &default_loc,
+                            name.clone(),
+                            binding,
+                        );
+                    },
+                );
             }
             S::ComponentDeclaration {
                 loc: _,
@@ -13443,15 +13488,18 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             let is_type_only = ast_utils::is_type_only_declaration_statement(stmt);
             namespace_decl(opts, scope, scopes, tbls, is_type_only, decl, statement);
         }
+        // `declare enum` is ambient regardless of file extension.
         S::DeclareEnum {
             loc: _,
             inner: decl,
+        } => {
+            enum_decl(opts, scope, scopes, tbls, decl, true, &|_, _, _| {});
         }
-        | S::EnumDeclaration {
+        S::EnumDeclaration {
             loc: _,
             inner: decl,
         } => {
-            enum_decl(opts, scope, scopes, tbls, decl, &|_, _, _| {});
+            enum_decl(opts, scope, scopes, tbls, decl, false, &|_, _, _| {});
         }
         // unsupported
         S::With { .. } => {}

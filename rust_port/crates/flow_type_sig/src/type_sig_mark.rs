@@ -386,7 +386,7 @@ fn mark_local_binding<'arena, 'ast>(
             def,
         } => {
             mark_loc(marker, id_loc);
-            if let Some((_rep, members, _has_unknown_members)) =
+            if let Some((_rep, members, _member_values, _has_unknown_members)) =
                 def.as_ref().map(|d| d.get_forced(opts, scopes, tbls))
             {
                 for member_loc in members.values() {

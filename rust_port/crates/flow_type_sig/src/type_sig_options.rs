@@ -29,6 +29,9 @@ pub struct TypeSigOptions {
     pub for_builtins: bool,
     pub locs_to_dirtify: Vec<Loc>,
     pub is_ts_file: bool,
+    // True for ambient TS files (.d.ts), where uninitialized enum members are
+    // treated as computed rather than auto-numbered literals.
+    pub is_dts_file: bool,
     pub tslib_syntax: bool,
 }
 
@@ -66,7 +69,9 @@ impl TypeSigOptions {
             hook_compatibility: options.hook_compatibility_in_file(file),
             facebook_fbt: options.facebook_fbt.dupe(),
             enable_custom_error: options.enable_custom_error,
-            enable_enums: options.enums,
+            // TS enums (.ts/.d.ts) are a distinct feature from Flow Enums and are always
+            // available, independent of the `enums` option which gates Flow Enums.
+            enable_enums: options.enums || flow_common::files::has_ts_ext(file),
             enable_component_syntax,
             component_syntax_enabled_in_config: options.component_syntax,
             enable_ts_syntax: options.ts_syntax || flow_common::files::has_ts_ext(file),
@@ -75,6 +80,7 @@ impl TypeSigOptions {
             enable_records: options.enable_records,
             for_builtins: false,
             is_ts_file: flow_common::files::has_ts_ext(file),
+            is_dts_file: flow_common::files::has_dts_ext(file),
             tslib_syntax: options.tslib_syntax,
         }
     }
@@ -101,6 +107,7 @@ impl TypeSigOptions {
             for_builtins: true,
             locs_to_dirtify: Vec::new(),
             is_ts_file: false,
+            is_dts_file: false,
             tslib_syntax: true,
         }
     }

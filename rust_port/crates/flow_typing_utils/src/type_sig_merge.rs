@@ -687,70 +687,118 @@ fn import_typeof_ns<'cx>(
     annotation_inference::import_typeof(cx, reason, "*", ns_t)
 }
 
+// A TS enum (from a .ts/.d.ts signature) is modeled as a NamespaceT tagged with
+// SymbolEnum. The representation and its consequences live in the shared
+// `ts_enum.rs`'s `mk_ts_enum_namespace_type`, which also backs the local checking
+// path `ts_enum.rs`'s `mk_ts_enum_namespace`. Here we just recover each member's
+// loc (the signature stores values without locs; the merge step recovers them from
+// [members]).
+fn merge_ts_enum_namespace<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    id_loc: ALoc,
+    enum_name: &FlowSmolStr,
+    members: &BTreeMap<FlowSmolStr, ALoc>,
+    member_values: &BTreeMap<FlowSmolStr, TsEnumMemberValue>,
+) -> Type {
+    let resolved_members: Vec<(FlowSmolStr, ALoc, TsEnumMemberValue)> = member_values
+        .iter()
+        .map(|(name, value)| {
+            let loc = match members.get(name) {
+                Some(loc) => loc.dupe(),
+                None => id_loc.dupe(),
+            };
+            (name.dupe(), loc, value.clone())
+        })
+        .collect();
+    let namespace_symbol = Symbol::mk_enum_symbol(enum_name.dupe(), id_loc.dupe());
+    flow_typing_flow_common::ts_enum::mk_ts_enum_namespace_type(
+        cx,
+        reason,
+        namespace_symbol,
+        &resolved_members,
+    )
+}
+
 fn merge_enum<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
     id_loc: ALoc,
     enum_name: &FlowSmolStr,
-    rep: &EnumRep,
+    rep: Option<&EnumRep>,
     members: &BTreeMap<FlowSmolStr, ALoc>,
+    member_values: Option<&BTreeMap<FlowSmolStr, TsEnumMemberValue>>,
     has_unknown_members: bool,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
 
-    let rep_t = |desc, def_t_inner| {
-        let reason = reason::mk_reason(desc, id_loc.dupe());
-        Type::new(type_::TypeInner::DefT(
-            reason,
-            type_::DefT::new(def_t_inner),
-        ))
-    };
-    let representation_t = match rep {
-        EnumRep::BoolRep(None) => rep_t(RBoolean, type_::DefTInner::BoolGeneralT),
-        EnumRep::BoolRep(Some(lit)) => rep_t(
-            RBoolean,
-            type_::DefTInner::SingletonBoolT {
-                value: *lit,
-                from_annot: false,
-            },
-        ),
-        EnumRep::NumberRep { truthy } => {
-            let lit = if *truthy {
-                type_::Literal::Truthy
-            } else {
-                type_::Literal::AnyLiteral
-            };
-            rep_t(RNumber, type_::DefTInner::NumGeneralT(lit))
+    match member_values {
+        // TS enum (from a .ts/.d.ts signature): model as an object of literal members
+        // + union type. This path does not depend on the Flow-Enum representation
+        // (`rep`), which may be `None` for member shapes Flow Enums reject (e.g.
+        // defaulted numeric members).
+        Some(member_values) => {
+            merge_ts_enum_namespace(cx, reason, id_loc, enum_name, members, member_values)
         }
-        EnumRep::StringRep { truthy } => {
-            let lit = if *truthy {
-                type_::Literal::Truthy
-            } else {
-                type_::Literal::AnyLiteral
-            };
-            rep_t(RString, type_::DefTInner::StrGeneralT(lit))
-        }
-        EnumRep::SymbolRep => rep_t(RSymbol, type_::DefTInner::SymbolT),
-        EnumRep::BigIntRep { truthy } => {
-            let lit = if *truthy {
-                type_::Literal::Truthy
-            } else {
-                type_::Literal::AnyLiteral
-            };
-            rep_t(RBigInt, type_::DefTInner::BigIntGeneralT(lit))
-        }
-    };
-    let enum_id = cx.make_aloc_id(&id_loc);
-    let enum_info = type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
-        type_::EnumConcreteInfo::new(type_::EnumConcreteInfoInner {
-            enum_name: enum_name.dupe(),
-            enum_id,
-            members: members.iter().map(|(k, v)| (k.dupe(), v.dupe())).collect(),
-            representation_t,
-            has_unknown_members,
-        }),
-    ));
-    type_::mk_enum_object_type(reason, Rc::new(enum_info))
+        None => match rep {
+            None => type_::any_t::error(reason),
+            Some(rep) => {
+                let rep_t = |desc, def_t_inner| {
+                    let reason = reason::mk_reason(desc, id_loc.dupe());
+                    Type::new(type_::TypeInner::DefT(
+                        reason,
+                        type_::DefT::new(def_t_inner),
+                    ))
+                };
+                let representation_t = match rep {
+                    EnumRep::BoolRep(None) => rep_t(RBoolean, type_::DefTInner::BoolGeneralT),
+                    EnumRep::BoolRep(Some(lit)) => rep_t(
+                        RBoolean,
+                        type_::DefTInner::SingletonBoolT {
+                            value: *lit,
+                            from_annot: false,
+                        },
+                    ),
+                    EnumRep::NumberRep { truthy } => {
+                        let lit = if *truthy {
+                            type_::Literal::Truthy
+                        } else {
+                            type_::Literal::AnyLiteral
+                        };
+                        rep_t(RNumber, type_::DefTInner::NumGeneralT(lit))
+                    }
+                    EnumRep::StringRep { truthy } => {
+                        let lit = if *truthy {
+                            type_::Literal::Truthy
+                        } else {
+                            type_::Literal::AnyLiteral
+                        };
+                        rep_t(RString, type_::DefTInner::StrGeneralT(lit))
+                    }
+                    EnumRep::SymbolRep => rep_t(RSymbol, type_::DefTInner::SymbolT),
+                    EnumRep::BigIntRep { truthy } => {
+                        let lit = if *truthy {
+                            type_::Literal::Truthy
+                        } else {
+                            type_::Literal::AnyLiteral
+                        };
+                        rep_t(RBigInt, type_::DefTInner::BigIntGeneralT(lit))
+                    }
+                };
+                let enum_id = cx.make_aloc_id(&id_loc);
+                let enum_info = type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
+                    type_::EnumConcreteInfo::new(type_::EnumConcreteInfoInner {
+                        enum_name: enum_name.dupe(),
+                        enum_id,
+                        members: members.iter().map(|(k, v)| (k.dupe(), v.dupe())).collect(),
+                        representation_t,
+                        has_unknown_members,
+                    }),
+                ));
+                type_::mk_enum_object_type(reason, Rc::new(enum_info))
+            }
+        },
+    }
 }
 
 pub fn merge_pattern<'cx>(
@@ -5177,17 +5225,27 @@ pub fn merge_def<'cx>(
         Def::DisabledComponentBinding(_)
         | Def::DisabledEnumBinding(_)
         | Def::DisabledRecordBinding(_) => type_::any_t::error(reason),
-        Def::EnumBinding(inner) if inner.rep.is_none() => type_::any_t::error(reason),
+        // `rep` may be None (invalid Flow Enum). merge_enum still produces a TS-enum
+        // NamespaceT when member_values is present, falling back to AnyT.error only
+        // for an invalid Flow Enum with no member_values.
         Def::EnumBinding(inner) => {
-            let rep = inner.rep.as_ref().unwrap();
+            let DefEnumBinding {
+                id_loc,
+                rep,
+                members,
+                member_values,
+                has_unknown_members,
+                name,
+            } = inner.as_ref();
             merge_enum(
                 cx,
                 reason,
-                inner.id_loc.dupe(),
-                &inner.name,
-                rep,
-                &inner.members,
-                inner.has_unknown_members,
+                id_loc.dupe(),
+                name,
+                rep.as_ref(),
+                members,
+                member_values.as_ref(),
+                *has_unknown_members,
             )
         }
         Def::NamespaceBinding(inner) => {

@@ -2517,6 +2517,62 @@ pub fn namespace_type<'cx>(
     namespace_type_with_values_type(cx, namespace_symbol, values_type, types)
 }
 
+// TS enums (.ts/.d.ts) are represented as a NamespaceT whose symbol kind is
+// [SymbolEnum]: its values_type is an exact object of literal-typed members and
+// its types_tmap maps each member to a TypeT-wrapped singleton. These helpers
+// are the single source of truth for (a) recognizing that representation and
+// (b) computing its meaning as a *bare* type — the union of the member literals.
+// The producers that build the representation live in ts_enum.rs
+// (ts_enum.rs's mk_ts_enum_namespace for local checking and
+// type_sig_merge.rs's merge_ts_enum_namespace for signatures); the consumers (the
+// value->type transforms, inspection-concretization, and the import value/type
+// classifier) call these.
+pub fn is_ts_enum_symbol(namespace_symbol: &flow_common::flow_symbol::Symbol) -> bool {
+    namespace_symbol.kind() == flow_common::flow_symbol::SymbolKind::SymbolEnum
+}
+
+// The member literal types of a TS enum, read out of its [types_tmap] and
+// unwrapped from the [TypeT] wrappers the representation stores them in. Shared
+// by [ts_enum_member_union] and the normalizer.rs rendering of a TS enum as a
+// type. Entries that are not TypeT-wrapped are dropped: the representation never
+// produces them, and a malformed one should not leak into the result.
+pub fn ts_enum_member_types<'cx>(
+    cx: &Context<'cx>,
+    types_tmap: flow_typing_type::type_::properties::Id,
+) -> Vec<Type> {
+    use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::TypeInner;
+    use flow_typing_type::type_::property;
+
+    // [NameUtils.Map.values] (OCaml [WrappedMap.values]) folds with a prepend, so
+    // it yields values in descending key order; mirror that with [rev] so the
+    // member union renders in the same order as the OCaml [.exp].
+    cx.find_props(types_tmap)
+        .iter()
+        .rev()
+        .filter_map(|(_, p)| match property::read_t(p) {
+            Some(t) => match t.deref() {
+                TypeInner::DefT(_, def_t) => match def_t.deref() {
+                    DefTInner::TypeT(_, inner) => Some(inner.dupe()),
+                    _ => None,
+                },
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect()
+}
+
+pub fn ts_enum_member_union<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    types_tmap: flow_typing_type::type_::properties::Id,
+) -> Type {
+    use flow_typing_type::type_util::union_of_ts;
+
+    union_of_ts(reason, ts_enum_member_types(cx, types_tmap), None)
+}
+
 pub fn obj_is_readonlyish(obj: &flow_typing_type::type_::ObjType) -> bool {
     obj.flags.react_dro.is_some()
 }
@@ -3173,6 +3229,13 @@ pub mod value_to_type_reference_transform {
                     Ok(any_t::error(reason_of_t(&t).dupe()))
                 }
             },
+
+            // A TS enum used as a bare type is the union of its member literal types. Any
+            // other namespace value used as a type is an error and falls through to the
+            // catch-all below.
+            TypeInner::NamespaceT(ns) if super::is_ts_enum_symbol(&ns.namespace_symbol) => Ok(
+                super::ts_enum_member_union(cx, reason_op.dupe(), ns.types_tmap.dupe()),
+            ),
 
             TypeInner::AnyT(r, AnySource::AnyError(Some(AnyErrorKind::MissingAnnotation))) => {
                 add_output(

@@ -1121,6 +1121,13 @@ fn elab_t_concrete<'cx>(
                 }
             }
         }
+        // a TS enum used as a bare type is the union of its member literal types; any
+        // other namespace value used as a type is an error (catch-all below)
+        (TypeInner::NamespaceT(ns), OpInner::AnnotUseTTypeT { reason, .. })
+            if flow_js_utils::is_ts_enum_symbol(&ns.namespace_symbol) =>
+        {
+            flow_js_utils::ts_enum_member_union(cx, reason.dupe(), ns.types_tmap.dupe())
+        }
         (
             TypeInner::AnyT(_, type_::AnySource::AnyError(_)),
             OpInner::AnnotUseTTypeT { reason, .. },

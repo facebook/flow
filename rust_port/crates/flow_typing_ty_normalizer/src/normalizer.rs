@@ -999,32 +999,49 @@ mod reason_utils {
 
     use super::*;
 
-    pub(super) fn local_type_alias_symbol<'cx>(
+    // The local type alias name extractable from [reason], or [None] when the
+    // reason is not alias-shaped (e.g. a synthetic [TypeT] wrapping a TS enum
+    // member literal, whose reason is the literal's own reason).
+    pub(super) fn local_type_alias_symbol_opt<'cx>(
         env: &mut Env<'_, 'cx>,
         reason: &Reason,
-    ) -> Result<ALocSymbol, Error> {
+    ) -> Result<Option<ALocSymbol>, Error> {
         fn loop_<'cx>(
             env: &mut Env<'_, 'cx>,
             reason: &Reason,
             desc: &ReasonDesc<ALoc>,
-        ) -> Result<ALocSymbol, Error> {
+        ) -> Result<Option<ALocSymbol>, Error> {
             match desc {
-                ReasonDesc::REnum { name: Some(name) } => {
-                    symbol_from_reason(env, reason, Name::new(name.dupe()))
-                }
-                ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => {
-                    symbol_from_loc(env, loc.dupe(), Name::new(name.dupe()))
-                }
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
+                ReasonDesc::REnum { name: Some(name) } => Ok(Some(symbol_from_reason(
+                    env,
+                    reason,
+                    Name::new(name.dupe()),
+                )?)),
+                ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => Ok(Some(symbol_from_loc(
+                    env,
+                    loc.dupe(),
+                    Name::new(name.dupe()),
+                )?)),
+                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(env, reason, name.dupe())?)),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
-                _ => Err(terr(
-                    ErrorKind::BadTypeAlias,
-                    Some("could not extract local type alias name from reason"),
-                    None,
-                )),
+                _ => Ok(None),
             }
         }
         loop_(env, reason, reason.desc(false))
+    }
+
+    pub(super) fn local_type_alias_symbol<'cx>(
+        env: &mut Env<'_, 'cx>,
+        reason: &Reason,
+    ) -> Result<ALocSymbol, Error> {
+        match local_type_alias_symbol_opt(env, reason)? {
+            Some(symbol) => Ok(symbol),
+            None => Err(terr(
+                ErrorKind::BadTypeAlias,
+                Some("could not extract local type alias name from reason"),
+                None,
+            )),
+        }
     }
 
     pub fn imported_type_alias_symbol<'cx>(
@@ -3471,16 +3488,26 @@ pub mod element_converter {
             t: &Type,
             tparams: Option<Vec<ty::TypeParam<ALoc>>>,
         ) -> Result<ALocElt, Error> {
-            let name = reason_utils::local_type_alias_symbol(env, reason)?;
-            let ty = type_converter::convert_t::<I>(env, state, true, t)?;
-            Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl(Box::new(
-                ty::DeclTypeAliasDeclData {
-                    import: false,
-                    name,
-                    tparams: tparams.map(Into::into),
-                    type_: Some(ty),
-                },
-            ))))
+            match reason_utils::local_type_alias_symbol_opt(env, reason)? {
+                Some(name) => {
+                    let ty = type_converter::convert_t::<I>(env, state, true, t)?;
+                    Ok(ty::Elt::Decl(ty::Decl::TypeAliasDecl(Box::new(
+                        ty::DeclTypeAliasDeclData {
+                            import: false,
+                            name,
+                            tparams: tparams.map(Into::into),
+                            type_: Some(ty),
+                        },
+                    ))))
+                }
+                None => {
+                    // The reason carries no alias name — e.g. a TS enum member used as a
+                    // type (`Color.Red`), a [TypeT] wrapping the member's literal. Render
+                    // the wrapped type directly (e.g. `1`) instead of failing.
+                    let ty = type_converter::convert_t::<I>(env, state, false, t)?;
+                    Ok(ty::Elt::Type(ty))
+                }
+            }
         }
 
         fn import<'cx, I: NormalizerInput>(
@@ -3904,6 +3931,39 @@ pub mod element_converter {
                                             exports: exports.into(),
                                         },
                                     ))));
+                                }
+                                // A TS enum is a NamespaceT tagged with SymbolEnum. Its meaning as a type
+                                // is the union of its member literals, so render it that way (e.g.
+                                // `1 | 2`). The member literals are read directly from [types_tmap]
+                                // rather than via [namespace_t]: those entries are TypeT-wrapped
+                                // singletons carrying the members' own (non-alias) reasons, which the
+                                // namespace path cannot turn into type-alias names.
+                                SymbolKind::SymbolEnum if !env.keep_only_namespace_name => {
+                                    let member_ts =
+                                        flow_typing_flow_common::flow_js_utils::ts_enum_member_types(
+                                            env.genv.cx,
+                                            ns.types_tmap.dupe(),
+                                        );
+                                    match member_ts.split_first() {
+                                        None => {
+                                            return Ok(ty::Elt::Type(mk_empty(BotKind::EmptyType)));
+                                        }
+                                        Some((t0, ts)) => {
+                                            let ty0 = type_converter::convert_t::<I>(
+                                                env, state, false, t0,
+                                            )?;
+                                            let mut tys = vec![ty0];
+                                            for t in ts {
+                                                tys.push(type_converter::convert_t::<I>(
+                                                    env, state, false, t,
+                                                )?);
+                                            }
+                                            return Ok(ty::Elt::Type(
+                                                ty::mk_union(false, tys)
+                                                    .expect("non-empty members yield Some union"),
+                                            ));
+                                        }
+                                    }
                                 }
                                 _ => {}
                             },

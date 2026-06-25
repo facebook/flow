@@ -4459,6 +4459,35 @@ impl<'a> DefFinder<'a> {
             }
         }
     }
+
+    fn enum_declaration_impl(
+        &mut self,
+        declared: bool,
+        loc: &ALoc,
+        enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        let id_loc = enum_decl.id.loc.dupe();
+        let name = &enum_decl.id.name;
+        let body = &enum_decl.body;
+
+        self.add_ordinary_binding(
+            id_loc.dupe(),
+            mk_reason(
+                VirtualReasonDesc::REnum {
+                    name: Some(name.dupe()),
+                },
+                id_loc.dupe(),
+            ),
+            Def::Enum {
+                loc: loc.dupe(),
+                name: name.dupe(),
+                declared,
+                body: body.clone(),
+            },
+        );
+
+        ast_visitor::enum_declaration_default(self, loc, enum_decl)
+    }
 }
 
 // ============================================================================
@@ -6092,22 +6121,33 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         loc: &ALoc,
         enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
     ) -> Result<(), !> {
-        let id_loc = enum_decl.id.loc.dupe();
-        let name = &enum_decl.id.name;
-        let body = &enum_decl.body;
+        self.enum_declaration_impl(false, loc, enum_decl)
+    }
 
-        self.add_ordinary_binding(
-            id_loc.dupe(),
-            mk_reason(
-                VirtualReasonDesc::REnum {
-                    name: Some(name.dupe()),
-                },
-                id_loc.dupe(),
-            ),
-            Def::Enum(Box::new((id_loc.dupe(), name.dupe(), body.clone()))),
-        );
+    // `declare enum` is ambient regardless of file extension.
+    fn declare_enum(
+        &mut self,
+        loc: &ALoc,
+        enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        self.enum_declaration_impl(true, loc, enum_decl)
+    }
 
-        ast_visitor::enum_declaration_default(self, loc, enum_decl)
+    // The base mapper routes `declare export enum` through [enum_declaration], which
+    // would mark it non-ambient; intercept it here so it is treated as ambient.
+    fn declare_export_declaration_decl(
+        &mut self,
+        decl: &ast::statement::declare_export_declaration::Declaration<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        match decl {
+            ast::statement::declare_export_declaration::Declaration::Enum { loc, declaration } => {
+                let Ok(()) = self.enum_declaration_impl(true, loc, declaration);
+            }
+            _ => {
+                let Ok(()) = ast_visitor::declare_export_declaration_decl_default(self, decl);
+            }
+        }
+        Ok(())
     }
 
     fn import_declaration(

@@ -1974,6 +1974,7 @@ dependencies = [
  "flow_lazy",
  "flow_parser",
  "flow_parser_utils",
+ "flow_type_sig",
  "flow_typing_context",
  "flow_typing_debug",
  "flow_typing_errors",

@@ -1067,7 +1067,8 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                     name: name.dupe(),
                 })),
                 Some(def) => {
-                    let (rep, members, has_unknown_members) = def.as_already_forced();
+                    let (rep, members, member_values, has_unknown_members) =
+                        def.as_already_forced();
                     let members = members
                         .iter()
                         .map(|(k, loc)| (k.dupe(), pack_loc(loc)))
@@ -1077,6 +1078,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                         name: name.dupe(),
                         rep: *rep,
                         members,
+                        member_values: member_values.clone(),
                         has_unknown_members: *has_unknown_members,
                     }))
                 }
