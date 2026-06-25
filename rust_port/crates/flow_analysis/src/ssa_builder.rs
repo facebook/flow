@@ -24,7 +24,6 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
@@ -1042,10 +1041,7 @@ impl<'ast, Loc: Dupe + Clone + Eq + Ord + Hash + Default>
             let this = &mut *self;
             let loc: &Loc = &ident.loc;
             let name: &FlowSmolStr = &ident.name;
-            let reason = mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                loc.dupe(),
-            );
+            let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
             match this.ssa_env.get_mut(name) {
                 Some(ssa) => {
                     *ssa.val_ref.borrow_mut() = Val::one(reason.dupe());

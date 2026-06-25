@@ -66,10 +66,10 @@ pub fn ts_enum_member_type(loc: ALoc, value: &TsEnumMemberValue) -> Type {
             }),
         )),
         TsEnumMemberValue::TSEnumMemberString(s) => Type::new(TypeInner::DefT(
-            mk_annot_reason(VirtualReasonDesc::RStringLit(Name::new(s.dupe())), loc),
+            mk_annot_reason(VirtualReasonDesc::RStringLit(s.dupe()), loc),
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.dupe()),
+                value: s.dupe(),
             }),
         )),
         TsEnumMemberValue::TSEnumMemberComputed => Type::new(TypeInner::DefT(

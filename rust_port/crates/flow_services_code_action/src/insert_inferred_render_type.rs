@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/insert_inferred_render_type.ml`
+//! Port of `insert_inferred_render_type.rs`
 
 use std::rc::Rc;
 use std::sync::Arc;
@@ -14,7 +14,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocFuzzy;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_parser::ast;
 use flow_parser::ast::types::ComponentRendersAnnotation;
@@ -126,9 +125,9 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
         None => Ok(None),
         Some(ts) => {
             let reason = reason::mk_reason(
-                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(Name::new(
-                    "React.Node",
-                )))),
+                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
+                    "React.Node".into(),
+                ))),
                 ALoc::of_loc(missing_renders_loc.dupe()),
             );
             let t =

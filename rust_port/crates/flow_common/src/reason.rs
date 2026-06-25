@@ -259,7 +259,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RComponentType,
     RRendersNothing,
     RAutocompleteToken,
-    RStringLit(Name),
+    RStringLit(FlowSmolStr),
     RTemplateLiteralType,
     RNumberLit(FlowSmolStr),
     RBigIntLit(FlowSmolStr),
@@ -310,7 +310,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RConstructorCall(Arc<VirtualReasonDesc<L>>),
     RRecordType(FlowSmolStr),
     RImplicitThis(Arc<VirtualReasonDesc<L>>),
-    RType(Name),
+    RType(FlowSmolStr),
     RTypeAlias(Box<(FlowSmolStr, Option<L>, Arc<VirtualReasonDesc<L>>)>),
     ROpaqueType(FlowSmolStr),
     RTypeParam(
@@ -328,7 +328,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RParameter(Option<FlowSmolStr>),
     RRestParameter(Option<FlowSmolStr>),
     RPatternParameter(FlowSmolStr),
-    RIdentifier(Name),
+    RIdentifier(FlowSmolStr),
     RPropertyAssignment(Option<FlowSmolStr>),
     RProperty(Option<Name>),
     RPrivateProperty(FlowSmolStr),
@@ -380,7 +380,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RPossiblyMissingPropFromObj(Name, Arc<VirtualReasonDesc<L>>),
     RUnionBranching(Arc<VirtualReasonDesc<L>>, i32),
     RTypeGuardParam(FlowSmolStr),
-    RComponent(Name),
+    RComponent(FlowSmolStr),
     RPropsOfComponent(Arc<VirtualReasonDesc<L>>),
     RInstanceOfComponent(Arc<VirtualReasonDesc<L>>),
     RDefaultTypeArgumentAtIndex {
@@ -844,7 +844,7 @@ impl Reason {
         self.is_lib()
             && matches!(
                 self.desc(true),
-                VirtualReasonDesc::RClass(inner) if matches!(&**inner, VirtualReasonDesc::RType(Name(s)) if s.as_str() == "Promise")
+                VirtualReasonDesc::RClass(inner) if matches!(&**inner, VirtualReasonDesc::RType(s) if s.as_str() == "Promise")
             )
     }
 
@@ -2329,7 +2329,7 @@ pub fn mk_expression_reason<M: Dupe + PartialEq, T: Dupe + PartialEq>(
             mk_reason(desc, loc.dupe())
         }
         ExpressionInner::StringLiteral { loc, inner } if inner.value.is_empty() => {
-            mk_reason(VirtualReasonDesc::RStringLit(Name::new("")), loc.dupe())
+            mk_reason(VirtualReasonDesc::RStringLit("".into()), loc.dupe())
         }
         ExpressionInner::TaggedTemplate { loc, .. }
         | ExpressionInner::TemplateLiteral { loc, .. } => {
@@ -2388,7 +2388,7 @@ pub fn mk_typed_expression_reason<M: Dupe + PartialEq, T: Dupe>(
             mk_reason(desc, loc.0.dupe())
         }
         ExpressionInner::StringLiteral { loc, inner } if inner.value.is_empty() => {
-            mk_reason(VirtualReasonDesc::RStringLit(Name::new("")), loc.0.dupe())
+            mk_reason(VirtualReasonDesc::RStringLit("".into()), loc.0.dupe())
         }
         ExpressionInner::TaggedTemplate { loc, .. }
         | ExpressionInner::TemplateLiteral { loc, .. } => {
@@ -2480,7 +2480,7 @@ pub fn react_element_desc_of_component_reason<L: Dupe>(
 ) -> VirtualReasonDesc<L> {
     match reason.desc(false) {
         VirtualReasonDesc::RComponent(name) => VirtualReasonDesc::RReactElement {
-            name_opt: Some(name.dupe()),
+            name_opt: Some(Name::new(name.dupe())),
             from_component_syntax: true,
         },
         _ => VirtualReasonDesc::RReactElement {

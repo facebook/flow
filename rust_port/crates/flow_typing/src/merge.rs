@@ -548,7 +548,7 @@ fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> Truthy
                 }
             }
             DefTInner::SingletonStrT { value, .. } => {
-                if value.as_str() == "" {
+                if value.is_empty() {
                     TruthynessResult::ConstCondFalsy {
                         constant_condition_kind: ConstantConditionKind::ConstCondGeneral,
                         reason: Some(reason.dupe()),
@@ -1158,8 +1158,8 @@ fn detect_unused_promises<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 
 fn enforce_optimize<'cx>(cx: &Context<'cx>, loc: &ALoc, t: &Type) -> Result<(), JobError> {
     let reason = flow_common::reason::mk_reason(
-        VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(Name::new(
-            FlowSmolStr::new_inline("$Flow$EnforceOptimized"),
+        VirtualReasonDesc::RTypeApp(Arc::new(VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+            "$Flow$EnforceOptimized",
         )))),
         loc.dupe(),
     );

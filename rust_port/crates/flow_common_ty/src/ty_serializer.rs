@@ -242,7 +242,7 @@ impl Serializer {
             }),
             Ty::StrLit(lit) => ast::types::Type::new(TypeInner::StringLiteral {
                 loc: LOC_NONE,
-                literal: self.str_lit(lit.as_str()),
+                literal: self.str_lit(lit),
             }),
             Ty::BoolLit(lit) => ast::types::Type::new(TypeInner::BooleanLiteral {
                 loc: LOC_NONE,

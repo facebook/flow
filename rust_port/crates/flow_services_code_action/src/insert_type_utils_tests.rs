@@ -5,12 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/__tests__/insert_type_utils_tests.ml`
+//! Port of `insert_type_utils_tests.rs`
 
 use std::sync::Arc;
 
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
 use flow_common_ty::ty::AnyKind;
 use flow_common_ty::ty::BotKind;
 use flow_common_ty::ty::Ty;
@@ -48,7 +47,7 @@ fn stylize_union_number_with_number_literal() {
 fn stylize_union_string_with_string_literal() {
     let t_in = Arc::new(Ty::Union(
         false,
-        Arc::new(Ty::StrLit(Name::new("foo"))),
+        Arc::new(Ty::StrLit("foo".into())),
         Arc::new(Ty::Str),
         Arc::from([]),
     ));

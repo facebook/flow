@@ -2006,7 +2006,7 @@ pub fn resolve<'cx, A>(
                         let reason_op = match tool {
                             object::Tool::MakeExact => reason
                                 .dupe()
-                                .replace_desc(VirtualReasonDesc::RType(Name::new("$Exact"))),
+                                .replace_desc(VirtualReasonDesc::RType("$Exact".into())),
                             _ => reason.dupe(),
                         };
                         add_output(
@@ -2633,14 +2633,15 @@ pub fn map_object<'cx>(
         let prop_polarity = property::polarity(prop);
         let key_loc = property::first_loc(prop)
             .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
+        let key_str = key.as_smol_str().dupe();
         let key_t = Type::new(TypeInner::DefT(
             flow_common::reason::mk_reason(
-                VirtualReasonDesc::RStringLit(key.clone()),
+                VirtualReasonDesc::RStringLit(key_str.dupe()),
                 key_loc.dupe(),
             ),
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: key.dupe(),
+                value: key_str,
             }),
         ));
         let prop_optional = is_prop_optional(prop_t);

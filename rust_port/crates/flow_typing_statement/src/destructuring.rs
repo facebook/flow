@@ -381,10 +381,7 @@ fn identifier<'a>(
     name: &FlowSmolStr,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let default_val = &acc.default;
-    let reason = mk_reason(
-        VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name))),
-        name_loc.dupe(),
-    );
+    let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc.dupe());
     let write_t = type_env::find_write(cx, DefLocType::OrdinaryNameLoc, reason.dupe());
     let current = type_util::mod_reason_of_t(
         &|r: Reason| {
@@ -393,7 +390,7 @@ fn identifier<'a>(
                 VirtualReasonDesc::RDefaultValue
                 | VirtualReasonDesc::RArrayPatternRestProp
                 | VirtualReasonDesc::RObjectPatternRestProp => {
-                    VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name)))
+                    VirtualReasonDesc::RIdentifier(name.dupe())
                 }
                 _ => desc.clone(),
             };
@@ -422,10 +419,7 @@ fn current_type<'a>(cx: &Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> Type 
             type_env::find_write(
                 cx,
                 DefLocType::OrdinaryNameLoc,
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    name_loc,
-                ),
+                mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc),
             )
         }
         pattern::Pattern::Expression { .. } => {

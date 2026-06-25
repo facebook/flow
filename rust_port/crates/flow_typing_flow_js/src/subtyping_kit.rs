@@ -2589,7 +2589,7 @@ pub fn rec_sub_t<'cx>(
         // which we signal by setting the final element in ConcretizeTypeAppsT to
         // true.
         //
-        // The next step happens back in flow_js.ml, at the cases for a
+        // The next step happens back in flow_js.rs, at the cases for a
         // ConcretizeTypeAppsT use type.
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -3040,7 +3040,7 @@ pub fn rec_sub_t<'cx>(
                 },
             ) = (ld.deref(), ud.deref()) =>
         {
-            if Name::new(actual_lit.1.dupe()) != *expected {
+            if actual_lit.1 != *expected {
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
@@ -3056,7 +3056,7 @@ pub fn rec_sub_t<'cx>(
             let u_new = Type::new(TypeInner::DefT(
                 r.dupe(),
                 DefT::new(DefTInner::SingletonStrT {
-                    value: Name::new(num_lit.1.as_str()),
+                    value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
             ));
@@ -3288,7 +3288,7 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::update_lit_type_from_annot(cx, l);
             let reason_next = reason_s
                 .dupe()
-                .replace_desc_new(VirtualReasonDesc::RProperty(Some(x.dupe())));
+                .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
             // check that o has key x
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3319,7 +3319,7 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::update_lit_type_from_annot(cx, l);
             let reason_next = reason_s
                 .dupe()
-                .replace_desc_new(VirtualReasonDesc::RProperty(Some(x.dupe())));
+                .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
             // check that o has key x
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
@@ -3401,7 +3401,7 @@ pub fn rec_sub_t<'cx>(
             let l_new = Type::new(TypeInner::DefT(
                 reason_s.dupe(),
                 DefT::new(DefTInner::SingletonStrT {
-                    value: Name::new(num_lit.1.as_str()),
+                    value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
             ));
@@ -3439,7 +3439,7 @@ pub fn rec_sub_t<'cx>(
             let l_new = Type::new(TypeInner::DefT(
                 reason_s.dupe(),
                 DefT::new(DefTInner::SingletonStrT {
-                    value: Name::new(num_lit.1.as_str()),
+                    value: num_lit.1.dupe(),
                     from_annot: false,
                 }),
             ));

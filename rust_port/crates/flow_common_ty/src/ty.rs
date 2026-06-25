@@ -42,7 +42,7 @@ pub enum Ty<L> {
     Bool,
     BigInt,
     NumLit(String),
-    StrLit(Name),
+    StrLit(FlowSmolStr),
     BoolLit(bool),
     BigIntLit(String),
     Fun(Box<FunT<L>>),
@@ -1107,8 +1107,8 @@ where
             Ty::NumLit(s) | Ty::BigIntLit(s) => {
                 self.on_string(env, s);
             }
-            Ty::StrLit(name) => {
-                self.on_name(env, name);
+            Ty::StrLit(s) => {
+                self.on_string(env, s);
             }
             Ty::BoolLit(b) => {
                 self.on_bool(env, *b);
@@ -1617,7 +1617,7 @@ where
             (Ty::NumLit(s1), Ty::NumLit(s2)) | (Ty::BigIntLit(s1), Ty::BigIntLit(s2)) => {
                 self.on_string(env, s1, s2)
             }
-            (Ty::StrLit(n1), Ty::StrLit(n2)) => self.on_name(env, n1, n2),
+            (Ty::StrLit(s1), Ty::StrLit(s2)) => self.on_string(env, s1, s2),
             (Ty::BoolLit(b1), Ty::BoolLit(b2)) => self.on_bool(env, *b1, *b2),
             (Ty::Fun(f1), Ty::Fun(f2)) => self.on_fun_t(env, f1, f2),
             (Ty::Obj(o1), Ty::Obj(o2)) => self.on_obj_t(env, o1, o2),
@@ -2664,7 +2664,7 @@ where
             | Ty::BigInt => Self::Acc::zero(),
             Ty::Bot(bk) => self.on_bot_kind(env, bk),
             Ty::NumLit(s) | Ty::BigIntLit(s) => self.on_string(env, s),
-            Ty::StrLit(name) => self.on_name(env, name),
+            Ty::StrLit(s) => self.on_string(env, s),
             Ty::BoolLit(b) => self.on_bool(env, *b),
             Ty::Fun(fun_t) => self.on_fun_t(env, fun_t),
             Ty::Obj(obj_t) => self.on_obj_t(env, obj_t),
@@ -3140,9 +3140,9 @@ where
                 let s_new = self.on_string(env, s.clone());
                 Arc::new(Ty::BigIntLit(s_new))
             }
-            Ty::StrLit(name) => {
-                let name_new = self.on_name(env, name.clone());
-                Arc::new(Ty::StrLit(name_new))
+            Ty::StrLit(s) => {
+                let s_new: FlowSmolStr = self.on_string(env, s.to_string()).into();
+                Arc::new(Ty::StrLit(s_new))
             }
             Ty::BoolLit(b) => {
                 let b_new = self.on_bool(env, *b);
@@ -4747,7 +4747,7 @@ impl<L: Dupe> Ty<L> {
             Ty::Bool => Ty::Bool,
             Ty::BigInt => Ty::BigInt,
             Ty::NumLit(s) => Ty::NumLit(s.clone()),
-            Ty::StrLit(name) => Ty::StrLit(name.dupe()),
+            Ty::StrLit(s) => Ty::StrLit(s.dupe()),
             Ty::BoolLit(b) => Ty::BoolLit(*b),
             Ty::BigIntLit(s) => Ty::BigIntLit(s.clone()),
             Ty::Fun(fun) => Ty::Fun(Box::new(fun.map_locs(f))),

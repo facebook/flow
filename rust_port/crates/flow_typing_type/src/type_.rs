@@ -455,8 +455,7 @@ pub enum DefTInner {
     /// singleton string, matches exactly a given string literal
     SingletonStrT {
         from_annot: bool,
-        /// TODO SingletonStrT should not include internal names
-        value: Name,
+        value: FlowSmolStr,
     },
     /// This type is only to be used to represent numeric-like object keys in the
     /// context of object-to-object subtyping. It allows numeric-like object keys
@@ -4525,7 +4524,7 @@ pub enum ThisStatus {
 }
 
 /// A CallT constructor can be used to compute hints in calls to IntersectionTs.
-/// (See `synthesis_speculation_call` in type_hint.ml.) We use speculation_hint_state
+/// (See `synthesis_speculation_call` in type_hint.rs.) We use speculation_hint_state
 /// to keep track of the various states of hint computation during speculation.
 /// The state is initialized to the "unset" phase. If an overload succeeds, it is
 /// recorded along with the speculation path (list of speculation_ids that led
@@ -5798,7 +5797,7 @@ pub enum TypeMap {
 
 /// Concretizers of resolved types: simplify types like EvalT, OpenT, TypeAppT,
 /// etc. The order of the constructors below denotes the order in which the
-/// respective catch-all cases appears in flow_js.ml. *)
+/// respective catch-all cases appears in flow_js.rs.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ConcretizationKind {
     ConcretizeForCJSExtractNamedExportsAndTypeExports,
@@ -5948,7 +5947,7 @@ impl DepthTrace {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum UnionEnum {
-    Str(Name),
+    Str(FlowSmolStr),
     Num(NumberLiteral),
     Bool(bool),
     BigInt(BigIntLiteral),
@@ -7687,7 +7686,7 @@ pub mod union_rep {
             TypeInner::DefT(_, def_t) => match &**def_t {
                 DefTInner::SingletonStrT { value, .. } => Some(UnionEnum::Str(value.dupe())),
                 DefTInner::NumericStrKeyT(num_lit) => {
-                    Some(UnionEnum::Str(Name::new(num_lit.1.to_string())))
+                    Some(UnionEnum::Str(num_lit.1.to_string().into()))
                 }
                 DefTInner::SingletonNumT { value, .. } => Some(UnionEnum::Num(value.clone())),
                 DefTInner::SingletonBigIntT { value, .. } => Some(UnionEnum::BigInt(value.clone())),
@@ -9778,7 +9777,7 @@ pub mod aconstraint {
     /// that is maintained for every unresolved annotation variable. It is important
     /// to keep this information around, so we can force these dependents into
     /// evaluation when the current variable becomes resolved (see resolve_id in
-    /// annotation_inference.ml). An implied invariant is that all variables in the
+    /// annotation_inference.rs). An implied invariant is that all variables in the
     /// dependent set are of the Annot_op kind.
     ///
     /// While in one of the two initial states the respective annotation variable
@@ -10856,7 +10855,10 @@ pub mod desc_format {
 
     // InstanceT reasons have desc = name
     pub fn instance_reason(name: Name, loc: ALoc) -> Reason {
-        flow_common::reason::mk_reason(flow_common::reason::VirtualReasonDesc::RType(name), loc)
+        flow_common::reason::mk_reason(
+            flow_common::reason::VirtualReasonDesc::RType(name.into_smol_str()),
+            loc,
+        )
     }
 
     pub fn name_of_instance_reason(r: &Reason) -> String {
@@ -10869,13 +10871,16 @@ pub mod desc_format {
 
     // TypeT reasons have desc = type `name`
     pub fn type_reason(name: Name, loc: ALoc) -> Reason {
-        flow_common::reason::mk_reason(flow_common::reason::VirtualReasonDesc::RType(name), loc)
+        flow_common::reason::mk_reason(
+            flow_common::reason::VirtualReasonDesc::RType(name.into_smol_str()),
+            loc,
+        )
     }
 
     pub fn name_of_type_reason(r: &Reason) -> Name {
         let desc = r.desc.unwrap();
         match desc {
-            VirtualReasonDesc::RType(name) => name.dupe(),
+            VirtualReasonDesc::RType(name) => Name::new(name.dupe()),
             _ => panic!("not a type reason"),
         }
     }
@@ -11807,7 +11812,7 @@ pub fn mk_enum_type(reason: Reason, enum_info: Rc<EnumInfo>) -> Type {
     let reason = reason.update_desc(|desc| match &desc {
         VirtualReasonDesc::REnum { name } => {
             if let Some(name_str) = name {
-                VirtualReasonDesc::RType(Name::new(name_str.dupe()))
+                VirtualReasonDesc::RType(name_str.dupe())
             } else {
                 desc.clone()
             }

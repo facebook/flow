@@ -6,7 +6,6 @@
  */
 
 use dupe::Dupe;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
@@ -138,7 +137,7 @@ fn all_providers_of_writes<L: LocSig>(
             .iter()
             .map(|(loc, write_kind)| {
                 let reason = mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(entry.name.dupe())),
+                    VirtualReasonDesc::RIdentifier(entry.name.dupe()),
                     loc.dupe(),
                 );
                 let empty_array_writes = match write_kind {

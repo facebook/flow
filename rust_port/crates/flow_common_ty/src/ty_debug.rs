@@ -543,7 +543,7 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
         Ty::Num => "Num".to_string(),
         Ty::NumLit(s) => format!("\"{}\"", s),
         Ty::Str => "Str".to_string(),
-        Ty::StrLit(s) => format!("\"{}\"", s.as_str()),
+        Ty::StrLit(s) => format!("\"{}\"", s),
         Ty::Bool => "Bool".to_string(),
         Ty::BoolLit(b) => format!("\"{}\"", b),
         Ty::BigInt => "BigInt".to_string(),
@@ -836,7 +836,7 @@ where
 }
 
 /// Formats an ALoc directly (its keyed-or-concrete representation) without concretizing.
-/// OCaml: `Ty_debug.Make (struct let aloc_to_loc = None end)` (ty_debug.ml:87-95).
+/// OCaml: `Ty_debug.Make (struct let aloc_to_loc = None end)` (ty_debug.rs).
 pub struct AlocOnlyConverter;
 
 impl ALocToLoc<flow_aloc::ALoc> for AlocOnlyConverter {
@@ -1351,7 +1351,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe>(
             vec![]
         }
         Ty::NumLit(s) => vec![("literal".to_string(), Json::String(s.clone()))],
-        Ty::StrLit(s) => vec![("literal".to_string(), Json::String(s.as_str().to_string()))],
+        Ty::StrLit(s) => vec![("literal".to_string(), Json::String(s.to_string()))],
         Ty::BoolLit(b) => vec![("literal".to_string(), Json::Bool(*b))],
         Ty::BigIntLit(s) => vec![("literal".to_string(), Json::String(s.clone()))],
         Ty::Fun(f) => json_of_fun_t(converter, f, strip_root),
@@ -1777,7 +1777,7 @@ pub fn json_of_elt<L: Debug + Clone + Dupe>(
 /// Compact JSON for `elt`, returned as a `Box<RawValue>` so callers can embed it
 /// inside a serde-serializable struct without going through `serde_json::Value`
 /// (which would deduplicate the two `"kind"` entries that
-/// `json_of_utility` produces — outer wrapper + inner tag, OCaml `ty_debug.ml`
+/// `json_of_utility` produces — outer wrapper + inner tag, OCaml `ty_debug.rs`
 /// lines 516 + 831-836).
 pub fn json_of_elt_raw<L: Debug + Clone + Dupe>(
     converter: &dyn ALocToLoc<L>,

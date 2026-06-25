@@ -83,7 +83,7 @@ impl Key {
 
         let Key(base, projs) = self;
         match (base, projs.as_slice()) {
-            (Base::OrdinaryIdentifier(name), []) => RIdentifier(Name::new(name.dupe())),
+            (Base::OrdinaryIdentifier(name), []) => RIdentifier(name.dupe()),
             (Base::This, []) => RThis,
             (Base::Super, []) => RSuper,
             (_, projs) => match projs.last().unwrap() {

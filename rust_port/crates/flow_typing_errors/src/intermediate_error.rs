@@ -3909,7 +3909,6 @@ where
                     providers,
                 } = data.as_ref();
 
-                use flow_common::reason::Name as ReasonName;
                 use flow_common::reason::VirtualReasonDesc::RIdentifier;
                 use flow_common::reason::mk_reason;
 
@@ -3942,10 +3941,7 @@ where
                     features
                 };
 
-                let name_reason = mk_reason(
-                    RIdentifier(ReasonName::new(name.clone())),
-                    declaration.dupe(),
-                );
+                let name_reason = mk_reason(RIdentifier(name.clone()), declaration.dupe());
 
                 let mut features = vec![
                     text("All writes to "),
@@ -8024,7 +8020,7 @@ where
                 let ((first_loc, name, second_loc), rest) = duplicates.clone().split_off_first();
                 if rest.is_empty() {
                     let first = mk_reason(
-                        VirtualReasonDesc::RIdentifier(name.clone()),
+                        VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
                         first_loc.dupe(),
                     );
                     friendly::Message(vec![
@@ -8051,8 +8047,10 @@ where
                         text(".\n"),
                     ];
                     for (first_loc, name, second_loc) in all_dupes {
-                        let first =
-                            mk_reason(VirtualReasonDesc::RIdentifier(name.clone()), first_loc);
+                        let first = mk_reason(
+                            VirtualReasonDesc::RIdentifier(name.into_smol_str()),
+                            first_loc,
+                        );
                         features.extend(vec![
                             text(" - "),
                             ref_(&first),

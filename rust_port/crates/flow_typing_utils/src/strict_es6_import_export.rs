@@ -342,7 +342,7 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
     fn add_non_const_var_export_error(
         &self,
         loc: ALoc,
-        decl_info: Option<(ALoc, flow_common::reason::Name)>,
+        decl_info: Option<(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr)>,
     ) {
         let decl_reason = decl_info
             .map(|(decl_loc, name)| mk_reason(VirtualReasonDesc::RIdentifier(name), decl_loc));
@@ -770,14 +770,7 @@ impl<'cx, 'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExport
                             ast::VariableKind::Var | ast::VariableKind::Let => {
                                 self.add_non_const_var_export_error(
                                     id_loc.dupe(),
-                                    Some((
-                                        var_decl.decl_loc.dupe(),
-                                        flow_common::reason::Name::new(
-                                            flow_data_structure_wrapper::smol_str::FlowSmolStr::new(
-                                                &var_decl.name,
-                                            ),
-                                        ),
-                                    )),
+                                    Some((var_decl.decl_loc.dupe(), var_decl.name.dupe())),
                                 );
                             }
                             _ => {}

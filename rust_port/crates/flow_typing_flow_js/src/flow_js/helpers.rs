@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_common::reason::Name;
 use flow_common_utils::option_utils;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
@@ -311,8 +312,8 @@ pub(super) fn lookup_prop_type_direct<'cx>(
     props: &properties::PropertiesMap,
     key_type: &Type,
 ) -> Option<Type> {
-    let name = type_util::name_of_singleton_string_type(key_type)?;
-    let prop = props.get(name)?;
+    let name = type_util::string_of_singleton_string_type(key_type)?;
+    let prop = props.get(&Name::new(name.dupe()))?;
     match property::property_type(prop) {
         PropertyType::OrdinaryField { type_, polarity }
             if Polarity::compat(polarity, Polarity::Positive) =>

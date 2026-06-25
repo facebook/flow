@@ -1181,7 +1181,7 @@ pub mod operators {
                         }),
                     ))
                 }
-                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::SingletonStrT { value, .. } if value.as_str() == "") =>
+                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::SingletonStrT { value, .. } if value.is_empty()) =>
                 {
                     let reason = reason
                         .dupe()
@@ -2477,7 +2477,7 @@ pub mod type_assertions {
                             op_reason,
                             obj_reason,
                             obj,
-                            Some(value.clone()),
+                            Some(Name::new(value.dupe())),
                         );
                     }
                 }

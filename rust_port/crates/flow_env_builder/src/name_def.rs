@@ -20,7 +20,6 @@ use flow_common::hint::HintDecompositionInner;
 use flow_common::hint::HintKind;
 use flow_common::hint::PredicateKind;
 use flow_common::js_number;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::func_reason;
@@ -1681,7 +1680,7 @@ impl<'a> DefFinder<'a> {
                     );
                     self.add_ordinary_binding(
                         loc.dupe(),
-                        mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name)), loc),
+                        mk_reason(VirtualReasonDesc::RIdentifier(name), loc),
                         Def::Binding(Box::new(binding)),
                     );
                 }
@@ -1835,10 +1834,7 @@ impl<'a> DefFinder<'a> {
         for (id_loc, name, binding) in ops.identifiers {
             self.add_ordinary_binding(
                 id_loc.dupe(),
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    id_loc,
-                ),
+                mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
         }
@@ -1903,7 +1899,7 @@ impl<'a> DefFinder<'a> {
                     }
                     _ => {
                         // TODO: This should be a parse error, but we only produce an internal
-                        // error in statement.ml.
+                        // error in statement.rs.
                         mk_reason(VirtualReasonDesc::RContextualVariable, param_loc.dupe())
                     }
                 };
@@ -1932,10 +1928,7 @@ impl<'a> DefFinder<'a> {
         self.in_new_tparams_env(false, |this| {
             this.visit_component(stmt);
             let name = &id.name;
-            let reason = mk_reason(
-                VirtualReasonDesc::RComponent(Name::new(name.as_str())),
-                sig_loc.dupe(),
-            );
+            let reason = mk_reason(VirtualReasonDesc::RComponent(name.dupe()), sig_loc.dupe());
             let def = def_of_component(this.tparams.clone(), loc.dupe(), stmt.clone());
             let id_loc = id.loc.dupe();
             this.add_ordinary_binding(id_loc, reason, def);
@@ -2084,10 +2077,7 @@ impl<'a> DefFinder<'a> {
         for (id_loc, name, binding) in ops.identifiers {
             self.add_ordinary_binding(
                 id_loc.dupe(),
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    id_loc,
-                ),
+                mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
         }
@@ -2193,10 +2183,7 @@ impl<'a> DefFinder<'a> {
         for (id_loc, name, binding) in ops.identifiers {
             self.add_ordinary_binding(
                 id_loc.dupe(),
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    id_loc,
-                ),
+                mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
         }
@@ -2281,7 +2268,7 @@ impl<'a> DefFinder<'a> {
                 this.add_ordinary_binding(
                     name_loc,
                     mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.clone())),
+                        VirtualReasonDesc::RIdentifier(name.dupe()),
                         name_ident.loc.dupe(),
                     ),
                     Def::Binding(Box::new(binding)),
@@ -2693,7 +2680,7 @@ impl<'a> DefFinder<'a> {
 
             match id {
                 Some(id_ident) => {
-                    let name = Name::new(id_ident.name.dupe());
+                    let name = id_ident.name.dupe();
                     let reason = mk_reason(VirtualReasonDesc::RType(name), id_ident.loc.dupe());
                     this.add_ordinary_binding(
                         id_ident.loc.dupe(),
@@ -2709,7 +2696,7 @@ impl<'a> DefFinder<'a> {
                 }
                 None => {
                     let reason = mk_reason(
-                        VirtualReasonDesc::RType(Name::new("<<anonymous class>>")),
+                        VirtualReasonDesc::RType("<<anonymous class>>".into()),
                         loc.dupe(),
                     );
                     this.add_ordinary_binding(
@@ -2740,9 +2727,7 @@ impl<'a> DefFinder<'a> {
         self.add_ordinary_binding(
             id_loc,
             mk_reason(
-                VirtualReasonDesc::RClass(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())).into(),
-                ),
+                VirtualReasonDesc::RClass(VirtualReasonDesc::RIdentifier(name.dupe()).into()),
                 loc.dupe(),
             ),
             Def::DeclaredClass(Box::new(DeclaredClassDefData {
@@ -2836,10 +2821,7 @@ impl<'a> DefFinder<'a> {
                 .insert(EnvKey::new(DefLocType::ClassInstanceSuperLoc, loc.dupe()));
             this_super_write_locs.insert(EnvKey::new(DefLocType::ClassStaticSuperLoc, loc.dupe()));
 
-            let reason = mk_reason(
-                VirtualReasonDesc::RType(Name::new(record_name.dupe())),
-                id_loc.dupe(),
-            );
+            let reason = mk_reason(VirtualReasonDesc::RType(record_name.dupe()), id_loc.dupe());
             this.add_ordinary_binding(
                 id_loc.dupe(),
                 reason,
@@ -3120,10 +3102,7 @@ impl<'a> DefFinder<'a> {
                 let name = &inner.name.name;
                 self.add_ordinary_binding(
                     id_loc.dupe(),
-                    mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                        id_loc.dupe(),
-                    ),
+                    mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc.dupe()),
                     Def::OpAssign(Box::new(OpAssignData {
                         exp_loc: loc.dupe(),
                         lhs: left_tuple.clone(),
@@ -4442,7 +4421,7 @@ impl<'a> DefFinder<'a> {
                     );
                     self.add_ordinary_binding(
                         loc.dupe(),
-                        mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name.dupe())), loc),
+                        mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc),
                         Def::Binding(Box::new(binding)),
                     );
                 }
@@ -5415,10 +5394,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             }))),
                         );
 
-                        let reason = mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(name)),
-                            id_loc.dupe(),
-                        );
+                        let reason =
+                            mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
                         self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
                     }
@@ -5428,20 +5405,16 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             Binding::Root(mk_value(None, Some(kind), true, init_expr.clone())),
                         );
 
-                        let reason = mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(name)),
-                            id_loc.dupe(),
-                        );
+                        let reason =
+                            mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
                         self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
                     }
                     (ast::types::AnnotationOrHint::Missing(_), None) => {
                         // Error case: no annotation and no init. Type checker will report the error.
                         // We still need to add a binding for completeness.
-                        let reason = mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(name)),
-                            id_loc.dupe(),
-                        );
+                        let reason =
+                            mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
                         self.add_ordinary_binding(
                             id_loc,
@@ -5756,10 +5729,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
         self.add_ordinary_binding(
             id_loc,
-            mk_reason(
-                VirtualReasonDesc::RComponent(Name::new(name.dupe())),
-                loc.dupe(),
-            ),
+            mk_reason(VirtualReasonDesc::RComponent(name.dupe()), loc.dupe()),
             Def::DeclaredComponent(loc.dupe(), decl.clone()),
         );
         ast_visitor::declare_component_default(self, loc, decl)
@@ -5789,10 +5759,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
             self.add_ordinary_binding(
                 id_loc.dupe(),
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    id_loc.dupe(),
-                ),
+                mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc.dupe()),
                 Def::Update {
                     exp_loc: loc.dupe(),
                     op: expr.operator.clone(),
@@ -5985,10 +5952,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
         self.add_ordinary_binding(
             id_loc.dupe(),
-            mk_reason(
-                VirtualReasonDesc::RType(Name::new(name.dupe())),
-                id_loc.dupe(),
-            ),
+            mk_reason(VirtualReasonDesc::RType(name.dupe()), id_loc.dupe()),
             Def::TypeAlias(loc.dupe(), alias.clone()),
         );
 
@@ -6026,10 +5990,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
         self.force_add_binding(
             EnvKey::ordinary(name_loc.dupe()),
-            mk_reason(
-                VirtualReasonDesc::RType(Name::new(name.dupe())),
-                name_loc.dupe(),
-            ),
+            mk_reason(VirtualReasonDesc::RType(name.dupe()), name_loc.dupe()),
             Def::TypeParam(Box::new(TypeParamData {
                 tparams_map: self.tparams.clone(),
                 kind: *kind,

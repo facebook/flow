@@ -937,7 +937,7 @@ fn elab_t_concrete<'cx>(
         // *******************************************************************
         // UseT TypeT (runtime types derive static types through annotation)
         // *******************************************************************
-        // First handle catch-all cases of subtyping_kit.ml
+        // First handle catch-all cases of subtyping_kit.rs
         (TypeInner::MaybeT(reason, _), OpInner::AnnotUseTTypeT { .. })
         | (TypeInner::OptionalT { reason, .. }, OpInner::AnnotUseTTypeT { .. }) => {
             error_unsupported(None, cx, dst_cx, reason.dupe(), &op)
@@ -1442,9 +1442,7 @@ fn elab_t_concrete<'cx>(
                                 }),
                             ));
                         }
-                        DefTInner::SingletonStrT { value, .. }
-                            if value == &flow_common::reason::Name::new("") =>
-                        {
+                        DefTInner::SingletonStrT { value, .. } if value.is_empty() => {
                             let reason = reason.dupe().replace_desc(
                                 flow_common::reason::VirtualReasonDesc::RBooleanLit(true),
                             );
@@ -2585,7 +2583,7 @@ fn elab_t_concrete<'cx>(
             let new_t = Type::new(TypeInner::DefT(
                 reason.dupe(),
                 type_::DefT::new(DefTInner::SingletonStrT {
-                    value: flow_common::reason::Name::new(s.as_str()),
+                    value: s.dupe(),
                     from_annot: false,
                 }),
             ));

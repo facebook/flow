@@ -584,12 +584,12 @@ fn resolve_hint<'cx>(
             }
             HintNode::StringLiteralType(name) => Type::new(TypeInner::DefT(
                 reason::mk_reason(
-                    reason::VirtualReasonDesc::RIdentifier(reason::Name::new(name.dupe())),
+                    reason::VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
                 ),
                 DefT::new(DefTInner::SingletonStrT {
                     from_annot: true,
-                    value: reason::Name::new(name),
+                    value: name,
                 }),
             )),
             HintNode::ReactFragmentType => flow_js_exception_to_job_error(
@@ -606,9 +606,7 @@ fn resolve_hint<'cx>(
             )?,
             HintNode::ReactNodeType => {
                 let react_node_reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RType(reason::Name::new(FlowSmolStr::new(
-                        "React.Node",
-                    ))),
+                    reason::VirtualReasonDesc::RType("React.Node".into()),
                     loc.dupe(),
                 );
                 flow_typing_tvar::mk_fully_resolved_lazy(
@@ -1395,7 +1393,7 @@ fn resolve_binding<'cx>(
                     ast::expression::ExpressionInner::Array { loc, inner: arr } => {
                         let elements = &arr.elements;
                         let is_empty = elements.is_empty();
-                        // TODO merge code with statement.ml implementation
+                        // TODO merge code with statement.rs implementation
 
                         let elem_spread_list: flow_data_structure_wrapper::list::FlowOcamlList<
                             type_::UnresolvedParam,
@@ -3312,7 +3310,7 @@ fn resolve_component_type_params<'cx>(
                     let str_name = tparam.name.name.dupe();
                     let name = SubstName::name(str_name.dupe());
                     let tp_reason = reason::mk_annot_reason(
-                        reason::VirtualReasonDesc::RType(reason::Name::new(str_name)),
+                        reason::VirtualReasonDesc::RType(str_name),
                         name_loc.dupe(),
                     );
                     let tp = type_::TypeParam::new(type_::TypeParamInner {

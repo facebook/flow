@@ -6,7 +6,7 @@
  */
 
 // =============================================================================
-// OCaml: Renders_kit from flow/src/typing/renders_kit.ml
+// OCaml: Renders_kit from renders_kit.rs
 // =============================================================================
 
 use std::ops::Deref;
@@ -14,7 +14,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
@@ -426,7 +425,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
                         elem_reason.dupe(),
                         DefT::new(DefTInner::SingletonStrT {
                             from_annot: true,
-                            value: Name::new("svg"),
+                            value: "svg".into(),
                         }),
                     )),
                 )? {

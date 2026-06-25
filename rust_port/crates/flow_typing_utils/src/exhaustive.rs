@@ -492,10 +492,7 @@ pub mod pattern_union_builder {
                 (pattern_union, next_i)
             }
             MatchPattern::StringPattern { inner, .. } => {
-                let leaf_val = leaf::Leaf(
-                    reason,
-                    leaf::LeafCtor::StrC(flow_common::reason::Name::new(inner.value.dupe())),
-                );
+                let leaf_val = leaf::Leaf(reason, leaf::LeafCtor::StrC(inner.value.dupe()));
                 pattern_union = add_leaf(cx, raise_errors, guarded, pattern_union, leaf_val);
                 (pattern_union, next_i)
             }

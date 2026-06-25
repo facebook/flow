@@ -17,7 +17,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReason;
@@ -2611,7 +2610,7 @@ pub fn reason_of_resolved_param(param: &crate::type_::ResolvedParam) -> &Reason 
 
 /// Extract the property name from a key type that is a SingletonStrT,
 /// possibly wrapped in a GenericT. Returns None for non-string-literal keys.  
-pub fn name_of_singleton_string_type(t: &Type) -> Option<&Name> {
+pub fn string_of_singleton_string_type(t: &Type) -> Option<&FlowSmolStr> {
     use crate::type_::DefTInner;
 
     match t.deref() {

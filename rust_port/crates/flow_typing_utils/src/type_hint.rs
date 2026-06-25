@@ -7,7 +7,7 @@
 
 //! Type hint evaluation
 //!
-//! Ported from flow/src/typing/type_hint.ml
+//! Ported from type_hint.rs
 
 use std::cell::LazyCell;
 use std::cell::RefCell;
@@ -1506,7 +1506,7 @@ fn type_of_hint_decomposition<'cx>(
                                                     reason.dupe(),
                                                     DefT::new(DefTInner::SingletonStrT {
                                                         from_annot: true,
-                                                        value: Name::new(s.dupe()),
+                                                        value: s.dupe(),
                                                     }),
                                                 ))
                                             }

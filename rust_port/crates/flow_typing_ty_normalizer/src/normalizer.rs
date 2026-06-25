@@ -1022,7 +1022,11 @@ mod reason_utils {
                     loc.dupe(),
                     Name::new(name.dupe()),
                 )?)),
-                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(env, reason, name.dupe())?)),
+                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(
+                    env,
+                    reason,
+                    Name::new(name.dupe()),
+                )?)),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Ok(None),
             }
@@ -1061,7 +1065,7 @@ mod reason_utils {
                 | ReasonDesc::RImportStar(name) => {
                     symbol_from_reason(env, reason, Name::new(name.dupe()))
                 }
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, Name::new(name.dupe())),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1086,7 +1090,7 @@ mod reason_utils {
                 ReasonDesc::ROpaqueType(name) => {
                     symbol_from_reason(env, reason, Name::new(name.dupe()))
                 }
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, Name::new(name.dupe())),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1104,7 +1108,7 @@ mod reason_utils {
     ) -> Result<ALocSymbol, Error> {
         match reason.desc(true) {
             ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name) => {
-                symbol_from_reason(env, reason, name.dupe())
+                symbol_from_reason(env, reason, Name::new(name.dupe()))
             }
             ReasonDesc::RThisType => symbol_from_reason(env, reason, Name::new("this")),
             _ => Err(terr(
@@ -1336,7 +1340,7 @@ mod type_converter {
                 DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => Ok(Arc::new(ty::Ty::Symbol)),
                 DefTInner::EmptyT => Ok(mk_empty(BotKind::EmptyType)),
                 DefTInner::NumericStrKeyT(num_lit) => {
-                    Ok(Arc::new(ty::Ty::StrLit(Name::new(num_lit.1.to_string()))))
+                    Ok(Arc::new(ty::Ty::StrLit(num_lit.1.dupe())))
                 }
                 DefTInner::SingletonNumT { value, .. } => {
                     Ok(Arc::new(ty::Ty::NumLit(value.1.to_string())))
@@ -1417,7 +1421,7 @@ mod type_converter {
                     use flow_typing_type::type_::RendersVariant as TRendersVariant;
                     match renders.deref() {
                         CanonicalRendersForm::IntrinsicRenders(n) => {
-                            Ok(Arc::new(ty::Ty::StrLit(Name::new(n.as_str()))))
+                            Ok(Arc::new(ty::Ty::StrLit(n.dupe())))
                         }
                         CanonicalRendersForm::NominalRenders {
                             renders_id,
@@ -1425,7 +1429,7 @@ mod type_converter {
                             ..
                         } => {
                             let renders_reason = flow_common::reason::mk_reason(
-                                ReasonDesc::RComponent(Name::new(renders_name.dupe())),
+                                ReasonDesc::RComponent(renders_name.dupe()),
                                 renders_id.0.dupe(),
                             );
                             let symbol =
@@ -3174,7 +3178,7 @@ mod type_converter {
                         type__::<I>(env, state, None, t)?
                     }
                     OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name) => {
-                        Arc::new(ty::Ty::StrLit(name.clone()))
+                        Arc::new(ty::Ty::StrLit(name.as_smol_str().dupe()))
                     }
                 };
                 Ok(Arc::new(ty::Ty::IndexedAccess {
@@ -3208,7 +3212,7 @@ mod type_converter {
                 Ok(Arc::new(ty::Ty::Utility(ty::Utility::ObjKeyMirror(ty))))
             }
             D::PropertyType { name } => {
-                let index = Arc::new(ty::Ty::StrLit(name.clone()));
+                let index = Arc::new(ty::Ty::StrLit(name.as_smol_str().dupe()));
                 Ok(Arc::new(ty::Ty::IndexedAccess {
                     _object: ty,
                     index,
@@ -3846,7 +3850,7 @@ pub mod element_converter {
                                 }
                                 _ => {}
                             },
-                            // See flow_js.ml canonicalize_imported_type, case of PolyT (ThisClassT):
+                            // See flow_js.rs canonicalize_imported_type, case of PolyT (ThisClassT):
                             // The initial abstraction is wrapper within an abstraction and a type application.
                             // The current case unwraps the abstraction and application to reveal the
                             // initial imported type.
@@ -4095,7 +4099,7 @@ pub mod element_converter {
                                         None,
                                         config,
                                         renders,
-                                        &name.dupe().into_smol_str(),
+                                        name,
                                         orig_reason,
                                     );
                                 }

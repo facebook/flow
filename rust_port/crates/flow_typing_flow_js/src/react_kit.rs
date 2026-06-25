@@ -115,7 +115,7 @@ enum Artifact {
 }
 
 enum IntrinsicLiteral {
-    Literal(Name),
+    Literal(FlowSmolStr),
     General(Literal),
 }
 
@@ -133,7 +133,7 @@ fn get_intrinsic<'cx>(
     // Get the internal $JSXIntrinsics map.
     let intrinsics = {
         let reason = mk_reason(
-            VirtualReasonDesc::RType(Name::new("$JSXIntrinsics")),
+            VirtualReasonDesc::RType("$JSXIntrinsics".into()),
             component_reason.loc().dupe(),
         );
         FlowJs::get_builtin_type(cx, None, &reason, None, "$JSXIntrinsics")?
@@ -179,10 +179,10 @@ fn get_intrinsic<'cx>(
                     let reason = reason
                         .dupe()
                         .replace_desc(VirtualReasonDesc::RReactElement {
-                            name_opt: Some(name.dupe()),
+                            name_opt: Some(Name::new(name.dupe())),
                             from_component_syntax: false,
                         });
-                    mk_named_prop(reason, false, name.dupe())
+                    mk_named_prop(reason, false, Name::new(name.dupe()))
                 }
                 IntrinsicLiteral::General(_) => PropRef::Computed(Type::new(TypeInner::DefT(
                     reason.dupe(),

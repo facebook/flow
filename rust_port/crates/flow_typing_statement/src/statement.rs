@@ -337,14 +337,15 @@ pub mod object_expression_acc {
                             .obj_pmap
                             .iter()
                             .filter(|&(prop_name, _)| {
+                                let prop_str = prop_name.as_smol_str().dupe();
                                 let prop_t = Type::new(TypeInner::DefT(
                                     mk_reason(
-                                        VirtualReasonDesc::RStringLit(prop_name.dupe()),
+                                        VirtualReasonDesc::RStringLit(prop_str.dupe()),
                                         key_loc.dupe(),
                                     ),
                                     DefT::new(DefTInner::SingletonStrT {
                                         from_annot: false,
-                                        value: prop_name.dupe(),
+                                        value: prop_str,
                                     }),
                                 ));
                                 speculation_flow::is_subtyping_successful(cx, prop_t, key.dupe())
@@ -1348,20 +1349,16 @@ fn identifier_<'a>(
         )?;
         let t = natural_inference::try_generalize(cx, syntactic_flags, &loc, t);
         let desc = desc_of_t(&t);
-        let ordinary_name = Name::new(name.dupe());
         // We want to make sure that the reason description for the type we return
         // is always `RIdentifier name`.
         Ok(match desc {
-            VirtualReasonDesc::RIdentifier(name_prime) if ordinary_name == *name_prime => t,
+            VirtualReasonDesc::RIdentifier(name_prime) if *name == *name_prime => t,
             _ if matches!(t.deref(), TypeInner::OpenT(_)) => mod_reason_of_t(
-                &|r| r.replace_desc_new(VirtualReasonDesc::RIdentifier(Name::new(name.dupe()))),
+                &|r| r.replace_desc_new(VirtualReasonDesc::RIdentifier(name.dupe())),
                 &t,
             ),
             _ => {
-                let reason = mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    loc.dupe(),
-                );
+                let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
                 tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason, |cx, tout| {
                     flow_js::unify_non_speculating(cx, None, &t, tout)
                 })?
@@ -1409,24 +1406,22 @@ fn string_literal_value<'a>(
             let hint = (lazy_hint.1)(cx, false, None, reason)?;
             type_hint::with_hint(|t| t, || empty_t::at(loc.dupe()), hint)
         } else if as_const || frozen == FrozenKind::FrozenProp {
-            let name = Name::new(value.dupe());
-            let reason = mk_annot_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc);
+            let reason = mk_annot_reason(VirtualReasonDesc::RStringLit(value.dupe()), loc);
             Type::new(TypeInner::DefT(
                 reason,
                 DefT::new(DefTInner::SingletonStrT {
                     from_annot: true,
-                    value: name,
+                    value: value.dupe(),
                 }),
             ))
         } else {
             let precise = || {
-                let name = Name::new(value.dupe());
-                let reason = mk_reason(VirtualReasonDesc::RStringLit(name.dupe()), loc.dupe());
+                let reason = mk_reason(VirtualReasonDesc::RStringLit(value.dupe()), loc.dupe());
                 Type::new(TypeInner::DefT(
                     reason,
                     DefT::new(DefTInner::SingletonStrT {
                         from_annot: false,
-                        value: name,
+                        value: value.dupe(),
                     }),
                 ))
             };
@@ -1949,7 +1944,10 @@ fn export_specifiers<'a>(
                        loc: ALoc,
                        local_name: &Name|
      -> Result<(Option<ALoc>, Type), JobError> {
-        let reason = mk_reason(VirtualReasonDesc::RIdentifier(local_name.dupe()), loc);
+        let reason = mk_reason(
+            VirtualReasonDesc::RIdentifier(local_name.as_smol_str().dupe()),
+            loc,
+        );
         let import_kind = match kind {
             statement::ExportKind::ExportType => statement::ImportKind::ImportType,
             statement::ExportKind::ExportValue => statement::ImportKind::ImportValue,
@@ -2044,10 +2042,8 @@ fn export_specifiers<'a>(
                         source.expect("source must be present for ExportBatchSpecifier with id");
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
-                    let reason = mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                        id_loc.dupe(),
-                    );
+                    let reason =
+                        mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc.dupe());
                     let ns_t = match flow_js_utils::import_export_utils::get_module_namespace_type(
                         cx,
                         reason,
@@ -2979,9 +2975,7 @@ fn statement_<'a>(
                     let t = type_::str_module_t::at(pat_loc.dupe());
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                         var: Some(mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(
-                                name_str.dupe(),
-                            )),
+                            VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
                         )),
                         init: reason_of_t(&t).dupe(),
@@ -3053,9 +3047,7 @@ fn statement_<'a>(
                             inner: id_inner, ..
                         } = &first_decl.id
                     {
-                        VirtualReasonDesc::RIdentifier(Name::new(
-                            id_inner.name.name.dupe(),
-                        ))
+                        VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe())
                     } else {
                         VirtualReasonDesc::RForOfElement
                     }
@@ -3065,9 +3057,7 @@ fn statement_<'a>(
                         inner: id_inner, ..
                     } = patt
                     {
-                        VirtualReasonDesc::RIdentifier(Name::new(
-                            id_inner.name.name.dupe(),
-                        ))
+                        VirtualReasonDesc::RIdentifier(id_inner.name.name.dupe())
                     } else {
                         VirtualReasonDesc::RForOfElement
                     }
@@ -3125,9 +3115,7 @@ fn statement_<'a>(
                     let optional = id_inner.optional;
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                         var: Some(mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(
-                                name_str.dupe(),
-                            )),
+                            VirtualReasonDesc::RIdentifier(name_str.dupe()),
                             pat_loc.dupe(),
                         )),
                         init: reason_of_t(&elem_t).dupe(),
@@ -3225,10 +3213,7 @@ fn statement_<'a>(
                         );
                     }
                 }
-                let reason = mk_reason(
-                    VirtualReasonDesc::RComponent(Name::new(name.dupe())),
-                    loc.dupe(),
-                );
+                let reason = mk_reason(VirtualReasonDesc::RComponent(name.dupe()), loc.dupe());
                 match (&inner.body, cx.under_declaration_context()) {
                     (None, false) => {
                         flow_js::add_output_non_speculating(
@@ -3355,7 +3340,7 @@ fn statement_<'a>(
             )?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
-                    VirtualReasonDesc::RIdentifier(name),
+                    VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
                     name_loc.dupe(),
                 )),
                 init: reason_of_t(&class_t).dupe(),
@@ -3372,7 +3357,7 @@ fn statement_<'a>(
             let (t, decl_ast) = declare_class(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                    VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
                 )),
                 init: reason_of_t(&t).dupe(),
@@ -3449,7 +3434,7 @@ fn statement_<'a>(
                 )?;
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                     var: Some(mk_reason(
-                        VirtualReasonDesc::RIdentifier(name),
+                        VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
                         name_loc.dupe(),
                     )),
                     init: reason_of_t(&record_t).dupe(),
@@ -3477,7 +3462,7 @@ fn statement_<'a>(
             let (t, decl_ast) = declare_component(cx, loc.dupe(), inner)?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                    VirtualReasonDesc::RIdentifier(name.dupe()),
                     loc.dupe(),
                 )),
                 init: reason_of_t(&t).dupe(),
@@ -4601,7 +4586,7 @@ pub fn interface<'a>(
     let name_loc = decl.id.loc.dupe();
     let id = &decl.id;
     let name = &id.name;
-    let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+    let desc = VirtualReasonDesc::RType(name.dupe());
     let reason = mk_reason(desc.clone(), name_loc.dupe());
     let (t, iface_sig, decl_ast) = type_annotation::mk_interface_sig(cx, loc.dupe(), reason, decl)?;
     class_sig::check_signature_compatibility(cx, mk_reason(desc, loc), &iface_sig);
@@ -4818,7 +4803,7 @@ pub fn declare_class<'a>(
             })),
         );
     }
-    let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+    let desc = VirtualReasonDesc::RType(name.dupe());
     let reason = mk_reason(desc.clone(), name_loc.dupe());
     let (t, class_sig, decl_ast) =
         type_annotation::mk_declare_class_sig(cx, loc.dupe(), name, reason, decl)?;
@@ -5953,10 +5938,7 @@ fn variable<'a>(
         ast::pattern::Pattern::Identifier { inner, .. } => {
             let id_loc = inner.name.loc.dupe();
             let name = &inner.name.name;
-            mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                id_loc,
-            )
+            mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc)
         }
         _ => {
             let ploc = id.loc().dupe();
@@ -6072,10 +6054,8 @@ fn variable<'a>(
                   name: &FlowSmolStr,
                   default: Option<&flow_typing_default::Default<Type>>,
                   t: Type| {
-                    let reason = mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                        name_loc.dupe(),
-                    );
+                    let reason =
+                        mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc.dupe());
                     // If this is a variable declaration without a type annotation
                     // constraining writes, we need the type of the identifier to be the
                     // general type of the variable in order to detect if a generic escapes
@@ -7148,9 +7128,9 @@ fn expression_<'a>(
                         ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                             call_loc: loc.dupe(),
                             is_new: true,
-                            reason_arity: locationless_reason(VirtualReasonDesc::RType(Name::new(
+                            reason_arity: locationless_reason(VirtualReasonDesc::RType(
                                 FlowSmolStr::new("Function"),
-                            ))),
+                            )),
                             expected_arity: 0,
                         })),
                     );
@@ -7216,9 +7196,7 @@ fn expression_<'a>(
                 (Some(_), _) => Err(ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: true,
-                    reason_arity: locationless_reason(VirtualReasonDesc::RType(Name::new(
-                        n.dupe(),
-                    ))),
+                    reason_arity: locationless_reason(VirtualReasonDesc::RType(n.dupe())),
                     expected_arity: 1,
                 }))),
             };
@@ -7837,10 +7815,7 @@ fn expression_<'a>(
                 Some(id) => (id.loc.dupe(), id.name.dupe()),
                 None => (class_loc.dupe(), FlowSmolStr::from("<<anonymous class>>")),
             };
-            let reason = mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                name_loc.dupe(),
-            );
+            let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc.dupe());
             match &inner.id {
                 Some(_) => {
                     let (class_t, c_typed) = mk_class(
@@ -7855,10 +7830,9 @@ fn expression_<'a>(
                     // has the same type as its references inside the class.
                     // However, in the new env, we need to perform a bind of the class declaration type to the
                     // name to ensure that the environment knows the type of both the declaration and usages.
-                    let ord_name = Name::new(name.dupe());
                     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                         var: Some(mk_reason(
-                            VirtualReasonDesc::RIdentifier(ord_name),
+                            VirtualReasonDesc::RIdentifier(name.dupe()),
                             name_loc.dupe(),
                         )),
                         init: reason_of_t(&class_t).dupe(),
@@ -10739,7 +10713,7 @@ fn update<'a>(
             // enforce state-based guards for binding update, e.g., const
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                    VirtualReasonDesc::RIdentifier(name.dupe()),
                     id_loc.dupe(),
                 )),
                 init: reason_of_t(&result_t).dupe(),
@@ -11897,7 +11871,7 @@ fn op_assignment<'a>(
                 let name = &inner.name;
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                     var: Some(mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.name.dupe())),
+                        VirtualReasonDesc::RIdentifier(name.name.dupe()),
                         id_loc.dupe(),
                     )),
                     init: rhs_reason.dupe(),
@@ -12369,7 +12343,7 @@ fn jsx_fragment<'a>(
         }
         flow_common::options::ReactRuntime::Classic => {
             let reason = mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::from("React.Fragment"))),
+                VirtualReasonDesc::RIdentifier(FlowSmolStr::from("React.Fragment")),
                 expr_loc.dupe(),
             );
             let react = type_env::var_ref(
@@ -12587,7 +12561,7 @@ fn jsx_title<'a>(
                         type_env::intrinsic_ref(cx, None, Name::new(id_name.dupe()), id_loc.dupe())?
                     {
                         let ref_reason = mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(id_name.dupe())),
+                            VirtualReasonDesc::RIdentifier(id_name.dupe()),
                             id_loc.dupe(),
                         );
                         type_operation_utils::type_assertions::assert_non_component_like_base(
@@ -12598,14 +12572,14 @@ fn jsx_title<'a>(
                         )?;
                     }
                     let ident_reason = mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(id_name.dupe())),
+                        VirtualReasonDesc::RIdentifier(id_name.dupe()),
                         id_loc.dupe(),
                     );
                     Type::new(TypeInner::DefT(
                         ident_reason,
                         DefT::new(DefTInner::SingletonStrT {
                             from_annot: true,
-                            value: Name::new(id_name.dupe()),
+                            value: id_name.dupe(),
                         }),
                     ))
                 };
@@ -12673,8 +12647,8 @@ fn jsx_title<'a>(
             let m_t = m_t.dupe();
             let c = mod_reason_of_t(
                 &|r: Reason| {
-                    r.replace_desc(VirtualReasonDesc::RIdentifier(Name::new(
-                        FlowSmolStr::from(el_name.as_str()),
+                    r.replace_desc(VirtualReasonDesc::RIdentifier(FlowSmolStr::from(
+                        el_name.as_str(),
                     )))
                 },
                 &m_t,
@@ -13049,7 +13023,7 @@ pub fn jsx_mk_props<'a>(
             attr_loc.dupe(),
         );
         let component = mk_reason(
-            VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name))),
+            VirtualReasonDesc::RIdentifier(FlowSmolStr::new(name)),
             reason.loc().dupe(),
         );
         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::JSXCreateElement {
@@ -13713,7 +13687,7 @@ fn jsx_trim_text(loc: ALoc, value: &str) -> Option<Type> {
                 mk_reason(VirtualReasonDesc::RJSXText, ALoc::of_loc(trimmed_loc)),
                 DefT::new(DefTInner::SingletonStrT {
                     from_annot: false,
-                    value: Name::new(FlowSmolStr::from(trimmed.as_str())),
+                    value: FlowSmolStr::from(trimmed.as_str()),
                 }),
             ))
         },
@@ -19149,9 +19123,9 @@ pub fn mk_component_sig<'a>(
         }
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let reason = mk_annot_reason(
-                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(Name::new(
+                VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
                     FlowSmolStr::new("React.Node"),
-                )))),
+                ))),
                 loc.dupe(),
             );
             let renders_t = Type::new(TypeInner::DefT(
@@ -19629,7 +19603,7 @@ pub fn mk_func_sig<'a>(
             let void_t = type_::void::why(ret_reason.dupe());
             let t = if matches!(kind, func::Kind::Async) {
                 let promise_reason = mk_annot_reason(
-                    VirtualReasonDesc::RType(Name::new(FlowSmolStr::new("Promise"))),
+                    VirtualReasonDesc::RType(FlowSmolStr::new("Promise")),
                     ret_reason.loc().dupe(),
                 );
                 { FlowJs::get_builtin_typeapp(cx, &promise_reason, None, "Promise", vec![void_t]) }
@@ -19814,7 +19788,7 @@ pub fn mk_func_sig<'a>(
                     cx,
                     env_key.def_loc_type,
                     mk_reason(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                        VirtualReasonDesc::RIdentifier(name.dupe()),
                         env_key.loc.dupe(),
                     ),
                 );
@@ -20608,7 +20582,7 @@ fn enum_declaration<'a>(
     );
     let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
         var: Some(mk_reason(
-            VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+            VirtualReasonDesc::RIdentifier(name.dupe()),
             name_loc.dupe(),
         )),
         init: reason.dupe(),

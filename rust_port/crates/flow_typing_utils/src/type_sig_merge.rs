@@ -251,16 +251,14 @@ pub fn def_reason<T>(def: &Def<ALoc, T>) -> Reason {
             reason::func_reason(inner.async_, inner.generator, inner.fn_loc.dupe())
         }
         Def::DeclareFun(_) => reason::mk_reason(RFunctionType, def.id_loc()),
-        Def::ComponentBinding(inner) => reason::mk_reason(
-            RComponent(Name::new(inner.name.dupe())),
-            inner.fn_loc.dupe(),
-        ),
-        Def::DisabledComponentBinding(inner) => reason::mk_reason(
-            RIdentifier(Name::new(inner.name.dupe())),
-            inner.id_loc.dupe(),
-        ),
+        Def::ComponentBinding(inner) => {
+            reason::mk_reason(RComponent(inner.name.dupe()), inner.fn_loc.dupe())
+        }
+        Def::DisabledComponentBinding(inner) => {
+            reason::mk_reason(RIdentifier(inner.name.dupe()), inner.id_loc.dupe())
+        }
         Def::Variable(_) | Def::Parameter(_) => {
-            reason::mk_reason(RIdentifier(Name::new(def.name().dupe())), def.id_loc())
+            reason::mk_reason(RIdentifier(def.name().dupe()), def.id_loc())
         }
         Def::DisabledEnumBinding(_) | Def::EnumBinding(_) => reason::mk_reason(
             REnum {
@@ -302,7 +300,7 @@ pub fn remote_ref_reason(remote_ref: &Pack::RemoteRef<ALoc>) -> Reason {
     match remote_ref {
         Pack::RemoteRef::Import { id_loc, name, .. }
         | Pack::RemoteRef::ImportNs { id_loc, name, .. } => {
-            reason::mk_reason(RIdentifier(Name::new(name.dupe())), id_loc.dupe())
+            reason::mk_reason(RIdentifier(name.dupe()), id_loc.dupe())
         }
         Pack::RemoteRef::ImportType { id_loc, name, .. }
         | Pack::RemoteRef::ImportTypeof { id_loc, name, .. }
@@ -1048,7 +1046,7 @@ fn merge_ref<'cx, R>(
             type_ref,
             name,
         }) => {
-            let reason = reason::mk_reason(RIdentifier(Name::new(name.dupe())), ref_loc.dupe());
+            let reason = reason::mk_reason(RIdentifier(name.dupe()), ref_loc.dupe());
             let t = if *type_ref {
                 flow_js_utils::lookup_builtin_type(cx, name.as_str(), reason)
             } else {
@@ -1090,10 +1088,10 @@ fn merge_tyref<'cx, R>(
                         .map(|s| s.as_str())
                         .collect::<Vec<_>>()
                         .join(".");
+                    let id_reason = reason::mk_reason(RType(q_name.dupe()), q_id_loc.dupe());
                     let name = Name::new(q_name.dupe());
-                    let id_reason = reason::mk_reason(RType(name.dupe()), q_id_loc.dupe());
                     let op_reason =
-                        reason::mk_reason(RType(Name::new(FlowSmolStr::new(&qname))), q_loc.dupe());
+                        reason::mk_reason(RType(FlowSmolStr::new(&qname)), q_loc.dupe());
                     let use_op = type_::VirtualUseOp::Op(Arc::new(
                         type_::VirtualRootUseOp::GetProperty(op_reason.dupe()),
                     ));
@@ -1498,7 +1496,7 @@ fn merge_impl<'cx>(
                 file,
                 |t, ref_loc, names| {
                     let (name, _) = (names.first().duped().unwrap_or_default(), &names[1..]);
-                    let reason = reason::mk_annot_reason(RType(Name::new(name)), ref_loc.dupe());
+                    let reason = reason::mk_annot_reason(RType(name), ref_loc.dupe());
                     let type_t_kind = if in_renders_arg {
                         type_::TypeTKind::RenderTypeKind
                     } else {
@@ -1767,12 +1765,12 @@ fn merge_annot<'cx>(
             ))
         }
         Annot::SingletonString(box (loc, str)) => {
-            let reason = reason::mk_annot_reason(RStringLit(Name::new(str.dupe())), loc.dupe());
+            let reason = reason::mk_annot_reason(RStringLit(str.dupe()), loc.dupe());
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::SingletonStrT {
                     from_annot: true,
-                    value: Name::new(str.dupe()),
+                    value: str.dupe(),
                 }),
             ))
         }
@@ -1918,10 +1916,7 @@ fn merge_annot<'cx>(
         }
         Annot::PropertyType(inner) => {
             let AnnotPropertyType { loc, obj, prop } = inner.as_ref();
-            let reason = reason::mk_reason(
-                RType(Name::new(FlowSmolStr::new("$PropertyType"))),
-                loc.dupe(),
-            );
+            let reason = reason::mk_reason(RType("$PropertyType".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -1941,10 +1936,7 @@ fn merge_annot<'cx>(
         }
         Annot::ElementType(inner) => {
             let AnnotElementType { loc, obj, elem } = inner.as_ref();
-            let reason = reason::mk_reason(
-                RType(Name::new(FlowSmolStr::new("$ElementType"))),
-                loc.dupe(),
-            );
+            let reason = reason::mk_reason(RType("$ElementType".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -2045,10 +2037,7 @@ fn merge_annot<'cx>(
             })
         }
         Annot::NonMaybeType(box (loc, t)) => {
-            let reason = reason::mk_reason(
-                RType(Name::new(FlowSmolStr::new("$NonMaybeType"))),
-                loc.dupe(),
-            );
+            let reason = reason::mk_reason(RType("$NonMaybeType".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -2065,7 +2054,7 @@ fn merge_annot<'cx>(
             })
         }
         Annot::Omit(box (loc, t1, t2)) => {
-            let reason = reason::mk_reason(RType(Name::new(FlowSmolStr::new("Omit"))), loc.dupe());
+            let reason = reason::mk_reason(RType("Omit".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -2168,8 +2157,7 @@ fn merge_annot<'cx>(
             Type::new(type_::TypeInner::KeysT(reason, t))
         }
         Annot::Values(box (loc, t)) => {
-            let reason =
-                reason::mk_reason(RType(Name::new(FlowSmolStr::new("$Values"))), loc.dupe());
+            let reason = reason::mk_reason(RType("$Values".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -2347,10 +2335,7 @@ fn merge_annot<'cx>(
             Type::new(type_::TypeInner::FunProtoBindT(reason))
         }
         Annot::ReactElementConfig(box (loc, t)) => {
-            let reason = reason::mk_reason(
-                RType(Name::new(FlowSmolStr::new("React$ElementConfig"))),
-                loc.dupe(),
-            );
+            let reason = reason::mk_reason(RType("React$ElementConfig".into()), loc.dupe());
             let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::TypeApplication {
                 type_: reason.dupe(),
             }));
@@ -2395,7 +2380,7 @@ fn merge_annot<'cx>(
         }
         Annot::ComponentMissingRenders(box loc) => {
             let reason = reason::mk_annot_reason(
-                RRenderType(Arc::new(RType(Name::new(FlowSmolStr::new("React.Node"))))),
+                RRenderType(Arc::new(RType("React.Node".into()))),
                 loc.dupe(),
             );
             Type::new(type_::TypeInner::DefT(
@@ -2831,12 +2816,12 @@ fn merge_value<'cx>(
         }
         Value::StringLit(box (loc, lit)) => {
             if as_const || const_decl {
-                let reason = reason::mk_annot_reason(RStringLit(Name::new(lit.dupe())), loc.dupe());
+                let reason = reason::mk_annot_reason(RStringLit(lit.dupe()), loc.dupe());
                 Type::new(type_::TypeInner::DefT(
                     reason,
                     type_::DefT::new(type_::DefTInner::SingletonStrT {
                         from_annot: as_const,
-                        value: Name::new(lit.dupe()),
+                        value: lit.dupe(),
                     }),
                 ))
             } else {
@@ -3484,7 +3469,7 @@ fn merge_tparam<'cx>(
         default,
         is_const,
     } = tp;
-    let reason = reason::mk_reason(RType(Name::new(name.dupe())), name_loc.dupe());
+    let reason = reason::mk_reason(RType(name.dupe()), name_loc.dupe());
     let bound = match bound {
         None => {
             let bound_reason = reason.dupe().replace_desc(RMixed);
@@ -3565,8 +3550,8 @@ fn merge_interface_extends<'cx>(
                 }) => {
                     let qual_t = aux(cx, file, qualification);
                     let name_r = Name::new(name.dupe());
-                    let id_reason = reason::mk_reason(RType(name_r.dupe()), id_loc.dupe());
-                    let op_reason = reason::mk_reason(RType(name_r.dupe()), loc.dupe());
+                    let id_reason = reason::mk_reason(RType(name.dupe()), id_loc.dupe());
+                    let op_reason = reason::mk_reason(RType(name.dupe()), loc.dupe());
                     let use_op = type_::VirtualUseOp::Op(Arc::new(
                         type_::VirtualRootUseOp::GetProperty(op_reason.dupe()),
                     ));
@@ -4041,7 +4026,7 @@ fn merge_class_mixin<'cx>(
             let (t, names_rev) = loop_mixin(cx, file, packed);
             let names: Vec<&str> = names_rev.iter().map(|s| s.as_str()).collect();
             let name = names.join(".");
-            let reason = reason::mk_annot_reason(RType(Name::new(FlowSmolStr::new(&name))), loc);
+            let reason = reason::mk_annot_reason(RType(FlowSmolStr::new(&name)), loc);
             annotation_inference::mixin(cx, reason, t)
         };
 
@@ -5424,7 +5409,7 @@ pub fn classify_ts_pending_export<'cx>(
                 remote: remote_name.dupe(),
             };
             let reason = reason::mk_reason(
-                reason::VirtualReasonDesc::RIdentifier(Name::new(remote_name.dupe())),
+                reason::VirtualReasonDesc::RIdentifier(remote_name.dupe()),
                 export_loc.dupe(),
             );
             let type_ = merge_remote_ref(cx, file, reason.dupe(), &remote_ref_node);

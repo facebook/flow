@@ -634,7 +634,7 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
             "SingletonStr",
             vec![
                 ("from_annot", Json::Bool(*from_annot)),
-                ("value", Json::String(value.as_str().to_string())),
+                ("value", Json::String(value.to_string())),
             ],
         ),
         DefTInner::NumericStrKeyT(num_lit) => json_with_type(

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! Port of `services/code_action/insert_type_utils.ml`
+//! Port of `insert_type_utils.rs`
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -1164,9 +1164,7 @@ pub mod graphql {
                     let optional = opt_chain || optional;
                     let ty_prime = Arc::new(ty::Ty::IndexedAccess {
                         _object: ty_,
-                        index: Arc::new(ty::Ty::StrLit(flow_common::reason::Name::new(
-                            name.as_str(),
-                        ))),
+                        index: Arc::new(ty::Ty::StrLit(name)),
                         optional,
                     });
                     visit_type(defs, tgt, optional, ty_prime, t)

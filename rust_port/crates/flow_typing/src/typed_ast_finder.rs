@@ -269,10 +269,8 @@ pub mod type_at_pos {
         fn make_typeparam(&self, tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
             let (name_loc, _) = &tparam.name.loc;
             let name = &tparam.name.name;
-            let reason = reason::mk_annot_reason(
-                VirtualReasonDesc::RType(Name::new(name.dupe())),
-                name_loc.dupe(),
-            );
+            let reason =
+                reason::mk_annot_reason(VirtualReasonDesc::RType(name.dupe()), name_loc.dupe());
             let bound = match &tparam.bound {
                 ast::types::AnnotationOrHint::Missing((_, t)) => t.dupe(),
                 ast::types::AnnotationOrHint::Available(annotation) => {

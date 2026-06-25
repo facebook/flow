@@ -449,7 +449,7 @@ fn use_distributive_tparam_name<'a>(
             let bound = bound.dupe();
             let distributive_tparam = TypeParam::new(type_::TypeParamInner {
                 reason: reason::mk_annot_reason(
-                    reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
+                    reason::VirtualReasonDesc::RType(name.dupe()),
                     name_loc,
                 ),
                 name: subst_name.dupe(),
@@ -1389,17 +1389,13 @@ fn convert_inner<'a>(
                 let id_loc = q.id.loc.dupe();
                 let id_name = &q.id;
                 let name = &id_name.name;
-                let reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
-                    loc.dupe(),
-                );
-                let id_reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
-                    id_loc.dupe(),
-                );
+                let reason =
+                    reason::mk_reason(reason::VirtualReasonDesc::RType(name.dupe()), loc.dupe());
+                let id_reason =
+                    reason::mk_reason(reason::VirtualReasonDesc::RType(name.dupe()), id_loc.dupe());
                 let qid_name = qualified_name(qid);
                 let qid_reason = reason::mk_reason(
-                    reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new(&qid_name))),
+                    reason::VirtualReasonDesc::RType(FlowSmolStr::new(&qid_name)),
                     qid_loc.dupe(),
                 );
                 let use_op =
@@ -1448,9 +1444,7 @@ fn convert_inner<'a>(
                 let (t, targs_ast) = {
                     let import_id_name = qualified_name(import_id);
                     let reason = reason::mk_reason(
-                        reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new(
-                            &import_id_name,
-                        ))),
+                        reason::VirtualReasonDesc::RType(FlowSmolStr::new(&import_id_name)),
                         loc.dupe(),
                     );
                     mk_nominal_type_inner(cx, env, reason, m.dupe(), targs.as_ref())?
@@ -1552,7 +1546,7 @@ fn convert_inner<'a>(
                         flow_utils_concurrency::job_error::JobError,
                     > {
                         let reason = reason::mk_reason(
-                            reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
+                            reason::VirtualReasonDesc::RType(name.dupe()),
                             loc.dupe(),
                         );
                         let c = type_identifier(cx, name, name_loc)?;
@@ -1736,8 +1730,8 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let arg = ts.into_iter().next().unwrap();
                             let result_reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(Name::new(
-                                    FlowSmolStr::new_inline(kind_name),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                    kind_name,
                                 )),
                                 loc.dupe(),
                             );
@@ -1832,8 +1826,8 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(Name::new(
-                                    FlowSmolStr::new_inline("$NonMaybeType"),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                    "$NonMaybeType",
                                 )),
                                 loc.dupe(),
                             );
@@ -1962,9 +1956,7 @@ fn convert_inner<'a>(
                             let t1 = ts_iter.next().unwrap();
                             let t2 = ts_iter.next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(Name::new(
-                                    FlowSmolStr::new_inline("Omit"),
-                                )),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline("Omit")),
                                 loc.dupe(),
                             );
                             let mapped_use_op =
@@ -2128,8 +2120,8 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(Name::new(
-                                    FlowSmolStr::new_inline("$Values"),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                    "$Values",
                                 )),
                                 loc.dupe(),
                             );
@@ -2160,8 +2152,8 @@ fn convert_inner<'a>(
                                         convert_type_params(cx, env, inner.targs.as_ref())?;
                                     let tp = ts.into_iter().next().unwrap();
                                     let reason = reason::mk_reason(
-                                        reason::VirtualReasonDesc::RType(Name::new(
-                                            FlowSmolStr::new_inline("Values"),
+                                        reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                            "Values",
                                         )),
                                         loc.dupe(),
                                     );
@@ -2465,8 +2457,8 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let tp = ts.into_iter().next().unwrap();
                             let reason = reason::mk_reason(
-                                reason::VirtualReasonDesc::RType(Name::new(
-                                    FlowSmolStr::new_inline("React$ElementConfig"),
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                    "React$ElementConfig",
                                 )),
                                 loc.dupe(),
                             );
@@ -2613,8 +2605,8 @@ fn convert_inner<'a>(
                                         convert_type_params(cx, env, inner.targs.as_ref())?;
                                     let tp = ts.into_iter().next().unwrap();
                                     let reason = reason::mk_reason(
-                                        reason::VirtualReasonDesc::RType(Name::new(
-                                            FlowSmolStr::new_inline("NonNullable"),
+                                        reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                            "NonNullable",
                                         )),
                                         loc.dupe(),
                                     );
@@ -3634,7 +3626,7 @@ fn convert_qualification_with_lookup_mode<'a>(
             )));
             let id_reason = reason::mk_reason(desc, id_loc.dupe());
             let op_reason = reason::mk_reason(
-                reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new(&qname))),
+                reason::VirtualReasonDesc::RType(FlowSmolStr::new(&qname)),
                 q.loc.dupe(),
             );
             let use_op =
@@ -3786,7 +3778,7 @@ fn convert_typeof<'a>(
             let id_reason = reason::mk_reason(desc, id_loc.dupe());
             let use_op =
                 type_::UseOp::Op(Arc::new(type_::RootUseOp::GetProperty(reason::mk_reason(
-                    reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new(&tname))),
+                    reason::VirtualReasonDesc::RType(FlowSmolStr::new(&tname)),
                     q.loc.dupe(),
                 ))));
             let t = crate::type_annotation_cons_gen::get_prop(
@@ -5791,13 +5783,13 @@ fn mk_function_type_annotation_inner<'a>(
 }
 
 fn mk_singleton_string(loc: ALoc, key: &str) -> Type {
-    let name = Name::new(FlowSmolStr::new(key));
-    let reason = reason::mk_annot_reason(reason::VirtualReasonDesc::RStringLit(name.dupe()), loc);
+    let key = FlowSmolStr::new(key);
+    let reason = reason::mk_annot_reason(reason::VirtualReasonDesc::RStringLit(key.dupe()), loc);
     Type::new(type_::TypeInner::DefT(
         reason,
         type_::DefT::new(type_::DefTInner::SingletonStrT {
             from_annot: true,
-            value: name,
+            value: key,
         }),
     ))
 }
@@ -5936,7 +5928,7 @@ fn mk_type_param_inner<'a>(
     let const_mod = &type_param.const_;
 
     let reason = reason::mk_annot_reason(
-        reason::VirtualReasonDesc::RType(Name::new(name.dupe())),
+        reason::VirtualReasonDesc::RType(name.dupe()),
         name_loc.dupe(),
     );
     let pol = polarity(
@@ -7810,7 +7802,7 @@ fn mk_component<'a>(
         ast::types::ComponentRendersAnnotation::MissingRenders(loc) => {
             let reason = reason::mk_annot_reason(
                 reason::VirtualReasonDesc::RRenderType(Arc::new(reason::VirtualReasonDesc::RType(
-                    Name::new(FlowSmolStr::new("React.Node")),
+                    FlowSmolStr::new("React.Node"),
                 ))),
                 loc.dupe(),
             );
@@ -7996,7 +7988,7 @@ pub fn mk_declare_component_sig<'a>(
     let id_name = &*component.id;
     let name = &id_name.name;
     let reason = reason::mk_reason(
-        reason::VirtualReasonDesc::RComponent(Name::new(name.dupe())),
+        reason::VirtualReasonDesc::RComponent(name.dupe()),
         loc.dupe(),
     );
     let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new());
@@ -8347,7 +8339,7 @@ pub fn mk_declare_component_sig<'a>(
         ast::types::ComponentRendersAnnotation::MissingRenders(r_loc) => {
             let r = reason::mk_annot_reason(
                 reason::VirtualReasonDesc::RRenderType(Arc::new(reason::VirtualReasonDesc::RType(
-                    Name::new(FlowSmolStr::new("React.Node")),
+                    FlowSmolStr::new("React.Node"),
                 ))),
                 r_loc.dupe(),
             );
@@ -8421,7 +8413,7 @@ pub fn mk_declare_class_sig<'a>(
         let loc = loc.dupe();
         let name = qualified_name(&generic.id);
         let r = reason::mk_annot_reason(
-            reason::VirtualReasonDesc::RType(Name::new(FlowSmolStr::new(&name))),
+            reason::VirtualReasonDesc::RType(FlowSmolStr::new(&name)),
             loc.dupe(),
         );
         let (i, id_ast) = convert_qualification_with_lookup_mode(

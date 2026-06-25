@@ -6,7 +6,7 @@
  */
 
 // =============================================================================
-// OCaml: Flow_js_utils from flow/src/typing/flow_js_utils.ml
+// OCaml: Flow_js_utils from flow_js_utils.rs
 // =============================================================================
 
 use std::collections::BTreeMap;
@@ -156,7 +156,7 @@ pub fn polymorphic_class_kind<'cx>(cx: &Context<'cx>, t: &Type) -> PolymorphicCl
     }
 }
 
-// These possible_* functions would ideally be in constraint.ml, but since they use
+// These possible_* functions would ideally be in constraint.rs, but since they use
 // Context and Context depends on Constraint we need to extract these functions
 // to a separate module in order to avoid a circular dependency
 //
@@ -1195,7 +1195,7 @@ pub fn error_message_kind_of_upper<CX>(
             let name = match t.deref() {
                 TypeInner::DefT(_, def_t) => {
                     if let DefTInner::SingletonStrT { value, .. } = def_t.deref() {
-                        Some(value.dupe())
+                        Some(Name::new(value.dupe()))
                     } else {
                         None
                     }
@@ -1203,7 +1203,7 @@ pub fn error_message_kind_of_upper<CX>(
                 TypeInner::GenericT(box GenericTData { bound, .. }) => match bound.deref() {
                     TypeInner::DefT(_, def_t) => {
                         if let DefTInner::SingletonStrT { value, .. } = def_t.deref() {
-                            Some(value.dupe())
+                            Some(Name::new(value.dupe()))
                         } else {
                             None
                         }
@@ -1864,7 +1864,7 @@ pub fn string_key(s: Name, reason: &Reason) -> Type {
     Type::new(TypeInner::DefT(
         key_reason,
         DefT::new(DefTInner::SingletonStrT {
-            value: s,
+            value: s.into_smol_str(),
             from_annot: false,
         }),
     ))
@@ -2372,14 +2372,15 @@ pub fn obj_key_mirror<'cx>(
     };
 
     let map_field = |key: &Name, t: &Type| -> Type {
+        let key_str = key.as_smol_str().dupe();
         let reason = reason_op
             .dupe()
-            .update_desc(|_| VirtualReasonDesc::RStringLit(key.dupe()));
+            .update_desc(|_| VirtualReasonDesc::RStringLit(key_str.dupe()));
         let singleton = Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: key.dupe(),
+                value: key_str,
             }),
         ));
         map_t(singleton, t)
@@ -5372,7 +5373,7 @@ pub mod import_export_utils {
             ExpectedModulePurpose::ReactModuleForJSXFragment => (
                 "Fragment",
                 mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new("Fragment")),
+                    VirtualReasonDesc::RIdentifier("Fragment".into()),
                     loc.dupe(),
                 ),
                 ImportKind::ImportValue,
@@ -5380,7 +5381,7 @@ pub mod import_export_utils {
             ExpectedModulePurpose::ReactModuleForReactClassComponent => (
                 "Component",
                 mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new("Component")),
+                    VirtualReasonDesc::RIdentifier("Component".into()),
                     loc.dupe(),
                 ),
                 ImportKind::ImportValue,
@@ -5388,23 +5389,20 @@ pub mod import_export_utils {
             ExpectedModulePurpose::ReactModuleForReactMixedElementType => (
                 "MixedElement",
                 mk_reason(
-                    VirtualReasonDesc::RType(Name::new("React.MixedElement")),
+                    VirtualReasonDesc::RType("React.MixedElement".into()),
                     loc.dupe(),
                 ),
                 ImportKind::ImportType,
             ),
             ExpectedModulePurpose::ReactModuleForReactNodeType => (
                 "Node",
-                mk_reason(
-                    VirtualReasonDesc::RType(Name::new("React.Node")),
-                    loc.dupe(),
-                ),
+                mk_reason(VirtualReasonDesc::RType("React.Node".into()), loc.dupe()),
                 ImportKind::ImportType,
             ),
             ExpectedModulePurpose::ReactModuleForReactRefSetterType => (
                 "RefSetter",
                 mk_reason(
-                    VirtualReasonDesc::RType(Name::new("React.RefSetter")),
+                    VirtualReasonDesc::RType("React.RefSetter".into()),
                     loc.dupe(),
                 ),
                 ImportKind::ImportType,
@@ -5412,7 +5410,7 @@ pub mod import_export_utils {
             ExpectedModulePurpose::ReactModuleForReactElementRefType => (
                 "ElementRef",
                 mk_reason(
-                    VirtualReasonDesc::RType(Name::new("React.ElementRef")),
+                    VirtualReasonDesc::RType("React.ElementRef".into()),
                     loc.dupe(),
                 ),
                 ImportKind::ImportType,
@@ -5600,7 +5598,7 @@ pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> 
         Type::new(TypeInner::DefT(
             key_reason,
             DefT::new(DefTInner::SingletonStrT {
-                value: name.dupe(),
+                value: name.as_smol_str().dupe(),
                 from_annot: true,
             }),
         ))
@@ -5993,7 +5991,9 @@ pub mod get_prop_t_kit {
         let error_invalid_access =
             |suggestion: Option<FlowSmolStr>| -> Result<F::R, FlowJsException> {
                 let member_reason = prop_reason.dupe().replace_desc(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(member_name.dupe()),
+                    flow_common::reason::VirtualReasonDesc::RIdentifier(
+                        member_name.as_smol_str().dupe(),
+                    ),
                 );
                 add_output(
                     cx,
@@ -6674,10 +6674,11 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                 if let TypeInner::DefT(_, def) = upper_t.deref() {
                     if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
                         update_lit_type_from_annot(cx, l);
+                        let name = Name::new(name.dupe());
                         let reason = reason
                             .dupe()
                             .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
-                        return mk_named_prop(reason, true, name.dupe());
+                        return mk_named_prop(reason, true, name);
                     }
                     if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                         if is_float_safe_integer(value.0) {
@@ -6700,10 +6701,11 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
             if let TypeInner::DefT(_, def) = bound.deref() {
                 if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
                     update_lit_type_from_annot(cx, l);
+                    let name = Name::new(name.dupe());
                     let reason = reason
                         .dupe()
                         .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
-                    return mk_named_prop(reason, true, name.dupe());
+                    return mk_named_prop(reason, true, name);
                 }
                 if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                     if is_float_safe_integer(value.0) {
@@ -6724,11 +6726,12 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
         TypeInner::DefT(reason, def) => {
             if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
                 update_lit_type_from_annot(cx, l);
+                let name = Name::new(name.dupe());
                 // let reason = replace_desc_reason (RProperty (Some name)) reason in
                 let reason = reason
                     .dupe()
                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
-                return mk_named_prop(reason, true, name.dupe());
+                return mk_named_prop(reason, true, name);
             }
             if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                 if is_float_safe_integer(value.0) {
@@ -6757,6 +6760,7 @@ pub fn keylist_of_props(
 
     let mut acc = Vec::new();
     for (name, _) in props.iter() {
+        let name = name.as_smol_str().dupe();
         let reason = reason_op
             .dupe()
             .replace_desc_new(VirtualReasonDesc::RStringLit(name.dupe()));
@@ -6764,7 +6768,7 @@ pub fn keylist_of_props(
             reason,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: name.dupe(),
+                value: name,
             }),
         )));
     }
@@ -7609,7 +7613,6 @@ pub mod render_types {
 
     use dupe::Dupe;
     use flow_aloc::ALoc;
-    use flow_common::reason::Name;
     use flow_common::reason::Reason;
     use flow_common::reason::VirtualReasonDesc;
     use flow_common::reason::mk_reason;
@@ -7877,7 +7880,7 @@ pub mod render_types {
                 }) => {
                     let reason = mk_reason(
                         VirtualReasonDesc::RRenderType(Arc::new(VirtualReasonDesc::RType(
-                            Name::new(renders_name.dupe()),
+                            renders_name.dupe(),
                         ))),
                         normalization_cx.result_reason.loc().dupe(),
                     );

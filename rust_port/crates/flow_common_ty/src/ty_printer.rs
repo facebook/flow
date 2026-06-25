@@ -249,7 +249,7 @@ fn type_impl<L: Dupe>(
         Ty::BigInt => LayoutNode::atom("bigint".to_string()),
         Ty::Symbol => LayoutNode::atom("symbol".to_string()),
 
-        Ty::StrLit(raw) => layout::fuse(in_quotes(opts.prefer_single_quotes, &raw.to_string())),
+        Ty::StrLit(raw) => layout::fuse(in_quotes(opts.prefer_single_quotes, raw)),
         Ty::NumLit(raw) => LayoutNode::atom(raw.to_string()),
         Ty::BoolLit(value) => LayoutNode::atom(if *value { "true" } else { "false" }.to_string()),
         Ty::BigIntLit(raw) => LayoutNode::atom(raw.to_string()),

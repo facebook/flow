@@ -88,7 +88,7 @@ fn destruct<'a>(
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     if let Some(d) = default {
         let reason = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RIdentifier(Name::new(FlowSmolStr::new(name))),
+            VirtualReasonDesc::RIdentifier(FlowSmolStr::new(name)),
             name_loc,
         );
         let default_t = flow_js::mk_default_non_speculating(cx, &reason, d)?;
@@ -189,7 +189,7 @@ pub fn eval_param<'a>(
             let id_name = &id.name.name;
             let name_loc = id.name.loc.0.dupe();
             let reason = flow_common::reason::mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(id_name.dupe())),
+                VirtualReasonDesc::RIdentifier(id_name.dupe()),
                 name_loc.dupe(),
             );
             let id_t = type_env::find_write(

@@ -428,7 +428,7 @@ pub mod callee_finder {
         name: &Name,
     ) -> Result<Vec<(Type, bool)>, flow_utils_concurrency::job_error::JobError> {
         let reason = reason::mk_reason(
-            reason::VirtualReasonDesc::RType(reason::Name::new("React$ElementConfig")),
+            reason::VirtualReasonDesc::RType("React$ElementConfig".into()),
             loc,
         );
         let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::TypeApplication {

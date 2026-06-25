@@ -2376,7 +2376,7 @@ fn autocomplete_jsx_intrinsic(
     edit_locs: &(Loc, Loc),
 ) -> Result<AcResult<ac_completion::T>, flow_utils_concurrency::job_error::JobError> {
     let reason = flow_common::reason::mk_reason(
-        VirtualReasonDesc::RType(Name::new("$JSXIntrinsics")),
+        VirtualReasonDesc::RType("$JSXIntrinsics".into()),
         ALoc::of_loc(ac_loc.clone()),
     );
     let intrinsics_t = flow_typing_flow_js::flow_js::get_builtin_type_non_speculating(

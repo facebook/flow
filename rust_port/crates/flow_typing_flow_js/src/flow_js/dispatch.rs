@@ -2388,7 +2388,7 @@ fn __flow_impl<'cx>(
                 // If we have a literal string and that property exists
                 (TypeInner::DefT(_, inner_def), _)
                     if let DefTInner::SingletonStrT { value: x, .. } = inner_def.deref()
-                        && cx.has_prop(mapr.dupe(), x) => {}
+                        && cx.has_prop(mapr.dupe(), &Name::new(x.dupe())) => {}
                 // If we have a dictionary, try that next
                 (
                     _,
@@ -2407,7 +2407,7 @@ fn __flow_impl<'cx>(
                                 inner_def2.deref() =>
                         {
                             (
-                                Some(prop.dupe()),
+                                Some(Name::new(prop.dupe())),
                                 prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
                             )
                         }
@@ -2448,6 +2448,7 @@ fn __flow_impl<'cx>(
                 _ => None,
             } =>
         {
+            let x = Name::new(x.dupe());
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 cx,
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
@@ -2455,7 +2456,7 @@ fn __flow_impl<'cx>(
             )?;
             if prop_ids
                 .iter()
-                .any(|prop_id| cx.has_prop(prop_id.dupe(), x))
+                .any(|prop_id| cx.has_prop(prop_id.dupe(), &x))
             {
                 // no-op
             } else {

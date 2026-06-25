@@ -11,7 +11,6 @@ use std::rc::Rc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -149,12 +148,12 @@ pub fn transform_quasis(kind: StringMappingKind, quasis: Vec<FlowSmolStr>) -> Ve
 }
 
 fn mk_singleton_str(loc: ALoc, s: String) -> Type {
-    let r = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(Name::new(s.as_str())), loc);
+    let r = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(s.as_str().into()), loc);
     Type::new(TypeInner::DefT(
         r,
         DefT::new(DefTInner::SingletonStrT {
             from_annot: true,
-            value: Name::new(s.as_str()),
+            value: s.as_str().into(),
         }),
     ))
 }
@@ -173,7 +172,7 @@ fn can_be_empty_string(t: &Type) -> bool {
     match t.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
             DefTInner::StrGeneralT(_) => true,
-            DefTInner::SingletonStrT { value, .. } => value.as_smol_str().is_empty(),
+            DefTInner::SingletonStrT { value, .. } => value.is_empty(),
             DefTInner::NumGeneralT(_)
             | DefTInner::SingletonNumT { .. }
             | DefTInner::NumericStrKeyT { .. }
@@ -228,14 +227,13 @@ pub fn resolve<'cx>(
     arg: Type,
 ) -> Type {
     let result_reason = reason::mk_annot_reason(
-        VirtualReasonDesc::RType(Name::new(name_of_kind(kind))),
+        VirtualReasonDesc::RType(name_of_kind(kind).into()),
         loc.dupe(),
     );
     match arg.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
             DefTInner::SingletonStrT { value, .. } => {
-                let s = value.as_smol_str();
-                mk_singleton_str(loc, transform_string(kind, s.as_str()))
+                mk_singleton_str(loc, transform_string(kind, value.as_str()))
             }
             DefTInner::EmptyT => {
                 let r = reason::mk_annot_reason(VirtualReasonDesc::REmpty, loc);

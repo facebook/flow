@@ -1902,9 +1902,9 @@ fn super_has_real_extends<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
 // to [None] if the reason isn't a recognized class-named shape.
 fn class_name_of_inst_reason(r: &Reason) -> Option<FlowSmolStr> {
     match &r.desc {
-        VirtualReasonDesc::RType(n) => Some(n.as_smol_str().dupe()),
+        VirtualReasonDesc::RType(n) => Some(n.dupe()),
         VirtualReasonDesc::RStatics(inner) => match inner.as_ref() {
-            VirtualReasonDesc::RType(n) => Some(n.as_smol_str().dupe()),
+            VirtualReasonDesc::RType(n) => Some(n.dupe()),
             _ => None,
         },
         _ => None,

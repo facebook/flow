@@ -6,7 +6,7 @@
  */
 
 // =============================================================================
-// OCaml: Match_pattern_ir from flow/src/typing/match_pattern_ir.ml
+// OCaml: Match_pattern_ir from match_pattern_ir.rs
 // =============================================================================
 
 // open Loc_collections
@@ -17,7 +17,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -76,7 +75,7 @@ pub mod leaf {
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     pub enum LeafCtor {
         BoolC(bool),
-        StrC(Name),
+        StrC(FlowSmolStr),
         NumC(NumberLiteral),
         BigIntC(BigIntLiteral),
         // The global `NaN`. Has type `number`. Matched at runtime via `Number.isNaN`.
@@ -135,14 +134,14 @@ pub mod leaf {
                     },
                 ),
                 LeafCtor::StrC(name) => {
-                    let value = name.as_str();
-                    let raw = js_layout_generator::quote_string(true, value);
+                    let value = name;
+                    let raw = js_layout_generator::quote_string(true, value.as_str());
                     (
                         Loc::none(),
                         match_pattern::MatchPattern::StringPattern {
                             loc: Loc::none(),
                             inner: Box::new(StringLiteral {
-                                value: value.into(),
+                                value: value.dupe(),
                                 raw: raw.into(),
                                 comments: None,
                             }),

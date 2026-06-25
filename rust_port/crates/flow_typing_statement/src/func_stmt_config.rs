@@ -8,7 +8,6 @@
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -131,7 +130,7 @@ fn destruct<'a>(
     t: Type,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     if let Some(d) = default {
-        let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name)), name_loc);
+        let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(name.into()), name_loc);
         let default_t = flow_js::mk_default_non_speculating(cx, &reason, d)?;
         flow_js::flow_non_speculating(
             cx,
@@ -205,10 +204,7 @@ pub fn eval_param<'a>(
         Pattern::Id(id) => {
             let name_loc = id.name.loc.0.dupe();
             let name = &id.name.name;
-            let reason = reason::mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                name_loc,
-            );
+            let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc);
             let t = type_env::find_write(cx, env_api::DefLocType::OrdinaryNameLoc, reason);
             let default = eval_default(cx, true, &t, *has_anno, default.dupe())?;
             Ok(function::Param::RegularParam {
@@ -303,10 +299,7 @@ pub fn eval_rest<'a>(
     } = rest;
     let name_loc = id.name.loc.0.dupe();
     let name = &id.name.name;
-    let reason = reason::mk_reason(
-        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-        name_loc,
-    );
+    let reason = reason::mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc);
     let t = type_env::find_write(cx, env_api::DefLocType::OrdinaryNameLoc, reason);
     function::RestParam {
         loc: loc.dupe(),

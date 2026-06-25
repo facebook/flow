@@ -710,7 +710,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Kind::Async => {
                 let reason = reason::mk_annot_reason(
-                    reason::VirtualReasonDesc::RType(Name::new("Promise")),
+                    reason::VirtualReasonDesc::RType("Promise".into()),
                     loc.dupe(),
                 );
                 let void_t_val = type_::void::at(loc.dupe());
@@ -736,7 +736,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Kind::Generator { .. } => {
                 let reason = reason::mk_annot_reason(
-                    reason::VirtualReasonDesc::RType(Name::new("Generator")),
+                    reason::VirtualReasonDesc::RType("Generator".into()),
                     loc.dupe(),
                 );
                 let void_t_val = type_::void::at(loc.dupe());
@@ -762,7 +762,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Kind::AsyncGenerator { .. } => {
                 let reason = reason::mk_annot_reason(
-                    reason::VirtualReasonDesc::RType(Name::new("AsyncGenerator")),
+                    reason::VirtualReasonDesc::RType("AsyncGenerator".into()),
                     loc.dupe(),
                 );
                 let void_t_val = type_::void::at(loc.dupe());

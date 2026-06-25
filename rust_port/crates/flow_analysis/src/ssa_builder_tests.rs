@@ -7,7 +7,6 @@
 
 use std::collections::BTreeMap;
 
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
 use flow_parser::ParseOptions;
@@ -48,7 +47,7 @@ fn parse(contents: &str) -> ast::Program<Loc, Loc> {
 
 fn mk_write(start: (i32, i32), end: (i32, i32), name: &str) -> WriteLoc<Loc> {
     let loc = mk_loc(start, end);
-    let reason = mk_reason(VirtualReasonDesc::RIdentifier(Name::new(name)), loc);
+    let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.into()), loc);
     WriteLoc::Write(reason)
 }
 

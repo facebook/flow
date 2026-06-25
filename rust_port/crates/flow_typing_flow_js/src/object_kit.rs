@@ -107,7 +107,7 @@ fn partition_keys_and_indexer<'cx>(
             TypeInner::DefT(r, def_t)
                 if let DefTInner::SingletonStrT { value: name, .. } = def_t.deref() =>
             {
-                keys_result.push((name.dupe(), r.dupe()));
+                keys_result.push((Name::new(name.dupe()), r.dupe()));
                 continue;
             }
             TypeInner::DefT(_, def_t) if let DefTInner::EmptyT = def_t.deref() => continue,
@@ -137,7 +137,7 @@ fn dispatch_substituted_name<'cx>(
             TypeInner::DefT(r, def_t)
                 if let DefTInner::SingletonStrT { value, .. } = def_t.deref() =>
             {
-                dests.push((value.dupe(), r.dupe()));
+                dests.push((Name::new(value.dupe()), r.dupe()));
             }
             TypeInner::DefT(r, def_t)
                 if let DefTInner::SingletonNumT {
@@ -173,11 +173,12 @@ fn compute_name_remap<'cx>(
             Some(p) => property::first_loc(p).unwrap_or_else(|| reason.loc().dupe()),
             _ => reason.loc().dupe(),
         };
+        let key_str = k.as_smol_str().dupe();
         Type::new(TypeInner::DefT(
-            flow_common::reason::mk_reason(VirtualReasonDesc::RStringLit(k.clone()), key_loc),
+            flow_common::reason::mk_reason(VirtualReasonDesc::RStringLit(key_str.dupe()), key_loc),
             flow_typing_type::type_::DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: k.dupe(),
+                value: key_str,
             }),
         ))
     };

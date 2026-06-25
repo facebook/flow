@@ -16,13 +16,13 @@ use flow_common::enclosing_context::EnclosingContext;
 use flow_common::hint::Hint;
 use flow_common::hint::HintKind;
 use flow_common::polarity::Polarity;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::is_literal_array_reason;
 use flow_common::reason::is_literal_function_reason;
 use flow_common::reason::is_literal_object_reason;
 use flow_common::reason::is_promise_reason;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
 use flow_typing_context::Context;
 use flow_typing_context::TypingMode;
@@ -182,7 +182,7 @@ impl LiteralMapCx {
 }
 
 // Free-function versions of singleton handlers, parameterized by SingletonAction.
-fn singleton_str_action(action: SingletonAction, t: Type, r: &Reason, value: &Name) -> Type {
+fn singleton_str_action(action: SingletonAction, t: Type, r: &Reason, value: &FlowSmolStr) -> Type {
     match action {
         SingletonAction::KeepAsIs => t,
         SingletonAction::KeepAsConst => Type::new(TypeInner::DefT(

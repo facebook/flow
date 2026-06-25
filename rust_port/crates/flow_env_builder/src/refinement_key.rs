@@ -71,7 +71,7 @@ impl Lookup {
         })
     }
 
-    /* These functions are adapted from typing/refinement.ml. Eventually, this will be the only place
+    /* These functions are adapted from refinement.rs. Eventually, this will be the only place
      * where refinement logic lives, so jmbrown is ok with this temporary duplication while he is
      * fleshing out the refinement features of EnvBuilder
      *
@@ -229,7 +229,7 @@ impl<L: Dupe> RefinementKey<L> {
 
     pub fn reason_desc<DescL: Dupe>(&self) -> VirtualReasonDesc<DescL> {
         if self.lookup.projections.is_empty() {
-            VirtualReasonDesc::RIdentifier(Name::new(self.lookup.base.dupe()))
+            VirtualReasonDesc::RIdentifier(self.lookup.base.dupe())
         } else {
             // Get the last projection
             match self.lookup.projections.last() {
@@ -239,7 +239,7 @@ impl<L: Dupe> RefinementKey<L> {
                 None => {
                     // This shouldn't happen since we checked is_empty()
                     // but handle it gracefully by treating as identifier
-                    VirtualReasonDesc::RIdentifier(Name::new(self.lookup.base.dupe()))
+                    VirtualReasonDesc::RIdentifier(self.lookup.base.dupe())
                 }
             }
         }

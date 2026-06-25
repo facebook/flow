@@ -13,7 +13,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocId;
 use flow_common::js_number;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
@@ -40,7 +39,7 @@ use flow_utils_concurrency::job_error::JobError;
 pub fn extract_strings_aux(expand_generics: bool, t: &Type) -> Option<Vec<FlowSmolStr>> {
     match t.deref() {
         TypeInner::DefT(_, def) => match def.deref() {
-            DefTInner::SingletonStrT { value, .. } => Some(vec![value.as_smol_str().dupe()]),
+            DefTInner::SingletonStrT { value, .. } => Some(vec![value.dupe()]),
             DefTInner::SingletonNumT { value, .. } => {
                 Some(vec![js_number::ecma_string_of_float(value.0).into()])
             }
@@ -853,16 +852,13 @@ pub fn resolve<'cx>(
     };
     validate_placeholders(cx, &loc, &types);
     if types.is_empty() {
-        let s = quasis.iter().map(|s| s.as_str()).collect::<String>();
-        let reason = reason::mk_annot_reason(
-            VirtualReasonDesc::RStringLit(Name::new(s.as_str())),
-            loc.dupe(),
-        );
+        let s: FlowSmolStr = quasis.iter().map(|s| s.as_str()).collect::<String>().into();
+        let reason = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(s.dupe()), loc.dupe());
         return Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.as_str()),
+                value: s,
             }),
         ));
     }
@@ -896,15 +892,12 @@ pub fn resolve<'cx>(
         return unresolved();
     };
     let mk_str = |s: &FlowSmolStr| {
-        let r = reason::mk_annot_reason(
-            VirtualReasonDesc::RStringLit(Name::new(s.as_str())),
-            loc.dupe(),
-        );
+        let r = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(s.dupe()), loc.dupe());
         Type::new(TypeInner::DefT(
             r,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.as_str()),
+                value: s.dupe(),
             }),
         ))
     };
@@ -945,12 +938,12 @@ pub fn concretize_placeholders<'cx>(
     let mk_str = |s: &FlowSmolStr| {
         let r = union_reason
             .dupe()
-            .replace_desc(VirtualReasonDesc::RStringLit(Name::new(s.as_str())));
+            .replace_desc(VirtualReasonDesc::RStringLit(s.dupe()));
         Type::new(TypeInner::DefT(
             r,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.as_str()),
+                value: s.dupe(),
             }),
         ))
     };
@@ -1026,14 +1019,15 @@ pub fn subtype_str_lit_into_template<'cx>(
                 // into a non-string type (NullT/VoidT/etc.) would emit a
                 // spurious error.
                 if lexical_validator_of(&t).is_none() && extract_strings(&t).is_none() {
+                    let part_str: FlowSmolStr = part.as_str().into();
                     let r = type_util::reason_of_t(lower)
                         .dupe()
-                        .replace_desc(VirtualReasonDesc::RStringLit(Name::new(part.as_str())));
+                        .replace_desc(VirtualReasonDesc::RStringLit(part_str.dupe()));
                     let str_t = Type::new(TypeInner::DefT(
                         r,
                         DefT::new(DefTInner::SingletonStrT {
                             from_annot: true,
-                            value: Name::new(part.as_str()),
+                            value: part_str,
                         }),
                     ));
                     crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &str_t, &t)?;
@@ -1059,12 +1053,12 @@ pub fn subtype_template_into_union<'cx>(
     for s in strings {
         let r = type_util::reason_of_t(lower)
             .dupe()
-            .replace_desc(VirtualReasonDesc::RStringLit(Name::new(s.as_str())));
+            .replace_desc(VirtualReasonDesc::RStringLit(s.dupe()));
         let str_t = Type::new(TypeInner::DefT(
             r,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.as_str()),
+                value: s,
             }),
         ));
         crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &str_t, upper)?;
@@ -1140,12 +1134,12 @@ pub fn try_subtype_template_to_template<'cx>(
     {
         let r = l_reason
             .dupe()
-            .replace_desc(VirtualReasonDesc::RStringLit(Name::new(s.as_str())));
+            .replace_desc(VirtualReasonDesc::RStringLit(s.dupe()));
         let lower = Type::new(TypeInner::DefT(
             r,
             DefT::new(DefTInner::SingletonStrT {
                 from_annot: true,
-                value: Name::new(s.as_str()),
+                value: s.dupe(),
             }),
         ));
         subtype_str_lit_into_template(
@@ -1248,12 +1242,12 @@ pub fn subtype_template_to_other<'cx>(
             let mk_str = |s: &FlowSmolStr| {
                 let r = reason
                     .dupe()
-                    .replace_desc(VirtualReasonDesc::RStringLit(Name::new(s.as_str())));
+                    .replace_desc(VirtualReasonDesc::RStringLit(s.dupe()));
                 Type::new(TypeInner::DefT(
                     r,
                     DefT::new(DefTInner::SingletonStrT {
                         from_annot: true,
-                        value: Name::new(s.as_str()),
+                        value: s.dupe(),
                     }),
                 ))
             };

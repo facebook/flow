@@ -12,7 +12,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::enclosing_context::EnclosingContext;
 use flow_common::js_number;
-use flow_common::reason::Name;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_expression_reason;
 use flow_common::reason::mk_reason;
@@ -205,10 +204,7 @@ fn binding<'a>(
     name_loc: ALoc,
     name: &FlowSmolStr,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-    let reason = mk_reason(
-        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-        name_loc.dupe(),
-    );
+    let reason = mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), name_loc.dupe());
     let current = type_env::find_write(cx, DefLocType::OrdinaryNameLoc, reason.dupe());
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {

@@ -1080,10 +1080,7 @@ fn error_for_assignment_kind(
         def_loc: ALoc,
         binding_kind: AssignedConstLikeBindingType,
     ) -> ErrorMessage<ALoc> {
-        let definition = VirtualReason::new(
-            VirtualReasonDesc::RIdentifier(Name::new(name.to_string())),
-            def_loc,
-        );
+        let definition = VirtualReason::new(VirtualReasonDesc::RIdentifier(name.dupe()), def_loc);
         ErrorMessage::EAssignConstLikeBinding(Box::new(EAssignConstLikeBindingData {
             loc: assignment_loc,
             definition,
@@ -1580,16 +1577,13 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     }
 
     fn valid_declaration_check(&self, name: &FlowSmolStr, loc: &ALoc) {
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
         use invalidation_api::InitializationValid;
         use invalidation_api::declaration_validity;
 
-        let declaration = VirtualReason::new(
-            VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-            loc.dupe(),
-        );
+        let declaration =
+            VirtualReason::new(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
 
         let error =
             |null_write: Option<ALoc>,
@@ -2407,7 +2401,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     ) -> BTreeMap<FlowSmolStr, EnvVal> {
         use env_api::DefLocType;
         use env_api::EnvKey;
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
@@ -2420,7 +2413,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
 
             let env_val = match kind {
                 BindingsKind::Type { .. } | BindingsKind::Interface { .. } => {
-                    let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+                    let desc = VirtualReasonDesc::RType(name.dupe());
                     let reason = VirtualReason::new(desc, loc.dupe());
                     self.env_state.write_entries.insert(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
@@ -2459,7 +2452,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 | BindingsKind::DeclaredVar
                 | BindingsKind::DeclaredLet
                 | BindingsKind::DeclaredConst => {
-                    let desc = VirtualReasonDesc::RIdentifier(Name::new(name.dupe()));
+                    let desc = VirtualReasonDesc::RIdentifier(name.dupe());
                     let reason = VirtualReason::new(desc, loc.dupe());
                     self.env_state.write_entries.insert(
                         EnvKey::new(DefLocType::OrdinaryNameLoc, loc.dupe()),
@@ -2520,7 +2513,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     })
                 }
                 BindingsKind::Import => {
-                    let desc = VirtualReasonDesc::RIdentifier(Name::new(name.dupe()));
+                    let desc = VirtualReasonDesc::RIdentifier(name.dupe());
                     let reason = VirtualReason::new(desc, loc.dupe());
                     let kind = if self.is_ts {
                         BindingsKind::TsImport
@@ -2706,7 +2699,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use env_api::DefLocType;
         use env_api::EnvKey;
         use flow_analysis::bindings::Namespace;
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
@@ -2764,7 +2756,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             // find the resolved merged type. The lookup walks the full entries
             // list rather than only checking `full`'s canonical kind so that
             // namespace-before-function order is handled too. A value-bodied
-            // `declare namespace` binds as `DeclaredConst` (see hoister.ml) and
+            // `declare namespace` binds as `DeclaredConst` (see hoister.rs) and
             // never enters this type-side map.
             let (canonical_loc, canonical_kind) = match (canonical_kind, full.get(name)) {
                 (
@@ -2786,7 +2778,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             };
             let type_kind_at_loc: BTreeMap<ALoc, BindingsKind> =
                 type_entries.iter().map(|(l, k)| (l.dupe(), *k)).collect();
-            let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+            let desc = VirtualReasonDesc::RType(name.dupe());
             let reason = VirtualReason::new(desc, canonical_loc.dupe());
             // Add an AssigningWrite at every type-side decl loc so name_def's
             // resolution finds a tvar to populate. Skip the id loc of a
@@ -2806,7 +2798,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 if is_merged_type_only_namespace {
                     continue;
                 }
-                let decl_desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+                let decl_desc = VirtualReasonDesc::RType(name.dupe());
                 let decl_reason = VirtualReason::new(decl_desc, decl_loc.dupe());
                 self.env_state.write_entries.insert(
                     EnvKey::new(DefLocType::OrdinaryNameLoc, decl_loc.dupe()),
@@ -3005,11 +2997,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn binding_infer_type_identifier(&mut self, loc: ALoc, name: &FlowSmolStr) {
         use env_api::DefLocType;
         use env_api::EnvKey;
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
-        let desc = VirtualReasonDesc::RType(Name::new(name.dupe()));
+        let desc = VirtualReasonDesc::RType(name.dupe());
         let reason = VirtualReason::new(desc, loc.dupe());
         self.env_state.write_entries.insert(
             EnvKey::new(DefLocType::OrdinaryNameLoc, loc),
@@ -3264,10 +3255,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
-        let reason = VirtualReason::new(
-            VirtualReasonDesc::RIdentifier(Name::new(x.dupe())),
-            loc.dupe(),
-        );
+        let reason = VirtualReason::new(VirtualReasonDesc::RIdentifier(x.dupe()), loc.dupe());
 
         let env_val = self.env_read(x);
         let val_ref = env_val.val_ref.dupe();
@@ -3502,7 +3490,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         &mut self,
         id: &flow_parser::ast::Identifier<ALoc, ALoc>,
     ) {
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
@@ -3516,7 +3503,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 None => {}
                 Some(binding_name) => {
                     let reason = VirtualReason::new(
-                        VirtualReasonDesc::RIdentifier(Name::new(binding_name.dupe())),
+                        VirtualReasonDesc::RIdentifier(binding_name.dupe()),
                         def_loc.dupe(),
                     );
                     self.env_state.write_entries.insert(
@@ -3998,9 +3985,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     if let Some((_, first_binding)) = binding_list.first() {
                         let binding_loc = first_binding.loc.dupe();
                         let binding_reason = flow_common::reason::mk_reason(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(
-                                flow_common::reason::Name::new(name.dupe()),
-                            ),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name.dupe()),
                             binding_loc,
                         );
                         Fl::add_output(
@@ -5761,18 +5746,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 );
                 ast_visitor::identifier_default(self, identifier)?;
 
-                let reason = VirtualReason::new(
-                    VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
-                    name_loc.dupe(),
-                );
+                let reason =
+                    VirtualReason::new(VirtualReasonDesc::RType(name.dupe()), name_loc.dupe());
                 (name_loc, reason)
             }
             None => {
                 // Process annonymous class
                 let reason = VirtualReason::new(
-                    VirtualReasonDesc::RType(flow_common::reason::Name::new(
-                        FlowSmolStr::new_inline("<<anonymous class>>"),
-                    )),
+                    VirtualReasonDesc::RType(FlowSmolStr::new_inline("<<anonymous class>>")),
                     class_loc.dupe(),
                 );
                 self.env_state.write_entries.insert(
@@ -7248,7 +7229,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 let instance_loc = instance.loc().dupe();
                 // instance is not something the name_resolver can reason about.
                 // However, we still need to has a read and write entry, so we can
-                // record it in statement.ml and use it in new-env.
+                // record it in statement.rs and use it in new-env.
                 let reason = flow_common::reason::VirtualReason::new(
                     refinement_key.reason_desc(),
                     instance_loc.dupe(),
@@ -8166,10 +8147,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                             .entry(def_loc_val.dupe())
                             .or_insert_with(Vec::new);
                         entry.push(loc.dupe());
-                        let reason = VirtualReason::new(
-                            VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
-                            loc.dupe(),
-                        );
+                        let reason =
+                            VirtualReason::new(VirtualReasonDesc::RType(name.dupe()), loc.dupe());
                         self.env_state.write_entries.insert(
                             env_api::EnvKey::new(env_api::DefLocType::OrdinaryNameLoc, loc.dupe()),
                             env_api::EnvEntry::AssigningWrite(reason),
@@ -8188,10 +8167,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                         // namespace is allowed and merges into the namespace's
                         // type side. Add an AssigningWrite for this loc so
                         // name_def resolves the interface declaration.
-                        let reason = VirtualReason::new(
-                            VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
-                            loc.dupe(),
-                        );
+                        let reason =
+                            VirtualReason::new(VirtualReasonDesc::RType(name.dupe()), loc.dupe());
                         self.env_state.write_entries.insert(
                             env_api::EnvKey::new(env_api::DefLocType::OrdinaryNameLoc, loc.dupe()),
                             env_api::EnvEntry::AssigningWrite(reason),
@@ -8214,10 +8191,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                             .entry(def_loc_val.dupe())
                             .or_insert_with(Vec::new);
                         entry.push(loc.dupe());
-                        let reason = VirtualReason::new(
-                            VirtualReasonDesc::RType(flow_common::reason::Name::new(name.dupe())),
-                            loc.dupe(),
-                        );
+                        let reason =
+                            VirtualReason::new(VirtualReasonDesc::RType(name.dupe()), loc.dupe());
                         self.env_state.write_entries.insert(
                             env_api::EnvKey::new(env_api::DefLocType::OrdinaryNameLoc, loc.dupe()),
                             env_api::EnvEntry::AssigningWrite(reason),
@@ -8806,7 +8781,6 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         kind: flow_parser::ast::VariableKind,
         decl: &flow_parser::ast::statement::variable::Declarator<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
         use flow_parser::ast::pattern::Pattern;
@@ -8841,7 +8815,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     let write_kind =
                         variable_declaration_binding_kind_to_pattern_write_kind(Some(kind));
                     let reason = VirtualReason::new(
-                        VirtualReasonDesc::RIdentifier(Name::new(x.dupe())),
+                        VirtualReasonDesc::RIdentifier(x.dupe()),
                         name_loc.dupe(),
                     );
                     let write_entry = env_api::EnvEntry::AssigningWrite(reason.dupe());
@@ -8944,10 +8918,8 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                         *val_ref.borrow_mut() =
                             ssa_val::uninitialized(&mut *self.cache.borrow_mut(), loc.dupe());
                     }
-                    let reason = VirtualReason::new(
-                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                        loc.dupe(),
-                    );
+                    let reason =
+                        VirtualReason::new(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
 
                     match (error, annot) {
                         (None, flow_parser::ast::types::AnnotationOrHint::Available(_)) => {
@@ -10255,14 +10227,11 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             v.hoist_annotations(f)
         })?;
 
-        use flow_common::reason::Name;
         use flow_common::reason::VirtualReason;
         use flow_common::reason::VirtualReasonDesc;
 
-        let record_self_reason = VirtualReason::new(
-            VirtualReasonDesc::RType(Name::new(name.dupe())),
-            name_loc.dupe(),
-        );
+        let record_self_reason =
+            VirtualReason::new(VirtualReasonDesc::RType(name.dupe()), name_loc.dupe());
         if self.is_assigning_write(&env_api::EnvKey::ordinary(name_loc.dupe())) {
             let self_write = env_api::EnvEntry::AssigningWrite(record_self_reason);
             let this_write = env_api::EnvEntry::AssigningWrite(VirtualReason::new(
@@ -10978,9 +10947,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
     }
 }
 
-// The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
+// The EnvBuilder does not traverse dead code, but statement.rs does. Dead code
 // is an error in Flow, so type checking after that point is not very meaningful.
-// In order to support statement.ml's queries, we must ensure that the value map we
+// In order to support statement.rs's queries, we must ensure that the value map we
 // send to it has the dead code reads filled in. An alternative approach to this visitor
 // would be to assume that if the entry does not exist in the map then it is unreachable,
 // but that assumes that the EnvBuilder is 100% correct. This approach lets us discriminate

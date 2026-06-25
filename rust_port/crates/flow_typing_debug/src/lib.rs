@@ -566,7 +566,7 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                 p(cx, t, true, extra)
             }
             DefTInner::SingletonStrT { from_annot, value } => {
-                let extra = format!("{:?} (from_annot={})", value.as_str(), from_annot);
+                let extra = format!("{:?} (from_annot={})", value, from_annot);
                 p(cx, t, true, &extra)
             }
             DefTInner::SingletonNumT { from_annot, value } => {

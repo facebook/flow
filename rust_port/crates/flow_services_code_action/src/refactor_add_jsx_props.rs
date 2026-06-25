@@ -12,7 +12,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -114,7 +113,7 @@ fn get_obj_prop_names(
 
 fn get_required_attribute_names(cx: &Context, loc: Loc, t: &Type) -> Option<BTreeSet<FlowSmolStr>> {
     let reason = reason::mk_reason(
-        VirtualReasonDesc::RType(Name::new("React$ElementConfig")),
+        VirtualReasonDesc::RType("React$ElementConfig".into()),
         ALoc::of_loc(loc),
     );
     let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication {

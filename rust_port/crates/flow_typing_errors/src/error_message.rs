@@ -6355,7 +6355,7 @@ pub fn enum_name_of_reason<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
     use flow_common::reason::VirtualReasonDesc::*;
     match desc_of_reason(reason) {
         REnum { name: Some(name) } => Some(name.dupe()),
-        RType(name) => Some(name.dupe().into_smol_str()),
+        RType(name) => Some(name.dupe()),
         _ => None,
     }
 }
@@ -7906,7 +7906,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 actual_polarity,
             }) => {
                 let reason_targ = VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                    flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                     reason.def_loc_opt.as_ref().unwrap_or(&reason.loc).dupe(),
                 );
                 Normal(Message::MessageCannotUseTypeDueToPolarityMismatch {
@@ -8344,7 +8344,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EBindingError(box (binding_error, _, x, entry_loc)) => {
                 let x_reason = VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(x),
+                    flow_common::reason::VirtualReasonDesc::RIdentifier(x.into_smol_str()),
                     entry_loc,
                 );
 
@@ -8447,7 +8447,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         ..
                     } => {
                         let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                             existing_binding_loc,
                         );
                         Message::MessageBadLibdefModuleOverride(x)
@@ -8458,7 +8458,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         ..
                     } => {
                         let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                             existing_binding_loc,
                         );
                         Message::MessageBadLibdefNameOverride(x)
@@ -8469,7 +8469,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         ..
                     } => {
                         let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                             existing_binding_loc,
                         );
                         Message::MessageCannotDeclareAlreadyBoundNameInNamespace(x)
@@ -8480,7 +8480,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         ..
                     } => {
                         let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                             current_binding_loc,
                         );
                         Message::MessageInterfaceMergePropertyConflict(x)
@@ -8491,7 +8491,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         ..
                     } => {
                         let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(Name::new(name)),
+                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
                             current_binding_loc,
                         );
                         Message::MessageInterfaceMergeTparamMismatch(x)

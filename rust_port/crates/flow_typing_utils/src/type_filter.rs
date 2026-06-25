@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Port of flow/src/typing/type_filter.ml
+// Port of type_filter.rs
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -17,7 +17,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_common::polarity::Polarity;
-use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
@@ -457,7 +456,7 @@ pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
                     r.dupe(),
                     DefT::new(DefTInner::SingletonStrT {
                         from_annot: true,
-                        value: Name::new(""),
+                        value: "".into(),
                     }),
                 )))
             }
@@ -733,7 +732,7 @@ pub fn not_undefined<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     }
 }
 
-pub fn string_literal(expected_loc: ALoc, expected: Name, t: Type) -> FilterResult {
+pub fn string_literal(expected_loc: ALoc, expected: FlowSmolStr, t: Type) -> FilterResult {
     let expected_desc = VirtualReasonDesc::RStringLit(expected.dupe());
     match t.deref() {
         TypeInner::DefT(_, d) => match d.deref() {
@@ -750,7 +749,7 @@ pub fn string_literal(expected_loc: ALoc, expected: Name, t: Type) -> FilterResu
                     )))
                 }
             }
-            DefTInner::StrGeneralT(Literal::Truthy) if expected != Name::new("") => {
+            DefTInner::StrGeneralT(Literal::Truthy) if expected.as_str() != "" => {
                 changed_result(Type::new(TypeInner::DefT(
                     reason_of_t(&t).dupe().replace_desc_new(expected_desc),
                     DefT::new(DefTInner::SingletonStrT {
@@ -775,7 +774,7 @@ pub fn string_literal(expected_loc: ALoc, expected: Name, t: Type) -> FilterResu
     }
 }
 
-pub fn not_string_literal(expected: Name, t: Type) -> FilterResult {
+pub fn not_string_literal(expected: FlowSmolStr, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(r, d) => match d.deref() {
             DefTInner::SingletonStrT { value, .. } if *value == expected => {
@@ -1789,7 +1788,7 @@ pub mod type_tag {
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     pub(super) enum SentinelVal {
-        Str(Name),
+        Str(FlowSmolStr),
         Num(NumberLiteral),
         Bool(bool),
     }
@@ -1872,7 +1871,7 @@ fn tag_of_value<'cx>(cx: &Context<'cx>, type_: &Type) -> Option<type_tag::Sentin
         Some(t) => match t.deref() {
             TypeInner::DefT(_, d) => match d.deref() {
                 DefTInner::NumericStrKeyT(NumberLiteral(_, s)) => {
-                    Some(type_tag::SentinelVal::Str(Name::new(s.clone())))
+                    Some(type_tag::SentinelVal::Str(s.dupe()))
                 }
                 DefTInner::SingletonStrT { value, .. } => {
                     Some(type_tag::SentinelVal::Str(value.dupe()))

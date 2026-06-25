@@ -407,7 +407,7 @@ fn predicate_no_concretization<'cx>(
                 // (*********************)
                 PredicateInner::SingletonStrP(box (_, _, lit)) => {
                     let filtered_str =
-                        type_filter::not_string_literal(Name::new(lit.as_str()), l.dupe());
+                        type_filter::not_string_literal(FlowSmolStr::new(lit), l.dupe());
                     report_filtering_result_to_predicate_result(filtered_str, result_collector);
                     Ok(())
                 }
@@ -666,7 +666,7 @@ fn predicate_no_concretization<'cx>(
         // (*********************)
         PredicateInner::SingletonStrP(box (expected_loc, _sense, lit)) => {
             let filtered_str =
-                type_filter::string_literal(expected_loc.dupe(), Name::new(lit.as_str()), l.dupe());
+                type_filter::string_literal(expected_loc.dupe(), FlowSmolStr::new(lit), l.dupe());
             report_filtering_result_to_predicate_result(filtered_str, result_collector);
             Ok(())
         }

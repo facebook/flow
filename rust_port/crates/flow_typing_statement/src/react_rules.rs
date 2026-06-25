@@ -1022,7 +1022,7 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
         let loc = expr.loc().dupe();
         let reason = match expr.deref() {
             ExpressionInner::Identifier { loc, inner } => flow_common::reason::mk_reason(
-                VirtualReasonDesc::RIdentifier(Name::new(inner.name.dupe())),
+                VirtualReasonDesc::RIdentifier(inner.name.dupe()),
                 loc.dupe(),
             ),
             _ => flow_common::reason::mk_expression_reason(expr),

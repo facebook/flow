@@ -1671,13 +1671,12 @@ pub fn get_var<'cx>(
     name: &str,
     loc: ALoc,
 ) -> Result<Type, JobError> {
-    let ord_name = Name::new(name);
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     read_entry_exn(
         lookup_mode,
         cx,
         loc.dupe(),
-        flow_common::reason::mk_reason(VirtualReasonDesc::RIdentifier(ord_name), loc),
+        flow_common::reason::mk_reason(VirtualReasonDesc::RIdentifier(name.into()), loc),
     )
 }
 
@@ -1690,7 +1689,7 @@ pub fn query_var<'cx>(
 ) -> Result<Type, JobError> {
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name),
+        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
     };
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     read_entry_exn(
@@ -1709,7 +1708,7 @@ pub fn intrinsic_ref<'cx>(
 ) -> Result<Option<(Type, ALoc)>, JobError> {
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name),
+        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
     };
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     let read = {
@@ -1773,7 +1772,7 @@ pub fn sig_var_ref<'cx>(
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     let desc = match desc {
         Some(d) => d,
-        None => VirtualReasonDesc::RIdentifier(name.dupe()),
+        None => VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
     };
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     let t = query_var(Some(lookup_mode), cx, name, None, loc)?;
@@ -1879,7 +1878,7 @@ pub fn constraining_type<'cx>(
                     use flow_typing_type::type_::union_rep;
                     Type::new(TypeInner::UnionT(
                         flow_common::reason::mk_reason(
-                            VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                            VirtualReasonDesc::RIdentifier(name.dupe()),
                             loc,
                         ),
                         union_rep::make(
