@@ -77,32 +77,42 @@ mod parallelizable_workload_loop {
 
 fn start_parallelizable_workloads(
     _genv: &server_env::Genv,
-    env: &server_env::Env,
+    env: Arc<server_env::Env>,
 ) -> ParallelizableWorkloadsStopper {
     init_tokio_runtime();
 
     let wait_for_cancel = Arc::new(AtomicBool::new(false));
-    let env_for_loop = env.clone();
+    let env_for_loop = env.dupe();
     let wait_for_cancel_for_loop = wait_for_cancel.dupe();
     let (loop_started_tx, loop_started_rx) = tokio::sync::oneshot::channel::<()>();
-    let loop_task = flow_tokio_runtime::spawn_blocking(move || {
+    let (stopped_tx, stopped_rx) = std::sync::mpsc::channel::<()>();
+    // Detached on purpose: the loop holds an `Arc` snapshot of the pre-recheck
+    // `Env` and drops it here on the blocking pool after signaling it stopped, so
+    // the deep `Env` `Drop` (if this is the last reference) stays off the serve loop.
+    flow_tokio_runtime::spawn_blocking(move || {
         loop_started_tx
             .send(())
             .expect("parallelizable workload loop start signal should be received");
         parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
+        match stopped_tx.send(()) {
+            Ok(()) => {}
+            // stop() is not waiting (e.g. server shutdown); nothing to signal.
+            Err(std::sync::mpsc::SendError(())) => {}
+        }
+        drop(env_for_loop);
     });
     flow_tokio_runtime::block_on(loop_started_rx)
         .expect("parallelizable workload loop should start");
     ParallelizableWorkloadsStopper {
         wait_for_cancel,
-        loop_task: Arc::new(Mutex::new(Some(loop_task))),
+        stopped_rx: Arc::new(Mutex::new(Some(stopped_rx))),
     }
 }
 
 #[derive(Clone)]
 struct ParallelizableWorkloadsStopper {
     wait_for_cancel: Arc<AtomicBool>,
-    loop_task: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
+    stopped_rx: Arc<Mutex<Option<std::sync::mpsc::Receiver<()>>>>,
 }
 
 impl ParallelizableWorkloadsStopper {
@@ -111,16 +121,16 @@ impl ParallelizableWorkloadsStopper {
             server_monitor_listener_state::wake_workload_waiters();
         }
 
-        let loop_task = self
-            .loop_task
+        let stopped_rx = self
+            .stopped_rx
             .lock()
-            .expect("parallelizable workload loop task lock should not be poisoned")
+            .expect("parallelizable workload stopped-signal lock should not be poisoned")
             .take();
-        if let Some(loop_task) = loop_task {
-            match flow_tokio_runtime::block_on(loop_task) {
+        if let Some(stopped_rx) = stopped_rx {
+            match stopped_rx.recv() {
                 Ok(()) => {}
-                Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
-                Err(err) => panic!("parallelizable workload loop task failed: {}", err),
+                // The loop task ended without signaling (panic/shutdown).
+                Err(std::sync::mpsc::RecvError) => {}
             }
         }
     }
@@ -327,8 +337,12 @@ where
     PostCancel: FnOnce() -> T,
 {
     let (stop_tx, stop_rx) = crossbeam::channel::bounded::<()>(1);
-    let cancel_task = flow_tokio_runtime::spawn_blocking(move || {
-        match server_monitor_listener_state::wait_for_updates_for_recheck(
+    let (result_tx, result_rx) = std::sync::mpsc::channel::<bool>();
+    // Detached on purpose: the task reports `cancel_fired` via `result_tx`, then
+    // drops its captured closures (holding a deep `Env` clone) on the blocking
+    // pool, off the caller's critical path.
+    flow_tokio_runtime::spawn_blocking(move || {
+        let cancel_fired = match server_monitor_listener_state::wait_for_updates_for_recheck(
             &process_updates,
             &get_forced,
             priority,
@@ -359,6 +373,11 @@ where
                 true
             }
             None => false,
+        };
+        match result_tx.send(cancel_fired) {
+            Ok(()) => {}
+            // The caller is no longer waiting (e.g. server shutdown).
+            Err(std::sync::mpsc::SendError(_)) => {}
         }
     });
 
@@ -368,10 +387,10 @@ where
         Err(crossbeam::channel::TrySendError::Full(())) => {}
         Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
     }
-    let cancel_fired = match flow_tokio_runtime::block_on(cancel_task) {
+    let cancel_fired = match result_rx.recv() {
         Ok(cancel_fired) => cancel_fired,
-        Err(err) if err.is_panic() => std::panic::resume_unwind(err.into_panic()),
-        Err(err) => panic!("recheck cancel task failed: {}", err),
+        // The cancel task ended without reporting (panic/shutdown).
+        Err(std::sync::mpsc::RecvError) => false,
     };
     if cancel_fired && ret.is_ok() {
         worker_cancel::resume_workers();
@@ -446,15 +465,21 @@ pub(crate) fn recheck_single(
         return RecheckOutcome::NothingToDo(env);
     }
 
+    // One deep clone of the pre-recheck `Env`, shared via `Arc` by the workload
+    // loop, the cancel-path `process_updates`, and the canceled-recheck restart
+    // (the recheck itself consumes the owned `env`). Collapses three per-recheck
+    // clones into one, so a queued liveErrorsRequest waits on a single clone.
+    let env_snapshot = Arc::new(env.clone());
+
     let options_for_cancel = options.dupe();
     let shared_mem_for_cancel = genv.shared_mem.dupe();
-    let env_for_cancel_updates = env.clone();
+    let env_snapshot_for_updates = env_snapshot.dupe();
     let process_updates_for_cancel =
         move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
             crate::rechecker::process_updates(
                 skip_incompatible,
                 &options_for_cancel,
-                &env_for_cancel_updates,
+                &env_snapshot_for_updates,
                 &shared_mem_for_cancel,
                 updates,
             )
@@ -467,10 +492,12 @@ pub(crate) fn recheck_single(
             .dupe()
     };
 
-    let stop_parallelizable_workloads = start_parallelizable_workloads(genv, &env);
+    let stop_parallelizable_workloads = start_parallelizable_workloads(genv, env_snapshot.dupe());
     let stop_parallelizable_workloads_for_cancel = stop_parallelizable_workloads.clone();
     let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.clone();
-    let env_for_cancel = env.clone();
+    // Cloned lazily inside `post_cancel`, so only the rare canceled-recheck
+    // restart pays to build an owned `Env`.
+    let env_snapshot_for_post = env_snapshot.dupe();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
     // may have introduced garbage into shared memory. Since we immediately start another
@@ -531,7 +558,7 @@ pub(crate) fn recheck_single(
         }
     };
     let workload_cell_for_cancel = workload_cell.clone();
-    run_but_cancel_on_file_changes(
+    let outcome = run_but_cancel_on_file_changes(
         options,
         process_updates_for_cancel,
         get_forced_for_cancel,
@@ -548,9 +575,14 @@ pub(crate) fn recheck_single(
             );
             let _done: bool = shared_mem.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
+            let env_for_cancel = (*env_snapshot_for_post).clone();
             recheck_single(recheck_count + 1, genv, env_for_cancel, shared_mem)
         },
-    )
+    );
+    // Drop this reference on the blocking pool; if it's the last one, the deep
+    // `Env` `Drop` runs there instead of on the serve loop.
+    flow_tokio_runtime::spawn_blocking(move || drop(env_snapshot));
+    outcome
 }
 
 // It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
