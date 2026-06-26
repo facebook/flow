@@ -15078,10 +15078,10 @@ pub fn match_case_default<
         case_match_root_loc: _,
     } = case;
     visitor.match_pattern(pattern)?;
-    on_case_body(visitor, body)?;
     if let Some(guard) = guard {
         visitor.expression(guard)?;
     }
+    on_case_body(visitor, body)?;
     visitor.syntax_opt(comments.as_ref())?;
     Ok(())
 }

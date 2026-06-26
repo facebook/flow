@@ -10020,6 +10020,48 @@ declare var b2: {bar: Bar};
 }
 
 #[test]
+fn test_match_guard_with_abrupt_body_visits_guard_before_body() {
+    let result = print_ssa_test(
+        None,
+        false,
+        None,
+        None,
+        r#"
+function f(val: unknown) {
+  match (val) {
+    'productTags' if (Array.isArray(val)) => {
+      return;
+    }
+    _ => {}
+  }
+}
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"[
+  (3, 2) to (3, 7) => {
+    (3, 2) to (3, 7): (`<match_root>`)
+  };
+  (3, 9) to (3, 12) => {
+    (2, 11) to (2, 14): (`val`)
+  };
+  (4, 4) to (4, 4) => {
+    {refinement = productTags; writes = (3, 2) to (3, 7): (`<match_root>`)}
+  };
+  (4, 22) to (4, 27) => {
+    Global Array
+  };
+  (4, 36) to (4, 39) => {
+    (2, 11) to (2, 14): (`val`)
+  };
+  (7, 4) to (7, 4) => {
+    {refinement = Not (ImpossibleR); writes = (3, 2) to (3, 7): (`<match_root>`)}
+  }]"#,
+    );
+}
+
+#[test]
 fn test_annot_this() {
     let result = print_ssa_test(
         None,

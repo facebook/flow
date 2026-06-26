@@ -16,3 +16,12 @@ function test(x: 1 | 2 | 3, o: {foo: string}) {
     }
   }
 }
+
+function test_guard_with_abrupt_body(val: unknown): void {
+  match (val) {
+    'foo' if (Array.isArray(val)) => { // should not crash
+      return;
+    }
+    _ => {}
+  }
+}
