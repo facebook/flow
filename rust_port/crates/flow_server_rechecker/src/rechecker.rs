@@ -109,8 +109,8 @@ fn start_parallelizable_workloads(
     }
 }
 
-#[derive(Clone)]
-struct ParallelizableWorkloadsStopper {
+#[derive(Clone, Dupe)]
+pub(crate) struct ParallelizableWorkloadsStopper {
     wait_for_cancel: Arc<AtomicBool>,
     stopped_rx: Arc<Mutex<Option<std::sync::mpsc::Receiver<()>>>>,
 }
@@ -424,6 +424,13 @@ pub(crate) fn recheck_single(
     genv: &server_env::Genv,
     env: server_env::Env,
     shared_mem: &SharedMem,
+    // When a recheck is canceled and restarted, the parallelizable-workload loop
+    // from the canceled attempt is handed to the restart instead of being stopped
+    // and started afresh. This keeps hovers/liveErrors served (from the original
+    // pre-recheck `Env` snapshot the loop already holds) throughout the whole
+    // cancel->restart window, rather than starving them while the loop is torn
+    // down and rebuilt.
+    reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckOutcome {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
@@ -462,6 +469,11 @@ pub(crate) fn recheck_single(
         && files_to_recheck_set.is_empty()
         && workload.files_to_force.is_empty()
     {
+        // A reused loop is still running off the prior snapshot; stop it before
+        // returning, since this restart has no recheck to keep it alive for.
+        if let Some(reused_loop) = reused_loop {
+            reused_loop.stop();
+        }
         return RecheckOutcome::NothingToDo(env);
     }
 
@@ -492,9 +504,14 @@ pub(crate) fn recheck_single(
             .dupe()
     };
 
-    let stop_parallelizable_workloads = start_parallelizable_workloads(genv, env_snapshot.dupe());
-    let stop_parallelizable_workloads_for_cancel = stop_parallelizable_workloads.clone();
-    let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.clone();
+    // Reuse the loop from the canceled attempt if there is one, so it keeps
+    // serving uninterrupted; otherwise start one off this recheck's snapshot.
+    let stop_parallelizable_workloads = match reused_loop {
+        Some(reused_loop) => reused_loop,
+        None => start_parallelizable_workloads(genv, env_snapshot.dupe()),
+    };
+    let stop_parallelizable_workloads_for_post = stop_parallelizable_workloads.dupe();
+    let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.dupe();
     // Cloned lazily inside `post_cancel`, so only the rare canceled-recheck
     // restart pays to build an owned `Env`.
     let env_snapshot_for_post = env_snapshot.dupe();
@@ -550,7 +567,8 @@ pub(crate) fn recheck_single(
                 })
             }
             Err(type_service::RecheckError::Canceled(_changed_files)) => {
-                stop_parallelizable_workloads_for_recheck.stop();
+                // Leave the loop running; `post_cancel` hands it to the restart so
+                // serving continues across the cancel.
                 *workload_cell_for_recheck.borrow_mut() = Some(workload);
                 Err(type_service::RecheckError::Canceled(_changed_files))
             }
@@ -564,7 +582,9 @@ pub(crate) fn recheck_single(
         get_forced_for_cancel,
         priority,
         f,
-        move || stop_parallelizable_workloads_for_cancel.stop(),
+        // The loop is kept alive across the cancel (handed to the restart in
+        // `post_cancel`), so there is nothing to stop here.
+        || {},
         move || {
             let workload = workload_cell_for_cancel
                 .borrow_mut()
@@ -576,7 +596,13 @@ pub(crate) fn recheck_single(
             let _done: bool = shared_mem.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
             let env_for_cancel = (*env_snapshot_for_post).clone();
-            recheck_single(recheck_count + 1, genv, env_for_cancel, shared_mem)
+            recheck_single(
+                recheck_count + 1,
+                genv,
+                env_for_cancel,
+                shared_mem,
+                Some(stop_parallelizable_workloads_for_post),
+            )
         },
     );
     // Drop this reference on the blocking pool; if it's the last one, the deep
@@ -597,7 +623,7 @@ pub fn recheck_loop(
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, env, shared_mem);
+        let recheck_result = recheck_single(1, genv, env, shared_mem, None);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };
