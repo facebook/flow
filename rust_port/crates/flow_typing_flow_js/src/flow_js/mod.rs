@@ -1203,14 +1203,6 @@ pub fn reposition_reason_non_speculating<'cx>(
     flow_js_utils::flow_js_result_to_job_error(reposition_reason(cx, reason, use_desc, t))
 }
 
-pub fn filter_optional_non_speculating<'cx>(
-    cx: &Context<'cx>,
-    reason: &Reason,
-    opt_t: &Type,
-) -> Result<u32, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(filter_optional(cx, reason, opt_t))
-}
-
 pub fn unify_non_speculating<'cx>(
     cx: &Context<'cx>,
     use_op: Option<UseOp>,

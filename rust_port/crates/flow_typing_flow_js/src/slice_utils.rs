@@ -2428,13 +2428,13 @@ pub fn super_<'cx, A>(
 }
 
 pub fn mk_mapped_prop_type(
-    filter_optional: &dyn Fn(Type) -> Type,
+    filter_optional: &dyn Fn(Type) -> Result<Type, FlowJsException>,
     use_op: &UseOp,
     mapped_type_optionality: &MappedTypeOptionality,
     poly_prop: &Type,
     key_t: Type,
     prop_optional: bool,
-) -> Type {
+) -> Result<Type, FlowJsException> {
     // We persist the original use_op here so that errors involving the typeapp are positioned
     // at the use site and not the typeapp site
     let t = type_util::typeapp_with_use_op(
@@ -2446,19 +2446,19 @@ pub fn mk_mapped_prop_type(
         vec![key_t],
     );
     match mapped_type_optionality {
-        MappedTypeOptionality::MakeOptional => type_util::optional(t, None, false),
+        MappedTypeOptionality::MakeOptional => Ok(type_util::optional(t, None, false)),
         MappedTypeOptionality::RemoveOptional => {
             if prop_optional {
                 filter_optional(t)
             } else {
-                t
+                Ok(t)
             }
         }
         MappedTypeOptionality::KeepOptionality => {
             if prop_optional {
-                type_util::optional(t, None, false)
+                Ok(type_util::optional(t, None, false))
             } else {
-                t
+                Ok(t)
             }
         }
     }
@@ -2581,7 +2581,7 @@ pub fn merge_field(
 }
 
 pub fn map_object<'cx>(
-    filter_optional: &dyn Fn(Type) -> Type,
+    filter_optional: &dyn Fn(Type) -> Result<Type, FlowJsException>,
     name_remap: Option<&NameRemap>,
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
@@ -2590,7 +2590,7 @@ pub fn map_object<'cx>(
     use_op: &UseOp,
     selected_keys: Option<&(Vec<(Name, Reason)>, Vec<Type>)>,
     slice: &object::Slice,
-) -> Type {
+) -> Result<Type, FlowJsException> {
     let variance = mapped_type_flags.variance;
     let mapped_type_optionality = &mapped_type_flags.optional;
     let object::Slice {
@@ -2602,7 +2602,7 @@ pub fn map_object<'cx>(
         interface,
         reachable_targs,
     } = slice;
-    let mk_prop_type = |key_t: Type, prop_optional: bool| {
+    let mk_prop_type = |key_t: Type, prop_optional: bool| -> Result<Type, FlowJsException> {
         mk_mapped_prop_type(
             filter_optional,
             use_op,
@@ -2625,39 +2625,38 @@ pub fn map_object<'cx>(
             }
         }
     };
-    /* Build the field for a given source key and its prop in the source object. Returns
-     * (key_loc, field, indexer_keys) — the indexer_keys list is non-empty only when name_remap
-     * dispatched some of the substituted names to the indexer. */
-    let build_source_field = |key: &Name, prop: &Property| -> (ALoc, Property) {
-        let prop_t = property::type_(prop);
-        let prop_polarity = property::polarity(prop);
-        let key_loc = property::first_loc(prop)
-            .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
-        let key_str = key.as_smol_str().dupe();
-        let key_t = Type::new(TypeInner::DefT(
-            flow_common::reason::mk_reason(
-                VirtualReasonDesc::RStringLit(key_str.dupe()),
-                key_loc.dupe(),
-            ),
-            DefT::new(DefTInner::SingletonStrT {
-                from_annot: true,
-                value: key_str,
-            }),
-        ));
-        let prop_optional = is_prop_optional(prop_t);
-        let polarity = if *frozen {
-            Polarity::Positive
-        } else {
-            mk_variance(variance, prop_polarity)
+    /* Build the field for a given source key and its prop in the source object. */
+    let build_source_field =
+        |key: &Name, prop: &Property| -> Result<(ALoc, Property), FlowJsException> {
+            let prop_t = property::type_(prop);
+            let prop_polarity = property::polarity(prop);
+            let key_loc = property::first_loc(prop)
+                .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
+            let key_str = key.as_smol_str().dupe();
+            let key_t = Type::new(TypeInner::DefT(
+                flow_common::reason::mk_reason(
+                    VirtualReasonDesc::RStringLit(key_str.dupe()),
+                    key_loc.dupe(),
+                ),
+                DefT::new(DefTInner::SingletonStrT {
+                    from_annot: true,
+                    value: key_str,
+                }),
+            ));
+            let prop_optional = is_prop_optional(prop_t);
+            let polarity = if *frozen {
+                Polarity::Positive
+            } else {
+                mk_variance(variance, prop_polarity)
+            };
+            let field = Property::new(PropertyInner::Field(Box::new(FieldData {
+                preferred_def_locs: None,
+                key_loc: Some(key_loc.dupe()),
+                type_: mk_prop_type(key_t, prop_optional)?,
+                polarity,
+            })));
+            Ok((key_loc, field))
         };
-        let field = Property::new(PropertyInner::Field(Box::new(FieldData {
-            preferred_def_locs: None,
-            key_loc: Some(key_loc.dupe()),
-            type_: mk_prop_type(key_t, prop_optional),
-            polarity,
-        })));
-        (key_loc, field)
-    };
     let any_field = || -> Property {
         Property::new(PropertyInner::Field(Box::new(FieldData {
             preferred_def_locs: None,
@@ -2691,7 +2690,7 @@ pub fn map_object<'cx>(
                         out.insert(key.dupe(), any_field());
                     }
                     Some(prop) => {
-                        let (_, field) = build_source_field(key, prop);
+                        let (_, field) = build_source_field(key, prop)?;
                         out.insert(key.dupe(), field);
                     }
                 }
@@ -2735,7 +2734,7 @@ pub fn map_object<'cx>(
                             }
                         }
                         Some(prop) => {
-                            let (_, field) = build_source_field(src_key, prop);
+                            let (_, field) = build_source_field(src_key, prop)?;
                             for (n, _r) in dest_names {
                                 /* (fun m (n, _r) -> NameUtils.Map.update n (fun e -> merge_field reason e field) m) */
                                 name_utils::map::update(
@@ -2779,7 +2778,7 @@ pub fn map_object<'cx>(
                 let dict_key = type_util::union_of_ts(reason.dupe(), xs.clone(), None);
                 let dict_t_prime = DictType {
                     key: dict_key,
-                    value: mk_prop_type(dict_t.key.dupe(), dict_optional),
+                    value: mk_prop_type(dict_t.key.dupe(), dict_optional)?,
                     dict_polarity: mk_variance(variance, dict_t.dict_polarity),
                     ..dict_t.clone()
                 };
@@ -2798,7 +2797,7 @@ pub fn map_object<'cx>(
             (None, ObjKind::Indexed(dict_t)) => {
                 let dict_optional = is_prop_optional(&dict_t.value);
                 let dict_t_prime = DictType {
-                    value: mk_prop_type(dict_t.key.dupe(), dict_optional),
+                    value: mk_prop_type(dict_t.key.dupe(), dict_optional)?,
                     dict_polarity: mk_variance(variance, dict_t.dict_polarity),
                     ..dict_t.clone()
                 };
@@ -2843,7 +2842,7 @@ pub fn map_object<'cx>(
                     ObjKind::Indexed(dict_t),
                 ) => {
                     let dict_optional = is_prop_optional(&dict_t.value);
-                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional);
+                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional)?;
                     let pol = mk_variance(variance, dict_t.dict_polarity);
                     let mut keys = vec![new_key.dupe()];
                     keys.extend(xs.iter().duped());
@@ -2853,7 +2852,7 @@ pub fn map_object<'cx>(
                     /* Selected_keys.xs entries with source dict — value comes from source dict_t.key,
                      * matching the legacy `(Some (_, xs), Indexed dict_t)` arm. */
                     let dict_optional = is_prop_optional(&dict_t.value);
-                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional);
+                    let value = mk_prop_type(dict_t.key.dupe(), dict_optional)?;
                     let pol = mk_variance(variance, dict_t.dict_polarity);
                     (xs.iter().duped().collect(), Some(value), Some(pol))
                 }
@@ -2926,7 +2925,7 @@ pub fn map_object<'cx>(
         obj_kind,
         ..flags.clone()
     };
-    mk_object_type(
+    Ok(mk_object_type(
         cx,
         reason,
         false,
@@ -2939,7 +2938,7 @@ pub fn map_object<'cx>(
         id,
         proto,
         generics.clone(),
-    )
+    ))
 }
 
 pub fn run<'cx, A>(

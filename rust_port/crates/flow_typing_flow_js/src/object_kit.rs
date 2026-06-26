@@ -386,10 +386,12 @@ pub fn mapped_type_of_keys<'cx>(
         interface,
         reachable_targs: Rc::from([]),
     };
-    let filter_optional = |t: Type| -> Type {
-        let filter_id = crate::flow_js::filter_optional_non_speculating(cx, reason, &t)
-            .expect("filter_optional not in speculation");
-        Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
+    let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
+        let filter_id = crate::flow_js::filter_optional(cx, reason, &t)?;
+        Ok(Type::new(TypeInner::OpenT(Tvar::new(
+            reason.dupe(),
+            filter_id,
+        ))))
     };
     let name_remap = match name_type {
         None => None,
@@ -397,7 +399,7 @@ pub fn mapped_type_of_keys<'cx>(
             cx, trace, &use_op, reason, nt, None, &slice,
         )?),
     };
-    Ok(slice_utils::map_object(
+    slice_utils::map_object(
         &filter_optional,
         name_remap.as_ref(),
         property_type,
@@ -407,7 +409,7 @@ pub fn mapped_type_of_keys<'cx>(
         &use_op,
         None,
         &slice,
-    ))
+    )
 }
 
 pub fn run<'cx>(
@@ -1124,10 +1126,12 @@ pub fn run<'cx>(
             .as_ref()
             .map(|keys| partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, keys))
             .transpose()?;
-        let filter_optional = |t: Type| -> Type {
-            let filter_id = crate::flow_js::filter_optional_non_speculating(cx, reason, &t)
-                .expect("filter_optional not in speculation");
-            Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), filter_id)))
+        let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
+            let filter_id = crate::flow_js::filter_optional(cx, reason, &t)?;
+            Ok(Type::new(TypeInner::OpenT(Tvar::new(
+                reason.dupe(),
+                filter_id,
+            ))))
         };
         let map_one = |slice: &object::Slice| -> Result<Type, FlowJsException> {
             let name_remap = match name_type {
@@ -1142,7 +1146,7 @@ pub fn run<'cx>(
                     slice,
                 )?),
             };
-            Ok(slice_utils::map_object(
+            slice_utils::map_object(
                 &filter_optional,
                 name_remap.as_ref(),
                 prop_type,
@@ -1152,7 +1156,7 @@ pub fn run<'cx>(
                 &use_op,
                 selected_keys.as_ref(),
                 slice,
-            ))
+            )
         };
         let mut slices = x.iter();
         let t0 = map_one(slices.next().expect("Vec1 has at least one element"))?;

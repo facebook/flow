@@ -1328,6 +1328,37 @@ References:
                                      ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- issue-9448.js:23:26
+
+Template literal type is not enabled. [unsupported-syntax]
+
+   23|     : K extends 'root' | `root.${string}` // ERROR - template literal types are unsupported
+                                ^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- issue-9448.js:56:1
+
+Cannot get `form.formState.errors.name` because: [incompatible-use]
+ - Either cannot call `useForm` because boolean [1] is not an object.
+ - Or property `name` is missing in object type [2].
+
+   issue-9448.js:56:1
+   56| form.formState.errors.name?.message as ?string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   issue-9448.js:47:13
+   47|   enabled?: boolean,
+                   ^^^^^^^ [1]
+   issue-9448.js:32:5
+           v
+   32| > & {
+   33|   root?: ({[key: string]: GlobalError, ...} & GlobalError),
+   34|   ...
+   35| };
+       ^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:1
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
@@ -2617,4 +2648,4 @@ References:
 
 
 
-Found 159 errors
+Found 161 errors
