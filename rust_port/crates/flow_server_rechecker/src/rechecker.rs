@@ -413,12 +413,16 @@ pub(crate) enum RecheckOutcome {
     },
 }
 
-// This ref is an estimate of the files which will be checked by the time the recheck is done.
-// As the recheck progresses, the estimate will get better. We use this estimate to prevent
-// canceling the recheck to force a file which we were already going to check.
-// This early estimate is not a very good estimate, since it's missing new dependents and
-// dependencies. However it should be good enough to prevent rechecks continuously restarting as
-// the server gets spammed with autocomplete requests.
+// Result of a single recheck attempt. A canceled attempt yields `Restart` rather
+// than recursing, so `recheck_single` can drive restarts in a loop (see there).
+enum RecheckAttempt {
+    Done(RecheckOutcome),
+    Restart {
+        env: server_env::Env,
+        reused_loop: ParallelizableWorkloadsStopper,
+    },
+}
+
 pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
@@ -432,6 +436,43 @@ pub(crate) fn recheck_single(
     // down and rebuilt.
     reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckOutcome {
+    // Drive canceled-recheck restarts iteratively instead of recursively. Each
+    // attempt that gets canceled returns `Restart` (with a fresh `Env` and the
+    // still-running loop) rather than calling itself again; the canceled
+    // attempt's `Env` snapshot is dropped before the next attempt starts. This
+    // bounds both stack depth and the number of simultaneously live `Env`
+    // snapshots to O(1) regardless of how many consecutive cancellations occur.
+    let mut recheck_count = recheck_count;
+    let mut env = env;
+    let mut reused_loop = reused_loop;
+    loop {
+        match recheck_single_attempt(recheck_count, genv, env, shared_mem, reused_loop) {
+            RecheckAttempt::Done(outcome) => return outcome,
+            RecheckAttempt::Restart {
+                env: next_env,
+                reused_loop: next_reused_loop,
+            } => {
+                recheck_count += 1;
+                env = next_env;
+                reused_loop = Some(next_reused_loop);
+            }
+        }
+    }
+}
+
+// This ref is an estimate of the files which will be checked by the time the recheck is done.
+// As the recheck progresses, the estimate will get better. We use this estimate to prevent
+// canceling the recheck to force a file which we were already going to check.
+// This early estimate is not a very good estimate, since it's missing new dependents and
+// dependencies. However it should be good enough to prevent rechecks continuously restarting as
+// the server gets spammed with autocomplete requests.
+fn recheck_single_attempt(
+    recheck_count: usize,
+    genv: &server_env::Genv,
+    env: server_env::Env,
+    shared_mem: &SharedMem,
+    reused_loop: Option<ParallelizableWorkloadsStopper>,
+) -> RecheckAttempt {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
 
@@ -474,7 +515,7 @@ pub(crate) fn recheck_single(
         if let Some(reused_loop) = reused_loop {
             reused_loop.stop();
         }
-        return RecheckOutcome::NothingToDo(env);
+        return RecheckAttempt::Done(RecheckOutcome::NothingToDo(env));
     }
 
     // One deep clone of the pre-recheck `Env`, shared via `Arc` by the workload
@@ -560,11 +601,11 @@ pub(crate) fn recheck_single(
                 stop_parallelizable_workloads_for_recheck.stop();
                 server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
 
-                Ok(RecheckOutcome::CompletedRecheck {
+                Ok(RecheckAttempt::Done(RecheckOutcome::CompletedRecheck {
                     profiling,
                     env,
                     recheck_count,
-                })
+                }))
             }
             Err(type_service::RecheckError::Canceled(_changed_files)) => {
                 // Leave the loop running; `post_cancel` hands it to the restart so
@@ -596,17 +637,17 @@ pub(crate) fn recheck_single(
             let _done: bool = shared_mem.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
             let env_for_cancel = (*env_snapshot_for_post).clone();
-            recheck_single(
-                recheck_count + 1,
-                genv,
-                env_for_cancel,
-                shared_mem,
-                Some(stop_parallelizable_workloads_for_post),
-            )
+            // Hand the fresh `Env` and the still-running loop back to the driver
+            // loop, which restarts the recheck without recursing.
+            RecheckAttempt::Restart {
+                env: env_for_cancel,
+                reused_loop: stop_parallelizable_workloads_for_post,
+            }
         },
     );
-    // Drop this reference on the blocking pool; if it's the last one, the deep
-    // `Env` `Drop` runs there instead of on the serve loop.
+    // Drop this attempt's snapshot on the blocking pool before the driver starts
+    // the next attempt; if it's the last reference, the deep `Env` `Drop` runs
+    // there instead of on the serve loop.
     flow_tokio_runtime::spawn_blocking(move || drop(env_snapshot));
     outcome
 }
