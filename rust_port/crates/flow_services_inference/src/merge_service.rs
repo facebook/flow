@@ -710,7 +710,12 @@ fn merge_component(
     }
 
     worker_cancel::check_should_cancel()?;
-    let diff = merge_context_mutator::add_merge_on_diff(for_find_all_refs, &typed_component, hash);
+    let diff = merge_context_mutator::add_merge_on_diff(
+        shared_mem,
+        for_find_all_refs,
+        &typed_component,
+        hash,
+    );
     let duration = start_time.elapsed().as_secs_f64();
 
     Ok((diff, Some((suppressions, duration))))

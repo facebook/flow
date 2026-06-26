@@ -642,6 +642,7 @@ impl SharedMem {
         requires: Arc<[FlowImportSpecifier]>,
         imports: Arc<Imports>,
     ) -> BTreeSet<Modulename> {
+        self.record_changed_file(&file);
         let has_dependents = !file.as_str().ends_with(".flow");
 
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
@@ -750,6 +751,7 @@ impl SharedMem {
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::UntypedParse;
+        self.record_changed_file(&file);
         let has_dependents = !file.as_str().ends_with(".flow");
 
         let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
@@ -813,6 +815,7 @@ impl SharedMem {
         file_key: FileKey,
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
+        self.record_changed_file(&file_key);
         if let Some(existing_entry) = self.file_heap.get(&file_key) {
             if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
                 if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
@@ -853,6 +856,7 @@ impl SharedMem {
         package_info: Arc<PackageJson>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::PackageParse;
+        self.record_changed_file(&file);
         let has_dependents = true;
 
         if let Some(existing_entry) = self.file_heap.get(&file) {
@@ -914,6 +918,7 @@ impl SharedMem {
 
                 let new_deps = resolved_requires.all_dependencies();
 
+                self.record_changed_file(file);
                 typed.resolved_requires.set(resolved_requires);
 
                 let mut new_alloc_size = 0;
@@ -1069,12 +1074,16 @@ impl SharedMem {
     }
 
     pub fn rollback_entities(&self) {
-        for (file_key, entry) in self.file_heap.iter_unordered() {
-            self.rollback_file(&file_key, &entry);
+        // Only files advanced since the last commit need reverting. `rollback_file`
+        // restores each file's parse, resolved-requires revdeps, leader, and haste
+        // provider entities, so iterating the changed set is sufficient -- a no-op
+        // for any entity that wasn't actually advanced.
+        for file_key in self.changed_files.iter() {
+            if let Some(entry) = self.file_heap.get(&file_key) {
+                self.rollback_file(&file_key, &entry);
+            }
         }
-        for module in self.haste_module_heap.values() {
-            module.rollback_provider();
-        }
+        self.changed_files.clear();
     }
 }
 
@@ -1323,12 +1332,16 @@ pub mod merge_context_mutator {
     }
 
     pub fn add_merge_on_diff(
+        shared_mem: &SharedMem,
         for_find_all_refs: bool,
         component: &[(FileKey, TypedParse)],
         sig_hash: u64,
     ) -> bool {
         if component.is_empty() {
             return false;
+        }
+        for (file, _) in component.iter() {
+            shared_mem.record_changed_file(file);
         }
         let (leader_key, leader_parse) = &component[0];
         let rest = &component[1..];

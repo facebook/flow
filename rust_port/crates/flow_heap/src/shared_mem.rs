@@ -51,6 +51,9 @@ pub struct SharedMem {
     configured_hash_table_pow: Option<u32>,
     on_compact: RwLock<Option<Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>>>,
     pub(crate) gc_state: Mutex<GcState>,
+    // Files whose entities have been advanced since the last commit. Lets
+    // `rollback_entities` revert only these instead of scanning the whole heap.
+    pub(crate) changed_files: LockedSet<FileKey>,
 }
 
 pub struct HashStats {
@@ -170,35 +173,6 @@ impl<K: Ord + Hash, V: Dupe> GcMap<K, V> {
             }
         };
         (keys, done)
-    }
-
-    pub(crate) fn values(&self) -> Vec<V> {
-        self.shards
-            .iter()
-            .flat_map(|shard| {
-                shard
-                    .read()
-                    .values()
-                    .map(|value| value.dupe())
-                    .collect::<Vec<_>>()
-            })
-            .collect()
-    }
-
-    pub(crate) fn iter_unordered(&self) -> Vec<(K, V)>
-    where
-        K: Dupe,
-    {
-        self.shards
-            .iter()
-            .flat_map(|shard| {
-                shard
-                    .read()
-                    .iter()
-                    .map(|(key, value)| (key.dupe(), value.dupe()))
-                    .collect::<Vec<_>>()
-            })
-            .collect()
     }
 }
 
@@ -397,7 +371,12 @@ impl SharedMem {
             configured_hash_table_pow,
             on_compact: RwLock::new(None),
             gc_state: Mutex::new(GcState::default()),
+            changed_files: LockedSet::new(),
         }
+    }
+
+    pub(crate) fn record_changed_file(&self, file: &FileKey) {
+        self.changed_files.insert(file.dupe());
     }
 
     pub fn hash_stats(&self) -> HashStats {
@@ -1451,6 +1430,7 @@ impl SharedMem {
 
     pub fn commit_entities(&self) {
         self.entity_transaction.commit();
+        self.changed_files.clear();
     }
 }
 

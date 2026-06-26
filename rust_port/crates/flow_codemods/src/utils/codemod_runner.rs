@@ -314,6 +314,7 @@ fn merge_job(
                 &component,
             );
             flow_heap::parsing_heaps::merge_context_mutator::add_merge_on_diff(
+                reader,
                 for_find_all_refs,
                 &typed_component,
                 hash,

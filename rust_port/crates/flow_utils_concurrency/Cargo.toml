@@ -7,7 +7,6 @@ edition = "2024"
 
 [dependencies]
 crossbeam = "0.8"
-crossbeam-skiplist = "0.1.3"
 dupe = "0.9.1"
 equivalent = "1.0.2"
 flow_aloc = { path = "../flow_aloc" }

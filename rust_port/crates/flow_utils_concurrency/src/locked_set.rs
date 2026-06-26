@@ -68,6 +68,10 @@ impl<K: Ord + Send + Dupe + 'static> LockedSet<K> {
         self.entries.write().remove(key)
     }
 
+    pub fn clear(&self) {
+        *self.entries.write() = SkipList::new();
+    }
+
     pub fn contains(&self, key: &K) -> bool {
         self.entries.read().contains(key)
     }
