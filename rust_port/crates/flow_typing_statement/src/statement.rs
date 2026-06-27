@@ -2746,7 +2746,7 @@ fn statement_<'a>(
                     checks,
                     default_case_loc,
                 }) => {
-                    check_possible_enum_exhaustive_check(
+                    flow_js_utils::flow_js_result_to_job_error(check_possible_enum_exhaustive_check(
                         cx,
                         check_reason,
                         &possible_checks,
@@ -2755,19 +2755,17 @@ fn statement_<'a>(
                         &exhaustive_check_incomplete_out,
                         discriminant_after_check.as_ref(),
                         discriminant_t,
-                    )
-                    .unwrap();
+                    ))?;
                 }
                 EnumPossibleExhaustiveCheckT::EnumExhaustiveCheckInvalid(reasons) => {
-                    check_invalid_enum_exhaustive_check(
+                    flow_js_utils::flow_js_result_to_job_error(check_invalid_enum_exhaustive_check(
                         cx,
                         check_reason,
                         &reasons,
                         &exhaustive_check_incomplete_out,
                         discriminant_after_check.as_ref(),
                         discriminant_t,
-                    )
-                    .unwrap();
+                    ))?;
                 }
             };
             // We need to fully resolve all types attached to AST,
@@ -6615,7 +6613,9 @@ fn expression_<'a>(
                 upper: reason_of_t(&t).dupe(),
             }));
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
-            type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t).unwrap();
+            flow_js_utils::flow_js_result_to_job_error(type_operation_utils::perform_type_cast(
+                cx, use_op, &infer_t, &t,
+            ))?;
             expression::Expression::new(ExpressionInner::TypeCast {
                 loc: (loc, t),
                 inner: (expression::TypeCast {
@@ -6639,7 +6639,9 @@ fn expression_<'a>(
                 upper: reason_of_t(&t).dupe(),
             }));
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
-            type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t).unwrap();
+            flow_js_utils::flow_js_result_to_job_error(type_operation_utils::perform_type_cast(
+                cx, use_op, &infer_t, &t,
+            ))?;
             expression::Expression::new(ExpressionInner::AsExpression {
                 loc: (loc, t),
                 inner: (expression::AsExpression {
@@ -6692,7 +6694,9 @@ fn expression_<'a>(
                     upper: reason_of_t(&t_annot).dupe(),
                 }));
                 tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &infer_t);
-                type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t_annot).unwrap();
+                flow_js_utils::flow_js_result_to_job_error(
+                    type_operation_utils::perform_type_cast(cx, use_op, &infer_t, &t_annot),
+                )?;
                 expression::Expression::new(ExpressionInner::TSSatisfies {
                     loc: (loc, infer_t),
                     inner: (expression::TSSatisfies {
@@ -7021,14 +7025,15 @@ fn expression_<'a>(
                                 elem_t,
                                 tout: tout.dupe(),
                             };
-                            FlowJs::resolve_spread_list(
-                                cx,
-                                type_::unknown_use(),
-                                &reason_op,
-                                elem_spread_list.dupe(),
-                                resolve_to,
-                            )
-                            .expect("should not fail outside speculation");
+                            flow_js_utils::flow_js_result_to_job_error(
+                                FlowJs::resolve_spread_list(
+                                    cx,
+                                    type_::unknown_use(),
+                                    &reason_op,
+                                    elem_spread_list.dupe(),
+                                    resolve_to,
+                                ),
+                            )?;
                             Ok::<(), JobError>(())
                         },
                     )?;
@@ -7716,9 +7721,9 @@ fn expression_<'a>(
                             let e = expression(None, None, None, cx, expr)?;
                             let t = e.loc().1.dupe();
                             let reason = reason_of_t(&t).dupe();
-                            let concrete_types =
-                                FlowJs::possible_concrete_types_for_inspection(cx, &reason, &t)
-                                    .expect("should not fail outside speculation");
+                            let concrete_types = flow_js_utils::flow_js_result_to_job_error(
+                                FlowJs::possible_concrete_types_for_inspection(cx, &reason, &t),
+                            )?;
                             let expanded: Vec<_> = concrete_types
                                 .iter()
                                 .flat_map(|ct| {
@@ -8107,13 +8112,14 @@ pub fn optional_chain<'a>(
     let e: &ExpressionInner<ALoc, ALoc> = expr.deref();
     let ex = expr;
 
-    let normalize_voided_out = |t: Type| -> Vec<Type> {
-        let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(&t), &t)
-            .expect("should not fail outside speculation");
+    let normalize_voided_out = |t: Type| -> Result<Vec<Type>, JobError> {
+        let ts = flow_js_utils::flow_js_result_to_job_error(
+            FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(&t), &t),
+        )?;
         for t in &ts {
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, t);
         }
-        ts
+        Ok(ts)
     };
 
     let factor_out_optional = |factored_loc: ALoc,
@@ -9189,21 +9195,21 @@ pub fn optional_chain<'a>(
             Some(voided_out_collector.dupe())
         };
         let upper = apply_opt_use(opt_use, mem_tvar.dupe());
-        optional_chain::run(
+        flow_js_utils::flow_js_result_to_job_error(optional_chain::run(
             cx,
             &chain_t,
             &chain_reason,
             &lhs_reason,
             &upper,
             &chain_voided_out_collector,
-        )
-        .expect("should not fail outside speculation");
+        ))?;
         let mem_t = Type::new(TypeInner::OpenT(mem_tvar));
         let voided_out_ts: Vec<Type> = voided_out_collector.collect_to_vec();
         let voided_out = {
             let t = union_of_ts(reason.dupe(), voided_out_ts, None);
-            let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(&t), &t)
-                .expect("should not fail outside speculation");
+            let ts = flow_js_utils::flow_js_result_to_job_error(
+                FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(&t), &t),
+            )?;
             for t in &ts {
                 tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, t);
             }
@@ -9969,15 +9975,16 @@ pub fn optional_chain<'a>(
                                                     (mk_reason(RNonnullAssert, loc.dupe()), None)
                                                 };
                                             let lhs_reason = mk_expression_reason(callee);
-                                            optional_chain::run(
-                                                cx,
-                                                &f,
-                                                &chain_reason,
-                                                &lhs_reason,
-                                                &call_use,
-                                                &voided_out_collector_opt,
-                                            )
-                                            .expect("should not fail outside speculation");
+                                            flow_js_utils::flow_js_result_to_job_error(
+                                                optional_chain::run(
+                                                    cx,
+                                                    &f,
+                                                    &chain_reason,
+                                                    &lhs_reason,
+                                                    &call_use,
+                                                    &voided_out_collector_opt,
+                                                ),
+                                            )?;
                                         }
                                         _ => {
                                             flow_js::flow_non_speculating(cx, (&f, &call_use))?;
@@ -10245,7 +10252,7 @@ pub fn optional_chain<'a>(
             let call_voided_ts: Vec<Type> = call_voided_out_collector.collect_to_vec();
             let call_voided_union = union_of_ts(expr_reason.dupe(), call_voided_ts, None);
             let joined = join_optional_branches(&lookup_voided_out, &call_voided_union)?;
-            let voided_out = normalize_voided_out(joined);
+            let voided_out = normalize_voided_out(joined)?;
             let lhs_t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
                 cx,
                 reason_of_t(&member_lhs_t).dupe(),
@@ -11388,7 +11395,9 @@ fn assign_member<'a>(
                     //
                     // So if a is null, no work has to be done. Hence, we don't collect
                     // the nullable output for the optional chain.
-                    optional_chain::run(cx, lhs_type, &reason, lhs_reason, &use_t, &None).unwrap();
+                    flow_js_utils::flow_js_result_to_job_error(optional_chain::run(
+                        cx, lhs_type, &reason, lhs_reason, &use_t, &None,
+                    ))?;
                 }
                 _ => {
                     flow_js::flow_non_speculating(cx, (lhs_type, &use_t))?;
@@ -15208,10 +15217,11 @@ pub fn mk_class_sig<'a>(
                                         true,
                                         &infer_t,
                                     );
-                                    type_operation_utils::perform_type_cast(
-                                        cx, use_op, &infer_t, &t_c,
-                                    )
-                                    .unwrap();
+                                    flow_js_utils::flow_js_result_to_job_error(
+                                        type_operation_utils::perform_type_cast(
+                                            cx, use_op, &infer_t, &t_c,
+                                        ),
+                                    )?;
                                     Ok(expression::Expression::new(ExpressionInner::AsExpression {
                                         loc: (loc, t_c),
                                         inner: expression::AsExpression {
@@ -15251,10 +15261,11 @@ pub fn mk_class_sig<'a>(
                                             true,
                                             &infer_t,
                                         );
-                                        type_operation_utils::perform_type_cast(
-                                            cx, use_op, &infer_t, &t_c,
-                                        )
-                                        .unwrap();
+                                        flow_js_utils::flow_js_result_to_job_error(
+                                            type_operation_utils::perform_type_cast(
+                                                cx, use_op, &infer_t, &t_c,
+                                            ),
+                                        )?;
                                         Ok(expression::Expression::new(ExpressionInner::TypeCast {
                                             loc: (loc, t_c),
                                             inner: expression::TypeCast {
@@ -15338,10 +15349,11 @@ pub fn mk_class_sig<'a>(
                                             true,
                                             &infer_t,
                                         );
-                                        type_operation_utils::perform_type_cast(
-                                            cx, use_op, &infer_t, &t_annot,
-                                        )
-                                        .unwrap();
+                                        flow_js_utils::flow_js_result_to_job_error(
+                                            type_operation_utils::perform_type_cast(
+                                                cx, use_op, &infer_t, &t_annot,
+                                            ),
+                                        )?;
                                         let infer_t_c = infer_t.dupe();
                                         (
                                             infer_t,
