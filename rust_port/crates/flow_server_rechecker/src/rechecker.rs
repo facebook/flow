@@ -387,11 +387,8 @@ where
         Err(crossbeam::channel::TrySendError::Full(())) => {}
         Err(crossbeam::channel::TrySendError::Disconnected(())) => {}
     }
-    let cancel_fired = match result_rx.recv() {
-        Ok(cancel_fired) => cancel_fired,
-        // The cancel task ended without reporting (panic/shutdown).
-        Err(std::sync::mpsc::RecvError) => false,
-    };
+    // `Err` (default `false`) means the cancel task ended without reporting (panic/shutdown).
+    let cancel_fired: bool = result_rx.recv().unwrap_or_default();
     if cancel_fired && ret.is_ok() {
         worker_cancel::resume_workers();
     }
