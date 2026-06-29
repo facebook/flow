@@ -13,8 +13,7 @@ import * as React from 'react';
 
 export function SinceVersion({version}: {version: string}): React.MixedElement {
   return (
-    // $FlowFixMe[incompatible-type] class vs className
-    <span class="version added" title={`Added in ${version}`}>
+    <span className="version added" title={`Added in ${version}`}>
       &ge;{version}
     </span>
   );
@@ -22,8 +21,7 @@ export function SinceVersion({version}: {version: string}): React.MixedElement {
 
 export function UntilVersion({version}: {version: string}): React.MixedElement {
   return (
-    // $FlowFixMe[incompatible-type] class vs className
-    <span class="version removed" title={`Removed after ${version}`}>
+    <span className="version removed" title={`Removed after ${version}`}>
       &le;{version}
     </span>
   );
