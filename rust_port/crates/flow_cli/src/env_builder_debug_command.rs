@@ -160,8 +160,12 @@ pub fn main(path: Option<String>, filename: Option<String>) {
         let env = env.to_env_info();
         // Compute write -> read edges
         let autocomplete_hooks = autocomplete_hooks();
-        let (inits, _) =
-            name_def::find_defs(&autocomplete_hooks, true, &env, ScopeKind::Module, ast);
+        let Ok((inits, _)) =
+            name_def::find_defs(&autocomplete_hooks, true, &env, ScopeKind::Module, ast)
+        else {
+            eprintln!("Cannot generate defs.");
+            return;
+        };
 
         // Connect read -> write edges and write -> read edges to form a graph
         let Ok(graph) = name_def_ordering::build_graph::<_, _, TestCx, TestFlow>(

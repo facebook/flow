@@ -742,13 +742,16 @@ pub fn initialize_env<'cx>(
             }),
         };
         let react_jsx = matches!(cx.jsx(), JsxMode::JsxReact);
-        let (name_def_graph, ast_hint_map) = name_def::find_defs(
+        let (name_def_graph, ast_hint_map) = match name_def::find_defs(
             &autocomplete_hooks,
             react_jsx,
             &info,
             toplevel_scope_kind,
             aloc_ast,
-        );
+        ) {
+            Ok(v) => v,
+            Err(invariant) => return Ok(Err(invariant)),
+        };
         let mut hint_map = env_api::EnvMap::empty();
         for (loc, hints) in &ast_hint_map {
             hint_map.insert(

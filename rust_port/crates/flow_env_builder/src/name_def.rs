@@ -39,6 +39,8 @@ use flow_parser::loc_sig::LocSig;
 
 use crate::env_api::AutocompleteHooks;
 use crate::env_api::DefLocType;
+use crate::env_api::EnvInvariant;
+use crate::env_api::EnvInvariantFailure;
 use crate::env_api::EnvKey;
 use crate::env_api::EnvMap;
 use crate::env_api::EnvSet;
@@ -1048,14 +1050,11 @@ fn obj_properties_synthesizable(
         }
     }
 
-    if acc.is_empty() {
-        ObjectSynthKind::ObjectSynthesizable {
+    match vec1::Vec1::try_from_vec(acc) {
+        Ok(locs) => ObjectSynthKind::MissingMemberAnnots { locs },
+        Err(_) => ObjectSynthKind::ObjectSynthesizable {
             this_write_locs: current_this_write_locs,
-        }
-    } else {
-        ObjectSynthKind::MissingMemberAnnots {
-            locs: vec1::Vec1::try_from_vec(acc).unwrap(),
-        }
+        },
     }
 }
 
@@ -1543,11 +1542,10 @@ fn collect_declared_namespace_members(
     (values, types)
 }
 
-fn fail(loc: ALoc, str: &str) -> ! {
-    panic!(
-        "Env_invariant: {:?}, ASTStructureOverride: {}",
+fn fail(loc: ALoc, str: &str) -> EnvInvariant<ALoc> {
+    EnvInvariant::new(
         Some(loc),
-        str
+        EnvInvariantFailure::ASTStructureOverride(str.into()),
     )
 }
 
@@ -1641,7 +1639,7 @@ impl<'a> DefFinder<'a> {
         &mut self,
         root: Root,
         pattern: &(ALoc, ast::pattern::Pattern<ALoc, ALoc>),
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use std::cell::RefCell;
         enum Action {
             Identifier(ALoc, FlowSmolStr, Binding),
@@ -1688,10 +1686,11 @@ impl<'a> DefFinder<'a> {
                     self.add_destructure_binding(loc, binding);
                 }
                 Action::Expression(hints, expr) => {
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1)?;
                 }
             }
         }
+        Ok(())
     }
 
     fn mk_hooklike_if_necessary(&self, hooklike: bool, binding: Binding) -> Binding {
@@ -1731,7 +1730,7 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         effect_: ast::function::Effect,
         param: &ast::function::Param<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let (loc, argument, default_expression) = match param {
             ast::function::Param::RegularParam {
                 loc,
@@ -1740,7 +1739,7 @@ impl<'a> DefFinder<'a> {
             } => (loc, argument, default),
             ast::function::Param::ParamProperty { .. } => {
                 // Parameter properties are not supported
-                return;
+                return Ok(());
             }
         };
 
@@ -1758,7 +1757,7 @@ impl<'a> DefFinder<'a> {
                         HintNode::AnnotationHint(self.tparams.clone(), annot_val.clone()),
                         HintKind::ExpectedTypeHint,
                     );
-                    self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr)?;
                 }
                 Root::Annotation(Box::new(AnnotationData {
                     tparams_map: self.tparams.clone(),
@@ -1776,7 +1775,7 @@ impl<'a> DefFinder<'a> {
             }
             None => {
                 if let Some(default_expr) = default_expression {
-                    self.visit_expression(EnclosingContext::NoContext, &vec![], default_expr);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![], default_expr)?;
                 }
                 let reason = match argument {
                     ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -1844,7 +1843,7 @@ impl<'a> DefFinder<'a> {
         }
 
         for (hints, expr) in ops.expressions {
-            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1);
+            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1)?;
         }
 
         if !found && annot.is_none() {
@@ -1855,14 +1854,15 @@ impl<'a> DefFinder<'a> {
             );
         }
 
-        let Ok(()) = ast_visitor::function_param_default(
+        ast_visitor::function_param_default(
             self,
             &ast::function::Param::RegularParam {
                 loc: loc.dupe(),
                 argument: argument.clone(),
                 default: None,
             },
-        );
+        )?;
+        Ok(())
     }
 
     fn visit_function_rest_param(
@@ -1870,7 +1870,7 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         effect_: ast::function::Effect,
         rest_param: &ast::function::RestParam<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let argument = &rest_param.argument;
         let param_loc = argument.loc();
 
@@ -1913,29 +1913,35 @@ impl<'a> DefFinder<'a> {
             }
         };
 
-        self.add_destructure_bindings(source, &(argument.loc().dupe(), argument.clone()));
-        let Ok(()) = ast_visitor::function_rest_param_default(self, rest_param);
+        self.add_destructure_bindings(source, &(argument.loc().dupe(), argument.clone()))?;
+        ast_visitor::function_rest_param_default(self, rest_param)?;
+        Ok(())
     }
 
     fn visit_component_declaration(
         &mut self,
         loc: ALoc,
         stmt: &ast::statement::ComponentDeclaration<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &stmt.id;
         let sig_loc = &stmt.sig_loc;
 
         self.in_new_tparams_env(false, |this| {
-            this.visit_component(stmt);
+            this.visit_component(stmt)?;
             let name = &id.name;
             let reason = mk_reason(VirtualReasonDesc::RComponent(name.dupe()), sig_loc.dupe());
             let def = def_of_component(this.tparams.clone(), loc.dupe(), stmt.clone());
             let id_loc = id.loc.dupe();
             this.add_ordinary_binding(id_loc, reason, def);
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
-    fn visit_component(&mut self, stmt: &ast::statement::ComponentDeclaration<ALoc, ALoc>) {
+    fn visit_component(
+        &mut self,
+        stmt: &ast::statement::ComponentDeclaration<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.in_scope(ScopeKind::ComponentOrHookBody, |this| {
             let params_list = &stmt.params.params;
             let rest = &stmt.params.rest;
@@ -1944,18 +1950,18 @@ impl<'a> DefFinder<'a> {
             let component_tparams = &stmt.tparams;
 
             if let Some(tparams) = component_tparams {
-                let Ok(()) = this.type_params(
+                this.type_params(
                     &ast_visitor::TypeParamsContext::ComponentDeclaration,
                     tparams,
-                );
+                )?;
             }
             for param in params_list.iter() {
-                this.visit_component_param(param);
+                this.visit_component_param(param)?;
             }
             if let Some(rest) = rest {
-                this.visit_component_rest_param(rest);
+                this.visit_component_rest_param(rest)?;
             }
-            let Ok(()) = this.component_renders_annotation(renders);
+            this.component_renders_annotation(renders)?;
             let renders_loc = match renders {
                 ast::types::ComponentRendersAnnotation::AvailableRenders(loc, _) => loc.dupe(),
                 ast::types::ComponentRendersAnnotation::MissingRenders(loc) => loc.dupe(),
@@ -1984,16 +1990,18 @@ impl<'a> DefFinder<'a> {
             this.record_hint(renders_loc, renders_hint.clone());
             this.return_hint_stack.push(renders_hint);
             if let Some((body_loc, block)) = body {
-                let Ok(()) = this.block(body_loc, block);
+                this.block(body_loc, block)?;
             }
             this.return_hint_stack.pop();
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn visit_component_param(
         &mut self,
         param: &ast::statement::component_params::Param<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let loc = &param.loc;
         let local = &param.local;
         let default_expression = &param.default;
@@ -2013,7 +2021,7 @@ impl<'a> DefFinder<'a> {
                         HintNode::AnnotationHint(self.tparams.clone(), (*annot_val).clone()),
                         HintKind::ExpectedTypeHint,
                     );
-                    self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![hint], default_expr)?;
                 }
                 Root::Annotation(Box::new(AnnotationData {
                     tparams_map: self.tparams.clone(),
@@ -2027,7 +2035,7 @@ impl<'a> DefFinder<'a> {
             }
             None => {
                 if let Some(default_expr) = default_expression {
-                    self.visit_expression(EnclosingContext::NoContext, &vec![], default_expr);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![], default_expr)?;
                 }
                 let reason = match local {
                     ast::pattern::Pattern::Identifier { inner, .. } => {
@@ -2087,7 +2095,7 @@ impl<'a> DefFinder<'a> {
         }
 
         for (hints, expr) in ops.expressions {
-            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1);
+            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1)?;
         }
 
         if !found && annot.is_none() {
@@ -2097,7 +2105,7 @@ impl<'a> DefFinder<'a> {
                 Def::Binding(Box::new(Binding::Root(source))),
             );
         }
-        let Ok(()) = ast_visitor::component_param_default(
+        ast_visitor::component_param_default(
             self,
             &ast::statement::component_params::Param {
                 loc: loc.dupe(),
@@ -2106,13 +2114,14 @@ impl<'a> DefFinder<'a> {
                 default: None,
                 shorthand: param.shorthand,
             },
-        );
+        )?;
+        Ok(())
     }
 
     fn visit_component_rest_param(
         &mut self,
         param: &ast::statement::component_params::RestParam<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let loc = &param.loc;
         let argument = &param.argument;
 
@@ -2193,7 +2202,7 @@ impl<'a> DefFinder<'a> {
         }
 
         for (hints, expr) in ops.expressions {
-            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1);
+            self.visit_expression(EnclosingContext::NoContext, &hints, &expr.1)?;
         }
 
         if !found && annot.is_none() {
@@ -2203,7 +2212,8 @@ impl<'a> DefFinder<'a> {
                 Def::Binding(Box::new(Binding::Root(source))),
             );
         }
-        let Ok(()) = ast_visitor::component_rest_param_default(self, param);
+        ast_visitor::component_rest_param_default(self, param)?;
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2219,7 +2229,7 @@ impl<'a> DefFinder<'a> {
         hooklike: bool,
         function_loc: ALoc,
         expr: &ast::function::Function<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &expr.id;
         let async_ = expr.async_;
         let generator = expr.generator;
@@ -2249,7 +2259,7 @@ impl<'a> DefFinder<'a> {
                 &func_hints_clone,
                 &func_return_hints_clone,
                 expr,
-            );
+            )?;
 
             if let Some(name_ident) = var_assigned_to {
                 let name = &name_ident.name;
@@ -2300,7 +2310,9 @@ impl<'a> DefFinder<'a> {
                 None if has_this_def => add_def(this, function_loc.dupe()),
                 None => {}
             }
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn visit_function_declaration(
@@ -2309,7 +2321,7 @@ impl<'a> DefFinder<'a> {
         namespace_types: &NamespaceTypesMap,
         loc: ALoc,
         expr: &ast::function::Function<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &expr.id;
         let async_ = expr.async_;
         let generator = expr.generator;
@@ -2331,7 +2343,7 @@ impl<'a> DefFinder<'a> {
                 );
             }
 
-            this.visit_function(&scope_kind, &vec![], &vec![], expr);
+            this.visit_function(&scope_kind, &vec![], &vec![], expr)?;
             let reason = func_reason(async_, generator, sig_loc.dupe());
             let def = def_of_function(
                 this.tparams.clone(),
@@ -2351,7 +2363,9 @@ impl<'a> DefFinder<'a> {
                     this.add_ordinary_binding(loc.dupe(), reason, def);
                 }
             }
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn visit_declared_function(
@@ -2361,7 +2375,7 @@ impl<'a> DefFinder<'a> {
         declarations: &[(ALoc, ast::statement::DeclareFunction<ALoc, ALoc>)],
         statics: &StaticsMap,
         namespace_types: &NamespaceTypesMap,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(id) = &decl.id {
             self.add_ordinary_binding(
                 id.loc.dupe(),
@@ -2373,17 +2387,20 @@ impl<'a> DefFinder<'a> {
                 ),
             );
         }
-        let Ok(()) = ast_visitor::declare_function_default(self, &loc, decl);
+        ast_visitor::declare_function_default(self, &loc, decl)?;
+        Ok(())
     }
 
     fn visit_merged_declare_namespace_body(
         &mut self,
         namespace: &ast::statement::DeclareNamespace<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let (body_loc, body_block) = &namespace.body;
         self.in_scope(ScopeKind::DeclareNamespace, |this| {
-            let Ok(()) = ast_visitor::block_default(this, body_loc, body_block);
-        });
+            ast_visitor::block_default(this, body_loc, body_block)?;
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn hint_pred_kind(
@@ -2458,7 +2475,7 @@ impl<'a> DefFinder<'a> {
         func_hints: &AstHints,
         func_return_hints: &AstHints,
         expr: &ast::function::Function<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.in_scope(scope_kind.clone(), |this| {
             let params = &expr.params;
             let params_list = &params.params;
@@ -2473,11 +2490,11 @@ impl<'a> DefFinder<'a> {
             let fun_tparams = &expr.tparams;
 
             if let Some(tparams) = fun_tparams {
-                let Ok(()) = this.type_params(&ast_visitor::TypeParamsContext::Function, tparams);
+                this.type_params(&ast_visitor::TypeParamsContext::Function, tparams)?;
             }
 
             if let Some(this_param) = this_ {
-                let Ok(()) = this.function_this_param(this_param);
+                this.function_this_param(this_param)?;
             }
 
             let param_str_list = Self::params_list_to_str_opt(params_list);
@@ -2493,7 +2510,7 @@ impl<'a> DefFinder<'a> {
                     pred.clone(),
                 ));
                 let hints = Hint::decompose(decomp, func_hints.clone());
-                this.visit_function_param(&hints, effect_, param);
+                this.visit_function_param(&hints, effect_, param)?;
             }
             if let Some(rest_param) = rest {
                 let decomp = HintDecomposition::new(HintDecompositionInner::DecompFuncRest(
@@ -2501,9 +2518,9 @@ impl<'a> DefFinder<'a> {
                     pred.clone(),
                 ));
                 let hints = Hint::decompose(decomp, func_hints.clone());
-                this.visit_function_rest_param(&hints, effect_, rest_param);
+                this.visit_function_rest_param(&hints, effect_, rest_param)?;
             }
-            let Ok(()) = this.function_return_annotation(return_);
+            this.function_return_annotation(return_)?;
             let return_loc = match return_ {
                 ast::function::ReturnAnnot::Available(annot) => annot.loc.dupe(),
                 ast::function::ReturnAnnot::TypeGuard(tg) => tg.loc.dupe(),
@@ -2541,7 +2558,7 @@ impl<'a> DefFinder<'a> {
             this.return_hint_stack.push(return_hint.clone());
             let body_loc = match body {
                 ast::function::Body::BodyBlock((loc, block)) => {
-                    let Ok(()) = this.block(loc, block);
+                    this.block(loc, block)?;
                     loc.dupe()
                 }
                 ast::function::Body::BodyExpression(expr) => {
@@ -2551,7 +2568,7 @@ impl<'a> DefFinder<'a> {
                     } else {
                         EnclosingContext::NoContext
                     };
-                    this.visit_expression(cond, &return_hint, expr);
+                    this.visit_expression(cond, &return_hint, expr)?;
                     loc
                 }
             };
@@ -2587,10 +2604,12 @@ impl<'a> DefFinder<'a> {
 
             if let Some(predicate_val) = predicate {
                 if let ast::types::PredicateKind::Declared(expr) = &predicate_val.kind {
-                    this.visit_expression(EnclosingContext::NoContext, &vec![], expr);
+                    this.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
                 }
             }
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn class_internal(
@@ -2599,7 +2618,7 @@ impl<'a> DefFinder<'a> {
         namespace_types: &NamespaceTypesMap,
         loc: ALoc,
         expr: &ast::class::Class<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &expr.id;
         let body = &expr.body;
         let class_tparams = &expr.tparams;
@@ -2611,26 +2630,26 @@ impl<'a> DefFinder<'a> {
             this.class_stack.push(loc.dupe());
             this.in_scope(ScopeKind::Ordinary, |this_inner| {
                 if let Some(id_ident) = id {
-                    let Ok(()) = this_inner.class_identifier(id_ident);
+                    this_inner.class_identifier(id_ident)?;
                 }
                 if let Some(tparams) = class_tparams {
-                    let Ok(()) =
-                        this_inner.type_params(&ast_visitor::TypeParamsContext::Class, tparams);
+                    this_inner.type_params(&ast_visitor::TypeParamsContext::Class, tparams)?;
                 }
 
                 let this_tparam_loc = id.as_ref().map_or(loc.dupe(), |ident| ident.loc.dupe());
                 this_inner.add_tparam(this_tparam_loc, "this".into());
-                let Ok(()) = this_inner.class_body(body);
+                this_inner.class_body(body)?;
                 if let Some(extends_val) = extends {
-                    let Ok(()) = this_inner.class_extends(extends_val);
+                    this_inner.class_extends(extends_val)?;
                 }
                 if let Some(impl_val) = implements {
-                    let Ok(()) = this_inner.class_implements(impl_val);
+                    this_inner.class_implements(impl_val)?;
                 }
                 for decorator in class_decorators.iter() {
-                    let Ok(()) = this_inner.class_decorator(decorator);
+                    this_inner.class_decorator(decorator)?;
                 }
-            });
+                Ok(())
+            })?;
             this.class_stack.pop();
 
             let mut this_super_write_locs = EnvSet::empty();
@@ -2712,7 +2731,9 @@ impl<'a> DefFinder<'a> {
                     );
                 }
             }
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn visit_declare_class(
@@ -2720,7 +2741,7 @@ impl<'a> DefFinder<'a> {
         namespace_types: &NamespaceTypesMap,
         loc: ALoc,
         decl: &ast::statement::DeclareClass<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = decl.id.loc.dupe();
         let name = &decl.id.name;
 
@@ -2736,28 +2757,30 @@ impl<'a> DefFinder<'a> {
                 namespace_types: namespace_types.clone(),
             })),
         );
-        let Ok(()) = ast_visitor::declare_class_default(self, &loc, decl);
+        ast_visitor::declare_class_default(self, &loc, decl)?;
+        Ok(())
     }
 
     fn visit_class_property_value(
         &mut self,
         hints: &AstHints,
         value: &ast::class::property::Value<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         match value {
             ast::class::property::Value::Declared => {}
             ast::class::property::Value::Uninitialized => {}
             ast::class::property::Value::Initialized(x) => {
-                self.visit_expression(EnclosingContext::NoContext, hints, x);
+                self.visit_expression(EnclosingContext::NoContext, hints, x)?;
             }
         }
+        Ok(())
     }
 
     fn record_declaration_internal(
         &mut self,
         loc: ALoc,
         record: &ast::statement::RecordDeclaration<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &record.id;
         let id_loc = id.loc.dupe();
         let record_name = &id.name;
@@ -2770,17 +2793,17 @@ impl<'a> DefFinder<'a> {
         self.in_new_tparams_env(false, |this| {
             this.class_stack.push(loc.dupe());
             this.in_scope(ScopeKind::Ordinary, |this_inner| {
-                let Ok(()) = this_inner.class_identifier(id);
+                this_inner.class_identifier(id)?;
                 if let Some(tparams_val) = tparams {
-                    let Ok(()) =
-                        this_inner.type_params(&ast_visitor::TypeParamsContext::Class, tparams_val);
+                    this_inner.type_params(&ast_visitor::TypeParamsContext::Class, tparams_val)?;
                 }
                 this_inner.add_tparam(id_loc.dupe(), "this".into());
-                this_inner.record_declaration_internal_body(body);
+                this_inner.record_declaration_internal_body(body)?;
                 if let Some(impl_val) = implements {
-                    let Ok(()) = this_inner.class_implements(impl_val);
+                    this_inner.class_implements(impl_val)?;
                 }
-            });
+                Ok(())
+            })?;
             this.class_stack.pop();
 
             let mut this_super_write_locs = EnvSet::empty();
@@ -2832,30 +2855,37 @@ impl<'a> DefFinder<'a> {
                     defaulted_props,
                 })),
             );
-        });
+            Ok(())
+        })?;
+        Ok(())
     }
 
     fn record_declaration_internal_body(
         &mut self,
         body: &ast::statement::record_declaration::Body<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         for element in body.body.iter() {
             match element {
                 ast::statement::record_declaration::BodyElement::Method(method_) => {
-                    let Ok(()) = self.class_method(method_);
+                    self.class_method(method_)?;
                 }
                 ast::statement::record_declaration::BodyElement::Property(prop) => {
-                    let Ok(()) = self.type_annotation(&prop.annot);
+                    self.type_annotation(&prop.annot)?;
                     if let Some(default_value) = &prop.default_value {
-                        self.visit_expression(EnclosingContext::NoContext, &vec![], default_value);
+                        self.visit_expression(EnclosingContext::NoContext, &vec![], default_value)?;
                     }
                 }
                 ast::statement::record_declaration::BodyElement::StaticProperty(static_prop) => {
-                    let Ok(()) = self.type_annotation(&static_prop.annot);
-                    self.visit_expression(EnclosingContext::NoContext, &vec![], &static_prop.value);
+                    self.type_annotation(&static_prop.annot)?;
+                    self.visit_expression(
+                        EnclosingContext::NoContext,
+                        &vec![],
+                        &static_prop.value,
+                    )?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_assignment_expression(
@@ -2863,7 +2893,7 @@ impl<'a> DefFinder<'a> {
         is_function_statics_assignment: bool,
         loc: ALoc,
         expr: &ast::expression::Assignment<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use ast::expression::AssignmentOperator;
         use ast::expression::member::Property;
         use ast::pattern::Pattern;
@@ -3066,7 +3096,7 @@ impl<'a> DefFinder<'a> {
                 } = expr_inner
                 {
                     // Use super member to visit sub-expressions to avoid record a read of the member
-                    let Ok(()) = ast_visitor::member_default(self, member_loc, member);
+                    ast_visitor::member_default(self, member_loc, member)?;
 
                     self.add_ordinary_binding(
                         member_loc.dupe(),
@@ -3079,23 +3109,23 @@ impl<'a> DefFinder<'a> {
                     );
                     let hints = expression_pattern_hints(inner.deref(), &self.class_stack);
                     let right_tuple = (right.loc().dupe(), right.clone());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &right_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &right_tuple.1)?;
                 }
             }
             (None, Pattern::Expression { loc: _, inner }) => {
                 let e = inner.as_ref();
-                let Ok(()) = self.assignment_pattern(&left_tuple.1);
+                self.assignment_pattern(&left_tuple.1)?;
                 let value_root = mk_value(None, None, false, right.clone());
-                self.add_destructure_bindings(value_root, &left_tuple);
+                self.add_destructure_bindings(value_root, &left_tuple)?;
                 let hints = expression_pattern_hints(e, &self.class_stack);
-                self.visit_expression(EnclosingContext::NoContext, &hints, right);
+                self.visit_expression(EnclosingContext::NoContext, &hints, right)?;
             }
             (None, _) => {
-                let Ok(()) = self.assignment_pattern(&left_tuple.1);
+                self.assignment_pattern(&left_tuple.1)?;
                 let value_root = mk_value(None, None, false, right.clone());
-                self.add_destructure_bindings(value_root, &left_tuple);
+                self.add_destructure_bindings(value_root, &left_tuple)?;
                 let hints = other_pattern_hints(&left_tuple.1);
-                self.visit_expression(EnclosingContext::NoContext, &hints, right);
+                self.visit_expression(EnclosingContext::NoContext, &hints, right)?;
             }
             (Some(op), Pattern::Identifier { inner, .. }) => {
                 let id_loc = inner.name.loc.dupe();
@@ -3112,7 +3142,7 @@ impl<'a> DefFinder<'a> {
                     })),
                 );
                 let hints = other_pattern_hints(&left_tuple.1);
-                self.visit_expression(EnclosingContext::NoContext, &hints, right);
+                self.visit_expression(EnclosingContext::NoContext, &hints, right)?;
             }
             (Some(op), Pattern::Expression { loc: _, inner }) => {
                 let e = inner.as_ref();
@@ -3124,7 +3154,7 @@ impl<'a> DefFinder<'a> {
                     _ => EnclosingContext::NoContext,
                 };
                 let e_tuple = (e.loc().dupe(), e.clone());
-                self.visit_expression(cond, &vec![], &e_tuple.1);
+                self.visit_expression(cond, &vec![], &e_tuple.1)?;
                 self.add_ordinary_binding(
                     e.loc().dupe(),
                     mk_pattern_reason(&left_tuple.1),
@@ -3137,26 +3167,31 @@ impl<'a> DefFinder<'a> {
                     })),
                 );
                 let hints = expression_pattern_hints(e, &self.class_stack);
-                self.visit_expression(EnclosingContext::NoContext, &hints, right);
+                self.visit_expression(EnclosingContext::NoContext, &hints, right)?;
             }
             (Some(_), Pattern::Array { .. } | Pattern::Object { .. }) => {
                 // [a] += 1;
                 // ({b} += 1);
                 // will have invalid-lhs errors, we shouldn't visit the LHS pattern.
                 let hints = other_pattern_hints(&left_tuple.1);
-                self.visit_expression(EnclosingContext::NoContext, &hints, right);
+                self.visit_expression(EnclosingContext::NoContext, &hints, right)?;
             }
         }
+        Ok(())
     }
 
     fn visit_call_expression(
         &mut self,
         hints: &AstHints,
         cond: EnclosingContext,
-        visit_callee: impl FnOnce(&mut Self, &AstHints, &ast::expression::Expression<ALoc, ALoc>),
+        visit_callee: impl FnOnce(
+            &mut Self,
+            &AstHints,
+            &ast::expression::Expression<ALoc, ALoc>,
+        ) -> Result<(), EnvInvariant<ALoc>>,
         loc: ALoc,
         expr: &ast::expression::Call<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::mk_expression_reason;
         use flow_parser::ast_utils::is_call_to_invariant;
         use flow_parser::ast_utils::is_call_to_is_array;
@@ -3186,10 +3221,10 @@ impl<'a> DefFinder<'a> {
             _ => vec![],
         };
 
-        visit_callee(self, &callee_hints, callee);
+        visit_callee(self, &callee_hints, callee)?;
 
         if let Some(targs) = targs {
-            let Ok(()) = self.call_type_args(targs);
+            self.call_type_args(targs)?;
         }
 
         if is_call_to_invariant(callee) {
@@ -3202,7 +3237,7 @@ impl<'a> DefFinder<'a> {
                         } else {
                             EnclosingContext::NoContext
                         };
-                        self.visit_expression(arg_cond, &vec![], expr);
+                        self.visit_expression(arg_cond, &vec![], expr)?;
                     }
                     ast::expression::ExpressionOrSpread::Spread(spread) => {
                         let spread_tuple = (spread.argument.loc().dupe(), spread.argument.clone());
@@ -3210,7 +3245,7 @@ impl<'a> DefFinder<'a> {
                             EnclosingContext::NoContext,
                             &vec![],
                             &spread_tuple.1,
-                        );
+                        )?;
                     }
                 }
             }
@@ -3219,30 +3254,30 @@ impl<'a> DefFinder<'a> {
                 [ast::expression::ExpressionOrSpread::Expression(expr)]
                     if is_call_to_is_array(callee) =>
                 {
-                    self.visit_expression(cond.clone(), &vec![], expr);
+                    self.visit_expression(cond.clone(), &vec![], expr)?;
                 }
                 [ast::expression::ExpressionOrSpread::Expression(expr)]
                     if is_call_to_require(callee) =>
                 {
-                    self.visit_expression(cond.clone(), &vec![], expr);
+                    self.visit_expression(cond.clone(), &vec![], expr)?;
                 }
                 [ast::expression::ExpressionOrSpread::Expression(expr)]
                     if is_call_to_object_dot_freeze(callee) =>
                 {
-                    self.visit_expression(EnclosingContext::NoContext, hints, expr);
+                    self.visit_expression(EnclosingContext::NoContext, hints, expr)?;
                 }
                 _ if is_call_to_object_static_method(callee) => {
                     for arg in arguments.iter() {
                         match arg {
                             ast::expression::ExpressionOrSpread::Expression(expr) => {
-                                self.visit_expression(EnclosingContext::NoContext, &vec![], expr);
+                                self.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
                             }
                             ast::expression::ExpressionOrSpread::Spread(spread) => {
                                 self.visit_expression(
                                     EnclosingContext::NoContext,
                                     &vec![],
                                     &spread.argument,
-                                );
+                                )?;
                             }
                         }
                     }
@@ -3322,10 +3357,11 @@ impl<'a> DefFinder<'a> {
                         hints,
                         arg_list,
                         targs,
-                    );
+                    )?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_call_arguments(
@@ -3335,7 +3371,7 @@ impl<'a> DefFinder<'a> {
         return_hints: &AstHints,
         arg_list: &ast::expression::ArgList<ALoc, ALoc>,
         targs: &Option<ast::expression::CallTypeArgs<ALoc, ALoc>>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let arguments = &arg_list.arguments;
 
         let decomp =
@@ -3385,14 +3421,15 @@ impl<'a> DefFinder<'a> {
                         Hint::decompose(func_param_decomp, hints)
                     };
                     let expr_tuple = (expr.loc().dupe(), expr.dupe());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1)?;
                 }
                 ast::expression::ExpressionOrSpread::Spread(spread) => {
                     let spread_tuple = (spread.argument.loc().dupe(), spread.argument.clone());
-                    self.visit_expression(EnclosingContext::NoContext, &vec![], &spread_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![], &spread_tuple.1)?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_optional_call_expression(
@@ -3401,17 +3438,19 @@ impl<'a> DefFinder<'a> {
         cond: EnclosingContext,
         loc: ALoc,
         expr: &ast::expression::OptionalCall<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let call = &expr.call;
         self.visit_call_expression(
             hints,
             cond,
             |this, callee_hints, callee| {
-                this.visit_expression(EnclosingContext::NoContext, callee_hints, callee);
+                this.visit_expression(EnclosingContext::NoContext, callee_hints, callee)?;
+                Ok(())
             },
             loc,
             call,
-        );
+        )?;
+        Ok(())
     }
 
     fn visit_new_expression(
@@ -3419,16 +3458,16 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         loc: ALoc,
         expr: &ast::expression::New<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::mk_expression_reason;
 
         let callee = &expr.callee;
         let targs = &expr.targs;
         let arguments = &expr.arguments;
 
-        self.visit_expression(EnclosingContext::NoContext, &vec![], callee);
+        self.visit_expression(EnclosingContext::NoContext, &vec![], callee)?;
         if let Some(targs) = targs {
-            let Ok(()) = self.call_type_args(targs);
+            self.call_type_args(targs)?;
         }
 
         let decomp = HintDecomposition::new(HintDecompositionInner::DecompCallNew);
@@ -3450,7 +3489,8 @@ impl<'a> DefFinder<'a> {
                 loc: loc.dupe(),
                 inner: Arc::new(expr.clone()),
             }));
-        self.visit_call_arguments(&call_reason, &call_arguments_hints, hints, arg_list, targs);
+        self.visit_call_arguments(&call_reason, &call_arguments_hints, hints, arg_list, targs)?;
+        Ok(())
     }
 
     fn visit_member_expression(
@@ -3459,7 +3499,7 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         loc: ALoc,
         mem: &ast::expression::Member<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(crate::env_api::EnvEntry::AssigningWrite(reason)) =
             self.env_info.env_entries.get_ordinary(&loc)
         {
@@ -3477,7 +3517,8 @@ impl<'a> DefFinder<'a> {
                 })),
             );
         }
-        let Ok(()) = ast_visitor::member_default(self, &loc, mem);
+        ast_visitor::member_default(self, &loc, mem)?;
+        Ok(())
     }
 
     fn visit_optional_member_expression(
@@ -3486,7 +3527,7 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         loc: ALoc,
         mem: &ast::expression::OptionalMember<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(crate::env_api::EnvEntry::AssigningWrite(reason)) =
             self.env_info.env_entries.get_ordinary(&loc)
         {
@@ -3504,27 +3545,29 @@ impl<'a> DefFinder<'a> {
                 })),
             );
         }
-        let Ok(()) = ast_visitor::member_default(self, &loc, &mem.member);
+        ast_visitor::member_default(self, &loc, &mem.member)?;
+        Ok(())
     }
 
     fn cast(
         &mut self,
         annot: &ast::types::Annotation<ALoc, ALoc>,
         expression: &ast::expression::Expression<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let hints = vec![Hint::HintT(
             HintNode::AnnotationHint(FlowOrdMap::new(), annot.clone()),
             HintKind::ExpectedTypeHint,
         )];
-        self.visit_expression(EnclosingContext::NoContext, &hints, expression);
-        let Ok(()) = self.type_annotation(annot);
+        self.visit_expression(EnclosingContext::NoContext, &hints, expression)?;
+        self.type_annotation(annot)?;
+        Ok(())
     }
 
     fn visit_unary_expression(
         &mut self,
         hints: &AstHints,
         expr: &ast::expression::Unary<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let (hints, cond) = match expr.operator {
             ast::expression::UnaryOperator::Not => (vec![], EnclosingContext::OtherTestContext),
             ast::expression::UnaryOperator::Await => {
@@ -3537,23 +3580,29 @@ impl<'a> DefFinder<'a> {
             _ => (vec![], EnclosingContext::NoContext),
         };
         let arg_tuple = (expr.argument.loc().dupe(), expr.argument.clone());
-        self.visit_expression(cond, &hints, &arg_tuple.1);
+        self.visit_expression(cond, &hints, &arg_tuple.1)?;
+        Ok(())
     }
 
     fn visit_jsx_expression(
         &mut self,
         hints: &AstHints,
         expr: &ast::jsx::ExpressionContainer<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         match &expr.expression {
             ast::jsx::expression_container::Expression::Expression(e) => {
-                self.visit_expression(EnclosingContext::NoContext, hints, e);
+                self.visit_expression(EnclosingContext::NoContext, hints, e)?;
             }
             ast::jsx::expression_container::Expression::EmptyExpression => {}
         }
+        Ok(())
     }
 
-    fn visit_jsx_children(&mut self, hints: &AstHints, children: &[ast::jsx::Child<ALoc, ALoc>]) {
+    fn visit_jsx_children(
+        &mut self,
+        hints: &AstHints,
+        children: &[ast::jsx::Child<ALoc, ALoc>],
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let filtered_children: Vec<_> = children
             .iter()
             .filter(|child| match child {
@@ -3584,18 +3633,19 @@ impl<'a> DefFinder<'a> {
 
             match child {
                 ast::jsx::Child::Element { loc, inner } => {
-                    let Ok(()) = self.jsx_element(loc, inner);
+                    self.jsx_element(loc, inner)?;
                 }
                 ast::jsx::Child::Fragment { loc, inner } => {
-                    let Ok(()) = self.jsx_fragment(loc, inner);
+                    self.jsx_fragment(loc, inner)?;
                 }
                 ast::jsx::Child::ExpressionContainer { inner, .. } => {
-                    self.visit_jsx_expression(&hints, inner);
+                    self.visit_jsx_expression(&hints, inner)?;
                 }
                 ast::jsx::Child::SpreadChild { .. } => {}
                 ast::jsx::Child::Text { .. } => {}
             }
         }
+        Ok(())
     }
 
     fn visit_expression(
@@ -3603,7 +3653,7 @@ impl<'a> DefFinder<'a> {
         cond: EnclosingContext,
         hints: &AstHints,
         expr: &ast::expression::Expression<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let loc = expr.loc();
 
         let hints = {
@@ -3685,7 +3735,7 @@ impl<'a> DefFinder<'a> {
                 inner,
                 ..
             } => {
-                self.visit_array_expression(&hints, arr_loc.dupe(), inner);
+                self.visit_array_expression(&hints, arr_loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::ArrowFunction { inner, .. } => {
                 let inner_fn: ast::function::Function<ALoc, ALoc> = (**inner).clone();
@@ -3694,7 +3744,7 @@ impl<'a> DefFinder<'a> {
                 let hints_before = hints_before_synthesizable_check.clone();
                 let loc = loc.dupe();
                 self.in_new_tparams_env(false, |this| {
-                    this.visit_function(&scope_kind, &hints_clone, &hints_before, &inner_fn);
+                    this.visit_function(&scope_kind, &hints_clone, &hints_before, &inner_fn)?;
                     if let Some(crate::env_api::EnvEntry::AssigningWrite(reason)) =
                         this.env_info.env_entries.get_ordinary(&loc)
                     {
@@ -3710,10 +3760,11 @@ impl<'a> DefFinder<'a> {
                         );
                         this.add_ordinary_binding(loc.dupe(), reason.clone(), def);
                     }
-                });
+                    Ok(())
+                })?;
             }
             ast::expression::ExpressionInner::Assignment { inner, .. } => {
-                self.visit_assignment_expression(false, loc.dupe(), inner);
+                self.visit_assignment_expression(false, loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::Function { inner, loc: fn_loc } => {
                 self.visit_function_expr(
@@ -3727,25 +3778,25 @@ impl<'a> DefFinder<'a> {
                     false,
                     fn_loc.dupe(),
                     inner,
-                );
+                )?;
             }
             ast::expression::ExpressionInner::Object { inner, .. } => {
-                self.visit_object_expression(&hints_before_synthesizable_check, inner);
+                self.visit_object_expression(&hints_before_synthesizable_check, inner)?;
             }
             ast::expression::ExpressionInner::Record { inner, .. } => {
-                self.visit_record_expression(&hints_before_synthesizable_check, inner);
+                self.visit_record_expression(&hints_before_synthesizable_check, inner)?;
             }
             ast::expression::ExpressionInner::Member { loc: m_loc, inner } => {
-                self.visit_member_expression(cond, &hints, m_loc.dupe(), inner);
+                self.visit_member_expression(cond, &hints, m_loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::OptionalMember { loc: m_loc, inner } => {
-                self.visit_optional_member_expression(cond, &hints, m_loc.dupe(), inner);
+                self.visit_optional_member_expression(cond, &hints, m_loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::Binary { inner, .. } => {
-                self.visit_binary_expression(cond, inner);
+                self.visit_binary_expression(cond, inner)?;
             }
             ast::expression::ExpressionInner::Logical { inner, .. } => {
-                self.visit_logical_expression(&hints, cond, inner);
+                self.visit_logical_expression(&hints, cond, inner)?;
             }
             ast::expression::ExpressionInner::Call { inner, loc } => {
                 self.visit_call_expression(
@@ -3756,29 +3807,30 @@ impl<'a> DefFinder<'a> {
                             EnclosingContext::NoContext,
                             callee_hints,
                             callee_expr,
-                        );
+                        )?;
+                        Ok(())
                     },
                     loc.dupe(),
                     inner,
-                );
+                )?;
             }
             ast::expression::ExpressionInner::OptionalCall { inner, loc } => {
-                self.visit_optional_call_expression(&hints, cond, loc.dupe(), inner);
+                self.visit_optional_call_expression(&hints, cond, loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::New { inner, .. } => {
-                self.visit_new_expression(&hints, loc.dupe(), inner);
+                self.visit_new_expression(&hints, loc.dupe(), inner)?;
             }
             ast::expression::ExpressionInner::Unary { inner, .. } => {
-                self.visit_unary_expression(&hints, inner);
+                self.visit_unary_expression(&hints, inner)?;
             }
             ast::expression::ExpressionInner::Conditional { inner, .. } => {
-                self.visit_conditional(&hints, inner);
+                self.visit_conditional(&hints, inner)?;
             }
             ast::expression::ExpressionInner::AsConstExpression { inner, .. } => {
-                self.visit_expression(cond, &hints, &inner.expression);
+                self.visit_expression(cond, &hints, &inner.expression)?;
             }
             ast::expression::ExpressionInner::Match { inner, .. } => {
-                self.visit_match_expression(&hints, inner.as_ref());
+                self.visit_match_expression(&hints, inner.as_ref())?;
             }
             ast::expression::ExpressionInner::Class { .. }
             | ast::expression::ExpressionInner::Identifier { .. }
@@ -3803,9 +3855,10 @@ impl<'a> DefFinder<'a> {
             | ast::expression::ExpressionInner::TSSatisfies { .. }
             | ast::expression::ExpressionInner::Update { .. }
             | ast::expression::ExpressionInner::Yield { .. } => {
-                let Ok(()) = ast_visitor::expression_default(self, expr);
+                ast_visitor::expression_default(self, expr)?;
             }
         }
+        Ok(())
     }
 
     fn visit_array_expression(
@@ -3813,7 +3866,7 @@ impl<'a> DefFinder<'a> {
         array_hints: &AstHints,
         loc: ALoc,
         expr: &ast::expression::Array<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use HintDecompositionInner::*;
         use ast::expression::ArrayElement;
 
@@ -3832,7 +3885,7 @@ impl<'a> DefFinder<'a> {
                         Hint::decompose(decomp, array_hints.clone())
                     };
                     let expr_tuple = (expr_inner.loc().dupe(), expr_inner.clone());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1)?;
                 }
                 ArrayElement::Spread(spread_elem) => {
                     let hints = if seen_spread {
@@ -3843,7 +3896,7 @@ impl<'a> DefFinder<'a> {
                     };
                     let argument = &spread_elem.argument;
                     let arg_tuple = (argument.loc().dupe(), argument.clone());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &arg_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &arg_tuple.1)?;
                     seen_spread = true;
                 }
                 ArrayElement::Hole(_) => {}
@@ -3856,18 +3909,19 @@ impl<'a> DefFinder<'a> {
             let decomp = HintDecomposition::new(DecompEmptyArrayElement);
             self.record_hint(loc, Hint::decompose(decomp, array_hints.clone()));
         }
+        Ok(())
     }
 
     fn visit_conditional(
         &mut self,
         hints: &AstHints,
         expr: &ast::expression::Conditional<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let test = &expr.test;
         let consequent = &expr.consequent;
         let alternate = &expr.alternate;
 
-        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test);
+        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test)?;
 
         if expression_is_definitely_synthesizable(self.autocomplete_hooks, alternate) {
             // Special-case for expressions like `cond ? [] : [exp]`
@@ -3876,26 +3930,27 @@ impl<'a> DefFinder<'a> {
                 HintNode::ValueHint(EnclosingContext::NoContext, alternate.clone()),
                 HintKind::BestEffortHint,
             ));
-            self.visit_expression(EnclosingContext::NoContext, &consequent_hints, consequent);
+            self.visit_expression(EnclosingContext::NoContext, &consequent_hints, consequent)?;
 
-            self.visit_expression(EnclosingContext::NoContext, hints, alternate);
+            self.visit_expression(EnclosingContext::NoContext, hints, alternate)?;
         } else {
-            self.visit_expression(EnclosingContext::NoContext, hints, consequent);
+            self.visit_expression(EnclosingContext::NoContext, hints, consequent)?;
 
             let mut alternate_hints = hints.clone();
             alternate_hints.push(Hint::HintT(
                 HintNode::ValueHint(EnclosingContext::NoContext, consequent.clone()),
                 HintKind::BestEffortHint,
             ));
-            self.visit_expression(EnclosingContext::NoContext, &alternate_hints, alternate);
+            self.visit_expression(EnclosingContext::NoContext, &alternate_hints, alternate)?;
         }
+        Ok(())
     }
 
     fn visit_binary_expression(
         &mut self,
         cond: EnclosingContext,
         expr: &ast::expression::Binary<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use ast::expression::BinaryOperator;
 
         use crate::eq_test::visit_eq_test;
@@ -3906,8 +3961,8 @@ impl<'a> DefFinder<'a> {
 
         match (operator, &cond) {
             (BinaryOperator::Instanceof, EnclosingContext::OtherTestContext) => {
-                self.visit_expression(cond.clone(), &vec![], left);
-                self.visit_expression(EnclosingContext::NoContext, &vec![], right);
+                self.visit_expression(cond.clone(), &vec![], left)?;
+                self.visit_expression(EnclosingContext::NoContext, &vec![], right)?;
             }
             (
                 BinaryOperator::Equal
@@ -3974,45 +4029,58 @@ impl<'a> DefFinder<'a> {
                 match action {
                     EqTestAction::TypeOf(ref expr, ref value) => {
                         let expr_tuple = (expr.loc().dupe(), expr.dupe());
-                        self.visit_expression(cond, &vec![], &expr_tuple.1);
+                        self.visit_expression(cond, &vec![], &expr_tuple.1)?;
                         // For TypeOf: ignore @@ this#expression value (use NoContext)
                         let value_tuple = (value.loc().dupe(), value.clone());
-                        self.visit_expression(EnclosingContext::NoContext, &vec![], &value_tuple.1);
+                        self.visit_expression(
+                            EnclosingContext::NoContext,
+                            &vec![],
+                            &value_tuple.1,
+                        )?;
                     }
                     EqTestAction::Literal(ref expr, ref value) => {
-                        self.visit_expression(cond, &vec![], expr);
-                        self.visit_expression(EnclosingContext::LiteralTestContext, &vec![], value);
+                        self.visit_expression(cond, &vec![], expr)?;
+                        self.visit_expression(
+                            EnclosingContext::LiteralTestContext,
+                            &vec![],
+                            value,
+                        )?;
                     }
                     EqTestAction::Null(ref expr, ref value)
                     | EqTestAction::Void(ref expr, ref value) => {
                         let expr_tuple = (expr.loc().dupe(), expr.dupe());
-                        self.visit_expression(cond, &vec![], &expr_tuple.1);
+                        self.visit_expression(cond, &vec![], &expr_tuple.1)?;
                         // For Null/Void: ignore @@ this#expression value (use NoContext)
                         let value_tuple = (value.loc().dupe(), value.clone());
-                        self.visit_expression(EnclosingContext::NoContext, &vec![], &value_tuple.1);
+                        self.visit_expression(
+                            EnclosingContext::NoContext,
+                            &vec![],
+                            &value_tuple.1,
+                        )?;
                     }
                     EqTestAction::MemberOther(ref expr, ref value)
                     | EqTestAction::OtherMember(ref value, ref expr) => {
                         let expr_tuple = (expr.loc().dupe(), expr.dupe());
-                        self.visit_expression(cond.clone(), &vec![], &expr_tuple.1);
+                        self.visit_expression(cond.clone(), &vec![], &expr_tuple.1)?;
                         let value_tuple = (value.loc().dupe(), value.clone());
-                        self.visit_expression(cond, &vec![], &value_tuple.1);
+                        self.visit_expression(cond, &vec![], &value_tuple.1)?;
                     }
                     EqTestAction::Other(ref left, ref right) => {
                         let left_tuple = (left.loc().dupe(), left.clone());
-                        self.visit_expression(cond.clone(), &vec![], &left_tuple.1);
+                        self.visit_expression(cond.clone(), &vec![], &left_tuple.1)?;
                         let right_tuple = (right.loc().dupe(), right.clone());
-                        self.visit_expression(cond, &vec![], &right_tuple.1);
+                        self.visit_expression(cond, &vec![], &right_tuple.1)?;
                     }
                 }
             }
             _ => {
                 let left_tuple = (left.loc().dupe(), left.clone());
-                self.visit_expression(EnclosingContext::NoContext, &vec![], &left_tuple.1);
+                self.visit_expression(EnclosingContext::NoContext, &vec![], &left_tuple.1)?;
                 let right_tuple = (right.loc().dupe(), right.clone());
-                self.visit_expression(EnclosingContext::NoContext, &vec![], &right_tuple.1);
+                self.visit_expression(EnclosingContext::NoContext, &vec![], &right_tuple.1)?;
             }
         }
+        Ok(())
     }
 
     fn visit_logical_expression(
@@ -4020,7 +4088,7 @@ impl<'a> DefFinder<'a> {
         hints: &AstHints,
         cond: EnclosingContext,
         expr: &ast::expression::Logical<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use HintDecompositionInner::*;
         use ast::expression::LogicalOperator;
 
@@ -4056,15 +4124,16 @@ impl<'a> DefFinder<'a> {
             }
         };
 
-        self.visit_expression(left_cond, &left_hints, left);
-        self.visit_expression(cond, &right_hints, right);
+        self.visit_expression(left_cond, &left_hints, left)?;
+        self.visit_expression(cond, &right_hints, right)?;
+        Ok(())
     }
 
     fn visit_object_expression(
         &mut self,
         object_hints: &AstHints,
         expr: &ast::expression::Object<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use HintDecompositionInner::*;
         use ast::expression::object::Key;
         use ast::expression::object::NormalProperty;
@@ -4116,31 +4185,31 @@ impl<'a> DefFinder<'a> {
 
         let visit_object_key_and_compute_hint = |this: &mut Self,
                                                  key: &Key<ALoc, ALoc>|
-         -> AstHints {
+         -> Result<AstHints, EnvInvariant<ALoc>> {
             match key {
                 Key::StringLiteral((_, sl)) => {
                     let decomp = HintDecomposition::new(DecompObjProp(sl.value.dupe()));
-                    Hint::decompose(decomp, object_hints.clone())
+                    Ok(Hint::decompose(decomp, object_hints.clone()))
                 }
                 Key::NumberLiteral((_, nl)) if js_number::is_float_safe_integer(nl.value) => {
                     let name = js_number::ecma_string_of_float(nl.value);
                     let decomp = HintDecomposition::new(DecompObjProp(name.into()));
-                    Hint::decompose(decomp, object_hints.clone())
+                    Ok(Hint::decompose(decomp, object_hints.clone()))
                 }
-                Key::NumberLiteral(_) | Key::BigIntLiteral(_) => vec![],
-                Key::Identifier(id) if &*id.name == "__proto__" => vec![],
+                Key::NumberLiteral(_) | Key::BigIntLiteral(_) => Ok(vec![]),
+                Key::Identifier(id) if &*id.name == "__proto__" => Ok(vec![]),
                 Key::Identifier(id) => {
                     let decomp = HintDecomposition::new(DecompObjProp(id.name.dupe()));
-                    Hint::decompose(decomp, object_hints.clone())
+                    Ok(Hint::decompose(decomp, object_hints.clone()))
                 }
-                Key::PrivateName(_) => vec![],
+                Key::PrivateName(_) => Ok(vec![]),
                 Key::Computed(computed) => {
                     let expression = &computed.expression;
                     let expr_tuple = (expression.loc().dupe(), expression.clone());
-                    this.visit_expression(EnclosingContext::IndexContext, &vec![], &expr_tuple.1);
+                    this.visit_expression(EnclosingContext::IndexContext, &vec![], &expr_tuple.1)?;
                     let reason = mk_expression_reason(expression);
                     let decomp = HintDecomposition::new(DecompObjComputed(reason));
-                    Hint::decompose(decomp, object_hints.clone())
+                    Ok(Hint::decompose(decomp, object_hints.clone()))
                 }
             }
         };
@@ -4149,9 +4218,9 @@ impl<'a> DefFinder<'a> {
             match prop {
                 Property::NormalProperty(normal_prop) => match normal_prop {
                     NormalProperty::Init { key, value, .. } => {
-                        let hints = visit_object_key_and_compute_hint(self, key);
+                        let hints = visit_object_key_and_compute_hint(self, key)?;
                         let value_tuple = (value.loc().dupe(), value.clone());
-                        self.visit_expression(EnclosingContext::NoContext, &hints, &value_tuple.1);
+                        self.visit_expression(EnclosingContext::NoContext, &hints, &value_tuple.1)?;
                         if matches!(key, Key::Computed(_)) {
                             // We will be using this as hint for computed values.
                             // See Statement.create_computed_prop.
@@ -4162,7 +4231,7 @@ impl<'a> DefFinder<'a> {
                         }
                     }
                     NormalProperty::Method { key, value, .. } => {
-                        let func_hints = visit_object_key_and_compute_hint(self, key);
+                        let func_hints = visit_object_key_and_compute_hint(self, key)?;
                         let (fn_loc, fn_expr) = value;
                         self.visit_function_expr(
                             &func_hints,
@@ -4175,10 +4244,10 @@ impl<'a> DefFinder<'a> {
                             false,
                             fn_loc.dupe(),
                             fn_expr,
-                        );
+                        )?;
                     }
                     NormalProperty::Get { key, value, .. } => {
-                        let func_hints = visit_object_key_and_compute_hint(self, key);
+                        let func_hints = visit_object_key_and_compute_hint(self, key)?;
                         let (fn_loc, fn_expr) = value;
                         self.visit_function_expr(
                             &func_hints,
@@ -4191,10 +4260,10 @@ impl<'a> DefFinder<'a> {
                             false,
                             fn_loc.dupe(),
                             fn_expr,
-                        );
+                        )?;
                     }
                     NormalProperty::Set { key, value, .. } => {
-                        let func_hints = visit_object_key_and_compute_hint(self, key);
+                        let func_hints = visit_object_key_and_compute_hint(self, key)?;
                         let (fn_loc, fn_expr) = value;
                         self.visit_function_expr(
                             &func_hints,
@@ -4207,7 +4276,7 @@ impl<'a> DefFinder<'a> {
                             false,
                             fn_loc.dupe(),
                             fn_expr,
-                        );
+                        )?;
                     }
                 },
                 Property::SpreadProperty(spread_prop) => {
@@ -4215,17 +4284,18 @@ impl<'a> DefFinder<'a> {
                     let decomp = HintDecomposition::new(DecompObjSpread);
                     let hints = Hint::decompose(decomp, object_hints.clone());
                     let arg_tuple = (argument.loc().dupe(), argument.clone());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &arg_tuple.1);
+                    self.visit_expression(EnclosingContext::NoContext, &hints, &arg_tuple.1)?;
                 }
             }
         }
+        Ok(())
     }
 
     fn visit_record_expression(
         &mut self,
         record_hints: &AstHints,
         record: &ast::expression::Record<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use HintDecompositionInner::*;
 
         let constructor = &record.constructor;
@@ -4234,9 +4304,9 @@ impl<'a> DefFinder<'a> {
 
         let constructor_loc = constructor.loc().dupe();
 
-        self.visit_expression(EnclosingContext::NoContext, &vec![], constructor);
+        self.visit_expression(EnclosingContext::NoContext, &vec![], constructor)?;
         if let Some(ta) = targs {
-            let Ok(()) = self.call_type_args(ta);
+            self.call_type_args(ta)?;
         }
 
         let decomp = HintDecomposition::new(DecompCallNew);
@@ -4264,14 +4334,15 @@ impl<'a> DefFinder<'a> {
             record_hints,
             &arg_list,
             targs,
-        );
+        )?;
+        Ok(())
     }
 
     fn visit_match_expression(
         &mut self,
         hints: &AstHints,
         x: &ast::match_::Match<ALoc, ALoc, ast::expression::Expression<ALoc, ALoc>>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::VirtualReasonDesc::RMatch;
 
         let ast::match_::Match {
@@ -4281,7 +4352,7 @@ impl<'a> DefFinder<'a> {
             ..
         } = x;
 
-        self.visit_expression(EnclosingContext::NoContext, &vec![], arg);
+        self.visit_expression(EnclosingContext::NoContext, &vec![], arg)?;
         self.add_ordinary_binding(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
@@ -4330,11 +4401,11 @@ impl<'a> DefFinder<'a> {
                 prev_pattern_loc.dupe(),
                 acc,
                 pattern,
-            );
-            let Ok(()) = self.match_pattern(pattern);
+            )?;
+            self.match_pattern(pattern)?;
             if let Some(guard_expr) = guard {
                 let guard_tuple = (guard_expr.loc().dupe(), guard_expr.dupe());
-                self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &guard_tuple.1);
+                self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &guard_tuple.1)?;
             }
             // We use best-effort value hints for cases other than the current case.
             // Hints are ordered as the cases are in source, top to bottom.
@@ -4346,10 +4417,11 @@ impl<'a> DefFinder<'a> {
             let mut combined_hints = hints.clone();
             combined_hints.extend(other_case_hints);
             let body_tuple = (body.loc().dupe(), body.clone());
-            self.visit_expression(EnclosingContext::NoContext, &combined_hints, &body_tuple.1);
+            self.visit_expression(EnclosingContext::NoContext, &combined_hints, &body_tuple.1)?;
 
             prev_pattern_loc = Some(pattern.loc().dupe());
         }
+        Ok(())
     }
 
     fn add_match_destructure_bindings(
@@ -4359,7 +4431,7 @@ impl<'a> DefFinder<'a> {
         prev_pattern_loc: Option<ALoc>,
         root: Root,
         pattern: &ast::match_pattern::MatchPattern<ALoc, ALoc>,
-    ) {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::VirtualReasonDesc::RMatchPattern;
 
         use crate::env_api::DefLocType::MatchCasePatternLoc;
@@ -4430,13 +4502,14 @@ impl<'a> DefFinder<'a> {
                 }
                 MatchPatternAction::Expression(expr) => {
                     let expr_tuple = (expr.loc().dupe(), expr);
-                    self.visit_expression(EnclosingContext::MatchPattern, &vec![], &expr_tuple.1);
+                    self.visit_expression(EnclosingContext::MatchPattern, &vec![], &expr_tuple.1)?;
                 }
                 MatchPatternAction::Intermediate(loc, binding) => {
                     self.add_destructure_binding(loc, binding);
                 }
             }
         }
+        Ok(())
     }
 
     fn enum_declaration_impl(
@@ -4444,7 +4517,7 @@ impl<'a> DefFinder<'a> {
         declared: bool,
         loc: &ALoc,
         enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = enum_decl.id.loc.dupe();
         let name = &enum_decl.id.name;
         let body = &enum_decl.body;
@@ -4484,16 +4557,19 @@ impl<'a> DefFinder<'a> {
 // This Rust implementation overrides key methods to dispatch to the visit_* helpers.
 // TODO: Complete implementation of all method overrides for full functionality.
 
-impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
-    fn normalize_loc(loc: &ALoc) -> &ALoc {
+impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for DefFinder<'a> {
+    fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
 
-    fn normalize_type(type_: &ALoc) -> &ALoc {
+    fn normalize_type(type_: &'ast ALoc) -> &'ast ALoc {
         type_
     }
 
-    fn statement_list(&mut self, stmts: &[ast::statement::Statement<ALoc, ALoc>]) -> Result<(), !> {
+    fn statement_list(
+        &mut self,
+        stmts: &[ast::statement::Statement<ALoc, ALoc>],
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use ast::expression::ExpressionInner;
         use ast::expression::member::Property;
         use ast::pattern::Pattern;
@@ -4693,7 +4769,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             right: init.clone(),
                             comments: None,
                         },
-                    );
+                    )?;
 
                     if let Some(function_state) = state.get(obj_name) {
                         if !function_state.statics.contains_key(prop_name) {
@@ -4740,7 +4816,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             match stmt.deref() {
                 StatementInner::FunctionDeclaration { loc, inner } if inner.id.is_some() => {
                     let func = inner.as_ref();
-                    let id = func.id.as_ref().unwrap();
+                    let Some(id) = func.id.as_ref() else {
+                        return Err(EnvInvariant::new(
+                            Some(loc.dupe()),
+                            EnvInvariantFailure::Impossible(
+                                "Expected function declaration id".into(),
+                            ),
+                        ));
+                    };
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
                     if crate::env_api::has_assigning_write(
@@ -4756,7 +4839,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         function_state.record_merge_candidate(&id_loc);
                         function_state.deferred_visits.push(deferred);
                     } else {
-                        let Ok(()) = self.statement(stmt);
+                        self.statement(stmt)?;
                     }
                 }
 
@@ -4781,7 +4864,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         } = decl.deref()
                         {
                             let func = func_inner.as_ref();
-                            let id = func.id.as_ref().unwrap();
+                            let Some(id) = func.id.as_ref() else {
+                                return Err(EnvInvariant::new(
+                                    Some(loc.dupe()),
+                                    EnvInvariantFailure::Impossible(
+                                        "Expected function declaration id".into(),
+                                    ),
+                                ));
+                            };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if crate::env_api::has_assigning_write(
@@ -4797,7 +4887,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 function_state.record_merge_candidate(&id_loc);
                                 function_state.deferred_visits.push(deferred);
                             } else {
-                                let Ok(()) = self.statement(stmt);
+                                self.statement(stmt)?;
                             }
                         }
                     }
@@ -4826,7 +4916,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         } = decl.deref()
                         {
                             let func = func_inner.as_ref();
-                            let id = func.id.as_ref().unwrap();
+                            let Some(id) = func.id.as_ref() else {
+                                return Err(EnvInvariant::new(
+                                    Some(loc.dupe()),
+                                    EnvInvariantFailure::Impossible(
+                                        "Expected function declaration id".into(),
+                                    ),
+                                ));
+                            };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if crate::env_api::has_assigning_write(
@@ -4842,7 +4939,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 function_state.record_merge_candidate(&id_loc);
                                 function_state.deferred_visits.push(deferred);
                             } else {
-                                let Ok(()) = self.statement(stmt);
+                                self.statement(stmt)?;
                             }
                         }
                     }
@@ -4850,7 +4947,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 
                 StatementInner::DeclareFunction { loc, inner } if inner.id.is_some() => {
                     let decl = inner.as_ref();
-                    let id = decl.id.as_ref().unwrap();
+                    let Some(id) = decl.id.as_ref() else {
+                        return Err(EnvInvariant::new(
+                            Some(loc.dupe()),
+                            EnvInvariantFailure::Impossible("Expected declare function id".into()),
+                        ));
+                    };
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
                     if crate::env_api::has_assigning_write(
@@ -4864,14 +4966,19 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             .declared_functions
                             .push((loc.dupe(), decl.clone()));
                     } else {
-                        let Ok(()) = self.statement(stmt);
+                        self.statement(stmt)?;
                     }
                 }
 
                 // class Foo {}
                 StatementInner::ClassDeclaration { loc, inner } if inner.id.is_some() => {
                     let class_ = inner.as_ref();
-                    let id = class_.id.as_ref().unwrap();
+                    let Some(id) = class_.id.as_ref() else {
+                        return Err(EnvInvariant::new(
+                            Some(loc.dupe()),
+                            EnvInvariantFailure::Impossible("Expected class declaration id".into()),
+                        ));
+                    };
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
                     if namespace_names.contains(name)
@@ -4890,7 +4997,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         function_state.record_merge_candidate(&id_loc);
                         function_state.deferred_visits.push(deferred);
                     } else {
-                        let Ok(()) = self.statement(stmt);
+                        self.statement(stmt)?;
                     }
                 }
 
@@ -4915,7 +5022,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         } = decl.deref()
                         {
                             let class_ = class_inner.as_ref();
-                            let id = class_.id.as_ref().unwrap();
+                            let Some(id) = class_.id.as_ref() else {
+                                return Err(EnvInvariant::new(
+                                    Some(loc.dupe()),
+                                    EnvInvariantFailure::Impossible(
+                                        "Expected class declaration id".into(),
+                                    ),
+                                ));
+                            };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if namespace_names.contains(name)
@@ -4934,7 +5048,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 function_state.record_merge_candidate(&id_loc);
                                 function_state.deferred_visits.push(deferred);
                             } else {
-                                let Ok(()) = self.statement(stmt);
+                                self.statement(stmt)?;
                             }
                         }
                     }
@@ -4963,7 +5077,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         } = decl.deref()
                         {
                             let class_ = class_inner.as_ref();
-                            let id = class_.id.as_ref().unwrap();
+                            let Some(id) = class_.id.as_ref() else {
+                                return Err(EnvInvariant::new(
+                                    Some(loc.dupe()),
+                                    EnvInvariantFailure::Impossible(
+                                        "Expected class declaration id".into(),
+                                    ),
+                                ));
+                            };
                             let id_loc = id.loc.dupe();
                             let name = &id.name;
                             if namespace_names.contains(name)
@@ -4982,7 +5103,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 function_state.record_merge_candidate(&id_loc);
                                 function_state.deferred_visits.push(deferred);
                             } else {
-                                let Ok(()) = self.statement(stmt);
+                                self.statement(stmt)?;
                             }
                         }
                     }
@@ -5008,7 +5129,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         function_state.record_merge_candidate(&id_loc);
                         function_state.deferred_visits.push(deferred);
                     } else {
-                        let Ok(()) = self.statement(stmt);
+                        self.statement(stmt)?;
                     }
                 }
 
@@ -5068,11 +5189,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                     }
                                 }
                             }
-                            self.visit_merged_declare_namespace_body(inner);
+                            self.visit_merged_declare_namespace_body(inner)?;
                             continue;
                         }
                     }
-                    let Ok(()) = self.statement(stmt);
+                    self.statement(stmt)?;
                 }
 
                 // const f = () => {}; const f = function () {}; *)
@@ -5094,10 +5215,20 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         inner: pat_id_arc, ..
                     } = &decl.id
                     else {
-                        unreachable!()
+                        return Err(EnvInvariant::new(
+                            Some(decl.loc.dupe()),
+                            EnvInvariantFailure::Impossible("Invalid AST structure".into()),
+                        ));
                     };
                     let pat_id = pat_id_arc.as_ref();
-                    let init = decl.init.as_ref().unwrap();
+                    let Some(init) = decl.init.as_ref() else {
+                        return Err(EnvInvariant::new(
+                            Some(decl.loc.dupe()),
+                            EnvInvariantFailure::Impossible(
+                                "Expected variable declarator init".into(),
+                            ),
+                        ));
+                    };
                     let (func_loc, func, arrow) = match init.deref() {
                         ExpressionInner::ArrowFunction { loc, inner } => {
                             (loc.dupe(), inner.as_ref(), true)
@@ -5105,7 +5236,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         ExpressionInner::Function { loc, inner } => {
                             (loc.dupe(), inner.as_ref(), false)
                         }
-                        _ => unreachable!(),
+                        _ => {
+                            return Err(EnvInvariant::new(
+                                Some(decl.loc.dupe()),
+                                EnvInvariantFailure::Impossible("Invalid AST structure".into()),
+                            ));
+                        }
                     };
                     let var_id = &pat_id.name;
                     let id_loc = var_id.loc.dupe();
@@ -5128,7 +5264,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             .deferred_visits
                             .push(deferred);
                     } else {
-                        let Ok(()) = self.statement(stmt);
+                        self.statement(stmt)?;
                     }
                 }
 
@@ -5167,10 +5303,20 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 inner: pat_id_arc, ..
                             } = &decl.id
                             else {
-                                unreachable!()
+                                return Err(EnvInvariant::new(
+                                    Some(decl.loc.dupe()),
+                                    EnvInvariantFailure::Impossible("Invalid AST structure".into()),
+                                ));
                             };
                             let pat_id = pat_id_arc.as_ref();
-                            let init = decl.init.as_ref().unwrap();
+                            let Some(init) = decl.init.as_ref() else {
+                                return Err(EnvInvariant::new(
+                                    Some(decl.loc.dupe()),
+                                    EnvInvariantFailure::Impossible(
+                                        "Expected variable declarator init".into(),
+                                    ),
+                                ));
+                            };
                             let (func_loc, func, arrow) = match &**init {
                                 ExpressionInner::ArrowFunction { loc, inner } => {
                                     (loc.dupe(), inner.as_ref(), true)
@@ -5178,7 +5324,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 ExpressionInner::Function { loc, inner } => {
                                     (loc.dupe(), inner.as_ref(), false)
                                 }
-                                _ => unreachable!(),
+                                _ => {
+                                    return Err(EnvInvariant::new(
+                                        Some(decl.loc.dupe()),
+                                        EnvInvariantFailure::Impossible(
+                                            "Invalid AST structure".into(),
+                                        ),
+                                    ));
+                                }
                             };
                             let var_id = &pat_id.name;
                             let id_loc = var_id.loc.dupe();
@@ -5201,14 +5354,14 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                     .deferred_visits
                                     .push(deferred);
                             } else {
-                                let Ok(()) = self.statement(stmt);
+                                self.statement(stmt)?;
                             }
                         }
                     }
                 }
 
                 _ => {
-                    let Ok(()) = self.statement(stmt);
+                    self.statement(stmt)?;
                 }
             }
         }
@@ -5224,7 +5377,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             for deferred in function_state.deferred_visits {
                 match deferred {
                     DeferredVisit::FunctionDecl { loc, func } => {
-                        self.visit_function_declaration(&statics, &namespace_types, loc, &func);
+                        self.visit_function_declaration(&statics, &namespace_types, loc, &func)?;
                     }
                     DeferredVisit::FunctionExpr {
                         loc,
@@ -5244,19 +5397,19 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                             hooklike,
                             loc,
                             &func,
-                        );
+                        )?;
                     }
                     DeferredVisit::ClassDecl { loc, class_, kind } => {
-                        self.class_internal(kind, &namespace_types, loc, &class_);
+                        self.class_internal(kind, &namespace_types, loc, &class_)?;
                     }
                     DeferredVisit::DeclareClassDecl { loc, decl } => {
-                        self.visit_declare_class(&namespace_types, loc.dupe(), &decl);
+                        self.visit_declare_class(&namespace_types, loc.dupe(), &decl)?;
                     }
                 }
             }
             if namespace_types.is_empty() {
                 for (loc, decl) in declarations.iter() {
-                    let Ok(()) = self.declare_function(loc, decl);
+                    self.declare_function(loc, decl)?;
                 }
             } else {
                 for (loc, decl) in declarations.iter() {
@@ -5266,7 +5419,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         &declarations,
                         &statics,
                         &namespace_types,
-                    );
+                    )?;
                 }
             }
         }
@@ -5278,7 +5431,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         kind: ast::VariableKind,
         declarator: &ast::statement::variable::Declarator<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use ast::expression::ExpressionInner;
         use ast::pattern::Pattern;
 
@@ -5358,11 +5511,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             None => (concrete, Vec::new()),
         };
         if let Some(root) = source {
-            self.add_destructure_bindings(root, &(id.loc().dupe(), id.clone()));
+            self.add_destructure_bindings(root, &(id.loc().dupe(), id.clone()))?;
         }
-        let Ok(()) = self.variable_declarator_pattern(kind, id);
+        self.variable_declarator_pattern(kind, id)?;
         if let Some(init_expr) = init {
-            self.visit_expression(EnclosingContext::NoContext, &hints, init_expr);
+            self.visit_expression(EnclosingContext::NoContext, &hints, init_expr)?;
         }
         Ok(())
     }
@@ -5371,7 +5524,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         decl: &ast::statement::DeclareVariable<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let kind = decl.kind;
         for declarator in decl.declarations.iter() {
             if let ast::pattern::Pattern::Identifier { inner, .. } = &declarator.id {
@@ -5435,7 +5588,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         kind: Option<ast::VariableKind>,
         elem: &ast::pattern::array::NormalElement<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let modified = ast::pattern::array::NormalElement {
             loc: elem.loc.dupe(),
             argument: elem.argument.clone(),
@@ -5450,7 +5603,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         kind: Option<ast::VariableKind>,
         prop: &ast::pattern::object::NormalProperty<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let modified = ast::pattern::object::NormalProperty {
             loc: prop.loc.dupe(),
             key: prop.key.clone(),
@@ -5463,18 +5616,21 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         Ok(())
     }
 
-    fn function_param(&mut self, param: &ast::function::Param<ALoc, ALoc>) -> Result<(), !> {
+    fn function_param(
+        &mut self,
+        param: &ast::function::Param<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let loc = match param {
             ast::function::Param::RegularParam { loc, .. } => loc.dupe(),
             ast::function::Param::ParamProperty { loc, .. } => loc.dupe(),
         };
-        fail(loc, "Should be visited by visit_function_param");
+        Err(fail(loc, "Should be visited by visit_function_param"))
     }
 
     fn function_this_param(
         &mut self,
         this_param: &ast::function::ThisParam<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let loc = &this_param.loc;
         let annot = &this_param.annot;
 
@@ -5497,7 +5653,10 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         Ok(())
     }
 
-    fn catch_clause_pattern(&mut self, pat: &ast::pattern::Pattern<ALoc, ALoc>) -> Result<(), !> {
+    fn catch_clause_pattern(
+        &mut self,
+        pat: &ast::pattern::Pattern<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let source = match pat {
             ast::pattern::Pattern::Identifier { inner, .. } => match &inner.annot {
                 ast::types::AnnotationOrHint::Available(annot) => match annot.annotation.deref() {
@@ -5524,7 +5683,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             _ => Root::CatchUnannotated,
         };
 
-        self.add_destructure_bindings(source, &(pat.loc().dupe(), pat.clone()));
+        self.add_destructure_bindings(source, &(pat.loc().dupe(), pat.clone()))?;
         ast_visitor::catch_clause_pattern_default(self, pat)?;
         Ok(())
     }
@@ -5533,8 +5692,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         stmt: &ast::statement::ComponentDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.visit_component_declaration(loc.dupe(), stmt);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.visit_component_declaration(loc.dupe(), stmt)?;
         Ok(())
     }
 
@@ -5542,7 +5701,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.visit_function_expr(
             &vec![],
             &vec![],
@@ -5554,7 +5713,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             false,
             loc.dupe(),
             func,
-        );
+        )?;
         Ok(())
     }
 
@@ -5562,12 +5721,15 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.visit_function_declaration(&BTreeMap::new(), &BTreeMap::new(), loc.dupe(), func);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.visit_function_declaration(&BTreeMap::new(), &BTreeMap::new(), loc.dupe(), func)?;
         Ok(())
     }
 
-    fn function_type(&mut self, ft: &ast::types::Function<ALoc, ALoc>) -> Result<(), !> {
+    fn function_type(
+        &mut self,
+        ft: &ast::types::Function<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.in_new_tparams_env(true, |this| ast_visitor::function_type_default(this, ft))?;
         Ok(())
     }
@@ -5575,10 +5737,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
     fn object_mapped_type_property(
         &mut self,
         mt: &ast::types::object::MappedType<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.in_new_tparams_env(true, |this| {
-            let Ok(()) = ast_visitor::object_mapped_type_property_default(this, mt);
-        });
+            ast_visitor::object_mapped_type_property_default(this, mt)?;
+            Ok(())
+        })?;
         Ok(())
     }
 
@@ -5586,20 +5749,28 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         expr: &ast::function::Function<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let scope_kind = func_scope_kind(None, expr);
         self.in_new_tparams_env(false, |this| {
-            this.visit_function(&scope_kind, &vec![], &vec![], expr);
-        });
+            this.visit_function(&scope_kind, &vec![], &vec![], expr)?;
+            Ok(())
+        })?;
         Ok(())
     }
 
-    fn class_(&mut self, loc: &ALoc, cls: &ast::class::Class<ALoc, ALoc>) -> Result<(), !> {
-        self.class_internal(ClassKind::Class, &BTreeMap::new(), loc.dupe(), cls);
+    fn class_(
+        &mut self,
+        loc: &ALoc,
+        cls: &ast::class::Class<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.class_internal(ClassKind::Class, &BTreeMap::new(), loc.dupe(), cls)?;
         Ok(())
     }
 
-    fn class_property(&mut self, prop: &ast::class::Property<ALoc, ALoc>) -> Result<(), !> {
+    fn class_property(
+        &mut self,
+        prop: &ast::class::Property<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let key = &prop.key;
         let value = &prop.value;
         let annot = &prop.annot;
@@ -5607,10 +5778,10 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         let decorators = &prop.decorators;
 
         for decorator in decorators.iter() {
-            let Ok(()) = self.class_decorator(decorator);
+            self.class_decorator(decorator)?;
         }
-        let Ok(()) = self.object_key(key);
-        let Ok(()) = self.type_annotation_hint(annot);
+        self.object_key(key)?;
+        self.type_annotation_hint(annot)?;
         let hints = match annot {
             ast::types::AnnotationOrHint::Available(annot) => {
                 vec![Hint::HintT(
@@ -5620,12 +5791,15 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             }
             ast::types::AnnotationOrHint::Missing(_) => vec![],
         };
-        self.visit_class_property_value(&hints, value);
-        let Ok(()) = self.variance_opt(variance.as_ref());
+        self.visit_class_property_value(&hints, value)?;
+        self.variance_opt(variance.as_ref())?;
         Ok(())
     }
 
-    fn class_private_field(&mut self, pf: &ast::class::PrivateField<ALoc, ALoc>) -> Result<(), !> {
+    fn class_private_field(
+        &mut self,
+        pf: &ast::class::PrivateField<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let key = &pf.key;
         let value = &pf.value;
         let annot = &pf.annot;
@@ -5633,10 +5807,10 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         let decorators = &pf.decorators;
 
         for decorator in decorators.iter() {
-            let Ok(()) = self.class_decorator(decorator);
+            self.class_decorator(decorator)?;
         }
-        let Ok(()) = self.private_name(key);
-        let Ok(()) = self.type_annotation_hint(annot);
+        self.private_name(key)?;
+        self.type_annotation_hint(annot)?;
         let hints = match annot {
             ast::types::AnnotationOrHint::Available(annot) => {
                 vec![Hint::HintT(
@@ -5646,23 +5820,27 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             }
             ast::types::AnnotationOrHint::Missing(_) => vec![],
         };
-        self.visit_class_property_value(&hints, value);
-        let Ok(()) = self.variance_opt(variance.as_ref());
+        self.visit_class_property_value(&hints, value)?;
+        self.variance_opt(variance.as_ref())?;
         Ok(())
     }
 
-    fn class_method(&mut self, meth: &ast::class::Method<ALoc, ALoc>) -> Result<(), !> {
+    fn class_method(
+        &mut self,
+        meth: &ast::class::Method<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let key = &meth.key;
         let (_, value) = &meth.value;
         let decorators = &meth.decorators;
 
-        let Ok(()) = self.object_key(key);
+        self.object_key(key)?;
         let scope_kind = func_scope_kind(Some(key), value);
         self.in_new_tparams_env(true, |this| {
-            this.visit_function(&scope_kind, &vec![], &vec![], value);
-        });
+            this.visit_function(&scope_kind, &vec![], &vec![], value)?;
+            Ok(())
+        })?;
         for decorator in decorators.iter() {
-            let Ok(()) = self.class_decorator(decorator);
+            self.class_decorator(decorator)?;
         }
         Ok(())
     }
@@ -5671,8 +5849,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         record: &ast::statement::RecordDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.record_declaration_internal(loc.dupe(), record);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.record_declaration_internal(loc.dupe(), record)?;
         Ok(())
     }
 
@@ -5680,7 +5858,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         decl: &ast::statement::DeclareFunction<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(id) = &decl.id {
             let id_loc = id.loc.dupe();
             let name = &id.name;
@@ -5714,8 +5892,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         decl: &ast::statement::DeclareClass<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.visit_declare_class(&BTreeMap::new(), loc.dupe(), decl);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.visit_declare_class(&BTreeMap::new(), loc.dupe(), decl)?;
         Ok(())
     }
 
@@ -5723,7 +5901,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         decl: &ast::statement::DeclareComponent<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = decl.id.loc.dupe();
         let name = &decl.id.name;
 
@@ -5739,18 +5917,18 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::Assignment<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
             loc.dupe(),
             "Should be visited by visit_assignment_expression",
-        );
+        ))
     }
 
     fn update_expression(
         &mut self,
         loc: &ALoc,
         expr: &ast::expression::Update<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let ast::expression::ExpressionInner::Identifier { inner: id, .. } =
             expr.argument.deref()
         {
@@ -5770,7 +5948,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         ast_visitor::update_expression_default(self, loc, expr)
     }
 
-    fn return_(&mut self, _loc: &ALoc, stmt: &ast::statement::Return<ALoc, ALoc>) -> Result<(), !> {
+    fn return_(
+        &mut self,
+        _loc: &ALoc,
+        stmt: &ast::statement::Return<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(argument) = &stmt.argument {
             let hints = self.return_hint_stack.last().cloned().unwrap_or_default();
             let cond = if self.predicate_kind.is_some() {
@@ -5779,7 +5961,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 EnclosingContext::NoContext
             };
             let arg_tuple = (argument.loc().dupe(), argument.clone());
-            self.visit_expression(cond, &hints, &arg_tuple.1);
+            self.visit_expression(cond, &hints, &arg_tuple.1)?;
         }
         Ok(())
     }
@@ -5788,7 +5970,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         stmt: &ast::statement::ForOf<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let await_ = stmt.await_;
         let right = &stmt.right;
         let right_tuple = (right.loc().dupe(), right.clone());
@@ -5814,20 +5996,20 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     })),
                     None => forof,
                 };
-                self.add_destructure_bindings(source, &id_tuple);
+                self.add_destructure_bindings(source, &id_tuple)?;
             }
             ast::statement::for_of::Left::LeftDeclaration(_) => {
-                panic!(
-                    "Env_invariant: Some {}: Impossible: Invalid AST structure",
-                    loc.debug_to_string(true)
-                );
+                return Err(EnvInvariant::new(
+                    Some(loc.dupe()),
+                    EnvInvariantFailure::Impossible("Invalid AST structure".into()),
+                ));
             }
             ast::statement::for_of::Left::LeftPattern(pat) => {
                 let pat_tuple = (pat.loc().dupe(), pat.clone());
                 self.add_destructure_bindings(
                     Root::For(Box::new((ForKind::Of { await_ }, right_tuple))),
                     &pat_tuple,
-                );
+                )?;
             }
         }
 
@@ -5839,7 +6021,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         stmt: &ast::statement::ForIn<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let right = &stmt.right;
         let right_tuple = (right.loc().dupe(), right.clone());
 
@@ -5864,20 +6046,20 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                     })),
                     None => forin,
                 };
-                self.add_destructure_bindings(source, &id_tuple);
+                self.add_destructure_bindings(source, &id_tuple)?;
             }
             ast::statement::for_in::Left::LeftDeclaration(_) => {
-                panic!(
-                    "Env_invariant: Some {}: Impossible: Invalid AST structure",
-                    loc.debug_to_string(true)
-                );
+                return Err(EnvInvariant::new(
+                    Some(loc.dupe()),
+                    EnvInvariantFailure::Impossible("Invalid AST structure".into()),
+                ));
             }
             ast::statement::for_in::Left::LeftPattern(pat) => {
                 let pat_tuple = (pat.loc().dupe(), pat.clone());
                 self.add_destructure_bindings(
                     Root::For(Box::new((ForKind::In, right_tuple))),
                     &pat_tuple,
-                );
+                )?;
             }
         }
 
@@ -5889,28 +6071,32 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         stmt: &ast::statement::For<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(init) = &stmt.init {
             match init {
                 ast::statement::for_::Init::InitDeclaration((var_loc, var_decl)) => {
-                    let Ok(()) = self.variable_declaration(var_loc, var_decl);
+                    self.variable_declaration(var_loc, var_decl)?;
                 }
                 ast::statement::for_::Init::InitExpression(expr) => {
-                    self.visit_expression(EnclosingContext::NoContext, &vec![], expr);
+                    self.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
                 }
             }
         }
         if let Some(test) = &stmt.test {
-            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test);
+            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test)?;
         }
         if let Some(update) = &stmt.update {
-            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], update);
+            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], update)?;
         }
         self.statement(&stmt.body)
     }
 
-    fn while_(&mut self, _loc: &ALoc, stmt: &ast::statement::While<ALoc, ALoc>) -> Result<(), !> {
-        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &stmt.test);
+    fn while_(
+        &mut self,
+        _loc: &ALoc,
+        stmt: &ast::statement::While<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &stmt.test)?;
         self.statement(&stmt.body)
     }
 
@@ -5918,9 +6104,9 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         stmt: &ast::statement::DoWhile<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.statement(&stmt.body)?;
-        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &stmt.test);
+        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], &stmt.test)?;
         Ok(())
     }
 
@@ -5928,16 +6114,16 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         stmt: &ast::statement::If<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let test = &stmt.test;
         let consequent = &stmt.consequent;
         let alternate = &stmt.alternate;
 
-        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test);
+        self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test)?;
         let has_else = alternate.is_some();
-        let Ok(()) = self.if_consequent_statement(has_else, consequent);
+        self.if_consequent_statement(has_else, consequent)?;
         if let Some(altern) = alternate {
-            let Ok(()) = self.if_alternate_statement(altern);
+            self.if_alternate_statement(altern)?;
         }
         Ok(())
     }
@@ -5946,7 +6132,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         alias: &ast::statement::TypeAlias<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = alias.id.loc.dupe();
         let name = &alias.id.name;
 
@@ -5965,7 +6151,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         otype: &ast::statement::OpaqueType<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = otype.id.loc.dupe();
         let name = &otype.id.name;
 
@@ -5984,7 +6170,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         kind: &ast_visitor::TypeParamsContext,
         tparam: &ast::types::TypeParam<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let name_loc = tparam.name.loc.dupe();
         let name = &tparam.name.name;
 
@@ -6006,7 +6192,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         interface: &ast::statement::Interface<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let name_loc = interface.id.loc.dupe();
         let tparams = &interface.tparams;
         let extends = &interface.extends;
@@ -6046,10 +6232,11 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         m: &ast::statement::DeclareModule<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.in_scope(ScopeKind::DeclareModule, |this| {
-            let Ok(()) = ast_visitor::declare_module_default(this, loc, m);
-        });
+            ast_visitor::declare_module_default(this, loc, m)?;
+            Ok(())
+        })?;
         Ok(())
     }
 
@@ -6057,7 +6244,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         n: &ast::statement::DeclareNamespace<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id = &n.id;
         match id {
             ast::statement::declare_namespace::Id::Global(_) => {}
@@ -6072,8 +6259,9 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             }
         }
         self.in_scope(ScopeKind::DeclareNamespace, |this| {
-            let Ok(()) = ast_visitor::declare_namespace_default(this, loc, n);
-        });
+            ast_visitor::declare_namespace_default(this, loc, n)?;
+            Ok(())
+        })?;
         Ok(())
     }
 
@@ -6081,7 +6269,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.enum_declaration_impl(false, loc, enum_decl)
     }
 
@@ -6090,7 +6278,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         enum_decl: &ast::statement::EnumDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         self.enum_declaration_impl(true, loc, enum_decl)
     }
 
@@ -6099,13 +6287,13 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
     fn declare_export_declaration_decl(
         &mut self,
         decl: &ast::statement::declare_export_declaration::Declaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         match decl {
             ast::statement::declare_export_declaration::Declaration::Enum { loc, declaration } => {
-                let Ok(()) = self.enum_declaration_impl(true, loc, declaration);
+                self.enum_declaration_impl(true, loc, declaration)?;
             }
             _ => {
-                let Ok(()) = ast_visitor::declare_export_declaration_decl_default(self, decl);
+                ast_visitor::declare_export_declaration_decl_default(self, decl)?;
             }
         }
         Ok(())
@@ -6115,7 +6303,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         decl: &ast::statement::ImportDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let import_kind = decl.import_kind;
         let (source_loc, source_lit) = &decl.source;
         let source = &source_lit.value;
@@ -6218,7 +6406,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         decl: &ast::statement::ImportEqualsDeclaration<ALoc, ALoc>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let id_loc = decl.id.loc.dupe();
         let local_name = &decl.id.name;
         let module_reference = &decl.module_reference;
@@ -6254,34 +6442,55 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         Ok(())
     }
 
-    fn call(&mut self, loc: &ALoc, _expr: &ast::expression::Call<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_call_expression");
+    fn call(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::Call<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_call_expression",
+        ))
     }
 
     fn optional_call(
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::OptionalCall<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
             loc.dupe(),
             "Should be visited by visit_optional_call_expression",
-        );
+        ))
     }
 
-    fn new(&mut self, loc: &ALoc, _expr: &ast::expression::New<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_new_expression");
+    fn new(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::New<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_new_expression",
+        ))
     }
 
-    fn member(&mut self, loc: &ALoc, _expr: &ast::expression::Member<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_member_expression");
+    fn member(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::Member<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_member_expression",
+        ))
     }
 
     fn member_property_expression(
         &mut self,
         expr: &ast::expression::Expression<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.visit_expression(EnclosingContext::IndexContext, &Vec::new(), expr);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.visit_expression(EnclosingContext::IndexContext, &Vec::new(), expr)?;
         Ok(())
     }
 
@@ -6289,19 +6498,19 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::OptionalMember<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
             loc.dupe(),
             "Should be visited by visit_optional_member_expression",
-        );
+        ))
     }
 
     fn type_cast(
         &mut self,
         _loc: &ALoc,
         expr: &ast::expression::TypeCast<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.cast(&expr.annot, &expr.expression);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.cast(&expr.annot, &expr.expression)?;
         Ok(())
     }
 
@@ -6309,8 +6518,8 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         _loc: &ALoc,
         expr: &ast::expression::AsExpression<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        self.cast(&expr.annot, &expr.expression);
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        self.cast(&expr.annot, &expr.expression)?;
         Ok(())
     }
 
@@ -6318,11 +6527,18 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::Unary<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_unary_expression");
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_unary_expression",
+        ))
     }
 
-    fn jsx_element(&mut self, loc: &ALoc, expr: &ast::jsx::Element<ALoc, ALoc>) -> Result<(), !> {
+    fn jsx_element(
+        &mut self,
+        loc: &ALoc,
+        expr: &ast::jsx::Element<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let this = &mut *self;
         let loc_element = loc.dupe();
         use flow_common::hint::JsxImplicitInstantiationHints;
@@ -6527,7 +6743,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                                 this.record_hint(loc.dupe(), attr_hints);
                             }
                             ast::jsx::attribute::Value::ExpressionContainer((_, container)) => {
-                                this.visit_jsx_expression(&attr_hints, container);
+                                this.visit_jsx_expression(&attr_hints, container)?;
                             }
                         }
                     }
@@ -6539,7 +6755,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                         EnclosingContext::NoContext,
                         &spread_hints,
                         &spread.argument,
-                    );
+                    )?;
                 }
             }
         }
@@ -6547,11 +6763,15 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         let children_decomp =
             HintDecomposition::new(HintDecompositionInner::DecompObjProp("children".into()));
         let children_hints = Hint::decompose(children_decomp, hints);
-        this.visit_jsx_children(&children_hints, &children.1);
+        this.visit_jsx_children(&children_hints, &children.1)?;
         Ok(())
     }
 
-    fn jsx_fragment(&mut self, loc: &ALoc, expr: &ast::jsx::Fragment<ALoc, ALoc>) -> Result<(), !> {
+    fn jsx_fragment(
+        &mut self,
+        loc: &ALoc,
+        expr: &ast::jsx::Fragment<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let this = &mut *self;
         let _loc = loc.dupe();
         let frag_children = &expr.frag_children;
@@ -6569,45 +6789,76 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             HintDecomposition::new(HintDecompositionInner::DecompObjProp("children".into()));
         let hints = Hint::decompose(children_decomp, hints);
 
-        this.visit_jsx_children(&hints, &frag_children.1);
+        this.visit_jsx_children(&hints, &frag_children.1)?;
         Ok(())
     }
 
-    fn expression(&mut self, expr: &ast::expression::Expression<ALoc, ALoc>) -> Result<(), !> {
+    fn expression(
+        &mut self,
+        expr: &ast::expression::Expression<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::enclosing_context::EnclosingContext;
-        self.visit_expression(EnclosingContext::NoContext, &vec![], expr);
+        self.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
         Ok(())
     }
 
-    fn array(&mut self, loc: &ALoc, _expr: &ast::expression::Array<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_array_expression");
+    fn array(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::Array<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_array_expression",
+        ))
     }
 
     fn conditional(
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::Conditional<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_conditional");
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(loc.dupe(), "Should be visited by visit_conditional"))
     }
 
-    fn binary(&mut self, loc: &ALoc, _expr: &ast::expression::Binary<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_binary_expression");
+    fn binary(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::Binary<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_binary_expression",
+        ))
     }
 
     fn logical(
         &mut self,
         loc: &ALoc,
         _expr: &ast::expression::Logical<ALoc, ALoc>,
-    ) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_logical_expression");
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_logical_expression",
+        ))
     }
 
-    fn object(&mut self, loc: &ALoc, _expr: &ast::expression::Object<ALoc, ALoc>) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_object_expression");
+    fn object(
+        &mut self,
+        loc: &ALoc,
+        _expr: &ast::expression::Object<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_object_expression",
+        ))
     }
 
-    fn switch(&mut self, loc: &ALoc, stmt: &ast::statement::Switch<ALoc, ALoc>) -> Result<(), !> {
+    fn switch(
+        &mut self,
+        loc: &ALoc,
+        stmt: &ast::statement::Switch<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         let discriminant = &stmt.discriminant;
         let cases = &stmt.cases;
 
@@ -6628,9 +6879,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         Ok(())
     }
 
-    fn switch_case(&mut self, case: &ast::statement::switch::Case<ALoc, ALoc>) -> Result<(), !> {
+    fn switch_case(
+        &mut self,
+        case: &ast::statement::switch::Case<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
         if let Some(test) = &case.test {
-            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test);
+            self.visit_expression(EnclosingContext::OtherTestContext, &vec![], test)?;
         }
         self.statement_list(&case.consequent)
     }
@@ -6639,15 +6893,18 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
         &mut self,
         loc: &ALoc,
         _expr: &ast::match_::Match<ALoc, ALoc, ast::expression::Expression<ALoc, ALoc>>,
-    ) -> Result<(), !> {
-        fail(loc.dupe(), "Should be visited by visit_match_expression");
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        Err(fail(
+            loc.dupe(),
+            "Should be visited by visit_match_expression",
+        ))
     }
 
     fn match_statement(
         &mut self,
         _loc: &ALoc,
         x: &ast::match_::Match<ALoc, ALoc, ast::statement::Statement<ALoc, ALoc>>,
-    ) -> Result<(), !> {
+    ) -> Result<(), EnvInvariant<ALoc>> {
         use flow_common::reason::VirtualReasonDesc::RMatch;
 
         let ast::match_::Match {
@@ -6656,7 +6913,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
             match_keyword_loc,
             comments: _,
         } = x;
-        self.visit_expression(EnclosingContext::NoContext, &Vec::new(), arg);
+        self.visit_expression(EnclosingContext::NoContext, &Vec::new(), arg)?;
         self.add_ordinary_binding(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
@@ -6689,12 +6946,12 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
                 prev_pattern_loc.dupe(),
                 acc,
                 pattern,
-            );
-            let Ok(()) = self.match_pattern(pattern);
+            )?;
+            self.match_pattern(pattern)?;
             if let Some(guard_expr) = guard {
-                self.visit_expression(EnclosingContext::OtherTestContext, &Vec::new(), guard_expr);
+                self.visit_expression(EnclosingContext::OtherTestContext, &Vec::new(), guard_expr)?;
             }
-            let Ok(()) = self.statement(body);
+            self.statement(body)?;
             prev_pattern_loc = Some(pattern.loc().dupe());
         }
         Ok(())
@@ -6707,8 +6964,8 @@ pub fn find_defs(
     env_info: &crate::env_api::EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,
     ast: &ast::Program<ALoc, ALoc>,
-) -> (EnvEntriesMap, HintMap) {
+) -> Result<(EnvEntriesMap, HintMap), EnvInvariant<ALoc>> {
     let mut finder = DefFinder::new(autocomplete_hooks, react_jsx, env_info, toplevel_scope_kind);
-    let Ok(()) = finder.program(ast);
-    finder.into_acc()
+    finder.program(ast)?;
+    Ok(finder.into_acc())
 }

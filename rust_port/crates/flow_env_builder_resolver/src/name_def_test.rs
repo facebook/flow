@@ -206,7 +206,8 @@ fn print_init_test(contents: &str) -> String {
         name_resolver::program_with_scope::<TestCx, TestFlow>(&cx, false, FlowOrdSet::new(), &ast);
     let env = env.to_env_info();
     let hooks = autocomplete_hooks();
-    let (inits, _) = name_def::find_defs(&hooks, true, &env, ScopeKind::Module, &ast);
+    let (inits, _) = name_def::find_defs(&hooks, true, &env, ScopeKind::Module, &ast)
+        .expect("name def should not hit an internal error in test");
     print_values(&inits)
 }
 
@@ -232,7 +233,8 @@ fn print_order_test(
         name_resolver::program_with_scope::<TestCx, TestFlow>(&cx, false, FlowOrdSet::new(), &ast);
     let env = env.to_env_info();
     let hooks = autocomplete_hooks();
-    let (inits, _) = name_def::find_defs(&hooks, true, &env, ScopeKind::Module, &ast);
+    let (inits, _) = name_def::find_defs(&hooks, true, &env, ScopeKind::Module, &ast)
+        .expect("name def should not hit an internal error in test");
     let order =
         name_def_ordering::build_ordering::<_, _, TestCx, TestFlow>(&cx, &hooks, &env, &inits)
             .unwrap_or_else(|_| Vec::new());

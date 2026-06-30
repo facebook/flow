@@ -1027,10 +1027,21 @@ where
     ) -> Result<(), !> {
         let loc = &ident.loc;
         if self.providers.is_provider(loc) {
-            let def_providers = self
-                .providers
-                .providers_of_def(loc)
-                .expect("providers_of_def should exist for provider");
+            let def_providers = match self.providers.providers_of_def(loc) {
+                Some(def_providers) => def_providers,
+                None => {
+                    Fl::add_output(
+                        self.cx,
+                        ErrorMessage::EInternal(Box::new((
+                            loc.dupe(),
+                            InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
+                                "providers_of_def should exist for provider".into(),
+                            )),
+                        ))),
+                    );
+                    return Ok(());
+                }
+            };
             for provider in &def_providers.providers {
                 let r = &provider.reason;
                 let key = EnvKey::new(DefLocType::OrdinaryNameLoc, r.loc().dupe());
@@ -2723,10 +2734,16 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                             state,
                         ),
                         _ => {
-                            panic!(
-                                "Env_invariant: Impossible - Object not synthesizable at {:?}",
-                                id_loc
-                            )
+                            Fl::add_output(
+                                cx,
+                                ErrorMessage::EInternal(Box::new((
+                                    id_loc.dupe(),
+                                    InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
+                                        "Object not synthesizable".into(),
+                                    )),
+                                ))),
+                            );
+                            state
                         }
                     })
                 }
@@ -3934,8 +3951,16 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     let mut results: Vec<OrderingResult> = Vec::new();
     for component in sort_result {
         let (fst, rest): (EnvKey<ALoc>, Vec<EnvKey<ALoc>>) = {
+            let err_loc = component.first().loc.dupe();
             let mut iter = component.into_iter();
-            let first = iter.next().expect("component should be non-empty");
+            let first = iter.next().ok_or_else(|| {
+                Box::new(ErrorMessage::EInternal(Box::new((
+                    err_loc,
+                    InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
+                        "component should be non-empty".into(),
+                    )),
+                ))))
+            })?;
             (first, iter.collect())
         };
 
@@ -3989,7 +4014,14 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
                 for m in &component_list {
                     elements.push(element_of_loc(m)?);
                 }
-                let elements = Vec1::try_from_vec(elements).expect("component should be non-empty");
+                let elements = Vec1::try_from_vec(elements).map_err(|_| {
+                    Box::new(ErrorMessage::EInternal(Box::new((
+                        fst.loc.dupe(),
+                        InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
+                            "component should be non-empty".into(),
+                        )),
+                    ))))
+                })?;
                 results.push(OrderingResult::ResolvableSCC(elements));
             } else {
                 // BFS search
@@ -4088,7 +4120,14 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
                     elements.push((blame, display));
                 }
 
-                let elements = Vec1::try_from_vec(elements).expect("component should be non-empty");
+                let elements = Vec1::try_from_vec(elements).map_err(|_| {
+                    Box::new(ErrorMessage::EInternal(Box::new((
+                        fst.loc.dupe(),
+                        InternalError::EnvInvariant(EnvInvariantFailure::Impossible(
+                            "component should be non-empty".into(),
+                        )),
+                    ))))
+                })?;
                 results.push(OrderingResult::IllegalSCC(elements));
             }
         }
