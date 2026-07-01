@@ -15,3 +15,6 @@ assert_ok "$FLOW" query '{"fields":["name"]}' | redact_clock
 
 echo "=== multiple fields -> object per file ==="
 assert_ok "$FLOW" query '{"fields":["name","flow.content_hash"]}' | redact_clock
+
+echo "=== exists + new ==="
+assert_ok "$FLOW" query '{"fields":["name","exists","new"]}' | redact_clock

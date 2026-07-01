@@ -2,3 +2,5 @@
 {"clock":"<redacted>","files":["a.js"],"is_fresh_instance":true}
 === multiple fields -> object per file ===
 {"clock":"<redacted>","files":[{"flow.content_hash":"608a96052ff4287d","name":"a.js"}],"is_fresh_instance":true}
+=== exists + new ===
+{"clock":"<redacted>","files":[{"exists":true,"name":"a.js","new":true}],"is_fresh_instance":true}

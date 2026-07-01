@@ -128,6 +128,10 @@ pub mod request {
     pub enum QueryField {
         #[serde(rename = "name")]
         Name,
+        #[serde(rename = "exists")]
+        Exists,
+        #[serde(rename = "new")]
+        New,
         #[serde(rename = "flow.content_hash")]
         ContentHash,
     }
@@ -136,6 +140,8 @@ pub mod request {
         pub fn as_key(self) -> &'static str {
             match self {
                 QueryField::Name => "name",
+                QueryField::Exists => "exists",
+                QueryField::New => "new",
                 QueryField::ContentHash => "flow.content_hash",
             }
         }
@@ -691,10 +697,16 @@ mod tests {
     #[test]
     fn query_decodes_supported_fields() {
         let query: Query =
-            serde_json::from_str(r#"{"fields": ["name", "flow.content_hash"]}"#).expect("decodes");
+            serde_json::from_str(r#"{"fields": ["name", "exists", "new", "flow.content_hash"]}"#)
+                .expect("decodes");
         assert_eq!(
             query.fields,
-            vec![QueryField::Name, QueryField::ContentHash]
+            vec![
+                QueryField::Name,
+                QueryField::Exists,
+                QueryField::New,
+                QueryField::ContentHash
+            ]
         );
         assert!(query.since.is_none());
     }

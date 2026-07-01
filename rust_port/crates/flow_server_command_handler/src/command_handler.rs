@@ -2888,6 +2888,10 @@ fn field_value(
 ) -> Result<serde_json::Value, String> {
     Ok(match field {
         QueryField::Name => name.into(),
+        // Flow reports only files it knows, which exist; deletions aren't tracked yet.
+        QueryField::Exists => true.into(),
+        // No `since` support yet, so every response is a fresh instance and every file is new.
+        QueryField::New => true.into(),
         QueryField::ContentHash => {
             // Fail the whole query rather than emit a partial entry a consumer could cache.
             let content_hash = content_hash
@@ -7787,5 +7791,13 @@ mod tests {
             err.contains("a.js") && err.contains("flow.content_hash"),
             "error should name the file and field, got: {err}",
         );
+    }
+
+    #[test]
+    fn exists_and_new_are_true() {
+        let entry =
+            build_file_entry(&[QueryField::Exists, QueryField::New], "a.js", None).expect("entry");
+        assert_eq!(entry["exists"], true);
+        assert_eq!(entry["new"], true);
     }
 }
