@@ -20,13 +20,13 @@ use flow_parser::loc::Loc;
 use crate::monitor_prot::FileWatcherMetadata;
 use crate::monitor_prot::empty_file_watcher_metadata;
 use crate::monitor_prot::merge_file_watcher_metadata;
-use crate::server_env::Env;
+use crate::server_env::EnvRef;
 use crate::workload_stream::ParallelizableWorkload;
 use crate::workload_stream::Workload;
 use crate::workload_stream::WorkloadHandler;
 use crate::workload_stream::WorkloadStream;
 
-pub type EnvUpdate = Box<dyn FnOnce(Env) -> Env + Send>;
+pub type EnvUpdate = Box<dyn FnOnce(EnvRef) -> EnvRef + Send>;
 
 static WORKLOAD_STREAM: std::sync::LazyLock<WorkloadStream> =
     std::sync::LazyLock::new(WorkloadStream::create);
@@ -285,7 +285,7 @@ pub fn pop_next_parallelizable_workload() -> Option<ParallelizableWorkload> {
     WORKLOAD_STREAM.pop_parallelizable()
 }
 
-pub fn update_env(mut env: Env) -> Env {
+pub fn update_env(mut env: EnvRef) -> EnvRef {
     let updates: Vec<EnvUpdate> = {
         let mut stream = ENV_UPDATE_STREAM.lock().unwrap();
         std::mem::take(&mut *stream)

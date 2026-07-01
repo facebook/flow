@@ -77,7 +77,7 @@ mod parallelizable_workload_loop {
 
 fn start_parallelizable_workloads(
     _genv: &server_env::Genv,
-    env: Arc<server_env::Env>,
+    env: server_env::EnvRef,
 ) -> ParallelizableWorkloadsStopper {
     init_tokio_runtime();
 
@@ -212,10 +212,7 @@ fn send_end_recheck(options: &Options, env: &server_env::Env) {
     persistent_connection::update_clients(
         &env.connections,
         lsp_prot::ErrorsReason::EndOfRecheck,
-        || {
-            let (errors, warnings) = error_collator::get_with_separate_warnings(env);
-            (errors, warnings.clone())
-        },
+        || error_collator::get_with_separate_warnings(env),
     );
 
     monitor_rpc::status_update(server_status::Event::FinishingUp);
@@ -227,7 +224,7 @@ fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
 
 fn recheck(
     genv: &server_env::Genv,
-    env: server_env::Env,
+    env: server_env::EnvRef,
     files_to_force: CheckedSet,
     find_ref_command: &mut Option<server_monitor_listener_state::FindRefCommand>,
     incompatible_lib_change: bool,
@@ -235,7 +232,7 @@ fn recheck(
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
     updates: CheckedSet,
-) -> Result<(ProfilingFinished, server_env::Env), type_service::RecheckError> {
+) -> Result<(ProfilingFinished, server_env::EnvRef), type_service::RecheckError> {
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
 
@@ -402,10 +399,10 @@ where
 }
 
 pub(crate) enum RecheckOutcome {
-    NothingToDo(server_env::Env),
+    NothingToDo(server_env::EnvRef),
     CompletedRecheck {
         profiling: ProfilingFinished,
-        env: server_env::Env,
+        env: server_env::EnvRef,
         recheck_count: usize,
     },
 }
@@ -415,7 +412,7 @@ pub(crate) enum RecheckOutcome {
 enum RecheckAttempt {
     Done(RecheckOutcome),
     Restart {
-        env: server_env::Env,
+        env: server_env::EnvRef,
         reused_loop: ParallelizableWorkloadsStopper,
     },
 }
@@ -423,7 +420,7 @@ enum RecheckAttempt {
 pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
-    env: server_env::Env,
+    env: server_env::EnvRef,
     shared_mem: &SharedMem,
     // When a recheck is canceled and restarted, the parallelizable-workload loop
     // from the canceled attempt is handed to the restart instead of being stopped
@@ -466,7 +463,7 @@ pub(crate) fn recheck_single(
 fn recheck_single_attempt(
     recheck_count: usize,
     genv: &server_env::Genv,
-    env: server_env::Env,
+    env: server_env::EnvRef,
     shared_mem: &SharedMem,
     reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckAttempt {
@@ -515,11 +512,9 @@ fn recheck_single_attempt(
         return RecheckAttempt::Done(RecheckOutcome::NothingToDo(env));
     }
 
-    // One deep clone of the pre-recheck `Env`, shared via `Arc` by the workload
-    // loop, the cancel-path `process_updates`, and the canceled-recheck restart
-    // (the recheck itself consumes the owned `env`). Collapses three per-recheck
-    // clones into one, so a queued liveErrorsRequest waits on a single clone.
-    let env_snapshot = Arc::new(env.clone());
+    // One pre-recheck `Env` ref, shared by the workload loop, the cancel-path
+    // `process_updates`, and the canceled-recheck restart.
+    let env_snapshot = env.dupe();
 
     let options_for_cancel = options.dupe();
     let shared_mem_for_cancel = genv.shared_mem.dupe();
@@ -550,8 +545,6 @@ fn recheck_single_attempt(
     };
     let stop_parallelizable_workloads_for_post = stop_parallelizable_workloads.dupe();
     let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.dupe();
-    // Cloned lazily inside `post_cancel`, so only the rare canceled-recheck
-    // restart pays to build an owned `Env`.
     let env_snapshot_for_post = env_snapshot.dupe();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
@@ -633,11 +626,10 @@ fn recheck_single_attempt(
             );
             let _done: bool = shared_mem.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
-            let env_for_cancel = (*env_snapshot_for_post).clone();
-            // Hand the fresh `Env` and the still-running loop back to the driver
-            // loop, which restarts the recheck without recursing.
+            // Hand the pre-recheck `Env` ref and the still-running loop back to
+            // the driver loop, which restarts the recheck without recursing.
             RecheckAttempt::Restart {
-                env: env_for_cancel,
+                env: env_snapshot_for_post.dupe(),
                 reused_loop: stop_parallelizable_workloads_for_post,
             }
         },
@@ -653,9 +645,9 @@ fn recheck_single_attempt(
 // rechecks. But something is better than nothing...
 pub fn recheck_loop(
     genv: &server_env::Genv,
-    env: server_env::Env,
+    env: server_env::EnvRef,
     shared_mem: &SharedMem,
-) -> (Vec<ProfilingFinished>, server_env::Env) {
+) -> (Vec<ProfilingFinished>, server_env::EnvRef) {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     let mut env = env;
     loop {

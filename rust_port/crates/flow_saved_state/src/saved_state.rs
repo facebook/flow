@@ -547,6 +547,7 @@ fn collect_saved_state_data(
     } else {
         None
     };
+    let errors = env.errors();
     SavedStateData {
         flowconfig_hash: options.flowconfig_hash.dupe(),
         parsed_heaps,
@@ -555,7 +556,7 @@ fn collect_saved_state_data(
         // The builtin flowlibs are excluded from the saved state. The server which loads the saved
         // state will extract and typecheck its own builtin flowlibs
         non_flowlib_libs: collect_non_flowlib_libs(env, options),
-        local_errors: env.errors.local_errors.clone(),
+        local_errors: errors.local_errors.clone(),
         node_modules_containers,
         dependency_graph,
         export_index,
@@ -566,8 +567,8 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
     flow_hh_logger::info!("Collecting env data for saved state");
     // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
-    let duplicate_providers = env
-        .errors
+    let errors = env.errors();
+    let duplicate_providers = errors
         .duplicate_providers
         .iter()
         .map(|(k, (leader, others))| {
@@ -598,7 +599,7 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
             .collect(),
         package_json_files: env.package_json_files.iter().cloned().collect(),
         non_flowlib_libs: collect_non_flowlib_libs(env, options),
-        local_errors: env.errors.local_errors.clone(),
+        local_errors: errors.local_errors.clone(),
         node_modules_containers,
         dependency_info: env.dependency_info.clone(),
         duplicate_providers,

@@ -20,6 +20,7 @@ use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_server_env::server_env::Env as ServerEnv;
+use flow_server_env::server_env::EnvTransaction;
 use flow_server_env::server_env::Genv;
 use flow_typing_context::Metadata;
 use flow_utils_concurrency::map_reduce::Bucket;
@@ -1185,7 +1186,7 @@ where
     #[allow(unreachable_code)]
     async fn recheck_run(
         _genv: &Genv,
-        _env: Self::Env,
+        env: Self::Env,
         _iteration: i32,
         _roots: BTreeSet<FileKey>,
     ) -> Result<
@@ -1206,8 +1207,6 @@ where
         updates.add(Some(focused_set), None, None);
         let find_ref_request = flow_services_references::find_refs_types::empty_request();
         let files_to_force = flow_common_utils::checked_set::CheckedSet::empty();
-        // let%lwt (_, _, _, env) =
-        //   Types_js.recheck
         let mut will_be_checked_files = flow_common_utils::checked_set::CheckedSet::empty();
         let recheck_result = flow_services_inference::type_service::recheck(
             pool,
@@ -1220,7 +1219,7 @@ where
             None,  // changed_mergebase
             false, // missed_changes
             &mut will_be_checked_files,
-            _env,
+            Arc::new(env),
         );
         let (_, _, _, env) = recheck_result.expect("recheck failed");
         log_input_files(&_roots);
@@ -1228,6 +1227,7 @@ where
             &env, workers, options, &profiling, _roots, _iteration, shared_mem,
         )
         .await?;
+        let env = EnvTransaction::new(env).into_env();
         Ok(((), (env, results)))
     }
 

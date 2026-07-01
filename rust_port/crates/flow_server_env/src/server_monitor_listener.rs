@@ -53,19 +53,23 @@ fn handle_message(
         MonitorToServerMessage::NewPersistentConnection(client_id, lsp_init_params) => {
             // Immediately register the new client
             persistent_connection::add_client(client_id, lsp_init_params);
-            server_monitor_listener_state::push_new_env_update(Box::new(move |mut env| {
-                env.connections =
-                    persistent_connection::add_client_to_clients(env.connections, client_id);
-                env
+            server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
+                let connections = persistent_connection::add_client_to_clients(
+                    env.connections.clone(),
+                    client_id,
+                );
+                crate::server_env::with_connections(env, connections)
             }));
         }
         MonitorToServerMessage::DeadPersistentConnection(client_id) => {
             // Immediately remove the dead client
             persistent_connection::remove_client(client_id);
-            server_monitor_listener_state::push_new_env_update(Box::new(move |mut env| {
-                env.connections =
-                    persistent_connection::remove_client_from_clients(env.connections, client_id);
-                env
+            server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
+                let connections = persistent_connection::remove_client_from_clients(
+                    env.connections.clone(),
+                    client_id,
+                );
+                crate::server_env::with_connections(env, connections)
             }));
         }
         MonitorToServerMessage::FileWatcherNotification {

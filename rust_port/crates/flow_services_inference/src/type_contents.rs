@@ -171,7 +171,7 @@ fn errors_of_file_artifacts(
         inference_utils::set_of_docblock_errors(filename.dupe(), docblock_errors);
     errors = errors.union(&docblock_error_set);
     // Suppressions for errors in this file can come from dependencies
-    let mut suppressions = env.errors.suppressions.clone();
+    let mut suppressions = env.errors().suppressions.clone();
     let new_suppressions = cx.error_suppressions().clone();
     suppressions.update_suppressions(new_suppressions);
     let severity_cover = cx.severity_cover();

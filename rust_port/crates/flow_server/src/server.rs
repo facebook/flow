@@ -28,6 +28,7 @@ use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
+use flow_server_env::server_env::EnvRef;
 use flow_server_env::server_env::Genv;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_status;
@@ -268,7 +269,7 @@ async fn gc_loop(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) {
     }
 }
 
-fn serve(_genv: &Genv, mut _env: Env, shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) {
+fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -522,7 +523,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(&genv_arc, env, &genv_arc.shared_mem);
+    serve(&genv_arc, Arc::new(env), &genv_arc.shared_mem);
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {

@@ -1074,13 +1074,14 @@ fn autocomplete_on_parsed(
     let ac_result = match ac_typing_artifacts {
         None => None,
         Some((info, file_sig, ast, parse_errors, cx)) => {
+            let exports = env.exports.as_ref();
             let search_exported_values_fn: Box<
                 dyn Fn(
                         &flow_services_autocomplete::autocomplete_service_js::AcOptions,
                         &str,
                     ) -> SearchResults
                     + '_,
-            > = match env.exports.as_ref() {
+            > = match exports {
                 Some(exports) => Box::new(move |ac_options, before| {
                     search_exported_values(ac_options, before, exports)
                 }),
@@ -1094,7 +1095,7 @@ fn autocomplete_on_parsed(
                         &str,
                     ) -> SearchResults
                     + '_,
-            > = match env.exports.as_ref() {
+            > = match exports {
                 Some(exports) => Box::new(move |ac_options, before| {
                     search_exported_types(ac_options, before, exports)
                 }),
@@ -2382,8 +2383,8 @@ fn batch_coverage(
                 }
             })
         };
-        let mut response: Vec<_> = env
-            .coverage
+        let coverage = env.coverage();
+        let mut response: Vec<_> = coverage
             .iter()
             .filter(|(key, _)| !key.is_lib_file() && filter(&key.to_absolute()))
             .map(|(key, coverage)| (key.dupe(), coverage.clone()))
@@ -3919,9 +3920,9 @@ fn run_command_in_parallel(
 
 fn run_command_in_serial(
     genv: &Arc<server_env::Genv>,
-    mut env: server_env::Env,
+    mut env: server_env::EnvRef,
     workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
-) -> (server_env::Env, EphemeralNonparallelizableResult) {
+) -> (server_env::EnvRef, EphemeralNonparallelizableResult) {
     loop {
         match workload(&env) {
             Ok((response, json_data)) => return (env, Ok((response, json_data))),
@@ -3929,7 +3930,6 @@ fn run_command_in_serial(
                 flow_hh_logger::info!(
                     "Command successfully canceled. Running a recheck before restarting the command"
                 );
-                // let%lwt (recheck_profiling, env) = Rechecker.recheck_loop genv env in
                 let (_recheck_profiling, new_env) =
                     flow_server_rechecker::rechecker::recheck_loop(genv, env, &genv.shared_mem);
                 env = new_env;
@@ -4003,10 +4003,10 @@ fn handle_parallelizable_ephemeral(
 // without relying on side effects.
 fn handle_nonparallelizable_ephemeral_unsafe(
     genv: &Arc<server_env::Genv>,
-    env: server_env::Env,
+    env: server_env::EnvRef,
     workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
 ) -> (
-    server_env::Env,
+    server_env::EnvRef,
     Result<((), server_prot::response::Response, Option<lsp_prot::Json>), EphemeralHandlerError>,
 ) {
     let (env, result) = run_command_in_serial(genv, env, workload);
@@ -4026,7 +4026,7 @@ fn handle_nonparallelizable_ephemeral(
 ) -> flow_server_env::workload_stream::Workload {
     let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> = Box::new(|| false);
     let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
-        Box::new(move |env: server_env::Env| {
+        Box::new(move |env: server_env::EnvRef| {
             let workload_genv = genv.clone();
             let mut workload_fn =
                 |inner_env: &server_env::Env| -> EphemeralNonparallelizableResult {
@@ -4314,8 +4314,8 @@ fn handle_parallelizable_persistent(
 
 fn handle_nonparallelizable_persistent_unsafe(
     _genv: &server_env::Genv,
-    _env: server_env::Env,
-) -> server_env::Env {
+    _env: server_env::EnvRef,
+) -> server_env::EnvRef {
     _env
 }
 
@@ -4329,7 +4329,7 @@ fn handle_nonparallelizable_persistent(
     let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
         Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
     let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
-        Box::new(move |env: server_env::Env| {
+        Box::new(move |env: server_env::EnvRef| {
             let _: Result<(), WorkloadCanceled> =
                 wrap_persistent_handler(&genv.options, client_id, request, (), || {
                     let (response, metadata) = workload(&env)?;
@@ -4350,7 +4350,7 @@ fn did_open(env: &server_env::Env, client_id: lsp_prot::ClientId) {
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
-            warnings,
+            &warnings,
         );
     }
 }
@@ -4362,7 +4362,7 @@ fn did_close(env: &server_env::Env, client_id: lsp_prot::ClientId) {
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
-            warnings,
+            &warnings,
         );
     }
 }
@@ -4427,7 +4427,7 @@ fn handle_persistent_subscribe(
     let (current_errors, current_warnings) =
         flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
-        persistent_connection::subscribe_client(&client, &current_errors, current_warnings);
+        persistent_connection::subscribe_client(&client, &current_errors, &current_warnings);
     }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
@@ -7717,7 +7717,7 @@ fn mk_nonparallelizable_persistent_workload(
         workload_should_be_cancelled: Box::new(move || {
             cancelled_request_id_opt(&request_for_cancel).is_some()
         }),
-        workload_handler: Box::new(move |env: server_env::Env| {
+        workload_handler: Box::new(move |env: server_env::EnvRef| {
             let mut env = env;
             let mut current_workload = Some(workload);
             loop {

@@ -29,6 +29,7 @@ use flow_server_env::error_collator;
 use flow_server_env::file_watcher_status;
 use flow_server_env::monitor_prot::FileWatcherMetadata;
 use flow_server_env::persistent_connection;
+use flow_server_env::server_env::EnvTransaction;
 use flow_server_env::server_monitor_listener_state;
 pub use flow_server_env::server_prot::response::LazyStats;
 use flow_server_env::server_socket_rpc;
@@ -76,7 +77,7 @@ pub fn start(
 }
 
 struct ServerState {
-    env: Option<flow_server_env::server_env::Env>,
+    env: Option<flow_server_env::server_env::EnvRef>,
     env_generation: u64,
     init_done: bool,
     pending_recheck: bool,
@@ -288,18 +289,21 @@ impl FlowServer {
                                 .expect("pool_workers should be positive"),
                         ),
                     );
-                    let (mut env, _first_internal_error) =
+                    let (env, _first_internal_error) =
                         match type_service::init(&init_options, &pool, &init_shared_mem, None) {
                             Ok(result) => result,
                             Err(error) => panic!("init failed: {:?}", error),
                         };
-                    env = server_monitor_listener_state::update_env(env);
+                    let mut env = server_monitor_listener_state::update_env(Arc::new(env));
                     let init_duration = init_start.elapsed().as_secs_f64();
                     let finishing_up_status = server_status::Status::Typechecking(
                         server_status::TypecheckMode::Initializing,
                         server_status::TypecheckStatus::FinishingTypecheck,
                     );
-                    env.connections = persistent_connection::all_clients();
+                    env = flow_server_env::server_env::with_connections(
+                        env,
+                        persistent_connection::all_clients(),
+                    );
                     persistent_connection::send_status(
                         finishing_up_status,
                         (
@@ -324,7 +328,10 @@ impl FlowServer {
                     {
                         let (lock, cvar) = &*init_state;
                         let mut server_state = lock.lock().unwrap();
-                        env.connections = persistent_connection::all_clients();
+                        env = flow_server_env::server_env::with_connections(
+                            env,
+                            persistent_connection::all_clients(),
+                        );
                         server_state.env = Some(env);
                         server_state.env_generation += 1;
                         server_state.init_done = true;
@@ -526,10 +533,13 @@ fn process_persistent_workloads(
         };
 
         let env = workload(env);
-        let mut env = server_monitor_listener_state::update_env(env);
+        let env = server_monitor_listener_state::update_env(env);
         let (lock, cvar) = &**state;
         let mut server_state = lock.lock().unwrap();
-        env.connections = persistent_connection::all_clients();
+        let env = flow_server_env::server_env::with_connections(
+            env,
+            persistent_connection::all_clients(),
+        );
         server_state.env = Some(env);
         server_state.env_generation += 1;
         cvar.notify_all();
@@ -611,7 +621,7 @@ fn do_rechecks(
     let mut env = {
         let (lock, _) = &**state;
         let server_state = lock.lock().unwrap();
-        server_state.env.clone().unwrap()
+        server_state.env.as_ref().unwrap().dupe()
     };
 
     loop {
@@ -665,7 +675,10 @@ fn do_rechecks(
             env = server_monitor_listener_state::update_env(env);
             let (lock, cvar) = &**state;
             let mut server_state = lock.lock().unwrap();
-            env.connections = persistent_connection::all_clients();
+            env = flow_server_env::server_env::with_connections(
+                env,
+                persistent_connection::all_clients(),
+            );
             server_state.env = Some(env);
             server_state.env_generation += 1;
             cvar.notify_all();
@@ -677,7 +690,7 @@ fn do_rechecks(
         worker_cancel::resume_workers();
         will_be_checked_files.union(files_to_force.dupe());
 
-        let old_env = env.clone();
+        let old_env = env.dupe();
         let recheck_start = std::time::Instant::now();
         flow_server_env::monitor_rpc::status_update(server_status::Event::RecheckStart);
         persistent_connection::send_start_recheck(&env.connections);
@@ -729,10 +742,7 @@ fn do_rechecks(
                 persistent_connection::update_clients(
                     &env.connections,
                     flow_server_env::lsp_prot::ErrorsReason::EndOfRecheck,
-                    || {
-                        let (errors, warnings) = error_collator::get_with_separate_warnings(&env);
-                        (errors, warnings.clone())
-                    },
+                    || error_collator::get_with_separate_warnings(&env),
                 );
                 flow_server_env::monitor_rpc::status_update(server_status::Event::FinishingUp);
                 let duration = recheck_start.elapsed().as_secs_f64();
@@ -754,8 +764,11 @@ fn do_rechecks(
                 env = server_monitor_listener_state::update_env(env);
                 let (lock, cvar) = &**state;
                 let mut server_state = lock.lock().unwrap();
-                env.connections = persistent_connection::all_clients();
-                server_state.env = Some(env.clone());
+                env = flow_server_env::server_env::with_connections(
+                    env,
+                    persistent_connection::all_clients(),
+                );
+                server_state.env = Some(env.dupe());
                 server_state.env_generation += 1;
                 cvar.notify_all();
                 drop(server_state);
@@ -787,14 +800,18 @@ fn do_rechecks(
                         &updates,
                         &find_ref_request.def_info,
                         CheckedSet::empty(),
-                        old_env.clone(),
+                        EnvTransaction::new(old_env.dupe()),
                     )
+                    .map(|env| env.commit())
                     .unwrap_or(old_env);
                     env = server_monitor_listener_state::update_env(env);
                     let (lock, cvar) = &**state;
                     let mut server_state = lock.lock().unwrap();
-                    env.connections = persistent_connection::all_clients();
-                    server_state.env = Some(env.clone());
+                    env = flow_server_env::server_env::with_connections(
+                        env,
+                        persistent_connection::all_clients(),
+                    );
+                    server_state.env = Some(env.dupe());
                     server_state.env_generation += 1;
                     cvar.notify_all();
                 } else {
@@ -925,16 +942,20 @@ fn remove_persistent_client(
     client_id: flow_server_env::lsp_prot::ClientId,
 ) {
     persistent_connection::remove_client(client_id);
-    server_monitor_listener_state::push_new_env_update(Box::new(move |mut env| {
-        env.connections =
+    server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
+        let connections =
             persistent_connection::remove_client_from_clients(env.connections.clone(), client_id);
-        env
+        flow_server_env::server_env::with_connections(env, connections)
     }));
     let (lock, cvar) = &**state;
     let mut server_state = lock.lock().unwrap();
-    if let Some(env) = server_state.env.as_mut() {
-        env.connections =
+    if let Some(env) = server_state.env.take() {
+        let connections =
             persistent_connection::remove_client_from_clients(env.connections.clone(), client_id);
+        server_state.env = Some(flow_server_env::server_env::with_connections(
+            env,
+            connections,
+        ));
         server_state.env_generation += 1;
         cvar.notify_all();
     }
@@ -1068,14 +1089,18 @@ fn handle_connection(
             );
             return;
         }
-        server_monitor_listener_state::push_new_env_update(Box::new(move |mut env| {
-            env.connections =
+        server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
+            let connections =
                 persistent_connection::add_client_to_clients(env.connections.clone(), client_id);
-            env
+            flow_server_env::server_env::with_connections(env, connections)
         }));
-        if let Some(env) = server_state.env.as_mut() {
-            env.connections =
+        if let Some(env) = server_state.env.take() {
+            let connections =
                 persistent_connection::add_client_to_clients(env.connections.clone(), client_id);
+            server_state.env = Some(flow_server_env::server_env::with_connections(
+                env,
+                connections,
+            ));
             server_state.env_generation += 1;
             cvar.notify_all();
         }
@@ -1643,7 +1668,7 @@ fn handle_check_contents(
         flow_services_inference::type_contents::type_parse_artifacts(
             &options,
             shared_mem.dupe(),
-            env.master_cx.clone(),
+            env.master_cx.dupe(),
             file_key.dupe(),
             intermediate_result,
         )

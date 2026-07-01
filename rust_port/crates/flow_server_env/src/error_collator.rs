@@ -19,6 +19,8 @@ use flow_common_errors::error_utils::PrintableError;
 use flow_common_errors::error_utils::code_of_printable_error;
 use flow_common_errors::error_utils::lsp_output;
 use flow_common_utils::checked_set::CheckedSet;
+use flow_data_structure_wrapper::overlay_map::OverlayMap;
+use flow_data_structure_wrapper::overlay_map::OverlayMapBase;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
@@ -37,16 +39,19 @@ use murmur3::murmur3_32;
 
 use crate::collated_errors::CollatedErrors;
 use crate::collated_errors::ErrorStateTimestamps;
+use crate::collated_errors::OverlayCollatedErrors;
 use crate::monitor_rpc;
 use crate::server_env::Env;
+use crate::server_env::EnvCellReadGuard;
 use crate::server_env::Errors;
+use crate::server_env::OverlayErrors;
 use crate::server_status;
 
 fn add_suppression_warnings(
     root: &Path,
     checked: &CheckedSet,
     unused: &ErrorSuppressions,
-    warnings: &mut BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,
+    warnings: &mut OverlayMap<FileKey, ConcreteLocPrintableErrorSet>,
 ) {
     // For each unused suppression, create an warning
     let all_locs = unused.all_unused_locs();
@@ -72,19 +77,23 @@ fn add_suppression_warnings(
                 Some(root),
                 intermediate,
             );
-            let file_warnings = warnings
-                .entry(source_file)
-                .or_insert_with(ConcreteLocPrintableErrorSet::empty);
+            let mut file_warnings = match warnings.get(&source_file) {
+                Some(existing) => existing.clone(),
+                None => ConcreteLocPrintableErrorSet::empty(),
+            };
             file_warnings.add(err);
+            warnings.insert(source_file, file_warnings);
         }
     }
 }
 
-fn collate_duplicate_providers(
+fn collate_duplicate_providers<'a, I>(
     root: &Path,
-    duplicate_providers: &BTreeMap<FlowSmolStr, (FileKey, vec1::Vec1<FileKey>)>,
+    duplicate_providers: I,
     acc: &mut Vec<(PrintableError<Loc>, FileKey, FileKey)>,
-) {
+) where
+    I: IntoIterator<Item = (&'a FlowSmolStr, &'a (FileKey, vec1::Vec1<FileKey>))>,
+{
     let pos = Position { line: 1, column: 0 };
     for (module_name, (provider_file, duplicates)) in duplicate_providers {
         let provider = Loc {
@@ -126,7 +135,7 @@ pub fn update_local_collated_errors<F, G>(
     unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
     suppressions: &ErrorSuppressions,
     errors: &BTreeMap<FileKey, ErrorSet>,
-    acc: &mut CollatedErrors,
+    acc: &mut OverlayCollatedErrors,
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
@@ -158,50 +167,68 @@ pub fn update_local_collated_errors<F, G>(
 // suppression set we pass over to Error_suppressions.filter_suppressed_errors.
 // Finally, we compute unused suppression warnings over the set of suppressions
 // that we found during checking (not all_suppressions).
-pub fn update_collated_errors<F, G>(
+#[allow(clippy::too_many_arguments)]
+fn acc_fun<F, G, ErrorBase, SuppressedBase>(
+    loc_of_aloc: &F,
+    get_ast: &G,
+    options: &Options,
+    all_suppressions: &ErrorSuppressions,
+    unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
+    filename: &FileKey,
+    file_errs: &ErrorSet,
+    errors: &mut OverlayMap<FileKey, ConcreteLocPrintableErrorSet, ErrorBase>,
+    suppressed: &mut OverlayMap<
+        FileKey,
+        Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>,
+        SuppressedBase,
+    >,
+    unused: &mut ErrorSuppressions,
+) where
+    F: Fn(&ALoc) -> Loc,
+    G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    ErrorBase: OverlayMapBase<FileKey, ConcreteLocPrintableErrorSet>,
+    SuppressedBase: OverlayMapBase<FileKey, Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>>,
+{
+    let root = &*options.root;
+    let file_options = Some(&*options.file_options);
+    let (file_errs, file_suppressed) = all_suppressions.filter_suppressed_errors(
+        root,
+        file_options,
+        options.node_modules_errors,
+        unsuppressable_error_codes,
+        loc_of_aloc,
+        get_ast,
+        file_errs,
+        unused,
+    );
+    errors.insert(filename.dupe(), file_errs);
+    suppressed.insert(filename.dupe(), file_suppressed);
+}
+
+#[allow(clippy::too_many_arguments)]
+fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeErrors, Warnings>(
     loc_of_aloc: &F,
     get_ast: &G,
     options: &Options,
     checked_files: &CheckedSet,
     all_suppressions: &ErrorSuppressions,
-    errors: &Errors,
-    acc: &mut CollatedErrors,
+    local_errors: LocalErrors,
+    duplicate_providers: DuplicateProviders,
+    merge_errors: MergeErrors,
+    warnings: Warnings,
+    suppressions: &ErrorSuppressions,
+    acc: &mut OverlayCollatedErrors,
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    LocalErrors: IntoIterator<Item = (&'a FileKey, &'a ErrorSet)>,
+    DuplicateProviders: IntoIterator<Item = (&'a FlowSmolStr, &'a (FileKey, vec1::Vec1<FileKey>))>,
+    MergeErrors: IntoIterator<Item = (&'a FileKey, &'a ErrorSet)>,
+    Warnings: IntoIterator<Item = (&'a FileKey, &'a ErrorSet)>,
 {
     let root = &*options.root;
-    let node_modules_errors = options.node_modules_errors;
     let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
         options.unsuppressable_error_codes.iter().cloned().collect();
-    let Errors {
-        local_errors,
-        duplicate_providers,
-        merge_errors,
-        warnings,
-        suppressions,
-    } = errors;
-
-    let acc_fun =
-        |filename: &FileKey,
-         file_errs: &ErrorSet,
-         errors: &mut BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,
-         suppressed: &mut BTreeMap<FileKey, Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>>,
-         unused: &mut ErrorSuppressions| {
-            let file_options = Some(&*options.file_options);
-            let (file_errs, file_suppressed) = all_suppressions.filter_suppressed_errors(
-                root,
-                file_options,
-                node_modules_errors,
-                &unsuppressable_error_codes,
-                loc_of_aloc,
-                get_ast,
-                file_errs,
-                unused,
-            );
-            errors.insert(filename.dupe(), file_errs);
-            suppressed.insert(filename.dupe(), file_suppressed);
-        };
 
     monitor_rpc::status_update(server_status::Event::CollatingErrorsStart);
 
@@ -211,9 +238,14 @@ pub fn update_collated_errors<F, G>(
         &mut acc.collated_duplicate_providers_errors,
     );
 
-    let mut unused = suppressions.clone();
+    let mut unused = (*suppressions).clone();
     for (filename, file_errs) in local_errors {
         acc_fun(
+            loc_of_aloc,
+            get_ast,
+            options,
+            all_suppressions,
+            &unsuppressable_error_codes,
             filename,
             file_errs,
             &mut acc.collated_local_errors,
@@ -224,6 +256,11 @@ pub fn update_collated_errors<F, G>(
 
     for (filename, file_errs) in merge_errors {
         acc_fun(
+            loc_of_aloc,
+            get_ast,
+            options,
+            all_suppressions,
+            &unsuppressable_error_codes,
             filename,
             file_errs,
             &mut acc.collated_merge_errors,
@@ -232,9 +269,14 @@ pub fn update_collated_errors<F, G>(
         );
     }
 
-    let mut warning_results: BTreeMap<FileKey, ConcreteLocPrintableErrorSet> = BTreeMap::new();
+    let mut warning_results: OverlayMap<FileKey, ConcreteLocPrintableErrorSet> = OverlayMap::new();
     for (filename, file_errs) in warnings {
         acc_fun(
+            loc_of_aloc,
+            get_ast,
+            options,
+            all_suppressions,
+            &unsuppressable_error_codes,
             filename,
             file_errs,
             &mut warning_results,
@@ -246,48 +288,109 @@ pub fn update_collated_errors<F, G>(
     // Compute "unused suppression warnings" based on the suppression set that
     // emerged from the current checked set, not the entire set of suppressions.
     add_suppression_warnings(root, checked_files, &unused, &mut warning_results);
-    for (file, errs) in warning_results {
-        acc.collated_warning_map
-            .entry(file)
-            .and_modify(|existing| existing.union(&errs))
-            .or_insert(errs);
+    for (file, errs) in warning_results.into_delta_values() {
+        let merged = match acc.collated_warning_map.get(&file) {
+            Some(existing) => {
+                let mut merged = existing.clone();
+                merged.union(&errs);
+                merged
+            }
+            None => errs,
+        };
+        acc.collated_warning_map.insert(file, merged);
     }
+}
+
+pub fn update_collated_errors<F, G>(
+    loc_of_aloc: &F,
+    get_ast: &G,
+    options: &Options,
+    checked_files: &CheckedSet,
+    all_suppressions: &ErrorSuppressions,
+    errors: &Errors,
+    acc: &mut OverlayCollatedErrors,
+) where
+    F: Fn(&ALoc) -> Loc,
+    G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+{
+    let Errors {
+        local_errors,
+        duplicate_providers,
+        merge_errors,
+        warnings,
+        suppressions,
+    } = errors;
+    update_collated_errors_impl(
+        loc_of_aloc,
+        get_ast,
+        options,
+        checked_files,
+        all_suppressions,
+        local_errors,
+        duplicate_providers,
+        merge_errors,
+        warnings,
+        suppressions,
+        acc,
+    );
+}
+
+pub fn update_collated_overlay_errors<F, G>(
+    loc_of_aloc: &F,
+    get_ast: &G,
+    options: &Options,
+    checked_files: &CheckedSet,
+    all_suppressions: &ErrorSuppressions,
+    errors: &OverlayErrors,
+    acc: &mut OverlayCollatedErrors,
+) where
+    F: Fn(&ALoc) -> Loc,
+    G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+{
+    let OverlayErrors {
+        local_errors,
+        duplicate_providers,
+        merge_errors,
+        warnings,
+        suppressions,
+        ..
+    } = errors;
+    update_collated_errors_impl(
+        loc_of_aloc,
+        get_ast,
+        options,
+        checked_files,
+        all_suppressions,
+        local_errors,
+        duplicate_providers,
+        merge_errors,
+        warnings,
+        suppressions,
+        acc,
+    );
 }
 
 fn get_with_separate_warnings_internal(
     env: &Env,
 ) -> (
     ConcreteLocPrintableErrorSet,
-    &BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,
-    &BTreeMap<FileKey, Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>>,
+    EnvCellReadGuard<CollatedErrors>,
 ) {
-    let collated_errors = &env.collated_errors;
-    let CollatedErrors {
-        collated_duplicate_providers_errors,
-        collated_local_errors,
-        collated_merge_errors,
-        collated_warning_map,
-        collated_suppressed_errors,
-        error_state_timestamps: _,
-    } = collated_errors;
+    let collated_errors = env.collated_errors();
     let mut collated_errorset = ConcreteLocPrintableErrorSet::empty();
-    for (err, _, _) in collated_duplicate_providers_errors {
+    for (err, _, _) in &collated_errors.collated_duplicate_providers_errors {
         collated_errorset.add(err.clone());
     }
-    for errs in collated_local_errors.values() {
+    for errs in collated_errors.collated_local_errors.values() {
         collated_errorset.union(errs);
     }
-    for errs in collated_merge_errors.values() {
+    for errs in collated_errors.collated_merge_errors.values() {
         collated_errorset.union(errs);
     }
-    (
-        collated_errorset,
-        collated_warning_map,
-        collated_suppressed_errors,
-    )
+    (collated_errorset, collated_errors)
 }
 
-fn type_error_stat(collated_errors: &CollatedErrors) -> (bool, bool, bool, bool) {
+fn type_error_stat(collated_errors: &OverlayCollatedErrors) -> (bool, bool, bool, bool) {
     let collated_merge_errors = &collated_errors.collated_merge_errors;
     let (
         have_type_errors,
@@ -356,7 +459,7 @@ pub struct PerFileErrors<'a> {
 // let compute_per_file_errors ~with_context_limit collated_errors =
 pub fn compute_per_file_errors(
     with_context_limit: usize,
-    collated_errors: &CollatedErrors,
+    collated_errors: &OverlayCollatedErrors,
 ) -> Vec<PerFileErrors<'_>> {
     let mut context_count = 0;
     fn process_errors<'a>(
@@ -449,7 +552,9 @@ pub struct ErrorResolutionStat {
     pub time_to_resolve_all_subtyping_errors_in_one_file: Option<f64>,
 }
 
-pub fn update_error_state_timestamps(collated_errors: &mut CollatedErrors) -> ErrorResolutionStat {
+pub fn update_error_state_timestamps(
+    collated_errors: &mut OverlayCollatedErrors,
+) -> ErrorResolutionStat {
     let current_time = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
@@ -534,9 +639,9 @@ pub fn update_error_state_timestamps(collated_errors: &mut CollatedErrors) -> Er
 pub fn get_without_suppressed(
     env: &Env,
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
-    let (errors, warning_map, _suppressed_errors) = get_with_separate_warnings_internal(env);
+    let (errors, collated_errors) = get_with_separate_warnings_internal(env);
     let mut warnings = ConcreteLocPrintableErrorSet::empty();
-    for errs in warning_map.values() {
+    for errs in collated_errors.collated_warning_map.values() {
         warnings.union(errs);
     }
     (errors, warnings)
@@ -549,25 +654,26 @@ pub fn get(
     ConcreteLocPrintableErrorSet,
     Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>,
 ) {
-    let (errors, warning_map, suppressed_errors) = get_with_separate_warnings_internal(env);
+    let (errors, collated_errors) = get_with_separate_warnings_internal(env);
     let mut warnings = ConcreteLocPrintableErrorSet::empty();
-    for errs in warning_map.values() {
+    for errs in collated_errors.collated_warning_map.values() {
         warnings.union(errs);
     }
     let mut all_suppressed = Vec::new();
-    for errs in suppressed_errors.values() {
+    for errs in collated_errors.collated_suppressed_errors.values() {
         all_suppressed.extend(errs.iter().cloned());
     }
     (errors, warnings, all_suppressed)
 }
 
+/// Returns the collated error set plus the warning map. Keep the read lock
+/// scoped to this function so client sends do not block recheck commits.
 pub fn get_with_separate_warnings(
     env: &Env,
 ) -> (
     ConcreteLocPrintableErrorSet,
-    &BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,
+    BTreeMap<FileKey, ConcreteLocPrintableErrorSet>,
 ) {
-    let (collated_errorset, collated_warning_map, _collated_suppressed_errors) =
-        get_with_separate_warnings_internal(env);
-    (collated_errorset, collated_warning_map)
+    let (errors, collated_errors) = get_with_separate_warnings_internal(env);
+    (errors, collated_errors.collated_warning_map.clone())
 }

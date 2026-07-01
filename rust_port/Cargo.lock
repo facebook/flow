@@ -828,6 +828,7 @@ dependencies = [
  "arcstr",
  "dupe",
  "im",
+ "parking_lot",
  "rpds",
  "serde",
  "smol_str",

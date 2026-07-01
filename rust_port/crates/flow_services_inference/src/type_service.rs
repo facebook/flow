@@ -28,12 +28,14 @@ use flow_common_errors::error_utils::PrintableError;
 use flow_common_modulename::Modulename;
 use flow_common_semver::semver;
 use flow_common_tarjan::topsort;
-use flow_common_transaction as transaction;
-use flow_common_transaction::Transaction;
+use flow_common_transaction as side_effect_transaction;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_common_utils::graph::Graph;
 use flow_config::FlowConfig;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::overlay_map::OverlayMap;
+use flow_data_structure_wrapper::overlay_map::OverlayMapBase;
+use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::ast::Program;
@@ -44,12 +46,21 @@ use flow_parsing::parsing_service;
 use flow_saved_state::FetchResult;
 use flow_saved_state::LoadedSavedState;
 use flow_server_env::collated_errors::CollatedErrors;
+use flow_server_env::collated_errors::OverlayCollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
+use flow_server_env::server_env::EnvRef;
+use flow_server_env::server_env::EnvTransaction;
 use flow_server_env::server_env::Errors;
+use flow_server_env::server_env::OverlayCoverage;
+use flow_server_env::server_env::OverlayDuplicateProviders;
+use flow_server_env::server_env::OverlayErrorMap;
+use flow_server_env::server_env::OverlayErrors;
+use flow_server_env::server_env::env_cell;
+use flow_server_env::server_env::overlay_coverage;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_status;
 use flow_server_files::server_files_js;
@@ -97,13 +108,17 @@ fn with_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
     }
 }
 
-pub(crate) fn clear_errors(files: &FlowOrdSet<FileKey>, mut errors: Errors) -> Errors {
-    let Errors {
+pub(crate) fn clear_errors(
+    files: &FlowOrdSet<FileKey>,
+    mut errors: OverlayErrors,
+) -> OverlayErrors {
+    let OverlayErrors {
         ref mut local_errors,
         ref mut duplicate_providers,
         ref mut merge_errors,
         ref mut warnings,
         ref mut suppressions,
+        ..
     } = errors;
     for file in files {
         local_errors.remove(file);
@@ -111,19 +126,27 @@ pub(crate) fn clear_errors(files: &FlowOrdSet<FileKey>, mut errors: Errors) -> E
         warnings.remove(file);
         suppressions.remove(file);
     }
-    duplicate_providers.retain(|_, (leader, others)| {
-        !files.contains(leader) && others.iter().all(|other| !files.contains(other))
-    });
+    let duplicate_provider_keys: Vec<FlowSmolStr> = duplicate_providers
+        .iter()
+        .filter(|(_, (leader, others))| {
+            files.contains(leader) || others.iter().any(|other| files.contains(other))
+        })
+        .map(|(key, _)| key.dupe())
+        .collect();
+    for key in duplicate_provider_keys {
+        duplicate_providers.remove(&key);
+    }
     errors
 }
 
-pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &Errors) -> Errors {
-    let Errors {
+pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &OverlayErrors) -> Errors {
+    let OverlayErrors {
         local_errors,
         duplicate_providers,
         merge_errors,
         warnings,
         suppressions,
+        ..
     } = errors;
     let local_errors: BTreeMap<FileKey, ErrorSet> = local_errors
         .iter()
@@ -143,33 +166,58 @@ pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &Errors) -> Err
     let suppressions = suppressions.filter_by_file(files);
     Errors {
         local_errors,
-        duplicate_providers: duplicate_providers.clone(),
+        duplicate_providers: duplicate_providers
+            .iter()
+            .map(|(key, value)| (key.dupe(), value.clone()))
+            .collect(),
         merge_errors,
         warnings,
         suppressions,
     }
 }
 
-fn update_errset(map: &mut BTreeMap<FileKey, ErrorSet>, file: FileKey, errset: ErrorSet) {
-    if !errset.is_empty() {
-        let errset = match map.get(&file) {
-            Some(prev_errset) => prev_errset.union(&errset),
-            None => errset,
-        };
-        map.insert(file, errset);
+/// A per-file error-set map, abstracting over the plain `BTreeMap` used for
+/// transient maps and the `OverlayMap` used for the long-lived `Errors` fields.
+trait ErrSetMap {
+    fn get_errset(&self, file: &FileKey) -> Option<&ErrorSet>;
+    fn insert_errset(&mut self, file: FileKey, errset: ErrorSet);
+}
+
+impl ErrSetMap for BTreeMap<FileKey, ErrorSet> {
+    fn get_errset(&self, file: &FileKey) -> Option<&ErrorSet> {
+        self.get(file)
+    }
+    fn insert_errset(&mut self, file: FileKey, errset: ErrorSet) {
+        self.insert(file, errset);
     }
 }
 
-fn merge_error_maps(
-    mut left: BTreeMap<FileKey, ErrorSet>,
-    right: BTreeMap<FileKey, ErrorSet>,
-) -> BTreeMap<FileKey, ErrorSet> {
-    for (file, errset) in right {
-        let errset = match left.get(&file) {
+impl<B: OverlayMapBase<FileKey, ErrorSet>> ErrSetMap for OverlayMap<FileKey, ErrorSet, B> {
+    fn get_errset(&self, file: &FileKey) -> Option<&ErrorSet> {
+        self.get(file)
+    }
+    fn insert_errset(&mut self, file: FileKey, errset: ErrorSet) {
+        self.insert(file, errset);
+    }
+}
+
+fn update_errset<M: ErrSetMap>(map: &mut M, file: FileKey, errset: ErrorSet) {
+    if !errset.is_empty() {
+        let errset = match map.get_errset(&file) {
             Some(prev_errset) => prev_errset.union(&errset),
             None => errset,
         };
-        left.insert(file, errset);
+        map.insert_errset(file, errset);
+    }
+}
+
+fn merge_error_maps<M: ErrSetMap>(mut left: M, right: BTreeMap<FileKey, ErrorSet>) -> M {
+    for (file, errset) in right {
+        let errset = match left.get_errset(&file) {
+            Some(prev_errset) => prev_errset.union(&errset),
+            None => errset,
+        };
+        left.insert_errset(file, errset);
     }
     left
 }
@@ -267,22 +315,53 @@ fn reparse(
     })
 }
 
-fn commit_modules(
+trait DuplicateProvidersMap {
+    fn is_empty(&self) -> bool;
+    fn remove_provider(&mut self, key: &FlowSmolStr);
+    fn insert_provider_if_absent(&mut self, key: FlowSmolStr, value: (FileKey, Vec1<FileKey>));
+}
+
+impl DuplicateProvidersMap for BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)> {
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn remove_provider(&mut self, key: &FlowSmolStr) {
+        self.remove(key);
+    }
+
+    fn insert_provider_if_absent(&mut self, key: FlowSmolStr, value: (FileKey, Vec1<FileKey>)) {
+        self.entry(key).or_insert(value);
+    }
+}
+
+impl DuplicateProvidersMap for OverlayDuplicateProviders {
+    fn is_empty(&self) -> bool {
+        self.is_empty()
+    }
+
+    fn remove_provider(&mut self, key: &FlowSmolStr) {
+        self.remove(key);
+    }
+
+    fn insert_provider_if_absent(&mut self, key: FlowSmolStr, value: (FileKey, Vec1<FileKey>)) {
+        self.insert_if_absent(key, value);
+    }
+}
+
+fn commit_modules<M: DuplicateProvidersMap>(
     pool: &ThreadPool,
     options: &Arc<Options>,
     shared_mem: &Arc<SharedMem>,
-    mut duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
+    mut duplicate_providers: M,
     dirty_modules: flow_common_modulename::ModulenameSet,
-) -> (
-    flow_common_modulename::ModulenameSet,
-    BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
-) {
+) -> (flow_common_modulename::ModulenameSet, M) {
     with_memory_timer(options, "CommitModules", || {
         if !duplicate_providers.is_empty() {
             for m in dirty_modules.iter() {
                 match m {
                     Modulename::Haste(m) => {
-                        duplicate_providers.remove(m.module_name());
+                        duplicate_providers.remove_provider(m.module_name());
                     }
                     Modulename::Filename(_) => {}
                 }
@@ -291,7 +370,7 @@ fn commit_modules(
         let (changed_modules, new_duplicate_providers) =
             flow_services_module::commit_modules(pool, options, shared_mem, dirty_modules);
         for (key, value) in new_duplicate_providers {
-            duplicate_providers.entry(key).or_insert(value);
+            duplicate_providers.insert_provider_if_absent(key, value);
         }
         (changed_modules, duplicate_providers)
     })
@@ -546,11 +625,7 @@ fn update_first_internal_error(
     }
 }
 
-fn add_internal_error(
-    errors: &mut BTreeMap<FileKey, ErrorSet>,
-    file: FileKey,
-    err: (ALoc, InternalError),
-) {
+fn add_internal_error<M: ErrSetMap>(errors: &mut M, file: FileKey, err: (ALoc, InternalError)) {
     let new_errors = error_set_of_internal_error(file.dupe(), err);
     update_errset(errors, file, new_errors);
 }
@@ -602,10 +677,10 @@ type CheckResult = Result<
 
 type CheckAcc = (
     (
-        BTreeMap<FileKey, ErrorSet>,
-        BTreeMap<FileKey, ErrorSet>,
+        OverlayErrorMap,
+        OverlayErrorMap,
         ErrorSuppressions,
-        BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
+        OverlayCoverage,
         FindRefResults,
         Option<String>,
     ),
@@ -774,9 +849,9 @@ mod check_files {
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
         find_ref_request: &flow_services_references::find_refs_types::Request,
-        errors: Errors,
+        errors: OverlayErrors,
         updated_suppressions: ErrorSuppressions,
-        coverage: BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
+        coverage: OverlayCoverage,
         to_check: CheckedSet,
         dirty_direct_dependents: FlowOrdSet<FileKey>,
         sig_new_or_changed: FlowOrdSet<FileKey>,
@@ -784,8 +859,8 @@ mod check_files {
         master_cx: Arc<MasterContext>,
     ) -> Result<
         (
-            Errors,
-            BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
+            OverlayErrors,
+            OverlayCoverage,
             FindRefResults,
             f64,
             usize,
@@ -1005,12 +1080,13 @@ mod check_files {
                 Ok(v) => v,
                 Err(_) => return Err(RecheckError::Canceled(Vec::new())),
             };
-            let Errors {
+            let OverlayErrors {
                 merge_errors,
                 warnings,
                 local_errors,
                 duplicate_providers,
                 suppressions: _,
+                base_cell,
             } = errors;
             let (
                 (
@@ -1042,7 +1118,8 @@ mod check_files {
             if !quiet {
                 flow_hh_logger::info!("Checking Done");
             }
-            let errors = Errors {
+            let errors = OverlayErrors {
+                base_cell,
                 local_errors,
                 duplicate_providers,
                 merge_errors,
@@ -1215,10 +1292,10 @@ pub(crate) fn files_to_infer(options: &Options, parsed: FlowOrdSet<FileKey>) -> 
 
 pub(crate) fn restart_if_faster_than_recheck(
     options: &Options,
-    env: &Env,
+    checked_files: &CheckedSet,
     to_merge: &CheckedSet,
 ) -> Result<(), RecheckError> {
-    let files_already_checked = env.checked_files.cardinal();
+    let files_already_checked = checked_files.cardinal();
     let files_to_merge = to_merge.cardinal();
     let files_to_check = to_merge.focused_cardinal() + to_merge.dependents_cardinal();
     flow_hh_logger::info!(
@@ -1298,8 +1375,8 @@ pub(crate) mod recheck {
         pub modified_count: usize,
         pub deleted_count: usize,
         pub dirty_direct_dependents: FlowOrdSet<FileKey>,
-        pub errors: Errors,
-        pub collated_errors: CollatedErrors,
+        pub errors: OverlayErrors,
+        pub collated_errors: flow_server_env::collated_errors::OverlayCollatedErrors,
         pub freshparsed: CheckedSet,
         pub unchanged_checked: CheckedSet,
         pub unchanged_files_to_force: CheckedSet,
@@ -1311,30 +1388,21 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut Transaction,
+        transaction: &mut side_effect_transaction::Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
-        mut env: Env,
-    ) -> Result<(Env, IntermediateValues), RecheckError> {
+        env: &mut EnvTransaction,
+    ) -> Result<IntermediateValues, RecheckError> {
         check_recheck_canceled()?;
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
         let shared_mem_for_ast = shared_mem.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
             shared_mem_for_ast.get_ast(file)
         };
-        let errors = std::mem::replace(
-            &mut env.errors,
-            Errors {
-                local_errors: BTreeMap::new(),
-                duplicate_providers: BTreeMap::new(),
-                merge_errors: BTreeMap::new(),
-                warnings: BTreeMap::new(),
-                suppressions: ErrorSuppressions::empty(),
-            },
-        );
-        let collated_errors = std::mem::replace(&mut env.collated_errors, CollatedErrors::empty());
+        let errors = env.take_errors();
+        let collated_errors = env.take_collated_errors();
         let mut files_to_force = files_to_force;
-        files_to_force.diff(&env.checked_files);
+        files_to_force.diff(env.checked_files());
 
         flow_hh_logger::info!("Parsing");
         monitor_rpc::status_update(server_status::Event::ParsingProgress(
@@ -1376,7 +1444,7 @@ pub(crate) mod recheck {
             .map(|file| file.dupe())
             .collect();
         let shared_mem_for_reparse_commit = shared_mem.dupe();
-        transaction::add(
+        side_effect_transaction::add(
             transaction,
             move || {
                 flow_hh_logger::info!("Committing reparse");
@@ -1392,7 +1460,8 @@ pub(crate) mod recheck {
 
         let freshparsed = updates.filter(|file, _kind| parsed_set.contains(file));
 
-        let Errors {
+        let OverlayErrors {
+            base_cell,
             local_errors,
             duplicate_providers,
             merge_errors,
@@ -1418,14 +1487,14 @@ pub(crate) mod recheck {
             );
         }
 
-        let mut coverage = env.coverage;
+        let mut coverage = env.take_coverage();
         for file in &new_or_changed_or_deleted {
             coverage.remove(file);
         }
 
-        let local_errors = merge_error_maps(new_local_errors, local_errors);
+        let local_errors = merge_error_maps(local_errors, new_local_errors);
 
-        let old_parsed = env.files;
+        let old_parsed = env.files().dupe();
         let old_parsed_count = old_parsed.len();
         let unchanged = FlowOrdSet::from(
             old_parsed
@@ -1479,7 +1548,7 @@ pub(crate) mod recheck {
         let unchanged_files_to_upgrade = updates.filter(|file, kind| {
             !CheckedSet::is_dependency(kind)
                 && unchanged_parse.contains(file)
-                && env.checked_files.mem_dependency(file)
+                && env.checked_files().mem_dependency(file)
         });
 
         // TODO: Is OLD_M the same as NEW_M?
@@ -1488,7 +1557,7 @@ pub(crate) mod recheck {
             .dupe()
             .union(unparsed_set.dupe())
             .union(deleted.dupe());
-        let mut unchanged_checked = env.checked_files.dupe();
+        let mut unchanged_checked = env.checked_files().dupe();
         unchanged_checked.remove(&new_or_changed_or_deleted_for_remove);
 
         let unchanged_files_to_force =
@@ -1542,7 +1611,7 @@ pub(crate) mod recheck {
                 &parsed,
             );
             DependencyInfo::update(
-                env.dependency_info,
+                env.take_dependency_info(),
                 partial_dependency_graph,
                 unparsed_or_deleted,
             )
@@ -1551,29 +1620,20 @@ pub(crate) mod recheck {
 
         let to_remove = parsed.dupe().union(deleted);
         let unparsed = FlowOrdSet::from(
-            env.unparsed
+            env.unparsed()
+                .dupe()
                 .into_inner()
                 .relative_complement(to_remove.into_inner()),
         )
         .union(unparsed_set);
 
-        let env = Env {
-            files: parsed,
-            unparsed,
-            dependency_info,
-            coverage,
-            checked_files: env.checked_files,
-            package_json_files: env.package_json_files,
-            ordered_libs: env.ordered_libs,
-            all_unordered_libs: env.all_unordered_libs,
-            errors: env.errors,
-            collated_errors: env.collated_errors,
-            connections: env.connections,
-            exports: env.exports,
-            master_cx: env.master_cx,
-        };
+        env.set_files(parsed);
+        env.set_unparsed(unparsed);
+        env.set_dependency_info(dependency_info);
+        env.set_coverage(coverage);
 
-        let errors = Errors {
+        let errors = OverlayErrors {
+            base_cell,
             local_errors,
             duplicate_providers,
             merge_errors,
@@ -1592,7 +1652,7 @@ pub(crate) mod recheck {
             unchanged_files_to_force,
             unchanged_files_to_upgrade,
         };
-        Ok((env, intermediate_values))
+        Ok(intermediate_values)
     }
 
     pub(crate) fn determine_what_to_recheck(
@@ -1653,10 +1713,9 @@ pub(crate) mod recheck {
         will_be_checked_files: &mut CheckedSet,
         changed_mergebase: Option<bool>,
         intermediate_values: IntermediateValues,
-        env: Env,
+        env: &mut EnvTransaction,
     ) -> Result<
         (
-            Env,
             RecheckResult,
             Box<dyn FnOnce()>,
             FindRefResults,
@@ -1675,7 +1734,8 @@ pub(crate) mod recheck {
             unchanged_files_to_force,
             unchanged_files_to_upgrade,
         } = intermediate_values;
-        let dependency_info = &env.dependency_info;
+        let coverage_for_check = env.take_coverage();
+        let dependency_info = env.dependency_info();
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
         let sig_dependency_graph = dependency_info.sig_dependency_graph();
         flow_hh_logger::info!("Determining what to recheck...");
@@ -1702,7 +1762,7 @@ pub(crate) mod recheck {
 
         match changed_mergebase {
             Some(true) if options.lazy_mode && options.estimate_recheck_time => {
-                restart_if_faster_than_recheck(options, &env, &to_merge)?;
+                restart_if_faster_than_recheck(options, env.checked_files(), &to_merge)?;
             }
             _ => {}
         }
@@ -1731,7 +1791,7 @@ pub(crate) mod recheck {
             errors.suppressions.clone(),
         )?;
 
-        let exports = match &env.exports {
+        let exports = match env.exports() {
             None => None,
             Some(exports) => {
                 check_recheck_canceled()?;
@@ -1769,12 +1829,12 @@ pub(crate) mod recheck {
             find_ref_request,
             errors,
             updated_suppressions,
-            env.coverage.clone(),
+            coverage_for_check,
             to_check.dupe(),
             dirty_direct_dependents,
             sig_new_or_changed,
-            &env.dependency_info,
-            env.master_cx.dupe(),
+            dependency_info,
+            env.master_cx().dupe(),
         )?;
         check_recheck_canceled()?;
         if let Some(ref err) = check_internal_error {
@@ -1793,7 +1853,7 @@ pub(crate) mod recheck {
         // the lexicographically smallest file in each cycle group.
         {
             use flow_typing_errors::error_message::ErrorMessage;
-            let dep_graph = env.dependency_info.implementation_dependency_graph();
+            let dep_graph = dependency_info.implementation_dependency_graph();
             let files_with_cycle_errors: BTreeSet<FileKey> = errors
                 .merge_errors
                 .iter()
@@ -1852,15 +1912,13 @@ pub(crate) mod recheck {
         checked_files.union(to_merge.dupe());
         flow_hh_logger::info!("Checked set: {}", checked_files.debug_counts_to_string());
 
+        env.set_checked_files(checked_files);
+        env.set_errors(errors);
+        env.set_collated_errors(collated_errors);
+        env.set_coverage(coverage);
+        env.set_exports(exports);
+
         Ok((
-            Env {
-                checked_files,
-                errors,
-                collated_errors,
-                coverage,
-                exports,
-                ..env
-            },
             RecheckResult {
                 modified_count,
                 deleted_count,
@@ -1885,15 +1943,14 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut Transaction,
+        transaction: &mut side_effect_transaction::Transaction,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         files_to_force: CheckedSet,
         changed_mergebase: Option<bool>,
         will_be_checked_files: &mut CheckedSet,
-        env: Env,
+        env: &mut EnvTransaction,
     ) -> Result<
         (
-            Env,
             RecheckResult,
             Box<dyn FnOnce()>,
             FindRefResults,
@@ -1902,7 +1959,7 @@ pub(crate) mod recheck {
         RecheckError,
     > {
         let def_info = &find_ref_request.def_info;
-        let (env, intermediate_values) = recheck_parse_and_update_dependency_info(
+        let intermediate_values = recheck_parse_and_update_dependency_info(
             pool,
             shared_mem,
             options,
@@ -1934,12 +1991,12 @@ pub(crate) mod recheck {
         shared_mem: &Arc<SharedMem>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut Transaction,
+        transaction: &mut side_effect_transaction::Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
-        env: Env,
-    ) -> Result<Env, RecheckError> {
-        let (env, intermediate_values) = recheck_parse_and_update_dependency_info(
+        env: &mut EnvTransaction,
+    ) -> Result<(), RecheckError> {
+        let intermediate_values = recheck_parse_and_update_dependency_info(
             pool,
             shared_mem,
             options,
@@ -1954,11 +2011,9 @@ pub(crate) mod recheck {
             collated_errors,
             ..
         } = intermediate_values;
-        Ok(Env {
-            errors,
-            collated_errors,
-            ..env
-        })
+        env.set_errors(errors);
+        env.set_collated_errors(collated_errors);
+        Ok(())
     }
 }
 
@@ -1967,19 +2022,22 @@ fn clear_caches() {
     merge_service::check_contents_cache().borrow_mut().clear();
 }
 
-fn with_transaction<T>(name: &str, f: impl FnOnce(&mut Transaction) -> T) -> T {
-    transaction::with_transaction_sync(name, |transaction| {
-        transaction::add(transaction, clear_caches, || {});
+fn with_transaction<T>(
+    name: &str,
+    f: impl FnOnce(&mut side_effect_transaction::Transaction) -> T,
+) -> T {
+    side_effect_transaction::with_transaction_sync(name, |transaction| {
+        side_effect_transaction::add(transaction, clear_caches, || {});
         f(transaction)
     })
 }
 
 fn with_transaction_result<T, E>(
     name: &str,
-    f: impl FnOnce(&mut Transaction) -> Result<T, E>,
+    f: impl FnOnce(&mut side_effect_transaction::Transaction) -> Result<T, E>,
 ) -> Result<T, E> {
-    transaction::with_transaction_result_sync(name, |transaction| {
-        transaction::add(transaction, clear_caches, || {});
+    side_effect_transaction::with_transaction_result_sync(name, |transaction| {
+        side_effect_transaction::add(transaction, clear_caches, || {});
         f(transaction)
     })
 }
@@ -1994,18 +2052,17 @@ pub(crate) fn recheck_impl(
     files_to_force: CheckedSet,
     changed_mergebase: Option<bool>,
     will_be_checked_files: &mut CheckedSet,
-    env: Env,
+    env: &mut EnvTransaction,
 ) -> Result<
     (
         Box<dyn FnOnce(&serde_json::Value)>,
         RecheckStats,
         FindRefResults,
-        Env,
     ),
     RecheckError,
 > {
     check_recheck_canceled()?;
-    let (env, stats, record_recheck_time, find_ref_results, first_internal_error) =
+    let (stats, record_recheck_time, find_ref_results, first_internal_error) =
         match with_transaction_result("recheck", |transaction| {
             recheck::full(
                 pool,
@@ -2058,9 +2115,11 @@ pub(crate) fn recheck_impl(
                     .into_inner()
                     .union(dependents_to_check.into_inner()),
             );
-            let new_errors = filter_errors(&files, &env.errors);
-            let all_suppressions = env.errors.suppressions.clone();
-            let mut collated_errors = env.collated_errors;
+            let (new_errors, all_suppressions) = {
+                let errors = env.errors();
+                (filter_errors(&files, errors), errors.suppressions.clone())
+            };
+            let mut collated_errors = env.take_collated_errors();
             collated_errors.clear_merge(&files);
 
             {
@@ -2073,7 +2132,7 @@ pub(crate) fn recheck_impl(
                     &loc_of_aloc,
                     &get_ast,
                     options,
-                    &env.checked_files,
+                    env.checked_files(),
                     &all_suppressions,
                     &new_errors,
                     &mut collated_errors,
@@ -2131,21 +2190,7 @@ pub(crate) fn recheck_impl(
         None
     };
 
-    let env = Env {
-        collated_errors,
-        errors: env.errors,
-        files: env.files,
-        unparsed: env.unparsed,
-        dependency_info: env.dependency_info,
-        checked_files: env.checked_files,
-        package_json_files: env.package_json_files,
-        ordered_libs: env.ordered_libs,
-        all_unordered_libs: env.all_unordered_libs,
-        coverage: env.coverage,
-        connections: env.connections,
-        exports: env.exports,
-        master_cx: env.master_cx,
-    };
+    env.set_collated_errors(collated_errors);
 
     let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(move |profiling| {
         flow_event_logger::recheck(
@@ -2178,7 +2223,7 @@ pub(crate) fn recheck_impl(
         top_cycle,
     };
 
-    Ok((log_recheck_event, recheck_stats, find_ref_results, env))
+    Ok((log_recheck_event, recheck_stats, find_ref_results))
 }
 
 pub struct RecheckStats {
@@ -2195,8 +2240,8 @@ pub fn parse_and_update_dependency_info(
     updates: &CheckedSet,
     def_info: &DefInfo,
     files_to_force: CheckedSet,
-    env: Env,
-) -> Result<Env, RecheckError> {
+    mut env: EnvTransaction,
+) -> Result<EnvTransaction, RecheckError> {
     with_transaction_result("parse and update dependency info", |transaction| {
         recheck::parse_and_update_dependency_info(
             pool,
@@ -2206,9 +2251,10 @@ pub fn parse_and_update_dependency_info(
             transaction,
             def_info,
             files_to_force,
-            env,
+            &mut env,
         )
-    })
+    })?;
+    Ok(env)
 }
 
 pub fn make_next_files(
@@ -2266,9 +2312,9 @@ fn mk_env(
         package_json_files,
         ordered_libs,
         all_unordered_libs,
-        errors,
-        coverage: BTreeMap::new(),
-        collated_errors,
+        errors: env_cell(errors),
+        coverage: env_cell(BTreeMap::new()),
+        collated_errors: env_cell(collated_errors),
         connections: flow_server_env::persistent_connection::empty(),
         exports,
         master_cx,
@@ -2739,7 +2785,7 @@ fn init_with_initial_state(
     } else {
         None
     };
-    let mut collated_errors = CollatedErrors::empty();
+    let mut collated_errors = OverlayCollatedErrors::from_collated_errors(CollatedErrors::empty());
     {
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
         let shared_mem_for_ast = shared_mem.dupe();
@@ -2761,6 +2807,9 @@ fn init_with_initial_state(
         );
         error_collator::update_error_state_timestamps(&mut collated_errors);
     }
+    let mut collated_errors_base = CollatedErrors::empty();
+    collated_errors.apply_to_base(&mut collated_errors_base);
+    let collated_errors = collated_errors_base;
     let errors = Errors {
         local_errors,
         duplicate_providers,
@@ -2784,9 +2833,9 @@ fn init_with_initial_state(
             .collect(),
         all_unordered_libs: all_unordered_libs_set,
         unparsed,
-        errors,
-        coverage: BTreeMap::new(),
-        collated_errors,
+        errors: env_cell(errors),
+        coverage: env_cell(BTreeMap::new()),
+        collated_errors: env_cell(collated_errors),
         connections: env
             .map(|env| env.connections.clone())
             .unwrap_or_else(flow_server_env::persistent_connection::empty),
@@ -3066,7 +3115,8 @@ pub fn handle_updates_since_saved_state(
         let mut will_be_checked_files = CheckedSet::empty();
         let files_to_force = CheckedSet::empty();
         let find_ref_request = flow_services_references::find_refs_types::empty_request();
-        let (_log_recheck_event, _summary_info, _find_ref_results, env) = recheck_impl(
+        let mut env_transaction = EnvTransaction::new(Arc::new(env));
+        let (_log_recheck_event, _summary_info, _find_ref_results) = recheck_impl(
             pool,
             shared_mem,
             options,
@@ -3075,18 +3125,20 @@ pub fn handle_updates_since_saved_state(
             files_to_force,
             None,
             &mut will_be_checked_files,
-            env,
+            &mut env_transaction,
         )
         .unwrap_or_else(|_| {
             panic!("saved-state recheck during init failed");
         });
-        env
+        env_transaction.into_env()
     } else {
         // In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
         // is to update the dependency graph and stuff like that. We don't actually want to merge
         // anything yet.
         let mut updated_files = updates.dupe();
+        let env = Arc::new(env);
         loop {
+            let mut env_transaction = EnvTransaction::new(env.dupe());
             match with_transaction_result("lazy init update deps", |transaction| {
                 recheck::parse_and_update_dependency_info(
                     pool,
@@ -3096,12 +3148,12 @@ pub fn handle_updates_since_saved_state(
                     transaction,
                     &DefInfo::NoDefinition(None),
                     CheckedSet::empty(),
-                    env.clone(),
+                    &mut env_transaction,
                 )
             }) {
-                Ok(env) => {
+                Ok(()) => {
                     shared_mem.commit_entities();
-                    return env;
+                    return env_transaction.into_env();
                 }
                 Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
                     shared_mem.rollback_entities();
@@ -3234,7 +3286,8 @@ pub fn init_from_scratch(
             dep_service::calc_dependency_info(pool, shared_mem, &parsed_set)
         });
 
-        let mut collated_errors = CollatedErrors::empty();
+        let mut collated_errors =
+            OverlayCollatedErrors::from_collated_errors(CollatedErrors::empty());
         {
             let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
             let shared_mem_for_ast = shared_mem.dupe();
@@ -3256,6 +3309,9 @@ pub fn init_from_scratch(
             );
             error_collator::update_error_state_timestamps(&mut collated_errors);
         }
+        let mut collated_errors_base = CollatedErrors::empty();
+        collated_errors.apply_to_base(&mut collated_errors_base);
+        let collated_errors = collated_errors_base;
 
         let errors = Errors {
             local_errors,
@@ -3448,12 +3504,12 @@ pub fn reinit(
     updates: &CheckedSet,
     files_to_force: CheckedSet,
     will_be_checked_files: &mut CheckedSet,
-    env: Env,
+    env: EnvRef,
 ) -> Option<(
     Box<dyn FnOnce(&serde_json::Value)>,
     RecheckStats,
     FindRefResults,
-    Env,
+    EnvRef,
 )> {
     let (saved_state, updates_since_saved_state) = match load_saved_state(pool, shared_mem, options)
     {
@@ -3483,7 +3539,7 @@ pub fn reinit(
         options,
         saved_state,
         &updates_since_saved_state,
-        Some(&env),
+        Some(env.as_ref()),
     );
 
     let updates_since_saved_state = if !options.lazy_mode || options.saved_state_force_recheck {
@@ -3518,7 +3574,7 @@ pub fn reinit(
         changed_file_count: 0,
         top_cycle: None,
     };
-    Some((log_recheck_event, recheck_stats, Ok(vec![]), env))
+    Some((log_recheck_event, recheck_stats, Ok(vec![]), Arc::new(env)))
 }
 
 #[allow(dead_code)]
@@ -3529,13 +3585,13 @@ pub fn reinit_full_check(
     updates: &CheckedSet,
     files_to_force: CheckedSet,
     will_be_checked_files: &mut CheckedSet,
-    env: Env,
+    env: EnvRef,
 ) -> Result<
     (
         Box<dyn FnOnce(&serde_json::Value)>,
         RecheckStats,
         FindRefResults,
-        Env,
+        EnvRef,
     ),
     RecheckError,
 > {
@@ -3548,14 +3604,14 @@ pub fn reinit_full_check(
                 shared_mem,
                 options,
                 || env.dependency_info.clone(),
-                env.errors.duplicate_providers.clone(),
+                env.errors().duplicate_providers.clone(),
                 None,
-                Some(&env),
+                Some(env.as_ref()),
                 env.files.dupe(),
                 env.unparsed.dupe(),
                 env.package_json_files.dupe(),
                 BTreeSet::new(),
-                env.errors.local_errors.clone(),
+                env.errors().local_errors.clone(),
             ))
         })
         .unwrap();
@@ -3585,7 +3641,7 @@ pub fn reinit_full_check(
         changed_file_count: 0,
         top_cycle: None,
     };
-    Ok((log_recheck_event, recheck_stats, Ok(vec![]), env))
+    Ok((log_recheck_event, recheck_stats, Ok(vec![]), Arc::new(env)))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -3600,13 +3656,13 @@ pub fn recheck(
     changed_mergebase: Option<bool>,
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
-    env: Env,
+    env: EnvRef,
 ) -> Result<
     (
         Box<dyn FnOnce(&serde_json::Value)>,
         RecheckStats,
         FindRefResults,
-        Env,
+        EnvRef,
     ),
     RecheckError,
 > {
@@ -3627,7 +3683,8 @@ pub fn recheck(
                 env,
             )
         } else {
-            recheck_impl(
+            let mut env_transaction = EnvTransaction::new(env);
+            let (log_recheck_event, recheck_stats, find_ref_results) = recheck_impl(
                 pool,
                 shared_mem,
                 options,
@@ -3636,14 +3693,20 @@ pub fn recheck(
                 files_to_force,
                 changed_mergebase,
                 will_be_checked_files,
-                env,
-            )
+                &mut env_transaction,
+            )?;
+            Ok((
+                log_recheck_event,
+                recheck_stats,
+                find_ref_results,
+                env_transaction.commit(),
+            ))
         }
     } else {
         let reinit_or_restart = |reason: &str,
                                  files_to_force: CheckedSet,
                                  will_be_checked_files: &mut CheckedSet,
-                                 env: Env| {
+                                 env: EnvRef| {
             if options.saved_state_restart_on_reinit {
                 flow_hh_logger::info!("Reinit ({}): exiting for a clean restart", reason);
                 flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::Restart);
@@ -3679,7 +3742,7 @@ pub fn recheck(
                 updates,
                 files_to_force.dupe(),
                 will_be_checked_files,
-                env.clone(),
+                env.dupe(),
             ) {
                 Some(result) => Ok(result),
                 None => {
@@ -3705,8 +3768,9 @@ pub fn recheck(
                 env,
             ))
         } else {
-            let env_for_reinit = env.clone();
+            let env_for_reinit = env.dupe();
             let files_to_force_for_reinit = files_to_force.dupe();
+            let mut env_transaction = EnvTransaction::new(env);
             match recheck_impl(
                 pool,
                 shared_mem,
@@ -3716,9 +3780,14 @@ pub fn recheck(
                 files_to_force,
                 changed_mergebase,
                 will_be_checked_files,
-                env,
+                &mut env_transaction,
             ) {
-                Ok(result) => Ok(result),
+                Ok((log_recheck_event, recheck_stats, find_ref_results)) => Ok((
+                    log_recheck_event,
+                    recheck_stats,
+                    find_ref_results,
+                    env_transaction.commit(),
+                )),
                 Err(RecheckError::TooSlow) => Ok(reinit_or_restart(
                     "recheck_too_slow",
                     files_to_force_for_reinit,
@@ -3757,6 +3826,12 @@ pub fn check_files_for_init(
             connections,
             exports,
         } = env;
+        let env_errors_cell = env_errors.dupe();
+        let env_coverage_cell = env_coverage.dupe();
+        let env_collated_errors_cell = env_collated_errors.dupe();
+        let env_errors = OverlayErrors::new(env_errors);
+        let env_coverage = overlay_coverage(env_coverage);
+        let env_collated_errors = OverlayCollatedErrors::new(env_collated_errors);
 
         let to_infer = files_to_infer(options, parsed);
         let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
@@ -3867,7 +3942,7 @@ pub fn check_files_for_init(
             let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
                 shared_mem_for_ast.get_ast(file)
             };
-            error_collator::update_collated_errors(
+            error_collator::update_collated_overlay_errors(
                 &loc_of_aloc,
                 &get_ast,
                 options,
@@ -3878,6 +3953,13 @@ pub fn check_files_for_init(
             );
             error_collator::update_error_state_timestamps(&mut collated_errors);
         });
+        errors.commit();
+        let coverage = coverage.into_delta();
+        {
+            let mut base = env_coverage_cell.write();
+            apply_delta_to_base_map(&mut base, coverage);
+        }
+        collated_errors.commit();
         let env = Env {
             files: env_files,
             dependency_info,
@@ -3890,9 +3972,9 @@ pub fn check_files_for_init(
             ordered_libs,
             all_unordered_libs,
             unparsed,
-            errors,
-            coverage,
-            collated_errors,
+            errors: env_errors_cell,
+            coverage: env_coverage_cell,
+            collated_errors: env_collated_errors_cell,
             connections,
             exports,
             master_cx,
@@ -3948,9 +4030,9 @@ pub fn focus_check_for_init(
         None,
         false,
         &mut will_be_checked_files,
-        env,
+        Arc::new(env),
     )?;
-    Ok((env, first_internal_error))
+    Ok((EnvTransaction::new(env).into_env(), first_internal_error))
 }
 
 pub fn full_check_for_init(

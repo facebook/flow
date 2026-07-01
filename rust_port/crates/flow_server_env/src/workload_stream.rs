@@ -23,8 +23,9 @@ use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use crate::server_env::Env;
+use crate::server_env::EnvRef;
 
-pub type WorkloadHandler = Box<dyn FnOnce(Env) -> Env + Send>;
+pub type WorkloadHandler = Box<dyn FnOnce(EnvRef) -> EnvRef + Send>;
 
 pub struct Workload {
     pub workload_should_be_cancelled: Box<dyn Fn() -> bool + Send>,
@@ -131,7 +132,7 @@ impl WorkloadStream {
         let handler = pw.parallelizable_workload_handler;
         Workload {
             workload_should_be_cancelled: pw.parallelizable_workload_should_be_cancelled,
-            workload_handler: Box::new(move |env: Env| {
+            workload_handler: Box::new(move |env: EnvRef| {
                 handler(&env);
                 env
             }),
