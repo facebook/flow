@@ -534,6 +534,53 @@ fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
     }
 }
 
+// Most recent panic's backtrace, stashed at the panic site for the `catch_unwind`
+// thread to read back (rayon's `resume_unwind` skips the hook). Last-write-wins.
+// Kept unsymbolized so the hook stays cheap; `log_worker_exception` formats it.
+static LAST_PANIC_BACKTRACE: std::sync::Mutex<Option<std::backtrace::Backtrace>> =
+    std::sync::Mutex::new(None);
+
+// Stashes each panic's backtrace in `LAST_PANIC_BACKTRACE`. Capture only, no logging:
+// a panic in a hook aborts the process. Idempotent; chains to the prev hook.
+pub fn install_panic_hook() {
+    static INSTALLED: std::sync::Once = std::sync::Once::new();
+    INSTALLED.call_once(|| {
+        let prev = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            let bt = std::backtrace::Backtrace::force_capture();
+            if let Ok(mut guard) = LAST_PANIC_BACKTRACE.lock() {
+                *guard = Some(bt);
+            }
+            prev(info);
+        }));
+    });
+}
+
+fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
+    if let Some(s) = payload.downcast_ref::<String>() {
+        s.clone()
+    } else if let Some(s) = payload.downcast_ref::<&str>() {
+        s.to_string()
+    } else {
+        "unknown panic".to_string()
+    }
+}
+
+// Logs a panic to the `WORKER_EXCEPTION` Scuba event with the backtrace stashed by
+// `install_panic_hook`. Call from a `catch_unwind` boundary, never from the hook.
+pub fn log_worker_exception(err_msg: &str) {
+    // Read through poison: it just means a thread panicked here, which is what we log.
+    let backtrace = match LAST_PANIC_BACKTRACE.lock() {
+        Ok(mut guard) => guard.take(),
+        Err(poisoned) => poisoned.into_inner().take(),
+    };
+    let data = match backtrace {
+        Some(bt) => format!("{err_msg}\n{bt}"),
+        None => err_msg.to_string(),
+    };
+    flow_event_logger::worker_exception(&data);
+}
+
 pub fn run_from_daemonize(
     init_id: &str,
     options: Arc<Options>,
@@ -541,6 +588,7 @@ pub fn run_from_daemonize(
     start_cause: server_status::StartCause,
 ) {
     let init_id = init_id.to_string();
+    install_panic_hook();
     let result = std::thread::Builder::new()
         .name("flow_server_main".to_string())
         .stack_size(SERVER_MAIN_THREAD_STACK_SIZE)
@@ -555,13 +603,7 @@ pub fn run_from_daemonize(
     match result {
         Ok(()) => {}
         Err(e) => {
-            let err_msg = if let Some(s) = e.downcast_ref::<String>() {
-                s.clone()
-            } else if let Some(s) = e.downcast_ref::<&str>() {
-                s.to_string()
-            } else {
-                "unknown panic".to_string()
-            };
+            let err_msg = panic_message(&*e);
             let err_display: &dyn std::fmt::Display = &err_msg;
             if err_msg.contains("Out_of_shared_memory") || err_msg.contains("Out of shared memory")
             {
@@ -583,13 +625,38 @@ pub fn run_from_daemonize(
             } else {
                 let msg = format!("Unhandled exception: {}", err_msg);
                 flow_hh_logger::info!("{}", msg);
+                log_worker_exception(&err_msg);
                 flow_common_exit_status::exit(FlowExitStatus::UnknownError);
             }
         }
     }
 }
 
+// Foreground type check for `flow full-check` / `flow focus-check`. Logs a
+// `WORKER_EXCEPTION` on panic, then resumes the unwind for the CLI to classify.
 pub fn check_once<'a, FormatErrors>(
+    init_id: &str,
+    options: Arc<Options>,
+    format_errors: FormatErrors,
+    focus_targets: Option<FlowOrdSet<FileKey>>,
+) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet)
+where
+    FormatErrors: for<'b> FnOnce(CheckOnceCollatedErrors<'b>) -> CheckOncePrintErrors<'a>,
+{
+    install_panic_hook();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        check_once_inner(init_id, options, format_errors, focus_targets)
+    }));
+    match result {
+        Ok(errors_and_warnings) => errors_and_warnings,
+        Err(payload) => {
+            log_worker_exception(&panic_message(&*payload));
+            std::panic::resume_unwind(payload);
+        }
+    }
+}
+
+fn check_once_inner<'a, FormatErrors>(
     init_id: &str,
     options: Arc<Options>,
     format_errors: FormatErrors,
