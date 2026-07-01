@@ -1,0 +1,4 @@
+=== single field -> flat array of values ===
+{"clock":"<redacted>","files":["a.js"],"is_fresh_instance":true}
+=== multiple fields -> object per file ===
+{"clock":"<redacted>","files":[{"flow.content_hash":"608a96052ff4287d","name":"a.js"}],"is_fresh_instance":true}
