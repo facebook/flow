@@ -70,6 +70,25 @@ fn wait_for_progress_since(wait_signal: &Condvar, wait_state: &Mutex<WaitState>,
     drop(wait_signal.wait_while(state, |state| state.generation == generation && !state.done));
 }
 
+/// Run a worker body, ensuring a panic does not deadlock the rest of the pool.
+///
+/// A panicking worker never increments progress or signals completion, so peers
+/// parked in `wait_for_progress_since` (an untimed wait) would block forever and
+/// the spawning scope would never join — turning any worker panic into a hang
+/// instead of a propagated crash. On panic we wake all waiters via
+/// `notify_waiters_done` before re-raising, so the scope can join and the panic
+/// reaches the caller's unwind boundary.
+fn run_worker_panic_safe(
+    wait_signal: &Condvar,
+    wait_state: &Mutex<WaitState>,
+    body: impl FnOnce(),
+) {
+    if let Err(payload) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(body)) {
+        notify_waiters_done(wait_signal, wait_state);
+        std::panic::resume_unwind(payload);
+    }
+}
+
 /// A function that produces work batches on-demand.
 ///
 /// This trait allows lazy/streaming work generation:
@@ -419,51 +438,53 @@ where
         let wait_state = wait_state.dupe();
         let done_start_times = done_start_times.dupe();
 
-        // Each worker has a local accumulator (created once per worker thread)
-        let mut local_acc = Default::default();
+        run_worker_panic_safe(&wait_signal, &wait_state, || {
+            // Each worker has a local accumulator (created once per worker thread)
+            let mut local_acc = Default::default();
 
-        loop {
-            if wait_state.lock().done {
-                break;
-            }
-            let generation = progress_generation(&wait_state);
-            match sample_worker_read_request(|| {
-                let _guard = next_mutex.lock();
-                next.next()
-            }) {
-                Bucket::Job(batch) => {
-                    sample_worker_run(|| {
-                        job(&mut local_acc, batch);
-                    });
-
-                    // Merge local accumulator into global, then reset local
-                    sample_worker_send_response(|| {
-                        let mut results = results_mutex.lock();
-                        let acc_to_merge = std::mem::take(&mut local_acc);
-                        merge(&mut *results, acc_to_merge);
-                        drop(results);
-                    });
-
-                    // Notify workers waiting for progress.
-                    notify_waiters(&wait_signal, &wait_state);
-                }
-                Bucket::Wait => {
-                    // OCaml waits on Lwt_condition here and only retries next()
-                    // after a worker has merged and broadcast progress.
-                    sample_worker_idle(|| {
-                        wait_for_progress_since(&wait_signal, &wait_state, generation);
-                    });
-                }
-                Bucket::Done => {
-                    // Wake all workers so they can exit.
-                    notify_waiters_done(&wait_signal, &wait_state);
+            loop {
+                if wait_state.lock().done {
                     break;
                 }
+                let generation = progress_generation(&wait_state);
+                match sample_worker_read_request(|| {
+                    let _guard = next_mutex.lock();
+                    next.next()
+                }) {
+                    Bucket::Job(batch) => {
+                        sample_worker_run(|| {
+                            job(&mut local_acc, batch);
+                        });
+
+                        // Merge local accumulator into global, then reset local
+                        sample_worker_send_response(|| {
+                            let mut results = results_mutex.lock();
+                            let acc_to_merge = std::mem::take(&mut local_acc);
+                            merge(&mut *results, acc_to_merge);
+                            drop(results);
+                        });
+
+                        // Notify workers waiting for progress.
+                        notify_waiters(&wait_signal, &wait_state);
+                    }
+                    Bucket::Wait => {
+                        // OCaml waits on Lwt_condition here and only retries next()
+                        // after a worker has merged and broadcast progress.
+                        sample_worker_idle(|| {
+                            wait_for_progress_since(&wait_signal, &wait_state, generation);
+                        });
+                    }
+                    Bucket::Done => {
+                        // Wake all workers so they can exit.
+                        notify_waiters_done(&wait_signal, &wait_state);
+                        break;
+                    }
+                }
             }
-        }
-        if measure::is_enabled() {
-            done_start_times.lock().push(Instant::now());
-        }
+            if measure::is_enabled() {
+                done_start_times.lock().push(Instant::now());
+            }
+        });
     });
     sample_worker_done(&done_start_times);
 
@@ -520,38 +541,25 @@ where
         let wait_state = wait_state.dupe();
         let done_start_times = done_start_times.dupe();
 
-        // Each worker has a local accumulator (created once per worker thread)
-        let mut local_acc = Default::default();
+        run_worker_panic_safe(&wait_signal, &wait_state, || {
+            // Each worker has a local accumulator (created once per worker thread)
+            let mut local_acc = Default::default();
 
-        loop {
-            if wait_state.lock().done {
-                break;
-            }
-            let generation = progress_generation(&wait_state);
-            match sample_worker_read_request(|| {
-                let _guard = next_mutex.lock();
-                next.next()
-            }) {
-                Bucket::Job(batch) => {
-                    sample_worker_run(|| {
-                        job(&mut local_acc, batch);
-                    });
-
-                    // Merge local accumulator into global, then reset local
-                    sample_worker_send_response(|| {
-                        let mut results = results_mutex.lock();
-                        let acc_to_merge = std::mem::take(&mut local_acc);
-                        merge(&mut *results, acc_to_merge);
-                        drop(results);
-                    });
-
-                    // Notify workers waiting for progress.
-                    notify_waiters(&wait_signal, &wait_state);
+            loop {
+                if wait_state.lock().done {
+                    break;
                 }
-                Bucket::Wait => {
-                    // Try stealing before waiting.
-                    if sample_worker_run(|| steal(&mut local_acc)) {
-                        // Did useful work; merge and loop back.
+                let generation = progress_generation(&wait_state);
+                match sample_worker_read_request(|| {
+                    let _guard = next_mutex.lock();
+                    next.next()
+                }) {
+                    Bucket::Job(batch) => {
+                        sample_worker_run(|| {
+                            job(&mut local_acc, batch);
+                        });
+
+                        // Merge local accumulator into global, then reset local
                         sample_worker_send_response(|| {
                             let mut results = results_mutex.lock();
                             let acc_to_merge = std::mem::take(&mut local_acc);
@@ -559,26 +567,41 @@ where
                             drop(results);
                         });
 
+                        // Notify workers waiting for progress.
                         notify_waiters(&wait_signal, &wait_state);
-                        continue;
                     }
+                    Bucket::Wait => {
+                        // Try stealing before waiting.
+                        if sample_worker_run(|| steal(&mut local_acc)) {
+                            // Did useful work; merge and loop back.
+                            sample_worker_send_response(|| {
+                                let mut results = results_mutex.lock();
+                                let acc_to_merge = std::mem::take(&mut local_acc);
+                                merge(&mut *results, acc_to_merge);
+                                drop(results);
+                            });
 
-                    // OCaml waits on Lwt_condition here and only retries next()
-                    // after a worker has merged and broadcast progress.
-                    sample_worker_idle(|| {
-                        wait_for_progress_since(&wait_signal, &wait_state, generation);
-                    });
-                }
-                Bucket::Done => {
-                    // Wake all workers so they can exit.
-                    notify_waiters_done(&wait_signal, &wait_state);
-                    break;
+                            notify_waiters(&wait_signal, &wait_state);
+                            continue;
+                        }
+
+                        // OCaml waits on Lwt_condition here and only retries next()
+                        // after a worker has merged and broadcast progress.
+                        sample_worker_idle(|| {
+                            wait_for_progress_since(&wait_signal, &wait_state, generation);
+                        });
+                    }
+                    Bucket::Done => {
+                        // Wake all workers so they can exit.
+                        notify_waiters_done(&wait_signal, &wait_state);
+                        break;
+                    }
                 }
             }
-        }
-        if measure::is_enabled() {
-            done_start_times.lock().push(Instant::now());
-        }
+            if measure::is_enabled() {
+                done_start_times.lock().push(Instant::now());
+            }
+        });
     });
     sample_worker_done(&done_start_times);
 
