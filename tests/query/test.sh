@@ -18,3 +18,6 @@ assert_ok "$FLOW" query '{"fields":["name","flow.content_hash"]}' | redact_clock
 
 echo "=== exists + new ==="
 assert_ok "$FLOW" query '{"fields":["name","exists","new"]}' | redact_clock
+
+echo "=== empty_on_fresh_instance -> no files on a fresh instance ==="
+assert_ok "$FLOW" query '{"fields":["name"],"empty_on_fresh_instance":true}' | redact_clock

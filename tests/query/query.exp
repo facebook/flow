@@ -4,3 +4,5 @@
 {"clock":"<redacted>","files":[{"flow.content_hash":"608a96052ff4287d","name":"a.js"}],"is_fresh_instance":true}
 === exists + new ===
 {"clock":"<redacted>","files":[{"exists":true,"name":"a.js","new":true}],"is_fresh_instance":true}
+=== empty_on_fresh_instance -> no files on a fresh instance ===
+{"clock":"<redacted>","files":[],"is_fresh_instance":true}

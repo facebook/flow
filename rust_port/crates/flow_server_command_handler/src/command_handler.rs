@@ -2941,19 +2941,22 @@ fn query(
 
     let want_content = request.fields.contains(&QueryField::ContentHash);
 
-    let files = env
-        .files
-        .iter()
-        .filter(|file_key| !file_key.is_lib_file())
-        .map(|file_key| {
-            let content_hash = if want_content {
-                shared_mem.get_file_hash_committed(file_key)
-            } else {
-                None
-            };
-            build_file_entry(&request.fields, file_key.suffix(), content_hash)
-        })
-        .collect::<Result<Vec<_>, String>>()?;
+    let files: Vec<serde_json::Value> = if request.empty_on_fresh_instance {
+        Vec::new()
+    } else {
+        env.files
+            .iter()
+            .filter(|file_key| !file_key.is_lib_file())
+            .map(|file_key| {
+                let content_hash = if want_content {
+                    shared_mem.get_file_hash_committed(file_key)
+                } else {
+                    None
+                };
+                build_file_entry(&request.fields, file_key.suffix(), content_hash)
+            })
+            .collect::<Result<Vec<_>, String>>()?
+    };
 
     flow_clock::increment();
     let clock = serde_json::to_value(flow_clock::current()).map_err(|e| e.to_string())?;

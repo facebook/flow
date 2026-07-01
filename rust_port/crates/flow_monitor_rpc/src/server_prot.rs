@@ -154,6 +154,9 @@ pub mod request {
         /// A clock from a prior response.
         #[serde(default)]
         pub since: Option<Since>,
+        /// Return no files when the response is a fresh instance.
+        #[serde(default)]
+        pub empty_on_fresh_instance: bool,
     }
 
     #[allow(non_camel_case_types)]
@@ -729,5 +732,21 @@ mod tests {
             serde_json::from_str(&format!(r#"{{"fields": ["name"], "since": "{token}"}}"#))
                 .expect("decodes");
         assert!(matches!(query.since, Some(Since::Clock(_))));
+    }
+
+    #[test]
+    fn query_defaults_and_decodes_empty_on_fresh_instance() {
+        let default: Query = serde_json::from_str(r#"{"fields": ["name"]}"#).expect("decodes");
+        assert!(
+            !default.empty_on_fresh_instance,
+            "empty_on_fresh_instance must default to false when omitted"
+        );
+        let set: Query =
+            serde_json::from_str(r#"{"fields": ["name"], "empty_on_fresh_instance": true}"#)
+                .expect("decodes");
+        assert!(
+            set.empty_on_fresh_instance,
+            "empty_on_fresh_instance must decode to true when set"
+        );
     }
 }
