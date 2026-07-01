@@ -47,6 +47,7 @@ mod llm_context_command;
 mod ls_command;
 mod lsp_command;
 mod offset_cache;
+mod query_command;
 mod save_state_command;
 mod server_command;
 mod shell_complete_command;
@@ -259,6 +260,7 @@ fn explicit_commands() -> Vec<command_spec::Command> {
         coverage_command::command(),
         batch_coverage_command::command(),
         cycle_command::command(),
+        query_command::command(),
         env_builder_debug_command::command(),
         graph_command::command(),
         dump_types_command::command(),

@@ -503,6 +503,9 @@ pub enum CliCommand {
         filename: String,
         types_only: bool,
     },
+    QUERY {
+        query: server_prot::request::Query,
+    },
     DUMP_TYPES {
         input: FileInput,
         evaluate_type_destructors: bool,
@@ -626,6 +629,7 @@ impl From<server_prot::request::Command> for CliCommand {
                 filename,
                 types_only,
             },
+            server_prot::request::Command::QUERY { query } => Self::QUERY { query },
             server_prot::request::Command::DUMP_TYPES {
                 input,
                 evaluate_type_destructors,
@@ -781,6 +785,7 @@ impl CliCommand {
                 filename,
                 types_only,
             },
+            CliCommand::QUERY { query } => server_prot::request::Command::QUERY { query },
             CliCommand::DUMP_TYPES {
                 input,
                 evaluate_type_destructors,
@@ -1459,6 +1464,7 @@ pub enum CliResponse {
     BATCH_COVERAGE(BatchCoverageResponse),
     COVERAGE(CoverageResponse),
     CYCLE(CycleResponse),
+    QUERY(Result<String, String>),
     DUMP_TYPES(DumpTypesResponse),
     FIND_MODULE(FindModuleResponse),
     GET_DEF(GetDefResponse),
@@ -1510,6 +1516,7 @@ impl CliResponse {
                 })))
             }
             server_prot::response::Response::CYCLE(response) => Ok(Self::CYCLE(response)),
+            server_prot::response::Response::QUERY(response) => Ok(Self::QUERY(response)),
             server_prot::response::Response::DUMP_TYPES(response) => {
                 Ok(Self::DUMP_TYPES(response.map(|types| {
                     types
@@ -1607,6 +1614,7 @@ impl CliResponse {
                 }))
             }
             CliResponse::CYCLE(response) => server_prot::response::Response::CYCLE(response),
+            CliResponse::QUERY(response) => server_prot::response::Response::QUERY(response),
             CliResponse::DUMP_TYPES(response) => {
                 server_prot::response::Response::DUMP_TYPES(response.map(|types| {
                     types

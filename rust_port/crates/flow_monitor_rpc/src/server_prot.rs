@@ -108,12 +108,47 @@ pub mod request {
     use flow_parser::loc::Loc;
     use flow_server_utils::file_input::FileInput;
 
+    use crate::flow_clock::Since;
     use crate::server_prot::PathBuf;
     use crate::server_prot::code_action;
     use crate::server_prot::infer_type_options;
     use crate::server_prot::inlay_hint_options;
     use crate::server_prot::llm_context_options;
     use crate::server_prot::type_of_name_options;
+
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        serde::Serialize,
+        serde::Deserialize
+    )]
+    pub enum QueryField {
+        #[serde(rename = "name")]
+        Name,
+        #[serde(rename = "flow.content_hash")]
+        ContentHash,
+    }
+
+    impl QueryField {
+        pub fn as_key(self) -> &'static str {
+            match self {
+                QueryField::Name => "name",
+                QueryField::ContentHash => "flow.content_hash",
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+    #[serde(deny_unknown_fields)]
+    pub struct Query {
+        pub fields: Vec<QueryField>,
+        /// A clock from a prior response.
+        #[serde(default)]
+        pub since: Option<Since>,
+    }
 
     #[allow(non_camel_case_types)]
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -161,6 +196,9 @@ pub mod request {
         CYCLE {
             filename: String,
             types_only: bool,
+        },
+        QUERY {
+            query: Query,
         },
         DUMP_TYPES {
             input: FileInput,
@@ -269,6 +307,7 @@ pub mod request {
                 filename,
                 types_only,
             } => format!("cycle (types_only: {}) {}", types_only, filename),
+            Command::QUERY { query: _ } => "query".to_string(),
             Command::GRAPH_DEP_GRAPH { .. } => "dep-graph".to_string(),
             Command::DUMP_TYPES {
                 input,
@@ -594,6 +633,8 @@ pub mod response {
         COVERAGE(CoverageResponse),
         BATCH_COVERAGE(BatchCoverageResponse),
         CYCLE(GraphResponse),
+        // Ok = pre-serialized JSON mirror (clock, is_fresh_instance, files[]).
+        QUERY(Result<String, String>),
         GRAPH_DEP_GRAPH(Result<(), String>),
         DUMP_TYPES(DumpTypesResponse),
         FIND_MODULE(FindModuleResponse),
@@ -623,6 +664,7 @@ pub mod response {
             Response::COVERAGE(_) => "coverage response",
             Response::BATCH_COVERAGE(_) => "batch-coverage response",
             Response::CYCLE(_) => "cycle response",
+            Response::QUERY(_) => "query response",
             Response::GRAPH_DEP_GRAPH(_) => "dep-graph response",
             Response::DUMP_TYPES(_) => "dump_types response",
             Response::FIND_MODULE(_) => "find_module response",
@@ -638,5 +680,42 @@ pub mod response {
             Response::SUGGEST_IMPORTS(_) => "suggest imports response",
             Response::LLM_CONTEXT(_) => "llm_context response",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::request::Query;
+    use super::request::QueryField;
+
+    #[test]
+    fn query_decodes_supported_fields() {
+        let query: Query =
+            serde_json::from_str(r#"{"fields": ["name", "flow.content_hash"]}"#).expect("decodes");
+        assert_eq!(
+            query.fields,
+            vec![QueryField::Name, QueryField::ContentHash]
+        );
+        assert!(query.since.is_none());
+    }
+
+    #[test]
+    fn query_rejects_unknown_field() {
+        assert!(serde_json::from_str::<Query>(r#"{"fields": ["flow.bogus"]}"#).is_err());
+    }
+
+    #[test]
+    fn query_rejects_overlapping_or_unknown_keys() {
+        assert!(serde_json::from_str::<Query>(r#"{"fields": [], "root": "/x"}"#).is_err());
+    }
+
+    #[test]
+    fn query_accepts_since() {
+        use crate::flow_clock::Since;
+        let token = format!("flow:1:{:032x}:0", 0xabcu128);
+        let query: Query =
+            serde_json::from_str(&format!(r#"{{"fields": ["name"], "since": "{token}"}}"#))
+                .expect("decodes");
+        assert!(matches!(query.since, Some(Since::Clock(_))));
     }
 }

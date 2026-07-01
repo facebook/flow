@@ -9,6 +9,7 @@ pub mod collated_errors;
 pub mod dependency_info;
 pub mod error_collator;
 pub use flow_monitor_rpc::file_watcher_status;
+pub mod flow_clock;
 pub mod flow_lsp_conversions;
 pub use flow_lsp::lsp;
 pub mod lsp_connect_params;

@@ -22,6 +22,7 @@ use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_common_utils::list_utils;
 use flow_parser::loc_sig::LocSig;
+use flow_server_env::flow_clock;
 use flow_server_env::flow_lsp_conversions;
 use flow_server_env::lsp;
 use flow_server_env::lsp::LspMessage;
@@ -40,6 +41,8 @@ use flow_server_env::server_command_with_context::ServerCommandWithContext;
 use flow_server_env::server_env;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_prot;
+use flow_server_env::server_prot::request::Query;
+use flow_server_env::server_prot::request::QueryField;
 use flow_server_utils::file_input::FileInput;
 use flow_services_autocomplete::autocomplete_service_js::ac_completion;
 use flow_services_inference::type_contents::parse_contents;
@@ -2878,6 +2881,95 @@ fn handle_cycle(
     Ok((server_prot::response::Response::CYCLE(response), None))
 }
 
+fn field_value(
+    field: QueryField,
+    name: &str,
+    content_hash: Option<u64>,
+) -> Result<serde_json::Value, String> {
+    Ok(match field {
+        QueryField::Name => name.into(),
+        QueryField::ContentHash => {
+            // Fail the whole query rather than emit a partial entry a consumer could cache.
+            let content_hash = content_hash
+                .ok_or_else(|| format!("File {name} has no committed {}", field.as_key()))?;
+            format!("{:016x}", content_hash).into()
+        }
+    })
+}
+
+// A single requested field yields a bare value per file; multiple fields yield an object keyed by
+// field name.
+fn build_file_entry(
+    fields: &[QueryField],
+    name: &str,
+    content_hash: Option<u64>,
+) -> Result<serde_json::Value, String> {
+    if let [field] = fields {
+        return field_value(*field, name, content_hash);
+    }
+    let mut obj = serde_json::Map::new();
+    for field in fields {
+        obj.insert(
+            field.as_key().to_string(),
+            field_value(*field, name, content_hash)?,
+        );
+    }
+    Ok(serde_json::Value::Object(obj))
+}
+
+// NOTE: `query` reads the committed heap, which can lag the filesystem -- a daemon behind the
+// filesystem returns a self-consistent but stale mirror. Adding a freshness barrier here is a follow-up.
+fn query(
+    env: &server_env::Env,
+    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    request: &Query,
+) -> Result<String, String> {
+    // `fields` must be a non-empty list of distinct fields. Enforcing it here keeps the
+    // single-field-flattening rule unambiguous: one entry always means one distinct field.
+    if request.fields.is_empty() {
+        return Err("a query must request at least one field".to_string());
+    }
+    for (i, field) in request.fields.iter().enumerate() {
+        if request.fields[..i].contains(field) {
+            return Err(format!("duplicate query field `{}`", field.as_key()));
+        }
+    }
+
+    let want_content = request.fields.contains(&QueryField::ContentHash);
+
+    let files = env
+        .files
+        .iter()
+        .filter(|file_key| !file_key.is_lib_file())
+        .map(|file_key| {
+            let content_hash = if want_content {
+                shared_mem.get_file_hash_committed(file_key)
+            } else {
+                None
+            };
+            build_file_entry(&request.fields, file_key.suffix(), content_hash)
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+
+    flow_clock::increment();
+    let clock = serde_json::to_value(flow_clock::current()).map_err(|e| e.to_string())?;
+    let payload = serde_json::json!({
+        "clock": clock,
+        "is_fresh_instance": true,
+        "files": files,
+    });
+    serde_json::to_string(&payload).map_err(|e| e.to_string())
+}
+
+fn handle_query(
+    env: &server_env::Env,
+    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    request: &Query,
+) -> EphemeralNonparallelizableResult {
+    let response = query(env, shared_mem, request);
+    Ok((server_prot::response::Response::QUERY(response), None))
+}
+
 fn handle_dump_types(
     options: &Options,
     env: &server_env::Env,
@@ -3219,6 +3311,7 @@ pub fn handle_ephemeral_command_for_standalone(
             let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&filename);
             handle_cycle(env, &file_key, types_only)
         }
+        server_prot::request::Command::QUERY { query } => handle_query(env, &shared_mem, &query),
         server_prot::request::Command::DUMP_TYPES {
             input,
             evaluate_type_destructors,
@@ -3593,6 +3686,7 @@ fn get_ephemeral_handler(
             wait_for_recheck, ..
         } => mk_parallelizable(*wait_for_recheck, options),
         server_prot::request::Command::CYCLE { .. } => CommandHandler::HandleNonparallelizable,
+        server_prot::request::Command::QUERY { .. } => CommandHandler::HandleNonparallelizable,
         server_prot::request::Command::DUMP_TYPES {
             wait_for_recheck, ..
         } => mk_parallelizable(*wait_for_recheck, options),
@@ -7660,5 +7754,38 @@ fn mk_nonparallelizable_persistent_workload(
                 }
             }
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use flow_server_env::server_prot::request::QueryField;
+
+    use super::build_file_entry;
+
+    #[test]
+    fn build_file_entry_shapes_by_field_count() {
+        // Multiple fields -> an object keyed by field name.
+        let object = build_file_entry(
+            &[QueryField::Name, QueryField::ContentHash],
+            "a.js",
+            Some(0x1234),
+        )
+        .expect("entry");
+        assert_eq!(object["name"], "a.js");
+        assert_eq!(
+            object["flow.content_hash"], "0000000000001234",
+            "content hash is a fixed-width 16-hex-digit value",
+        );
+
+        // A single field -> the bare value, not an object.
+        let bare = build_file_entry(&[QueryField::Name], "a.js", Some(0x1234)).expect("entry");
+        assert_eq!(bare, serde_json::Value::String("a.js".to_string()));
+
+        let err = build_file_entry(&[QueryField::ContentHash], "a.js", None).unwrap_err();
+        assert!(
+            err.contains("a.js") && err.contains("flow.content_hash"),
+            "error should name the file and field, got: {err}",
+        );
     }
 }

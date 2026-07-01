@@ -6,6 +6,7 @@
  */
 
 pub mod file_watcher_status;
+pub mod flow_clock;
 pub mod lsp_prot;
 pub mod monitor_prot;
 pub mod monitor_rpc;
