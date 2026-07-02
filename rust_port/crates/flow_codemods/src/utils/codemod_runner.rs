@@ -19,7 +19,9 @@ use flow_common::options::Options;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::server_env::Env as ServerEnv;
+use flow_server_env::server_env::EnvCellReadGuard;
 use flow_server_env::server_env::EnvTransaction;
 use flow_server_env::server_env::Genv;
 use flow_typing_context::Metadata;
@@ -271,12 +273,12 @@ async fn merge_targets<'a>(
     >,
     roots: &BTreeSet<FileKey>,
 ) -> (
-    &'a flow_common_utils::graph::Graph<FileKey>,
+    EnvCellReadGuard<DependencyInfo>,
     Vec<vec1::Vec1<FileKey>>,
     flow_data_structure_wrapper::ord_set::FlowOrdSet<FileKey>,
     flow_common_utils::checked_set::CheckedSet,
 ) {
-    let dependency_info = &env.dependency_info;
+    let dependency_info = env.dependency_info();
     let sig_dependency_graph = dependency_info.sig_dependency_graph();
     let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
     flow_hh_logger::info!("Calculating dependencies");
@@ -292,7 +294,7 @@ async fn merge_targets<'a>(
     );
     let roots = checked_set_all(to_merge);
     let components = types_js_calc_deps(options, _components, &roots);
-    (sig_dependency_graph, components, roots, to_check)
+    (dependency_info, components, roots, to_check)
 }
 
 fn merge_job(
@@ -708,7 +710,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
          -> std::pin::Pin<
             Box<dyn std::future::Future<Output = BTreeSet<FileKey>>>,
         > { Box::pin(async { BTreeSet::new() }) };
-        let (_sig_dependency_graph, _components, files_to_merge, _) =
+        let (_dependency_info, _components, files_to_merge, _) =
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
@@ -727,7 +729,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 &reader,
                 _options,
                 false, // for_find_all_refs
-                _sig_dependency_graph,
+                _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
                 move |_shared_mem: &flow_heap::parsing_heaps::SharedMem,
@@ -837,7 +839,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
          -> std::pin::Pin<
             Box<dyn std::future::Future<Output = BTreeSet<FileKey>>>,
         > { Box::pin(async { BTreeSet::new() }) };
-        let (_sig_dependency_graph, _components, files_to_merge, _) =
+        let (_dependency_info, _components, files_to_merge, _) =
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
@@ -856,7 +858,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 &reader,
                 _options,
                 false,
-                _sig_dependency_graph,
+                _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
                 move |_sm: &flow_heap::parsing_heaps::SharedMem,
@@ -914,7 +916,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
          -> std::pin::Pin<
             Box<dyn std::future::Future<Output = BTreeSet<FileKey>>>,
         > { Box::pin(async { BTreeSet::new() }) };
-        let (_sig_dependency_graph2, _components2, files_to_merge2, _) =
+        let (_dependency_info2, _components2, files_to_merge2, _) =
             merge_targets(_env, _options, &(), get_dependent_files2, &second_run_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
@@ -933,7 +935,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 &reader,
                 _options,
                 false,
-                _sig_dependency_graph2,
+                _dependency_info2.sig_dependency_graph(),
                 _components2,
                 &files_to_merge2,
                 move |_sm: &flow_heap::parsing_heaps::SharedMem,
@@ -1013,7 +1015,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 Box::pin(async { BTreeSet::new() })
             }
         };
-        let (_sig_dependency_graph, _components, files_to_merge, _files_to_check) =
+        let (_dependency_info, _components, files_to_merge, _files_to_check) =
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
@@ -1032,7 +1034,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 &reader,
                 _options,
                 false,
-                _sig_dependency_graph,
+                _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
                 move |_sm: &flow_heap::parsing_heaps::SharedMem,

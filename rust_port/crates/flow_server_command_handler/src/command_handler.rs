@@ -2205,7 +2205,8 @@ fn collect_rage(
         env.checked_files.debug_to_string(Some(200)),
     );
     items.push(("env.checked_files".to_string(), data));
-    let dep_graph = env.dependency_info.implementation_dependency_graph();
+    let dependency_info = env.dependency_info();
+    let dep_graph = dependency_info.implementation_dependency_graph();
     let dep_map = dep_graph.to_map();
     let dependency_to_string = |(file, deps): (
         &flow_parser::file_key::FileKey,
@@ -2428,10 +2429,11 @@ fn output_dependencies(
     } else {
         Box::new(|x: &str| x.to_string())
     };
+    let dependency_info = env.dependency_info();
     let dep_graph = if types_only {
-        env.dependency_info.sig_dependency_graph()
+        dependency_info.sig_dependency_graph()
     } else {
-        env.dependency_info.implementation_dependency_graph()
+        dependency_info.implementation_dependency_graph()
     };
     let graph = serialize_graph(&dep_graph.to_map());
     flow_hh_logger::info!("printing dependency graph to {}\n", outfile);
@@ -2460,10 +2462,11 @@ fn get_cycle(
     types_only: bool,
 ) -> server_prot::response::GraphResponse {
     let parsed = &env.files;
+    let dependency_info = env.dependency_info();
     let dependency_graph = if types_only {
-        env.dependency_info.sig_dependency_graph()
+        dependency_info.sig_dependency_graph()
     } else {
-        env.dependency_info.implementation_dependency_graph()
+        dependency_info.implementation_dependency_graph()
     };
     let components = topsort(parsed.iter().cloned(), dependency_graph);
     let component = components

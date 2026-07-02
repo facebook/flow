@@ -32,6 +32,7 @@ use vec1::Vec1;
 use crate::collated_errors::CollatedErrors;
 use crate::collated_errors::OverlayCollatedErrors;
 use crate::dependency_info::DependencyInfo;
+use crate::dependency_info::OverlayDependencyInfo;
 use crate::persistent_connection::PersistentConnection;
 
 // The "static" environment, initialized first and then unchanged.
@@ -156,7 +157,7 @@ pub type OverlayCoverage =
 pub struct Env {
     /// All the files that we at least parse (includes libs).
     pub files: FlowOrdSet<FileKey>,
-    pub dependency_info: DependencyInfo,
+    pub dependency_info: Arc<EnvCell<DependencyInfo>>,
     /// All the current files we typecheck.
     pub checked_files: CheckedSet,
     /// package.json files
@@ -179,6 +180,10 @@ pub struct Env {
 pub type EnvRef = Arc<Env>;
 
 impl Env {
+    pub fn dependency_info(&self) -> EnvCellReadGuard<DependencyInfo> {
+        self.dependency_info.read_arc()
+    }
+
     pub fn errors(&self) -> EnvCellReadGuard<Errors> {
         self.errors.read_arc()
     }
@@ -195,7 +200,7 @@ impl Env {
 pub struct EnvTransaction {
     env: EnvRef,
     files: Option<FlowOrdSet<FileKey>>,
-    dependency_info: Option<DependencyInfo>,
+    dependency_info: Option<OverlayDependencyInfo>,
     checked_files: Option<CheckedSet>,
     package_json_files: Option<FlowOrdSet<FileKey>>,
     ordered_libs: Option<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
@@ -233,10 +238,24 @@ impl EnvTransaction {
         self.files.as_ref().unwrap_or(&self.env.files)
     }
 
-    pub fn dependency_info(&self) -> &DependencyInfo {
+    pub fn dependency_info(&mut self) -> &OverlayDependencyInfo {
+        if self.dependency_info.is_none() {
+            self.dependency_info =
+                Some(OverlayDependencyInfo::new(self.env.dependency_info.dupe()));
+        }
         self.dependency_info
             .as_ref()
-            .unwrap_or(&self.env.dependency_info)
+            .expect("dependency info initialized")
+    }
+
+    pub fn dependency_info_mut(&mut self) -> &mut OverlayDependencyInfo {
+        if self.dependency_info.is_none() {
+            self.dependency_info =
+                Some(OverlayDependencyInfo::new(self.env.dependency_info.dupe()));
+        }
+        self.dependency_info
+            .as_mut()
+            .expect("dependency info initialized")
     }
 
     pub fn checked_files(&self) -> &CheckedSet {
@@ -307,12 +326,6 @@ impl EnvTransaction {
             .unwrap_or_else(|| OverlayErrors::new(self.env.errors.dupe()))
     }
 
-    pub fn take_dependency_info(&mut self) -> DependencyInfo {
-        self.dependency_info
-            .take()
-            .unwrap_or_else(|| self.env.dependency_info.clone())
-    }
-
     pub fn take_coverage(&mut self) -> OverlayCoverage {
         self.coverage
             .take()
@@ -325,12 +338,14 @@ impl EnvTransaction {
             .unwrap_or_else(|| OverlayCollatedErrors::new(self.env.collated_errors.dupe()))
     }
 
-    pub fn set_files(&mut self, files: FlowOrdSet<FileKey>) {
-        self.files = Some(files);
+    pub fn take_dependency_info(&mut self) -> OverlayDependencyInfo {
+        self.dependency_info
+            .take()
+            .unwrap_or_else(|| OverlayDependencyInfo::new(self.env.dependency_info.dupe()))
     }
 
-    pub fn set_dependency_info(&mut self, dependency_info: DependencyInfo) {
-        self.dependency_info = Some(dependency_info);
+    pub fn set_files(&mut self, files: FlowOrdSet<FileKey>) {
+        self.files = Some(files);
     }
 
     pub fn set_checked_files(&mut self, checked_files: CheckedSet) {
@@ -351,6 +366,10 @@ impl EnvTransaction {
 
     pub fn set_collated_errors(&mut self, collated_errors: OverlayCollatedErrors) {
         self.collated_errors = Some(collated_errors);
+    }
+
+    pub fn set_dependency_info(&mut self, dependency_info: OverlayDependencyInfo) {
+        self.dependency_info = Some(dependency_info);
     }
 
     pub fn set_connections(&mut self, connections: PersistentConnection) {
@@ -379,7 +398,6 @@ impl EnvTransaction {
             master_cx,
         } = self;
         let needs_new_env = files.is_some()
-            || dependency_info.is_some()
             || checked_files.is_some()
             || package_json_files.is_some()
             || ordered_libs.is_some()
@@ -389,6 +407,9 @@ impl EnvTransaction {
             || exports.is_some()
             || master_cx.is_some();
 
+        if let Some(dependency_info) = dependency_info {
+            dependency_info.commit();
+        }
         if let Some(errors) = errors {
             errors.commit();
         }
@@ -404,7 +425,7 @@ impl EnvTransaction {
         if needs_new_env {
             Arc::new(Env {
                 files: files.unwrap_or_else(|| env.files.dupe()),
-                dependency_info: dependency_info.unwrap_or_else(|| env.dependency_info.clone()),
+                dependency_info: env.dependency_info.dupe(),
                 checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
                 package_json_files: package_json_files
                     .unwrap_or_else(|| env.package_json_files.dupe()),
@@ -442,6 +463,9 @@ impl EnvTransaction {
             master_cx,
         } = self;
 
+        if let Some(dependency_info) = dependency_info {
+            dependency_info.commit();
+        }
         if let Some(errors) = errors {
             errors.commit();
         }
@@ -456,7 +480,7 @@ impl EnvTransaction {
 
         Env {
             files: files.unwrap_or_else(|| env.files.dupe()),
-            dependency_info: dependency_info.unwrap_or_else(|| env.dependency_info.clone()),
+            dependency_info: env.dependency_info.dupe(),
             checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
             package_json_files: package_json_files.unwrap_or_else(|| env.package_json_files.dupe()),
             ordered_libs: ordered_libs.unwrap_or_else(|| env.ordered_libs.clone()),
@@ -489,7 +513,10 @@ pub fn with_connections(env: EnvRef, connections: PersistentConnection) -> EnvRe
 
 #[cfg(test)]
 mod tests {
+    use flow_common_utils::graph::GraphLike;
+
     use super::*;
+    use crate::dependency_info::PartialDependencyGraph;
 
     fn empty_errors() -> Errors {
         Errors {
@@ -504,7 +531,7 @@ mod tests {
     fn env_ref() -> EnvRef {
         Arc::new(Env {
             files: FlowOrdSet::new(),
-            dependency_info: DependencyInfo::empty(),
+            dependency_info: env_cell(DependencyInfo::empty()),
             checked_files: CheckedSet::empty(),
             package_json_files: FlowOrdSet::new(),
             ordered_libs: Vec::new(),
@@ -517,6 +544,30 @@ mod tests {
             exports: None,
             master_cx: Arc::new(MasterContext::EmptyMasterContext),
         })
+    }
+
+    fn source_file(name: &str) -> FileKey {
+        FileKey::source_file_of_absolute(&format!("/tmp/{name}.js"))
+    }
+
+    fn partial_dependency_graph(
+        file: FileKey,
+        sig_deps: BTreeSet<FileKey>,
+        impl_deps: BTreeSet<FileKey>,
+    ) -> PartialDependencyGraph {
+        PartialDependencyGraph::from_map(BTreeMap::from([(file, (sig_deps, impl_deps))]))
+    }
+
+    fn dependency_info_update() -> (FileKey, FileKey, FileKey, PartialDependencyGraph) {
+        let file = source_file("a");
+        let sig_dep = source_file("sig");
+        let impl_dep = source_file("impl");
+        let partial_dependency_graph = partial_dependency_graph(
+            file.dupe(),
+            BTreeSet::from([sig_dep.dupe()]),
+            BTreeSet::from([impl_dep.dupe()]),
+        );
+        (file, sig_dep, impl_dep, partial_dependency_graph)
     }
 
     #[test]
@@ -560,5 +611,87 @@ mod tests {
         assert_eq!(env.connections.0, Vec::<i32>::new());
         assert_eq!(committed.connections.0, vec![42]);
         assert_eq!(committed.files.len(), 1);
+    }
+
+    #[test]
+    fn dependency_info_update_is_visible_inside_transaction_only() {
+        let env = env_ref();
+        let (file, sig_dep, impl_dep, partial_dependency_graph) = dependency_info_update();
+        let mut transaction = EnvTransaction::new(env.dupe());
+
+        transaction
+            .dependency_info_mut()
+            .update(partial_dependency_graph, BTreeSet::new());
+
+        let transaction_dependency_info = transaction.dependency_info();
+        assert_eq!(
+            transaction_dependency_info
+                .sig_dependency_graph()
+                .find_opt(&file),
+            Some(&BTreeSet::from([sig_dep]))
+        );
+        assert_eq!(
+            transaction_dependency_info
+                .implementation_dependency_graph()
+                .find_opt(&file),
+            Some(&BTreeSet::from([impl_dep]))
+        );
+        assert!(
+            env.dependency_info()
+                .sig_dependency_graph()
+                .find_opt(&file)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn dropped_transaction_does_not_commit_dependency_info() {
+        let env = env_ref();
+        let (file, _sig_dep, _impl_dep, partial_dependency_graph) = dependency_info_update();
+
+        {
+            let mut transaction = EnvTransaction::new(env.dupe());
+            transaction
+                .dependency_info_mut()
+                .update(partial_dependency_graph, BTreeSet::new());
+        }
+
+        assert!(
+            env.dependency_info()
+                .sig_dependency_graph()
+                .find_opt(&file)
+                .is_none()
+        );
+        assert!(
+            env.dependency_info()
+                .implementation_dependency_graph()
+                .find_opt(&file)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn commit_updates_dependency_info_graphs() {
+        let env = env_ref();
+        let (file, sig_dep, impl_dep, partial_dependency_graph) = dependency_info_update();
+        let mut transaction = EnvTransaction::new(env.dupe());
+        transaction
+            .dependency_info_mut()
+            .update(partial_dependency_graph, BTreeSet::new());
+
+        let committed = transaction.commit();
+        let dependency_info = committed.dependency_info();
+
+        assert_eq!(
+            dependency_info.sig_dependency_graph().find_opt(&file),
+            Some(&BTreeSet::from([sig_dep]))
+        );
+        assert_eq!(
+            dependency_info
+                .implementation_dependency_graph()
+                .find_opt(&file),
+            Some(&BTreeSet::from([impl_dep]))
+        );
+        assert!(Arc::ptr_eq(&env, &committed));
     }
 }

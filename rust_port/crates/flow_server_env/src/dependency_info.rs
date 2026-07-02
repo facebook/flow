@@ -7,12 +7,16 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
+use dupe::Dupe;
+use flow_common_utils::graph::EnvOverlayGraph;
 use flow_common_utils::graph::Graph;
+use flow_data_structure_wrapper::overlay_map::EnvCell;
 use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct DependencyInfo {
     sig_dependency_graph: Graph<FileKey>,
     implementation_dependency_graph: Graph<FileKey>,
@@ -52,20 +56,19 @@ impl PartialDependencyGraph {
     }
 }
 
-fn extract_sig_map(
+fn split_dependency_maps(
     map: BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
-) -> BTreeMap<FileKey, BTreeSet<FileKey>> {
-    map.into_iter()
-        .map(|(file, (sig_deps, _impl_deps))| (file, sig_deps))
-        .collect()
-}
-
-fn extract_impl_map(
-    map: BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
-) -> BTreeMap<FileKey, BTreeSet<FileKey>> {
-    map.into_iter()
-        .map(|(file, (_sig_deps, impl_deps))| (file, impl_deps))
-        .collect()
+) -> (
+    BTreeMap<FileKey, BTreeSet<FileKey>>,
+    BTreeMap<FileKey, BTreeSet<FileKey>>,
+) {
+    let mut sig_map = BTreeMap::new();
+    let mut implementation_map = BTreeMap::new();
+    for (file, (sig_deps, impl_deps)) in map {
+        sig_map.insert(file.dupe(), sig_deps);
+        implementation_map.insert(file, impl_deps);
+    }
+    (sig_map, implementation_map)
 }
 
 impl DependencyInfo {
@@ -88,9 +91,8 @@ impl DependencyInfo {
 
     pub fn of_map(pool: &ThreadPool, map: PartialDependencyGraph) -> Self {
         let _ = pool;
-        let sig_dependency_map = extract_sig_map(map.inner.clone());
+        let (sig_dependency_map, implementation_dependency_map) = split_dependency_maps(map.inner);
         let sig_dependency_graph = Graph::of_map(sig_dependency_map);
-        let implementation_dependency_map = extract_impl_map(map.inner);
         let implementation_dependency_graph = Graph::of_map(implementation_dependency_map);
         Self {
             sig_dependency_graph,
@@ -107,13 +109,11 @@ impl DependencyInfo {
             sig_dependency_graph: old_sig_graph,
             implementation_dependency_graph: old_impl_graph,
         } = old_dep_info;
-        let updated_map = partial_dep_graph.inner;
-        let updated_sig_map = extract_sig_map(updated_map.clone());
-        let updated_impl_map = extract_impl_map(updated_map);
+        let (updated_sig_map, updated_impl_map) = split_dependency_maps(partial_dep_graph.inner);
         Self {
-            sig_dependency_graph: old_sig_graph.update_from_map(updated_sig_map, to_remove.clone()),
+            sig_dependency_graph: old_sig_graph.update_from_map(updated_sig_map, &to_remove),
             implementation_dependency_graph: old_impl_graph
-                .update_from_map(updated_impl_map, to_remove),
+                .update_from_map(updated_impl_map, &to_remove),
         }
     }
 
@@ -136,5 +136,65 @@ impl DependencyInfo {
             "Sig dependency graph:\n{:?}\nImplementation dependency graph:\n{:?}",
             sig_map, impl_map
         )
+    }
+}
+
+pub struct OverlayDependencyInfo {
+    base_cell: Arc<EnvCell<DependencyInfo>>,
+    sig_dependency_graph: EnvOverlayGraph<DependencyInfo, FileKey>,
+    implementation_dependency_graph: EnvOverlayGraph<DependencyInfo, FileKey>,
+}
+
+impl OverlayDependencyInfo {
+    pub fn new(base_cell: Arc<EnvCell<DependencyInfo>>) -> Self {
+        Self {
+            base_cell: base_cell.dupe(),
+            sig_dependency_graph: EnvOverlayGraph::new(
+                base_cell.dupe(),
+                DependencyInfo::sig_dependency_graph,
+            ),
+            implementation_dependency_graph: EnvOverlayGraph::new(
+                base_cell,
+                DependencyInfo::implementation_dependency_graph,
+            ),
+        }
+    }
+
+    pub fn update(
+        &mut self,
+        partial_dep_graph: PartialDependencyGraph,
+        to_remove: BTreeSet<FileKey>,
+    ) {
+        let (updated_sig_map, updated_impl_map) = split_dependency_maps(partial_dep_graph.inner);
+        self.sig_dependency_graph
+            .update_from_map(updated_sig_map, &to_remove);
+        self.implementation_dependency_graph
+            .update_from_map(updated_impl_map, &to_remove);
+    }
+
+    pub fn implementation_dependency_graph(&self) -> &EnvOverlayGraph<DependencyInfo, FileKey> {
+        &self.implementation_dependency_graph
+    }
+
+    pub fn sig_dependency_graph(&self) -> &EnvOverlayGraph<DependencyInfo, FileKey> {
+        &self.sig_dependency_graph
+    }
+
+    pub fn commit(self) {
+        let Self {
+            base_cell,
+            sig_dependency_graph,
+            implementation_dependency_graph,
+        } = self;
+        let sig_dependency_graph = sig_dependency_graph.into_delta();
+        let implementation_dependency_graph_delta = implementation_dependency_graph.into_delta();
+
+        let mut dependency_info = base_cell.write();
+        dependency_info
+            .sig_dependency_graph
+            .apply_delta(sig_dependency_graph);
+        dependency_info
+            .implementation_dependency_graph
+            .apply_delta(implementation_dependency_graph_delta);
     }
 }

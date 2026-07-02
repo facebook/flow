@@ -31,8 +31,10 @@ use flow_common_tarjan::topsort;
 use flow_common_transaction as side_effect_transaction;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_common_utils::graph::Graph;
+use flow_common_utils::graph::GraphLike;
 use flow_config::FlowConfig;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::overlay_map::EnvCell;
 use flow_data_structure_wrapper::overlay_map::OverlayMap;
 use flow_data_structure_wrapper::overlay_map::OverlayMapBase;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
@@ -495,13 +497,13 @@ fn calc_deps_for_recheck(
     calc_deps_impl(options, components, to_merge, true)
 }
 
-fn include_dependencies_and_dependents_impl(
+fn include_dependencies_and_dependents_impl<IG, SG>(
     options: &Options,
     input: CheckedSet,
     unchanged_checked: CheckedSet,
     all_dependent_files: FlowOrdSet<FileKey>,
-    implementation_dependency_graph: &Graph<FileKey>,
-    sig_dependency_graph: &Graph<FileKey>,
+    implementation_dependency_graph: &IG,
+    sig_dependency_graph: &SG,
     cancelable: bool,
 ) -> Result<
     (
@@ -511,7 +513,11 @@ fn include_dependencies_and_dependents_impl(
         FlowOrdSet<FileKey>,
     ),
     RecheckError,
-> {
+>
+where
+    IG: GraphLike<FileKey> + ?Sized,
+    SG: GraphLike<FileKey> + ?Sized,
+{
     with_memory_timer(options, "PruneDeps", || {
         if cancelable {
             check_recheck_canceled()?;
@@ -559,19 +565,23 @@ fn include_dependencies_and_dependents_impl(
     })
 }
 
-pub fn include_dependencies_and_dependents(
+pub fn include_dependencies_and_dependents<IG, SG>(
     options: &Options,
     input: CheckedSet,
     unchanged_checked: CheckedSet,
     all_dependent_files: FlowOrdSet<FileKey>,
-    implementation_dependency_graph: &Graph<FileKey>,
-    sig_dependency_graph: &Graph<FileKey>,
+    implementation_dependency_graph: &IG,
+    sig_dependency_graph: &SG,
 ) -> (
     CheckedSet,
     CheckedSet,
     Vec<Vec1<FileKey>>,
     FlowOrdSet<FileKey>,
-) {
+)
+where
+    IG: GraphLike<FileKey> + ?Sized,
+    SG: GraphLike<FileKey> + ?Sized,
+{
     include_dependencies_and_dependents_impl(
         options,
         input,
@@ -584,13 +594,13 @@ pub fn include_dependencies_and_dependents(
     .expect("non-recheck dependency pruning should not be canceled")
 }
 
-fn include_dependencies_and_dependents_for_recheck(
+fn include_dependencies_and_dependents_for_recheck<IG, SG>(
     options: &Options,
     input: CheckedSet,
     unchanged_checked: CheckedSet,
     all_dependent_files: FlowOrdSet<FileKey>,
-    implementation_dependency_graph: &Graph<FileKey>,
-    sig_dependency_graph: &Graph<FileKey>,
+    implementation_dependency_graph: &IG,
+    sig_dependency_graph: &SG,
 ) -> Result<
     (
         CheckedSet,
@@ -599,7 +609,11 @@ fn include_dependencies_and_dependents_for_recheck(
         FlowOrdSet<FileKey>,
     ),
     RecheckError,
-> {
+>
+where
+    IG: GraphLike<FileKey> + ?Sized,
+    SG: GraphLike<FileKey> + ?Sized,
+{
     include_dependencies_and_dependents_impl(
         options,
         input,
@@ -749,7 +763,7 @@ fn run_merge_service(
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
     for_find_all_refs: bool,
-    sig_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
     suppressions: ErrorSuppressions,
@@ -786,7 +800,7 @@ fn merge(
     to_merge: &CheckedSet,
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
-    sig_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
     suppressions: ErrorSuppressions,
 ) -> Result<MergeResult, RecheckError> {
     if !options.quiet {
@@ -855,7 +869,7 @@ mod check_files {
         to_check: CheckedSet,
         dirty_direct_dependents: FlowOrdSet<FileKey>,
         sig_new_or_changed: FlowOrdSet<FileKey>,
-        dependency_info: &DependencyInfo,
+        implementation_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
         master_cx: Arc<MasterContext>,
     ) -> Result<
         (
@@ -880,7 +894,6 @@ mod check_files {
             let focused_to_check = to_check.focused();
             let merged_dependents = to_check.dependents();
             let mut skipped_count = 0;
-            let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
             let dependents_to_check = merged_dependents
                 .iter()
                 .filter_map(|file| {
@@ -1602,7 +1615,7 @@ pub(crate) mod recheck {
         flow_hh_logger::info!("Recalculating dependency graph");
         monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let parsed = parsed_set.dupe().union(unchanged.dupe());
-        let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
+        with_memory_timer(options, "CalcDepsTypecheck", || {
             let files_to_update_dependency_info = parsed_set.union(dirty_direct_dependents.dupe());
             let partial_dependency_graph = dep_service::calc_partial_dependency_graph(
                 pool,
@@ -1610,11 +1623,8 @@ pub(crate) mod recheck {
                 &files_to_update_dependency_info,
                 &parsed,
             );
-            DependencyInfo::update(
-                env.take_dependency_info(),
-                partial_dependency_graph,
-                unparsed_or_deleted,
-            )
+            env.dependency_info_mut()
+                .update(partial_dependency_graph, unparsed_or_deleted);
         });
         check_recheck_canceled()?;
 
@@ -1629,7 +1639,6 @@ pub(crate) mod recheck {
 
         env.set_files(parsed);
         env.set_unparsed(unparsed);
-        env.set_dependency_info(dependency_info);
         env.set_coverage(coverage);
 
         let errors = OverlayErrors {
@@ -1655,15 +1664,19 @@ pub(crate) mod recheck {
         Ok(intermediate_values)
     }
 
-    pub(crate) fn determine_what_to_recheck(
+    pub(crate) fn determine_what_to_recheck<SG, IG>(
         options: &Options,
-        sig_dependency_graph: &Graph<FileKey>,
-        implementation_dependency_graph: &Graph<FileKey>,
+        sig_dependency_graph: &SG,
+        implementation_dependency_graph: &IG,
         freshparsed: &CheckedSet,
         unchanged_checked: CheckedSet,
         unchanged_files_to_force: &CheckedSet,
         dirty_direct_dependents: &FlowOrdSet<FileKey>,
-    ) -> Result<DetermineWhatToRecheckResult, RecheckError> {
+    ) -> Result<DetermineWhatToRecheckResult, RecheckError>
+    where
+        SG: GraphLike<FileKey> + ?Sized,
+        IG: GraphLike<FileKey> + ?Sized,
+    {
         check_recheck_canceled()?;
         let input_focused = freshparsed
             .focused()
@@ -1735,206 +1748,213 @@ pub(crate) mod recheck {
             unchanged_files_to_upgrade,
         } = intermediate_values;
         let coverage_for_check = env.take_coverage();
-        let dependency_info = env.dependency_info();
-        let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
-        let sig_dependency_graph = dependency_info.sig_dependency_graph();
-        flow_hh_logger::info!("Determining what to recheck...");
-        monitor_rpc::status_update(server_status::Event::CalculatingDependentsStart);
-        let mut unchanged_files_to_force = unchanged_files_to_force;
-        unchanged_files_to_force.union(unchanged_files_to_upgrade.dupe());
-        let DetermineWhatToRecheckResult {
-            to_merge,
-            to_check,
-            components,
-            recheck_set,
-            dependent_file_count,
-        } = determine_what_to_recheck(
-            options,
-            sig_dependency_graph,
-            implementation_dependency_graph,
-            &freshparsed,
-            unchanged_checked.dupe(),
-            &unchanged_files_to_force,
-            &dirty_direct_dependents,
-        )?;
-        monitor_rpc::status_update(server_status::Event::CalculatingDependentsEnd);
-        will_be_checked_files.union(to_merge.dupe());
+        let dependency_info = env.take_dependency_info();
+        let result = (|| {
+            let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
+            let sig_dependency_graph = dependency_info.sig_dependency_graph();
+            flow_hh_logger::info!("Determining what to recheck...");
+            monitor_rpc::status_update(server_status::Event::CalculatingDependentsStart);
+            let mut unchanged_files_to_force = unchanged_files_to_force;
+            unchanged_files_to_force.union(unchanged_files_to_upgrade.dupe());
+            let DetermineWhatToRecheckResult {
+                to_merge,
+                to_check,
+                components,
+                recheck_set,
+                dependent_file_count,
+            } = determine_what_to_recheck(
+                options,
+                sig_dependency_graph,
+                implementation_dependency_graph,
+                &freshparsed,
+                unchanged_checked.dupe(),
+                &unchanged_files_to_force,
+                &dirty_direct_dependents,
+            )?;
+            monitor_rpc::status_update(server_status::Event::CalculatingDependentsEnd);
+            will_be_checked_files.union(to_merge.dupe());
 
-        match changed_mergebase {
-            Some(true) if options.lazy_mode && options.estimate_recheck_time => {
-                restart_if_faster_than_recheck(options, env.checked_files(), &to_merge)?;
-            }
-            _ => {}
-        }
-        check_recheck_canceled()?;
-        ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
-        check_recheck_canceled()?;
-        if dependent_file_count > 0 {
-            flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
-        }
-        let MergeResult {
-            suppressions: updated_suppressions,
-            skipped_count: merge_skip_count,
-            sig_new_or_changed,
-            top_cycle,
-            calc_deps_time: _,
-            time_to_merge,
-        } = merge(
-            pool,
-            shared_mem,
-            options,
-            for_find_all_refs,
-            &to_merge,
-            components,
-            &recheck_set,
-            sig_dependency_graph,
-            errors.suppressions.clone(),
-        )?;
-
-        let exports = match env.exports() {
-            None => None,
-            Some(exports) => {
-                check_recheck_canceled()?;
-                flow_hh_logger::info!("Updating index");
-                let updated_exports = with_memory_timer(options, "Indexing", || {
-                    let dirty_files: BTreeSet<FileKey> =
-                        sig_new_or_changed.iter().duped().collect();
-                    flow_services_export::export_service::update(
-                        pool,
-                        shared_mem,
-                        &dirty_files,
-                        exports,
-                    )
-                });
-                flow_hh_logger::info!("Done updating index");
-                Some(updated_exports)
-            }
-        };
-        check_recheck_canceled()?;
-
-        let sig_new_or_changed = sig_new_or_changed.union(unchanged_files_to_upgrade.dupe().all());
-        let (
-            mut errors,
-            coverage,
-            find_ref_results,
-            time_to_check_merged,
-            check_skip_count,
-            slowest_file,
-            num_slow_files,
-            check_internal_error,
-        ) = check_files::check_files(
-            options.dupe(),
-            pool,
-            shared_mem,
-            find_ref_request,
-            errors,
-            updated_suppressions,
-            coverage_for_check,
-            to_check.dupe(),
-            dirty_direct_dependents,
-            sig_new_or_changed,
-            dependency_info,
-            env.master_cx().dupe(),
-        )?;
-        check_recheck_canceled()?;
-        if let Some(ref err) = check_internal_error {
-            flow_hh_logger::error!("{}", err);
-        }
-
-        // Deduplicate ETrivialRecursiveDefinition errors from cyclic
-        // dependencies. In OCaml, the single-threaded check phase shares a
-        // check cache so cycle errors are generated only once. In the Rust
-        // port, multi-threaded checking means each thread has its own check
-        // cache, so cycle members checked on different threads independently
-        // detect the cycle and each generate an error.
-        //
-        // Fix: find files that both have ETrivialRecursiveDefinition errors
-        // AND are mutually dependent (same cycle). Keep only the error from
-        // the lexicographically smallest file in each cycle group.
-        {
-            use flow_typing_errors::error_message::ErrorMessage;
-            let dep_graph = dependency_info.implementation_dependency_graph();
-            let files_with_cycle_errors: BTreeSet<FileKey> = errors
-                .merge_errors
-                .iter()
-                .filter(|(_, errs)| {
-                    errs.iter().any(|e| {
-                        matches!(
-                            e.msg_of_error(),
-                            ErrorMessage::ETrivialRecursiveDefinition(..)
-                        )
-                    })
-                })
-                .map(|(f, _)| f.dupe())
-                .collect();
-            if files_with_cycle_errors.len() > 1 {
-                let mut files_to_strip: BTreeSet<FileKey> = BTreeSet::new();
-                for file in &files_with_cycle_errors {
-                    if let Some(deps) = dep_graph.find_opt(file) {
-                        for dep in deps {
-                            if files_with_cycle_errors.contains(dep) && file.as_str() > dep.as_str()
-                            {
-                                files_to_strip.insert(file.dupe());
-                            }
-                        }
-                    }
+            match changed_mergebase {
+                Some(true) if options.lazy_mode && options.estimate_recheck_time => {
+                    restart_if_faster_than_recheck(options, env.checked_files(), &to_merge)?;
                 }
-                for file in &files_to_strip {
-                    if let Some(errs) = errors.merge_errors.get(file) {
-                        let filtered = errs.dupe().filter(|e| {
-                            !matches!(
+                _ => {}
+            }
+            check_recheck_canceled()?;
+            ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
+            check_recheck_canceled()?;
+            if dependent_file_count > 0 {
+                flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
+            }
+            let MergeResult {
+                suppressions: updated_suppressions,
+                skipped_count: merge_skip_count,
+                sig_new_or_changed,
+                top_cycle,
+                calc_deps_time: _,
+                time_to_merge,
+            } = merge(
+                pool,
+                shared_mem,
+                options,
+                for_find_all_refs,
+                &to_merge,
+                components,
+                &recheck_set,
+                sig_dependency_graph,
+                errors.suppressions.clone(),
+            )?;
+
+            let exports = match env.exports() {
+                None => None,
+                Some(exports) => {
+                    check_recheck_canceled()?;
+                    flow_hh_logger::info!("Updating index");
+                    let updated_exports = with_memory_timer(options, "Indexing", || {
+                        let dirty_files: BTreeSet<FileKey> =
+                            sig_new_or_changed.iter().duped().collect();
+                        flow_services_export::export_service::update(
+                            pool,
+                            shared_mem,
+                            &dirty_files,
+                            exports,
+                        )
+                    });
+                    flow_hh_logger::info!("Done updating index");
+                    Some(updated_exports)
+                }
+            };
+            check_recheck_canceled()?;
+
+            let sig_new_or_changed =
+                sig_new_or_changed.union(unchanged_files_to_upgrade.dupe().all());
+            let (
+                mut errors,
+                coverage,
+                find_ref_results,
+                time_to_check_merged,
+                check_skip_count,
+                slowest_file,
+                num_slow_files,
+                check_internal_error,
+            ) = check_files::check_files(
+                options.dupe(),
+                pool,
+                shared_mem,
+                find_ref_request,
+                errors,
+                updated_suppressions,
+                coverage_for_check,
+                to_check.dupe(),
+                dirty_direct_dependents,
+                sig_new_or_changed,
+                implementation_dependency_graph,
+                env.master_cx().dupe(),
+            )?;
+            check_recheck_canceled()?;
+            if let Some(ref err) = check_internal_error {
+                flow_hh_logger::error!("{}", err);
+            }
+
+            // Deduplicate ETrivialRecursiveDefinition errors from cyclic
+            // dependencies. In OCaml, the single-threaded check phase shares a
+            // check cache so cycle errors are generated only once. In the Rust
+            // port, multi-threaded checking means each thread has its own check
+            // cache, so cycle members checked on different threads independently
+            // detect the cycle and each generate an error.
+            //
+            // Fix: find files that both have ETrivialRecursiveDefinition errors
+            // AND are mutually dependent (same cycle). Keep only the error from
+            // the lexicographically smallest file in each cycle group.
+            {
+                use flow_typing_errors::error_message::ErrorMessage;
+                let dep_graph = dependency_info.implementation_dependency_graph();
+                let files_with_cycle_errors: BTreeSet<FileKey> = errors
+                    .merge_errors
+                    .iter()
+                    .filter(|(_, errs)| {
+                        errs.iter().any(|e| {
+                            matches!(
                                 e.msg_of_error(),
                                 ErrorMessage::ETrivialRecursiveDefinition(..)
                             )
-                        });
-                        errors.merge_errors.insert(file.dupe(), filtered);
+                        })
+                    })
+                    .map(|(f, _)| f.dupe())
+                    .collect();
+                if files_with_cycle_errors.len() > 1 {
+                    let mut files_to_strip: BTreeSet<FileKey> = BTreeSet::new();
+                    for file in &files_with_cycle_errors {
+                        if let Some(deps) = dep_graph.find_opt(file) {
+                            for dep in deps {
+                                if files_with_cycle_errors.contains(dep)
+                                    && file.as_str() > dep.as_str()
+                                {
+                                    files_to_strip.insert(file.dupe());
+                                }
+                            }
+                        }
+                    }
+                    for file in &files_to_strip {
+                        if let Some(errs) = errors.merge_errors.get(file) {
+                            let filtered = errs.dupe().filter(|e| {
+                                !matches!(
+                                    e.msg_of_error(),
+                                    ErrorMessage::ETrivialRecursiveDefinition(..)
+                                )
+                            });
+                            errors.merge_errors.insert(file.dupe(), filtered);
+                        }
                     }
                 }
             }
-        }
-        check_recheck_canceled()?;
+            check_recheck_canceled()?;
 
-        let options_for_record = options.dupe();
-        let merge_time = time_to_merge.as_secs_f64();
-        let check_time = time_to_check_merged;
-        let merged_files = to_merge.cardinal() as i64;
-        let checked_files = (to_check.focused_cardinal() + to_check.dependents_cardinal()) as i64;
-        let record_recheck_time: Box<dyn FnOnce()> = Box::new(move || {
-            recheck_stats::record_recheck_time(
-                &options_for_record,
-                merge_time,
-                check_time,
-                merged_files,
-                checked_files,
-            );
-        });
-        let mut checked_files = unchanged_checked;
-        checked_files.union(to_merge.dupe());
-        flow_hh_logger::info!("Checked set: {}", checked_files.debug_counts_to_string());
+            let options_for_record = options.dupe();
+            let merge_time = time_to_merge.as_secs_f64();
+            let check_time = time_to_check_merged;
+            let merged_files = to_merge.cardinal() as i64;
+            let checked_files =
+                (to_check.focused_cardinal() + to_check.dependents_cardinal()) as i64;
+            let record_recheck_time: Box<dyn FnOnce()> = Box::new(move || {
+                recheck_stats::record_recheck_time(
+                    &options_for_record,
+                    merge_time,
+                    check_time,
+                    merged_files,
+                    checked_files,
+                );
+            });
+            let mut checked_files = unchanged_checked;
+            checked_files.union(to_merge.dupe());
+            flow_hh_logger::info!("Checked set: {}", checked_files.debug_counts_to_string());
 
-        env.set_checked_files(checked_files);
-        env.set_errors(errors);
-        env.set_collated_errors(collated_errors);
-        env.set_coverage(coverage);
-        env.set_exports(exports);
+            env.set_checked_files(checked_files);
+            env.set_errors(errors);
+            env.set_collated_errors(collated_errors);
+            env.set_coverage(coverage);
+            env.set_exports(exports);
 
-        Ok((
-            RecheckResult {
-                modified_count,
-                deleted_count,
-                dependent_file_count,
-                to_merge,
-                to_check,
-                top_cycle,
-                merge_skip_count,
-                check_skip_count,
-                slowest_file,
-                num_slow_files: num_slow_files as usize,
-            },
-            record_recheck_time,
-            find_ref_results,
-            check_internal_error,
-        ))
+            Ok((
+                RecheckResult {
+                    modified_count,
+                    deleted_count,
+                    dependent_file_count,
+                    to_merge,
+                    to_check,
+                    top_cycle,
+                    merge_skip_count,
+                    check_skip_count,
+                    slowest_file,
+                    num_slow_files: num_slow_files as usize,
+                },
+                record_recheck_time,
+                find_ref_results,
+                check_internal_error,
+            ))
+        })();
+        env.set_dependency_info(dependency_info);
+        result
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2307,7 +2327,7 @@ fn mk_env(
     Env {
         files,
         unparsed,
-        dependency_info,
+        dependency_info: env_cell(dependency_info),
         checked_files: CheckedSet::empty(),
         package_json_files,
         ordered_libs,
@@ -2672,7 +2692,7 @@ fn init_with_initial_state(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
-    restore_dependency_info: impl FnOnce() -> DependencyInfo,
+    restore_dependency_info: impl FnOnce() -> Arc<EnvCell<DependencyInfo>>,
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     saved_export_index: Option<ExportIndex>,
     env: Option<&Env>,
@@ -2976,7 +2996,12 @@ pub fn init_from_legacy_saved_state(
         pool,
         shared_mem,
         options,
-        || flow_saved_state::restore_dependency_info(pool, dependency_graph),
+        || {
+            env_cell(flow_saved_state::restore_dependency_info(
+                pool,
+                dependency_graph,
+            ))
+        },
         BTreeMap::new(),
         if options.saved_state_persist_export_index {
             export_index
@@ -3054,7 +3079,7 @@ pub fn init_from_direct_saved_state(
         pool,
         shared_mem,
         options,
-        || dependency_info,
+        || env_cell(dependency_info),
         saved_duplicate_providers_from_direct_state(duplicate_providers),
         if options.saved_state_persist_export_index {
             export_index
@@ -3603,7 +3628,7 @@ pub fn reinit_full_check(
                 pool,
                 shared_mem,
                 options,
-                || env.dependency_info.clone(),
+                || env.dependency_info.dupe(),
                 env.errors().duplicate_providers.clone(),
                 None,
                 Some(env.as_ref()),
@@ -3829,6 +3854,8 @@ pub fn check_files_for_init(
         let env_errors_cell = env_errors.dupe();
         let env_coverage_cell = env_coverage.dupe();
         let env_collated_errors_cell = env_collated_errors.dupe();
+        let dependency_info_cell = dependency_info.dupe();
+        let dependency_info = dependency_info.read_arc();
         let env_errors = OverlayErrors::new(env_errors);
         let env_coverage = overlay_coverage(env_coverage);
         let env_collated_errors = OverlayCollatedErrors::new(env_collated_errors);
@@ -3876,7 +3903,7 @@ pub fn check_files_for_init(
             to_check.dupe(),
             FlowOrdSet::new(),
             merge_result.sig_new_or_changed.dupe(),
-            &dependency_info,
+            implementation_dependency_graph,
             master_cx.dupe(),
         )?;
         if let Some(ref err) = check_internal_error {
@@ -3962,7 +3989,7 @@ pub fn check_files_for_init(
         collated_errors.commit();
         let env = Env {
             files: env_files,
-            dependency_info,
+            dependency_info: dependency_info_cell,
             checked_files: {
                 let mut checked_files = to_merge;
                 checked_files.union(env_checked_files);

@@ -10,11 +10,14 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
+use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
+use flow_data_structure_wrapper::overlay_map::EnvCell;
+use flow_data_structure_wrapper::overlay_map::EnvCellReadGuard;
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 struct Node<K: Ord> {
     forward: BTreeSet<K>,
     // These edges are mutable *only* for efficiency during construction. Once the graph is
@@ -22,9 +25,42 @@ struct Node<K: Ord> {
     backward: BTreeSet<K>,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+fn empty_node<K: Ord>() -> Node<K> {
+    Node {
+        forward: BTreeSet::new(),
+        backward: BTreeSet::new(),
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Graph<K: Eq + Ord + Hash + Dupe> {
     nodes: BTreeMap<K, Node<K>>,
+}
+
+pub struct GraphDelta<K: Eq + Ord + Hash + Dupe> {
+    nodes: BTreeMap<K, Option<Node<K>>>,
+}
+
+pub trait GraphLike<K: Eq + Ord + Hash + Dupe> {
+    fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>>;
+
+    fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>>;
+
+    fn fold<F, A>(&self, f: F, init: A) -> A
+    where
+        F: FnMut(&K, &BTreeSet<K>, A) -> A;
+
+    fn to_map(&self) -> BTreeMap<K, BTreeSet<K>>;
+
+    fn find(&self, elt: &K) -> &BTreeSet<K> {
+        self.find_opt(elt)
+            .unwrap_or_else(|| panic!("Node not found in graph"))
+    }
+
+    fn find_backward(&self, elt: &K) -> &BTreeSet<K> {
+        self.find_backward_opt(elt)
+            .unwrap_or_else(|| panic!("Node not found in graph"))
+    }
 }
 
 impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
@@ -40,19 +76,13 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
         // Single pass: consume map and build both forward and backward edges
         for (key, forward_edges) in map {
             // Ensure the source node exists
-            nodes.entry(key.dupe()).or_insert_with(|| Node {
-                forward: BTreeSet::new(),
-                backward: BTreeSet::new(),
-            });
+            nodes.entry(key.dupe()).or_insert_with(empty_node);
 
             // Add backward edges for each forward edge
             for edge in &forward_edges {
                 nodes
                     .entry(edge.dupe())
-                    .or_insert_with(|| Node {
-                        forward: BTreeSet::new(),
-                        backward: BTreeSet::new(),
-                    })
+                    .or_insert_with(empty_node)
                     .backward
                     .insert(key.dupe());
             }
@@ -67,7 +97,7 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
     pub fn update_from_map(
         mut self,
         map: BTreeMap<K, BTreeSet<K>>,
-        to_remove: BTreeSet<K>,
+        to_remove: &BTreeSet<K>,
     ) -> Self {
         // First, make changes as needed based on `map`. This includes updating dependency edges and
         // adding entirely new nodes.
@@ -84,10 +114,7 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
                 if !previous_forward_edges.contains(edge) {
                     self.nodes
                         .entry(edge.dupe())
-                        .or_insert_with(|| Node {
-                            forward: BTreeSet::new(),
-                            backward: BTreeSet::new(),
-                        })
+                        .or_insert_with(empty_node)
                         .backward
                         .insert(key.dupe());
                 }
@@ -103,13 +130,7 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
             }
 
             // Ensure the source node exists and set forward edges (move, not clone)
-            self.nodes
-                .entry(key)
-                .or_insert_with(|| Node {
-                    forward: BTreeSet::new(),
-                    backward: BTreeSet::new(),
-                })
-                .forward = new_forward_edges;
+            self.nodes.entry(key).or_insert_with(empty_node).forward = new_forward_edges;
         }
 
         // Now, remove nodes as needed based on `to_remove`. This requires fixing up both
@@ -118,18 +139,18 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
         for key_to_remove in to_remove {
             // In practice we sometimes get asked to remove nodes that aren't present to begin
             // with. That's a bit weird, but let's just tolerate that by doing nothing.
-            if let Some(node) = self.nodes.remove(&key_to_remove) {
+            if let Some(node) = self.nodes.remove(key_to_remove) {
                 // Remove forward dependency edges that refer to this key
                 for backward_key in &node.backward {
                     if let Some(backward_node) = self.nodes.get_mut(backward_key) {
-                        backward_node.forward.remove(&key_to_remove);
+                        backward_node.forward.remove(key_to_remove);
                     }
                 }
 
                 // Remove backward dependency edges that refer to this key
                 for forward_key in &node.forward {
                     if let Some(forward_node) = self.nodes.get_mut(forward_key) {
-                        forward_node.backward.remove(&key_to_remove);
+                        forward_node.backward.remove(key_to_remove);
                     }
                 }
             }
@@ -138,17 +159,23 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
         self
     }
 
-    pub fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
-        self.nodes
-            .iter()
-            .map(|(k, node)| (k.dupe(), node.forward.clone()))
-            .collect()
+    pub fn apply_delta(&mut self, delta: GraphDelta<K>) {
+        for (key, value) in delta.nodes {
+            match value {
+                Some(node) => {
+                    self.nodes.insert(key, node);
+                }
+                None => {
+                    self.nodes.remove(&key);
+                }
+            }
+        }
     }
 
     pub fn to_backward_map(&self) -> BTreeMap<K, BTreeSet<K>> {
         self.nodes
             .iter()
-            .map(|(k, node)| (k.dupe(), node.backward.clone()))
+            .map(|(k, node)| (k.dupe(), node.backward.iter().duped().collect()))
             .collect()
     }
 
@@ -188,30 +215,30 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
     }
 
     pub fn find(&self, elt: &K) -> &BTreeSet<K> {
-        self.find_opt(elt)
-            .unwrap_or_else(|| panic!("Node not found in graph"))
+        GraphLike::find(self, elt)
     }
 
     pub fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
-        self.nodes.get(elt).map(|node| &node.forward)
+        GraphLike::find_opt(self, elt)
     }
 
     pub fn find_backward(&self, elt: &K) -> &BTreeSet<K> {
-        self.find_backward_opt(elt)
-            .unwrap_or_else(|| panic!("Node not found in graph"))
+        GraphLike::find_backward(self, elt)
     }
 
     pub fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
-        self.nodes.get(elt).map(|node| &node.backward)
+        GraphLike::find_backward_opt(self, elt)
     }
 
-    pub fn fold<F, A>(&self, mut f: F, init: A) -> A
+    pub fn fold<F, A>(&self, f: F, init: A) -> A
     where
         F: FnMut(&K, &BTreeSet<K>, A) -> A,
     {
-        self.nodes
-            .iter()
-            .fold(init, |acc, (key, node)| f(key, &node.forward, acc))
+        GraphLike::fold(self, f, init)
+    }
+
+    pub fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        GraphLike::to_map(self)
     }
 
     pub fn map<F>(&self, mut f: F) -> Self
@@ -242,9 +269,386 @@ impl<K: Eq + Ord + Hash + Dupe> Graph<K> {
     }
 }
 
+impl<K: Eq + Ord + Hash + Dupe> GraphLike<K> for Graph<K> {
+    fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.nodes.get(elt).map(|node| &node.forward)
+    }
+
+    fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.nodes.get(elt).map(|node| &node.backward)
+    }
+
+    fn fold<F, A>(&self, mut f: F, init: A) -> A
+    where
+        F: FnMut(&K, &BTreeSet<K>, A) -> A,
+    {
+        self.nodes
+            .iter()
+            .fold(init, |acc, (key, node)| f(key, &node.forward, acc))
+    }
+
+    fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        self.nodes
+            .iter()
+            .map(|(k, node)| (k.dupe(), node.forward.iter().duped().collect()))
+            .collect()
+    }
+}
+
 impl<K: Eq + Ord + Hash + Dupe> Default for Graph<K> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+struct GraphCellBase<T, K: Eq + Ord + Hash + Dupe> {
+    snapshot: EnvCellReadGuard<T>,
+    graph: fn(&T) -> &Graph<K>,
+}
+
+impl<T, K: Eq + Ord + Hash + Dupe> GraphCellBase<T, K> {
+    fn new(cell: Arc<EnvCell<T>>, graph: fn(&T) -> &Graph<K>) -> Self {
+        Self {
+            snapshot: cell.read_arc_recursive(),
+            graph,
+        }
+    }
+}
+
+trait GraphBase<K: Eq + Ord + Hash + Dupe> {
+    fn map(&self) -> &BTreeMap<K, Node<K>>;
+}
+
+impl<K: Eq + Ord + Hash + Dupe> GraphBase<K> for Arc<BTreeMap<K, Node<K>>> {
+    fn map(&self) -> &BTreeMap<K, Node<K>> {
+        self
+    }
+}
+
+impl<T, K: Eq + Ord + Hash + Dupe> GraphBase<K> for GraphCellBase<T, K> {
+    fn map(&self) -> &BTreeMap<K, Node<K>> {
+        &(self.graph)(&self.snapshot).nodes
+    }
+}
+
+struct GraphOverlay<K, B>
+where
+    K: Eq + Ord + Hash + Dupe,
+    B: GraphBase<K>,
+{
+    base: B,
+    delta: BTreeMap<K, Option<Node<K>>>,
+}
+
+impl<K, B> GraphOverlay<K, B>
+where
+    K: Eq + Ord + Hash + Dupe,
+    B: GraphBase<K>,
+{
+    fn with_base(base: B) -> Self {
+        Self {
+            base,
+            delta: BTreeMap::new(),
+        }
+    }
+
+    fn node_opt(&self, key: &K) -> Option<&Node<K>> {
+        match self.delta.get(key) {
+            Some(Some(node)) => Some(node),
+            Some(None) => None,
+            None => self.base.map().get(key),
+        }
+    }
+
+    fn copy_node(node: &Node<K>) -> Node<K> {
+        Node {
+            forward: node.forward.iter().duped().collect(),
+            backward: node.backward.iter().duped().collect(),
+        }
+    }
+
+    fn materialize_node(&self, key: &K) -> Node<K> {
+        self.node_opt(key)
+            .map(Self::copy_node)
+            .unwrap_or_else(empty_node)
+    }
+
+    fn update_from_map(&mut self, map: BTreeMap<K, BTreeSet<K>>, to_remove: &BTreeSet<K>) {
+        for (key, new_forward_edges) in map {
+            let added_edges: Vec<K> = match self.node_opt(&key) {
+                Some(node) => new_forward_edges
+                    .iter()
+                    .filter(|edge| !node.forward.contains(*edge))
+                    .duped()
+                    .collect(),
+                None => new_forward_edges.iter().duped().collect(),
+            };
+            let removed_edges: Vec<K> = self
+                .node_opt(&key)
+                .map(|node| {
+                    node.forward
+                        .iter()
+                        .filter(|edge| !new_forward_edges.contains(*edge))
+                        .duped()
+                        .collect()
+                })
+                .unwrap_or_default();
+
+            for edge in added_edges {
+                let mut node = self.materialize_node(&edge);
+                node.backward.insert(key.dupe());
+                self.delta.insert(edge, Some(node));
+            }
+
+            for edge in removed_edges {
+                if self.node_opt(&edge).is_some() {
+                    let mut node = self.materialize_node(&edge);
+                    node.backward.remove(&key);
+                    self.delta.insert(edge, Some(node));
+                }
+            }
+
+            let mut node = self.materialize_node(&key);
+            node.forward = new_forward_edges;
+            self.delta.insert(key, Some(node));
+        }
+
+        for key_to_remove in to_remove {
+            let Some(node) = self.node_opt(key_to_remove) else {
+                continue;
+            };
+            let backward_keys: Vec<K> = node.backward.iter().duped().collect();
+            let forward_keys: Vec<K> = node.forward.iter().duped().collect();
+
+            self.delta.insert(key_to_remove.dupe(), None);
+
+            for backward_key in backward_keys {
+                if self.node_opt(&backward_key).is_some() {
+                    let mut backward_node = self.materialize_node(&backward_key);
+                    backward_node.forward.remove(key_to_remove);
+                    self.delta.insert(backward_key, Some(backward_node));
+                }
+            }
+
+            for forward_key in forward_keys {
+                if self.node_opt(&forward_key).is_some() {
+                    let mut forward_node = self.materialize_node(&forward_key);
+                    forward_node.backward.remove(key_to_remove);
+                    self.delta.insert(forward_key, Some(forward_node));
+                }
+            }
+        }
+    }
+
+    fn commit_to(self, base: &mut Graph<K>) {
+        base.apply_delta(self.into_delta());
+    }
+
+    fn into_delta(self) -> GraphDelta<K> {
+        GraphDelta { nodes: self.delta }
+    }
+}
+
+impl<K, B> GraphLike<K> for GraphOverlay<K, B>
+where
+    K: Eq + Ord + Hash + Dupe,
+    B: GraphBase<K>,
+{
+    fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.node_opt(elt).map(|node| &node.forward)
+    }
+
+    fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.node_opt(elt).map(|node| &node.backward)
+    }
+
+    fn fold<F, A>(&self, mut f: F, init: A) -> A
+    where
+        F: FnMut(&K, &BTreeSet<K>, A) -> A,
+    {
+        let mut base = self.base.map().iter().peekable();
+        let mut delta = self.delta.iter().peekable();
+        let mut acc = init;
+
+        loop {
+            match (base.peek(), delta.peek()) {
+                (Some((base_key, _)), Some((delta_key, _))) => match (*base_key).cmp(*delta_key) {
+                    std::cmp::Ordering::Less => {
+                        let (key, node) = base.next().expect("base entry should exist");
+                        acc = f(key, &node.forward, acc);
+                    }
+                    std::cmp::Ordering::Equal => {
+                        base.next();
+                        let (key, node) = delta.next().expect("delta entry should exist");
+                        if let Some(node) = node {
+                            acc = f(key, &node.forward, acc);
+                        }
+                    }
+                    std::cmp::Ordering::Greater => {
+                        let (key, node) = delta.next().expect("delta entry should exist");
+                        if let Some(node) = node {
+                            acc = f(key, &node.forward, acc);
+                        }
+                    }
+                },
+                (Some(_), None) => {
+                    let (key, node) = base.next().expect("base entry should exist");
+                    acc = f(key, &node.forward, acc);
+                }
+                (None, Some(_)) => {
+                    let (key, node) = delta.next().expect("delta entry should exist");
+                    if let Some(node) = node {
+                        acc = f(key, &node.forward, acc);
+                    }
+                }
+                (None, None) => break,
+            }
+        }
+
+        acc
+    }
+
+    fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        self.fold(
+            |key, edges, mut acc| {
+                acc.insert(key.dupe(), edges.iter().duped().collect());
+                acc
+            },
+            BTreeMap::new(),
+        )
+    }
+}
+
+pub struct OverlayGraph<K: Eq + Ord + Hash + Dupe> {
+    inner: GraphOverlay<K, Arc<BTreeMap<K, Node<K>>>>,
+}
+
+impl<K: Eq + Ord + Hash + Dupe> OverlayGraph<K> {
+    pub fn from_graph(graph: Graph<K>) -> Self {
+        Self {
+            inner: GraphOverlay::with_base(Arc::new(graph.nodes)),
+        }
+    }
+
+    pub fn update_from_map(&mut self, map: BTreeMap<K, BTreeSet<K>>, to_remove: &BTreeSet<K>) {
+        self.inner.update_from_map(map, to_remove);
+    }
+
+    pub fn commit_to(self, base: &mut Graph<K>) {
+        self.inner.commit_to(base);
+    }
+
+    pub fn into_delta(self) -> GraphDelta<K> {
+        self.inner.into_delta()
+    }
+
+    pub fn to_backward_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        let mut base = self.inner.base.map().iter().peekable();
+        let mut delta = self.inner.delta.iter().peekable();
+        let mut acc = BTreeMap::new();
+
+        loop {
+            match (base.peek(), delta.peek()) {
+                (Some((base_key, _)), Some((delta_key, _))) => match (*base_key).cmp(*delta_key) {
+                    std::cmp::Ordering::Less => {
+                        let (key, node) = base.next().expect("base entry should exist");
+                        acc.insert(key.dupe(), node.backward.iter().duped().collect());
+                    }
+                    std::cmp::Ordering::Equal => {
+                        base.next();
+                        let (key, node) = delta.next().expect("delta entry should exist");
+                        if let Some(node) = node {
+                            acc.insert(key.dupe(), node.backward.iter().duped().collect());
+                        }
+                    }
+                    std::cmp::Ordering::Greater => {
+                        let (key, node) = delta.next().expect("delta entry should exist");
+                        if let Some(node) = node {
+                            acc.insert(key.dupe(), node.backward.iter().duped().collect());
+                        }
+                    }
+                },
+                (Some(_), None) => {
+                    let (key, node) = base.next().expect("base entry should exist");
+                    acc.insert(key.dupe(), node.backward.iter().duped().collect());
+                }
+                (None, Some(_)) => {
+                    let (key, node) = delta.next().expect("delta entry should exist");
+                    if let Some(node) = node {
+                        acc.insert(key.dupe(), node.backward.iter().duped().collect());
+                    }
+                }
+                (None, None) => break,
+            }
+        }
+
+        acc
+    }
+}
+
+impl<K: Eq + Ord + Hash + Dupe> GraphLike<K> for OverlayGraph<K> {
+    fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.inner.find_opt(elt)
+    }
+
+    fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.inner.find_backward_opt(elt)
+    }
+
+    fn fold<F, A>(&self, f: F, init: A) -> A
+    where
+        F: FnMut(&K, &BTreeSet<K>, A) -> A,
+    {
+        self.inner.fold(f, init)
+    }
+
+    fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        self.inner.to_map()
+    }
+}
+
+pub struct EnvOverlayGraph<T, K: Eq + Ord + Hash + Dupe> {
+    inner: GraphOverlay<K, GraphCellBase<T, K>>,
+}
+
+impl<T, K: Eq + Ord + Hash + Dupe> EnvOverlayGraph<T, K> {
+    pub fn new(cell: Arc<EnvCell<T>>, graph: fn(&T) -> &Graph<K>) -> Self {
+        Self {
+            inner: GraphOverlay::with_base(GraphCellBase::new(cell, graph)),
+        }
+    }
+
+    pub fn update_from_map(&mut self, map: BTreeMap<K, BTreeSet<K>>, to_remove: &BTreeSet<K>) {
+        self.inner.update_from_map(map, to_remove);
+    }
+
+    pub fn commit_to(self, base: &mut Graph<K>) {
+        self.inner.commit_to(base);
+    }
+
+    pub fn into_delta(self) -> GraphDelta<K> {
+        self.inner.into_delta()
+    }
+}
+
+impl<T, K: Eq + Ord + Hash + Dupe> GraphLike<K> for EnvOverlayGraph<T, K> {
+    fn find_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.inner.find_opt(elt)
+    }
+
+    fn find_backward_opt(&self, elt: &K) -> Option<&BTreeSet<K>> {
+        self.inner.find_backward_opt(elt)
+    }
+
+    fn fold<F, A>(&self, f: F, init: A) -> A
+    where
+        F: FnMut(&K, &BTreeSet<K>, A) -> A,
+    {
+        self.inner.fold(f, init)
+    }
+
+    fn to_map(&self) -> BTreeMap<K, BTreeSet<K>> {
+        self.inner.to_map()
     }
 }
 
@@ -290,6 +694,26 @@ mod tests {
         StringGraph::of_map(map())
     }
 
+    fn assert_overlay_update_matches_graph(
+        update_pairs: &[(&str, &[&str])],
+        to_remove_items: &[&str],
+    ) {
+        let to_remove = sset_of_list(to_remove_items);
+        let expected = graph().update_from_map(smap_of_list(update_pairs), &to_remove);
+        let mut overlay = OverlayGraph::from_graph(graph());
+
+        overlay.update_from_map(smap_of_list(update_pairs), &to_remove);
+
+        assert_smaps_equal(&expected.to_map(), &overlay.to_map());
+        assert_smaps_equal(&expected.to_backward_map(), &overlay.to_backward_map());
+
+        let mut committed = graph();
+        overlay.commit_to(&mut committed);
+
+        assert_smaps_equal(&expected.to_map(), &committed.to_map());
+        assert_smaps_equal(&expected.to_backward_map(), &committed.to_backward_map());
+    }
+
     #[test]
     fn basic_construction() {
         let graph = graph();
@@ -303,8 +727,9 @@ mod tests {
     fn find() {
         let graph = graph();
         let result = graph.find(&Arc::from("foo"));
-        let expected = map().get(&Arc::from("foo") as &Arc<str>).unwrap().clone();
-        assert_ssets_equal(&expected, result);
+        let expected_map = map();
+        let expected = expected_map.get(&Arc::from("foo") as &Arc<str>).unwrap();
+        assert_ssets_equal(expected, result);
     }
 
     #[test]
@@ -312,8 +737,9 @@ mod tests {
         let graph = graph();
         let result = graph.find_opt(&Arc::from("foo"));
         let result = result.unwrap();
-        let expected = map().get(&Arc::from("foo") as &Arc<str>).unwrap().clone();
-        assert_ssets_equal(&expected, result);
+        let expected_map = map();
+        let expected = expected_map.get(&Arc::from("foo") as &Arc<str>).unwrap();
+        assert_ssets_equal(expected, result);
     }
 
     #[test]
@@ -328,11 +754,9 @@ mod tests {
     fn find_backward() {
         let graph = graph();
         let result = graph.find_backward(&Arc::from("baz"));
-        let expected = reverse_map()
-            .get(&Arc::from("baz") as &Arc<str>)
-            .unwrap()
-            .clone();
-        assert_ssets_equal(&expected, result);
+        let expected_map = reverse_map();
+        let expected = expected_map.get(&Arc::from("baz") as &Arc<str>).unwrap();
+        assert_ssets_equal(expected, result);
     }
 
     #[test]
@@ -340,11 +764,9 @@ mod tests {
         let graph = graph();
         let result = graph.find_backward_opt(&Arc::from("baz"));
         let result = result.unwrap();
-        let expected = reverse_map()
-            .get(&Arc::from("baz") as &Arc<str>)
-            .unwrap()
-            .clone();
-        assert_ssets_equal(&expected, result);
+        let expected_map = reverse_map();
+        let expected = expected_map.get(&Arc::from("baz") as &Arc<str>).unwrap();
+        assert_ssets_equal(expected, result);
     }
 
     #[test]
@@ -359,12 +781,10 @@ mod tests {
     fn add() {
         let graph = graph();
         let update_map = smap_of_list(&[("qux", &["foo", "baz"])]);
-        let graph = graph.update_from_map(update_map.clone(), BTreeSet::new());
+        let graph = graph.update_from_map(update_map, &BTreeSet::new());
         let result_forward_map = graph.to_map();
         let mut expected_forward_map = map();
-        for (k, v) in update_map {
-            expected_forward_map.insert(k, v);
-        }
+        expected_forward_map.insert(Arc::from("qux"), sset_of_list(&["foo", "baz"]));
         let result_backward_map = graph.to_backward_map();
         let mut expected_backward_map = reverse_map();
         expected_backward_map.insert(Arc::from("foo"), sset_of_list(&["qux"]));
@@ -379,7 +799,7 @@ mod tests {
         let graph = graph();
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("bar"));
-        let graph = graph.update_from_map(BTreeMap::new(), to_remove);
+        let graph = graph.update_from_map(BTreeMap::new(), &to_remove);
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         let expected_forward_map = smap_of_list(&[("foo", &["baz"]), ("baz", &[])]);
@@ -391,8 +811,8 @@ mod tests {
     #[test]
     fn remove_all() {
         let graph = graph();
-        let to_remove: BTreeSet<Arc<str>> = map().keys().cloned().collect();
-        let graph = graph.update_from_map(BTreeMap::new(), to_remove);
+        let to_remove: BTreeSet<Arc<str>> = map().keys().duped().collect();
+        let graph = graph.update_from_map(BTreeMap::new(), &to_remove);
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         let expected: BTreeMap<Arc<str>, BTreeSet<Arc<str>>> = BTreeMap::new();
@@ -405,7 +825,7 @@ mod tests {
         let graph = graph();
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("fake"));
-        let graph = graph.update_from_map(BTreeMap::new(), to_remove);
+        let graph = graph.update_from_map(BTreeMap::new(), &to_remove);
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         assert_smaps_equal(&map(), &result_forward_map);
@@ -416,7 +836,7 @@ mod tests {
     fn modify() {
         let graph = graph();
         let update_map = smap_of_list(&[("foo", &[])]);
-        let graph = graph.update_from_map(update_map, BTreeSet::new());
+        let graph = graph.update_from_map(update_map, &BTreeSet::new());
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         let mut expected_forward_map = map();
@@ -432,7 +852,7 @@ mod tests {
         let update_map = smap_of_list(&[("foo", &["qux"]), ("qux", &["baz"])]);
         let mut to_remove = BTreeSet::new();
         to_remove.insert(Arc::from("bar"));
-        let graph = graph.update_from_map(update_map, to_remove);
+        let graph = graph.update_from_map(update_map, &to_remove);
         let result_forward_map = graph.to_map();
         let result_backward_map = graph.to_backward_map();
         let expected_forward_map =
@@ -441,6 +861,31 @@ mod tests {
             smap_of_list(&[("foo", &[]), ("baz", &["qux"]), ("qux", &["foo"])]);
         assert_smaps_equal(&expected_forward_map, &result_forward_map);
         assert_smaps_equal(&expected_backward_map, &result_backward_map);
+    }
+
+    #[test]
+    fn overlay_add_matches_graph_update() {
+        assert_overlay_update_matches_graph(&[("qux", &["foo", "baz"])], &[]);
+    }
+
+    #[test]
+    fn overlay_remove_matches_graph_update() {
+        assert_overlay_update_matches_graph(&[], &["bar"]);
+    }
+
+    #[test]
+    fn overlay_remove_nonexistent_matches_graph_update() {
+        assert_overlay_update_matches_graph(&[], &["fake"]);
+    }
+
+    #[test]
+    fn overlay_modify_matches_graph_update() {
+        assert_overlay_update_matches_graph(&[("foo", &[])], &[]);
+    }
+
+    #[test]
+    fn overlay_complex_update_matches_graph_update() {
+        assert_overlay_update_matches_graph(&[("foo", &["qux"]), ("qux", &["baz"])], &["bar"]);
     }
 
     #[test]

@@ -119,7 +119,7 @@ pub struct SavedStateData {
 // env-level metadata (file sets, dependency graph, etc.) - the per-file data
 // lives in the heap dump itself. On load, SharedMem.load_heap bulk-loads the
 // heap, so no per-file restoration is needed.
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct SavedStateEnvData {
     pub flowconfig_hash: FlowSmolStr,
     pub parsed_files: FlowOrdSet<FileKey>,
@@ -131,6 +131,18 @@ pub struct SavedStateEnvData {
     pub dependency_info: DependencyInfo,
     pub duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
     pub export_index: Option<ExportIndex>,
+}
+
+struct SavedStateEnvDataForSerialization {
+    flowconfig_hash: FlowSmolStr,
+    parsed_files: FlowOrdSet<FileKey>,
+    unparsed_files: FlowOrdSet<FileKey>,
+    package_json_files: FlowOrdSet<FileKey>,
+    non_flowlib_libs: BTreeSet<FlowSmolStr>,
+    local_errors: BTreeMap<FileKey, ErrorSet>,
+    node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
+    export_index: Option<ExportIndex>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -189,7 +201,6 @@ struct DeserializedSavedStateEnvBaseData {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone)]
 pub enum LoadedSavedState {
     Legacy_saved_state(SavedStateData),
     Direct_saved_state(SavedStateEnvData),
@@ -539,7 +550,8 @@ fn collect_saved_state_data(
             })
             .collect()
     };
-    let dependency_graph = collect_dependency_graph(&env.dependency_info);
+    let dependency_info = env.dependency_info();
+    let dependency_graph = collect_dependency_graph(&dependency_info);
     let export_index = if options.saved_state_persist_export_index {
         env.exports
             .as_ref()
@@ -563,7 +575,7 @@ fn collect_saved_state_data(
     }
 }
 
-fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvData {
+fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDataForSerialization {
     flow_hh_logger::info!("Collecting env data for saved state");
     // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
@@ -583,7 +595,7 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
         .collect();
     // let node_modules_containers = collect_node_modules_containers root in
     let node_modules_containers = collect_node_modules_containers(root);
-    SavedStateEnvData {
+    SavedStateEnvDataForSerialization {
         flowconfig_hash: options.flowconfig_hash.dupe(),
         parsed_files: env
             .files
@@ -601,7 +613,6 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
         non_flowlib_libs: collect_non_flowlib_libs(env, options),
         local_errors: errors.local_errors.clone(),
         node_modules_containers,
-        dependency_info: env.dependency_info.clone(),
         duplicate_providers,
         export_index: if options.saved_state_persist_export_index {
             env.exports
@@ -775,14 +786,14 @@ fn deserialize_file_table(bytes: &[u8]) -> Result<SavedStateEnvFileTable, Invali
 }
 
 fn collect_graph_file_keys(graph: &Graph<FileKey>, file_keys: &mut BTreeSet<FileKey>) {
-    for (file, dependencies) in graph.to_map() {
-        file_keys.insert(file);
-        file_keys.extend(dependencies);
-    }
-    for (file, dependents) in graph.to_backward_map() {
-        file_keys.insert(file);
-        file_keys.extend(dependents);
-    }
+    graph.fold(
+        |file, dependencies, ()| {
+            file_keys.insert(file.dupe());
+            file_keys.extend(dependencies.iter().duped());
+            file_keys.extend(graph.find_backward(file).iter().duped());
+        },
+        (),
+    );
 }
 
 fn collect_export_index_file_keys(
@@ -835,14 +846,18 @@ fn indexed_graph_from_graph(
     graph: &Graph<FileKey>,
     file_to_index: &BTreeMap<FileKey, u32>,
 ) -> SerializedIndexedGraph {
-    let forward_map = graph.to_map();
-    let backward_map = graph.to_backward_map();
-    let keys = forward_map.keys().duped().collect::<Vec<_>>();
+    let keys = graph.fold(
+        |file, _dependencies, mut keys| {
+            keys.push(file.dupe());
+            keys
+        },
+        Vec::new(),
+    );
     let forward = keys
         .iter()
         .map(|file| {
-            forward_map
-                .get(file)
+            graph
+                .find_opt(file)
                 .map(|files| file_key_set_to_indices(files, file_to_index))
                 .unwrap_or_default()
         })
@@ -850,8 +865,8 @@ fn indexed_graph_from_graph(
     let backward = keys
         .iter()
         .map(|file| {
-            backward_map
-                .get(file)
+            graph
+                .find_backward_opt(file)
                 .map(|files| file_key_set_to_indices(files, file_to_index))
                 .unwrap_or_default()
         })
@@ -946,7 +961,8 @@ fn export_index_from_serialized(
 }
 
 fn serialize_saved_state_env_data(
-    data: SavedStateEnvData,
+    data: SavedStateEnvDataForSerialization,
+    dependency_info: &DependencyInfo,
     heap_files: Vec<FileKey>,
 ) -> (
     SavedStateEnvFileTable,
@@ -964,9 +980,9 @@ fn serialize_saved_state_env_data(
         file_keys.insert(leader.dupe());
         file_keys.extend(others.iter().duped());
     }
-    collect_graph_file_keys(data.dependency_info.sig_dependency_graph(), &mut file_keys);
+    collect_graph_file_keys(dependency_info.sig_dependency_graph(), &mut file_keys);
     collect_graph_file_keys(
-        data.dependency_info.implementation_dependency_graph(),
+        dependency_info.implementation_dependency_graph(),
         &mut file_keys,
     );
     collect_export_index_file_keys(data.export_index.as_ref(), &mut file_keys);
@@ -982,12 +998,12 @@ fn serialize_saved_state_env_data(
         })
         .collect::<BTreeMap<_, _>>();
     let sig_dependency_graph =
-        indexed_graph_from_graph(data.dependency_info.sig_dependency_graph(), &file_to_index);
+        indexed_graph_from_graph(dependency_info.sig_dependency_graph(), &file_to_index);
     let implementation_dependency_graph = indexed_graph_from_graph(
-        data.dependency_info.implementation_dependency_graph(),
+        dependency_info.implementation_dependency_graph(),
         &file_to_index,
     );
-    let SavedStateEnvData {
+    let SavedStateEnvDataForSerialization {
         flowconfig_hash,
         parsed_files,
         unparsed_files,
@@ -995,7 +1011,6 @@ fn serialize_saved_state_env_data(
         non_flowlib_libs,
         local_errors,
         node_modules_containers,
-        dependency_info: _,
         duplicate_providers,
         export_index,
     } = data;
@@ -1208,11 +1223,12 @@ fn unmarshal_file_table(compressed: &[u8]) -> Result<SavedStateEnvFileTable, Inv
 
 fn write_serialized_env_data_with_heap_files(
     file: &mut impl Write,
-    data: SavedStateEnvData,
+    data: SavedStateEnvDataForSerialization,
+    dependency_info: &DependencyInfo,
     heap_files: Vec<FileKey>,
 ) -> Result<Vec<FileKey>, InvalidReason> {
     let (file_table, data, sig_dependency_graph, implementation_dependency_graph) =
-        serialize_saved_state_env_data(data, heap_files);
+        serialize_saved_state_env_data(data, dependency_info, heap_files);
     let files = file_table.files.clone();
     write_serialized_file_table(file, &file_table)?;
     write_serialized_raw(file, "base", &data)?;
@@ -1315,7 +1331,15 @@ pub fn save(
         if options.saved_state_parallel_decompress {
             flow_hh_logger::info!("Serializing env metadata");
             let heap_files = shared_mem.collect_heap_file_table();
-            let files = write_serialized_env_data_with_heap_files(&mut file, env_data, heap_files)?;
+            let files = {
+                let dependency_info = env.dependency_info();
+                write_serialized_env_data_with_heap_files(
+                    &mut file,
+                    env_data,
+                    &dependency_info,
+                    heap_files,
+                )?
+            };
             flow_hh_logger::info!("Saving heap to saved-state file");
             shared_mem
                 .save_heap_with_file_table(&mut file, &files)
@@ -1323,7 +1347,15 @@ pub fn save(
         } else {
             flow_hh_logger::info!("Serializing env metadata");
             let heap_files = shared_mem.collect_heap_file_table();
-            let files = write_serialized_env_data_with_heap_files(&mut file, env_data, heap_files)?;
+            let files = {
+                let dependency_info = env.dependency_info();
+                write_serialized_env_data_with_heap_files(
+                    &mut file,
+                    env_data,
+                    &dependency_info,
+                    heap_files,
+                )?
+            };
             flow_hh_logger::info!("Saving heap to saved-state file");
             shared_mem
                 .save_heap_with_file_table(&mut file, &files)

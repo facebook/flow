@@ -40,7 +40,7 @@ use std::sync::atomic::Ordering;
 
 use crossbeam::channel;
 use dupe::Dupe;
-use flow_common_utils::graph::Graph;
+use flow_common_utils::graph::GraphLike;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::lock::Mutex;
@@ -86,7 +86,7 @@ pub struct MergeStream<A> {
 impl<A> MergeStream<A> {
     pub fn new(
         num_workers: usize,
-        sig_dependency_graph: &Graph<FileKey>,
+        sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
         components: Vec<Vec1<FileKey>>,
         recheck_set: &FlowOrdSet<FileKey>,
     ) -> Self {

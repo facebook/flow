@@ -24,7 +24,7 @@ use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
 use flow_common_cycle_hash as cycle_hash;
-use flow_common_utils::graph::Graph;
+use flow_common_utils::graph::GraphLike;
 use flow_common_xx as xx;
 use flow_common_xx::content_hash_of;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -1118,7 +1118,7 @@ pub fn merge_runner<A, F>(
     shared_mem: &SharedMem,
     options: &Options,
     for_find_all_refs: bool,
-    sig_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
     job: F,
@@ -1214,7 +1214,7 @@ pub fn merge(
     shared_mem: &SharedMem,
     options: &Options,
     for_find_all_refs: bool,
-    sig_dependency_graph: &Graph<FileKey>,
+    sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
     components: Vec<Vec1<FileKey>>,
     recheck_set: &FlowOrdSet<FileKey>,
 ) -> Result<MergeResults<Option<(ErrorSuppressions, f64)>>, worker_cancel::WorkerCanceled> {

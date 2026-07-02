@@ -1845,8 +1845,9 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
         let config = GLEAN_RUNTIME_CONFIG.get().unwrap();
         if config.include_direct_deps {
             let roots: FlowOrdSet<FileKey> = roots.iter().cloned().collect();
+            let dependency_info = env.dependency_info();
             flow_services_inference::pure_dep_graph_operations::calc_direct_dependencies(
-                env.dependency_info.implementation_dependency_graph(),
+                dependency_info.implementation_dependency_graph(),
                 &roots,
             )
             .iter()

@@ -15,7 +15,8 @@
 use std::collections::HashMap;
 
 use dupe::Dupe;
-use flow_common_utils::graph::Graph;
+use dupe::IterDupedExt;
+use flow_common_utils::graph::GraphLike;
 use vec1::Vec1;
 
 struct Node {
@@ -37,8 +38,12 @@ impl Node {
 }
 
 // Nodes are K. Edges are dependencies.
-struct TopsortState<'a, K: Eq + Ord + std::hash::Hash + Dupe> {
-    graph: &'a Graph<K>,
+struct TopsortState<'a, K, G>
+where
+    K: Eq + Ord + std::hash::Hash + Dupe,
+    G: GraphLike<K> + ?Sized,
+{
+    graph: &'a G,
     // nodes, created on demand
     nodes: HashMap<K, Node>,
     // number of nodes visited
@@ -49,8 +54,12 @@ struct TopsortState<'a, K: Eq + Ord + std::hash::Hash + Dupe> {
     components: Vec<Vec1<K>>,
 }
 
-impl<'a, K: Eq + Ord + std::hash::Hash + Dupe> TopsortState<'a, K> {
-    fn new(graph: &'a Graph<K>) -> Self {
+impl<'a, K, G> TopsortState<'a, K, G>
+where
+    K: Eq + Ord + std::hash::Hash + Dupe,
+    G: GraphLike<K> + ?Sized,
+{
+    fn new(graph: &'a G) -> Self {
         Self {
             graph,
             nodes: HashMap::new(),
@@ -105,13 +114,19 @@ impl<'a, K: Eq + Ord + std::hash::Hash + Dupe> TopsortState<'a, K> {
         // push on stack
         self.stack.push(v_value.dupe());
 
-        let edges = self.graph.find_opt(&v_value).cloned().unwrap_or_default();
+        let edges: Vec<K> = self
+            .graph
+            .find_opt(&v_value)
+            .into_iter()
+            .flat_map(|edges| edges.iter())
+            .duped()
+            .collect();
 
         // for each edge e:
         // If the edge has not yet been visited, recurse in a depth-first manner.
         // If the edge has been visited, it is a back-edge iff it is on the stack,
         // otherwise it's a cross-edge and can be ignored.
-        for e in edges.iter() {
+        for e in &edges {
             let w_exists = self.nodes.contains_key(e);
 
             if !w_exists {
@@ -162,10 +177,11 @@ impl<'a, K: Eq + Ord + std::hash::Hash + Dupe> TopsortState<'a, K> {
 // given a map from keys to dependencies, returns whether the dependencies are
 // cyclic, as well as a topologically sorted list of key lists where any keys in
 // a list only depend on keys in a subsequent list
-pub fn topsort<K, I>(roots: I, graph: &Graph<K>) -> Vec<Vec1<K>>
+pub fn topsort<K, I, G>(roots: I, graph: &G) -> Vec<Vec1<K>>
 where
     K: Eq + Ord + std::hash::Hash + Dupe,
     I: IntoIterator<Item = K>,
+    G: GraphLike<K> + ?Sized,
 {
     let mut state = TopsortState::new(graph);
     state.tarjan(roots);
