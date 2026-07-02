@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@babel/cli": "7.16.0",
-    "@babel/core": "7.16.5",
+    "@babel/core": "7.29.6",
     "@babel/node": "^7.15.8",
     "@babel/plugin-proposal-class-properties": "7.16.5",
     "@babel/plugin-syntax-flow": "^7.16.7",
