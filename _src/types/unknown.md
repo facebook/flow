@@ -1,0 +1,172 @@
+---
+title: Unknown
+slug: /types/unknown
+description: "How the unknown type works in Flow as the safe supertype of all types, requiring refinement before use."
+---
+
+`unknown` is the [supertype of all types](../lang/type-hierarchy.md). All values are `unknown`, but you must [refine](../lang/refinements.md) an `unknown` value before performing any operations on it.
+
+:::info TypeScript comparison
+Flow's `unknown` is the same top type as TypeScript's `unknown`. See [Flow and TypeScript type spellings](../flow-vs-typescript.md#toc-type-spellings) for the full comparison.
+:::
+
+## When to use this {#toc-when-to-use}
+
+Use `unknown` instead of [`any`](./any.md) when you need to accept arbitrary values — `unknown` forces you to [refine](../lang/refinements.md) before use, so it is type-safe to use. If you know the set of possible types upfront, prefer a [union](./unions.md) for better specificity.
+
+## Overview {#toc-overview}
+
+In general, programs have several different categories of types:
+
+**A single type:**
+
+Here the input value can only be a `number`.
+
+```js flow-check
+function square(n: number) {
+  return n * n;
+}
+```
+
+**A group of different possible types:**
+
+Here the input value could be either a `string` or a `number`.
+
+```js flow-check
+function stringifyBasicValue(value: string | number) {
+  return '' + value;
+}
+```
+
+**A type based on another type:**
+
+Here the return type will be the same as the type of whatever value is passed
+into the function.
+
+```js flow-check
+function identity<T>(value: T): T {
+  return value;
+}
+```
+
+These three are the most common categories of types. They will make up the
+majority of the types you'll be writing.
+
+However, there is also a fourth category.
+
+**An arbitrary type that could be anything:**
+
+Here the passed in value is an unknown type, it could be any type and the
+function would still work.
+
+```js flow-check
+function getTypeOf(value: unknown): string {
+  return typeof value;
+}
+```
+
+These unknown types are less common, but are still useful at times.
+
+You should represent these values with `unknown`.
+
+## Anything goes in, Nothing comes out {#toc-anything-goes-in-nothing-comes-out}
+
+`unknown` will accept any type of value. Strings, numbers, objects, functions–
+anything will work.
+
+```js flow-check
+function stringify(value: unknown) {
+  // ...
+}
+
+stringify("foo");
+stringify(3.14);
+stringify(null);
+stringify({});
+```
+
+When you try to use a value of a `unknown` type you must first figure out what
+the actual type is or you'll end up with an error.
+
+```js flow-check
+function stringify(value: unknown) {
+  return "" + value; // Error!
+}
+
+stringify("foo");
+```
+
+Instead you must ensure the value is a certain type by [refining](../lang/refinements.md) it.
+
+```js flow-check
+function stringify(value: unknown) {
+  if (typeof value === 'string') {
+    return "" + value; // Works!
+  } else {
+    return "";
+  }
+}
+
+stringify("foo");
+```
+
+Because of the `typeof value === 'string'` check, Flow knows the `value` can
+only be a `string` inside of the `if` statement. This is known as a
+[refinement](../lang/refinements.md).
+
+## Versus `any`
+`unknown` is safe, while [`any`](./any.md) is not. Both accept all values, but `any` also unsafely allows all operations.
+
+## Versus `empty`
+`unknown` is the opposite of [`empty`](./empty.md):
+- Everything is an `unknown`, but few operations are permitted on it without first refining to a specific type. It is the supertype of all types.
+- Nothing is `empty`, but any operation is permitted on it. It is the subtype of all types.
+
+## Refining `unknown` {#toc-refining-unknown}
+
+`typeof` is the most common way to narrow an `unknown` value (see [refinements](../lang/refinements.md) for the full list of forms), but several other idioms come up regularly when working with `unknown`.
+
+### `Array.isArray`
+
+Narrows `unknown` to `ReadonlyArray<unknown>`. Elements are still `unknown` and must be refined before use.
+
+```js flow-check
+declare const value: unknown;
+if (Array.isArray(value)) {
+  value as ReadonlyArray<unknown>; // OK
+}
+```
+
+### `'key' in value`
+
+The `in` operator requires its right-hand side to already be a non-null object, so `'key' in value` on a bare `unknown` is a type error. Narrow to an object first; `in` then refines the value to an object with that property (the property type is `unknown` and needs further refinement before use):
+
+```js flow-check
+declare const value: unknown;
+if (typeof value === 'object' && value !== null && 'foo' in value) {
+  value as {readonly foo: unknown, ...}; // OK
+}
+```
+
+The `value !== null` step is required because `typeof null === 'object'`.
+
+### `instanceof`
+
+`value instanceof SomeClass` narrows `unknown` to that class:
+
+```js flow-check
+class User {
+  name: string = '';
+}
+
+declare const value: unknown;
+if (value instanceof User) {
+  value.name as string; // OK
+}
+```
+
+## See Also {#toc-see-also}
+
+- [Refinements](../lang/refinements.md) — how to narrow `unknown` values to specific types before use
+- [Type Hierarchy](../lang/type-hierarchy.md) — how `unknown`, `any`, and `empty` relate in the full type hierarchy
+- [Modernizing Legacy Flow Syntax](../modernizing-legacy-syntax.md) — migrating the legacy `mixed` type to `unknown`
