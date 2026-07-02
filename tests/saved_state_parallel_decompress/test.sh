@@ -32,7 +32,7 @@ cat > test.js <<'EOF'
 import dep from './dep';
 dep as string;
 EOF
-"$FLOW" force-recheck test.js --missed-changes --changed-mergebase
+"$FLOW" force-recheck --focus test.js --missed-changes --changed-mergebase
 
 printf "After reinit (should have type error):\n"
 assert_errors "$FLOW" status --strip-root

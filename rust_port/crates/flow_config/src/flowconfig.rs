@@ -267,7 +267,7 @@ pub mod opts {
             enable_const_params: None,
             enums: true,
             estimate_recheck_time: None,
-            saved_state_restart_on_reinit: false,
+            saved_state_restart_on_reinit: true,
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,

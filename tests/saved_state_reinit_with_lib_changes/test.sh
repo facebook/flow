@@ -15,5 +15,5 @@ echo "" > .flow.saved_state_file_changes
 
 echo "test.js" > .flow.saved_state_file_changes
 echo "" > test.js
-"$FLOW" force-recheck test.js --missed-changes --changed-mergebase
+"$FLOW" force-recheck --focus test.js --missed-changes --changed-mergebase
 "$FLOW" status --strip-root

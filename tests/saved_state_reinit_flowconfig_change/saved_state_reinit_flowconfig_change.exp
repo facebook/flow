@@ -24,5 +24,5 @@ References:
 
 Found 1 error
 
-The Flow server is currently in lazy mode and is only checking 1/2 source files (+ 0/1 libdefs).
+The Flow server is currently in lazy mode and is only checking 1/2 source files (+ 1/1 libdefs).
 To learn more, visit flow.org/en/docs/lang/lazy-modes
