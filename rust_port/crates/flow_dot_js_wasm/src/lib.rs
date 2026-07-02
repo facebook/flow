@@ -11,6 +11,7 @@ use std::alloc::Layout;
 use std::cell::LazyCell;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
@@ -53,6 +54,7 @@ use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
 use flow_typing_context::ResolvedRequire;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::intermediate_error;
@@ -412,9 +414,12 @@ fn printable_errors(parsed: &ParsedFile, errors: ErrorSet) -> ConcreteLocPrintab
     )
 }
 
-fn errors_json(parsed: &ParsedFile, content: &str, errors: ErrorSet) -> Value {
-    let errors = printable_errors(parsed, errors);
-    let warnings = ConcreteLocPrintableErrorSet::empty();
+fn errors_json(
+    parsed: &ParsedFile,
+    content: &str,
+    errors: ConcreteLocPrintableErrorSet,
+    warnings: ConcreteLocPrintableErrorSet,
+) -> Value {
     let stdin_file = Some((PathBuf::from(parsed.file_key.as_str()), content.to_string()));
     json_output::json_of_errors_with_context(
         Some(""),
@@ -427,6 +432,62 @@ fn errors_json(parsed: &ParsedFile, content: &str, errors: ErrorSet) -> Value {
     )
 }
 
+// Mirrors OCaml `src/flow_dot_js.ml` `check_content`: split lints by severity,
+// apply suppressions, then preserve warnings in the JSON diagnostics array.
+fn filtered_errors(
+    cx: &Context<'_>,
+    parsed: &ParsedFile,
+    errors: ErrorSet,
+) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
+    let mut suppressions = cx.take_error_suppressions();
+    let severity_cover = cx.severity_cover();
+    let include_suppressions = cx.include_suppressions();
+    let aloc_tables = cx.aloc_tables();
+    let (errors, warnings) =
+        suppressions.filter_lints(errors, &aloc_tables, include_suppressions, &severity_cover);
+    drop(aloc_tables);
+    drop(severity_cover);
+
+    let loc_of_aloc = |aloc: &ALoc| aloc.to_loc_exn().dupe();
+    let file_key = parsed.file_key.dupe();
+    let ast = parsed.ast.dupe();
+    let get_ast = move |requested_file: &FileKey| {
+        if requested_file == &file_key {
+            Some(ast.dupe())
+        } else {
+            None
+        }
+    };
+    let root = Path::new("");
+    let unsuppressable_error_codes = BTreeSet::new();
+
+    let mut unused = ErrorSuppressions::empty();
+    let (errors, _) = suppressions.filter_suppressed_errors(
+        root,
+        None,
+        false,
+        &unsuppressable_error_codes,
+        loc_of_aloc,
+        &get_ast,
+        &errors,
+        &mut unused,
+    );
+
+    let mut unused = ErrorSuppressions::empty();
+    let (warnings, _) = suppressions.filter_suppressed_errors(
+        root,
+        None,
+        false,
+        &unsuppressable_error_codes,
+        loc_of_aloc,
+        &get_ast,
+        &warnings,
+        &mut unused,
+    );
+
+    (errors, warnings)
+}
+
 fn check_content(params: &Value) -> Result<Value, String> {
     let filename = string_arg(params, "filename")?;
     let content = string_arg(params, "content")?;
@@ -435,7 +496,13 @@ fn check_content(params: &Value) -> Result<Value, String> {
     let prepared = prepare_file(filename, content, config, master_cx)?;
     if !prepared.parsed.parse_errors.is_empty() || !prepared.parsed.docblock_errors.is_empty() {
         let errors = parse_error_set(&prepared.parsed);
-        return Ok(errors_json(&prepared.parsed, content, errors));
+        let errors = printable_errors(&prepared.parsed, errors);
+        return Ok(errors_json(
+            &prepared.parsed,
+            content,
+            errors,
+            ConcreteLocPrintableErrorSet::empty(),
+        ));
     }
     let checked = check_file(
         filename,
@@ -444,7 +511,14 @@ fn check_content(params: &Value) -> Result<Value, String> {
         STATE.with(|state| state.borrow().master_cx.dupe()),
     )?;
     let errors = checked.prepared.cx.errors();
-    Ok(errors_json(&checked.prepared.parsed, content, errors))
+    let (errors, warnings) =
+        filtered_errors(&checked.prepared.cx, &checked.prepared.parsed, errors);
+    Ok(errors_json(
+        &checked.prepared.parsed,
+        content,
+        errors,
+        warnings,
+    ))
 }
 
 fn check_registered(params: &Value) -> Result<Value, String> {
@@ -1124,5 +1198,66 @@ pub extern "C" fn main(op: usize, arg1: usize, arg2: usize) -> usize {
             response as usize
         }
         _ => 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn check_content_value(content: &str) -> Value {
+        ensure_roots();
+        check_content(&json!({
+            "filename": "test.js",
+            "content": content,
+            "config": {},
+        }))
+        .expect("checkContent should succeed")
+    }
+
+    fn diagnostics(value: &Value) -> &Vec<Value> {
+        value
+            .as_array()
+            .expect("checkContent should return a diagnostics array")
+    }
+
+    fn level_is(diagnostic: &Value, level: &str) -> bool {
+        diagnostic.get("level").and_then(Value::as_str) == Some(level)
+    }
+
+    #[test]
+    fn check_content_filters_disabled_lints() {
+        let value = check_content_value("type T = {foo: string};\n");
+
+        assert!(
+            diagnostics(&value).is_empty(),
+            "disabled lint should not be reported: {value}"
+        );
+    }
+
+    #[test]
+    fn check_content_preserves_lint_warnings() {
+        let value = check_content_value(
+            "// flowlint ambiguous-object-type:warn\n type T = {foo: string};\n",
+        );
+
+        assert!(
+            diagnostics(&value)
+                .iter()
+                .all(|diagnostic| !level_is(diagnostic, "error")),
+            "warning lint should not be reported as an error: {value}"
+        );
+        assert!(
+            diagnostics(&value)
+                .iter()
+                .any(|diagnostic| level_is(diagnostic, "warning")),
+            "warning lint should be reported as a warning: {value}"
+        );
+        assert!(
+            serde_json::to_string(diagnostics(&value))
+                .expect("warnings should serialize")
+                .contains("ambiguous-object-type"),
+            "warning lint should be reported as a warning: {value}"
+        );
     }
 }

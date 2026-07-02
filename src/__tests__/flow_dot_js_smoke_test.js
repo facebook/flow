@@ -53,6 +53,35 @@ async function main() {
   if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
     throw 'There should be no errors if the library is correctly registered.';
   }
+  const ambiguousObjectTypeDefault = flow.checkContent(
+    'test.js',
+    'type T = {foo: string};',
+    config,
+  );
+  if (ambiguousObjectTypeDefault.length > 0) {
+    throw (
+      'Disabled ambiguous-object-type lint should not be reported. Got: ' +
+      JSON.stringify(ambiguousObjectTypeDefault, undefined, 2)
+    );
+  }
+  const ambiguousObjectTypeWarning = flow.checkContent(
+    'test.js',
+    `// flowlint ambiguous-object-type:warn
+type T = {foo: string};`,
+    config,
+  );
+  if (
+    ambiguousObjectTypeWarning.length !== 1 ||
+    ambiguousObjectTypeWarning[0].level !== 'warning' ||
+    !JSON.stringify(ambiguousObjectTypeWarning).includes(
+      'ambiguous-object-type',
+    )
+  ) {
+    throw (
+      'ambiguous-object-type should be preserved as a warning. Got: ' +
+      JSON.stringify(ambiguousObjectTypeWarning, undefined, 2)
+    );
+  }
   if (
     flow.checkContent('test.js', 'MyGloba;', config)[0].message[0].descr !==
     'Cannot resolve name `MyGloba`. [cannot-resolve-name]'
