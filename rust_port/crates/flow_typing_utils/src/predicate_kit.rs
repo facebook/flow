@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::Cell;
 use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -113,6 +114,12 @@ fn concretization_variant_of_predicate(p: &Predicate) -> PredicateConcretetizerV
 struct PredicateResultCollector {
     collector: TypeCollector,
     changed: Rc<RefCell<bool>>,
+    // Set when refining a union member: an `instanceof` against a provably-disjoint
+    // class prunes the member to `empty` rather than keeping the conservative guard.
+    from_union: Cell<bool>,
+    // Shared across a union's members: the guard a pruned member would have produced,
+    // used as the fallback if every member prunes (avoids a bare `empty`).
+    disjoint_fallback: TypeCollector,
 }
 
 // Simple wrapper to protect against using non-concretized types in type-guard
@@ -178,6 +185,52 @@ fn report_changed_filtering_result_to_predicate_result(
     );
 }
 
+// Refines each member of a union scrutinee independently. A member provably
+// disjoint from the guard prunes to `empty` (its sub-collector stays empty)
+// rather than leaking the guard-with-`any`, so the disjoint members drop out of
+// the result union. If *every* member prunes, emitting a bare `empty` is a
+// footgun (and unreliable for library `declare class` hierarchies), so we fall
+// back to the conservative guard types recorded while pruning (in
+// `disjoint_fallback`) — each member is refined exactly once, so any diagnostics
+// the predicate emits are not duplicated.
+fn run_predicate_over_union_members(
+    ts: &[Type],
+    result_collector: &PredicateResultCollector,
+    process_one: &dyn Fn(&Type, &PredicateResultCollector) -> Result<(), FlowJsException>,
+) -> Result<(), FlowJsException> {
+    let disjoint_fallback = TypeCollector::create();
+    let mut any_survived = false;
+    let mut changed = false;
+    for t in ts.iter() {
+        let sub = PredicateResultCollector {
+            collector: TypeCollector::create(),
+            changed: Rc::new(RefCell::new(false)),
+            from_union: Cell::new(true),
+            disjoint_fallback: disjoint_fallback.dupe(),
+        };
+        process_one(t, &sub)?;
+        if *sub.changed.borrow() {
+            changed = true;
+        }
+        let collected = sub.collector.collect_to_vec();
+        if !collected.is_empty() {
+            any_survived = true;
+            for ty in collected {
+                result_collector.collector.add(ty);
+            }
+        }
+    }
+    if changed {
+        report_changes_to_input(result_collector);
+    }
+    if !any_survived {
+        for ty in disjoint_fallback.collect_to_vec() {
+            result_collector.collector.add(ty);
+        }
+    }
+    Ok(())
+}
+
 fn concretize_and_run_predicate<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -193,7 +246,8 @@ fn concretize_and_run_predicate<'cx>(
 ) -> Result<(), FlowJsException> {
     let reason = reason_of_t(l);
     let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, reason, l)?;
-    for t in ts.iter() {
+    // Runs the predicate on a single concretized member `t`, reporting into `rc`.
+    let process_one = |t: &Type, rc: &PredicateResultCollector| -> Result<(), FlowJsException> {
         match t.deref() {
             TypeInner::GenericT(box GenericTData {
                 bound,
@@ -207,6 +261,8 @@ fn concretize_and_run_predicate<'cx>(
                 let bound_result_collector = PredicateResultCollector {
                     collector: bound_type_collector,
                     changed: changed.dupe(),
+                    from_union: Cell::new(rc.from_union.get()),
+                    disjoint_fallback: rc.disjoint_fallback.dupe(),
                 };
                 let repositioned_bound =
                     FlowJs::reposition_reason(cx, Some(trace), reason, None, bound)?;
@@ -220,7 +276,7 @@ fn concretize_and_run_predicate<'cx>(
                 )?;
                 let changed_val = *changed.borrow();
                 if changed_val {
-                    report_changes_to_input(result_collector);
+                    report_changes_to_input(rc);
                 }
                 let name = name.dupe();
                 let no_infer = *no_infer;
@@ -238,14 +294,20 @@ fn concretize_and_run_predicate<'cx>(
                             type_,
                             changed: changed_val,
                         },
-                        result_collector,
+                        rc,
                     );
                     Ok(())
                 })?;
+                Ok(())
             }
-            _ => {
-                predicate_no_concretization(cx, trace, result_collector, t)?;
-            }
+            _ => predicate_no_concretization(cx, trace, rc, t),
+        }
+    };
+    if ts.len() > 1 {
+        run_predicate_over_union_members(&ts, result_collector, &process_one)?;
+    } else {
+        for t in ts.iter() {
+            process_one(t, result_collector)?;
         }
     }
     Ok(())
@@ -298,6 +360,8 @@ fn predicate_no_concretization<'cx>(
             let intermediate_result_collector = PredicateResultCollector {
                 collector: intermediate_type_collector,
                 changed: changed.dupe(),
+                from_union: Cell::new(result_collector.from_union.get()),
+                disjoint_fallback: result_collector.disjoint_fallback.dupe(),
             };
             let p1_clone = p1.dupe();
             concretize_and_run_predicate(
@@ -2014,12 +2078,22 @@ fn instanceof_test<'cx>(
             )?;
         }
         // We hit the root class, so C is not a subclass of A
-        (true, TypeInner::DefT(_, def_t), InstanceofRhs::InternalExtendsOperand(r, _, a))
+        (true, TypeInner::DefT(_, def_t), InstanceofRhs::InternalExtendsOperand(r, c, a))
             if let DefTInner::NullT = def_t.deref() =>
         {
-            // We hit the root class, so C is not a subclass of A
+            // C is not a subclass of A. If A is a subclass of C it is a legitimate
+            // downcast (keep A); otherwise A and C are unrelated, so from a union we
+            // prune the member (else keep the guard to avoid a bare `empty`).
+            let a_subclass_of_c =
+                FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, a, c)?;
             let repositioned = flow_js::reposition(cx, r.loc().dupe(), a.dupe())?;
-            report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
+            if result_collector.from_union.get() && !a_subclass_of_c {
+                // Prune this member, but stash the guard in case every member prunes.
+                result_collector.disjoint_fallback.add(repositioned);
+                report_changes_to_input(result_collector);
+            } else {
+                report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
+            }
         }
         // If we're refining `mixed` or `any` with instanceof A, then flow A to the result
         (true, TypeInner::DefT(_, def_t), InstanceofRhs::TypeOperand(right_t))
@@ -2682,6 +2756,8 @@ pub fn run_predicate_track_changes<'cx>(
     let result_collector = PredicateResultCollector {
         collector,
         changed: changed.dupe(),
+        from_union: Cell::new(false),
+        disjoint_fallback: TypeCollector::create(),
     };
     let p_clone = p.dupe();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
@@ -2724,6 +2800,8 @@ pub fn run_predicate_for_filtering<'cx>(
     let result_collector = PredicateResultCollector {
         collector,
         changed: changed.dupe(),
+        from_union: Cell::new(false),
+        disjoint_fallback: TypeCollector::create(),
     };
     let p_clone = p.dupe();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
