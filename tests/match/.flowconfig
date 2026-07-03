@@ -1,5 +1,3 @@
 [options]
 all=true
-pattern_matching=true
-component_syntax=true
 no_flowlib=false
