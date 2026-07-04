@@ -21,4 +21,4 @@ log = { version = "0.4.33", features = ["kv_unstable", "kv_unstable_std"] }
 lsp-types = "0.97"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
-uuid = { version = "1.23.3", features = ["rng-getrandom", "serde", "v4", "v5", "v6", "v7", "v8"] }
+uuid = { version = "1.23.4", features = ["rng-getrandom", "serde", "v4", "v5", "v6", "v7", "v8"] }
