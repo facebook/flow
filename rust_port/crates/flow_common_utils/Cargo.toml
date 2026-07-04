@@ -9,7 +9,7 @@ edition = "2024"
 dupe = "0.9.1"
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
-rand = "0.10.1"
+rand = "0.10.2"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 
 [dev-dependencies]

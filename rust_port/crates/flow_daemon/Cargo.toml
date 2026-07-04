@@ -8,7 +8,7 @@ edition = "2024"
 [dependencies]
 bincode = { version = "2", features = ["serde"] }
 flow_common = { path = "../flow_common" }
-rand = "0.10.1"
+rand = "0.10.2"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 tempfile = "3.27.0"
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }
