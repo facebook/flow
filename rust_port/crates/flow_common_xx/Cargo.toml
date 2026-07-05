@@ -6,4 +6,4 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-xxhash-rust = { version = "0.8.15", features = ["xxh3", "xxh64"] }
+xxhash-rust = { version = "0.8.16", features = ["xxh3", "xxh64"] }
