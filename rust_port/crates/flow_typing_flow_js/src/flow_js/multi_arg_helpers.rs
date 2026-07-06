@@ -176,7 +176,7 @@ pub(super) fn multiflow_partial<'cx>(
                 };
                 let (mut used_pairs, unused_arglist, unused_parlist) =
                     multiflow_non_spreads(cx, use_op, n + 1, arglist, parlist);
-                let par_def_loc = reason_of_use_t(&tout_use).def_loc().dupe();
+                let par_def_loc = reason_of_t(&tout).def_loc().dupe();
                 cx.add_missing_local_annot_lower_bound(par_def_loc, tin.dupe());
                 used_pairs.push((tin, tout_use));
                 (used_pairs, unused_arglist, unused_parlist)

@@ -968,8 +968,24 @@ pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub lower: (VirtualReason<L>, Option<LowerKind>),
-    pub upper: (VirtualReason<L>, UpperKind<L>),
+    pub upper: IncompatibleUpperData<L>,
     pub use_op: Option<VirtualUseOp<L>>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct IncompatibleUpperData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub kind: UpperKind<L>,
 }
 
 #[derive(
@@ -3080,7 +3096,7 @@ pub enum UpperKind<L: Dupe> {
     IncompatibleGetKeysT,
     IncompatibleHasOwnPropT(L, Option<Name>),
     IncompatibleGetValuesT,
-    IncompatibleMapTypeTObject,
+    IncompatibleMapTypeTObject(VirtualReason<L>),
     IncompatibleGetStaticsT,
     IncompatibleBindT,
     IncompatibleUnclassified(FlowSmolStr),
@@ -3537,7 +3553,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 UpperKind::IncompatibleVarianceCheckT => UpperKind::IncompatibleVarianceCheckT,
                 UpperKind::IncompatibleGetKeysT => UpperKind::IncompatibleGetKeysT,
                 UpperKind::IncompatibleGetValuesT => UpperKind::IncompatibleGetValuesT,
-                UpperKind::IncompatibleMapTypeTObject => UpperKind::IncompatibleMapTypeTObject,
+                UpperKind::IncompatibleMapTypeTObject(reason) => {
+                    UpperKind::IncompatibleMapTypeTObject(map_reason(reason))
+                }
                 UpperKind::IncompatibleGetStaticsT => UpperKind::IncompatibleGetStaticsT,
                 UpperKind::IncompatibleBindT => UpperKind::IncompatibleBindT,
                 UpperKind::IncompatibleUnclassified(s) => UpperKind::IncompatibleUnclassified(s),
@@ -3548,11 +3566,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EIncompatible(box EIncompatibleData {
                 use_op,
                 lower: (lreason, lkind),
-                upper: (ureason, ukind),
+                upper:
+                    IncompatibleUpperData {
+                        loc: uloc,
+                        kind: ukind,
+                    },
             }) => EIncompatible(Box::new(EIncompatibleData {
                 use_op: use_op.map(map_use_op),
                 lower: (map_reason(lreason), lkind),
-                upper: (map_reason(ureason), map_upper_kind(ukind)),
+                upper: IncompatibleUpperData {
+                    loc: f(uloc),
+                    kind: map_upper_kind(ukind),
+                },
             })),
 
             EIncompatibleSpeculation(box EIncompatibleSpeculationData {
@@ -6494,7 +6519,6 @@ pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub upper_kind: UpperKind<L>,
     pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -6754,19 +6778,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         match self {
             ErrorMessage::EIncompatible(box EIncompatibleData {
                 lower: (reason_lower, _),
-                upper: (reason_upper, upper_kind),
+                upper:
+                    IncompatibleUpperData {
+                        loc,
+                        kind: upper_kind,
+                    },
                 use_op,
-            }) => {
-                let loc = reason_upper.loc.dupe();
-                IncompatibleUse(Box::new(IncompatibleUseData {
-                    loc,
-                    upper_kind,
-                    reason_lower,
-                    reason_upper,
-                    use_op: use_op
-                        .unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
-                }))
-            }
+            }) => IncompatibleUse(Box::new(IncompatibleUseData {
+                loc,
+                upper_kind,
+                reason_lower,
+                use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
+            })),
 
             ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
                 loc,
@@ -9521,7 +9544,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EImportTypeAsValue(box (_, _)) => Some(ImportTypeAsValue),
             ErrorMessage::EImportValueAsType(box (_, _)) => Some(ImportValueAsType),
             ErrorMessage::EIncompatible(box EIncompatibleData {
-                upper: (_, upper_kind),
+                upper:
+                    IncompatibleUpperData {
+                        kind: upper_kind, ..
+                    },
                 ..
             }) => Self::error_code_of_upper_kind(upper_kind),
             ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {

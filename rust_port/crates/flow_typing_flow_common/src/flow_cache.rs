@@ -21,7 +21,6 @@ use flow_typing_type::type_::string_of_ctor;
 use flow_typing_type::type_::string_of_use_ctor;
 use flow_typing_type::type_util::mod_use_op_of_use_t;
 use flow_typing_type::type_util::reason_of_t;
-use flow_typing_type::type_util::reason_of_use_t;
 
 // Cache that remembers pairs of types that are passed to __flow.
 pub mod flow_constraint {
@@ -231,11 +230,10 @@ pub fn summarize_flow_constraint(cx: &Context) -> Vec<(String, i32)> {
     cache.fold(
         |(), (l, u)| {
             let key = format!(
-                "[{}] {:?} => [{}] {:?}",
+                "[{}] {:?} => [{}]",
                 string_of_ctor(l),
                 reason_of_t(l),
                 string_of_use_ctor(u),
-                reason_of_use_t(u)
             );
             *group_counts.entry(key).or_insert(0) += 1;
         },

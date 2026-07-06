@@ -22,6 +22,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
 use flow_typing_errors::error_message::EnumModificationData;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallElemTData;
@@ -46,6 +47,7 @@ use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::OptionalIndexedAccessTData;
 use flow_typing_type::type_::PolyTData;
+use flow_typing_type::type_::PrivateMethodTData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::ReadElemData;
 use flow_typing_type::type_::ReposUseTData;
@@ -89,12 +91,28 @@ use crate::tvar_resolver;
 /// optimized by the compiler to reuse the stack frame. In Rust, we return
 /// these as continuations for the trampoline to process iteratively.
 enum TailCall<'cx> {
-    /// Replaces a tail call to `flow()` (e.g. from resolve_union):
-    /// uses unit_trace, catches LimitExceeded.
-    Flow(Type, UseT<Context<'cx>>),
+    /// Continue by flowing the lower type into the upper use under a fresh
+    /// trace. The `Reason` is not part of the flow itself; it is the diagnostic
+    /// reason to report for the upper side if this continuation hits the
+    /// recursion limit. `resolve_union` uses the reason of the union it is
+    /// rebuilding here.
+    Flow(Type, UseT<Context<'cx>>, Reason),
     /// Replaces a tail call to `rec_flow()` (e.g. from EvalT, OpenT handlers):
     /// uses given trace, propagates LimitExceeded.
     RecFlow(Type, UseT<Context<'cx>>, DepthTrace),
+}
+
+fn upper_operation_reason_or<CX>(u: &UseT<CX>, fallback: &Reason) -> Reason {
+    if let Some(reason) = use_op_of_use_t(u)
+        .and_then(|use_op| flow_js_utils::primary_reason_of_use_op(&use_op).map(|r| r.dupe()))
+    {
+        return reason;
+    }
+
+    match u.deref() {
+        UseTInner::UseT(_, t) => reason_of_t(t).dupe(),
+        _ => fallback.dupe(),
+    }
 }
 
 fn is_extends_use_t_root(t: &TypeInner) -> bool {
@@ -123,16 +141,15 @@ pub(super) fn __flow<'cx>(
 
     // Process tail calls iteratively instead of recursing
     while let Some(tail_call) = tc {
-        let (tc_l, tc_u, tc_trace, catch_limit) = match tail_call {
-            TailCall::Flow(l, u) => (l, u, DepthTrace::unit_trace(), true),
-            TailCall::RecFlow(l, u, t) => (l, u, t, false),
+        let (tc_l, tc_u, tc_trace, catch_limit_reason) = match tail_call {
+            TailCall::Flow(l, u, reason) => (l, u, DepthTrace::unit_trace(), Some(reason)),
+            TailCall::RecFlow(l, u, t) => (l, u, t, None),
         };
         match __flow_impl(cx, (&tc_l, &tc_u), tc_trace) {
             Ok(next) => tc = next,
-            Err(FlowJsException::LimitExceeded) if catch_limit => {
+            Err(FlowJsException::LimitExceeded) if let Some(ru) = catch_limit_reason => {
                 // flow() handles LimitExceeded by recording an error and continuing
                 let rl = reason_of_t(&tc_l).dupe();
-                let ru = reason_of_use_t(&tc_u).dupe();
                 let reasons = match tc_u.deref() {
                     UseTInner::UseT(_, _) => (ru, rl),
                     _ => flow_error::ordered_reasons((rl, ru)),
@@ -1661,10 +1678,10 @@ fn __flow_impl<'cx>(
                 id,
             }),
         ) => {
-            if let Some((tc_l, tc_u)) =
+            if let Some((tc_l, tc_u, reason)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
             {
-                return Ok(Some(TailCall::Flow(tc_l, tc_u)));
+                return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
         }
         (TypeInner::MaybeT(reason, t), _)
@@ -1720,10 +1737,10 @@ fn __flow_impl<'cx>(
                 id,
             }),
         ) => {
-            if let Some((tc_l, tc_u)) =
+            if let Some((tc_l, tc_u, reason)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
             {
-                return Ok(Some(TailCall::Flow(tc_l, tc_u)));
+                return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
         }
         (
@@ -1757,11 +1774,11 @@ fn __flow_impl<'cx>(
             }),
             _,
         ) => {
-            let reason_op = reason_of_use_t(u);
+            let reason_op = upper_operation_reason_or(u, reason_tapp);
             FlowJs::instantiate_this_class(
                 cx,
                 trace,
-                reason_op,
+                &reason_op,
                 reason_tapp,
                 c,
                 ts.dupe(),
@@ -1791,14 +1808,21 @@ fn __flow_impl<'cx>(
             }),
             UseTInner::MethodT(box MethodTData {
                 use_op: _,
-                reason: _,
+                reason: reason_op,
                 prop_reason: _,
                 propref: _,
                 method_action: _,
             })
-            | UseTInner::PrivateMethodT(..),
+            | UseTInner::PrivateMethodT(box PrivateMethodTData {
+                use_op: _,
+                reason: reason_op,
+                prop_reason: _,
+                name: _,
+                class_bindings: _,
+                static_: _,
+                method_action: _,
+            }),
         ) => {
-            let reason_op = reason_of_use_t(u);
             let t = mk_typeapp_instance_annot(
                 cx,
                 Some(trace),
@@ -1974,7 +1998,7 @@ fn __flow_impl<'cx>(
             }),
             _,
         ) => {
-            let reason_op = reason_of_use_t(u);
+            let reason_op = upper_operation_reason_or(u, reason_tapp);
             if instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
                 type_app_expansion::Bound::Lower,
@@ -1985,7 +2009,7 @@ fn __flow_impl<'cx>(
                     cx,
                     Some(trace),
                     use_op.dupe(),
-                    reason_op,
+                    &reason_op,
                     reason_tapp,
                     *from_value,
                     None,
@@ -2659,10 +2683,10 @@ fn __flow_impl<'cx>(
                 id,
             }),
         ) => {
-            if let Some((tc_l, tc_u)) =
+            if let Some((tc_l, tc_u, reason)) =
                 resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
             {
-                return Ok(Some(TailCall::Flow(tc_l, tc_u)));
+                return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
         }
         (TypeInner::UnionT(reason, rep), UseTInner::FilterMaybeT(use_op, tout)) => {
@@ -4076,6 +4100,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(reason_tapp, def_t),
             UseTInner::ConcretizeT(box ConcretizeTData {
+                reason: reason_op,
                 kind:
                     ConcretizationKind::ConcretizeForPredicate(
                         PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest,
@@ -4089,7 +4114,6 @@ fn __flow_impl<'cx>(
             ..
         }) = def_t.deref() =>
         {
-            let reason_op = reason_of_use_t(u);
             let new_l = instantiate_poly_default_args(
                 cx,
                 trace,
@@ -4536,7 +4560,7 @@ fn __flow_impl<'cx>(
                 ..
             }) = def_t.deref() =>
         {
-            let reason_op = reason_of_use_t(u);
+            let reason_op = upper_operation_reason_or(u, reason_tapp);
             let use_op = match use_op_of_use_t(u) {
                 Some(use_op) => use_op,
                 None => unknown_use(),
@@ -4555,7 +4579,7 @@ fn __flow_impl<'cx>(
                 cx,
                 trace,
                 use_op,
-                reason_op,
+                &reason_op,
                 reason_tapp,
                 Some(unify_bounds),
                 (
@@ -4576,15 +4600,9 @@ fn __flow_impl<'cx>(
                     subst_name,
                 }) = inner.deref() =>
         {
-            let reason = reason_of_use_t(u);
-            let fixed = flow_js_utils::fix_this_instance(
-                cx,
-                reason.dupe(),
-                r.dupe(),
-                i,
-                *this,
-                subst_name.dupe(),
-            );
+            let reason = upper_operation_reason_or(u, r);
+            let fixed =
+                flow_js_utils::fix_this_instance(cx, reason, r.dupe(), i, *this, subst_name.dupe());
             let new_l = Type::new(TypeInner::DefT(
                 class_r.dupe(),
                 DefT::new(DefTInner::ClassT(fixed)),
@@ -4600,15 +4618,9 @@ fn __flow_impl<'cx>(
             }),
             _,
         ) => {
-            let reason = reason_of_use_t(u);
-            let fixed = flow_js_utils::fix_this_instance(
-                cx,
-                reason.dupe(),
-                r.dupe(),
-                i,
-                *this,
-                subst_name.dupe(),
-            );
+            let reason = upper_operation_reason_or(u, r);
+            let fixed =
+                flow_js_utils::fix_this_instance(cx, reason, r.dupe(), i, *this, subst_name.dupe());
             rec_flow(cx, trace, (&fixed, u))?;
         }
 
@@ -9697,7 +9709,7 @@ fn __flow_impl<'cx>(
                 reason.dupe(),
                 *inexact,
                 *arity,
-                reason_of_use_t(u),
+                data.reason.loc().dupe(),
             )?(cx, (*data.tout).dupe())?;
         }
         (TypeInner::DefT(reason, def_t), _)
@@ -9865,7 +9877,10 @@ fn __flow_impl<'cx>(
                 cx,
                 ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (lreason.dupe(), None),
-                    upper: (ureason.dupe(), UpperKind::IncompatibleMixedCallT),
+                    upper: IncompatibleUpperData {
+                        loc: ureason.loc().dupe(),
+                        kind: UpperKind::IncompatibleMixedCallT,
+                    },
                     use_op: Some(use_op.dupe()),
                 })),
             )?;
@@ -9991,18 +10006,14 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
         _ => {
+            let lower_reason = reason_of_t(l).dupe();
+            let use_op = use_op_of_use_t(u);
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                    lower: (
-                        reason_of_t(l).dupe(),
-                        flow_js_utils::error_message_kind_of_lower(l),
-                    ),
-                    upper: (
-                        reason_of_use_t(u).dupe(),
-                        flow_js_utils::error_message_kind_of_upper(u),
-                    ),
-                    use_op: use_op_of_use_t(u),
+                    lower: (lower_reason, flow_js_utils::error_message_kind_of_lower(l)),
+                    upper: flow_js_utils::incompatible_upper_of_use(u),
+                    use_op,
                 })),
             )?;
             let resolve_callee = match u.deref() {

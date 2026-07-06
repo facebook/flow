@@ -38,6 +38,7 @@ use flow_typing_errors::error_message::ETupleNonIntegerIndexData;
 use flow_typing_errors::error_message::ETupleOutOfBoundsData;
 use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::DefTInner;
@@ -1118,59 +1119,90 @@ pub fn error_message_kind_of_lower(
     }
 }
 
-pub fn error_message_kind_of_upper<CX>(
-    u: &UseT<CX>,
-) -> flow_typing_errors::error_message::UpperKind<ALoc> {
+pub fn incompatible_upper_of_use<CX>(u: &UseT<CX>) -> IncompatibleUpperData<ALoc> {
     use flow_typing_errors::error_message::UpperKind;
     use flow_typing_type::type_::PropRef;
     use flow_typing_type::type_::string_of_use_ctor;
     use flow_typing_type::type_util::loc_of_t;
+    use flow_typing_type::type_util::reason_of_t;
 
-    match u.deref() {
+    let (loc, kind) = match u.deref() {
         UseTInner::GetPropT(data) => match data.propref.as_ref() {
-            PropRef::Named { reason, name, .. } => {
-                UpperKind::IncompatibleGetPropT(reason.loc().dupe(), Some(name.dupe()))
-            }
-            PropRef::Computed(t) => UpperKind::IncompatibleGetPropT(loc_of_t(t).dupe(), None),
+            PropRef::Named { reason, name, .. } => (
+                data.reason.loc().dupe(),
+                UpperKind::IncompatibleGetPropT(reason.loc().dupe(), Some(name.dupe())),
+            ),
+            PropRef::Computed(t) => (
+                data.reason.loc().dupe(),
+                UpperKind::IncompatibleGetPropT(loc_of_t(t).dupe(), None),
+            ),
         },
-        UseTInner::GetPrivatePropT(..) => UpperKind::IncompatibleGetPrivatePropT,
-        UseTInner::SetPropT(_, _, propref, _, _, _, _) => match propref.as_ref() {
-            PropRef::Named { reason, name, .. } => {
-                UpperKind::IncompatibleSetPropT(reason.loc().dupe(), Some(name.dupe()))
-            }
-            PropRef::Computed(t) => UpperKind::IncompatibleSetPropT(loc_of_t(t).dupe(), None),
+        UseTInner::GetPrivatePropT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleGetPrivatePropT,
+        ),
+        UseTInner::SetPropT(_, reason_op, propref, _, _, _, _) => match propref.as_ref() {
+            PropRef::Named { reason, name, .. } => (
+                reason_op.loc().dupe(),
+                UpperKind::IncompatibleSetPropT(reason.loc().dupe(), Some(name.dupe())),
+            ),
+            PropRef::Computed(t) => (
+                reason_op.loc().dupe(),
+                UpperKind::IncompatibleSetPropT(loc_of_t(t).dupe(), None),
+            ),
         },
-        UseTInner::SetPrivatePropT(..) => UpperKind::IncompatibleSetPrivatePropT,
-        UseTInner::MethodT(box MethodTData { propref, .. }) => match propref.as_ref() {
-            PropRef::Named { reason, name, .. } => {
-                UpperKind::IncompatibleMethodT(reason.loc().dupe(), Some(name.dupe()))
-            }
-            PropRef::Computed(t) => UpperKind::IncompatibleMethodT(loc_of_t(t).dupe(), None),
+        UseTInner::SetPrivatePropT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleSetPrivatePropT,
+        ),
+        UseTInner::MethodT(box MethodTData {
+            reason: reason_op,
+            propref,
+            ..
+        }) => match propref.as_ref() {
+            PropRef::Named { reason, name, .. } => (
+                reason_op.loc().dupe(),
+                UpperKind::IncompatibleMethodT(reason.loc().dupe(), Some(name.dupe())),
+            ),
+            PropRef::Computed(t) => (
+                reason_op.loc().dupe(),
+                UpperKind::IncompatibleMethodT(loc_of_t(t).dupe(), None),
+            ),
         },
-        UseTInner::CallT(..) => UpperKind::IncompatibleCallT,
-        UseTInner::GetElemT(box GetElemTData { key_t, .. }) => {
-            UpperKind::IncompatibleGetElemT(loc_of_t(key_t).dupe())
-        }
-        UseTInner::SetElemT(box SetElemTData { key_t: t, .. }) => {
-            UpperKind::IncompatibleSetElemT(loc_of_t(t).dupe())
-        }
-        UseTInner::CallElemT(box CallElemTData { key_t: t, .. }) => {
-            UpperKind::IncompatibleCallElemT(loc_of_t(t).dupe())
-        }
-        UseTInner::ElemT(box ElemTData { obj, .. }) => {
-            if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)))
+        UseTInner::CallT(data) => (data.reason.loc().dupe(), UpperKind::IncompatibleCallT),
+        UseTInner::GetElemT(box GetElemTData { reason, key_t, .. }) => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleGetElemT(loc_of_t(key_t).dupe()),
+        ),
+        UseTInner::SetElemT(box SetElemTData {
+            reason, key_t: t, ..
+        }) => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleSetElemT(loc_of_t(t).dupe()),
+        ),
+        UseTInner::CallElemT(box CallElemTData {
+            reason, key_t: t, ..
+        }) => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleCallElemT(loc_of_t(t).dupe()),
+        ),
+        UseTInner::ElemT(box ElemTData { reason, obj, .. }) => {
+            let kind = if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)))
             {
                 UpperKind::IncompatibleElemTOfArrT
             } else {
                 UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into())
-            }
+            };
+            (reason.loc().dupe(), kind)
         }
-        UseTInner::ObjRestT(..) => UpperKind::IncompatibleObjRestT,
-        UseTInner::ArrRestT(..) => UpperKind::IncompatibleArrRestT,
-        UseTInner::SuperT(..) => UpperKind::IncompatibleSuperT,
-        UseTInner::MixinT(..) => UpperKind::IncompatibleMixinT,
-        UseTInner::SpecializeT(box SpecializeTData { use_op, .. }) => {
-            if matches!(
+        UseTInner::ObjRestT(reason, ..) => (reason.loc().dupe(), UpperKind::IncompatibleObjRestT),
+        UseTInner::ArrRestT(data) => (data.reason.loc().dupe(), UpperKind::IncompatibleArrRestT),
+        UseTInner::SuperT(data) => (data.reason.loc().dupe(), UpperKind::IncompatibleSuperT),
+        UseTInner::MixinT(reason, _) => (reason.loc().dupe(), UpperKind::IncompatibleMixinT),
+        UseTInner::SpecializeT(box SpecializeTData {
+            reason2, use_op, ..
+        }) => {
+            let kind = if matches!(
                 use_op,
                 flow_typing_type::type_::VirtualUseOp::Op(inner)
                     if matches!(inner.as_ref(), flow_typing_type::type_::VirtualRootUseOp::ClassExtendsCheck { .. })
@@ -1178,11 +1210,16 @@ pub fn error_message_kind_of_upper<CX>(
                 UpperKind::IncompatibleSuperT
             } else {
                 UpperKind::IncompatibleSpecializeT
-            }
+            };
+            (reason2.loc().dupe(), kind)
         }
-        UseTInner::ConcretizeTypeAppsT(..) => UpperKind::IncompatibleSpecializeT,
-        UseTInner::ThisSpecializeT(..) => UpperKind::IncompatibleThisSpecializeT,
-        UseTInner::GetKeysT(..) => UpperKind::IncompatibleGetKeysT,
+        UseTInner::ConcretizeTypeAppsT(_, _, box (_, _, _, _, reason), _) => {
+            (reason.loc().dupe(), UpperKind::IncompatibleSpecializeT)
+        }
+        UseTInner::ThisSpecializeT(reason, _, _) => {
+            (reason.loc().dupe(), UpperKind::IncompatibleThisSpecializeT)
+        }
+        UseTInner::GetKeysT(reason, _) => (reason.loc().dupe(), UpperKind::IncompatibleGetKeysT),
         UseTInner::HasOwnPropT(box HasOwnPropTData {
             reason: r,
             type_: t,
@@ -1208,20 +1245,197 @@ pub fn error_message_kind_of_upper<CX>(
                 },
                 _ => None,
             };
-            UpperKind::IncompatibleHasOwnPropT(r.loc().dupe(), name)
+            (
+                r.loc().dupe(),
+                UpperKind::IncompatibleHasOwnPropT(r.loc().dupe(), name),
+            )
         }
-        UseTInner::GetValuesT(..) => UpperKind::IncompatibleGetValuesT,
-        UseTInner::GetDictValuesT(..) => UpperKind::IncompatibleGetValuesT,
-        UseTInner::MapTypeT(box MapTypeTData { type_map: kind, .. }) => {
-            if matches!(kind, flow_typing_type::type_::TypeMap::ObjectKeyMirror) {
-                UpperKind::IncompatibleMapTypeTObject
+        UseTInner::GetValuesT(reason, _) => {
+            (reason.loc().dupe(), UpperKind::IncompatibleGetValuesT)
+        }
+        UseTInner::GetDictValuesT(reason, _) => {
+            (reason.loc().dupe(), UpperKind::IncompatibleGetValuesT)
+        }
+        UseTInner::MapTypeT(box MapTypeTData {
+            reason,
+            type_map: kind,
+            ..
+        }) => {
+            let kind = if matches!(kind, flow_typing_type::type_::TypeMap::ObjectKeyMirror) {
+                UpperKind::IncompatibleMapTypeTObject(reason.dupe())
             } else {
                 UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into())
-            }
+            };
+            (reason.loc().dupe(), kind)
         }
-        UseTInner::GetStaticsT(..) => UpperKind::IncompatibleGetStaticsT,
-        UseTInner::BindT(..) => UpperKind::IncompatibleBindT,
-        _ => UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        UseTInner::GetStaticsT(tvar) => (
+            tvar.reason().loc().dupe(),
+            UpperKind::IncompatibleGetStaticsT,
+        ),
+        UseTInner::BindT(data) => (data.reason.loc().dupe(), UpperKind::IncompatibleBindT),
+        UseTInner::ConditionalT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::UseT(_, t) => (
+            reason_of_t(t).loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::PrivateMethodT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::GetTypeFromNamespaceT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::TestPropT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::GetProtoT(reason, _)
+        | UseTInner::SetProtoT(reason, _)
+        | UseTInner::ObjTestProtoT(reason, _)
+        | UseTInner::ObjTestT(reason, _, _)
+        | UseTInner::ObjKitT(_, reason, _, _, _)
+        | UseTInner::ConvertEmptyPropsToMixedT(reason, _) => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ReposLowerT { reason, .. } => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ReposUseT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ConstructorT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ImplementsT(_, t)
+        | UseTInner::FilterOptionalT(_, t)
+        | UseTInner::FilterMaybeT(_, t) => (
+            reason_of_t(t).loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ToStringT { reason, .. } => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ValueToTypeReferenceT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::LookupT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ReactKitT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ConcretizeT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ResolveSpreadT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::CondT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ExtendsUseT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ResolveUnionT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::GetEnumT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::DeepReadOnlyT(tvar, _) | UseTInner::HooklikeT(tvar) => (
+            tvar.reason().loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::SealGenericT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::OptionalIndexedAccessT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::CheckUnusedPromiseT { reason, .. } => (
+            reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::ExitRendersT { renders_reason, .. } => (
+            renders_reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+        UseTInner::EvalTypeDestructorT(data) => (
+            data.reason.loc().dupe(),
+            UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into()),
+        ),
+    };
+
+    IncompatibleUpperData { loc, kind }
+}
+
+pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
+    use flow_typing_type::type_::RootUseOp;
+    use flow_typing_type::type_::root_of_use_op;
+
+    match root_of_use_op(use_op) {
+        RootUseOp::ObjectAddComputedProperty { op }
+        | RootUseOp::ObjectSpread { op }
+        | RootUseOp::ObjectRest { op }
+        | RootUseOp::ObjectChain { op }
+        | RootUseOp::DeclareComponentRef { op }
+        | RootUseOp::FunReturnStatement { value: op }
+        | RootUseOp::GeneratorYield { value: op }
+        | RootUseOp::GetExport(op)
+        | RootUseOp::GetProperty(op)
+        | RootUseOp::InitField { op, .. }
+        | RootUseOp::JSXCreateElement { op, .. }
+        | RootUseOp::ReactGetIntrinsic { literal: op }
+        | RootUseOp::TypeApplication { type_: op }
+        | RootUseOp::EvalMappedType { mapped_type: op }
+        | RootUseOp::TypeGuardIncompatibility { guard_type: op, .. }
+        | RootUseOp::RenderTypeInstantiation { render_type: op }
+        | RootUseOp::ComponentRestParamCompatibility { rest_param: op } => Some(op),
+        RootUseOp::AssignVar { var, init } => var.as_ref().or(Some(init)),
+        RootUseOp::Cast { upper, .. } => Some(upper),
+        RootUseOp::ClassExtendsCheck { extends, .. } => Some(extends),
+        RootUseOp::ClassImplementsCheck(data) => Some(&data.implements),
+        RootUseOp::ClassOwnProtoCheck(_) => None,
+        RootUseOp::ClassMethodDefinition { name, .. } => Some(name),
+        RootUseOp::Coercion { target, .. } => Some(target),
+        RootUseOp::ConformToCommonInterface(_) => None,
+        RootUseOp::MergedDeclaration { current_decl, .. } => Some(current_decl),
+        RootUseOp::DeleteProperty { prop, .. } => Some(prop),
+        RootUseOp::DeleteVar { var } => Some(var),
+        RootUseOp::FunCall(data) => Some(&data.op),
+        RootUseOp::FunCallMethod(data) => Some(&data.op),
+        RootUseOp::FunImplicitReturn(data) => Some(&data.upper),
+        RootUseOp::IndexedTypeAccess { index, .. } => Some(index),
+        RootUseOp::InferBoundCompatibilityCheck { infer, .. } => Some(infer),
+        RootUseOp::ReactCreateElementCall(data) => Some(&data.op),
+        RootUseOp::RecordCreate(data) => Some(&data.op),
+        RootUseOp::Speculation(use_op) => primary_reason_of_use_op(use_op),
+        RootUseOp::SetProperty(data) => Some(&data.prop),
+        RootUseOp::UpdateProperty { prop, .. } => Some(prop),
+        RootUseOp::RefinementCheck { test, .. } => Some(test),
+        RootUseOp::SwitchRefinementCheck(_) => None,
+        RootUseOp::PositiveTypeGuardConsistency(data) => Some(&data.reason),
+        RootUseOp::UnknownUse => None,
     }
 }
 
@@ -5718,6 +5932,7 @@ pub mod get_prop_t_kit {
 
     use dupe::Dupe;
     use dupe::OptionDupedExt;
+    use flow_aloc::ALoc;
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
     use flow_common_utils::utils_js::typo_suggestion;
@@ -6050,11 +6265,10 @@ pub mod get_prop_t_kit {
         reason: Reason,
         inexact: bool,
         arity: (i32, i32),
-        reason_op: &Reason,
+        loc: ALoc,
     ) -> Result<F::R, FlowJsException> {
         // Use definition as the reason for the length, as this is
         // the actual location where the length is in fact set.
-        let loc = reason_op.loc().dupe();
         let t = type_util::tuple_length(reason, inexact, arity.0, arity.1);
         F::return_(
             cx,

@@ -640,13 +640,17 @@ where
                             },
                         ))
                     }
-                    _ => ErrorMessage::EIncompatibleSpeculation(Box::new(
-                        EIncompatibleSpeculationData {
-                            use_op: type_util::use_op_of_use_t(upper),
-                            loc: type_util::reason_of_use_t(upper).loc().dupe(),
-                            branches: msgs,
-                        },
-                    )),
+                    _ => {
+                        let use_op = type_util::use_op_of_use_t(upper);
+                        let loc = flow_js_utils::incompatible_upper_of_use(upper).loc;
+                        ErrorMessage::EIncompatibleSpeculation(Box::new(
+                            EIncompatibleSpeculationData {
+                                use_op,
+                                loc,
+                                branches: msgs,
+                            },
+                        ))
+                    }
                 };
                 flow_js_utils::add_output(cx, err)?;
                 Ok(())

@@ -45,6 +45,7 @@ use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumIncompatibleData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::flow_error::ordered_reasons;
 use flow_typing_errors::intermediate_error_types;
@@ -6200,10 +6201,10 @@ pub fn rec_sub_t<'cx>(
                 cx,
                 ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (lreason.dupe(), None),
-                    upper: (
-                        ureason.dupe(),
-                        flow_typing_errors::error_message::UpperKind::IncompatibleMixedCallT,
-                    ),
+                    upper: IncompatibleUpperData {
+                        loc: ureason.loc().dupe(),
+                        kind: flow_typing_errors::error_message::UpperKind::IncompatibleMixedCallT,
+                    },
                     use_op: Some(use_op.dupe()),
                 })),
             )?;

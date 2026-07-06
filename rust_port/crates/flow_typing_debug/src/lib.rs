@@ -225,7 +225,6 @@ use flow_typing_type::type_::string_of_ctor;
 use flow_typing_type::type_::string_of_use_ctor;
 use flow_typing_type::type_::string_of_use_op;
 use flow_typing_type::type_util::reason_of_t;
-use flow_typing_type::type_util::reason_of_use_t;
 
 pub fn string_of_selector(selector: &Selector) -> String {
     match selector {
@@ -773,13 +772,9 @@ fn dump_use_t_<CX>(
         return string_of_use_ctor(use_t);
     }
 
-    fn p<CX>(cx: &Context, use_t: &UseT<CX>, reason: bool, extra: &str) -> String {
+    fn p<CX>(_cx: &Context, use_t: &UseT<CX>, reason: bool, extra: &str) -> String {
         let ctor = string_of_use_ctor(use_t);
-        let reason_str = if reason {
-            format!("{:?}", dump_reason(cx, reason_of_use_t(use_t)))
-        } else {
-            String::new()
-        };
+        let reason_str = String::new();
         let sep = if reason && !extra.is_empty() {
             ", "
         } else {
@@ -1884,7 +1879,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             UpperKind::IncompatibleGetKeysT => "IncompatibleGetKeysT".to_string(),
             UpperKind::IncompatibleHasOwnPropT(_, _) => "IncompatibleHasOwnPropT".to_string(),
             UpperKind::IncompatibleGetValuesT => "IncompatibleGetValuesT".to_string(),
-            UpperKind::IncompatibleMapTypeTObject => "IncompatibleMapTypeTObject".to_string(),
+            UpperKind::IncompatibleMapTypeTObject(_) => "IncompatibleMapTypeTObject".to_string(),
             UpperKind::IncompatibleGetStaticsT => "IncompatibleGetStaticsT".to_string(),
             UpperKind::IncompatibleBindT => "IncompatibleBindT".to_string(),
             UpperKind::IncompatibleUnclassified(ctor) => {
@@ -1900,12 +1895,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let (reason_lower, _lower_kind) = lower;
-            let (reason_upper, upper_kind) = upper;
             format!(
                 "EIncompatible(Box::new(EIncompatibleData {{ lower = ({}, _); upper = ({}, {}); use_op = {}; branches = _ }}))",
                 dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
-                dump_upper_kind(upper_kind),
+                format_args!("loc {:?}", upper.loc),
+                dump_upper_kind(&upper.kind),
                 match use_op {
                     None => "None".to_string(),
                     Some(use_op) => format!("Some({})", string_of_use_op(use_op)),

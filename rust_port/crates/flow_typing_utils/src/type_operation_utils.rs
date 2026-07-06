@@ -28,6 +28,7 @@ use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::flow_error;
 use flow_typing_flow_common::flow_js_utils;
@@ -1762,7 +1763,10 @@ pub mod special_cased_functions {
                         cx,
                         ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                             lower: (reason_of_t(l).dupe(), None),
-                            upper: (reason_op.dupe(), upper_kind),
+                            upper: IncompatibleUpperData {
+                                loc: reason_op.loc().dupe(),
+                                kind: upper_kind,
+                            },
                             use_op: Some(use_op.clone()),
                         })),
                     )?;

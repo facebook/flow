@@ -22,6 +22,7 @@ use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::slice_utils;
@@ -901,12 +902,12 @@ fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &
         type_util::reason_of_t(t).dupe(),
         flow_js_utils::error_message_kind_of_lower(t),
     );
-    let upper = (
-        reason_op.dupe(),
-        flow_typing_errors::error_message::UpperKind::IncompatibleUnclassified(
+    let upper = IncompatibleUpperData {
+        loc: reason_op.loc().dupe(),
+        kind: flow_typing_errors::error_message::UpperKind::IncompatibleUnclassified(
             op.string_of_operation().into(),
         ),
-    );
+    };
     let use_op = op.use_op();
     flow_js_utils::add_output_non_speculating(
         cx,
@@ -2115,12 +2116,13 @@ fn elab_t_concrete<'cx>(
                         type_util::reason_of_t(&t).dupe(),
                         flow_js_utils::error_message_kind_of_lower(&t),
                     );
-                    let upper = (
-                        reason_op_catch.dupe(),
-                        flow_typing_errors::error_message::UpperKind::IncompatibleUnclassified(
-                            op.string_of_operation().into(),
-                        ),
-                    );
+                    let upper = IncompatibleUpperData {
+                        loc: reason_op_catch.loc().dupe(),
+                        kind:
+                            flow_typing_errors::error_message::UpperKind::IncompatibleUnclassified(
+                                op.string_of_operation().into(),
+                            ),
+                    };
                     let use_op = op.use_op();
                     flow_js_utils::add_output_non_speculating(
                         cx,
@@ -2330,7 +2332,7 @@ fn elab_t_concrete<'cx>(
                         reason.dupe(),
                         *inexact,
                         *arity,
-                        reason_op,
+                        reason_op.loc().dupe(),
                     )
                     // Annotation inference is never speculative
                     .unwrap()

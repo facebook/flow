@@ -960,13 +960,19 @@ pub(super) fn handle_generic<'cx>(
     }
 }
 
-/// Returns `Ok(Some((next_l, next_u)))` when the OCaml code would tail-call
-/// `flow cx (next_l, next_u)`. The caller (__flow trampoline) processes this
-/// as a loop continuation instead of recursing. Returns `Ok(None)` when done.
+/// Resolves one member of a union and either finishes the union flow or returns
+/// the next continuation for the `__flow` trampoline.
 ///
-/// In OCaml, the `flow cx (next, ResolveUnionT {...})` call is in tail position
-/// and is optimized by the compiler. In Rust, we return the continuation for
-/// the trampoline in __flow to process iteratively.
+/// `Ok(None)` means union resolution is complete: the resolved members have
+/// been rebuilt into a union and flowed to `upper`.
+///
+/// `Ok(Some((next_l, next_u, reason)))` means there are still unresolved
+/// members. `next_l` is the next union member to resolve. `next_u` is a
+/// `ResolveUnionT` continuation carrying the resolved prefix, the remaining
+/// unresolved members, and the original `upper`. The returned `reason` is the
+/// reason of the union being rebuilt; the trampoline uses it as the diagnostic
+/// reason for this continuation if resolving the next member hits the recursion
+/// limit.
 pub(super) fn resolve_union<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -976,9 +982,9 @@ pub(super) fn resolve_union<'cx>(
     unresolved: &flow_data_structure_wrapper::list::FlowOcamlList<Type>,
     l: &Type,
     upper: &UseT<Context<'cx>>,
-) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+) -> Result<Option<(Type, UseT<Context<'cx>>, Reason)>, FlowJsException> {
     let do_continue = |resolved: flow_data_structure_wrapper::list::FlowOcamlList<Type>| -> Result<
-        Option<(Type, UseT<Context<'cx>>)>,
+        Option<(Type, UseT<Context<'cx>>, Reason)>,
         FlowJsException,
     > {
         match unresolved.first() {
@@ -1004,6 +1010,7 @@ pub(super) fn resolve_union<'cx>(
                         upper: Box::new(upper.dupe()),
                         id,
                     }))),
+                    reason.dupe(),
                 )))
             }
         }
@@ -2093,7 +2100,16 @@ pub(super) fn flow<'cx>(
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {
             let rl = reason_of_t(lower).dupe();
-            let ru = reason_of_use_t(upper).dupe();
+            let ru = match type_util::use_op_of_use_t(upper).and_then(|use_op| {
+                flow_js_utils::primary_reason_of_use_op(&use_op).map(|reason| reason.dupe())
+            }) {
+                Some(reason) => reason,
+                None => match upper.deref() {
+                    UseTInner::UseT(_, t) => reason_of_t(t).dupe(),
+                    UseTInner::ResolveUnionT(data) => data.reason.dupe(),
+                    _ => rl.dupe(),
+                },
+            };
             let reasons = match upper.deref() {
                 UseTInner::UseT(_, _) => (ru, rl),
                 _ => flow_error::ordered_reasons((rl, ru)),

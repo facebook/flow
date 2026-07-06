@@ -17,6 +17,7 @@ use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -186,10 +187,10 @@ fn check_polarity_impl<'cx>(
                                 reason_of_t(l).dupe(),
                                 flow_js_utils::error_message_kind_of_lower(t),
                             ),
-                            upper: (
-                                reason_of_t(type_).dupe(),
-                                UpperKind::IncompatibleVarianceCheckT,
-                            ),
+                            upper: IncompatibleUpperData {
+                                loc: reason_of_t(type_).loc().dupe(),
+                                kind: UpperKind::IncompatibleVarianceCheckT,
+                            },
                             use_op: None,
                         })),
                     )

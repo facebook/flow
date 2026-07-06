@@ -3335,7 +3335,6 @@ where
     let mk_incompatible_use_error = |use_loc: Loc,
                                      use_kind: super::error_message::UpperKind<L>,
                                      lower: VirtualReason<L>,
-                                     upper: VirtualReason<L>,
                                      use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         use super::error_message::UpperKind;
@@ -3392,7 +3391,7 @@ where
                 Message::MessageLowerIsNotObject(lower),
             ),
 
-            UpperKind::IncompatibleMapTypeTObject => mk_use_op_error(
+            UpperKind::IncompatibleMapTypeTObject(upper) => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
@@ -3640,16 +3639,9 @@ where
                 loc,
                 upper_kind,
                 reason_lower,
-                reason_upper,
                 use_op,
             }),
-        ) => mk_incompatible_use_error(
-            loc_of_aloc(&loc),
-            upper_kind,
-            reason_lower,
-            reason_upper,
-            use_op,
-        ),
+        ) => mk_incompatible_use_error(loc_of_aloc(&loc), upper_kind, reason_lower, use_op),
 
         (
             None,
