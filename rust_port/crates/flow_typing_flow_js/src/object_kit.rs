@@ -865,7 +865,7 @@ pub fn run<'cx>(
                                             trace,
                                             &open_t,
                                             &UseT::new(UseTInner::CondT(Box::new(CondTData {
-                                                reason: reason.dupe(),
+                                                loc: reason.loc().dupe(),
                                                 opt_type: None,
                                                 true_t: t2_clone.dupe(),
                                                 false_t: tvar.dupe(),

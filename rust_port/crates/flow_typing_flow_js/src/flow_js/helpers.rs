@@ -410,7 +410,7 @@ pub(super) fn handle_generic<'cx>(
         rec_flow(cx, trace, (&repos_bound, &use_t))?;
         let open_t = Type::new(TypeInner::OpenT(t_out_prime));
         let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
-            reason: reason.dupe(),
+            loc: reason.loc().dupe(),
             id: id.clone(),
             name: name.dupe(),
             cont,
@@ -453,7 +453,7 @@ pub(super) fn handle_generic<'cx>(
             let upper = upper.unwrap_or(u);
             let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
             let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
-                reason: reason.dupe(),
+                loc: reason.loc().dupe(),
                 id: id.clone(),
                 name: name.dupe(),
                 cont: Cont::Upper(Box::new(upper.dupe())),
@@ -578,7 +578,7 @@ pub(super) fn handle_generic<'cx>(
         TypeInner::KeysT(..) => {
             let repos_bound = reposition_reason(cx, Some(trace), reason, false, bound)?;
             let seal = UseT::new(UseTInner::SealGenericT(Box::new(SealGenericTData {
-                reason: reason.dupe(),
+                loc: reason.loc().dupe(),
                 id: id.clone(),
                 name: name.dupe(),
                 no_infer,

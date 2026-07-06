@@ -444,7 +444,7 @@ fn t_of_use_t<'cx>(
                                 let open_t_prime = Type::new(TypeInner::OpenT(t_prime_tvar));
                                 let u_inner = UseTInner::GetEnumT(Box::new(GetEnumTData {
                                     use_op: unknown_use(),
-                                    reason: r.dupe(),
+                                    loc: r.loc().dupe(),
                                     orig_t: None,
                                     kind: GetEnumKind::GetEnumValue,
                                     tout: open_t_prime,

@@ -1312,7 +1312,7 @@ pub(super) fn eval_destructor<'cx>(
                 Destructor::EnumType => {
                     let u = UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
                         use_op: use_op.dupe(),
-                        reason: reason.dupe(),
+                        loc: reason.loc().dupe(),
                         orig_t: Some(t.dupe()),
                         kind: GetEnumKind::GetEnumObject,
                         tout: Type::new(TypeInner::OpenT(tout.dupe())),

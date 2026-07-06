@@ -1819,7 +1819,7 @@ pub struct ResolveSpreadTData {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CondTData {
-    pub reason: Reason,
+    pub loc: ALoc,
     pub opt_type: Option<Type>,
     pub true_t: Type,
     pub false_t: Type,
@@ -1837,7 +1837,7 @@ pub struct ExtendsUseTData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GetEnumTData {
     pub use_op: UseOp,
-    pub reason: Reason,
+    pub loc: ALoc,
     pub orig_t: Option<Type>,
     pub kind: GetEnumKind,
     pub tout: Type,
@@ -2269,7 +2269,7 @@ impl<CX> std::fmt::Debug for ReactKitTData<CX> {
 }
 
 pub struct SealGenericTData<CX = ()> {
-    pub reason: Reason,
+    pub loc: ALoc,
     pub id: flow_typing_generics::GenericId,
     pub name: SubstName,
     pub no_infer: bool,
@@ -2279,7 +2279,7 @@ pub struct SealGenericTData<CX = ()> {
 impl<CX> Clone for SealGenericTData<CX> {
     fn clone(&self) -> Self {
         SealGenericTData {
-            reason: self.reason.clone(),
+            loc: self.loc.clone(),
             id: self.id.clone(),
             name: self.name.clone(),
             no_infer: self.no_infer,
@@ -2290,7 +2290,7 @@ impl<CX> Clone for SealGenericTData<CX> {
 
 impl<CX> PartialEq for SealGenericTData<CX> {
     fn eq(&self, other: &Self) -> bool {
-        self.reason == other.reason
+        self.loc == other.loc
             && self.id == other.id
             && self.name == other.name
             && self.no_infer == other.no_infer
@@ -2302,7 +2302,7 @@ impl<CX> Eq for SealGenericTData<CX> {}
 
 impl<CX> std::hash::Hash for SealGenericTData<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.reason.hash(state);
+        self.loc.hash(state);
         self.id.hash(state);
         self.name.hash(state);
         self.no_infer.hash(state);
@@ -2318,8 +2318,8 @@ impl<CX> PartialOrd for SealGenericTData<CX> {
 
 impl<CX> Ord for SealGenericTData<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.reason
-            .cmp(&other.reason)
+        self.loc
+            .cmp(&other.loc)
             .then_with(|| self.id.cmp(&other.id))
             .then_with(|| self.name.cmp(&other.name))
             .then_with(|| self.no_infer.cmp(&other.no_infer))
@@ -2330,7 +2330,7 @@ impl<CX> Ord for SealGenericTData<CX> {
 impl<CX> std::fmt::Debug for SealGenericTData<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SealGenericTData")
-            .field("reason", &self.reason)
+            .field("loc", &self.loc)
             .field("id", &self.id)
             .field("name", &self.name)
             .field("no_infer", &self.no_infer)
@@ -2511,7 +2511,7 @@ pub enum UseTInner<CX = ()> {
         reason: Reason,
         async_: bool,
     },
-    ConvertEmptyPropsToMixedT(Reason, Type),
+    ConvertEmptyPropsToMixedT(ALoc, Type),
     ExitRendersT {
         renders_reason: Reason,
         u: Box<UseT<CX>>,
@@ -3322,7 +3322,7 @@ pub struct UseT<CX = ()>(Rc<UseTInner<CX>>);
 
 impl<CX> Clone for UseT<CX> {
     fn clone(&self) -> Self {
-        UseT(self.0.clone())
+        Self(self.0.clone())
     }
 }
 
@@ -3374,7 +3374,7 @@ impl<CX> Deref for UseT<CX> {
 
 impl<CX> UseT<CX> {
     pub fn new(inner: UseTInner<CX>) -> Self {
-        UseT(Rc::new(inner))
+        Self(Rc::new(inner))
     }
 
     pub fn ptr_eq(&self, other: &UseT<CX>) -> bool {

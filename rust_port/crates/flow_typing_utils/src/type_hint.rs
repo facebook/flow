@@ -505,10 +505,8 @@ fn instantiate_callee<'cx>(
                         class_reason.dupe(),
                         statics_id as u32,
                     )));
-                    let use_t = UseT::new(UseTInner::GetStaticsT(Box::new(Tvar::new(
-                        class_reason.dupe(),
-                        statics_id as u32,
-                    ))));
+                    let statics_tvar = Tvar::new(class_reason.dupe(), statics_id as u32);
+                    let use_t = UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar)));
                     flow_js::flow(cx, (instance, &use_t))?;
                     let resolved = get_t(cx, statics);
                     handle_poly(

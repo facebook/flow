@@ -2763,7 +2763,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::UnionT(_, _),
             UseTInner::SealGenericT(box SealGenericTData {
-                reason: _,
+                loc: _,
                 id,
                 name,
                 cont,
@@ -3254,7 +3254,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::IntersectionT(_, _),
             UseTInner::SealGenericT(box SealGenericTData {
-                reason: _,
+                loc: _,
                 id,
                 name,
                 cont,
@@ -7662,7 +7662,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::NominalT { .. },
             UseTInner::SealGenericT(box SealGenericTData {
-                reason: _,
+                loc: _,
                 id,
                 name,
                 cont,
@@ -7686,7 +7686,7 @@ fn __flow_impl<'cx>(
                 ..
             },
             UseTInner::CondT(box CondTData {
-                reason: r,
+                loc,
                 opt_type: then_t_opt,
                 true_t: else_t,
                 false_t: tout,
@@ -7703,7 +7703,7 @@ fn __flow_impl<'cx>(
                 (
                     t,
                     &UseT::new(UseTInner::CondT(Box::new(CondTData {
-                        reason: r.dupe(),
+                        loc: loc.dupe(),
                         opt_type: new_then_t_opt,
                         true_t: else_t.dupe(),
                         false_t: tout.dupe(),
@@ -8469,7 +8469,7 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(_, def_t),
             UseTInner::CondT(box CondTData {
-                reason: _,
+                loc: _,
                 opt_type: _,
                 true_t: else_t,
                 false_t: tout,
@@ -8481,7 +8481,7 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::CondT(box CondTData {
-                reason: _,
+                loc: _,
                 opt_type: then_t_opt,
                 true_t: _,
                 false_t: tout,
@@ -8523,7 +8523,7 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::SealGenericT(box SealGenericTData {
-                reason: _,
+                loc: _,
                 id,
                 name,
                 cont,
@@ -10012,7 +10012,10 @@ fn __flow_impl<'cx>(
                 cx,
                 ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                     lower: (lower_reason, flow_js_utils::error_message_kind_of_lower(l)),
-                    upper: flow_js_utils::incompatible_upper_of_use(u),
+                    upper: IncompatibleUpperData {
+                        loc: flow_js_utils::error_message_loc_of_upper(u),
+                        kind: flow_js_utils::error_message_kind_of_upper(u),
+                    },
                     use_op,
                 })),
             )?;

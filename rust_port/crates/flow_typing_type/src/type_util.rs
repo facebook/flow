@@ -912,14 +912,14 @@ pub fn util_use_op_of_use_t<T, CX>(
             })
         }
         UseTInner::GetEnumT(data) => {
-            let reason = data.reason.dupe();
+            let loc = data.loc.dupe();
             let orig_t = data.orig_t.dupe();
             let kind = data.kind.clone();
             let tout = data.tout.clone();
             call_util(&data.use_op, &move |use_op| {
                 UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
                     use_op,
-                    reason: reason.dupe(),
+                    loc: loc.dupe(),
                     orig_t: orig_t.dupe(),
                     kind: kind.clone(),
                     tout: tout.clone(),

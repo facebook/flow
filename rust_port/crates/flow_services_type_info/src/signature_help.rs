@@ -647,16 +647,17 @@ pub mod callee_finder {
                                         Name::new("constructor"),
                                     );
                                     let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                                    use_op: unknown_use(),
-                                    reason: ctor_reason.dupe(),
-                                    prop_reason: ctor_reason.dupe(),
-                                    propref: Box::new(propref),
-                                    method_action: Box::new(
-                                        flow_typing_type::type_::MethodAction::NoMethodAction(
-                                            t_out.dupe(),
-                                        ),
-                                    ),
-                                })));
+                                            use_op: unknown_use(),
+                                            reason: ctor_reason.dupe(),
+                                            prop_reason: ctor_reason.dupe(),
+                                            propref: Box::new(propref),
+                                            method_action: Box::new(
+                                                flow_typing_type::type_::MethodAction::NoMethodAction(
+                                                    t_out.dupe(),
+                                                ),
+                                            ),
+                                        })),
+                                    );
                                     flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
                                     Ok(())
                                 },

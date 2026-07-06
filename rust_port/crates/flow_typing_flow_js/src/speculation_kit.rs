@@ -642,7 +642,7 @@ where
                     }
                     _ => {
                         let use_op = type_util::use_op_of_use_t(upper);
-                        let loc = flow_js_utils::incompatible_upper_of_use(upper).loc;
+                        let loc = flow_js_utils::error_message_loc_of_upper(upper);
                         ErrorMessage::EIncompatibleSpeculation(Box::new(
                             EIncompatibleSpeculationData {
                                 use_op,

@@ -557,7 +557,7 @@ fn props_to_tout<'cx>(
                     cx,
                     trace,
                     config,
-                    &UseT::new(UseTInner::ConvertEmptyPropsToMixedT(r.dupe(), tout)),
+                    &UseT::new(UseTInner::ConvertEmptyPropsToMixedT(r.loc().dupe(), tout)),
                 )?;
                 Ok(())
             }
