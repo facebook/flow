@@ -163,9 +163,9 @@ pub struct Env {
     /// package.json files
     pub package_json_files: FlowOrdSet<FileKey>,
     /// The lib files, in their merge order
-    pub ordered_libs: Vec<(Option<FlowSmolStr>, FlowSmolStr)>,
+    pub ordered_libs: Arc<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
     /// The lib files as a set
-    pub all_unordered_libs: BTreeSet<FlowSmolStr>,
+    pub all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     /// The files which didn't parse (skipped or errored)
     pub unparsed: FlowOrdSet<FileKey>,
     pub errors: Arc<EnvCell<Errors>>,
@@ -271,13 +271,15 @@ impl EnvTransaction {
     }
 
     pub fn ordered_libs(&self) -> &[(Option<FlowSmolStr>, FlowSmolStr)] {
-        self.ordered_libs.as_ref().unwrap_or(&self.env.ordered_libs)
+        self.ordered_libs
+            .as_ref()
+            .map_or(self.env.ordered_libs.as_slice(), |libs| libs.as_slice())
     }
 
     pub fn all_unordered_libs(&self) -> &BTreeSet<FlowSmolStr> {
         self.all_unordered_libs
             .as_ref()
-            .unwrap_or(&self.env.all_unordered_libs)
+            .map_or(self.env.all_unordered_libs.as_ref(), |libs| libs)
     }
 
     pub fn unparsed(&self) -> &FlowOrdSet<FileKey> {
@@ -429,15 +431,18 @@ impl EnvTransaction {
                 checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
                 package_json_files: package_json_files
                     .unwrap_or_else(|| env.package_json_files.dupe()),
-                ordered_libs: ordered_libs.unwrap_or_else(|| env.ordered_libs.clone()),
+                ordered_libs: ordered_libs
+                    .map(Arc::new)
+                    .unwrap_or_else(|| env.ordered_libs.dupe()),
                 all_unordered_libs: all_unordered_libs
-                    .unwrap_or_else(|| env.all_unordered_libs.clone()),
+                    .map(Arc::new)
+                    .unwrap_or_else(|| env.all_unordered_libs.dupe()),
                 unparsed: unparsed.unwrap_or_else(|| env.unparsed.dupe()),
                 errors: env.errors.dupe(),
                 coverage: env.coverage.dupe(),
                 collated_errors: env.collated_errors.dupe(),
-                connections: connections.unwrap_or_else(|| env.connections.clone()),
-                exports: exports.unwrap_or_else(|| env.exports.clone()),
+                connections: connections.unwrap_or_else(|| env.connections.dupe()),
+                exports: exports.unwrap_or_else(|| env.exports.dupe()),
                 master_cx: master_cx.unwrap_or_else(|| env.master_cx.dupe()),
             })
         } else {
@@ -483,15 +488,18 @@ impl EnvTransaction {
             dependency_info: env.dependency_info.dupe(),
             checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
             package_json_files: package_json_files.unwrap_or_else(|| env.package_json_files.dupe()),
-            ordered_libs: ordered_libs.unwrap_or_else(|| env.ordered_libs.clone()),
+            ordered_libs: ordered_libs
+                .map(Arc::new)
+                .unwrap_or_else(|| env.ordered_libs.dupe()),
             all_unordered_libs: all_unordered_libs
-                .unwrap_or_else(|| env.all_unordered_libs.clone()),
+                .map(Arc::new)
+                .unwrap_or_else(|| env.all_unordered_libs.dupe()),
             unparsed: unparsed.unwrap_or_else(|| env.unparsed.dupe()),
             errors: env.errors.dupe(),
             coverage: env.coverage.dupe(),
             collated_errors: env.collated_errors.dupe(),
-            connections: connections.unwrap_or_else(|| env.connections.clone()),
-            exports: exports.unwrap_or_else(|| env.exports.clone()),
+            connections: connections.unwrap_or_else(|| env.connections.dupe()),
+            exports: exports.unwrap_or_else(|| env.exports.dupe()),
             master_cx: master_cx.unwrap_or_else(|| env.master_cx.dupe()),
         }
     }
@@ -534,13 +542,13 @@ mod tests {
             dependency_info: env_cell(DependencyInfo::empty()),
             checked_files: CheckedSet::empty(),
             package_json_files: FlowOrdSet::new(),
-            ordered_libs: Vec::new(),
-            all_unordered_libs: BTreeSet::new(),
+            ordered_libs: Arc::new(Vec::new()),
+            all_unordered_libs: Arc::new(BTreeSet::new()),
             unparsed: FlowOrdSet::new(),
             errors: env_cell(empty_errors()),
             coverage: env_cell(BTreeMap::new()),
             collated_errors: env_cell(CollatedErrors::empty()),
-            connections: PersistentConnection(Vec::new()),
+            connections: PersistentConnection(Arc::new(Vec::new())),
             exports: None,
             master_cx: Arc::new(MasterContext::EmptyMasterContext),
         })
@@ -606,10 +614,10 @@ mod tests {
         transaction.set_files(files);
         let env = Arc::new(transaction.into_env());
 
-        let committed = with_connections(env.dupe(), PersistentConnection(vec![42]));
+        let committed = with_connections(env.dupe(), PersistentConnection(Arc::new(vec![42])));
 
-        assert_eq!(env.connections.0, Vec::<i32>::new());
-        assert_eq!(committed.connections.0, vec![42]);
+        assert_eq!(env.connections.0.as_ref(), &Vec::<i32>::new());
+        assert_eq!(committed.connections.0.as_ref(), &vec![42]);
         assert_eq!(committed.files.len(), 1);
     }
 

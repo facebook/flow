@@ -24,7 +24,7 @@ use crate::export_search_types::SearchResults;
 use crate::fuzzy_path;
 use crate::fuzzy_path::FuzzyPath;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Dupe)]
 pub struct ExportSearch {
     index: ExportIndex,
     value_matcher: Arc<Mutex<FuzzyPath>>,
@@ -128,8 +128,8 @@ pub fn merge_available_exports(
         .add_candidates(types);
     ExportSearch {
         index,
-        value_matcher: search.value_matcher.clone(),
-        type_matcher: search.type_matcher.clone(),
+        value_matcher: search.value_matcher.dupe(),
+        type_matcher: search.type_matcher.dupe(),
     }
 }
 
@@ -137,8 +137,8 @@ pub fn subtract_count(removed_imports: &ExportIndex, search: &ExportSearch) -> E
     let index = export_index::subtract_count(removed_imports, &search.index);
     ExportSearch {
         index,
-        value_matcher: search.value_matcher.clone(),
-        type_matcher: search.type_matcher.clone(),
+        value_matcher: search.value_matcher.dupe(),
+        type_matcher: search.type_matcher.dupe(),
     }
 }
 
@@ -147,8 +147,8 @@ pub fn merge_export_import(new_index: &ExportIndex, search: &ExportSearch) -> Ex
     let index = export_index::merge_export_import(new_index, &search.index);
     ExportSearch {
         index,
-        value_matcher: search.value_matcher.clone(),
-        type_matcher: search.type_matcher.clone(),
+        value_matcher: search.value_matcher.dupe(),
+        type_matcher: search.type_matcher.dupe(),
     }
 }
 

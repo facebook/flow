@@ -2285,7 +2285,7 @@ pub fn make_next_files(
     mut send_chunked: impl FnMut(Vec<FileKey>),
 ) {
     let file_opts_for_convert = file_options.dupe();
-    let libs_for_convert = all_unordered_libs.clone();
+    let libs_for_convert = all_unordered_libs.dupe();
     files::make_next_files(
         root,
         None,
@@ -2330,8 +2330,8 @@ fn mk_env(
         dependency_info: env_cell(dependency_info),
         checked_files: CheckedSet::empty(),
         package_json_files,
-        ordered_libs,
-        all_unordered_libs,
+        ordered_libs: Arc::new(ordered_libs),
+        all_unordered_libs: Arc::new(all_unordered_libs),
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
         collated_errors: env_cell(collated_errors),
@@ -2842,22 +2842,24 @@ fn init_with_initial_state(
         dependency_info,
         checked_files: CheckedSet::empty(),
         package_json_files,
-        ordered_libs: ordered_libs
-            .into_iter()
-            .map(|(opt, s)| {
-                (
-                    opt.map(|o| FlowSmolStr::from(o.as_str())),
-                    FlowSmolStr::from(s.as_str()),
-                )
-            })
-            .collect(),
-        all_unordered_libs: all_unordered_libs_set,
+        ordered_libs: Arc::new(
+            ordered_libs
+                .into_iter()
+                .map(|(opt, s)| {
+                    (
+                        opt.map(|o| FlowSmolStr::from(o.as_str())),
+                        FlowSmolStr::from(s.as_str()),
+                    )
+                })
+                .collect(),
+        ),
+        all_unordered_libs: Arc::new(all_unordered_libs_set),
         unparsed,
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
         collated_errors: env_cell(collated_errors),
         connections: env
-            .map(|env| env.connections.clone())
+            .map(|env| env.connections.dupe())
             .unwrap_or_else(flow_server_env::persistent_connection::empty),
         exports,
         master_cx,
@@ -3216,7 +3218,7 @@ pub fn init_from_scratch(
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);
 
-        let all_libs_for_thread = all_unordered_libs.clone();
+        let all_libs_for_thread = all_unordered_libs.dupe();
         let handle = std::thread::spawn(move || {
             make_next_files(&root_buf, file_opts, true, all_libs_for_thread, |files| {
                 sender.send(files).unwrap();

@@ -18,6 +18,7 @@ use std::sync::Mutex;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
 
+use dupe::Dupe;
 use flow_common_exit_status::FlowExitStatus;
 use flow_common_utils::filename_cache;
 use lsp_types::InitializeParams;
@@ -131,8 +132,8 @@ struct RegistryEntry {
     cache_invalidations: VecDeque<CacheInvalidation>,
 }
 
-#[derive(Debug, Clone)]
-pub struct PersistentConnection(pub Vec<Prot::ClientId>);
+#[derive(Debug, Clone, Dupe)]
+pub struct PersistentConnection(pub Arc<Vec<Prot::ClientId>>);
 
 const CACHE_MAX_SIZE: usize = 10;
 const MAX_PENDING_MESSAGES: usize = 1024;
@@ -299,7 +300,7 @@ fn with_registry_mut<R>(
 }
 
 pub fn empty() -> PersistentConnection {
-    PersistentConnection(Vec::new())
+    PersistentConnection(Arc::new(Vec::new()))
 }
 
 pub fn all_clients() -> PersistentConnection {
@@ -309,7 +310,7 @@ pub fn all_clients() -> PersistentConnection {
         .keys()
         .copied()
         .collect::<Vec<_>>();
-    PersistentConnection(clients)
+    PersistentConnection(Arc::new(clients))
 }
 
 pub fn pop_message(client_id: Prot::ClientId) -> Result<Option<Prot::MessageFromServer>, String> {
@@ -541,29 +542,31 @@ pub fn add_client_to_clients(
 ) -> PersistentConnection {
     let mut clients = clients
         .0
-        .into_iter()
+        .iter()
+        .copied()
         .filter(|id| *id != client_id)
         .collect::<Vec<_>>();
     clients.push(client_id);
-    PersistentConnection(clients)
+    PersistentConnection(Arc::new(clients))
 }
 
 pub fn remove_client_from_clients(
     clients: PersistentConnection,
     client_id: Prot::ClientId,
 ) -> PersistentConnection {
-    PersistentConnection(
+    PersistentConnection(Arc::new(
         clients
             .0
-            .into_iter()
+            .iter()
+            .copied()
             .filter(|id| *id != client_id)
             .collect(),
-    )
+    ))
 }
 
 fn get_subscribed_clients(clients: &PersistentConnection) -> Vec<SingleClientRef> {
     let mut acc = Vec::new();
-    for client_id in &clients.0 {
+    for client_id in clients.0.iter() {
         match get_client(*client_id) {
             Some(client)
                 if with_registry(*client_id, |entry| entry.subscribed).unwrap_or(false) =>
@@ -631,7 +634,7 @@ pub fn send_status(
     watcher_status: file_watcher_status::Status,
     clients: &PersistentConnection,
 ) {
-    for client_id in &clients.0 {
+    for client_id in clients.0.iter() {
         if let Some(client) = get_client(*client_id) {
             send_single_status(status.clone(), watcher_status.clone(), &client);
         }
@@ -639,7 +642,7 @@ pub fn send_status(
 }
 
 pub fn send_server_exit(exit_status: FlowExitStatus, clients: &PersistentConnection) {
-    for client_id in &clients.0 {
+    for client_id in clients.0.iter() {
         if let Some(client) = get_client(*client_id) {
             send_single_server_exit(exit_status, &client);
         }
@@ -647,7 +650,7 @@ pub fn send_server_exit(exit_status: FlowExitStatus, clients: &PersistentConnect
 }
 
 pub fn send_telemetry(telemetry: Prot::TelemetryFromServer, clients: &PersistentConnection) {
-    for client_id in &clients.0 {
+    for client_id in clients.0.iter() {
         if let Some(client) = get_client(*client_id) {
             send_single_telemetry(telemetry.clone(), &client);
         }

@@ -249,7 +249,7 @@ impl FlowServer {
             let connections = {
                 let (lock, _) = &*canceled_state;
                 let server_state = lock.lock().unwrap();
-                server_state.env.as_ref().map(|env| env.connections.clone())
+                server_state.env.as_ref().map(|env| env.connections.dupe())
             };
             if let Some(connections) = connections {
                 persistent_connection::send_status(
@@ -944,14 +944,14 @@ fn remove_persistent_client(
     persistent_connection::remove_client(client_id);
     server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
         let connections =
-            persistent_connection::remove_client_from_clients(env.connections.clone(), client_id);
+            persistent_connection::remove_client_from_clients(env.connections.dupe(), client_id);
         flow_server_env::server_env::with_connections(env, connections)
     }));
     let (lock, cvar) = &**state;
     let mut server_state = lock.lock().unwrap();
     if let Some(env) = server_state.env.take() {
         let connections =
-            persistent_connection::remove_client_from_clients(env.connections.clone(), client_id);
+            persistent_connection::remove_client_from_clients(env.connections.dupe(), client_id);
         server_state.env = Some(flow_server_env::server_env::with_connections(
             env,
             connections,
@@ -1091,12 +1091,12 @@ fn handle_connection(
         }
         server_monitor_listener_state::push_new_env_update(Box::new(move |env| {
             let connections =
-                persistent_connection::add_client_to_clients(env.connections.clone(), client_id);
+                persistent_connection::add_client_to_clients(env.connections.dupe(), client_id);
             flow_server_env::server_env::with_connections(env, connections)
         }));
         if let Some(env) = server_state.env.take() {
             let connections =
-                persistent_connection::add_client_to_clients(env.connections.clone(), client_id);
+                persistent_connection::add_client_to_clients(env.connections.dupe(), client_id);
             server_state.env = Some(flow_server_env::server_env::with_connections(
                 env,
                 connections,
@@ -1117,7 +1117,7 @@ fn handle_connection(
         persistent_connection::send_status(
             status,
             watcher_status,
-            &persistent_connection::PersistentConnection(vec![client_id]),
+            &persistent_connection::PersistentConnection(Arc::new(vec![client_id])),
         );
 
         loop {
