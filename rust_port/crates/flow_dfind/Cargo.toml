@@ -15,4 +15,4 @@ tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
 tracing = { version = "0.1.41", features = ["attributes", "valuable"] }
 
 [dev-dependencies]
-ctor = "1.0.7"
+ctor = "1.0.8"
