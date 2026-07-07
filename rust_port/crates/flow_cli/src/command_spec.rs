@@ -30,6 +30,8 @@ pub mod arg_spec {
         Truthy,
         NoArg,
         Arg,
+        // A flag that may be repeated; each occurrence contributes one value, accumulated in order.
+        ArgRepeated,
         ArgList,
         ArgRest,
         ArgCommand,
@@ -283,41 +285,66 @@ pub mod arg_spec {
         })
     }
 
+    // Split one `KEY<delim>VALUE` token and parse each side. A token with no delimiter yields a key
+    // and no value (the value type decides whether that is allowed). Shared by `key_value` and
+    // `repeated_key_value` so the two can't drift.
+    fn parse_key_value<K, V>(
+        name: &str,
+        delim: &str,
+        key_type: &FlagType<Option<K>>,
+        value_type: &FlagType<V>,
+        token: &str,
+    ) -> Result<(K, V), FailedToParse> {
+        let (key_str, val_input) = match token.split_once(delim) {
+            Some((key, value)) => (key.to_string(), Some(vec![value.to_string()])),
+            None => (token.to_string(), None),
+        };
+        let key = match key_type.parse(name, Some(std::slice::from_ref(&key_str)))? {
+            None => {
+                return Err(FailedToParse {
+                    arg: name.to_string(),
+                    msg: "Invalid argument".to_string(),
+                    details: Some(format!("wrong type for key: {}", key_str)),
+                });
+            }
+            Some(result) => result,
+        };
+        let value = value_type.parse(name, val_input.as_deref())?;
+        Ok((key, value))
+    }
+
     pub fn key_value<K: Send + Sync + 'static, V: Send + Sync + 'static>(
         delim: &'static str,
         key_type: FlagType<Option<K>>,
         value_type: FlagType<V>,
     ) -> FlagType<Option<(K, V)>> {
-        FlagType::new(FlagArgCount::Arg, move |name, value| {
-            Ok(match value {
-                Some([x]) => {
-                    let (key_str, val_input) =
-                        match x.splitn(2, delim).collect::<Vec<_>>().as_slice() {
-                            [key, value] => (key.to_string(), Some(vec![value.to_string()])),
-                            [key] => (key.to_string(), None),
-                            _ => {
-                                return Err(FailedToParse {
-                                    arg: name.to_string(),
-                                    msg: "Unexpected value".to_string(),
-                                    details: Some(format!("got {}", x)),
-                                });
-                            }
-                        };
-                    let key = match key_type.parse(name, Some(std::slice::from_ref(&key_str)))? {
-                        None => {
-                            return Err(FailedToParse {
-                                arg: name.to_string(),
-                                msg: "Invalid argument".to_string(),
-                                details: Some(format!("wrong type for key: {}", key_str)),
-                            });
-                        }
-                        Some(result) => result,
-                    };
-                    let value = value_type.parse(name, val_input.as_deref())?;
-                    Some((key, value))
-                }
-                _ => None,
-            })
+        FlagType::new(FlagArgCount::Arg, move |name, value| match value {
+            Some([x]) => Ok(Some(parse_key_value(
+                name,
+                delim,
+                &key_type,
+                &value_type,
+                x,
+            )?)),
+            _ => Ok(None),
+        })
+    }
+
+    // Like `key_value`, but the flag may be repeated: each occurrence is one `KEY<delim>VALUE` pair,
+    // and the pairs accumulate in the order given.
+    pub fn repeated_key_value<K: Send + Sync + 'static, V: Send + Sync + 'static>(
+        delim: &'static str,
+        key_type: FlagType<Option<K>>,
+        value_type: FlagType<V>,
+    ) -> FlagType<Option<Vec<(K, V)>>> {
+        FlagType::new(FlagArgCount::ArgRepeated, move |name, value| match value {
+            Some(tokens) => Ok(Some(
+                tokens
+                    .iter()
+                    .map(|token| parse_key_value(name, delim, &key_type, &value_type, token))
+                    .collect::<Result<Vec<_>, _>>()?,
+            )),
+            None => Ok(None),
         })
     }
 
@@ -543,6 +570,28 @@ fn parse_flag(
                 parse(values, spec, anon_index, rest)
             }
         },
+        arg_spec::FlagArgCount::ArgRepeated => match args {
+            [] => Err(FailedToParse {
+                arg: arg.to_string(),
+                msg: "Option needs an argument".to_string(),
+                details: None,
+            }),
+            [value, rest @ ..] => {
+                if is_arg(value) {
+                    return Err(FailedToParse {
+                        arg: arg.to_string(),
+                        msg: "Option needs an argument".to_string(),
+                        details: None,
+                    });
+                }
+                // Accumulate, rather than overwrite, so a repeated flag keeps every occurrence.
+                values
+                    .entry(arg.to_string())
+                    .or_default()
+                    .push(value.clone());
+                parse(values, spec, anon_index, rest)
+            }
+        },
         arg_spec::FlagArgCount::ArgList => {
             let (value_list, remaining) = consume_args(args);
             values.insert(arg.to_string(), value_list);
@@ -617,6 +666,7 @@ fn parse_anon(
         Some((_, arg_spec::FlagArgCount::Truthy)) => unreachable!(),
         Some((_, arg_spec::FlagArgCount::NoArg)) => unreachable!(),
         Some((_, arg_spec::FlagArgCount::MaybeArg)) => unreachable!(),
+        Some((_, arg_spec::FlagArgCount::ArgRepeated)) => unreachable!(),
         None => Err(FailedToParse {
             arg: arg.to_string(),
             msg: "Unexpected argument".to_string(),
@@ -796,4 +846,73 @@ pub(crate) fn error_message(error: &FailedToParse) -> String {
         write!(message, " ({details})").unwrap();
     }
     message
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Spec;
+    use super::Visibility;
+    use super::arg_spec;
+    use super::get;
+    use super::parse_argv;
+
+    fn kv_flag() -> arg_spec::FlagType<Option<Vec<(String, Option<String>)>>> {
+        arg_spec::repeated_key_value("=", arg_spec::string(), arg_spec::string())
+    }
+
+    fn kv_spec() -> Spec {
+        Spec::new("t", "", Visibility::Internal, String::new()).flag("--kv", &kv_flag(), "", None)
+    }
+
+    fn argv(parts: &[&str]) -> Vec<String> {
+        parts.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn repeated_flag_accumulates_each_occurrence() {
+        let spec = kv_spec();
+        let values = parse_argv(&spec, &argv(&["--kv", "a=1", "--kv", "b=2"])).expect("parses");
+        let pairs = get(&values, "--kv", &kv_flag())
+            .expect("gets")
+            .expect("present");
+        assert_eq!(
+            pairs,
+            vec![
+                ("a".to_string(), Some("1".to_string())),
+                ("b".to_string(), Some("2".to_string())),
+            ]
+        );
+    }
+
+    #[test]
+    fn repeated_flag_absent_is_none() {
+        let spec = kv_spec();
+        let values = parse_argv(&spec, &argv(&[])).expect("parses");
+        assert_eq!(get(&values, "--kv", &kv_flag()).expect("gets"), None);
+    }
+
+    #[test]
+    fn repeated_flag_bare_key_has_no_value() {
+        let spec = kv_spec();
+        let values = parse_argv(&spec, &argv(&["--kv", "a"])).expect("parses");
+        let pairs = get(&values, "--kv", &kv_flag())
+            .expect("gets")
+            .expect("present");
+        assert_eq!(pairs, vec![("a".to_string(), None)]);
+    }
+
+    #[test]
+    fn repeated_flag_missing_argument_errors() {
+        // A trailing `--kv` has no token to consume as its value.
+        let spec = kv_spec();
+        assert!(parse_argv(&spec, &argv(&["--kv"])).is_err());
+    }
+
+    #[test]
+    fn repeated_flag_value_looking_like_a_flag_errors() {
+        // The following token is itself a flag, so `--kv` is missing its argument rather than
+        // silently swallowing `--other`.
+        let spec = kv_spec();
+        assert!(parse_argv(&spec, &argv(&["--kv", "--other"])).is_err());
+    }
 }

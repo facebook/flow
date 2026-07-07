@@ -5,10 +5,6 @@ name = "flow_cli_support"
 version = "0.0.0"
 edition = "2024"
 
-[lib]
-test = false
-doctest = false
-
 [[bin]]
 name = "flow_cli"
 path = "src/main.rs"
