@@ -5,10 +5,6 @@ name = "flow_server_monitor"
 version = "0.0.0"
 edition = "2024"
 
-[lib]
-test = false
-doctest = false
-
 [dependencies]
 bincode = { version = "2", features = ["serde"] }
 crossbeam = "0.8"
