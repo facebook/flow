@@ -223,8 +223,7 @@ declare module 'prettier' {
     locStart: (node: T) => number,
     locEnd: (node: T) => number,
     preprocess?:
-      | ((text: string, options: PrettierParserOptions<T>) => string)
-      | void,
+      ((text: string, options: PrettierParserOptions<T>) => string) | void,
   };
 
   declare export type Printer<T = any> = {

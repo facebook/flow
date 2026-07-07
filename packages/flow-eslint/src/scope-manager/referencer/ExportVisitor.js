@@ -22,9 +22,7 @@ import type {Referencer} from './Referencer';
 import {Visitor} from './Visitor';
 
 type ExportNode =
-  | ExportAllDeclaration
-  | ExportDefaultDeclaration
-  | ExportNamedDeclaration;
+  ExportAllDeclaration | ExportDefaultDeclaration | ExportNamedDeclaration;
 
 class ExportVisitor extends Visitor {
   +_referencer: Referencer;

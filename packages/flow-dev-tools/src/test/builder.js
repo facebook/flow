@@ -35,7 +35,8 @@ import type {AllInvocations} from './ShellMocker';
 
 type CancellationToken = {
   +isCancellationRequested: boolean,
-  onCancellationRequested(callback: () => any): void, ...
+  onCancellationRequested(callback: () => any): void,
+  ...
 };
 
 class TestBuilder {
@@ -54,7 +55,8 @@ class TestBuilder {
     >,
     outstandingRequestsInfo: {nextId: number, mostRecent: ?number, ...},
     stderr: Array<string>,
-    messageEmitter: EventEmitter, ...
+    messageEmitter: EventEmitter,
+    ...
   } = null;
   lspMessages: Array<LSPMessage>; // this should outlive the death of the lsp+server in a step
   lspEmitter: EventEmitter;

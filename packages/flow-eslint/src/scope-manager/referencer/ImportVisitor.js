@@ -40,9 +40,7 @@ class ImportVisitor extends Visitor {
   visitImport(
     id: Identifier,
     specifier:
-      | ImportDefaultSpecifier
-      | ImportNamespaceSpecifier
-      | ImportSpecifier,
+      ImportDefaultSpecifier | ImportNamespaceSpecifier | ImportSpecifier,
   ): void {
     this._referencer
       .currentScope()

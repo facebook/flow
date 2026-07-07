@@ -43,12 +43,7 @@ export const InterceptDiagnosticsMiddleware: lsp.Middleware = {
 };
 
 type AnsiStyleType =
-  | 'normal'
-  | 'bold'
-  | 'dim'
-  | 'underline'
-  | 'bold-underline'
-  | 'dim-underline';
+  'normal' | 'bold' | 'dim' | 'underline' | 'bold-underline' | 'dim-underline';
 
 type AnsiColor =
   | 'default'

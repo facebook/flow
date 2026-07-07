@@ -68,11 +68,9 @@ class FunctionScope extends ScopeBase<
 
     // It's invalid resolution in the following case:
     return !(
-      (
-        variable.scope === this &&
-        ref.identifier.range[0] < bodyStart && // the reference is in the parameter part.
-        variable.defs.every(d => d.name.range[0] >= bodyStart)
-      ) // the variable is in the body.
+      variable.scope === this &&
+      ref.identifier.range[0] < bodyStart && // the reference is in the parameter part.
+      variable.defs.every(d => d.name.range[0] >= bodyStart) // the variable is in the body.
     );
   }
 }

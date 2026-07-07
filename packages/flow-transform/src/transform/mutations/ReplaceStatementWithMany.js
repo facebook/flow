@@ -20,8 +20,7 @@ import {InvalidReplacementError} from '../Errors';
 import * as t from '../../generated/node-types';
 
 export type ReplaceStatementWithManyMutationNodes =
-  | ModuleDeclaration
-  | Statement;
+  ModuleDeclaration | Statement;
 export type ReplaceStatementWithManyMutation = Readonly<{
   type: 'replaceStatementWithMany',
   target: ReplaceStatementWithManyMutationNodes,
