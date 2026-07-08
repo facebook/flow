@@ -45,6 +45,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_utils_concurrency::lock::Mutex;
 use flow_utils_concurrency::map_reduce::Bucket;
+use flow_utils_concurrency::worker_cancel;
 use vec1::Vec1;
 
 pub struct Component(pub Arc<Vec1<FileKey>>);
@@ -187,6 +188,14 @@ impl<A> MergeStream<A> {
     }
 
     pub fn next(&self) -> Bucket<Component> {
+        // A worker can observe cancellation after taking ready components but
+        // before merging them, which leaves their dependents permanently
+        // blocked. OCaml's Lwt cancellation unwound the whole merge in that
+        // state; the Rust producer must also stop instead of returning Wait.
+        if worker_cancel::should_cancel() {
+            return Bucket::Done;
+        }
+
         let n = self.bucket_size();
         let mut batch = Vec::new();
         let mut size_taken = 0;
@@ -318,5 +327,55 @@ impl<A> MergeStream<A> {
         for dependent in dependents.values() {
             self.unblock(false, dependent);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Mutex;
+
+    use flow_utils_concurrency::map_reduce::Bucket;
+    use flow_utils_concurrency::worker_cancel;
+    use vec1::Vec1;
+
+    use super::MergeStream;
+    use crate::dep_graph_test_utils::make_dependency_graph;
+    use crate::dep_graph_test_utils::make_fake_file_key;
+    use crate::dep_graph_test_utils::make_filename_set;
+
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn component(file: &str) -> Vec1<flow_parser::file_key::FileKey> {
+        Vec1::try_from_vec(vec![make_fake_file_key(file)])
+            .expect("test component should be non-empty")
+    }
+
+    #[test]
+    fn canceled_stream_does_not_wait_on_blocked_components() {
+        let _lock = TEST_LOCK.lock().expect("test lock should not be poisoned");
+        worker_cancel::resume_workers();
+
+        let graph = make_dependency_graph(&[("a", vec!["b"]), ("b", vec![])]);
+        let stream = MergeStream::<()>::new(
+            1,
+            &graph,
+            vec![component("a"), component("b")],
+            &make_filename_set(&["a", "b"]),
+        );
+
+        match stream.next() {
+            Bucket::Job(batch) => assert_eq!(batch.len(), 1),
+            Bucket::Wait => panic!("first ready component should be schedulable"),
+            Bucket::Done => panic!("stream should not be done before taking ready work"),
+        }
+
+        worker_cancel::stop_workers();
+        match stream.next() {
+            Bucket::Done => {}
+            Bucket::Job(_) => panic!("canceled stream should not schedule more merge work"),
+            Bucket::Wait => panic!("canceled stream should not wait for blocked components"),
+        }
+
+        worker_cancel::resume_workers();
     }
 }
