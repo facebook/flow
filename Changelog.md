@@ -1,3 +1,10 @@
+### 0.322.0
+
+Notable bug fixes:
+* Fixed https://github.com/facebook/flow/issues/9448
+* Fixed a crash in pattern matching. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgRgiW8cGgAAIRnp8AghFQ2Pg0nAJIUsNJ-vg0BA2LQABQlXDIPmJFLpKAASk1RQgcDYfOAAB0oHy+eEFvk+WruHqzZbrdaAOQwYjuvlwGAOgCC1DomnxQZoqvVeudAF4AHxmvkAeiTfJI+QgQlwptSEj5YBo6ddbutLAkQkoUAA3MXrcza3z8Hz42b61a+W22zEQEVlCReVBAkUAAyaADMACYAIyaYcgZlAA))
+* Refining a union by `instanceof` no longer leaks `any` from members that cannot match the guard (e.g. `Foo<string> | Bar<number>` refined by `instanceof Foo` now yields `Foo<string>` instead of `Foo<string> | Foo<any>`). This may surface real errors that were previously masked.
+
 ### 0.321.0
 
 Parser:
