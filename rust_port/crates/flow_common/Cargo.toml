@@ -15,7 +15,7 @@ flow_lint_settings = { path = "../flow_lint_settings" }
 flow_packed_locs = { path = "../flow_packed_locs" }
 flow_parser = { path = "../flow_parser" }
 jwalk = "0.8.1"
-regex = "1.12.4"
+regex = "1.13.0"
 rustix = { version = "1.1.4", features = ["event", "fs", "mm", "mount", "net", "pipe", "process", "thread", "time", "use-libc"] }
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

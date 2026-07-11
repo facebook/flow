@@ -26,5 +26,5 @@ flow_typing_spread_cache = { path = "../flow_typing_spread_cache" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 flow_utils_union_find = { path = "../flow_utils_union_find" }
-regex = "1.12.4"
+regex = "1.13.0"
 vec1 = { version = "1.12.1", features = ["serde"] }
