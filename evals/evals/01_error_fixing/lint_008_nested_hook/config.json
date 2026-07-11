@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "lint_008_nested_hook",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "nested-hook",
+      "react",
+      "hook_syntax"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      }
+    ]
+  }
+}

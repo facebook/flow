@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "name": "match_020_maybe_type",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "maybe_type",
+      "null",
+      "undefined",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchLiteralPattern\" and .literal.raw == \"null\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchIdentifierPattern\" and .id.name == \"undefined\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

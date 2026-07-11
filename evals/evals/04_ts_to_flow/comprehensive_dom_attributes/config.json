@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "comprehensive_dom_attributes",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "react",
+      "component_syntax",
+      "synthetic_events",
+      "dom_attributes"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      }
+    ]
+  }
+}

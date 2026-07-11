@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "react_element_basic",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "react",
+      "component_syntax",
+      "react_node",
+      "element_types"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      }
+    ]
+  }
+}

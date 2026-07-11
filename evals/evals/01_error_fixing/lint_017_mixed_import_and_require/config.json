@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "lint_017_mixed_import_and_require",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "mixed-import-and-require",
+      "strict-es6-import-export"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

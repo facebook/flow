@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "as_const_assertions",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "as_const",
+      "literal_types",
+      "keyof",
+      "indexed_access"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "AsConstExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "KeyofTypeAnnotation"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "IndexedAccessType"
+      }
+    ]
+  }
+}

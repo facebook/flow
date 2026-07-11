@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "lint_011_react_intrinsic_overlap",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "react-intrinsic-overlap",
+      "react"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

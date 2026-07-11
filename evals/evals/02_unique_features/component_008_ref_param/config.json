@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_008_ref_param",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "ref",
+      "forwardRef"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ComponentParameter\" and .name.name == \"ref\""
+      }
+    ]
+  }
+}

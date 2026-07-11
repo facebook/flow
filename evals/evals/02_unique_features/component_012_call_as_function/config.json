@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "component_012_call_as_function",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "rules_for_components",
+      "react_rule_call_component"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"JSXOpeningElement\" and .name.name == \"Avatar\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.name == \"Avatar\"",
+        "negate": true
+      }
+    ]
+  }
+}

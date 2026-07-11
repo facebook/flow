@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "lint_005_unnecessary_invariant",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unnecessary-invariant"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.name == \"invariant\""
+      }
+    ]
+  }
+}

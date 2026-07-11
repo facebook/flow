@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "enum_002_number_enum_switch",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "number_enum",
+      "exhaustive_switch",
+      "representation_cast"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumNumberMember"
+      }
+    ]
+  }
+}

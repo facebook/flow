@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "void_vs_undefined",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "void",
+      "undefined",
+      "maybe_types"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

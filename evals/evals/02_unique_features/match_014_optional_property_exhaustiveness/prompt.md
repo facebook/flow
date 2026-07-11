@@ -1,0 +1,1 @@
+Write a Flow function `describeConfig(config: Config): string` using a `match` expression that returns a description for every possible configuration, including when the optional `debug` property is not set.

@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "name": "match_016_const_shorthand_inexact",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "const_shorthand",
+      "inexact",
+      "object_pattern",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchBindingPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchRestPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

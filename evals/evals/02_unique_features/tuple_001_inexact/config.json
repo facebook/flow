@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "name": "tuple_001_inexact",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "tuples",
+      "inexact_tuples"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TupleTypeAnnotation\" and .inexact == true"
+      }
+    ]
+  }
+}

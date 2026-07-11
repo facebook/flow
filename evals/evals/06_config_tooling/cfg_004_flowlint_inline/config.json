@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "name": "cfg_004_flowlint_inline",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "flowlint",
+      "inline-comments",
+      "lint-severity"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "file_modified",
+        "files": "main.js"
+      },
+      {
+        "type": "no_flowfixme",
+        "files": "main.js"
+      },
+      {
+        "type": "file_contains",
+        "files": "main.js",
+        "pattern": "flowlint[- ].*sketchy-null-string"
+      },
+      {
+        "type": "file_not_modified",
+        "files": ".flowconfig"
+      }
+    ]
+  }
+}

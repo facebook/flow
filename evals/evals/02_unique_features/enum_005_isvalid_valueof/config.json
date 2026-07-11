@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "enum_005_isvalid_valueof",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "isValid",
+      "valueOf"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"isValid\" and .callee?.object?.name == \"Theme\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"valueOf\""
+      }
+    ]
+  }
+}

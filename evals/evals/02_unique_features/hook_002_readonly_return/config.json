@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "hook_002_readonly_return",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "hook",
+      "readonly",
+      "type_checking"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ObjectTypeProperty\" and .key.name == \"entries\" and .value.type == \"GenericTypeAnnotation\" and .value.id.name == \"ReadonlyArray\""
+      }
+    ]
+  }
+}

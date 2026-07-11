@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "opaque_002_module_boundary",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "opaque_type",
+      "nominal",
+      "module_boundary",
+      "cross_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "OpaqueType",
+        "files": ["Email.js"]
+      }
+    ]
+  }
+}

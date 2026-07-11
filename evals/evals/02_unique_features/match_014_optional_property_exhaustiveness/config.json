@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "name": "match_014_optional_property_exhaustiveness",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "optional_properties",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchRestPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

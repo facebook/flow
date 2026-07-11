@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "name": "enum_004_members_getname",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "members",
+      "getName",
+      "iteration"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumNumberMember"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"members\" and .callee?.object?.name == \"LogLevel\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"getName\" and .callee?.object?.name == \"LogLevel\""
+      }
+    ]
+  }
+}

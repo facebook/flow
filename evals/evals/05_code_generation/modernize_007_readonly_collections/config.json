@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "name": "modernize_007_readonly_collections",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "deprecated",
+      "readonly",
+      "collections"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"ReadonlyMap\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"ReadonlySet\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"ReadonlyWeakMap\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"ReadonlyWeakSet\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$ReadOnlyMap\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$ReadOnlySet\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$ReadOnlyWeakMap\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$ReadOnlyWeakSet\"",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "error_009_react_props",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "react",
+      "props",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      }
+    ]
+  }
+}

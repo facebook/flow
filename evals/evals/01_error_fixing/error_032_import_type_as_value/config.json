@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "error_032_import_type_as_value",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "import_type",
+      "type_as_value",
+      "modules",
+      "multi_file"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

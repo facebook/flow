@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "method_unbinding_arrow",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "method_unbinding",
+      "class",
+      "this"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

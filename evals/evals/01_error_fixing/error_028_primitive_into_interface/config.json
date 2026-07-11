@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_028_primitive_into_interface",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "primitive",
+      "iterable",
+      "structural_typing",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

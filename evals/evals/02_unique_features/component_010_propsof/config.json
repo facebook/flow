@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "component_010_propsof",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "propsof"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"QualifiedTypeIdentifier\" and .id.name == \"PropsOf\" and .qualification.name == \"React\""
+      }
+    ]
+  }
+}

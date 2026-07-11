@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "hook_003_hook_type_annotation",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "hook_syntax",
+      "react",
+      "hook_type"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookTypeAnnotation"
+      }
+    ]
+  }
+}

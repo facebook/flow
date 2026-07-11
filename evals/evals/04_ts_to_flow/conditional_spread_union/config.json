@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "conditional_spread_union",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "object_spread",
+      "exponential_spread",
+      "union",
+      "natural_inference"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "flow_check"
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "hook_007_migrate_basic",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "hook_syntax",
+      "react",
+      "migration",
+      "custom_hooks"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

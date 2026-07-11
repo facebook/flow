@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "utility_type_mappings_comprehensive",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "utility_types",
+      "keyof",
+      "indexed_access",
+      "readonly",
+      "partial"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "IndexedAccessType"
+      },
+      {
+        "type": "ast_query",
+        "selector": "GenericTypeAnnotation[id.name=/^\\$/]",
+        "negate": true
+      }
+    ]
+  }
+}

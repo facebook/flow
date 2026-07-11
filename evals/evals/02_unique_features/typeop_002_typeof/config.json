@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "name": "typeop_002_typeof",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_operators",
+      "typeof"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "TypeofTypeAnnotation"
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "cfg_003_flow_strict",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "flow-strict",
+      "pragma",
+      "unclear-type",
+      "sketchy-null"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "file_modified",
+        "files": "main.js"
+      },
+      {
+        "type": "no_any",
+        "files": "main.js"
+      },
+      {
+        "type": "file_contains",
+        "files": "main.js",
+        "pattern": "@flow strict$"
+      }
+    ]
+  }
+}

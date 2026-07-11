@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+unused-promise=error
+
+[strict]
+
+[libs]

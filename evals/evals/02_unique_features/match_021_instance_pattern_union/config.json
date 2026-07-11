@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_021_instance_pattern_union",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "instance_pattern",
+      "classes",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchInstancePattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

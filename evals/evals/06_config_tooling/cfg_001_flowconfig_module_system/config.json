@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "cfg_001_flowconfig_module_system",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "flowconfig",
+      "options",
+      "module-resolution",
+      "haste"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "file_modified",
+        "files": ".flowconfig"
+      },
+      {
+        "type": "file_not_modified",
+        "files": ["main.js", "Discount.js"]
+      }
+    ]
+  }
+}

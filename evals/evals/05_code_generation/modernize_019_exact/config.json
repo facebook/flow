@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_019_exact",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "discouraged",
+      "exact",
+      "object_spread"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ObjectTypeSpreadProperty"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Exact\"",
+        "negate": true
+      }
+    ]
+  }
+}

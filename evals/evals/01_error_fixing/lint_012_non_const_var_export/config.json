@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "lint_012_non_const_var_export",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "non-const-var-export",
+      "strict-es6-import-export"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"VariableDeclaration\" and .kind != \"const\"",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "object_combination_spread",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "object_types",
+      "type_spread",
+      "exact_objects"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ObjectTypeSpreadProperty"
+      }
+    ]
+  }
+}

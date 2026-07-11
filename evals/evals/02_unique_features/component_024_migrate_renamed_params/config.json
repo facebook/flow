@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "component_024_migrate_renamed_params",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "migration",
+      "renamed_params"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ComponentParameter\" and .shorthand == false and .name.type == \"Literal\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

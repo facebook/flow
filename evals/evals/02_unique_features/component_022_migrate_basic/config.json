@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "component_022_migrate_basic",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "migration",
+      "props"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

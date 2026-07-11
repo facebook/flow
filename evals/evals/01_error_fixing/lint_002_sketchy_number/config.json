@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "lint_002_sketchy_number",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "sketchy-number"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

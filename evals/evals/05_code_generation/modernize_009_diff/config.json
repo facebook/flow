@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "modernize_009_diff",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "removed",
+      "omit",
+      "diff"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"Omit\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "KeyofTypeAnnotation"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Diff\"",
+        "negate": true
+      }
+    ]
+  }
+}

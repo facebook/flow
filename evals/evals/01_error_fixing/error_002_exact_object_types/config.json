@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "error_002_exact_object_types",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "exact_objects",
+      "spread"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

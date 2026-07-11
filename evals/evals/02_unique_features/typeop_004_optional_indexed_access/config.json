@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "typeop_004_optional_indexed_access",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_operators",
+      "indexed_access",
+      "optional_indexed_access"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "OptionalIndexedAccessType"
+      }
+    ]
+  }
+}

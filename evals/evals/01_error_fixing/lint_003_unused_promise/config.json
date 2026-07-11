@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "lint_003_unused_promise",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unused-promise"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "AwaitExpression"
+      }
+    ]
+  }
+}

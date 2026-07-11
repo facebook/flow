@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "component_021_import_typeof_generic",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "import_typeof",
+      "generic_components"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ImportDeclaration\" and .importKind == \"typeof\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "ImportNamespaceSpecifier"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "IndexedAccessType"
+      }
+    ]
+  }
+}

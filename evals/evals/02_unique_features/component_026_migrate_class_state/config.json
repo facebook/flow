@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "component_026_migrate_class_state",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "migration",
+      "class_component",
+      "hooks"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "ClassDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

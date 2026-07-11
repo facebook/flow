@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "component_015_this_reference",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "rules_for_components",
+      "this_reference"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ThisExpression\"",
+        "negate": true
+      }
+    ]
+  }
+}

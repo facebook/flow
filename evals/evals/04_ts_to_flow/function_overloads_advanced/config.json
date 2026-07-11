@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "function_overloads_advanced",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "function_overloads",
+      "generics",
+      "keyof",
+      "indexed_access"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "IndexedAccessType"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "DeclareFunction",
+        "negate": true
+      }
+    ]
+  }
+}

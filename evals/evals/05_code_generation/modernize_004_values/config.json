@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "modernize_004_values",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "deprecated",
+      "values"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"Values\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Values\"",
+        "negate": true
+      }
+    ]
+  }
+}

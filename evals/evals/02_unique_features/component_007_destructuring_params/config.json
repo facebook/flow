@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "component_007_destructuring_params",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "destructuring_params"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ComponentParameter\" and .shorthand == false and .local.type == \"ObjectPattern\""
+      }
+    ]
+  }
+}

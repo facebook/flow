@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_030_await_statement_body",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "match_statement",
+      "await",
+      "async",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchStatement"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "AwaitExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

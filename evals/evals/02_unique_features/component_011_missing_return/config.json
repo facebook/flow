@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "component_011_missing_return",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "rules_for_components",
+      "missing_return"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+[options]
+
+[lints]
+
+[strict]
+
+[libs]
+flow-typed

@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "error_019_class_nominal_typing",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "nominal_typing",
+      "interface",
+      "class"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "InterfaceDeclaration"
+      }
+    ]
+  }
+}

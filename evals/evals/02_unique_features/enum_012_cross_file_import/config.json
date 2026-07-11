@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "name": "enum_012_cross_file_import",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "import",
+      "export",
+      "export_type",
+      "cross_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration",
+        "files": ["Status.js"]
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ImportDeclaration\" and .importKind == \"value\" and (.specifiers | any(.type == \"ImportDefaultSpecifier\"))",
+        "files": ["main.js"]
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ExportNamedDeclaration\" and .exportKind == \"type\"",
+        "files": ["main.js"]
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.object?.name == \"Status\" and .callee?.property?.name == \"cast\"",
+        "files": ["main.js"]
+      }
+    ]
+  }
+}

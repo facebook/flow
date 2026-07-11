@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_008_mixed",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "deprecated",
+      "unknown",
+      "mixed"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "UnknownTypeAnnotation"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MixedTypeAnnotation",
+        "negate": true
+      }
+    ]
+  }
+}

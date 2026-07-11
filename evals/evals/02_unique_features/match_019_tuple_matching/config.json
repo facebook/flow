@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "match_019_multi_value",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "multi_value",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

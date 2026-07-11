@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "error_018_generic_context_var",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "generic_context",
+      "invalid_declaration",
+      "error_fixing"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Identifier\" and .name == \"latestPayload\" and .typeAnnotation != null"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "type_guard_001_this",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_guards",
+      "this_type",
+      "refinement"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypePredicate\" and .parameterName?.name == \"this\""
+      }
+    ]
+  }
+}

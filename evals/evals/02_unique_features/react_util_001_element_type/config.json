@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "react_util_001_element_type",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "react",
+      "react_utility_types",
+      "element_type"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".name == \"ElementType\""
+      }
+    ]
+  }
+}

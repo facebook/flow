@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "error_022_implements_object_type",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "class",
+      "implements",
+      "interface"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"InterfaceDeclaration\" and .id.name == \"Cache\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ClassImplements\" and .id.name == \"Cache\""
+      }
+    ]
+  }
+}

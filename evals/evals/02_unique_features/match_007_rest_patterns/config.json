@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "match_007_rest_patterns",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "rest_pattern",
+      "destructuring"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchRestPattern\" and .argument"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

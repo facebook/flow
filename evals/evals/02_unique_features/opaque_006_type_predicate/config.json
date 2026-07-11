@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "opaque_006_type_predicate",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "opaque_type",
+      "type_predicate",
+      "union",
+      "cross_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "OpaqueType",
+        "files": ["Metric.js"]
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "TypePredicate",
+        "files": ["Metric.js"]
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ImportDeclaration\" and .source?.value == \"./Metric\"",
+        "files": ["main.js"]
+      }
+    ]
+  }
+}

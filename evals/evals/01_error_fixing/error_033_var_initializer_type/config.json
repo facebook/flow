@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "error_033_var_initializer_type",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "variable_declaration",
+      "variable_inference",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Identifier\" and .name == \"timeout\" and .typeAnnotation != null"
+      }
+    ]
+  }
+}

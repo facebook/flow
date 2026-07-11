@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_017_renders_optional",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "renders",
+      "react",
+      "renders_optional"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypeOperator\" and .operator == \"renders?\""
+      }
+    ]
+  }
+}

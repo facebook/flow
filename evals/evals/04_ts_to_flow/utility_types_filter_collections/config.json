@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "name": "utility_types_filter_collections",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "utility_types",
+      "exclude",
+      "extract",
+      "readonly_collections"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"Exclude\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"Extract\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"Required\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"Awaited\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"ReadonlyMap\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"ReadonlySet\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"NoInfer\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and (.id.name // \"\" | startswith(\"$\"))",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "flow-evals",
+  "version": "0.0.0",
+  "description": "LLM coding evaluations for the Flow type checker",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "flow": "flow"
+  },
+  "dependencies": {
+    "flow-bin": "^0.322.0"
+  }
+}

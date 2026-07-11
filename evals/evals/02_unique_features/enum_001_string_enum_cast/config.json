@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "enum_001_string_enum_cast",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "string_enum",
+      "cast",
+      "type_annotation"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      }
+    ]
+  }
+}

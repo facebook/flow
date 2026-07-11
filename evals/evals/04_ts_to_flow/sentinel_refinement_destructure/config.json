@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "sentinel_refinement_destructure",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "refinement",
+      "destructuring",
+      "disjoint_union",
+      "match"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "error_029_tuple_spread_optional",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "tuples",
+      "tuple_arity",
+      "optional_elements",
+      "spread"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

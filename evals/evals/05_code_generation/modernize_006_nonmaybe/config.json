@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_006_nonmaybe",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "deprecated",
+      "nonnullable",
+      "nonmaybe"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"NonNullable\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$NonMaybeType\"",
+        "negate": true
+      }
+    ]
+  }
+}

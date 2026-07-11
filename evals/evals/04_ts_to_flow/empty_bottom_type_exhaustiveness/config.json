@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "empty_bottom_type_exhaustiveness",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "empty",
+      "bottom_type",
+      "exhaustiveness"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EmptyTypeAnnotation"
+      }
+    ]
+  }
+}

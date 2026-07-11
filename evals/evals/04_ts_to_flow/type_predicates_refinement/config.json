@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "type_predicates_refinement",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "type_guards",
+      "refinement",
+      "unknown"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "TypePredicate"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_024_method_unbinding",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "method_unbinding",
+      "class",
+      "this"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

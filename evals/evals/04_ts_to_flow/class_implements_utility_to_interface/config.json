@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "class_implements_utility_to_interface",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "class",
+      "implements",
+      "interface",
+      "utility_types"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "InterfaceDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "ClassImplements"
+      }
+    ]
+  }
+}

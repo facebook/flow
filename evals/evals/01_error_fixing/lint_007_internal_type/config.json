@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "lint_007_internal_type",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "internal-type"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id.name == \"React$Node\"",
+        "negate": true
+      }
+    ]
+  }
+}

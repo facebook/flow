@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "asymmetric_subtyping_kinds",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "interface",
+      "class",
+      "nominal_typing"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "InterfaceDeclaration"
+      }
+    ]
+  }
+}

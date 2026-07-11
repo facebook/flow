@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "error_003_unknown_type_refinement",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "unknown",
+      "type_narrowing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

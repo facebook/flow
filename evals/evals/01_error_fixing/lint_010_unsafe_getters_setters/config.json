@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "lint_010_unsafe_getters_setters",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unsafe-getters-setters"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Property\" and (.kind == \"get\" or .kind == \"set\")",
+        "negate": true
+      }
+    ]
+  }
+}

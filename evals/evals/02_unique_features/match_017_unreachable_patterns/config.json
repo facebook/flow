@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "match_017_unreachable_patterns",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "unreachable_patterns",
+      "unused_patterns",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchWildcardPattern",
+        "negate": true
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

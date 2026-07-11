@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "relay_core_01_notification_inbox",
+    "category": "project_patterns",
+    "difficulty": "hard",
+    "tags": ["relay", "useFragment", "usePreloadedQuery", "component-syntax"]
+  },
+  "grading": {
+    "graders": [
+      {"type": "no_flowfixme", "files": ["NotificationInbox.react.js", "NotificationItem.react.js"]},
+      {"type": "no_any", "files": ["NotificationInbox.react.js", "NotificationItem.react.js"]},
+      {"type": "contains_ast_node_type", "query": "ComponentDeclaration", "files": ["NotificationInbox.react.js"]},
+      {"type": "contains_ast_node_type", "query": "ComponentDeclaration", "files": ["NotificationItem.react.js"]}
+    ]
+  }
+}

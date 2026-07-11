@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+unclear-type=error
+
+[strict]
+
+[libs]

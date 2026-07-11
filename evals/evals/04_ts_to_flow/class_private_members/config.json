@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "class_private_members",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "class",
+      "private_fields",
+      "access_modifiers"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "PrivateIdentifier"
+      }
+    ]
+  }
+}

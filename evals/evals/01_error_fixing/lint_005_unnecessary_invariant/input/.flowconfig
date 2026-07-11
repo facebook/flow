@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+unnecessary-invariant=error
+
+[strict]
+
+[libs]

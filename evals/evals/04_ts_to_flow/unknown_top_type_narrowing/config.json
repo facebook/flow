@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "unknown_top_type_narrowing",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "unknown",
+      "top_type",
+      "refinement"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "UnknownTypeAnnotation"
+      }
+    ]
+  }
+}

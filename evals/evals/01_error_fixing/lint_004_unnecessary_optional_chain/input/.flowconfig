@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+unnecessary-optional-chain=error
+
+[strict]
+
+[libs]

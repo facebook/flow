@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "lint_001_sketchy_null",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "sketchy-null"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": "(.type == \"Literal\" and .raw == \"null\") or (.type == \"UnaryExpression\" and .operator == \"typeof\")"
+      }
+    ]
+  }
+}

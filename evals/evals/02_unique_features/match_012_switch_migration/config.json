@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_012_switch_migration",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "migration",
+      "switch",
+      "or_patterns",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchOrPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

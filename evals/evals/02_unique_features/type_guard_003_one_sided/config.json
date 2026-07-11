@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "type_guard_003_one_sided",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_guards",
+      "one_sided_type_guard",
+      "refinement"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypePredicate\" and .kind == \"implies\""
+      }
+    ]
+  }
+}

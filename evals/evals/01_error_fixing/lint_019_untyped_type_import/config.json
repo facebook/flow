@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "lint_019_untyped_type_import",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "untyped-type-import"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

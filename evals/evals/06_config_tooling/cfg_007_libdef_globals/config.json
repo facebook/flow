@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "cfg_007_libdef_globals",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "libdef",
+      "libs",
+      "declare-namespace",
+      "globals",
+      "multi_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "file_modified",
+        "files": ".flowconfig"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "DeclareFunction",
+        "files": "lib/globals.js"
+      },
+      {
+        "type": "file_not_modified",
+        "files": "main.js"
+      }
+    ]
+  }
+}

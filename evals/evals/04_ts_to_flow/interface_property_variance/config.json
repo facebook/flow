@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "interface_property_variance",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "interfaces",
+      "variance",
+      "readonly",
+      "writeonly"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type==\"Variance\" and .kind==\"readonly\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type==\"Variance\" and .kind==\"writeonly\""
+      }
+    ]
+  }
+}

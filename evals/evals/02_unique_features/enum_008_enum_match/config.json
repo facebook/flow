@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "name": "enum_008_enum_match",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "match",
+      "string_enum",
+      "number_enum",
+      "cast"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"EnumDefaultedMember\" or .type == \"EnumStringMember\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumNumberMember"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

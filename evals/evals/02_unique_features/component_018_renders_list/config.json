@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_018_renders_list",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "renders",
+      "react",
+      "renders_list"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypeOperator\" and .operator == \"renders*\""
+      }
+    ]
+  }
+}

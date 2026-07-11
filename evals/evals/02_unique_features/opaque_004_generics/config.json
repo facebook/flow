@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "opaque_004_generics",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "opaque_type",
+      "generics",
+      "phantom_type",
+      "cross_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"OpaqueType\" and .typeParameters != null",
+        "files": ["Id.js"]
+      }
+    ]
+  }
+}

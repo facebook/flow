@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "component_027_migrate_generic",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "migration",
+      "generics"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ComponentDeclaration\" and .typeParameters != null"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

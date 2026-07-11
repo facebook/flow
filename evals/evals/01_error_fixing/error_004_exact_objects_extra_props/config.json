@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "name": "error_004_exact_objects_extra_props",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "exact_objects",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

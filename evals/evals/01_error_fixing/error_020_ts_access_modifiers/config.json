@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "error_020_ts_access_modifiers",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "class",
+      "private_fields",
+      "access_modifiers"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "PrivateIdentifier"
+      }
+    ]
+  }
+}

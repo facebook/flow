@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "object_literal_this",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "object_this_reference",
+      "object_literal",
+      "this"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

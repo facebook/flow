@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "enum_011_string_explicit_values",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "string_enum",
+      "explicit_values",
+      "cast"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumStringMember"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.object?.name == \"EventType\" and .callee?.property?.name == \"cast\""
+      }
+    ]
+  }
+}

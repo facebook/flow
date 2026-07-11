@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "lint_016_invalid_import_star_use",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "invalid-import-star-use",
+      "strict-es6-import-export"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

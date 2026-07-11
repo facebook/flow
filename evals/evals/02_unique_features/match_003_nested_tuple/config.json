@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_003_nested_tuple",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "tuples",
+      "nested_patterns",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchArrayPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

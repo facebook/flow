@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "error_021_class_into_object_type",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "interface",
+      "class",
+      "structural_typing",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"InterfaceTypeAnnotation\" or .type == \"InterfaceDeclaration\""
+      }
+    ]
+  }
+}

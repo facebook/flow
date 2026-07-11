@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_013_ternary_migration",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "migration",
+      "ternary",
+      "object_pattern",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "ConditionalExpression",
+        "negate": true
+      }
+    ]
+  }
+}

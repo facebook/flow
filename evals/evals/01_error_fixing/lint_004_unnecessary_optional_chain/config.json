@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "lint_004_unnecessary_optional_chain",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unnecessary-optional-chain"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ChainExpression\"",
+        "negate": true
+      }
+    ]
+  }
+}

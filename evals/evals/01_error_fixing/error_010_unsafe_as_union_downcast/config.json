@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "error_010_unsafe_as_union_downcast",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "as_cast",
+      "downcast",
+      "disjoint_union",
+      "refinement"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

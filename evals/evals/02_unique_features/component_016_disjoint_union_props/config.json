@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_016_disjoint_union_props",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "rest_params",
+      "disjoint_union"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "RestElement"
+      }
+    ]
+  }
+}

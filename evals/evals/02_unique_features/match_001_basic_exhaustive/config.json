@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "match_001_basic_exhaustive",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchLiteralPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

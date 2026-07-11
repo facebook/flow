@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "lint_006_unsafe_object_assign",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unsafe-object-assign"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.type == \"MemberExpression\" and .callee.object.name == \"Object\" and .callee.property.name == \"assign\"",
+        "negate": true
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SpreadElement"
+      }
+    ]
+  }
+}

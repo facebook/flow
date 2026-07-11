@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "enum_003_boolean_symbol",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "boolean_enum",
+      "symbol_enum"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumBooleanMember"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDefaultedMember"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_011_objmap",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "removed",
+      "mapped_type",
+      "objmap"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ObjectTypeMappedTypeProperty"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$ObjMap\"",
+        "negate": true
+      }
+    ]
+  }
+}

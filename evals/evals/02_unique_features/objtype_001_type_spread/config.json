@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "name": "objtype_001_type_spread",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "object_types",
+      "type_spread"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ObjectTypeSpreadProperty"
+      }
+    ]
+  }
+}

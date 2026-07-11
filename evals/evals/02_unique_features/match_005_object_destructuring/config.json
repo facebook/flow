@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_005_nested_object_patterns",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "nested_object_pattern",
+      "destructuring",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

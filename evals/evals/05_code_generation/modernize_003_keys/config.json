@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_003_keys",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "deprecated",
+      "keyof",
+      "keys"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "KeyofTypeAnnotation"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Keys\"",
+        "negate": true
+      }
+    ]
+  }
+}

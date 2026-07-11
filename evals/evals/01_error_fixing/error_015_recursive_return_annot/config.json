@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "error_015_recursive_return_annot",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "definition_cycle",
+      "recursion",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"FunctionDeclaration\" and .returnType != null"
+      }
+    ]
+  }
+}

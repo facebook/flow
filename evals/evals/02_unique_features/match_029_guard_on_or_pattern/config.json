@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_029_guard_on_or_pattern",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "guards",
+      "or_patterns",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchExpressionCase\" and (.guard != null) and (.pattern.type == \"MatchOrPattern\")"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

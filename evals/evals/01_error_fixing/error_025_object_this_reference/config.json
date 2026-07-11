@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_025_object_this_reference",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "object_this_reference",
+      "object_literal",
+      "this"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

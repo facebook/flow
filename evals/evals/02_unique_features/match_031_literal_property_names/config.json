@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_031_literal_property_names",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "object_pattern",
+      "literal_property_names",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchObjectPatternProperty\" and .key.type == \"Literal\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

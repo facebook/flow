@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "const_type_parameters",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "const_type_parameters",
+      "literal_types",
+      "generics"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypeParameter\" and .const == true"
+      }
+    ]
+  }
+}

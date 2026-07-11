@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "name": "enum_010_enum_union_refine",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "string_enum",
+      "refinement",
+      "union",
+      "getName",
+      "members"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDefaultedMember"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"UnaryExpression\" and .operator == \"typeof\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.object?.name == \"Severity\" and .callee?.property?.name == \"getName\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+[options]
+experimental.strict_es6_import_export=true
+
+[lints]
+export-renamed-default=error
+
+[strict]
+
+[libs]

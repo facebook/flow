@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "error_026_asymmetric_subtyping",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "interface",
+      "object_type",
+      "nominal_typing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Identifier\" and .name == \"entry\" and .typeAnnotation.typeAnnotation.id.name == \"LogRecord\""
+      }
+    ]
+  }
+}

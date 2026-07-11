@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "lint_015_default_import_access",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "default-import-access",
+      "strict-es6-import-export"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ImportDefaultSpecifier"
+      }
+    ]
+  }
+}

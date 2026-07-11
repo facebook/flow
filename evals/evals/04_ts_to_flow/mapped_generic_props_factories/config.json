@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "name": "mapped_generic_props_factories",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "react",
+      "generics",
+      "component_factory",
+      "component_type"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": []
+  }
+}

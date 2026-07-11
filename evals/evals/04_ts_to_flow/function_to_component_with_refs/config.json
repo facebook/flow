@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "function_to_component_with_refs",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "react",
+      "component_syntax",
+      "ref_as_prop",
+      "imperative_handle"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": "MemberExpression[property.name='forwardRef']",
+        "negate": true
+      }
+    ]
+  }
+}

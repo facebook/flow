@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "error_008_indexer_access",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "indexer",
+      "nullable",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

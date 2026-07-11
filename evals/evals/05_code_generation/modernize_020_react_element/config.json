@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "modernize_020_react_element",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "removed",
+      "react",
+      "render_types"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypeOperator\" and .operator == \"renders\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.type == \"QualifiedTypeIdentifier\" and .id?.id?.name == \"Element\"",
+        "negate": true
+      }
+    ]
+  }
+}

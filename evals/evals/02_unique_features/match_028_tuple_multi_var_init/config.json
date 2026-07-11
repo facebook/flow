@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_028_tuple_multi_var_init",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "multi_variable",
+      "tuple_destructuring",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"VariableDeclarator\" and .id.type == \"ArrayPattern\" and .init.type == \"MatchExpression\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

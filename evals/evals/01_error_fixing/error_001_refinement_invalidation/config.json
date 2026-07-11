@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "error_001_refinement_invalidation",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "refinement",
+      "nullability"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"logAccess\""
+      }
+    ]
+  }
+}

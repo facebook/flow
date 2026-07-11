@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_027_interface_spread",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "interface",
+      "object_spread",
+      "structural_typing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

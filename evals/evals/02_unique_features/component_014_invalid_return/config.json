@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_014_invalid_return",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "rules_for_components",
+      "react_node_return"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "JSXElement"
+      }
+    ]
+  }
+}

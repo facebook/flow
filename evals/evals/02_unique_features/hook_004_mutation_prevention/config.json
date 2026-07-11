@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "name": "hook_004_mutation_prevention",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "hook_syntax",
+      "react",
+      "mutation"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.name == \"setFilters\""
+      }
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "name": "match_018_invariant_throw",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "invariant",
+      "throw",
+      "expression_constraint",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.name == \"invariant\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "component_023_migrate_default_props",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "react",
+      "migration",
+      "default_props"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ComponentParameter\" and .local.type == \"AssignmentPattern\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

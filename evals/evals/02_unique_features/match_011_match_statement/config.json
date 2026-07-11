@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "match_011_match_statement",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "match_statement",
+      "side_effects",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchStatement"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchObjectPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

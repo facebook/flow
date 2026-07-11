@@ -1,0 +1,10 @@
+[options]
+module.system=haste
+experimental.strict_es6_import_export=true
+
+[lints]
+invalid-import-star-use=error
+
+[strict]
+
+[libs]

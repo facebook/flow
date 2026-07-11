@@ -1,0 +1,1 @@
+The code in `main.js` has type errors. Fix it so it passes `flow check` with zero errors. The hooks must always be called unconditionally, but their results should only affect the rendered output when the corresponding flag is true: the animated value should only be shown when `animated` is true, and the fetched data should only be displayed when `enabled` is true.

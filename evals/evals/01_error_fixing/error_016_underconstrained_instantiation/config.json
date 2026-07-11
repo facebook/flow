@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "name": "error_016_underconstrained_instantiation",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "implicit_instantiation",
+      "underconstrained",
+      "generics",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": "(.type == \"Identifier\" and .name == \"counts\" and .typeAnnotation != null) or (.type == \"NewExpression\" and .typeArguments != null)"
+      }
+    ]
+  }
+}

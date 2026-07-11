@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "name": "enum_014_migrate_keymirror",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "migration",
+      "keymirror",
+      "string_enum",
+      "mapping"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDefaultedMember"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.name == \"keyMirror\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"KeyofTypeAnnotation\"",
+        "negate": true
+      }
+    ]
+  }
+}

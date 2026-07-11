@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+unsafe-getters-setters=error
+
+[strict]
+
+[libs]

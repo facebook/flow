@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "exact_objects_complex",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "exact_objects",
+      "disjoint_union",
+      "match",
+      "type_guard"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchExpression\" or .type == \"SwitchStatement\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "TypePredicate"
+      }
+    ]
+  }
+}

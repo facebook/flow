@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "mapped_type_modifiers",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "mapped_types",
+      "optionality",
+      "readonly",
+      "tuples"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ObjectTypeMappedTypeProperty\" and .optional == \"MinusOptional\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ObjectTypeMappedTypeProperty\" and .optional == \"PlusOptional\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ObjectTypeMappedTypeProperty\" and .variance.kind == \"readonly\""
+      }
+    ]
+  }
+}

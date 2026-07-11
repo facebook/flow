@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "modernize_017_checks",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "removed",
+      "type_guard",
+      "checks"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "TypePredicate"
+      }
+    ]
+  }
+}

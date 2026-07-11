@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_030_this_type_variance",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "this_type",
+      "variance",
+      "class"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

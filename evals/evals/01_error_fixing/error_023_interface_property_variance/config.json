@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "error_023_interface_property_variance",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "interfaces",
+      "variance",
+      "readonly",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type==\"Variance\" and .kind==\"readonly\""
+      }
+    ]
+  }
+}

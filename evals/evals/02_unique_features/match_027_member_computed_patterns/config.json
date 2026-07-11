@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_027_member_computed_patterns",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "member_pattern",
+      "computed_property",
+      "primitive_patterns",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchMemberPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "modernize_018_partial",
+    "category": "code_generation",
+    "tags": [
+      "flow",
+      "modernize",
+      "code_generation",
+      "removed",
+      "partial"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"Partial\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Partial\"",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "intersection_function_overloads",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "intersection_types",
+      "function_overloads",
+      "interfaces"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"IntersectionTypeAnnotation\" and any(.types[]; .type == \"FunctionTypeAnnotation\")"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"IntersectionTypeAnnotation\" and any(.types[]; .type == \"GenericTypeAnnotation\")"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "InterfaceDeclaration"
+      }
+    ]
+  }
+}

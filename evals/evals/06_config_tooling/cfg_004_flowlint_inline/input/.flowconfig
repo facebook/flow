@@ -1,0 +1,8 @@
+[options]
+
+[lints]
+sketchy-null-string=error
+
+[strict]
+
+[libs]

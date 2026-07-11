@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "name": "enum_013_migrate_object_freeze",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "migration",
+      "object_freeze",
+      "number_enum",
+      "cast"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumNumberMember"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.object?.name == \"Object\" and .callee?.property?.name == \"freeze\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"Values\"",
+        "negate": true
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.object?.name == \"Priority\" and .callee?.property?.name == \"cast\""
+      }
+    ]
+  }
+}

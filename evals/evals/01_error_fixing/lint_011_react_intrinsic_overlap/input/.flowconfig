@@ -1,0 +1,9 @@
+[options]
+
+
+[lints]
+react-intrinsic-overlap=error
+
+[strict]
+
+[libs]

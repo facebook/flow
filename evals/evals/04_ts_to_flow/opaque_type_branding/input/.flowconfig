@@ -1,0 +1,8 @@
+[options]
+module.system=haste
+
+[lints]
+
+[strict]
+
+[libs]

@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "opaque_003_subtype_constraint",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "opaque_type",
+      "subtype_constraint",
+      "supertype",
+      "cross_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"OpaqueType\" and .supertype != null",
+        "files": ["UserId.js"]
+      }
+    ]
+  }
+}

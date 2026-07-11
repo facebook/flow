@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "conditional_polymorphic_components",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "react",
+      "component_syntax",
+      "match",
+      "disjoint_union"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      }
+    ]
+  }
+}

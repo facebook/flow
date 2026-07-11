@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "maybe_type_introduction_advanced",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "maybe_types",
+      "optional_chaining",
+      "nullability"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "NullableTypeAnnotation"
+      }
+    ]
+  }
+}

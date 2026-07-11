@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "cfg_006_declare_module",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "libdef",
+      "declare-module",
+      "flow-typed",
+      "multi_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "DeclareModule",
+        "files": "flow-typed/list-utils.js"
+      },
+      {
+        "type": "file_not_modified",
+        "files": "main.js"
+      }
+    ]
+  }
+}

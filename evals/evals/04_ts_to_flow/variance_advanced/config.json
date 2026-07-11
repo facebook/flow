@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "variance_advanced",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "variance",
+      "covariance",
+      "contravariance",
+      "generics"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Variance\" and .kind == \"out\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Variance\" and .kind == \"in\""
+      }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "relay_core_02_activity_feed",
+    "category": "project_patterns",
+    "difficulty": "hard",
+    "tags": [
+      "flow",
+      "relay",
+      "component-syntax",
+      "match",
+      "spread-types",
+      "rest-params",
+      "or-patterns",
+      "nested-object-patterns"
+    ]
+  },
+  "grading": {
+    "graders": [
+      {"type": "no_flowfixme", "files": ["ActivityFeed.react.js"]},
+      {"type": "no_any", "files": ["ActivityFeed.react.js"]},
+      {"type": "contains_ast_node_type", "query": "ComponentDeclaration", "files": ["ActivityFeed.react.js"]},
+      {"type": "ast_query", "selector": ".type == \"MatchExpression\" or .type == \"SwitchStatement\"", "files": ["ActivityFeed.react.js"]},
+      {"type": "contains_ast_node_type", "query": "ObjectTypeSpreadProperty", "files": ["ActivityFeed.react.js"]}
+    ]
+  }
+}

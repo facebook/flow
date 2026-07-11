@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "enum_007_abstract_enums",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "abstract_enum",
+      "EnumValue",
+      "Enum",
+      "generics"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"Enum\""
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"EnumValue\""
+      }
+    ]
+  }
+}

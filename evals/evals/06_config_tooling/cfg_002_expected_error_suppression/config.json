@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "cfg_002_expected_error_suppression",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "suppression",
+      "FlowExpectedError",
+      "error-codes"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "file_modified",
+        "files": "main.js"
+      },
+      {
+        "type": "file_contains",
+        "files": "main.js",
+        "pattern": "\\$FlowExpectedError\\["
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee.name == \"clamp\" and (.arguments[0] | .type == \"Literal\" and .value == \"5\")",
+        "files": "main.js"
+      }
+    ]
+  }
+}

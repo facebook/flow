@@ -1,0 +1,5 @@
+{
+  "name": "relay-runtime",
+  "haste_commonjs": true,
+  "main": "index.js"
+}

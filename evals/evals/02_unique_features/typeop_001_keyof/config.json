@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "typeop_001_keyof",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_operators",
+      "keyof"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "KeyofTypeAnnotation"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"GenericTypeAnnotation\" and .id?.name == \"$Keys\"",
+        "negate": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "multi_file_module_split",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "multi_file",
+      "modules",
+      "import_type"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "no_commonjs",
+        "files": "*"
+      }
+    ]
+  }
+}

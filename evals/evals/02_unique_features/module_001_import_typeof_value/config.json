@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "name": "module_001_import_typeof_value",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "imports",
+      "modules",
+      "import_typeof",
+      "cross_file"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"ImportDeclaration\" and .importKind == \"typeof\"",
+        "files": ["main.js"]
+      },
+      {
+        "type": "file_not_modified",
+        "files": ["numberFormat.js"]
+      }
+    ]
+  }
+}

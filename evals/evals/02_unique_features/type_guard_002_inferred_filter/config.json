@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "type_guard_002_inferred_filter",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "type_guards",
+      "inferred_type_guards",
+      "refinement"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"CallExpression\" and .callee?.property?.name == \"filter\""
+      }
+    ]
+  }
+}

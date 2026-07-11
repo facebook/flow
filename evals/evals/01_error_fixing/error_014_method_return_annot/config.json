@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "error_014_method_return_annot",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "method_return",
+      "missing_local_annot",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MethodDefinition\" and .key?.name == \"increment\" and .value?.returnType != null"
+      }
+    ]
+  }
+}

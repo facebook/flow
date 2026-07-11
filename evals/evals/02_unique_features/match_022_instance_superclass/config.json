@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_022_instance_superclass",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "instance_pattern",
+      "inheritance",
+      "prototype_chain",
+      "pattern_matching"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchInstancePattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

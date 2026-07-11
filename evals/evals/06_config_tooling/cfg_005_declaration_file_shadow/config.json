@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "name": "cfg_005_declaration_file_shadow",
+    "category": "config_tooling",
+    "tags": [
+      "flow",
+      "config_tooling",
+      "declaration-file",
+      "dot-flow",
+      "shadowing",
+      "multi_file"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "DeclareExportDeclaration",
+        "files": "Money.js.flow"
+      },
+      {
+        "type": "file_not_modified",
+        "files": ["main.js", "Money.js"]
+      }
+    ]
+  }
+}

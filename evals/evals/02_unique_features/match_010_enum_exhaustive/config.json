@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "match_010_enum_exhaustive",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "enum",
+      "exhaustiveness"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      }
+    ]
+  }
+}

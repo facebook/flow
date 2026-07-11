@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "lint_013_this_in_exported_function",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "this-in-exported-function",
+      "strict-es6-import-export"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"FunctionDeclaration\" and .id.name == \"fullLabel\" and (.params | length) > 0 and (.params[0].typeAnnotation != null)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+type Profile = {
+  name: string,
+  bio: string,
+  avatarUrl: string,
+};
+
+type ProfilePatch = Partial<Profile>;
+
+export function applyPatch(base: Profile, patch: ProfilePatch): Profile {
+  return {...base, ...patch};
+}

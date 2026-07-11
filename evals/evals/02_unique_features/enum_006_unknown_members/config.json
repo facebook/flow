@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "name": "enum_006_unknown_members",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "enum",
+      "unknown_members",
+      "exhaustive_switch"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "EnumDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"EnumBody\" and .hasUnknownMembers == true"
+      }
+    ]
+  }
+}

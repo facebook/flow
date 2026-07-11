@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "error_017_export_signature",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "module_exports",
+      "signature_verification_failure",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Identifier\" and .name == \"cacheTtl\" and .typeAnnotation != null"
+      }
+    ]
+  }
+}

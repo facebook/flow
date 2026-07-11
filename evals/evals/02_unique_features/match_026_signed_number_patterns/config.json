@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "name": "match_026_signed_number_patterns",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "signed_number",
+      "primitive_patterns",
+      "exhaustiveness",
+      "pattern_matching"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"MatchUnaryPattern\" and .operator == \"-\""
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

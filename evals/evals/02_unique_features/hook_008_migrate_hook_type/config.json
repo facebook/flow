@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "name": "hook_008_migrate_hook_type",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "hook_syntax",
+      "react",
+      "migration",
+      "hook_type"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookDeclaration"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "HookTypeAnnotation"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "FunctionDeclaration",
+        "negate": true
+      }
+    ]
+  }
+}

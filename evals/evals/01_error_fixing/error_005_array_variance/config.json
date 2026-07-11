@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "error_005_array_variance",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "variance",
+      "array",
+      "readonly",
+      "error_fixing"
+    ],
+    "difficulty": "easy"
+  },
+  "grading": {
+    "graders": []
+  }
+}

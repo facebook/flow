@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "name": "nominal_classes_interface_bridge",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "interface",
+      "class",
+      "nominal_typing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "InterfaceDeclaration"
+      }
+    ]
+  }
+}

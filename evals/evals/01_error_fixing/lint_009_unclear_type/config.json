@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "name": "lint_009_unclear_type",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "error_fixing",
+      "lint",
+      "unclear-type"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

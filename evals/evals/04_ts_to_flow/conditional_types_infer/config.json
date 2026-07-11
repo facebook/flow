@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "conditional_types_infer",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "conditional_types",
+      "infer",
+      "distributive"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ConditionalTypeAnnotation"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "InferTypeAnnotation"
+      }
+    ]
+  }
+}

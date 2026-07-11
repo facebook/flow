@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "name": "match_006_as_pattern",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "match",
+      "as_pattern",
+      "nested"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchExpression"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "MatchAsPattern"
+      },
+      {
+        "type": "contains_ast_node_type",
+        "query": "SwitchStatement",
+        "negate": true
+      }
+    ]
+  }
+}

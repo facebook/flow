@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "name": "error_034_var_branch_union",
+    "category": "error_fixing",
+    "tags": [
+      "flow",
+      "annotation_requirement",
+      "local_type_inference",
+      "variable_declaration",
+      "variable_inference",
+      "union_inference",
+      "error_fixing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "ast_query",
+        "selector": ".type == \"Identifier\" and .name == \"badge\" and .typeAnnotation != null"
+      }
+    ]
+  }
+}

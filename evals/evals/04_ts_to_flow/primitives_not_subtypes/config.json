@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "name": "primitives_not_subtypes",
+    "category": "ts_to_flow",
+    "tags": [
+      "flow",
+      "ts_to_flow",
+      "primitive",
+      "iterable",
+      "structural_typing"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": []
+  }
+}

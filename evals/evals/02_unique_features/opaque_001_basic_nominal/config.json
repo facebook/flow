@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "opaque_001_basic_nominal",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "opaque_type",
+      "nominal",
+      "type_alias"
+    ],
+    "difficulty": "medium"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "OpaqueType"
+      }
+    ]
+  }
+}

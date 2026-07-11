@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "name": "component_019_render_prop_constraint",
+    "category": "unique_features",
+    "tags": [
+      "flow",
+      "component_syntax",
+      "renders",
+      "react",
+      "render_prop_constraint"
+    ],
+    "difficulty": "hard"
+  },
+  "grading": {
+    "graders": [
+      {
+        "type": "contains_ast_node_type",
+        "query": "ComponentDeclaration"
+      },
+      {
+        "type": "ast_query",
+        "selector": ".type == \"TypeOperator\" and .operator == \"renders\""
+      }
+    ]
+  }
+}
