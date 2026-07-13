@@ -178,68 +178,52 @@ type EventHandler = (event: Event) => mixed;
 type EventListener = {handleEvent: EventHandler, ...} | EventHandler;
 type MouseEventHandler = (event: MouseEvent) => mixed;
 type MouseEventListener =
-  | {handleEvent: MouseEventHandler, ...}
-  | MouseEventHandler;
+  {handleEvent: MouseEventHandler, ...} | MouseEventHandler;
 type FocusEventHandler = (event: FocusEvent) => mixed;
 type FocusEventListener =
-  | {handleEvent: FocusEventHandler, ...}
-  | FocusEventHandler;
+  {handleEvent: FocusEventHandler, ...} | FocusEventHandler;
 type KeyboardEventHandler = (event: KeyboardEvent) => mixed;
 type KeyboardEventListener =
-  | {handleEvent: KeyboardEventHandler, ...}
-  | KeyboardEventHandler;
+  {handleEvent: KeyboardEventHandler, ...} | KeyboardEventHandler;
 type InputEventHandler = (event: InputEvent) => mixed;
 type InputEventListener =
-  | {handleEvent: InputEventHandler, ...}
-  | InputEventHandler;
+  {handleEvent: InputEventHandler, ...} | InputEventHandler;
 type TouchEventHandler = (event: TouchEvent) => mixed;
 type TouchEventListener =
-  | {handleEvent: TouchEventHandler, ...}
-  | TouchEventHandler;
+  {handleEvent: TouchEventHandler, ...} | TouchEventHandler;
 type WheelEventHandler = (event: WheelEvent) => mixed;
 type WheelEventListener =
-  | {handleEvent: WheelEventHandler, ...}
-  | WheelEventHandler;
+  {handleEvent: WheelEventHandler, ...} | WheelEventHandler;
 type AbortProgressEventHandler = (event: ProgressEvent) => mixed;
 type AbortProgressEventListener =
-  | {handleEvent: AbortProgressEventHandler, ...}
-  | AbortProgressEventHandler;
+  {handleEvent: AbortProgressEventHandler, ...} | AbortProgressEventHandler;
 type ProgressEventHandler = (event: ProgressEvent) => mixed;
 type ProgressEventListener =
-  | {handleEvent: ProgressEventHandler, ...}
-  | ProgressEventHandler;
+  {handleEvent: ProgressEventHandler, ...} | ProgressEventHandler;
 type DragEventHandler = (event: DragEvent) => mixed;
 type DragEventListener =
-  | {handleEvent: DragEventHandler, ...}
-  | DragEventHandler;
+  {handleEvent: DragEventHandler, ...} | DragEventHandler;
 type PointerEventHandler = (event: PointerEvent) => mixed;
 type PointerEventListener =
-  | {handleEvent: PointerEventHandler, ...}
-  | PointerEventHandler;
+  {handleEvent: PointerEventHandler, ...} | PointerEventHandler;
 type AnimationEventHandler = (event: AnimationEvent) => mixed;
 type AnimationEventListener =
-  | {handleEvent: AnimationEventHandler, ...}
-  | AnimationEventHandler;
+  {handleEvent: AnimationEventHandler, ...} | AnimationEventHandler;
 type ClipboardEventHandler = (event: ClipboardEvent) => mixed;
 type ClipboardEventListener =
-  | {handleEvent: ClipboardEventHandler, ...}
-  | ClipboardEventHandler;
+  {handleEvent: ClipboardEventHandler, ...} | ClipboardEventHandler;
 type TransitionEventHandler = (event: TransitionEvent) => mixed;
 type TransitionEventListener =
-  | {handleEvent: TransitionEventHandler, ...}
-  | TransitionEventHandler;
+  {handleEvent: TransitionEventHandler, ...} | TransitionEventHandler;
 type MessageEventHandler = (event: MessageEvent) => mixed;
 type MessageEventListener =
-  | {handleEvent: MessageEventHandler, ...}
-  | MessageEventHandler;
+  {handleEvent: MessageEventHandler, ...} | MessageEventHandler;
 type BeforeUnloadEventHandler = (event: BeforeUnloadEvent) => mixed;
 type BeforeUnloadEventListener =
-  | {handleEvent: BeforeUnloadEventHandler, ...}
-  | BeforeUnloadEventHandler;
+  {handleEvent: BeforeUnloadEventHandler, ...} | BeforeUnloadEventHandler;
 type StorageEventHandler = (event: StorageEvent) => mixed;
 type StorageEventListener =
-  | {handleEvent: StorageEventHandler, ...}
-  | StorageEventHandler;
+  {handleEvent: StorageEventHandler, ...} | StorageEventHandler;
 type SecurityPolicyViolationEventHandler = (
   event: SecurityPolicyViolationEvent,
 ) => mixed;
@@ -248,8 +232,7 @@ type SecurityPolicyViolationEventListener =
   | SecurityPolicyViolationEventHandler;
 type USBConnectionEventHandler = (event: USBConnectionEvent) => mixed;
 type USBConnectionEventListener =
-  | {handleEvent: USBConnectionEventHandler, ...}
-  | USBConnectionEventHandler;
+  {handleEvent: USBConnectionEventHandler, ...} | USBConnectionEventHandler;
 
 type MediaKeySessionType = 'temporary' | 'persistent-license';
 type MediaKeyStatus =
@@ -278,13 +261,7 @@ type TouchEventTypes = 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel';
 type WheelEventTypes = 'wheel';
 type AbortProgressEventTypes = 'abort';
 type ProgressEventTypes =
-  | 'abort'
-  | 'error'
-  | 'load'
-  | 'loadend'
-  | 'loadstart'
-  | 'progress'
-  | 'timeout';
+  'abort' | 'error' | 'load' | 'loadend' | 'loadstart' | 'progress' | 'timeout';
 type DragEventTypes =
   | 'drag'
   | 'dragend'
@@ -306,15 +283,10 @@ type PointerEventTypes =
   | 'gotpointercapture'
   | 'lostpointercapture';
 type AnimationEventTypes =
-  | 'animationstart'
-  | 'animationend'
-  | 'animationiteration';
+  'animationstart' | 'animationend' | 'animationiteration';
 type ClipboardEventTypes = 'clipboardchange' | 'cut' | 'copy' | 'paste';
 type TransitionEventTypes =
-  | 'transitionrun'
-  | 'transitionstart'
-  | 'transitionend'
-  | 'transitioncancel';
+  'transitionrun' | 'transitionstart' | 'transitionend' | 'transitioncancel';
 type MessageEventTypes = string;
 type BeforeUnloadEventTypes = 'beforeunload';
 type StorageEventTypes = 'storage';
@@ -6049,8 +6021,7 @@ type NodeFilterCallback = (
   | typeof NodeFilter.FILTER_SKIP;
 
 type NodeFilterInterface =
-  | NodeFilterCallback
-  | {acceptNode: NodeFilterCallback, ...};
+  NodeFilterCallback | {acceptNode: NodeFilterCallback, ...};
 
 // TODO: window.NodeFilter exists at runtime and behaves as a constructor
 //       as far as `instanceof` is concerned, but it is not callable.

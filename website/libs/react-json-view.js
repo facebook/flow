@@ -233,10 +233,7 @@ declare module 'react-json-view' {
   }
 
   declare export type TypeDefaultValue =
-    | string
-    | number
-    | boolean
-    | {+[string]: mixed};
+    string | number | boolean | {+[string]: mixed};
 
   declare export interface ThemeObject {
     base00: string;

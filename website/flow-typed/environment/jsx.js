@@ -47,49 +47,50 @@ declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
   type: string;
 }
 
-declare class SyntheticAnimationEvent<+T: EventTarget = EventTarget>
-  extends SyntheticEvent<T>
-{
+declare class SyntheticAnimationEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticEvent<T> {
   animationName: string;
   elapsedTime: number;
   pseudoElement: string;
 }
 
-declare class SyntheticClipboardEvent<+T: EventTarget = EventTarget>
-  extends SyntheticEvent<T>
-{
+declare class SyntheticClipboardEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticEvent<T> {
   clipboardData: any;
 }
 
-declare class SyntheticCompositionEvent<+T: EventTarget = EventTarget>
-  extends SyntheticEvent<T>
-{
+declare class SyntheticCompositionEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticEvent<T> {
   data: any;
 }
 
-declare class SyntheticInputEvent<+T: EventTarget = EventTarget>
-  extends SyntheticEvent<T>
-{
+declare class SyntheticInputEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticEvent<T> {
   data: any;
   +target: HTMLInputElement;
 }
 
-declare class SyntheticUIEvent<+T: EventTarget = EventTarget, +E: Event = Event>
-  extends SyntheticEvent<T, E>
-{
+declare class SyntheticUIEvent<
+  +T: EventTarget = EventTarget,
+  +E: Event = Event,
+> extends SyntheticEvent<T, E> {
   detail: number;
   view: any;
 }
 
-declare class SyntheticFocusEvent<+T: EventTarget = EventTarget>
-  extends SyntheticUIEvent<T>
-{
+declare class SyntheticFocusEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticUIEvent<T> {
   relatedTarget: EventTarget;
 }
 
-declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
-  extends SyntheticUIEvent<T, KeyboardEvent>
-{
+declare class SyntheticKeyboardEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticUIEvent<T, KeyboardEvent> {
   altKey: boolean;
   charCode: number;
   ctrlKey: boolean;
@@ -107,8 +108,7 @@ declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
 declare class SyntheticMouseEvent<
   +T: EventTarget = EventTarget,
   +E: Event = MouseEvent,
-> extends SyntheticUIEvent<T, E>
-{
+> extends SyntheticUIEvent<T, E> {
   altKey: boolean;
   button: number;
   buttons: number;
@@ -125,24 +125,24 @@ declare class SyntheticMouseEvent<
   shiftKey: boolean;
 }
 
-declare class SyntheticDragEvent<+T: EventTarget = EventTarget>
-  extends SyntheticMouseEvent<T, DragEvent>
-{
+declare class SyntheticDragEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticMouseEvent<T, DragEvent> {
   dataTransfer: any;
 }
 
-declare class SyntheticWheelEvent<+T: EventTarget = EventTarget>
-  extends SyntheticMouseEvent<T, WheelEvent>
-{
+declare class SyntheticWheelEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticMouseEvent<T, WheelEvent> {
   deltaMode: number;
   deltaX: number;
   deltaY: number;
   deltaZ: number;
 }
 
-declare class SyntheticPointerEvent<+T: EventTarget = EventTarget>
-  extends SyntheticMouseEvent<T, PointerEvent>
-{
+declare class SyntheticPointerEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticMouseEvent<T, PointerEvent> {
   height: number;
   isPrimary: boolean;
   pointerId: number;
@@ -155,9 +155,9 @@ declare class SyntheticPointerEvent<+T: EventTarget = EventTarget>
   width: number;
 }
 
-declare class SyntheticTouchEvent<+T: EventTarget = EventTarget>
-  extends SyntheticUIEvent<T, TouchEvent>
-{
+declare class SyntheticTouchEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticUIEvent<T, TouchEvent> {
   altKey: boolean;
   changedTouches: TouchList;
   ctrlKey: boolean;
@@ -168,9 +168,9 @@ declare class SyntheticTouchEvent<+T: EventTarget = EventTarget>
   touches: TouchList;
 }
 
-declare class SyntheticTransitionEvent<+T: EventTarget = EventTarget>
-  extends SyntheticEvent<T>
-{
+declare class SyntheticTransitionEvent<
+  +T: EventTarget = EventTarget,
+> extends SyntheticEvent<T> {
   elapsedTime: number;
   propertyName: string;
   pseudoElement: string;
@@ -466,12 +466,7 @@ type ReactDOM$AriaAttributes = {|
   'aria-controls'?: ?string,
   /** Indicates the element that represents the current item within a container or set of related elements. */
   'aria-current'?: ?(
-    | ReactDOM$BooleanishString
-    | 'page'
-    | 'step'
-    | 'location'
-    | 'date'
-    | 'time'
+    ReactDOM$BooleanishString | 'page' | 'step' | 'location' | 'date' | 'time'
   ),
   /**
    * Identifies the element (or elements) that describes the object.
@@ -498,12 +493,7 @@ type ReactDOM$AriaAttributes = {|
    * @deprecated in ARIA 1.1
    */
   'aria-dropeffect'?: ?(
-    | 'none'
-    | 'copy'
-    | 'execute'
-    | 'link'
-    | 'move'
-    | 'popup'
+    'none' | 'copy' | 'execute' | 'link' | 'move' | 'popup'
   ),
   /**
    * Identifies the element that provides an error message for the object.
@@ -524,12 +514,7 @@ type ReactDOM$AriaAttributes = {|
   'aria-grabbed'?: ?ReactDOM$BooleanishString,
   /** Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element. */
   'aria-haspopup'?: ?(
-    | ReactDOM$BooleanishString
-    | 'menu'
-    | 'listbox'
-    | 'tree'
-    | 'grid'
-    | 'dialog'
+    ReactDOM$BooleanishString | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog'
   ),
   /**
    * Indicates whether the element is exposed to an accessibility API.
@@ -877,12 +862,7 @@ type ReactDOM$HTMLElementProps = {|
   ...ReactDOM$AriaAttributes,
   accessKey?: ?string,
   autoCapitalize?: ?(
-    | 'off'
-    | 'none'
-    | 'on'
-    | 'sentences'
-    | 'words'
-    | 'characters'
+    'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'
   ),
   autoCorrect?: ?('off' | 'on'),
   autoFocus?: ?boolean,
@@ -892,26 +872,13 @@ type ReactDOM$HTMLElementProps = {|
   dir?: ?('ltr' | 'rtl' | 'LTR' | 'RTL' | 'auto'),
   draggable?: ?ReactDOM$BooleanishString,
   enterKeyHint?: ?(
-    | 'enter'
-    | 'done'
-    | 'go'
-    | 'next'
-    | 'previous'
-    | 'search'
-    | 'send'
+    'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send'
   ),
   hidden?: ?ReactDOM$Boolean<'hidden'>,
   id?: ?string,
   inert?: ?ReactDOM$BooleanishString,
   inputMode?: ?(
-    | 'none'
-    | 'text'
-    | 'tel'
-    | 'url'
-    | 'email'
-    | 'numeric'
-    | 'decimal'
-    | 'search'
+    'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'
   ),
   is?: ?string,
   itemID?: ?string,
@@ -961,10 +928,7 @@ type ReactDOM$HTMLAttributeReferrerPolicy =
   | 'unsafe-url';
 
 type ReactDOM$HTMLAttributeAnchorTarget =
-  | '_self'
-  | '_blank'
-  | '_parent'
-  | '_top';
+  '_self' | '_blank' | '_parent' | '_top';
 
 type ReactDOM$aProps = {|
   ...ReactDOM$HTMLElementProps,

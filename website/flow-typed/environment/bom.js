@@ -719,9 +719,7 @@ declare class MutationRecord {
 }
 
 type MutationObserverInitRequired =
-  | {childList: true, ...}
-  | {attributes: true, ...}
-  | {characterData: true, ...};
+  {childList: true, ...} | {attributes: true, ...} | {characterData: true, ...};
 
 declare type MutationObserverInit = MutationObserverInitRequired & {
   subtree?: boolean,
@@ -866,9 +864,7 @@ declare interface ResizeObserverEntry {
  *     This size must contain integer values.
  */
 type ResizeObserverBoxOptions =
-  | 'border-box'
-  | 'content-box'
-  | 'device-pixel-content-box';
+  'border-box' | 'content-box' | 'device-pixel-content-box';
 
 declare type ResizeObserverOptions = {
   box?: ResizeObserverBoxOptions,
@@ -1697,9 +1693,7 @@ declare class WaveShaperNode extends AudioNode {
 // this part of spec is not finished yet, apparently
 // https://stackoverflow.com/questions/35296664/can-fetch-get-object-as-headers
 type HeadersInit =
-  | Headers
-  | Array<[string, string]>
-  | {[key: string]: string, ...};
+  Headers | Array<[string, string]> | {[key: string]: string, ...};
 
 // TODO Heades and URLSearchParams are almost the same thing.
 // Could it somehow be abstracted away?
@@ -1781,12 +1775,7 @@ type ReferrerPolicyType =
   | 'unsafe-url';
 
 type ResponseType =
-  | 'basic'
-  | 'cors'
-  | 'default'
-  | 'error'
-  | 'opaque'
-  | 'opaqueredirect';
+  'basic' | 'cors' | 'default' | 'error' | 'opaque' | 'opaqueredirect';
 
 type BodyInit =
   | string
@@ -1897,12 +1886,7 @@ declare function fetch(
 ): Promise<Response>;
 
 type TextEncoder$availableEncodings =
-  | 'utf-8'
-  | 'utf8'
-  | 'unicode-1-1-utf-8'
-  | 'utf-16be'
-  | 'utf-16'
-  | 'utf-16le';
+  'utf-8' | 'utf8' | 'unicode-1-1-utf-8' | 'utf-16be' | 'utf-16' | 'utf-16le';
 
 declare class TextEncoder {
   constructor(encoding?: TextEncoder$availableEncodings): void;
@@ -2239,10 +2223,7 @@ type VRStageParameters = {
 };
 
 type VRDisplayEventReason =
-  | 'mounted'
-  | 'navigation'
-  | 'requested'
-  | 'unmounted';
+  'mounted' | 'navigation' | 'requested' | 'unmounted';
 
 type VRDisplayEventInit = {
   display: VRDisplay,
@@ -2789,11 +2770,7 @@ declare class WriteableStream {
 
 // https://fs.spec.whatwg.org/#dictdef-writeparams
 declare type FileSystemWriteableFileStreamDataTypes =
-  | ArrayBuffer
-  | $TypedArray
-  | DataView
-  | Blob
-  | string;
+  ArrayBuffer | $TypedArray | DataView | Blob | string;
 
 // https://fs.spec.whatwg.org/#dictdef-writeparams
 declare type FileSystemWriteableFileStreamData =

@@ -394,8 +394,7 @@ declare module 'child_process' {
       | child_process$execFileOpts
       | child_process$execFileCallback,
     optionsOrCallback?:
-      | child_process$execFileOpts
-      | child_process$execFileCallback,
+      child_process$execFileOpts | child_process$execFileCallback,
     callback?: child_process$execFileCallback,
   ): child_process$ChildProcess;
 
@@ -1854,9 +1853,9 @@ declare class http$Agent<+SocketT = net$Socket> {
   +sockets: Readonly<{[name: string]: ReadonlyArray<SocketT>}>;
 }
 
-declare class http$IncomingMessage<SocketT = net$Socket>
-  extends stream$Readable
-{
+declare class http$IncomingMessage<
+  SocketT = net$Socket,
+> extends stream$Readable {
   headers: Object;
   rawHeaders: Array<string>;
   httpVersion: string;
@@ -1872,9 +1871,9 @@ declare class http$IncomingMessage<SocketT = net$Socket>
   rawTrailers: Array<string>;
 }
 
-declare class http$ClientRequest<+SocketT = net$Socket>
-  extends stream$Writable
-{
+declare class http$ClientRequest<
+  +SocketT = net$Socket,
+> extends stream$Writable {
   abort(): void;
   aborted: boolean;
   +connection: SocketT | null;
@@ -2140,10 +2139,7 @@ declare class net$Socket extends stream$Duplex {
   destroyed: boolean;
   end(
     chunkOrEncodingOrCallback?:
-      | Buffer
-      | Uint8Array
-      | string
-      | ((data: any) => void),
+      Buffer | Uint8Array | string | ((data: any) => void),
     encodingOrCallback?: string | ((data: any) => void),
     callback?: (data: any) => void,
   ): this;
@@ -3848,9 +3844,7 @@ declare module 'repl' {
     writer?: (object: any, options?: util$InspectOptions) => string,
     completer?: readline$InterfaceCompleter,
     replMode?:
-      | $SymbolReplModeMagic
-      | $SymbolReplModeSloppy
-      | $SymbolReplModeStrict,
+      $SymbolReplModeMagic | $SymbolReplModeSloppy | $SymbolReplModeStrict,
     breakEvalOnSigint?: boolean,
     ...
   }): REPLServer;
