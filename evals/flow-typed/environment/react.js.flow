@@ -144,22 +144,16 @@ declare module 'react' {
   // Use [component types](https://flow.org/en/docs/react/component-types/) instead.
   export type PropsOf<
     E extends
-      | string
-      | React.MixedElement
-      | React$RendersExactly<React.ElementType>,
+      string | React.MixedElement | React$RendersExactly<React.ElementType>,
   > = React.PropsOf<E>;
   export type PropOf<
     E extends
-      | string
-      | React.MixedElement
-      | React$RendersExactly<React.ElementType>,
+      string | React.MixedElement | React$RendersExactly<React.ElementType>,
     K extends string,
   > = React.PropOf<E, K>;
   export type RefOf<
     E extends
-      | string
-      | React.MixedElement
-      | React$RendersExactly<React.ElementType>,
+      string | React.MixedElement | React$RendersExactly<React.ElementType>,
   > = React.RefOf<E>;
   export type MixedElement = React.MixedElement;
   export type ElementType = React.ElementType;
@@ -636,8 +630,10 @@ declare module 'react' {
      *
      * @see https://react.dev/reference/react/PureComponent
      */
-    declare class PureComponent<Props, State = void>
-      extends Component<Props, State> {}
+    declare class PureComponent<Props, State = void> extends Component<
+      Props,
+      State,
+    > {}
 
     /**
      * Intentionally set type to mixed to prevent new usages.
@@ -726,10 +722,7 @@ declare module 'react' {
       [transitionType: 'default' | string]: 'none' | 'auto' | string,
     };
     type ViewTransitionClass =
-      | 'none'
-      | 'auto'
-      | string
-      | ViewTransitionClassPerType;
+      'none' | 'auto' | string | ViewTransitionClassPerType;
 
     type ViewTransitionInstance = {
       group: unknown,
@@ -1017,22 +1010,16 @@ declare module 'react' {
 
     type PropsOf<
       C extends
-        | string
-        | React.MixedElement
-        | React$RendersExactly<React.ElementType>,
+        string | React.MixedElement | React$RendersExactly<React.ElementType>,
     > = globalThis.React.PropsOf<C>;
     type PropOf<
       C extends
-        | string
-        | React.MixedElement
-        | React$RendersExactly<React.ElementType>,
+        string | React.MixedElement | React$RendersExactly<React.ElementType>,
       K extends string,
     > = globalThis.React.PropOf<C, K>;
     type RefOf<
       C extends
-        | string
-        | React.MixedElement
-        | React$RendersExactly<React.ElementType>,
+        string | React.MixedElement | React$RendersExactly<React.ElementType>,
     > = globalThis.React.RefOf<C>;
 
     type MixedElement = globalThis.React.MixedElement;
