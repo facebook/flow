@@ -2117,167 +2117,45 @@ pub mod opts {
 
     pub fn parse(config: &mut Opts, lines: &[(u32, String)]) -> Result<Vec<Warning>, Error> {
         let mut raw_opts = parse_lines(lines)?;
-        let parser_keys = [
-            "all",
-            "autoimports",
-            "autoimports.min_characters",
-            "autoimports_ranked_by_usage",
-            "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
-            "babel_loose_array_spread",
-            "ban_spread_key_props",
-            "check_is_status",
-            "component_syntax",
-            "dev_only.refinement_info_as_errors",
-            "emoji",
-            "enums",
-            "estimate_recheck_time",
-            "saved_state_restart_on_reinit",
-            "exact_by_default",
-            "experimental.assert_operator",
-            "experimental.casting_syntax.only_support_as.excludes",
-            "experimental.async_component_syntax",
-            "experimental.async_component_syntax.includes",
-            "experimental.channel_mode",
-            "experimental.channel_mode.windows",
-            "experimental.component_syntax.hook_compatibility",
-            "experimental.component_syntax.hook_compatibility.excludes",
-            "experimental.component_syntax.hook_compatibility.includes",
-            "experimental.const_params",
-            "experimental.deprecated_utilities.excludes",
-            "experimental.enable_custom_error",
-            "experimental.facebook_module_interop",
-            "experimental.instance_t_objkit_fix",
-            "experimental.long_lived_workers",
-            "experimental.long_lived_workers.windows",
-            "experimental.llm_context.include_imports",
-            "experimental.log_per_error_typing_telemetry",
-            "experimental.module.automatic_require_default",
-            "experimental.multi_platform",
-            "experimental.multi_platform.extensions",
-            "experimental.multi_platform.ambient_supports_platform.project_overrides",
-            "experimental.multi_platform.extension_group_mapping",
-            "experimental.opaque_type_new_bound_syntax",
-            "experimental.projects",
-            "experimental.projects.strict_boundary",
-            "experimental.projects_path_mapping",
-            "experimental.records",
-            "experimental.records.includes",
-            "experimental.strict_es6_import_export",
-            "experimental.ts_syntax",
-            "experimental.deprecated_variance_sigils.excludes",
-            "experimental.deprecated_colon_extends.excludes",
-            "experimental.tslib_syntax",
-            "experimental.typescript_library_definition_support",
-            "experimental.type_expansion_recursion_limit",
-            "facebook.fbs",
-            "facebook.fbt",
-            "file_watcher",
-            "file_watcher.edenfs.throttle_time_ms",
-            "file_watcher.edenfs.timeout",
-            "file_watcher.edenfs.max_commit_distance",
-            "file_watcher.edenfs.subprocess_mergebase",
-            "file_watcher.mergebase_with",
-            "file_watcher.mergebase_with_git",
-            "file_watcher.mergebase_with_hg",
-            "file_watcher.defer_state",
-            "file_watcher.watchman.defer_state",
-            "file_watcher.watchman.sync_timeout",
-            "file_watcher_timeout",
-            "files.implicitly_include_root",
-            "format.bracket_spacing",
-            "format.single_quotes",
-            "gc.worker.custom_major_ratio",
-            "gc.worker.custom_minor_max_size",
-            "gc.worker.custom_minor_ratio",
-            "gc.worker.major_heap_increment",
-            "gc.worker.minor_heap_size",
-            "gc.worker.space_overhead",
-            "gc.worker.window_size",
-            "include_warnings",
-            "jest_integration",
-            "lazy_mode",
-            "log_saving",
-            "max_header_tokens",
-            "merge_timeout",
-            "module.declaration_dirnames",
-            "module.file_ext",
-            "module.ignore_non_literal_requires",
-            "module.missing_module_generators",
-            "module.name_mapper",
-            "module.name_mapper.extension",
-            "module.system",
-            "module.system.haste.module_ref_prefix",
-            "module.system.haste.paths.excludes",
-            "module.system.haste.paths.includes",
-            "module.system.node.allow_root_relative",
-            "module.system.node.main_field",
-            "module.system.node.package_export_condition",
-            "module.system.node.resolve_dirname",
-            "module.system.node.root_relative_dirname",
-            "module.use_strict",
-            "munge_underscores",
-            "name",
-            "builtin_lib",
-            "no_flowlib",
-            "no_implicit_override",
-            "no_unchecked_indexed_access",
-            "node_modules_errors",
-            "pattern_matching",
-            "react.custom_jsx_typing",
-            "react.ref_as_prop",
-            "react.runtime",
-            "recursion_limit",
-            "relay_integration",
-            "relay_integration.esmodules",
-            "relay_integration.excludes",
-            "relay_integration.module_prefix",
-            "relay_integration.module_prefix.includes",
-            "saved_state.allow_reinit",
-            "saved_state.fetcher",
-            "saved_state.direct_serialization",
-            "saved_state.parallel_decompress",
-            "saved_state.persist_export_index",
-            "saved_state.reinit_on_lib_change",
-            "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
-            "server.max_workers",
-            "server.max_workers.full_check",
-            "server.max_workers.windows",
-            "sharedmemory.hash_table_pow",
-            "sharedmemory.heap_size",
-            "supported_operating_systems",
-            "stylex_shorthand_prop",
-            "types_first.max_files_checked_per_worker",
-            "types_first.max_files_checked_per_worker.rust_port",
-            "types_first.max_seconds_for_check_per_worker",
-            "unsuppressable_error_codes",
-            "use_unknown_in_catch_variables",
-            "vpn_less",
-            "wait_for_recheck",
-        ];
         let mut warnings = Vec::new();
 
-        for key in parser_keys {
-            let Some(values) = raw_opts.0.shift_remove(key) else {
-                continue;
+        let error_of_opt_error = |key: &str, OptError(line, kind): OptError| {
+            let msg = match kind {
+                ErrorKind::FailedToParseValue(m) => {
+                    format!("Error parsing value for \"{}\". {}", key, m)
+                }
+                ErrorKind::FailedToSet(m) => {
+                    format!("Error setting value for \"{}\". {}", key, m)
+                }
+                ErrorKind::DuplicateOption => format!("Duplicate option: \"{}\"", key),
             };
-            let result = match key {
-                "all" => Some(parse_boolean(
+            Error(line, msg)
+        };
+
+        type Parser = fn(RawValues, &mut Opts) -> Result<(), OptError>;
+        let parsers: &[(&str, Parser)] = &[
+            ("all", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.all = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "autoimports" => Some(parse_boolean(
+                )
+            }),
+            ("autoimports", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.autoimports = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "autoimports.min_characters" => Some(parse_uint(
+                )
+            }),
+            ("autoimports.min_characters", |values, config| {
+                parse_uint(
                     |opts, v| {
                         if opts.autoimports == Some(false) {
                             return Err(
@@ -2291,17 +2169,22 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "autoimports_ranked_by_usage" => Some(parse_boolean(
+                )
+            }),
+            ("autoimports_ranked_by_usage", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.autoimports_ranked_by_usage = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length" => {
-                    Some(parse_uint(
+                )
+            }),
+            (
+                "autoimports_ranked_by_usage.experimental.boost_exact_match_min_length",
+                |values, config| {
+                    parse_uint(
                         |opts, v| {
                             if opts.autoimports == Some(false) {
                                 return Err("Cannot be configured unless autoimport is enabled."
@@ -2314,42 +2197,60 @@ pub mod opts {
                         false,
                         values,
                         config,
-                    ))
-                }
-                "babel_loose_array_spread" => Some(babel_loose_array_spread_parser(values, config)),
-                "ban_spread_key_props" => Some(ban_spread_key_props_parser(values, config)),
-                // check_is_status is deprecated and ignored. `flow check` is always an alias for `flow status`.
-                "check_is_status" => Some(parse_boolean(|_opts, _v| Ok(()), values, config)),
-                "component_syntax" => Some(component_syntax_parser(values, config)),
-                "dev_only.refinement_info_as_errors" => Some(parse_boolean(
+                    )
+                },
+            ),
+            ("babel_loose_array_spread", |values, config| {
+                babel_loose_array_spread_parser(values, config)
+            }),
+            ("ban_spread_key_props", |values, config| {
+                ban_spread_key_props_parser(values, config)
+            }),
+            // check_is_status is deprecated and ignored. `flow check` is always an alias for `flow status`.
+            ("check_is_status", |values, config| {
+                parse_boolean(|_opts, _v| Ok(()), values, config)
+            }),
+            ("component_syntax", |values, config| {
+                component_syntax_parser(values, config)
+            }),
+            ("dev_only.refinement_info_as_errors", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.dev_only_refinement_info_as_errors = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "emoji" => Some(parse_boolean(
+                )
+            }),
+            ("emoji", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.emoji = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "enums" => Some(parse_boolean(
+                )
+            }),
+            ("enums", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.enums = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "estimate_recheck_time" => Some(estimate_recheck_time_parser(values, config)),
-                "saved_state_restart_on_reinit" => {
-                    Some(saved_state_restart_on_reinit_parser(values, config))
-                }
-                "exact_by_default" => Some(parse_boolean(
+                )
+            }),
+            ("estimate_recheck_time", |values, config| {
+                estimate_recheck_time_parser(values, config)
+            }),
+            ("saved_state_restart_on_reinit", |values, config| {
+                saved_state_restart_on_reinit_parser(values, config)
+            }),
+            ("exact_by_default", |values, config| {
+                parse_boolean(
                     |_opts, v| {
                         if v {
                             Ok(())
@@ -2362,226 +2263,301 @@ pub mod opts {
                     },
                     values,
                     config,
-                )),
-                "experimental.const_params" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.enable_const_params = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.casting_syntax.only_support_as.excludes" => Some(parse_string(
-                    |opts, v| {
-                        opts.casting_syntax_only_support_as_excludes
-                            .push(ocaml_str_to_rust_regex(&v));
-                        Ok(())
-                    },
-                    Some(|opts| opts.casting_syntax_only_support_as_excludes = Vec::new()),
-                    true,
-                    values,
-                    config,
-                )),
-                "experimental.async_component_syntax" => Some(parse_boolean(
+                )
+            }),
+            ("experimental.assert_operator", |values, config| {
+                assert_operator_parser(values, config)
+            }),
+            (
+                "experimental.casting_syntax.only_support_as.excludes",
+                |values, config| {
+                    parse_string(
+                        |opts, v| {
+                            opts.casting_syntax_only_support_as_excludes
+                                .push(ocaml_str_to_rust_regex(&v));
+                            Ok(())
+                        },
+                        Some(|opts| opts.casting_syntax_only_support_as_excludes = Vec::new()),
+                        true,
+                        values,
+                        config,
+                    )
+                },
+            ),
+            ("experimental.async_component_syntax", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.async_component_syntax = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "experimental.async_component_syntax.includes" => {
-                    Some(async_component_syntax_includes_parser(values, config))
-                }
-                "experimental.component_syntax.hook_compatibility" => {
-                    Some(hook_compatibility_parser(values, config))
-                }
-                "experimental.component_syntax.hook_compatibility.includes" => {
-                    Some(hook_compatibility_includes_parser(values, config))
-                }
-                "experimental.component_syntax.hook_compatibility.excludes" => {
-                    Some(hook_compatibility_excludes_parser(values, config))
-                }
-                "experimental.facebook_module_interop" => {
-                    Some(facebook_module_interop_parser(values, config))
-                }
-                "experimental.instance_t_objkit_fix" => {
-                    Some(instance_t_objkit_fix_parser(values, config))
-                }
-                "experimental.channel_mode" => Some(channel_mode_parser(values, config, true)),
-                "experimental.channel_mode.windows" => {
-                    Some(channel_mode_parser(values, config, cfg!(windows)))
-                }
-                "experimental.llm_context.include_imports" => Some(parse_boolean(
+                )
+            }),
+            (
+                "experimental.async_component_syntax.includes",
+                |values, config| async_component_syntax_includes_parser(values, config),
+            ),
+            ("experimental.channel_mode", |values, config| {
+                channel_mode_parser(values, config, true)
+            }),
+            ("experimental.channel_mode.windows", |values, config| {
+                channel_mode_parser(values, config, cfg!(windows))
+            }),
+            (
+                "experimental.component_syntax.hook_compatibility",
+                |values, config| hook_compatibility_parser(values, config),
+            ),
+            (
+                "experimental.component_syntax.hook_compatibility.excludes",
+                |values, config| hook_compatibility_excludes_parser(values, config),
+            ),
+            (
+                "experimental.component_syntax.hook_compatibility.includes",
+                |values, config| hook_compatibility_includes_parser(values, config),
+            ),
+            ("experimental.const_params", |values, config| {
+                parse_boolean(
                     |opts, v| {
-                        opts.llm_context_include_imports = v;
+                        opts.enable_const_params = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "experimental.log_per_error_typing_telemetry" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.log_per_error_typing_telemetry = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.long_lived_workers" => {
-                    Some(long_lived_workers_parser(values, config, true))
-                }
-                "experimental.long_lived_workers.windows" => {
-                    Some(long_lived_workers_parser(values, config, cfg!(windows)))
-                }
-                "experimental.module.automatic_require_default" => {
-                    Some(automatic_require_default_parser(values, config))
-                }
-                "experimental.multi_platform" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.multi_platform = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.multi_platform.extensions" => {
-                    Some(multi_platform_extensions_parser(values, config))
-                }
-                "experimental.multi_platform.extension_group_mapping" => Some(
-                    multi_platform_extension_group_mapping_parser(values, config),
-                ),
-                "experimental.multi_platform.ambient_supports_platform.project_overrides" => Some(
-                    multi_platform_ambient_supports_platform_project_overrides_parser(
-                        values, config,
-                    ),
-                ),
-                "experimental.projects" => Some(projects_parser(values, config)),
-                "experimental.projects_path_mapping" => {
-                    Some(projects_path_mapping_parser(values, config))
-                }
-                "experimental.projects.strict_boundary" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.projects_strict_boundary = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.records" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.records = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.records.includes" => {
-                    fn init_fn(opts: &mut Opts) {
-                        opts.records_includes = vec![];
-                    }
-                    Some(parse_string(
+                )
+            }),
+            (
+                "experimental.deprecated_utilities.excludes",
+                |values, config| {
+                    parse_string(
                         |opts, v| {
-                            opts.records_includes.push(ocaml_str_to_rust_regex(&v));
+                            opts.deprecated_utilities_excludes.push(v);
                             Ok(())
                         },
-                        Some(init_fn),
+                        Some(|opts| opts.deprecated_utilities_excludes = Vec::new()),
                         true,
                         values,
                         config,
-                    ))
-                }
-                "experimental.strict_es6_import_export" => {
-                    Some(strict_es6_import_export_parser(values, config))
-                }
-                "experimental.assert_operator" => Some(assert_operator_parser(values, config)),
-                "experimental.opaque_type_new_bound_syntax" => Some(enum_parser(
-                    &[("true", ())],
-                    |_opts, ()| Ok(()),
-                    values,
-                    config,
-                )),
-                "experimental.ts_syntax" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.ts_syntax = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.deprecated_variance_sigils.excludes" => Some(parse_string(
-                    |opts, v| {
-                        opts.deprecated_variance_sigils_excludes.push(v);
-                        Ok(())
-                    },
-                    Some(|opts| opts.deprecated_variance_sigils_excludes = Vec::new()),
-                    true,
-                    values,
-                    config,
-                )),
-                "experimental.ts_utility_syntax" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.ts_utility_syntax = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.deprecated_utilities.excludes" => Some(parse_string(
-                    |opts, v| {
-                        opts.deprecated_utilities_excludes.push(v);
-                        Ok(())
-                    },
-                    Some(|opts| opts.deprecated_utilities_excludes = Vec::new()),
-                    true,
-                    values,
-                    config,
-                )),
-                "experimental.deprecated_colon_extends.excludes" => Some(parse_string(
-                    |opts, v| {
-                        opts.deprecated_colon_extends_excludes.push(v);
-                        Ok(())
-                    },
-                    Some(|opts| opts.deprecated_colon_extends_excludes = Vec::new()),
-                    true,
-                    values,
-                    config,
-                )),
-                "experimental.enable_custom_error" => Some(parse_boolean(
+                    )
+                },
+            ),
+            ("experimental.enable_custom_error", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.enable_custom_error = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "experimental.tslib_syntax" => Some(parse_boolean(
+                )
+            }),
+            ("experimental.facebook_module_interop", |values, config| {
+                facebook_module_interop_parser(values, config)
+            }),
+            ("experimental.instance_t_objkit_fix", |values, config| {
+                instance_t_objkit_fix_parser(values, config)
+            }),
+            ("experimental.long_lived_workers", |values, config| {
+                long_lived_workers_parser(values, config, true)
+            }),
+            (
+                "experimental.long_lived_workers.windows",
+                |values, config| long_lived_workers_parser(values, config, cfg!(windows)),
+            ),
+            (
+                "experimental.llm_context.include_imports",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.llm_context_include_imports = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
+            (
+                "experimental.log_per_error_typing_telemetry",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.log_per_error_typing_telemetry = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
+            (
+                "experimental.module.automatic_require_default",
+                |values, config| automatic_require_default_parser(values, config),
+            ),
+            ("experimental.multi_platform", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.multi_platform = Some(v);
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
+            (
+                "experimental.multi_platform.extensions",
+                |values, config| multi_platform_extensions_parser(values, config),
+            ),
+            (
+                "experimental.multi_platform.ambient_supports_platform.project_overrides",
+                |values, config| {
+                    multi_platform_ambient_supports_platform_project_overrides_parser(
+                        values, config,
+                    )
+                },
+            ),
+            (
+                "experimental.multi_platform.extension_group_mapping",
+                |values, config| multi_platform_extension_group_mapping_parser(values, config),
+            ),
+            (
+                "experimental.opaque_type_new_bound_syntax",
+                |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
+            ),
+            ("experimental.projects", |values, config| {
+                projects_parser(values, config)
+            }),
+            ("experimental.projects.strict_boundary", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.projects_strict_boundary = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
+            ("experimental.projects_path_mapping", |values, config| {
+                projects_path_mapping_parser(values, config)
+            }),
+            ("experimental.records", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.records = Some(v);
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
+            ("experimental.records.includes", |values, config| {
+                fn init_fn(opts: &mut Opts) {
+                    opts.records_includes = vec![];
+                }
+                parse_string(
+                    |opts, v| {
+                        opts.records_includes.push(ocaml_str_to_rust_regex(&v));
+                        Ok(())
+                    },
+                    Some(init_fn),
+                    true,
+                    values,
+                    config,
+                )
+            }),
+            ("experimental.strict_es6_import_export", |values, config| {
+                strict_es6_import_export_parser(values, config)
+            }),
+            ("experimental.ts_syntax", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.ts_syntax = Some(v);
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
+            (
+                "experimental.deprecated_variance_sigils.excludes",
+                |values, config| {
+                    parse_string(
+                        |opts, v| {
+                            opts.deprecated_variance_sigils_excludes.push(v);
+                            Ok(())
+                        },
+                        Some(|opts| opts.deprecated_variance_sigils_excludes = Vec::new()),
+                        true,
+                        values,
+                        config,
+                    )
+                },
+            ),
+            ("experimental.ts_utility_syntax", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.ts_utility_syntax = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
+            (
+                "experimental.deprecated_colon_extends.excludes",
+                |values, config| {
+                    parse_string(
+                        |opts, v| {
+                            opts.deprecated_colon_extends_excludes.push(v);
+                            Ok(())
+                        },
+                        Some(|opts| opts.deprecated_colon_extends_excludes = Vec::new()),
+                        true,
+                        values,
+                        config,
+                    )
+                },
+            ),
+            ("experimental.tslib_syntax", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.tslib_syntax = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "experimental.typescript_library_definition_support" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.typescript_library_definition_support = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
-                "experimental.type_expansion_recursion_limit" => Some(parse_uint(
-                    |opts, v| {
-                        opts.type_expansion_recursion_limit = v;
-                        Ok(())
-                    },
-                    None,
-                    false,
-                    values,
-                    config,
-                )),
-                "facebook.fbs" => Some(parse_string(
+                )
+            }),
+            (
+                "experimental.typescript_library_definition_support",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.typescript_library_definition_support = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
+            (
+                "experimental.type_expansion_recursion_limit",
+                |values, config| {
+                    parse_uint(
+                        |opts, v| {
+                            opts.type_expansion_recursion_limit = v;
+                            Ok(())
+                        },
+                        None,
+                        false,
+                        values,
+                        config,
+                    )
+                },
+            ),
+            ("facebook.fbs", |values, config| {
+                parse_string(
                     |opts, v| {
                         opts.facebook_fbs = Some(v);
                         Ok(())
@@ -2590,8 +2566,10 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "facebook.fbt" => Some(parse_string(
+                )
+            }),
+            ("facebook.fbt", |values, config| {
+                parse_string(
                     |opts, v| {
                         opts.facebook_fbt = Some(v);
                         Ok(())
@@ -2600,37 +2578,45 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "file_watcher" => Some(file_watcher_parser(values, config)),
-                "file_watcher.edenfs.throttle_time_ms" => {
-                    Some(file_watcher_edenfs_throttle_time_ms_parser(values, config))
-                }
-                "file_watcher.edenfs.timeout" => {
-                    Some(file_watcher_edenfs_timeout_parser(values, config))
-                }
-                "file_watcher.edenfs.max_commit_distance" => Some(
-                    file_watcher_edenfs_max_commit_distance_parser(values, config),
-                ),
-                "file_watcher.edenfs.subprocess_mergebase" => Some(
-                    file_watcher_edenfs_subprocess_mergebase_parser(values, config),
-                ),
-                "file_watcher.mergebase_with" => {
-                    Some(file_watcher_mergebase_with_parser(values, config))
-                }
-                "file_watcher.mergebase_with_git" => {
-                    Some(file_watcher_mergebase_with_git_parser(values, config))
-                }
-                "file_watcher.mergebase_with_hg" => {
-                    Some(file_watcher_mergebase_with_hg_parser(values, config))
-                }
-                "file_watcher.defer_state" => Some(watchman_defer_states_parser(values, config)),
-                "file_watcher.watchman.defer_state" => {
-                    Some(watchman_defer_states_parser(values, config))
-                }
-                "file_watcher.watchman.sync_timeout" => {
-                    Some(watchman_sync_timeout_parser(values, config))
-                }
-                "file_watcher_timeout" => Some(parse_uint(
+                )
+            }),
+            ("file_watcher", |values, config| {
+                file_watcher_parser(values, config)
+            }),
+            ("file_watcher.edenfs.throttle_time_ms", |values, config| {
+                file_watcher_edenfs_throttle_time_ms_parser(values, config)
+            }),
+            ("file_watcher.edenfs.timeout", |values, config| {
+                file_watcher_edenfs_timeout_parser(values, config)
+            }),
+            (
+                "file_watcher.edenfs.max_commit_distance",
+                |values, config| file_watcher_edenfs_max_commit_distance_parser(values, config),
+            ),
+            (
+                "file_watcher.edenfs.subprocess_mergebase",
+                |values, config| file_watcher_edenfs_subprocess_mergebase_parser(values, config),
+            ),
+            ("file_watcher.mergebase_with", |values, config| {
+                file_watcher_mergebase_with_parser(values, config)
+            }),
+            ("file_watcher.mergebase_with_git", |values, config| {
+                file_watcher_mergebase_with_git_parser(values, config)
+            }),
+            ("file_watcher.mergebase_with_hg", |values, config| {
+                file_watcher_mergebase_with_hg_parser(values, config)
+            }),
+            ("file_watcher.defer_state", |values, config| {
+                watchman_defer_states_parser(values, config)
+            }),
+            ("file_watcher.watchman.defer_state", |values, config| {
+                watchman_defer_states_parser(values, config)
+            }),
+            ("file_watcher.watchman.sync_timeout", |values, config| {
+                watchman_sync_timeout_parser(values, config)
+            }),
+            ("file_watcher_timeout", |values, config| {
+                parse_uint(
                     |opts, v| {
                         opts.file_watcher_timeout = Some(v);
                         Ok(())
@@ -2639,53 +2625,73 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "files.implicitly_include_root" => Some(parse_boolean(
+                )
+            }),
+            ("files.implicitly_include_root", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.files_implicitly_include_root = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "format.bracket_spacing" => Some(format_bracket_spacing_parser(values, config)),
-                "format.single_quotes" => Some(format_single_quotes_parser(values, config)),
-                "gc.worker.custom_major_ratio" => {
-                    Some(gc_worker_custom_major_ratio_parser(values, config))
-                }
-                "gc.worker.custom_minor_max_size" => {
-                    Some(gc_worker_custom_minor_max_size_parser(values, config))
-                }
-                "gc.worker.custom_minor_ratio" => {
-                    Some(gc_worker_custom_minor_ratio_parser(values, config))
-                }
-                "gc.worker.major_heap_increment" => {
-                    Some(gc_worker_major_heap_increment_parser(values, config))
-                }
-                "gc.worker.minor_heap_size" => {
-                    Some(gc_worker_minor_heap_size_parser(values, config))
-                }
-                "gc.worker.space_overhead" => Some(gc_worker_space_overhead_parser(values, config)),
-                "gc.worker.window_size" => Some(gc_worker_window_size_parser(values, config)),
-                "include_warnings" => Some(parse_boolean(
+                )
+            }),
+            ("format.bracket_spacing", |values, config| {
+                format_bracket_spacing_parser(values, config)
+            }),
+            ("format.single_quotes", |values, config| {
+                format_single_quotes_parser(values, config)
+            }),
+            ("gc.worker.custom_major_ratio", |values, config| {
+                gc_worker_custom_major_ratio_parser(values, config)
+            }),
+            ("gc.worker.custom_minor_max_size", |values, config| {
+                gc_worker_custom_minor_max_size_parser(values, config)
+            }),
+            ("gc.worker.custom_minor_ratio", |values, config| {
+                gc_worker_custom_minor_ratio_parser(values, config)
+            }),
+            ("gc.worker.major_heap_increment", |values, config| {
+                gc_worker_major_heap_increment_parser(values, config)
+            }),
+            ("gc.worker.minor_heap_size", |values, config| {
+                gc_worker_minor_heap_size_parser(values, config)
+            }),
+            ("gc.worker.space_overhead", |values, config| {
+                gc_worker_space_overhead_parser(values, config)
+            }),
+            ("gc.worker.window_size", |values, config| {
+                gc_worker_window_size_parser(values, config)
+            }),
+            ("include_warnings", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.include_warnings = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "jest_integration" => Some(parse_boolean(
+                )
+            }),
+            ("jest_integration", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.jest_integration = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "lazy_mode" => Some(lazy_mode_parser(values, config)),
-                "log_saving" => Some(log_saving_parser(values, config)),
-                "max_header_tokens" => Some(parse_uint(
+                )
+            }),
+            ("lazy_mode", |values, config| {
+                lazy_mode_parser(values, config)
+            }),
+            ("log_saving", |values, config| {
+                log_saving_parser(values, config)
+            }),
+            ("max_header_tokens", |values, config| {
+                parse_uint(
                     |opts, v| {
                         opts.max_header_tokens = v;
                         Ok(())
@@ -2694,63 +2700,82 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "merge_timeout" => Some(merge_timeout_parser(values, config)),
-                "module.file_ext" => Some(file_ext_parser(values, config)),
-                "module.ignore_non_literal_requires" => {
-                    Some(ignore_non_literal_requires_parser(values, config))
-                }
-                "module.name_mapper" => Some(name_mapper_parser(values, config)),
-                "module.name_mapper.extension" => {
-                    Some(name_mapper_extension_parser(values, config))
-                }
-                "module.declaration_dirnames" => {
-                    Some(module_declaration_dirnames_parser(values, config))
-                }
-                "module.missing_module_generators" => {
-                    Some(missing_module_generators_parser(values, config))
-                }
-                "module.system" => Some(module_system_parser(values, config)),
-                "module.system.haste.module_ref_prefix" => {
-                    Some(haste_module_ref_prefix_parser(values, config))
-                }
-                "module.system.haste.paths.excludes" => {
-                    Some(haste_paths_excludes_parser(values, config))
-                }
-                "module.system.haste.paths.includes" => {
-                    Some(haste_paths_includes_parser(values, config))
-                }
-                "module.system.node.allow_root_relative" => {
-                    Some(node_resolver_allow_root_relative_parser(values, config))
-                }
-                "module.system.node.main_field" => Some(node_main_field_parser(values, config)),
-                "module.system.node.package_export_condition" => {
-                    Some(node_package_export_condition_parser(values, config))
-                }
-                "module.system.node.resolve_dirname" => {
-                    Some(node_resolve_dirname_parser(values, config))
-                }
-                "module.system.node.root_relative_dirname" => {
-                    Some(node_resolver_root_relative_dirnames_parser(values, config))
-                }
-                "module.use_strict" => Some(parse_boolean(
+                )
+            }),
+            ("merge_timeout", |values, config| {
+                merge_timeout_parser(values, config)
+            }),
+            ("module.declaration_dirnames", |values, config| {
+                module_declaration_dirnames_parser(values, config)
+            }),
+            ("module.file_ext", |values, config| {
+                file_ext_parser(values, config)
+            }),
+            ("module.ignore_non_literal_requires", |values, config| {
+                ignore_non_literal_requires_parser(values, config)
+            }),
+            ("module.missing_module_generators", |values, config| {
+                missing_module_generators_parser(values, config)
+            }),
+            ("module.name_mapper", |values, config| {
+                name_mapper_parser(values, config)
+            }),
+            ("module.name_mapper.extension", |values, config| {
+                name_mapper_extension_parser(values, config)
+            }),
+            ("module.system", |values, config| {
+                module_system_parser(values, config)
+            }),
+            ("module.system.haste.module_ref_prefix", |values, config| {
+                haste_module_ref_prefix_parser(values, config)
+            }),
+            ("module.system.haste.paths.excludes", |values, config| {
+                haste_paths_excludes_parser(values, config)
+            }),
+            ("module.system.haste.paths.includes", |values, config| {
+                haste_paths_includes_parser(values, config)
+            }),
+            (
+                "module.system.node.allow_root_relative",
+                |values, config| node_resolver_allow_root_relative_parser(values, config),
+            ),
+            ("module.system.node.main_field", |values, config| {
+                node_main_field_parser(values, config)
+            }),
+            (
+                "module.system.node.package_export_condition",
+                |values, config| node_package_export_condition_parser(values, config),
+            ),
+            ("module.system.node.resolve_dirname", |values, config| {
+                node_resolve_dirname_parser(values, config)
+            }),
+            (
+                "module.system.node.root_relative_dirname",
+                |values, config| node_resolver_root_relative_dirnames_parser(values, config),
+            ),
+            ("module.use_strict", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.modules_are_use_strict = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "munge_underscores" => Some(parse_boolean(
+                )
+            }),
+            ("munge_underscores", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.munge_underscores = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "name" => Some(root_name_parser(values, config)),
-                "builtin_lib" => Some(enum_parser(
+                )
+            }),
+            ("name", |values, config| root_name_parser(values, config)),
+            ("builtin_lib", |values, config| {
+                enum_parser(
                     &[
                         ("flowlib", BuiltinLib::Flowlib),
                         ("prelude", BuiltinLib::Prelude),
@@ -2762,8 +2787,10 @@ pub mod opts {
                     },
                     values,
                     config,
-                )),
-                "no_flowlib" => Some(parse_boolean(
+                )
+            }),
+            ("no_flowlib", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.builtin_lib = if v {
                             BuiltinLib::Prelude
@@ -2774,48 +2801,60 @@ pub mod opts {
                     },
                     values,
                     config,
-                )),
-                "no_implicit_override" => Some(parse_boolean(
+                )
+            }),
+            ("no_implicit_override", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.no_implicit_override = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "no_unchecked_indexed_access" => Some(parse_boolean(
+                )
+            }),
+            ("no_unchecked_indexed_access", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.no_unchecked_indexed_access = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "node_modules_errors" => Some(parse_boolean(
+                )
+            }),
+            ("node_modules_errors", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.node_modules_errors = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "pattern_matching" => Some(parse_boolean(
+                )
+            }),
+            ("pattern_matching", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.pattern_matching = Some(v);
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "react.custom_jsx_typing" => Some(parse_boolean(
+                )
+            }),
+            ("react.custom_jsx_typing", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.react_custom_jsx_typing = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "react.ref_as_prop" => Some(enum_parser(
+                )
+            }),
+            ("react.ref_as_prop", |values, config| {
+                enum_parser(
                     &[
                         ("legacy", ReactRefAsProp::Legacy),
                         ("experimental.full_support", ReactRefAsProp::FullSupport),
@@ -2826,9 +2865,13 @@ pub mod opts {
                     },
                     values,
                     config,
-                )),
-                "react.runtime" => Some(react_runtime_parser(values, config)),
-                "recursion_limit" => Some(parse_uint(
+                )
+            }),
+            ("react.runtime", |values, config| {
+                react_runtime_parser(values, config)
+            }),
+            ("recursion_limit", |values, config| {
+                parse_uint(
                     |opts, v| {
                         opts.recursion_limit = v as i32;
                         Ok(())
@@ -2837,27 +2880,33 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "relay_integration" => Some(parse_boolean(
+                )
+            }),
+            ("relay_integration", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.relay_integration = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "relay_integration.esmodules" => Some(parse_boolean(
+                )
+            }),
+            ("relay_integration.esmodules", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.relay_integration_esmodules = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "relay_integration.excludes" => {
-                    Some(relay_integration_excludes_parser(values, config))
-                }
-                "relay_integration.module_prefix" => Some(parse_string(
+                )
+            }),
+            ("relay_integration.excludes", |values, config| {
+                relay_integration_excludes_parser(values, config)
+            }),
+            ("relay_integration.module_prefix", |values, config| {
+                parse_string(
                     |opts, v| {
                         opts.relay_integration_module_prefix = Some(v);
                         Ok(())
@@ -2866,35 +2915,45 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "relay_integration.module_prefix.includes" => Some(
-                    relay_integration_module_prefix_includes_parser(values, config),
-                ),
-                "saved_state.allow_reinit" => Some(saved_state_allow_reinit_parser(values, config)),
-                "saved_state.direct_serialization" => {
-                    Some(saved_state_direct_serialization_parser(values, config))
-                }
-                "saved_state.parallel_decompress" => {
-                    Some(saved_state_parallel_decompress_parser(values, config))
-                }
-                "saved_state.fetcher" => Some(saved_state_fetcher_parser(values, config)),
-                "saved_state.persist_export_index" => {
-                    Some(saved_state_persist_export_index_parser(values, config))
-                }
-                "saved_state.reinit_on_lib_change" => {
-                    Some(saved_state_reinit_on_lib_change_parser(values, config))
-                }
-                "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED" => {
-                    Some(parse_boolean(
+                )
+            }),
+            (
+                "relay_integration.module_prefix.includes",
+                |values, config| relay_integration_module_prefix_includes_parser(values, config),
+            ),
+            ("saved_state.allow_reinit", |values, config| {
+                saved_state_allow_reinit_parser(values, config)
+            }),
+            ("saved_state.fetcher", |values, config| {
+                saved_state_fetcher_parser(values, config)
+            }),
+            ("saved_state.direct_serialization", |values, config| {
+                saved_state_direct_serialization_parser(values, config)
+            }),
+            ("saved_state.parallel_decompress", |values, config| {
+                saved_state_parallel_decompress_parser(values, config)
+            }),
+            ("saved_state.persist_export_index", |values, config| {
+                saved_state_persist_export_index_parser(values, config)
+            }),
+            ("saved_state.reinit_on_lib_change", |values, config| {
+                saved_state_reinit_on_lib_change_parser(values, config)
+            }),
+            (
+                "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
+                |values, config| {
+                    parse_boolean(
                         |opts, v| {
                             opts.saved_state_skip_version_check = v;
                             Ok(())
                         },
                         values,
                         config,
-                    ))
-                }
-                "server.max_workers" => Some(parse_uint(
+                    )
+                },
+            ),
+            ("server.max_workers", |values, config| {
+                parse_uint(
                     |opts, v| {
                         opts.max_workers = Some(v);
                         Ok(())
@@ -2903,8 +2962,10 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "server.max_workers.full_check" => Some(parse_uint(
+                )
+            }),
+            ("server.max_workers.full_check", |values, config| {
+                parse_uint(
                     |opts, v| {
                         opts.max_workers_full_check = Some(v);
                         Ok(())
@@ -2913,8 +2974,10 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "server.max_workers.windows" => Some(parse_uint(
+                )
+            }),
+            ("server.max_workers.windows", |values, config| {
+                parse_uint(
                     |opts, v| {
                         if cfg!(windows) {
                             opts.max_workers = Some(v);
@@ -2925,9 +2988,13 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "sharedmemory.hash_table_pow" => Some(shm_hash_table_pow_parser(values, config)),
-                "sharedmemory.heap_size" => Some(parse_u64(
+                )
+            }),
+            ("sharedmemory.hash_table_pow", |values, config| {
+                shm_hash_table_pow_parser(values, config)
+            }),
+            ("sharedmemory.heap_size", |values, config| {
+                parse_u64(
                     |opts, v| {
                         opts.shm_heap_size = v;
                         Ok(())
@@ -2936,20 +3003,10 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "types_first.max_files_checked_per_worker" => {
-                    Some(max_files_checked_per_worker_parser(values, config))
-                }
-                "types_first.max_files_checked_per_worker.rust_port" => Some(
-                    max_files_checked_per_worker_rust_port_parser(values, config),
-                ),
-                "types_first.max_seconds_for_check_per_worker" => {
-                    Some(max_seconds_for_check_per_worker_parser(values, config))
-                }
-                "unsuppressable_error_codes" => {
-                    Some(unsuppressable_error_codes_parser(values, config))
-                }
-                "supported_operating_systems" => Some(enum_parser(
+                )
+            }),
+            ("supported_operating_systems", |values, config| {
+                enum_parser(
                     &[("CentOS", SupportedOs::CentOS)],
                     |opts, v| {
                         opts.supported_operating_systems.push(v);
@@ -2957,8 +3014,10 @@ pub mod opts {
                     },
                     values,
                     config,
-                )),
-                "stylex_shorthand_prop" => Some(parse_string(
+                )
+            }),
+            ("stylex_shorthand_prop", |values, config| {
+                parse_string(
                     |opts, v| {
                         opts.stylex_shorthand_prop = Some(v);
                         Ok(())
@@ -2967,43 +3026,53 @@ pub mod opts {
                     false,
                     values,
                     config,
-                )),
-                "use_unknown_in_catch_variables" => {
-                    Some(use_unknown_in_catch_variables_parser(values, config))
-                }
-                "vpn_less" => Some(parse_boolean(
+                )
+            }),
+            (
+                "types_first.max_files_checked_per_worker",
+                |values, config| max_files_checked_per_worker_parser(values, config),
+            ),
+            (
+                "types_first.max_files_checked_per_worker.rust_port",
+                |values, config| max_files_checked_per_worker_rust_port_parser(values, config),
+            ),
+            (
+                "types_first.max_seconds_for_check_per_worker",
+                |values, config| max_seconds_for_check_per_worker_parser(values, config),
+            ),
+            ("unsuppressable_error_codes", |values, config| {
+                unsuppressable_error_codes_parser(values, config)
+            }),
+            ("use_unknown_in_catch_variables", |values, config| {
+                use_unknown_in_catch_variables_parser(values, config)
+            }),
+            ("vpn_less", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.vpn_less = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                "wait_for_recheck" => Some(parse_boolean(
+                )
+            }),
+            ("wait_for_recheck", |values, config| {
+                parse_boolean(
                     |opts, v| {
                         opts.wait_for_recheck = v;
                         Ok(())
                     },
                     values,
                     config,
-                )),
-                _ => None,
-            };
+                )
+            }),
+        ];
 
-            if let Some(res) = result {
-                res.map_err(|OptError(line, kind)| {
-                    let msg = match kind {
-                        ErrorKind::FailedToParseValue(m) => {
-                            format!("Error parsing value for \"{}\". {}", key, m)
-                        }
-                        ErrorKind::FailedToSet(m) => {
-                            format!("Error setting value for \"{}\". {}", key, m)
-                        }
-                        ErrorKind::DuplicateOption => format!("Duplicate option: \"{}\"", key),
-                    };
-                    Error(line, msg)
-                })?;
-            }
+        for &(key, parser) in parsers {
+            let Some(values) = raw_opts.0.shift_remove(key) else {
+                continue;
+            };
+            parser(values, config).map_err(|err| error_of_opt_error(key, err))?;
         }
 
         for (key, values) in raw_opts.0 {
@@ -3800,6 +3869,57 @@ mod tests {
                         value, line, message
                     )
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn options_parse_in_declared_order_not_input_order() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "autoimports.min_characters=3".to_owned()),
+                (3, "autoimports=false".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(_) => panic!("autoimports.min_characters should depend on autoimports=false"),
+            Err(Error(line, message)) => {
+                assert_eq!(line, 2);
+                assert_eq!(
+                    message.as_str(),
+                    "Error setting value for \"autoimports.min_characters\". Cannot be configured unless autoimport is enabled."
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn ts_utility_syntax_is_supported() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "experimental.ts_utility_syntax=false".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(warnings) => {
+                assert!(warnings.is_empty());
+                assert!(!config.options.ts_utility_syntax);
+            }
+            Err(Error(line, message)) => {
+                panic!(
+                    "experimental.ts_utility_syntax errored at line {}: {}",
+                    line, message
+                )
             }
         }
     }
