@@ -25,7 +25,7 @@
     "jest-specific-snapshot": "^5.0.0",
     "mkdirp": "^1.0.4",
     "patch-package": "^6.5.0",
-    "prettier": "3.6.2",
+    "prettier": "3.9.4",
     "prettier-plugin-hermes-parser": "*"
   },
   "scripts": {
@@ -42,8 +42,7 @@
     "flow-estree",
     "flow-parser",
     "flow-transform",
-    "babel-plugin-syntax-flow-parser",
-    "prettier-plugin-flow-parser"
+    "babel-plugin-syntax-flow-parser"
   ],
   "dependencies": {},
   "resolutions": {

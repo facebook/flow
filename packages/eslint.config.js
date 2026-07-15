@@ -27,7 +27,6 @@ module.exports = defineConfig([
     '**/fixtures/**',
     'internal-prettier-v3/',
     'jest.config.js',
-    'prettier-plugin-flow-parser/index.mjs',
     'babel-plugin-transform-flow-enums/',
     'eslint-plugin-fb-flow/',
     'flow-dev-tools/',

@@ -4395,10 +4395,10 @@ prettier-plugin-hermes-parser@*, prettier-plugin-hermes-parser@0.31.1:
   resolved "https://registry.yarnpkg.com/prettier-plugin-hermes-parser/-/prettier-plugin-hermes-parser-0.31.1.tgz#950f14274ba6d5d39d152cdb25ea67c107b9b467"
   integrity sha512-h98zphVpGyil1qXUP70jmD2SLMqsdah2Ys6Ap/f3zbKXJU5U91mtI+egxyTXtDasIL8Jp9awmUVLkzkyfimUNQ==
 
-prettier@3.6.2:
-  version "3.6.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.6.2.tgz#ccda02a1003ebbb2bfda6f83a074978f608b9393"
-  integrity sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==
+prettier@3.9.4:
+  version "3.9.4"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.9.4.tgz#a9c477cf1614376bd1f6bbc593d8c0d414bcec87"
+  integrity sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==
 
 pretty-format@30.0.5:
   version "30.0.5"

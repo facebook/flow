@@ -66,13 +66,6 @@ module.exports = {
       '$1',
     ),
 
-    // prettier-plugin-flow-parser is a pre-built bundle without src/index.js
-    '^prettier-plugin-flow-parser$': path.resolve(
-      __dirname,
-      'prettier-plugin-flow-parser',
-      'index.mjs',
-    ),
-
     // flow-parser
     '.*/FlowParserWASM$': path.resolve(
       __dirname,

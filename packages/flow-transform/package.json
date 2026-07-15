@@ -19,13 +19,7 @@
     "string-width": "4.2.3"
   },
   "peerDependencies": {
-    "prettier": "^3.0.0",
-    "prettier-plugin-flow-parser": "*"
-  },
-  "peerDependenciesMeta": {
-    "prettier-plugin-flow-parser": {
-      "optional": true
-    }
+    "prettier": "^3.0.0"
   },
   "files": [
     "dist",

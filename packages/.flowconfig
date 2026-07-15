@@ -32,7 +32,6 @@ module.name_mapper='^flow-parser/__test_utils__/\(.*\)$' -> '<PROJECT_ROOT>/flow
 module.name_mapper='^flow-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
 module.name_mapper='^flow-eslint$' -> '<PROJECT_ROOT>/flow-eslint/src/index.js'
 module.name_mapper='^flow-transform$' -> '<PROJECT_ROOT>/flow-transform/src/index.js'
-module.name_mapper='^prettier-plugin-flow-parser$' -> '<PROJECT_ROOT>/prettier-plugin-flow-parser/index.mjs'
 module.name_mapper='^hermes-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
 
 enums=true

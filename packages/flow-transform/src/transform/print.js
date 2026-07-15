@@ -47,20 +47,12 @@ export async function print(
   // Fix up the AST to match what prettier expects.
   mutateESTreeASTForPrettier(program, visitorKeys);
 
-  let pluginParserName = 'flow';
-  let pluginParser;
-  let pluginPrinter;
-  try {
-    // Use prettier-plugin-flow-parser if we can. It has latest Flow syntax support.
-    // $FlowExpectedError[untyped-import]
-    const prettierHermesPlugin = await import('prettier-plugin-flow-parser');
-    pluginParser = prettierHermesPlugin.parsers.hermes;
-    pluginPrinter = prettierHermesPlugin.printers;
-    pluginParserName = 'hermes';
-  } catch {
-    const prettierFlowPlugin = require('prettier/plugins/flow');
-    pluginParser = prettierFlowPlugin.parsers.flow;
-  }
+  const prettierEstreePlugin = require('prettier/plugins/estree');
+  const pluginParserName = visitorKeys != null ? 'typescript' : 'flow';
+  const pluginParser =
+    visitorKeys != null
+      ? require('prettier/plugins/typescript').parsers.typescript
+      : require('prettier/plugins/flow').parsers.flow;
 
   return prettier.format(
     codeForPrinting,
@@ -79,7 +71,7 @@ export async function print(
               },
             },
           },
-          printers: pluginPrinter,
+          printers: prettierEstreePlugin.printers,
         },
       ],
     },

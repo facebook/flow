@@ -7,8 +7,9 @@ with the sibling deps rewired:
 - `hermes-parser` -> `flow-parser`
 - `hermes-estree` -> `flow-estree`
 - `hermes-eslint` -> `flow-eslint`
-- `prettier-plugin-hermes-parser` -> `prettier-plugin-flow-parser`
-  (optional peerDep)
+
+`flow-transform` itself prints with Prettier's built-in parsers and does not
+depend on the prettier plugin fork.
 
 This package is pieced together and inspired by code from:
 - [`@babel/traverse`](https://github.com/babel/babel/tree/35ec4394a72e6fc88553ce7dcf0fb1c91d9505a9/packages/babel-traverse)
