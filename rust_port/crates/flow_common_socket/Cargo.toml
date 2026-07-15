@@ -9,7 +9,7 @@ edition = "2024"
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 md-5 = "0.10"
-socket2 = { version = "0.6.4", features = ["all"] }
+socket2 = { version = "0.6.5", features = ["all"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
