@@ -533,6 +533,7 @@ dependencies = [
  "flow_config",
  "flow_daemon",
  "flow_data_structure_wrapper",
+ "flow_dev_tools",
  "flow_dfind",
  "flow_edenfs_watcher",
  "flow_env_builder",
@@ -832,6 +833,16 @@ dependencies = [
  "rpds",
  "serde",
  "smol_str",
+]
+
+[[package]]
+name = "flow_dev_tools"
+version = "0.0.0"
+dependencies = [
+ "flow_parser",
+ "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

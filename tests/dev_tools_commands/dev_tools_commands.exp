@@ -1,0 +1,41 @@
+=== remove-comments keeps remaining flowlint suppressions ===
+Removed 1 comments in 1 files
+>>> remove_partial/test.js
+function f(x: ?number) {
+  // flowlint-next-line, sketchy-null-number:off
+  if (x) {}
+}
+
+=== remove-comments removes empty flowlint suppressions ===
+Removed 1 comments in 1 files
+>>> remove_empty/test.js
+function f(x: number) {
+  if (x) {}
+}
+
+=== update-suppressions preserves eslint suppressions and adds missing ones ===
+Removed 1 comments in 1 files
+Added 1 comments in 1 files
+>>> update_suppressions/test.js
+// $FlowFixMe[incompatible-type] eslint-disable-next-line no-fallthrough
+const ok: number = 1;
+
+function takesNumber(x: number) {}
+// $FlowFixMe[incompatible-type]
+takesNumber("nope");
+
+=== update-suppressions updates site annotations across roots ===
+Removed 1 comments in 1 files
+Added 0 comments in 0 files
+>>> update_sites/shared.js
+function f(x: ?number) {
+  // $FlowFixMe[sketchy-null-number](site=bar)
+  if (x) {}
+}
+
+=== add-comments adds suppressions for errors ===
+Added 1 comments to suppress 1 errors
+>>> add_comments/test.js
+function takesNumber(x: number) {}
+// $FlowFixMe[incompatible-type] e2e
+takesNumber("nope");

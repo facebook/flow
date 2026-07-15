@@ -28,6 +28,7 @@ pub mod command_utils;
 mod config_command;
 mod coverage_command;
 mod cycle_command;
+mod dev_tools_command;
 mod dump_types_command;
 mod env_builder_debug_command;
 mod extra_commands;
@@ -260,6 +261,7 @@ fn explicit_commands() -> Vec<command_spec::Command> {
         coverage_command::command(),
         batch_coverage_command::command(),
         cycle_command::command(),
+        dev_tools_command::command(),
         query_command::command(),
         env_builder_debug_command::command(),
         graph_command::command(),
