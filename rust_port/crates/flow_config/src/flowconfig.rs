@@ -1509,23 +1509,6 @@ pub mod opts {
         )
     }
 
-    fn instance_t_objkit_fix_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
-        parse_boolean(
-            |_opts, v| {
-                if v {
-                    Ok(())
-                } else {
-                    Err(
-                        "Support for experimental.instance_t_objkit_fix=false is removed."
-                            .to_string(),
-                    )
-                }
-            },
-            values,
-            config,
-        )
-    }
-
     fn lazy_mode_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         let allowed = vec![
             ("true", LazyMode::Lazy),
@@ -2353,9 +2336,6 @@ pub mod opts {
             }),
             ("experimental.facebook_module_interop", |values, config| {
                 facebook_module_interop_parser(values, config)
-            }),
-            ("experimental.instance_t_objkit_fix", |values, config| {
-                instance_t_objkit_fix_parser(values, config)
             }),
             ("experimental.long_lived_workers", |values, config| {
                 long_lived_workers_parser(values, config, true)
