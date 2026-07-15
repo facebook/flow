@@ -7176,6 +7176,27 @@ pub mod exports {
             self.0.iter().map(|(k, v)| (k.dupe(), v.clone())).collect()
         }
 
+        /// Returns this export map with the `default` entry removed. When there
+        /// is no `default` export (the common case) `self` is returned
+        /// unchanged -- a zero-cost move; otherwise a filtered copy is built in
+        /// a single O(n) pass (the source is already sorted, so order is
+        /// preserved). Used to implement spec-compliant `export *`, which
+        /// re-exports named exports but never the source module's default export
+        /// (matching `GetExportedNames` in the ES spec and Node.js/ESM).
+        pub fn without_default(self) -> Self {
+            let default_name = Name::new("default");
+            if !self.contains_key(&default_name) {
+                return self;
+            }
+            T(Rc::new(
+                self.0
+                    .iter()
+                    .filter(|(k, _)| *k != default_name)
+                    .cloned()
+                    .collect(),
+            ))
+        }
+
         /// Merge two sorted export maps, preferring entries from `other` on key collision.
         /// Both inputs are already sorted, so this is O(n+m).
         pub fn union(self, other: T) -> T {

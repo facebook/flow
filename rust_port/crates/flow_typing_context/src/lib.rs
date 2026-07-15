@@ -195,6 +195,7 @@ pub struct FrozenMetadata {
     pub strict_es6_import_export: bool,
     pub strip_root: bool,
     pub stylex_shorthand_prop: Option<String>,
+    pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
@@ -255,6 +256,7 @@ impl Default for FrozenMetadata {
             strict_es6_import_export: false,
             strip_root: true,
             stylex_shorthand_prop: None,
+            export_star_excludes_default: false,
             ts_syntax: false,
             deprecated_variance_sigils_excludes: Arc::from([]),
             deprecated_colon_extends_excludes: Arc::from([]),
@@ -653,6 +655,7 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             strict_es6_import_export: options.strict_es6_import_export,
             strip_root: options.strip_root,
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
+            export_star_excludes_default: options.export_star_excludes_default,
             ts_syntax: options.ts_syntax,
             deprecated_variance_sigils_excludes: options.deprecated_variance_sigils_excludes.dupe(),
             deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
@@ -1360,6 +1363,10 @@ impl<'cx> Context<'cx> {
 
     pub fn stylex_shorthand_prop(&self) -> Option<&str> {
         self.0.metadata.frozen.stylex_shorthand_prop.as_deref()
+    }
+
+    pub fn export_star_excludes_default(&self) -> bool {
+        self.0.metadata.frozen.export_star_excludes_default
     }
 
     pub fn ts_syntax(&self) -> bool {

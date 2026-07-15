@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+all=true
+experimental.export_star_excludes_default=true
+
+[strict]

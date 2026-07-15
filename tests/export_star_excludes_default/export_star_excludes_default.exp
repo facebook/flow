@@ -1,0 +1,10 @@
+Error -------------------------------------------------------------------------------------------------- consumer.js:5:8
+
+Cannot import a default export because there is no default export in `./barrel`. [missing-export]
+
+   5| import DefaultThroughStar from './barrel';
+             ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

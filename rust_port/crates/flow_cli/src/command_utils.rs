@@ -2157,6 +2157,7 @@ pub(super) fn make_options(
                 shm_heap_size: _shm_heap_size,
                 supported_operating_systems,
                 strict_es6_import_export,
+                export_star_excludes_default,
                 ts_syntax,
                 deprecated_variance_sigils_excludes,
                 ts_utility_syntax,
@@ -2181,6 +2182,8 @@ pub(super) fn make_options(
 
     // FlowConfig.ts_syntax: defaults to false when unset.
     let ts_syntax = ts_syntax.unwrap_or(false);
+    // FlowConfig.export_star_excludes_default: defaults to false when unset.
+    let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     // FlowConfig.tslib_syntax: falls back to ts_syntax when unset.
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
@@ -2801,6 +2804,7 @@ pub(super) fn make_options(
         supported_operating_systems,
         stylex_shorthand_prop,
         temp_dir: FlowSmolStr::new(temp_dir),
+        export_star_excludes_default,
         ts_syntax,
         deprecated_variance_sigils_excludes,
         tslib_syntax,

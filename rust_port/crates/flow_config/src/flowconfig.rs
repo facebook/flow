@@ -197,6 +197,7 @@ pub mod opts {
         pub shm_heap_size: u64,
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
+        pub export_star_excludes_default: Option<bool>,
         pub ts_syntax: Option<bool>,
         pub deprecated_variance_sigils_excludes: Vec<String>,
         pub ts_utility_syntax: bool,
@@ -378,6 +379,7 @@ pub mod opts {
             shm_heap_size: /* 25GB */ 1024 * 1024 * 25,
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
+            export_star_excludes_default: None,
             ts_syntax: None,
             deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,
@@ -2448,6 +2450,19 @@ pub mod opts {
             ("experimental.strict_es6_import_export", |values, config| {
                 strict_es6_import_export_parser(values, config)
             }),
+            (
+                "experimental.export_star_excludes_default",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.export_star_excludes_default = Some(v);
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             ("experimental.ts_syntax", |values, config| {
                 parse_boolean(
                     |opts, v| {

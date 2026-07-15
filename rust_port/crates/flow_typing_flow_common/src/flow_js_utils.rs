@@ -4772,6 +4772,16 @@ pub mod copy_named_exports_t_kit {
         let source_exports = &module_.module_export_types;
         let value_exports = cx.find_exports(source_exports.value_exports_tmap);
         let type_exports = cx.find_exports(source_exports.type_exports_tmap);
+        // Per the ECMAScript spec, `export * from 'x'` re-exports the named
+        // exports of `x` but never its default export (GetExportedNames skips
+        // "default"). Historically Flow forwarded the default too, matching a
+        // now-fixed Metro runtime bug. When the flag is set, drop "default" so
+        // Flow agrees with the spec and the fixed bundler runtime.
+        let value_exports = if cx.export_star_excludes_default() {
+            value_exports.without_default()
+        } else {
+            value_exports
+        };
         export_named_t_kit::mod_module_t(
             cx,
             value_exports,

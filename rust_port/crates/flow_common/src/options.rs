@@ -243,6 +243,7 @@ pub struct Options {
     pub supported_operating_systems: Vec<SupportedOs>,
     pub stylex_shorthand_prop: Option<String>,
     pub temp_dir: FlowSmolStr,
+    pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub tslib_syntax: bool,
