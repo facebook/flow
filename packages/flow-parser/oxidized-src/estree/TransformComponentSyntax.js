@@ -622,6 +622,7 @@ function mapComponentDeclaration(
 function mapDeclareHook(node: DeclareHook): DeclareFunction {
   return {
     type: 'DeclareFunction',
+    implicitDeclare: false,
     id: {
       type: 'Identifier',
       name: node.id.name,

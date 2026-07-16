@@ -26,8 +26,8 @@ module.system=node
 munge_underscores=true
 ; Yarn workspaces hoist packages to the top level node_modules, causing module resolution errors if
 ; we do not specify where each package's type definitions can be found.
-module.name_mapper='^flow-parser/oxidized$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/index.js'
-module.name_mapper='^flow-parser/oxidized/\(.*\)$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/\1'
+module.name_mapper='^flow-parser$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/index.js'
+module.name_mapper='^flow-parser/\(.*\)$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/\1'
 module.name_mapper='^flow-parser/__test_utils__/\(.*\)$' -> '<PROJECT_ROOT>/flow-parser/__test_utils__/\1'
 module.name_mapper='^flow-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
 module.name_mapper='^flow-eslint$' -> '<PROJECT_ROOT>/flow-eslint/src/index.js'
