@@ -18,7 +18,7 @@ import type {VisitorKeys} from '../oxidized-src/generated/ESTreeVisitorKeys';
 
 import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';
 import {parse as parseOriginal} from '../oxidized-src/index';
-import {print as printAST} from '../oxidized-src/transform/print/print';
+import {print as printAST} from 'flow-transform';
 
 // $FlowExpectedError[untyped-import]
 import {VISITOR_KEYS as babelVisitorKeys} from '@babel/types';
