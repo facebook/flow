@@ -1,0 +1,381 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 1
+          }
+        },
+        "name": "A",
+        "optional": false,
+        "range": [
+          5,
+          6
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 28,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        28
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 26,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 20,
+                  "line": 1
+                }
+              },
+              "range": [
+                20,
+                26
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 1
+                }
+              },
+              "name": "function",
+              "optional": false,
+              "range": [
+                10,
+                18
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 26,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 1
+              }
+            },
+            "optional": false,
+            "range": [
+              10,
+              26
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 27,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 1
+          }
+        },
+        "range": [
+          9,
+          27
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 2
+          }
+        },
+        "name": "B",
+        "optional": false,
+        "range": [
+          34,
+          35
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 26,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        29,
+        55
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 24,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 2
+                }
+              },
+              "range": [
+                47,
+                53
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 2
+                }
+              },
+              "name": "typeof",
+              "optional": false,
+              "range": [
+                39,
+                45
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 24,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 2
+              }
+            },
+            "optional": false,
+            "range": [
+              39,
+              53
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 25,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 2
+          }
+        },
+        "range": [
+          38,
+          54
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 3
+          }
+        },
+        "name": "C",
+        "optional": false,
+        "range": [
+          61,
+          62
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 29,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        56,
+        85
+      ],
+      "right": {
+        "elementTypes": [
+          {
+            "elementType": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 3
+                }
+              },
+              "range": [
+                77,
+                83
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "label": {
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 10,
+                  "line": 3
+                }
+              },
+              "name": "function",
+              "optional": false,
+              "range": [
+                66,
+                74
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 27,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 3
+              }
+            },
+            "optional": true,
+            "range": [
+              66,
+              83
+            ],
+            "type": "TupleTypeLabeledElement",
+            "variance": null
+          }
+        ],
+        "inexact": false,
+        "loc": {
+          "end": {
+            "column": 28,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 3
+          }
+        },
+        "range": [
+          65,
+          84
+        ],
+        "type": "TupleTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 29,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    85
+  ],
+  "type": "Program"
+}

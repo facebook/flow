@@ -1604,8 +1604,11 @@ fn token_needs_identifier_reparse_before_label(env: &mut ParserEnv) -> bool {
         | TokenKind::TAsserts
         | TokenKind::TIs
         | TokenKind::TImplies
-        | TokenKind::TVoidType => true,
-        TokenKind::TIdentifier { raw, .. } => raw == "component" || raw == "renders",
+        | TokenKind::TVoidType
+        | TokenKind::TTypeof => true,
+        TokenKind::TIdentifier { raw, .. } => {
+            raw == "component" || raw == "renders" || raw == "function"
+        }
         _ => false,
     };
     token_needs_reparse && peek::token_after_current_is_pling_or_colon(env)
