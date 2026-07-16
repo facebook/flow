@@ -38,7 +38,6 @@ import type {ScopeManager} from '../ScopeManager';
 
 import {isStringLiteral} from 'flow-estree';
 import {ScopeType} from './ScopeType';
-import {DefinitionType} from '../definition';
 import {createIdGenerator} from '../ID';
 import {
   Reference,
@@ -284,45 +283,7 @@ type VariableScope =
   }
 
   shouldStaticallyClose(): boolean {
-    return !this.__dynamic;
-  }
-
-  _shouldStaticallyCloseForGlobal(
-    ref: Reference,
-    scopeManager: ScopeManager,
-  ): boolean {
-    // On global scope, let/const/class declarations should be resolved statically.
-    const name = ref.identifier.name;
-
-    const variable = this.set.get(name);
-    if (!variable) {
-      return false;
-    }
-    // variable exists on the scope
-
-    // in module mode, we can statically resolve everything, regardless of its decl type
-    if (scopeManager.isModule()) {
-      return true;
-    }
-
-    // in script mode, only certain cases should be statically resolved
-    // Example:
-    // a `var` decl is ignored by the runtime if it clashes with a global name
-    // this means that we should not resolve the reference to the variable
-    const defs = variable.defs;
-    return (
-      defs.length > 0 &&
-      defs.every(def => {
-        if (
-          def.type === DefinitionType.Variable &&
-          def.parent?.type === 'VariableDeclaration' &&
-          def.parent.kind === 'var'
-        ) {
-          return false;
-        }
-        return true;
-      })
-    );
+    return !this.__dynamic || this.type === ScopeType.Global;
   }
 
   _staticCloseRef = (ref: Reference, _?: ScopeManager): void => {
@@ -369,26 +330,10 @@ type VariableScope =
     }
   };
 
-  _globalCloseRef = (ref: Reference, scopeManager: ScopeManager): void => {
-    // let/const/class declarations should be resolved statically.
-    // others should be resolved dynamically.
-    if (this._shouldStaticallyCloseForGlobal(ref, scopeManager)) {
-      this._staticCloseRef(ref);
-    } else {
-      this._dynamicCloseRef(ref);
-    }
-  };
-
-  close(scopeManager: ScopeManager): Scope | null {
-    let closeRef: (Reference, ScopeManager) => void;
-
-    if (this.shouldStaticallyClose()) {
-      closeRef = this._staticCloseRef;
-    } else if (this.type !== 'global') {
-      closeRef = this._dynamicCloseRef;
-    } else {
-      closeRef = this._globalCloseRef;
-    }
+  close(_scopeManager: ScopeManager): Scope | null {
+    const closeRef = this.shouldStaticallyClose()
+      ? this._staticCloseRef
+      : this._dynamicCloseRef;
 
     // Try Resolving all references in this scope.
     if (this.__referencesLeftToResolve == null) {
@@ -396,7 +341,7 @@ type VariableScope =
     }
     for (let i = 0; i < this.__referencesLeftToResolve.length; ++i) {
       const ref = this.__referencesLeftToResolve[i];
-      closeRef(ref, scopeManager);
+      closeRef(ref);
     }
     this.__referencesLeftToResolve = null;
 

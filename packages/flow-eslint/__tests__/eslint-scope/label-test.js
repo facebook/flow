@@ -77,9 +77,10 @@ describe('label', () => {
     expect(globalScope.type).toEqual('global');
     expect(globalScope.variables).toHaveLength(1);
     expect(globalScope.variables[0].name).toEqual('foo');
-    expect(globalScope.through.length).toEqual(3);
-    expect(globalScope.through[2].identifier.name).toEqual('foo');
-    expect(globalScope.through[2].isRead()).toBe(true);
+    expect(globalScope.through.length).toEqual(1);
+    expect(globalScope.through[0].identifier.name).toEqual('console');
+    expect(globalScope.variables[0].references).toHaveLength(2);
+    expect(globalScope.variables[0].references[1].isRead()).toBe(true);
 
     const scope = scopeManager.scopes[1];
     expect(scope.type).toEqual('block');

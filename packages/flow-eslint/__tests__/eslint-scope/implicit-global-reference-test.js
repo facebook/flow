@@ -55,6 +55,16 @@ describe('implicit global reference', () => {
         variable => variable.name,
       ),
     ).toEqual([]);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual([]);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual([]);
   });
 
   it('assignments global scope without definition', () => {
@@ -76,6 +86,16 @@ describe('implicit global reference', () => {
         variable => variable.name,
       ),
     ).toEqual(['x']);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['x', 'x']);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['x', 'x']);
   });
 
   it('assignment leaks', () => {
@@ -94,6 +114,16 @@ describe('implicit global reference', () => {
     expect(
       scopeManager.globalScope.__implicit.variables.map(
         variable => variable.name,
+      ),
+    ).toEqual(['x']);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['x']);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
       ),
     ).toEqual(['x']);
   });
@@ -119,6 +149,16 @@ describe('implicit global reference', () => {
         variable => variable.name,
       ),
     ).toEqual([]);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual([]);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual([]);
   });
 
   it('for-in-statement leaks', () => {
@@ -138,6 +178,16 @@ describe('implicit global reference', () => {
         variable => variable.name,
       ),
     ).toEqual(['x']);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['x', 'y']);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['x', 'y']);
   });
 
   it("for-in-statement doesn't leaks", () => {
@@ -161,5 +211,15 @@ describe('implicit global reference', () => {
         variable => variable.name,
       ),
     ).toEqual([]);
+    expect(
+      scopeManager.globalScope.__implicit.referencesLeftToResolve.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['y']);
+    expect(
+      scopeManager.globalScope.through.map(
+        reference => reference.identifier.name,
+      ),
+    ).toEqual(['y']);
   });
 });

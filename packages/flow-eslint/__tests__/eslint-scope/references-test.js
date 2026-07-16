@@ -154,7 +154,7 @@ describe('References:', () => {
   });
 
   describe('When there is a `var` declaration on global,', () => {
-    it('the reference on global should NOT be resolved.', () => {
+    it('the reference on global should be resolved.', () => {
       const {scopeManager} = parseForESLint('var a = 0;');
 
       expect(scopeManager.scopes).toHaveLength(1);
@@ -168,13 +168,13 @@ describe('References:', () => {
 
       expect(reference.from).toEqual(scope);
       expect(reference.identifier.name).toEqual('a');
-      expect(reference.resolved).toBeNull();
+      expect(reference.resolved).toEqual(scope.variables[0]);
       expect(reference.writeExpr).toBeDefined();
       expect(reference.isWrite()).toBe(true);
       expect(reference.isRead()).toBe(false);
     });
 
-    it('the reference in functions should NOT be resolved.', () => {
+    it('the reference in functions should be resolved.', () => {
       const {scopeManager} = parseForESLint(`
                 var a = 0;
                 function foo() {
@@ -193,7 +193,7 @@ describe('References:', () => {
 
       expect(reference.from).toEqual(scope);
       expect(reference.identifier.name).toEqual('a');
-      expect(reference.resolved).toBeNull();
+      expect(reference.resolved).toEqual(scopeManager.scopes[0].variables[0]);
       expect(reference.writeExpr).toBeUndefined();
       expect(reference.isWrite()).toBe(false);
       expect(reference.isRead()).toBe(true);
