@@ -114,23 +114,15 @@ function getPossibleTypes(parsedSelector: Selector): ?Array<ESNode['type']> {
       return getPossibleTypes(parsedSelector.right);
 
     case 'class':
-      switch (parsedSelector.name) {
-        case 'function':
-          return [
-            'FunctionDeclaration',
-            'FunctionExpression',
-            'ArrowFunctionExpression',
-          ];
-
-        case 'declaration':
-        case 'expression':
-        case 'pattern':
-        case 'statement':
-          return null;
-
-        default:
-          throw new Error(`Unexpected selector :${parsedSelector.name}`);
+      if (parsedSelector.name === 'function') {
+        return [
+          'FunctionDeclaration',
+          'FunctionExpression',
+          'ArrowFunctionExpression',
+        ];
       }
+
+      return null;
 
     default:
       return null;

@@ -49,7 +49,7 @@ export function isValidModuleDeclarationParent(
 ): boolean {
   if (
     target.type === 'Program' ||
-    (target.type === 'BlockStatement' && target.parent.type === 'DeclareModule')
+    (target.type === 'BlockStatement' && target.parent?.type === 'DeclareModule')
   ) {
     return true;
   }
