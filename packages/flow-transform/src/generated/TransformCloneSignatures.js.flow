@@ -8,7 +8,7 @@
  * @format
  */
 
-import type {CallExpression} from 'hermes-estree';
+import type {CallExpression} from 'flow-estree';
 import type {CallExpressionProps} from './node-types';
 import type {DetachedNode} from '../detachedNode';
 

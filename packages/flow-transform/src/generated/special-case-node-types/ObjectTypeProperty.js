@@ -13,7 +13,7 @@ import type {
   ObjectTypeAccessorSignature as ObjectTypeAccessorSignatureType,
   ObjectTypeMethodSignature as ObjectTypeMethodSignatureType,
   ObjectTypePropertySignature as ObjectTypePropertySignatureType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../../detachedNode';
 
 import {

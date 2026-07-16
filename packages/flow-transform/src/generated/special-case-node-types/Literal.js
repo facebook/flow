@@ -16,7 +16,7 @@ import type {
   NumericLiteral as NumericLiteralType,
   RegExpLiteral as RegExpLiteralType,
   StringLiteral as StringLiteralType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode} from '../../detachedNode';
 
 import {detachedProps} from '../../detachedNode';

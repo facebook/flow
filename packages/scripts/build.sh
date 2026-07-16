@@ -31,6 +31,22 @@ export SKIP_HERMES_PARSER_OVERRIDE=1
 # Yarn install all packages
 yarn install --offline
 
+HERMES_PARSER_JS_DIR="$THIS_DIR/../../../../xplat/static_h/tools/hermes-parser/js"
+HERMES_SCRIPTS_DIR="$HERMES_PARSER_JS_DIR/scripts"
+HERMES_INCLUDE_PATH=$(
+  cd "$HERMES_PARSER_JS_DIR"
+  "$HERMES_SCRIPTS_DIR/facebook/getIncludePath.sh"
+)
+
+# Reuse the upstream generators with Flow's ESTree schema and package names.
+(
+  cd "$HERMES_PARSER_JS_DIR"
+  yarn babel-node "$HERMES_SCRIPTS_DIR/genESTreeJSON.js" "$HERMES_INCLUDE_PATH"
+  HERMES_TRANSFORM_TARGET=flow \
+  HERMES_TRANSFORM_PACKAGE_DIR="$THIS_DIR/../flow-transform" \
+    yarn babel-node "$HERMES_SCRIPTS_DIR/genTransformNodeTypes.js"
+)
+
 # Use internal FB build or pass path to WASM parser as first command line argument
 FB_BUILD_WASM_PARSER="$THIS_DIR/facebook/buildFlowWasmParser.sh"
 if [[ -f "${1:-}" ]]; then
@@ -89,6 +105,18 @@ for package in "${PACKAGES[@]}"; do
   else
     rsync -a --include="*/" --include="*.js" --exclude="*" "$SRC_DIR" "$DIST_DIR"
   fi
+done
+
+for generator in \
+  genTransformCloneTypes.js \
+  genTransformModifyTypes.js \
+  genTransformReplaceNodeTypes.js; do
+  (
+    cd "$HERMES_PARSER_JS_DIR"
+    HERMES_TRANSFORM_TARGET=flow \
+    HERMES_TRANSFORM_PACKAGE_DIR="$THIS_DIR/../flow-transform" \
+      yarn babel-node "$HERMES_SCRIPTS_DIR/$generator"
+  )
 done
 
 # Generate source code that only applies to dist directory

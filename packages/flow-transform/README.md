@@ -11,6 +11,11 @@ with the sibling deps rewired:
 `flow-transform` itself prints with Prettier's built-in parsers and does not
 depend on the prettier plugin fork.
 
+The Flow package build reuses the upstream `genTransform*.js` generators in
+their Flow target mode. That mode writes `flow-estree` imports, Flow readonly
+syntax, and the Flow-specific `DeclareVariable` shape. The generators retain
+their existing Hermes output by default.
+
 This package is pieced together and inspired by code from:
 - [`@babel/traverse`](https://github.com/babel/babel/tree/35ec4394a72e6fc88553ce7dcf0fb1c91d9505a9/packages/babel-traverse)
 - [`eslint`](https://github.com/eslint/eslint/tree/e926b1735c77bf55abc1150b060a535a6c4e2778)
@@ -18,16 +23,6 @@ This package is pieced together and inspired by code from:
 
 ## Known gaps in this fork
 
-- **Generated files preserved as-is**: `src/generated/{node-types.js,
-  special-case-node-types/, TransformCloneSignatures.js.flow,
-  TransformModifySignatures.js.flow, TransformReplaceSignatures.js.flow}` are
-  marked `@generated` by upstream codegen scripts that live OUTSIDE this
-  package (at `xplat/static_h/tools/hermes-parser/js/scripts/genTransform*.js`).
-  Their contents still reference `hermes-estree` import paths. Retargeting the
-  codegen so it emits `flow-estree` references is a separate
-  follow-up. Until then, consumers who hit those imports can rely on the
-  Yarn-workspace resolution chain (the upstream `hermes-estree` package is
-  still present alongside the fork).
 - **Internal Symbol.for markers**: `src/detachedNode.js` uses
   `Symbol.for('hermes-transform - ...')` runtime markers. These are private
   to this package (not import paths), preserved verbatim from upstream to

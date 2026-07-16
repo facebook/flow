@@ -13,7 +13,7 @@ import type {
   ESNode,
   DeclareExportDeclarationNamedWithDeclaration as DeclareExportDeclarationNamedWithDeclarationType,
   DeclareExportDeclarationNamedWithSpecifiers as DeclareExportDeclarationNamedWithSpecifiersType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../../detachedNode';
 
 import {

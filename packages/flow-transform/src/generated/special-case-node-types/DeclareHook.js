@@ -12,7 +12,7 @@ import type {
   DeclareHook as DeclareHookType,
   ESNode,
   HookTypeAnnotation as HookTypeAnnotationType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../../detachedNode';
 
 import {

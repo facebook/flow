@@ -24,7 +24,7 @@ import type {
   Program as ProgramType,
   DocblockMetadata as DocblockMetadataType,
   MemberExpression as MemberExpressionType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../../detachedNode';
 
 import {

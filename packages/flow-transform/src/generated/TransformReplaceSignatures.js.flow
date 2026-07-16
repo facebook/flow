@@ -16,7 +16,7 @@
  * the transformation tests.
  */
 
-import type {VariableDeclaration} from 'hermes-estree';
+import type {VariableDeclaration} from 'flow-estree';
 import type {DetachedNode} from '../detachedNode';
 
 type VariableDeclarationReplaceSignature = (

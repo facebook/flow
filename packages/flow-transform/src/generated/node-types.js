@@ -216,7 +216,7 @@ import type {
   WhileStatement as WhileStatementType,
   WithStatement as WithStatementType,
   YieldExpression as YieldExpressionType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../detachedNode';
 
 import {

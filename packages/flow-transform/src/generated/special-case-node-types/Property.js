@@ -18,7 +18,7 @@ import type {
   ObjectPropertyWithComputedName as ObjectPropertyWithComputedNameType,
   ObjectPropertyWithNonShorthandStaticName as ObjectPropertyWithNonShorthandStaticNameType,
   ObjectPropertyWithShorthandStaticName as ObjectPropertyWithShorthandStaticNameType,
-} from 'hermes-estree';
+} from 'flow-estree';
 import type {DetachedNode, MaybeDetachedNode} from '../../detachedNode';
 
 import {

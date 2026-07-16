@@ -11,7 +11,7 @@
 import type {
   BlockComment as BlockCommentType,
   LineComment as LineCommentType,
-} from 'hermes-estree';
+} from 'flow-estree';
 
 import {detachedProps} from '../../detachedNode';
 
