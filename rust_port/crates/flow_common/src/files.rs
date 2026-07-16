@@ -1068,8 +1068,40 @@ fn is_windows_root(root: &str) -> bool {
         && root.as_bytes()[0].is_ascii_alphabetic()
 }
 
+#[cfg(windows)]
+fn msys_absolute_path(file: &str) -> Option<String> {
+    fn drive_path(rest: &str) -> Option<String> {
+        let bytes = rest.as_bytes();
+        if bytes.len() == 1 && bytes[0].is_ascii_alphabetic() {
+            return Some(format!("{}:/", char::from(bytes[0]).to_ascii_uppercase()));
+        }
+        if bytes.len() >= 2
+            && bytes[0].is_ascii_alphabetic()
+            && (bytes[1] == b'/' || bytes[1] == b'\\')
+        {
+            let drive = char::from(bytes[0]).to_ascii_uppercase();
+            return Some(format!("{}:/{}", drive, &rest[2..]));
+        }
+        None
+    }
+
+    let rest = file.strip_prefix('/')?;
+    drive_path(rest).or_else(|| rest.strip_prefix("cygdrive/").and_then(drive_path))
+}
+
 // Split on both '/' and '\\' to match OCaml behavior
 pub fn normalize_path(dir: &str, file: &str) -> String {
+    #[cfg(windows)]
+    let normalized_file;
+    #[cfg(windows)]
+    let file = match msys_absolute_path(file) {
+        Some(path) => {
+            normalized_file = path;
+            normalized_file.as_str()
+        }
+        None => file,
+    };
+
     let parts: Vec<&str> = file.split(&['/', '\\'][..]).collect();
     normalize_path_parts(dir, &parts)
 }
@@ -1177,31 +1209,70 @@ pub fn relative_path(root: &Path, file: &str) -> String {
     }
 }
 
-pub fn absolute_path(root: &Path, file: &str) -> String {
-    let root_components: Vec<String> = split_path(&root.to_string_lossy());
-    let root_components_rev: Vec<String> = root_components.iter().rev().cloned().collect();
+fn path_with_trailing_sep(path: &Path) -> String {
+    let path = path.to_string_lossy();
+    if path.ends_with('/') || path.ends_with('\\') {
+        path.into_owned()
+    } else {
+        format!("{}{}", path, std::path::MAIN_SEPARATOR)
+    }
+}
 
-    // Let's avoid creating paths like "/path/to/foo/."
+fn dirname_slash(path: &str) -> &str {
+    match path.rfind('/') {
+        Some(0) => "/",
+        Some(i) => &path[..i],
+        None => path,
+    }
+}
+
+pub fn absolute_path(root: &Path, file: &str) -> String {
     if file == "." || file.is_empty() {
         return root.to_string_lossy().into_owned();
     }
 
-    let file_components = split_path(file);
+    if Path::new(file).is_absolute() {
+        return file.to_string();
+    }
 
-    fn make_absolute(root_rev: &[String], file: &[String]) -> Vec<String> {
-        match (root_rev, file) {
-            ([_, root_rest @ ..], file) if !file.is_empty() && file[0] == ".." => {
-                make_absolute(root_rest, &file[1..])
+    let file = normalize_filename_dir_sep(file);
+    let parts: Vec<&str> = file.split('/').collect();
+    let has_dots = parts.iter().any(|part| *part == "." || *part == "..");
+    if !has_dots {
+        return format!("{}{}", path_with_trailing_sep(root), file);
+    }
+
+    let root = root.to_string_lossy();
+    let root = normalize_filename_dir_sep(&root);
+    let root_len = root.len();
+    let root = if root_len > 1 && root.ends_with('/') {
+        &root[..root_len - 1]
+    } else {
+        &root
+    };
+
+    let mut dir = root.to_string();
+    let mut i = 0;
+    while i < parts.len() {
+        match parts[i] {
+            "" | "." => i += 1,
+            ".." => {
+                dir = dirname_slash(&dir).to_string();
+                i += 1;
             }
-            (root_rev, file) => {
-                let mut result: Vec<String> = root_rev.iter().rev().cloned().collect();
-                result.extend_from_slice(file);
-                result
+            _ => {
+                let remaining = parts[i..].join("/");
+                let sep = if !dir.is_empty() && dir.ends_with('/') {
+                    ""
+                } else {
+                    "/"
+                };
+                return format!("{}{}{}", dir, sep, remaining);
             }
         }
     }
 
-    make_absolute(&root_components_rev, &file_components).join(std::path::MAIN_SEPARATOR_STR)
+    dir
 }
 
 // helper to get the full path to the "flow-typed" library dir
@@ -1453,5 +1524,50 @@ mod tests {
             "{}\\flow_mkdirp_verbatim_prefix_test",
             tmp.to_string_lossy().trim_end_matches(['\\', '/']),
         ));
+    }
+
+    #[test]
+    fn absolute_path_preserves_relative_suffix_separators() {
+        let root = if cfg!(windows) {
+            std::path::Path::new(r"C:\project")
+        } else {
+            std::path::Path::new("/project")
+        };
+        let expected = if cfg!(windows) {
+            r"C:\project\packages/app"
+        } else {
+            "/project/packages/app"
+        };
+
+        assert_eq!(super::absolute_path(root, "packages/app"), expected);
+    }
+
+    #[test]
+    fn absolute_path_resolves_parent_segments_like_file_keys() {
+        let root = if cfg!(windows) {
+            std::path::Path::new(r"C:\tmp\project")
+        } else {
+            std::path::Path::new("/tmp/project")
+        };
+        let expected = if cfg!(windows) {
+            "C:/tmp/outside/helper.js"
+        } else {
+            "/tmp/outside/helper.js"
+        };
+
+        assert_eq!(super::absolute_path(root, "../outside/helper.js"), expected);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_path_accepts_msys_drive_paths() {
+        assert_eq!(
+            super::normalize_path(r"C:\cwd", "/c/project/bar.js"),
+            r"C:\project\bar.js"
+        );
+        assert_eq!(
+            super::normalize_path(r"C:\cwd", "/cygdrive/c/project/bar.js"),
+            r"C:\project\bar.js"
+        );
     }
 }
