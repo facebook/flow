@@ -4,7 +4,41 @@
 
 ## Usage
 
-To use `flow-eslint` as the parser for ESLint in your project you must specify `"flow-eslint"` as the `"parser"` in your `.eslintrc` configuration file:
+### Flat config (`eslint.config.js`)
+
+To use `flow-eslint` with ESLint flat config, set it as
+`languageOptions.parser`:
+
+```js
+module.exports = [
+  {
+    languageOptions: {
+      parser: require('flow-eslint'),
+    },
+  },
+];
+```
+
+You can configure parser options with
+`languageOptions.parserOptions`:
+
+```js
+module.exports = [
+  {
+    languageOptions: {
+      parser: require('flow-eslint'),
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
+  },
+];
+```
+
+### Legacy config (`.eslintrc`)
+
+If you are still using legacy ESLint config, specify
+`"flow-eslint"` as the `"parser"` in your `.eslintrc` file:
 
 ```json
 {
@@ -12,11 +46,14 @@ To use `flow-eslint` as the parser for ESLint in your project you must specify `
 }
 ```
 
-The ESLint documentation provides more information about [how to configure ESLint](https://eslint.org/docs/user-guide/configuring/), including [how to specify a custom parser](https://eslint.org/docs/user-guide/configuring/plugins#specifying-parser).
+The ESLint documentation provides more information about [how to configure ESLint](https://eslint.org/docs/latest/use/configure/), including [how to specify a custom parser](https://eslint.org/docs/latest/use/configure/parser).
 
 ### Options
 
-You may provide additional configuration for `flow-eslint` by passing an object containing configuration options as the `"parserOptions"` in your ESLint configuration file. This object may contain the following properties:
+You may provide additional configuration for `flow-eslint` by passing an
+object containing configuration options as `parserOptions` in your ESLint
+configuration file. In flat config, this is `languageOptions.parserOptions`.
+This object may contain the following properties:
 
 ```ts
 type ParserOptions = {
