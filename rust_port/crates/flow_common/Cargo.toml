@@ -14,6 +14,7 @@ flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_lint_settings = { path = "../flow_lint_settings" }
 flow_packed_locs = { path = "../flow_packed_locs" }
 flow_parser = { path = "../flow_parser" }
+globset = { version = "0.4.13", features = ["serde1"] }
 jwalk = "0.8.1"
 regex = "1.13.0"
 rustix = { version = "1.1.4", features = ["event", "fs", "mm", "mount", "net", "pipe", "process", "thread", "time", "use-libc"] }

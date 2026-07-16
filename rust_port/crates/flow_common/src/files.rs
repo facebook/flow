@@ -25,6 +25,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use regex::Regex;
 
+use crate::path_matcher::FilePatternMatcher;
 use crate::path_matcher::PathMatcher;
 use crate::sys_utils::normalize_filename_dir_sep;
 
@@ -92,7 +93,7 @@ pub enum LibDir {
 #[derive(Debug, Clone)]
 pub struct FileOptions {
     pub default_lib_dir: Option<LibDir>,
-    pub ignores: Vec<((String, Option<String>), Regex)>,
+    pub ignores: Vec<((String, Option<String>), FilePatternMatcher)>,
     pub untyped: Vec<(String, Regex)>,
     pub declarations: Vec<(String, Regex)>,
     pub implicitly_include_root: bool,
@@ -531,10 +532,9 @@ pub static ABSOLUTE_PATH_REGEXP: LazyLock<Regex> =
 pub const PROJECT_ROOT_TOKEN: &str = "<PROJECT_ROOT>";
 pub const BUILTIN_ROOT_TOKEN: &str = "<BUILTINS>";
 fn can_prune_dir(options: &FileOptions) -> bool {
-    options
-        .ignores
-        .iter()
-        .all(|((pattern, _), _rx)| !pattern.starts_with('!') && !pattern.ends_with('$'))
+    options.ignores.iter().all(|((pattern, _), matcher)| {
+        !is_negated_pattern(pattern) && matcher.supports_directory_pruning(pattern)
+    })
 }
 
 pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
@@ -635,28 +635,48 @@ pub fn ordered_and_unordered_lib_paths(
     (libs, all_libs_set)
 }
 
-fn is_matching_path(path: &str, pattern: &str, rx: &Regex, current: bool) -> bool {
+fn is_negated_pattern(pattern: &str) -> bool {
+    pattern
+        .strip_prefix("glob:")
+        .is_some_and(|glob| glob.starts_with('!'))
+        || pattern.starts_with('!')
+}
+
+fn is_matching_regex_path(path: &str, pattern: &str, regex: &Regex, current: bool) -> bool {
     if pattern.starts_with('!') {
-        current && !rx.is_match(path)
+        current && !regex.is_match(path)
     } else {
-        current || rx.is_match(path)
+        current || regex.is_match(path)
+    }
+}
+
+fn is_matching_ignore_path(
+    path: &str,
+    pattern: &str,
+    matcher: &FilePatternMatcher,
+    current: bool,
+) -> bool {
+    if is_negated_pattern(pattern) {
+        current && !matcher.is_match(path)
+    } else {
+        current || matcher.is_match(path)
     }
 }
 
 fn is_matching(path: &str, pattern_list: &[(String, Regex)]) -> bool {
     pattern_list.iter().fold(false, |current, (pattern, rx)| {
-        is_matching_path(path, pattern, rx, current)
+        is_matching_regex_path(path, pattern, rx, current)
     })
 }
 
 fn is_matching_ignore(
     path: &str,
-    pattern_list: &[((String, Option<String>), Regex)],
+    pattern_list: &[((String, Option<String>), FilePatternMatcher)],
 ) -> (bool, Option<String>) {
     pattern_list.iter().fold(
         (false, None),
         |(matched_already, current_backup), ((pattern, backup), rx)| {
-            let matches = is_matching_path(path, pattern, rx, matched_already);
+            let matches = is_matching_ignore_path(path, pattern, rx, matched_already);
             let new_backup = if matches && current_backup.is_none() {
                 backup.clone()
             } else {
@@ -1459,6 +1479,51 @@ pub fn canonicalize_filenames(
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
+    use regex::Regex;
+
+    use crate::path_matcher::FilePatternMatcher;
+    use crate::path_matcher::RootedGlob;
+
+    #[test]
+    fn mixed_ignore_patterns_preserve_ordered_negation() {
+        let root = Path::new("/project");
+        let patterns = vec![
+            (
+                (".*/legacy/.*".to_owned(), None),
+                FilePatternMatcher::Regex(
+                    Regex::new(".*/legacy/.*").expect("test regex should compile"),
+                ),
+            ),
+            (
+                ("glob:generated/**".to_owned(), None),
+                FilePatternMatcher::Glob(
+                    RootedGlob::new(root, "generated/**").expect("test glob should compile"),
+                ),
+            ),
+            (
+                ("glob:!generated/keep/**".to_owned(), None),
+                FilePatternMatcher::Glob(
+                    RootedGlob::new(root, "generated/keep/**").expect("test glob should compile"),
+                ),
+            ),
+        ];
+
+        assert_eq!(
+            super::is_matching_ignore("/project/legacy/file.js", &patterns),
+            (true, None)
+        );
+        assert_eq!(
+            super::is_matching_ignore("/project/generated/file.js", &patterns),
+            (true, None)
+        );
+        assert_eq!(
+            super::is_matching_ignore("/project/generated/keep/file.js", &patterns),
+            (false, None)
+        );
+    }
+
     #[cfg(windows)]
     #[test]
     fn cached_canonicalize_strips_windows_verbatim_prefix() {

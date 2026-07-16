@@ -166,6 +166,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7dc094d718f2e1c1559ad110e27eeaae14a5465d3d56dd6dbd793079fbd530"
+dependencies = [
+ "memchr",
+ "serde_core",
+]
+
+[[package]]
 name = "buck-resources"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -649,6 +659,7 @@ dependencies = [
  "flow_lint_settings",
  "flow_packed_locs",
  "flow_parser",
+ "globset",
  "jwalk",
  "nix",
  "regex",
@@ -2438,6 +2449,20 @@ dependencies = [
  "rand_core 0.10.1",
  "wasip2",
  "wasip3",
+]
+
+[[package]]
+name = "globset"
+version = "0.4.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52dfc19153a48bde0cbd630453615c8151bce3a5adfac7a0aebfbf0a1e1f57e3"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+ "serde",
 ]
 
 [[package]]

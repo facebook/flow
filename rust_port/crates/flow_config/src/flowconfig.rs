@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::DefaultHasher;
+use std::path::Path;
 
 use flow_common::options::AssertOperator;
 use flow_common::options::LogSaving;
@@ -3176,8 +3177,46 @@ fn trim_numbered_lines(lines: &[(u32, String)]) -> Vec<(u32, String)> {
 }
 
 // parse [include] lines
-fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) {
-    config.includes = trim_lines(lines);
+const GLOB_PREFIX: &str = "glob:";
+
+fn validate_flowconfig_glob(line: u32, pattern: &str, allow_negation: bool) -> Result<(), Error> {
+    let Some(pattern) = pattern.strip_prefix(GLOB_PREFIX) else {
+        return Ok(());
+    };
+    let pattern = if allow_negation {
+        pattern.strip_prefix('!').unwrap_or(pattern)
+    } else {
+        pattern
+    };
+    if pattern.is_empty() {
+        return Err(Error(line, "Glob pattern must not be empty".to_owned()));
+    }
+    if Path::new(pattern).is_absolute()
+        || flow_common::files::ABSOLUTE_PATH_REGEXP.is_match(pattern)
+    {
+        return Err(Error(
+            line,
+            "Glob patterns must be relative to the project root".to_owned(),
+        ));
+    }
+    if pattern.contains(flow_common::files::PROJECT_ROOT_TOKEN) {
+        return Err(Error(
+            line,
+            "Glob patterns are already relative to the project root and must not use <PROJECT_ROOT>"
+                .to_owned(),
+        ));
+    }
+    flow_common::path_matcher::validate_glob(pattern)
+        .map_err(|error| Error(line, format!("Invalid glob pattern: {error}")))
+}
+
+fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
+    let includes = trim_numbered_lines(lines);
+    for (line, include) in &includes {
+        validate_flowconfig_glob(*line, include, false)?;
+    }
+    config.includes = includes.into_iter().map(|(_, include)| include).collect();
+    Ok(())
 }
 
 fn parse_libs(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
@@ -3230,23 +3269,34 @@ fn parse_libs(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Er
     Ok(())
 }
 
-fn parse_ignores(config: &mut FlowConfig, lines: &[(u32, String)]) {
+fn parse_ignores(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
     let mapping_re = Regex::new(r"^'([^']*)'[ \t]*->[ \t]*'([^']*)'$").unwrap();
-    let raw_ignores = trim_lines(lines);
+    let raw_ignores = trim_numbered_lines(lines);
     let ignores = raw_ignores
         .into_iter()
-        .map(|ignore| {
+        .map(|(line, ignore)| {
             if let Some(caps) = mapping_re.captures(&ignore) {
-                (
-                    opts::ocaml_str_to_rust_regex(caps.get(1).unwrap().as_str()),
-                    Some(caps.get(2).unwrap().as_str().to_owned()),
-                )
+                let pattern = caps.get(1).unwrap().as_str();
+                validate_flowconfig_glob(line, pattern, true)?;
+                let pattern = if pattern.starts_with(GLOB_PREFIX) {
+                    pattern.to_owned()
+                } else {
+                    opts::ocaml_str_to_rust_regex(pattern)
+                };
+                Ok((pattern, Some(caps.get(2).unwrap().as_str().to_owned())))
             } else {
-                (opts::ocaml_str_to_rust_regex(&ignore), None)
+                validate_flowconfig_glob(line, &ignore, true)?;
+                let pattern = if ignore.starts_with(GLOB_PREFIX) {
+                    ignore
+                } else {
+                    opts::ocaml_str_to_rust_regex(&ignore)
+                };
+                Ok((pattern, None))
             }
         })
-        .collect();
+        .collect::<Result<Vec<_>, Error>>()?;
     config.ignores = ignores;
+    Ok(())
 }
 
 fn parse_untyped(config: &mut FlowConfig, lines: &[(u32, String)]) {
@@ -3462,11 +3512,11 @@ fn parse_section(
             format!("Unexpected config line not in any section: {message}"),
         )),
         ("include", lines) => {
-            parse_includes(config, lines);
+            parse_includes(config, lines)?;
             Ok(vec![])
         }
         ("ignore", lines) => {
-            parse_ignores(config, lines);
+            parse_ignores(config, lines)?;
             Ok(vec![])
         }
         ("libs", lines) => {
@@ -3659,7 +3709,7 @@ pub fn init(
     parse_ignores(
         &mut config,
         &ignores.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
-    );
+    )?;
     parse_untyped(
         &mut config,
         &untyped.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
@@ -3671,7 +3721,7 @@ pub fn init(
     parse_includes(
         &mut config,
         &includes.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
-    );
+    )?;
     warnings.extend(parse_options(
         &mut config,
         &options.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
@@ -3916,6 +3966,73 @@ mod tests {
                     line, message
                 )
             }
+        }
+    }
+
+    #[test]
+    fn glob_patterns_are_preserved_without_regex_conversion() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[ignore]".to_owned()),
+                (2, "glob:generated/**/*.{js,jsx}".to_owned()),
+                (3, "glob:!generated/keep/**".to_owned()),
+                (4, ".*/legacy/.*".to_owned()),
+                (5, "[include]".to_owned()),
+                (6, "glob:../shared/**/src/*.js".to_owned()),
+            ],
+            true,
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(
+            config.ignores,
+            vec![
+                ("glob:generated/**/*.{js,jsx}".to_owned(), None),
+                ("glob:!generated/keep/**".to_owned(), None),
+                (".*/legacy/.*".to_owned(), None),
+            ]
+        );
+        assert_eq!(
+            config.includes,
+            vec!["glob:../shared/**/src/*.js".to_owned()]
+        );
+    }
+
+    #[test]
+    fn invalid_glob_reports_its_config_line() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[ignore]".to_owned()),
+                (2, "glob:valid/**".to_owned()),
+                (3, "glob:[invalid".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(_) => panic!("invalid glob should fail to parse"),
+            Err(Error(line, message)) => {
+                assert_eq!(line, 3);
+                assert!(message.starts_with("Invalid glob pattern:"));
+            }
+        }
+    }
+
+    #[test]
+    fn glob_patterns_must_be_project_relative() {
+        for pattern in ["glob:/absolute/**", "glob:<PROJECT_ROOT>/src/**"] {
+            let mut config = empty_config();
+            let result = parse(
+                &mut config,
+                vec![(1, "[include]".to_owned()), (2, pattern.to_owned())],
+                true,
+            );
+
+            assert!(matches!(result, Err(Error(2, _))));
         }
     }
 }

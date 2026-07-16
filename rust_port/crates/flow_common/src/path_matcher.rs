@@ -9,6 +9,8 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 
+use globset::GlobBuilder;
+use globset::GlobMatcher;
 use regex::Regex;
 
 use crate::sys_utils::normalize_filename_dir_sep;
@@ -19,6 +21,115 @@ pub struct PathMatcher {
     stems: Vec<PathBuf>,
     /// Map from stems to list of (original path, regexified path)
     stem_map: BTreeMap<PathBuf, Vec<(String, Regex)>>,
+    /// Glob patterns are matched against paths relative to their Flow root.
+    glob_patterns: Vec<RootedGlob>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RootedGlob {
+    root: PathBuf,
+    matcher: GlobMatcher,
+}
+
+#[derive(Debug, Clone)]
+pub enum FilePatternMatcher {
+    Regex(Regex),
+    Glob(RootedGlob),
+}
+
+impl FilePatternMatcher {
+    pub fn is_match(&self, path: &str) -> bool {
+        match self {
+            Self::Regex(regex) => regex.is_match(path),
+            Self::Glob(glob) => glob.is_match(path),
+        }
+    }
+
+    pub fn supports_directory_pruning(&self, pattern: &str) -> bool {
+        match self {
+            Self::Regex(_) => !pattern.ends_with('$'),
+            Self::Glob(glob) => glob.supports_directory_pruning(),
+        }
+    }
+}
+
+fn relative_path(root: &Path, path: &Path) -> Option<PathBuf> {
+    let root = fixup_path(root);
+    let path = fixup_path(path);
+    let mut root_components = root.components();
+    let mut path_components = path.components();
+    let mut result = PathBuf::new();
+
+    loop {
+        match (root_components.next(), path_components.next()) {
+            (None, None) => return Some(result),
+            (None, Some(path_component)) => {
+                result.push(path_component.as_os_str());
+                result.extend(path_components.map(|component| component.as_os_str()));
+                return Some(result);
+            }
+            (Some(_), None) => {
+                result.push("..");
+                result.extend(root_components.map(|_| ".."));
+                return Some(result);
+            }
+            (Some(root_component), Some(path_component)) if root_component == path_component => {}
+            (Some(root_component), Some(path_component)) => {
+                if matches!(
+                    root_component,
+                    std::path::Component::Prefix(_) | std::path::Component::RootDir
+                ) || matches!(
+                    path_component,
+                    std::path::Component::Prefix(_) | std::path::Component::RootDir
+                ) {
+                    return None;
+                }
+                result.push("..");
+                result.extend(root_components.map(|_| ".."));
+                result.push(path_component.as_os_str());
+                result.extend(path_components.map(|component| component.as_os_str()));
+                return Some(result);
+            }
+        }
+    }
+}
+
+pub fn validate_glob(pattern: &str) -> Result<(), globset::Error> {
+    GlobBuilder::new(pattern)
+        .literal_separator(true)
+        .build()
+        .map(|_| ())
+}
+
+impl RootedGlob {
+    pub fn new(root: &Path, pattern: &str) -> Result<Self, globset::Error> {
+        let matcher = GlobBuilder::new(pattern)
+            .literal_separator(true)
+            .build()?
+            .compile_matcher();
+        Ok(Self {
+            root: fixup_path(root),
+            matcher,
+        })
+    }
+
+    pub fn is_match(&self, path: &str) -> bool {
+        let path = Path::new(path);
+        relative_path(&self.root, path).is_some_and(|relative| {
+            let relative_string = relative.to_string_lossy();
+            let relative = normalize_filename_dir_sep(&relative_string);
+            self.matcher.is_match(relative.as_ref())
+        })
+    }
+
+    fn supports_directory_pruning(&self) -> bool {
+        let pattern = self.matcher.glob().glob();
+        pattern.ends_with('/')
+            || pattern == "**"
+            || pattern.ends_with("/**")
+            || pattern == "**/*"
+            || pattern.ends_with("/**/*")
+    }
 }
 
 /// Given a path, return the max prefix not containing a wildcard or a terminal filename
@@ -44,6 +155,38 @@ fn path_stem(path: &Path) -> PathBuf {
     };
 
     PathBuf::from(stem)
+}
+
+fn has_glob_metacharacter(component: &str) -> bool {
+    let mut escaped = false;
+    for character in component.chars() {
+        if escaped {
+            escaped = false;
+        } else if character == '\\' {
+            escaped = true;
+        } else if matches!(character, '*' | '?' | '[' | '{') {
+            return true;
+        }
+    }
+    false
+}
+
+fn glob_stem(root: &Path, pattern: &str) -> PathBuf {
+    let mut stem = root.to_path_buf();
+    let mut found_metacharacter = false;
+    for component in Path::new(pattern).components() {
+        if has_glob_metacharacter(&component.as_os_str().to_string_lossy()) {
+            found_metacharacter = true;
+            break;
+        }
+        stem.push(component.as_os_str());
+    }
+    let stem = fixup_path(&stem);
+    if found_metacharacter {
+        stem
+    } else {
+        path_stem(&stem)
+    }
 }
 
 /// Translate a path with wildcards into a regex
@@ -149,6 +292,7 @@ impl PathMatcher {
         Self {
             stems: Vec::new(),
             stem_map: BTreeMap::new(),
+            glob_patterns: Vec::new(),
         }
     }
 
@@ -171,6 +315,12 @@ impl PathMatcher {
         }
     }
 
+    pub fn add_glob(&mut self, root: &Path, pattern: &str) -> Result<(), globset::Error> {
+        self.stems.push(glob_stem(root, pattern));
+        self.glob_patterns.push(RootedGlob::new(root, pattern)?);
+        Ok(())
+    }
+
     /// Check if a file path matches any pattern in the matcher
     pub fn matches(&self, f: &str) -> bool {
         let matching_stems = find_prefixes(&self.stems, f);
@@ -182,6 +332,241 @@ impl PathMatcher {
             } else {
                 false
             }
-        })
+        }) || self.glob_patterns.iter().any(|glob| glob.is_match(f))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rooted_glob_is_separator_aware() {
+        let glob = RootedGlob::new(Path::new("/project"), "src/*.{js,jsx}")
+            .expect("test glob should compile");
+
+        assert!(glob.is_match("/project/src/foo.js"));
+        assert!(glob.is_match("/project/src/foo.jsx"));
+        assert!(!glob.is_match("/project/src/nested/foo.js"));
+    }
+
+    #[test]
+    fn rooted_glob_can_match_outside_the_root() {
+        let glob = RootedGlob::new(Path::new("/project/root"), "../shared/**/*.js")
+            .expect("test glob should compile");
+
+        assert!(glob.is_match("/project/shared/nested/foo.js"));
+        assert!(!glob.is_match("/project/root/shared/nested/foo.js"));
+    }
+
+    #[test]
+    fn glob_directory_pruning_is_checked_against_globset() {
+        let safe_recursive = [
+            (
+                "src/**",
+                "src/generated",
+                [
+                    "src/generated/file.js",
+                    "src/generated/nested/file.js",
+                    "src/generated/.hidden",
+                ],
+            ),
+            (
+                "**",
+                "generated",
+                [
+                    "generated/file.js",
+                    "generated/nested/file.js",
+                    "generated/.hidden",
+                ],
+            ),
+            (
+                "src-?/**",
+                "src-a/generated",
+                [
+                    "src-a/generated/file.js",
+                    "src-a/generated/nested/file.js",
+                    "src-a/generated/.hidden",
+                ],
+            ),
+            (
+                "src-*/**",
+                "src-long/generated",
+                [
+                    "src-long/generated/file.js",
+                    "src-long/generated/nested/file.js",
+                    "src-long/generated/.hidden",
+                ],
+            ),
+            (
+                "src-[ab]/**",
+                "src-a/generated",
+                [
+                    "src-a/generated/file.js",
+                    "src-a/generated/nested/file.js",
+                    "src-a/generated/.hidden",
+                ],
+            ),
+            (
+                "src-[!x]/**",
+                "src-a/generated",
+                [
+                    "src-a/generated/file.js",
+                    "src-a/generated/nested/file.js",
+                    "src-a/generated/.hidden",
+                ],
+            ),
+            (
+                "{src,lib}/**",
+                "lib/generated",
+                [
+                    "lib/generated/file.js",
+                    "lib/generated/nested/file.js",
+                    "lib/generated/.hidden",
+                ],
+            ),
+            (
+                "**/generated/**",
+                "packages/app/generated/output",
+                [
+                    "packages/app/generated/output/file.js",
+                    "packages/app/generated/output/nested/file.js",
+                    "packages/app/generated/output/.hidden",
+                ],
+            ),
+            (
+                r"src/\*/**",
+                "src/*/generated",
+                [
+                    "src/*/generated/file.js",
+                    "src/*/generated/nested/file.js",
+                    "src/*/generated/.hidden",
+                ],
+            ),
+            (
+                "../shared/**",
+                "../shared/generated",
+                [
+                    "../shared/generated/file.js",
+                    "../shared/generated/nested/file.js",
+                    "../shared/generated/.hidden",
+                ],
+            ),
+            (
+                "src/**/*",
+                "src/generated",
+                [
+                    "src/generated/file.js",
+                    "src/generated/nested/file.js",
+                    "src/generated/.hidden",
+                ],
+            ),
+            (
+                "**/*",
+                "generated",
+                [
+                    "generated/file.js",
+                    "generated/nested/file.js",
+                    "generated/.hidden",
+                ],
+            ),
+        ];
+
+        for (pattern, directory, descendants) in safe_recursive {
+            let glob =
+                RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
+            assert!(glob.matcher.is_match(directory), "{pattern}");
+            for descendant in descendants {
+                assert!(glob.matcher.is_match(descendant), "{pattern}: {descendant}");
+            }
+            assert!(glob.supports_directory_pruning(), "{pattern}");
+            assert!(
+                FilePatternMatcher::Glob(glob)
+                    .supports_directory_pruning(&format!("glob:{pattern}")),
+                "{pattern}"
+            );
+        }
+
+        let explicit_directories = [
+            ("src/", "src/"),
+            ("src-?/", "src-a/"),
+            ("src-*/", "src-long/"),
+            ("src-[ab]/", "src-a/"),
+            ("src-[!x]/", "src-a/"),
+            ("{src,lib}/", "lib/"),
+            (r"src/\*/", "src/*/"),
+            ("../shared/", "../shared/"),
+        ];
+        for (pattern, directory) in explicit_directories {
+            let glob =
+                RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
+            assert!(glob.matcher.is_match(directory), "{pattern}");
+            assert!(glob.supports_directory_pruning(), "{pattern}");
+            assert!(
+                FilePatternMatcher::Glob(glob)
+                    .supports_directory_pruning(&format!("glob:{pattern}")),
+                "{pattern}"
+            );
+        }
+    }
+
+    #[test]
+    fn supports_directory_pruning_rejects_unsafe_patterns() {
+        let unsafe_globs = [
+            ("src", "src", "src/file.js"),
+            ("src/*", "src/generated", "src/generated/file.js"),
+            ("src/?", "src/a", "src/a/file.js"),
+            ("src/[ab]", "src/a", "src/a/file.js"),
+            ("src/[!x]", "src/a", "src/a/file.js"),
+            ("src/{a,b}", "src/a", "src/a/file.js"),
+            ("**/generated", "src/generated", "src/generated/file.js"),
+            (
+                "src/**/generated",
+                "src/a/generated",
+                "src/a/generated/file.js",
+            ),
+            (r"src/\*", "src/*", "src/*/file.js"),
+            ("src/*.js", "src/generated.js", "src/generated.js/file.js"),
+        ];
+        for (pattern, directory, descendant) in unsafe_globs {
+            let glob =
+                RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
+            assert!(glob.matcher.is_match(directory), "{pattern}");
+            assert!(
+                !glob.matcher.is_match(descendant),
+                "{pattern}: {descendant}"
+            );
+            assert!(!glob.supports_directory_pruning(), "{pattern}");
+            assert!(
+                !FilePatternMatcher::Glob(glob)
+                    .supports_directory_pruning(&format!("glob:{pattern}")),
+                "{pattern}"
+            );
+        }
+
+        let anchored_regex =
+            FilePatternMatcher::Regex(Regex::new("src$").expect("test regex should compile"));
+        assert!(!anchored_regex.supports_directory_pruning("src$"));
+    }
+
+    #[test]
+    fn path_matcher_combines_legacy_paths_and_globs() {
+        let root = Path::new("/project");
+        let mut matcher = PathMatcher::empty();
+        matcher.add_path(Path::new("/legacy/included"));
+        matcher
+            .add_glob(root, "src/*.js")
+            .expect("test glob should compile");
+
+        assert!(matcher.matches("/legacy/included/file.js"));
+        assert!(matcher.matches("/project/src/file.js"));
+        assert!(!matcher.matches("/project/src/nested/file.js"));
+        assert_eq!(
+            matcher.stems(),
+            &[
+                PathBuf::from("/legacy/included"),
+                PathBuf::from("/project/src"),
+            ]
+        );
     }
 }

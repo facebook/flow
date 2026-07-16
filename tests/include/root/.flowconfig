@@ -2,6 +2,13 @@
 ../included
 ../foo/**/bar.js
 ../foo/batman
+glob:../globbed/**/*.{js,jsx}
+glob:../glob_exact
+
+[ignore]
+.*/globbed/legacy_ignored/.*
+glob:../globbed/**/ignored.js
+glob:!../globbed/keep/ignored.js
 
 [options]
 module.system=haste

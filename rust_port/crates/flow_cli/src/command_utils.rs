@@ -24,7 +24,9 @@ use flow_common::options::GcControl;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
+use flow_common::path_matcher::FilePatternMatcher;
 use flow_common::path_matcher::PathMatcher;
+use flow_common::path_matcher::RootedGlob;
 use flow_common::verbose::Verbose;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_exit::FlowExitStatus;
@@ -1007,6 +1009,34 @@ pub(crate) fn remove_exclusion(pattern: &str) -> &str {
     pattern.strip_prefix('!').unwrap_or(pattern)
 }
 
+fn compile_ignore_pattern(root: &Path, pattern: &str) -> FilePatternMatcher {
+    if let Some(glob) = pattern.strip_prefix("glob:") {
+        match RootedGlob::new(root, remove_exclusion(glob)) {
+            Ok(glob) => FilePatternMatcher::Glob(glob),
+            Err(error) => {
+                let message = format!("Invalid glob pattern `{pattern}`: {error}");
+                flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&message))
+            }
+        }
+    } else {
+        let expanded =
+            flow_common::files::expand_project_root_token(root, remove_exclusion(pattern));
+        FilePatternMatcher::Regex(Regex::new(&expanded).unwrap())
+    }
+}
+
+fn add_include_pattern(matcher: &mut PathMatcher, root: &Path, include: &str) {
+    if let Some(glob) = include.strip_prefix("glob:") {
+        if let Err(error) = matcher.add_glob(root, glob) {
+            let message = format!("Invalid glob pattern `{include}`: {error}");
+            flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&message));
+        }
+    } else {
+        let expanded = flow_common::files::expand_project_root_token(root, include);
+        matcher.add_path(&flow_common::files::make_path_absolute(root, &expanded));
+    }
+}
+
 fn flowlib_builtin_lib(
     builtin_lib: ConfigBuiltinLib,
     cli_no_flowlib: bool,
@@ -1053,10 +1083,8 @@ pub(crate) fn file_options(
     let ignores = all_ignores
         .into_iter()
         .map(|(path, backup)| {
-            let pattern = remove_exclusion(&path);
-            let expanded = flow_common::files::expand_project_root_token(root, pattern);
-            let regex = Regex::new(&expanded).unwrap();
-            ((path, backup), regex)
+            let matcher = compile_ignore_pattern(root, &path);
+            ((path, backup), matcher)
         })
         .collect();
 
@@ -1119,7 +1147,7 @@ pub(crate) fn file_options(
         merged_includes.extend(flowconfig.includes.iter().cloned());
         let mut matcher = PathMatcher::empty();
         for include in merged_includes {
-            matcher.add_path(&flow_common::files::make_path_absolute(root, &include));
+            add_include_pattern(&mut matcher, root, &include);
         }
         // Implicitly included paths are added only if they're not already being watched
         let mut implicit_paths = Vec::new();
@@ -2484,10 +2512,8 @@ pub(super) fn make_options(
         let ignores_processed = ignores
             .into_iter()
             .map(|(path, backup)| {
-                let pattern = remove_exclusion(&path);
-                let expanded = flow_common::files::expand_project_root_token(&root, pattern);
-                let regex = Regex::new(&expanded).unwrap();
-                ((path, backup), regex)
+                let matcher = compile_ignore_pattern(&root, &path);
+                ((path, backup), matcher)
             })
             .collect();
 
@@ -2552,8 +2578,7 @@ pub(super) fn make_options(
             let mut matcher = PathMatcher::empty();
             // Explicitly included paths are always added to the path_matcher
             for include in merged_includes {
-                let expanded = flow_common::files::expand_project_root_token(&root, &include);
-                matcher.add_path(&flow_common::files::make_path_absolute(&root, &expanded));
+                add_include_pattern(&mut matcher, &root, &include);
             }
             // Implicitly included paths are added only if they're not already being watched
             let mut implicit_paths = Vec::new();
