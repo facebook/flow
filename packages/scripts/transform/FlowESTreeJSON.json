@@ -1,0 +1,3618 @@
+[
+  {
+    "name": "AnyTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "ArrayExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "elements",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "trailingComma",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ArrayPattern",
+    "base": "Pattern",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "elements",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ArrayTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "elementType",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ArrowFunctionExpression",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "predicate",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "async",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "AsConstExpression",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "AsExpression",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "AssignmentExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "AssignmentPattern",
+    "base": "Pattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "AwaitExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BigIntLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "bigint",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BigIntLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BigIntTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "BinaryExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BlockStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "implicit",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BooleanLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeBoolean",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BooleanLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeBoolean",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "BooleanTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "BreakStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "label",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "CallExpression",
+    "base": "CallExpressionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "callee",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "arguments",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "CatchClause",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "param",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ChainExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ClassBody",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ClassDeclaration",
+    "base": "ClassLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "superClass",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "superTypeArguments",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "implements",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "decorators",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ClassExpression",
+    "base": "ClassLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "superClass",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "superTypeArguments",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "implements",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "decorators",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ClassImplements",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ComponentDeclaration",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "rendersType",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "async",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ComponentParameter",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "local",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "shorthand",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ComponentTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "rendersType",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ComponentTypeParameter",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ConditionalExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "alternate",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "consequent",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ConditionalTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "checkType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "extendsType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "trueType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "falseType",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ContinueStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "label",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "DebuggerStatement",
+    "base": "Statement",
+    "arguments": []
+  },
+  {
+    "name": "DeclareClass",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "extends",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "implements",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "mixins",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareComponent",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "rendersType",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "DeclaredPredicate",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareEnum",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareExportAllDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareExportDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "declaration",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "specifiers",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "default",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareFunction",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "predicate",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "DeclareHook",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareInterface",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "extends",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareModule",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareModuleExports",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareNamespace",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareOpaqueType",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "impltype",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "lowerBound",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "upperBound",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "supertype",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "DeclareTypeAlias",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DeclareVariable",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "declarations",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "kind",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "implicitDeclare",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Decorator",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "DoWhileStatement",
+    "base": "LoopStatement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EmptyStatement",
+    "base": "Statement",
+    "arguments": []
+  },
+  {
+    "name": "EmptyTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "EnumBigIntBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "members",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "explicitType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "hasUnknownMembers",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumBigIntMember",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumBooleanBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "members",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "explicitType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "hasUnknownMembers",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumBooleanMember",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumDefaultedMember",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumNumberBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "members",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "explicitType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "hasUnknownMembers",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumNumberMember",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumStringBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "members",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "explicitType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "hasUnknownMembers",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumStringMember",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "EnumSymbolBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "members",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "hasUnknownMembers",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ExistsTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "ExportAllDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "exported",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "exportKind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ExportDefaultDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "declaration",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ExportNamedDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "declaration",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "specifiers",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": true
+      },
+      {
+        "type": "NodeLabel",
+        "name": "exportKind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ExportSpecifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "exported",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "local",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ExpressionStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "directive",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ForInStatement",
+    "base": "LoopStatement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ForOfStatement",
+    "base": "LoopStatement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "await",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ForStatement",
+    "base": "LoopStatement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "update",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "FunctionDeclaration",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "predicate",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "generator",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "async",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "FunctionExpression",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "predicate",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "generator",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "async",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "FunctionTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "this",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "FunctionTypeParam",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "GenericTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "HookDeclaration",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "async",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "HookTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "Identifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "IfStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "consequent",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "alternate",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ImportAttribute",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ImportDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "specifiers",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "attributes",
+        "optional": true
+      },
+      {
+        "type": "NodeLabel",
+        "name": "importKind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ImportDefaultSpecifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "local",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ImportExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "source",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "options",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ImportNamespaceSpecifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "local",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ImportSpecifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "imported",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "local",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "importKind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "IndexedAccessType",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "objectType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "indexType",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "InferredPredicate",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "InferTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "typeParameter",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "InterfaceDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "extends",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "InterfaceExtends",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "InterfaceTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "extends",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "IntersectionTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "types",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXAttribute",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "JSXClosingElement",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXClosingFragment",
+    "base": "JSX",
+    "arguments": []
+  },
+  {
+    "name": "JSXElement",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "openingElement",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "children",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "closingElement",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "JSXEmptyExpression",
+    "base": "JSX",
+    "arguments": []
+  },
+  {
+    "name": "JSXExpressionContainer",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXFragment",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "openingFragment",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "children",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "closingFragment",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXIdentifier",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "name",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXMemberExpression",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "object",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "property",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXNamespacedName",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "namespace",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXOpeningElement",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "attributes",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "selfClosing",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "JSXOpeningFragment",
+    "base": "JSX",
+    "arguments": []
+  },
+  {
+    "name": "JSXSpreadAttribute",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXSpreadChild",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "JSXText",
+    "base": "JSX",
+    "arguments": [
+      {
+        "type": "NodeString",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "KeyofTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "LabeledStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "label",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "LogicalExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "left",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchArrayPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "elements",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchAsPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "pattern",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "target",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchBindingPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "cases",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchExpressionCase",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "pattern",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "guard",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchIdentifierPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchInstanceObjectPattern",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchInstancePattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "targetConstructor",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "properties",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchLiteralPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "literal",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchMemberPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "base",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "property",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchObjectPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchObjectPatternProperty",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "pattern",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "shorthand",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchOrPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "patterns",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchRestPattern",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "cases",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchStatementCase",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "pattern",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "guard",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "MatchUnaryPattern",
+    "base": "MatchPattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MatchWildcardPattern",
+    "base": "MatchPattern",
+    "arguments": []
+  },
+  {
+    "name": "MemberExpression",
+    "base": "MemberExpressionLike",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "object",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "property",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MetaProperty",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "meta",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "property",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MethodDefinition",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "decorators",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "MixedTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "NeverTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "NewExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "callee",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "arguments",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "NullableTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "NullLiteral",
+    "base": "Base",
+    "arguments": []
+  },
+  {
+    "name": "NullLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "NumberLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeNumber",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "NumberTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "NumericLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeNumber",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectPattern",
+    "base": "Pattern",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "indexers",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "callProperties",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "internalSlots",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "inexact",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "exact",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeCallProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeIndexer",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeInternalSlot",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "method",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeMappedTypeProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "keyTparam",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "propType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "sourceType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodeString",
+        "name": "optional",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "method",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "proto",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypeSpreadProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "OpaqueType",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "impltype",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "lowerBound",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "upperBound",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "supertype",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "OptionalIndexedAccessType",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "objectType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "indexType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "PrivateIdentifier",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "name",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Program",
+    "base": "FunctionLike",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Property",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "method",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "shorthand",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "PropertyDefinition",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "static",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "decorators",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "declare",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "tsModifiers",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "QualifiedTypeIdentifier",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "qualification",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "QualifiedTypeofIdentifier",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "qualification",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RecordDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "implements",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RecordDeclarationBody",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "elements",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RecordDeclarationImplements",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "RecordDeclarationProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "defaultValue",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "RecordDeclarationStaticProperty",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RecordExpression",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "recordConstructor",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "properties",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RecordExpressionProperties",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "properties",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RegExpLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "pattern",
+        "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "flags",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "RestElement",
+    "base": "Pattern",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ReturnStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "SequenceExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "expressions",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "SpreadElement",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "StaticBlock",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "StringLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeString",
+        "name": "value",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "StringLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeString",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "StringTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "Super",
+    "base": "Base",
+    "arguments": []
+  },
+  {
+    "name": "SwitchCase",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": true
+      },
+      {
+        "type": "NodeList",
+        "name": "consequent",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "SwitchStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "discriminant",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "cases",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "SymbolTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "TaggedTemplateExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "tag",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "quasi",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TemplateElement",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeBoolean",
+        "name": "tail",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "cooked",
+        "optional": true
+      },
+      {
+        "type": "NodeLabel",
+        "name": "raw",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TemplateLiteral",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "quasis",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "expressions",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ThisExpression",
+    "base": "Base",
+    "arguments": []
+  },
+  {
+    "name": "ThisTypeAnnotation",
+    "base": "Base",
+    "arguments": []
+  },
+  {
+    "name": "ThrowStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TryStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "block",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "handler",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "finalizer",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "TupleTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "elementTypes",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "inexact",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TupleTypeLabeledElement",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "label",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "elementType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "TupleTypeSpreadElement",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "label",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeAlias",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "right",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeCastExpression",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeofTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeArguments",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "TypeOperator",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeParameter",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "name",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "const",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "bound",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "default",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "usesExtendsBound",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeParameterDeclaration",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypeParameterInstantiation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TypePredicate",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "parameterName",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      },
+      {
+        "type": "NodeString",
+        "name": "kind",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "UnaryExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "prefix",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "UndefinedTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "UnionTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "types",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "UnknownTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "UpdateExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "operator",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "prefix",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "VariableDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "declarations",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "VariableDeclarator",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "init",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "Variance",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeLabel",
+        "name": "kind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "VoidTypeAnnotation",
+    "base": "Flow",
+    "arguments": []
+  },
+  {
+    "name": "WhileStatement",
+    "base": "LoopStatement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "test",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "WithStatement",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "object",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "body",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "YieldExpression",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "delegate",
+        "optional": true
+      }
+    ]
+  }
+]

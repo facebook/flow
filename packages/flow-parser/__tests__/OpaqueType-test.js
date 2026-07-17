@@ -24,8 +24,10 @@ describe('OpaqueType', () => {
 
     test('ESTree', async () => {
       expect(await parseForSnapshotESTree(code)).toMatchSnapshot();
-      expect(await printForSnapshotESTree(code)).toBe(`declare opaque type Foo;
-opaque type Foo = Boz;`);
+      expect(await printForSnapshotESTree(code)).toBe(
+        `declare opaque type Foo super Bar extends Baz;
+opaque type Foo super Bar extends Baz = Boz;`,
+      );
     });
 
     test('Babel', async () => {
