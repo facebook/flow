@@ -238,9 +238,15 @@ jobs:
       run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform'
     - name: Create package artifact
       run: |
-        mkdir -p "${RUNNER_TEMP}/build_js_packages/flow-parser" "${RUNNER_TEMP}/build_js_packages/flow-estree"
-        cp -R packages/flow-parser/dist "${RUNNER_TEMP}/build_js_packages/flow-parser/dist"
+        mkdir -p \
+          "${RUNNER_TEMP}/build_js_packages/flow-eslint" \
+          "${RUNNER_TEMP}/build_js_packages/flow-estree" \
+          "${RUNNER_TEMP}/build_js_packages/flow-parser" \
+          "${RUNNER_TEMP}/build_js_packages/flow-transform"
+        cp -R packages/flow-eslint/dist "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist"
         cp -R packages/flow-estree/dist "${RUNNER_TEMP}/build_js_packages/flow-estree/dist"
+        cp -R packages/flow-parser/dist "${RUNNER_TEMP}/build_js_packages/flow-parser/dist"
+        cp -R packages/flow-transform/dist "${RUNNER_TEMP}/build_js_packages/flow-transform/dist"
     - uses: actions/upload-artifact@v4.4.0
       with:
         name: build_js_packages
@@ -374,12 +380,18 @@ jobs:
         path: ${{ runner.temp }}/build_js_packages
     - name: Install generated package artifacts
       run: |
-        test -f "${RUNNER_TEMP}/build_js_packages/flow-parser/dist/index.js"
+        test -f "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-estree/dist/index.js"
-        test ! -e packages/flow-parser/dist
+        test -f "${RUNNER_TEMP}/build_js_packages/flow-parser/dist/index.js"
+        test -f "${RUNNER_TEMP}/build_js_packages/flow-transform/dist/index.js"
+        test ! -e packages/flow-eslint/dist
         test ! -e packages/flow-estree/dist
-        cp -R "${RUNNER_TEMP}/build_js_packages/flow-parser/dist" packages/flow-parser/dist
+        test ! -e packages/flow-parser/dist
+        test ! -e packages/flow-transform/dist
+        cp -R "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist" packages/flow-eslint/dist
         cp -R "${RUNNER_TEMP}/build_js_packages/flow-estree/dist" packages/flow-estree/dist
+        cp -R "${RUNNER_TEMP}/build_js_packages/flow-parser/dist" packages/flow-parser/dist
+        cp -R "${RUNNER_TEMP}/build_js_packages/flow-transform/dist" packages/flow-transform/dist
     - name: Pack flow-estree
       run: |
         test -f packages/flow-estree/dist/index.js
@@ -388,6 +400,14 @@ jobs:
       run: |
         test -f packages/flow-parser/dist/index.js
         make dist/npm-flow-parser.tgz
+    - name: Pack flow-eslint
+      run: |
+        test -f packages/flow-eslint/dist/index.js
+        make dist/npm-flow-eslint.tgz
+    - name: Pack flow-transform
+      run: |
+        test -f packages/flow-transform/dist/index.js
+        make dist/npm-flow-transform.tgz
     - name: Pack flow-remove-types and flow-node
       run: |
         rm -rf packages/flow-node
@@ -407,8 +427,10 @@ jobs:
       with:
         name: npm_pack
         path: |
+          dist/npm-flow-eslint.tgz
           dist/npm-flow-estree.tgz
           dist/npm-flow-parser.tgz
+          dist/npm-flow-transform.tgz
           dist/npm-flow-node.tgz
           dist/npm-flow-remove-types.tgz
           dist/npm-flow-upgrade.tgz

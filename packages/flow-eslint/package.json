@@ -1,6 +1,6 @@
 {
   "name": "flow-eslint",
-  "version": "0.0.1",
+  "version": "0.323.0",
   "description": "A custom parser for ESLint using the Flow Rust parser, forked from hermes-eslint.",
   "homepage": "https://flow.org",
   "license": "MIT",

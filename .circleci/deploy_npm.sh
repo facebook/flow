@@ -19,6 +19,12 @@ npm publish ./dist/npm-flow-estree.tgz;
 echo "Publishing flow-parser";
 npm publish ./dist/npm-flow-parser.tgz;
 
+echo "Publishing flow-eslint";
+npm publish ./dist/npm-flow-eslint.tgz;
+
+echo "Publishing flow-transform";
+npm publish ./dist/npm-flow-transform.tgz;
+
 echo "Publishing flow-remove-types";
 npm publish ./dist/npm-flow-remove-types.tgz;
 
