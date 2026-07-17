@@ -192,32 +192,39 @@ fn remove_cache_entry_from_client(
     }
 }
 
-pub fn invalidate_client_cache_entry(
-    client_id: Prot::ClientId,
-    filename: &str,
-    autocomplete: bool,
-) {
+fn record_cache_invalidation(entry: &mut RegistryEntry, filename: &str, autocomplete: bool) {
     let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(filename);
-    let Some(()) = with_registry_mut(client_id, |entry| {
-        entry.cache_invalidation_generation += 1;
-        let generation = entry.cache_invalidation_generation;
-        entry.cache_invalidations.push_back(CacheInvalidation {
-            generation,
-            file_key: file_key.clone(),
-            autocomplete,
-        });
-        if entry.cache_invalidations.len() > MAX_CACHE_INVALIDATIONS {
-            entry.cache_invalidations.pop_front();
-        }
-    }) else {
-        return;
-    };
+    entry.cache_invalidation_generation += 1;
+    let generation = entry.cache_invalidation_generation;
+    entry.cache_invalidations.push_back(CacheInvalidation {
+        generation,
+        file_key,
+        autocomplete,
+    });
+    if entry.cache_invalidations.len() > MAX_CACHE_INVALIDATIONS {
+        entry.cache_invalidations.pop_front();
+    }
+}
 
+fn sync_local_client_cache_invalidations(client_id: Prot::ClientId) {
     LOCAL_CLIENTS.with(|clients| {
         if let Some(client) = clients.borrow().get(&client_id) {
             sync_client_cache_invalidations(client_id, client);
         }
     });
+}
+
+pub fn invalidate_client_cache_entry(
+    client_id: Prot::ClientId,
+    filename: &str,
+    autocomplete: bool,
+) {
+    let Some(()) = with_registry_mut(client_id, |entry| {
+        record_cache_invalidation(entry, filename, autocomplete);
+    }) else {
+        return;
+    };
+    sync_local_client_cache_invalidations(client_id);
 }
 
 fn sync_client_cache_invalidations(client_id: Prot::ClientId, client: &SingleClientRef) {
@@ -713,8 +720,7 @@ pub fn client_did_change(
     changes: &[lsp_types::TextDocumentContentChangeEvent],
 ) -> Result<(), (String, String)> {
     let client_id = get_id(client);
-    invalidate_client_cache_entry(client_id, filename, false);
-    with_registry_mut(client_id, |entry| {
+    let result = with_registry_mut(client_id, |entry| {
         let Some(content) = entry.opened_files.get(filename) else {
             return Err((
                 format!("File {} wasn't open to change", filename),
@@ -727,6 +733,7 @@ pub fn client_did_change(
                 entry
                     .opened_files
                     .insert(filename.to_string(), Arc::<str>::from(new_content));
+                record_cache_invalidation(entry, filename, false);
                 Ok(())
             }
         }
@@ -736,7 +743,11 @@ pub fn client_did_change(
             format!("File {} wasn't open to change", filename),
             String::new(),
         ))
-    })
+    });
+    if result.is_ok() {
+        sync_local_client_cache_invalidations(client_id);
+    }
+    result
 }
 
 pub fn client_did_close(client: &SingleClientRef, filenames: &[String]) -> bool {
