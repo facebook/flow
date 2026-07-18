@@ -907,6 +907,120 @@ impl Deref for TypeGuardNameInfo {
 use env_api::EnvEntry;
 use env_api::EnvMap;
 
+type RecordedDeclareNamespaceNamePath = FlowVector<FlowSmolStr>;
+type RecordedDeclareNamespacePath = FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>;
+type DeclareNamespacePathsByReadLoc = FlowOrdMap<ALoc, RecordedDeclareNamespacePath>;
+type NamespaceNamePath = Vec<FlowSmolStr>;
+
+/// Tracks namespace context for identifier reads inside local `declare namespace` bodies.
+///
+/// Example:
+/// ```ignore
+/// declare namespace A {
+///   declare namespace B {
+///     type T = "inner";
+///     declare const v: "value";
+///   }
+/// }
+///
+/// declare namespace A {
+///   declare namespace B {
+///     declare const x: T;
+///     declare const y: typeof v;
+///   }
+/// }
+/// ```
+///
+/// While visiting the `T` or `v` read, checker must later search every
+/// declaration fragment for `A.B`, then `A`, then the global scope.
+#[derive(Debug, Clone)]
+struct DeclareNamespaceReadRecorder {
+    /// Persisted to `EnvInfo` after namespace declaration traversal completes.
+    ///
+    /// In the example, when resolver visits either `T` in `declare const x: T`
+    /// or `v` in `declare const y: typeof v`, this stores the read loc mapped
+    /// to the name path `[A, B]`. `paths_by_read_loc` later expands that path
+    /// with every declaration loc for `A` and `A.B`, so checker can try `A.B`,
+    /// then `A`, then global lookup for the requested member.
+    name_paths_by_read_loc: FlowOrdMap<ALoc, RecordedDeclareNamespaceNamePath>,
+
+    /// Resolver stack for the namespace body currently being visited.
+    ///
+    /// In the example, entering the second `A` pushes `A`; entering the second
+    /// `B` pushes `B`; leaving those bodies restores the previous stack.
+    current_namespace_path: RecordedDeclareNamespaceNamePath,
+
+    /// Declaration locs for repeated namespace declarations.
+    ///
+    /// In the example, the first body records `[A] -> [first_A]` and `[A, B] ->
+    /// [first_B]`. The second body appends `second_A` and `second_B` to those
+    /// lists. Reads are expanded only after traversal so forward references can
+    /// depend on and search declarations that appear later in the file.
+    locs_by_namespace_path: BTreeMap<NamespaceNamePath, FlowVector<ALoc>>,
+}
+
+impl DeclareNamespaceReadRecorder {
+    fn new() -> Self {
+        Self {
+            name_paths_by_read_loc: FlowOrdMap::new(),
+            current_namespace_path: FlowVector::new(),
+            locs_by_namespace_path: BTreeMap::new(),
+        }
+    }
+
+    fn paths_by_read_loc(&self) -> DeclareNamespacePathsByReadLoc {
+        let mut paths_by_read_loc = FlowOrdMap::new();
+        for (read_loc, name_path) in self.name_paths_by_read_loc.iter() {
+            let mut namespace_name_path = NamespaceNamePath::new();
+            let mut path = RecordedDeclareNamespacePath::new();
+            for name in name_path.iter() {
+                namespace_name_path.push(name.dupe());
+                let locs = self
+                    .locs_by_namespace_path
+                    .get(&namespace_name_path)
+                    .expect("namespace path must have declaration locations")
+                    .dupe();
+                path.push_back(env_api::DeclareNamespaceReadPathElement {
+                    name: name.dupe(),
+                    locs,
+                });
+            }
+            paths_by_read_loc.insert(read_loc.dupe(), path);
+        }
+        paths_by_read_loc
+    }
+
+    fn record_identifier_read(&mut self, read_loc: ALoc) {
+        if !self.current_namespace_path.is_empty() {
+            self.name_paths_by_read_loc
+                .insert(read_loc, self.current_namespace_path.dupe());
+        }
+    }
+
+    fn enter_local_namespace(
+        &mut self,
+        name: FlowSmolStr,
+        loc: ALoc,
+    ) -> RecordedDeclareNamespaceNamePath {
+        let saved_path = self.current_namespace_path.dupe();
+        self.current_namespace_path.push_back(name);
+        let namespace_path = self
+            .current_namespace_path
+            .iter()
+            .map(|name| name.dupe())
+            .collect();
+        self.locs_by_namespace_path
+            .entry(namespace_path)
+            .or_insert_with(FlowVector::new)
+            .push_back(loc);
+        saved_path
+    }
+
+    fn restore_current_path(&mut self, saved_path: RecordedDeclareNamespaceNamePath) {
+        self.current_namespace_path = saved_path;
+    }
+}
+
 /// State for the name resolver analysis
 #[derive(Debug, Clone)]
 struct NameResolverState {
@@ -963,6 +1077,7 @@ struct NameResolverState {
     in_conditional_type_extends: bool,
     interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
     declare_class_interface_merge_conflicts: BTreeMap<ALoc, Vec<ALoc>>,
+    declare_namespace_read_recorder: DeclareNamespaceReadRecorder,
     jsx_base_name: Option<FlowSmolStr>,
     pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     /// Track parameter binding def_locs currently being processed, so that we can
@@ -1000,6 +1115,7 @@ impl NameResolverState {
             in_conditional_type_extends: false,
             interface_merge_conflicts: BTreeMap::new(),
             declare_class_interface_merge_conflicts: BTreeMap::new(),
+            declare_namespace_read_recorder: DeclareNamespaceReadRecorder::new(),
             jsx_base_name: None,
             pred_func_map: CACHED_PRED.with(|c| c.clone()),
             current_bindings: CACHED_BINDINGS.with(|c| c.clone()),
@@ -2787,6 +2903,18 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             // name_def (the type members are folded into the sibling via
             // `wrap_with_namespace_types`), so a write at that id would
             // create an unresolvable lazy tvar.
+            let merges_into_sibling_declaration =
+                full.get(name).is_some_and(|(_, full_entries)| {
+                    full_entries.iter().any(|(_, kind)| {
+                        matches!(
+                            kind,
+                            BindingsKind::Function
+                                | BindingsKind::DeclaredFunction
+                                | BindingsKind::Class
+                                | BindingsKind::DeclaredClass
+                        )
+                    })
+                });
             for (decl_loc, decl_kind) in type_kind_at_loc.iter() {
                 let is_merged_type_only_namespace = matches!(
                     decl_kind,
@@ -2795,7 +2923,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         ..
                     }
                 ) && decl_loc != &canonical_loc;
-                if is_merged_type_only_namespace {
+                if is_merged_type_only_namespace && merges_into_sibling_declaration {
                     continue;
                 }
                 let decl_desc = VirtualReasonDesc::RType(name.dupe());
@@ -3383,6 +3511,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// Instead of augmenting the name_resolver with those capabilities, we emit these errors
     /// in the new_env, which does know if it's querying a value or a type.
     fn any_identifier(&mut self, loc: ALoc, name: &FlowSmolStr) {
+        self.env_state
+            .declare_namespace_read_recorder
+            .record_identifier_read(loc.dupe());
         let env_val = self.env_read(name);
         let v = if self.env_state.visiting_hoisted_type {
             env_val.havoc.dupe()
@@ -3401,10 +3532,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     /// Type-position read: prefer the type namespace's binding, falling back
     /// to the value namespace via `type_env_read_opt`. This is the analogue of
     /// `any_identifier` for type-position references (interface decls, type
-    /// aliases, generic type ids, etc). When the name doesn't exist in either
-    /// namespace, skip recording — the check phase will surface a missing
-    /// binding error if appropriate.
+    /// aliases, generic type ids, etc).
     fn any_type_identifier(&mut self, loc: ALoc, name: &FlowSmolStr) {
+        self.env_state
+            .declare_namespace_read_recorder
+            .record_identifier_read(loc.dupe());
         let env_val = match self.type_env_read_opt(name) {
             None => return,
             Some(v) => v,
@@ -8216,6 +8348,20 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                         // name_def's `namespace_types` plumbing and `wrap_with_namespace_types`.
                         None
                     }
+                    BindingsKind::Type {
+                        type_only_namespace: true,
+                        ..
+                    } if loc != *def_loc_val
+                        && matches!(
+                            current_kind,
+                            Some(BindingsKind::Type {
+                                type_only_namespace: true,
+                                ..
+                            })
+                        ) =>
+                    {
+                        None
+                    }
                     _ if loc != *def_loc_val
                         && match current_kind {
                             Some(current_kind) => kind.can_coexist(&current_kind),
@@ -8352,7 +8498,10 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         id: &flow_parser::ast::Identifier<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
         self.error_on_reference_to_currently_declared_id(id);
-        ast_visitor::typeof_identifier_default(self, id)
+        let loc = id.loc.dupe();
+        let name = id.name.dupe();
+        self.any_identifier(loc, &name);
+        Ok(())
     }
 
     fn this_expression(
@@ -10921,9 +11070,23 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             let Ok(()) = hoister.statement(stmt);
         }
         let bindings = hoister.into_bindings();
+        let saved_declare_namespace_path = if let Id::Local(id) = &m.id {
+            Some(
+                self.env_state
+                    .declare_namespace_read_recorder
+                    .enter_local_namespace(id.name.dupe(), id.loc.dupe()),
+            )
+        } else {
+            None
+        };
         let saved_exclude_syms = std::mem::take(&mut self.env_state.exclude_syms);
         self.statements_with_bindings(block_loc.dupe(), bindings, statements);
         self.env_state.exclude_syms = saved_exclude_syms;
+        if let Some(saved_path) = saved_declare_namespace_path {
+            self.env_state
+                .declare_namespace_read_recorder
+                .restore_current_path(saved_path);
+        }
         Ok(())
     }
 
@@ -11732,6 +11895,8 @@ pub struct NameResolverResult {
     pub pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
+    pub declare_namespace_read_paths:
+        FlowOrdMap<ALoc, FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>>,
 }
 
 impl NameResolverResult {
@@ -11748,6 +11913,7 @@ impl NameResolverResult {
             pred_func_map: self.pred_func_map,
             interface_merge_conflicts: self.interface_merge_conflicts,
             declare_class_interface_merge_conflicts: self.declare_class_interface_merge_conflicts,
+            declare_namespace_read_paths: self.declare_namespace_read_paths,
         }
     }
 }
@@ -11795,6 +11961,10 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     let interface_merge_conflicts = env_walk.interface_merge_conflicts();
     let declare_class_interface_merge_conflicts =
         env_walk.declare_class_interface_merge_conflicts();
+    let declare_namespace_read_paths = env_walk
+        .env_state
+        .declare_namespace_read_recorder
+        .paths_by_read_loc();
     (
         completion_state,
         NameResolverResult {
@@ -11808,6 +11978,7 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
             pred_func_map,
             interface_merge_conflicts,
             declare_class_interface_merge_conflicts,
+            declare_namespace_read_paths,
         },
     )
 }

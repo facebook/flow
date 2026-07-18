@@ -556,156 +556,12 @@ Illegal name. [unsupported-syntax]
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:142:27
-
-Cannot resolve name `NumberFormatPartTypes`. [cannot-resolve-name]
-
-   142|             type: Exclude<NumberFormatPartTypes, "literal">;
-                                  ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:452:51
-
-Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
-
-   452|         new (locales?: LocalesArgument, options?: CollatorOptions): Collator;
-                                                          ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:452:69
-
-Cannot resolve name `Collator`. [cannot-resolve-name]
-
-   452|         new (locales?: LocalesArgument, options?: CollatorOptions): Collator;
-                                                                            ^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:453:47
-
-Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
-
-   453|         (locales?: LocalesArgument, options?: CollatorOptions): Collator;
-                                                      ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:453:65
-
-Cannot resolve name `Collator`. [cannot-resolve-name]
-
-   453|         (locales?: LocalesArgument, options?: CollatorOptions): Collator;
-                                                                        ^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:454:64
-
-Cannot resolve name `CollatorOptions`. [cannot-resolve-name]
-
-   454|         supportedLocalesOf(locales: LocalesArgument, options?: CollatorOptions): string[];
-                                                                       ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:458:75
-
-Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
-
-   458|         new (locales?: LocalesArgument, options?: DateTimeFormatOptions): DateTimeFormat;
-                                                                                  ^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:459:71
-
-Cannot resolve name `DateTimeFormat`. [cannot-resolve-name]
-
-   459|         (locales?: LocalesArgument, options?: DateTimeFormatOptions): DateTimeFormat;
-                                                                              ^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:464:73
-
-Cannot resolve name `NumberFormat`. [cannot-resolve-name]
-
-   464|         new (locales?: LocalesArgument, options?: NumberFormatOptions): NumberFormat;
-                                                                                ^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:465:69
-
-Cannot resolve name `NumberFormat`. [cannot-resolve-name]
-
-   465|         (locales?: LocalesArgument, options?: NumberFormatOptions): NumberFormat;
-                                                                            ^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:470:51
-
-Cannot resolve name `PluralRulesOptions`. [cannot-resolve-name]
-
-   470|         new (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
-                                                          ^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:470:72
-
-Cannot resolve name `PluralRules`. [cannot-resolve-name]
-
-   470|         new (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
-                                                                               ^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:471:47
-
-Cannot resolve name `PluralRulesOptions`. [cannot-resolve-name]
-
-   471|         (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
-                                                      ^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2020.intl.d.ts:471:68
-
-Cannot resolve name `PluralRules`. [cannot-resolve-name]
-
-   471|         (locales?: LocalesArgument, options?: PluralRulesOptions): PluralRules;
-                                                                           ^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------- <BUILTINS>/lib.es2020.symbol.wellknown.d.ts:41:5
 
 Illegal name. [unsupported-syntax]
 
    41|     [Symbol.matchAll](str: string): RegExpStringIterator<RegExpMatchArray>;
            ^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:33:47
-
-Cannot resolve name `DateTimeFormatPart`. [cannot-resolve-name]
-
-   33|     interface DateTimeRangeFormatPart extends DateTimeFormatPart {
-                                                     ^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:147:24
-
-Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
-
-   147|         new (locales?: LocalesArgument, options?: ListFormatOptions): ListFormat;
-                               ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:165:37
-
-Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
-
-   165|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<ListFormatOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
-                                            ^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2021.intl.d.ts:165:107
-
-Cannot resolve name `UnicodeBCP47LocaleIdentifier`. [cannot-resolve-name]
-
-   165|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<ListFormatOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
-                                                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2021.weakref.d.ts:23:5
@@ -722,46 +578,6 @@ Illegal name. [unsupported-syntax]
 
    47|     readonly [Symbol.toStringTag]: "FinalizationRegistry";
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:121:24
-
-Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
-
-   121|         new (locales?: LocalesArgument, options?: SegmenterOptions): Segmenter;
-                               ^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:135:37
-
-Cannot resolve name `LocalesArgument`. [cannot-resolve-name]
-
-   135|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<SegmenterOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
-                                            ^^^^^^^^^^^^^^^
-
-
-Error -------------------------------------------------------------------------- <BUILTINS>/lib.es2022.intl.d.ts:135:106
-
-Cannot resolve name `UnicodeBCP47LocaleIdentifier`. [cannot-resolve-name]
-
-   135|         supportedLocalesOf(locales: LocalesArgument, options?: Pick<SegmenterOptions, "localeMatcher">): UnicodeBCP47LocaleIdentifier[];
-                                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2023.intl.d.ts:45:45
-
-Cannot resolve name `NumberFormatPart`. [cannot-resolve-name]
-
-   45|     interface NumberRangeFormatPart extends NumberFormatPart {
-                                                   ^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------- <BUILTINS>/lib.es2023.intl.d.ts:53:71
-
-Cannot resolve name `NumberFormatPart`. [cannot-resolve-name]
-
-   53|         formatToParts(value: number | bigint | StringNumericLiteral): NumberFormatPart[];
-                                                                             ^^^^^^^^^^^^^^^^
 
 
 Error -------------------------------------------------------------------- <BUILTINS>/lib.es2024.sharedmemory.d.ts:41:27
@@ -866,4 +682,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 93 errors
+Found 70 errors

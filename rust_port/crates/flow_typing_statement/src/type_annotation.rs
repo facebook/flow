@@ -3665,7 +3665,8 @@ fn convert_qualification_with_lookup_mode<'a>(
             (t, result_ast)
         }
         Identifier::Unqualified(ident) => {
-            let t = type_env::get_var(Some(lookup_mode), cx, &ident.name, ident.loc.dupe())?;
+            let t =
+                type_env::lookup_type_identifier(lookup_mode, cx, &ident.name, ident.loc.dupe())?;
             (
                 t.dupe(),
                 Identifier::Unqualified(ast::Identifier::new(ast::IdentifierInner {
@@ -3828,8 +3829,8 @@ fn convert_typeof<'a>(
                 ) {
                     type_::unsoundness::at(type_::UnsoundnessKind::InferenceHooks, ident.loc.dupe())
                 } else {
-                    type_env::get_var(
-                        Some(type_env::LookupMode::ForTypeof),
+                    type_env::lookup_type_identifier(
+                        type_env::LookupMode::ForTypeof,
                         cx,
                         &ident.name,
                         ident.loc.dupe(),
@@ -6111,13 +6112,7 @@ fn type_identifier<'a>(
     name: &FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
-    let t = type_env::query_var(
-        Some(type_env::LookupMode::ForType),
-        cx,
-        name,
-        None,
-        loc.dupe(),
-    )?;
+    let t = type_env::lookup_type_identifier(type_env::LookupMode::ForType, cx, name, loc.dupe())?;
     Ok(type_util::mod_reason_of_t(
         &|r: Reason| r.reposition(loc.dupe()),
         &t,

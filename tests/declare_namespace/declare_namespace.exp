@@ -26,20 +26,6 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- binding_test.js:7:19
-
-Cannot declare `const_like` [1] because the name is already bound. [name-already-bound]
-
-   binding_test.js:7:19
-   7| declare namespace const_like {} // error
-                        ^^^^^^^^^^
-
-References:
-   binding_test.js:6:19
-   6| declare namespace const_like {}
-                        ^^^^^^^^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------- binding_test.js:8:1
 
 Cannot use variable `const_like` [1] because the declaration either comes later or was skipped.
@@ -1424,4 +1410,4 @@ References:
 
 
 
-Found 98 errors
+Found 97 errors

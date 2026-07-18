@@ -6,6 +6,7 @@
  */
 
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -19,6 +20,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
 use flow_env_builder::env_api::CacheableEnvError;
+use flow_env_builder::env_api::DeclareNamespaceReadPathElement;
 use flow_env_builder::env_api::DefLocType;
 use flow_env_builder::env_api::EnvEntry;
 use flow_env_builder::env_api::EnvInfo;
@@ -29,6 +31,7 @@ use flow_env_builder::env_api::Refinement;
 use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::env_api::ValKind;
 use flow_env_builder::env_api::WriteLoc;
+use flow_env_builder::env_api::has_assigning_write;
 use flow_env_builder::name_def_types::Def as NameDef;
 use flow_env_builder::name_def_types::Import as NameDefImport;
 use flow_env_builder::name_def_types::ScopeKind;
@@ -116,6 +119,238 @@ pub fn with_class_stack<'cx, A>(
     let mut env = cx.environment_mut();
     env.class_stack = old_class_stack;
     res
+}
+
+fn recorded_declare_namespace_member_opt<'cx>(
+    lookup_mode: LookupMode,
+    cx: &Context<'cx>,
+    name: &FlowSmolStr,
+    loc: ALoc,
+) -> Option<Type> {
+    fn namespace_type_member_opt<'cx>(
+        cx: &Context<'cx>,
+        namespace_t: &Type,
+        name: &FlowSmolStr,
+        use_loc: ALoc,
+    ) -> Option<Type> {
+        use flow_common::reason::Name;
+        use flow_typing_type::type_::TypeInner;
+        use flow_typing_type::type_::property;
+        use flow_typing_type::type_util;
+
+        let namespace_t = cx.find_resolved(namespace_t)?;
+        match namespace_t.deref() {
+            TypeInner::NamespaceT(ns) => {
+                let props = cx.find_props_opt(ns.types_tmap.dupe())?;
+                let prop = props
+                    .get(&Name::new(name.dupe()))
+                    .and_then(property::read_t)?;
+                Some(type_util::mod_reason_of_t(
+                    &|r: Reason| r.reposition(use_loc.dupe()),
+                    &prop,
+                ))
+            }
+            _ => None,
+        }
+    }
+
+    fn namespace_value_member_opt<'cx>(
+        cx: &Context<'cx>,
+        namespace_t: &Type,
+        name: &FlowSmolStr,
+        use_loc: ALoc,
+    ) -> Option<Type> {
+        fn object_value_member_opt<'cx>(
+            cx: &Context<'cx>,
+            obj_t: &Type,
+            name: &FlowSmolStr,
+            use_loc: ALoc,
+        ) -> Option<Type> {
+            use flow_common::reason::Name;
+            use flow_typing_type::type_::DefTInner;
+            use flow_typing_type::type_::TypeInner;
+            use flow_typing_type::type_::property;
+            use flow_typing_type::type_util;
+
+            let obj_t = cx.find_resolved(obj_t)?;
+            match obj_t.deref() {
+                TypeInner::DefT(_, def_t) => match def_t.deref() {
+                    DefTInner::ObjT(obj) => {
+                        let props = cx.find_props_opt(obj.props_tmap.dupe())?;
+                        let prop = props
+                            .get(&Name::new(name.dupe()))
+                            .and_then(property::read_t)?;
+                        Some(type_util::mod_reason_of_t(
+                            &|r: Reason| r.reposition(use_loc.dupe()),
+                            &prop,
+                        ))
+                    }
+                    _ => None,
+                },
+                _ => None,
+            }
+        }
+
+        use flow_typing_type::type_::TypeInner;
+
+        let namespace_t = cx.find_resolved(namespace_t)?;
+        match namespace_t.deref() {
+            TypeInner::NamespaceT(ns) => {
+                object_value_member_opt(cx, &ns.values_type, name, use_loc)
+            }
+            TypeInner::DefT(_, _) => object_value_member_opt(cx, &namespace_t, name, use_loc),
+            _ => None,
+        }
+    }
+
+    fn namespace_member_opt<'cx>(
+        lookup_mode: LookupMode,
+        cx: &Context<'cx>,
+        namespace_t: &Type,
+        name: &FlowSmolStr,
+        use_loc: ALoc,
+    ) -> Option<Type> {
+        match lookup_mode {
+            LookupMode::ForType => namespace_type_member_opt(cx, namespace_t, name, use_loc),
+            LookupMode::ForValue | LookupMode::ForTypeof => {
+                namespace_value_member_opt(cx, namespace_t, name, use_loc)
+            }
+        }
+    }
+
+    fn declare_namespace_read_path<'cx>(
+        cx: &Context<'cx>,
+        loc: &ALoc,
+    ) -> Option<FlowVector<DeclareNamespaceReadPathElement<ALoc>>> {
+        cx.environment()
+            .var_info
+            .declare_namespace_read_paths
+            .get(loc)
+            .duped()
+    }
+
+    fn resolved_loc_env_write_opt<'cx>(
+        cx: &Context<'cx>,
+        kind: DefLocType,
+        loc: ALoc,
+    ) -> Option<Type> {
+        let env = cx.environment();
+        let entry_key = EnvKey::new(kind, loc.dupe());
+        if !has_assigning_write(entry_key, &env.var_info.env_entries) {
+            return None;
+        }
+        let TypeEntry { t, state } = env.find_write(kind, loc)?;
+        if state.borrow().is_forced() {
+            Some(t.dupe())
+        } else {
+            None
+        }
+    }
+
+    fn namespace_types_at_path_prefix<'cx>(
+        cx: &Context<'cx>,
+        namespace_path: &FlowVector<DeclareNamespaceReadPathElement<ALoc>>,
+        prefix_len: usize,
+        loc: ALoc,
+    ) -> Vec<Type> {
+        fn resolved_loc_env_writes<'cx>(cx: &Context<'cx>, locs: &FlowVector<ALoc>) -> Vec<Type> {
+            locs.iter()
+                .filter_map(|loc| {
+                    resolved_loc_env_write_opt(cx, DefLocType::OrdinaryNameLoc, loc.dupe())
+                })
+                .collect()
+        }
+
+        fn namespace_types_for_root_path_element<'cx>(
+            cx: &Context<'cx>,
+            root: &DeclareNamespaceReadPathElement<ALoc>,
+        ) -> Vec<Type> {
+            let builtin_namespace = || {
+                cx.builtin_type_opt(root.name.as_str())
+                    .or_else(|| cx.builtin_value_opt(root.name.as_str()))
+                    .map(|(_, t)| t)
+            };
+            // Installed lib namespaces are already fully merged.
+            if cx.is_lib_file() {
+                if let Some(namespace_t) = builtin_namespace() {
+                    vec![namespace_t]
+                } else if cx
+                    .file()
+                    .as_str()
+                    .starts_with(flow_parser::file_key::FLOWLIB_MARKER)
+                {
+                    Vec::new()
+                } else {
+                    resolved_loc_env_writes(cx, &root.locs)
+                }
+            } else {
+                // A local namespace shadows a same-named builtin.
+                let namespace_types = resolved_loc_env_writes(cx, &root.locs);
+                if namespace_types.is_empty() {
+                    builtin_namespace().into_iter().collect()
+                } else {
+                    namespace_types
+                }
+            }
+        }
+
+        fn namespace_types_for_child_path_element<'cx>(
+            cx: &Context<'cx>,
+            namespace_types: &[Type],
+            child: &DeclareNamespaceReadPathElement<ALoc>,
+            use_loc: ALoc,
+        ) -> Vec<Type> {
+            let member_lookup = || {
+                namespace_types
+                    .iter()
+                    .filter_map(|namespace_t| {
+                        namespace_type_member_opt(cx, namespace_t, &child.name, use_loc.dupe())
+                            .or_else(|| {
+                                namespace_value_member_opt(
+                                    cx,
+                                    namespace_t,
+                                    &child.name,
+                                    use_loc.dupe(),
+                                )
+                            })
+                    })
+                    .collect()
+            };
+            if cx.is_lib_file() {
+                member_lookup()
+            } else {
+                let namespace_types = resolved_loc_env_writes(cx, &child.locs);
+                if namespace_types.is_empty() {
+                    member_lookup()
+                } else {
+                    namespace_types
+                }
+            }
+        }
+
+        let mut path = namespace_path.iter().take(prefix_len);
+        let Some(root) = path.next() else {
+            return Vec::new();
+        };
+        let mut namespace_types = namespace_types_for_root_path_element(cx, root);
+        for namespace in path {
+            namespace_types =
+                namespace_types_for_child_path_element(cx, &namespace_types, namespace, loc.dupe());
+        }
+        namespace_types
+    }
+
+    let namespace_path = declare_namespace_read_path(cx, &loc)?;
+    for prefix_len in (1..=namespace_path.len()).rev() {
+        for namespace_t in
+            namespace_types_at_path_prefix(cx, &namespace_path, prefix_len, loc.dupe())
+        {
+            if let Some(t) = namespace_member_opt(lookup_mode, cx, &namespace_t, name, loc.dupe()) {
+                return Some(t);
+            }
+        }
+    }
+    None
 }
 
 pub fn has_hint<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
@@ -1684,6 +1919,94 @@ pub fn query_var<'cx>(
         loc.dupe(),
         flow_common::reason::mk_reason(desc, loc),
     )
+}
+
+pub fn lookup_type_identifier<'cx>(
+    lookup_mode: LookupMode,
+    cx: &Context<'cx>,
+    name: &FlowSmolStr,
+    loc: ALoc,
+) -> Result<Type, JobError> {
+    fn is_unresolved_read_in_declare_namespace<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
+        let env = cx.environment();
+        if env.var_info.declare_namespace_read_paths.get(loc).is_none() {
+            return false;
+        }
+        match find_var_opt(&env.var_info, loc) {
+            Err(_) => true,
+            Ok(read) => {
+                !read.write_locs.is_empty()
+                    && read
+                        .write_locs
+                        .iter()
+                        .all(|write| matches!(write, WriteLoc::Global(_)))
+            }
+        }
+    }
+
+    fn query_var_opt<'cx>(
+        lookup_mode: LookupMode,
+        cx: &Context<'cx>,
+        name: &FlowSmolStr,
+        loc: ALoc,
+    ) -> Result<Option<Type>, JobError> {
+        if is_unresolved_read_in_declare_namespace(cx, &loc) {
+            return Ok(None);
+        }
+        let reason =
+            flow_common::reason::mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
+        match read_entry(lookup_mode, cx, loc, reason)? {
+            Ok(t) => Ok(Some(t)),
+            Err(_) => Ok(None),
+        }
+    }
+
+    fn flowlib_namespace_member_global_lookup<'cx>(
+        lookup_mode: LookupMode,
+        cx: &Context<'cx>,
+        name: &FlowSmolStr,
+        loc: ALoc,
+    ) -> Option<Type> {
+        if cx
+            .file()
+            .as_str()
+            .starts_with(flow_parser::file_key::FLOWLIB_MARKER)
+            && is_unresolved_read_in_declare_namespace(cx, &loc)
+        {
+            let reason =
+                flow_common::reason::mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc);
+            match lookup_mode {
+                LookupMode::ForType => {
+                    Some(flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
+                        cx,
+                        name.as_str(),
+                        reason,
+                    ))
+                }
+                LookupMode::ForValue | LookupMode::ForTypeof => Some(
+                    flow_typing_flow_common::flow_js_utils::lookup_builtin_value(
+                        cx,
+                        name.as_str(),
+                        reason,
+                    ),
+                ),
+            }
+        } else {
+            None
+        }
+    }
+
+    if let Some(t) = query_var_opt(lookup_mode, cx, name, loc.dupe())? {
+        return Ok(t);
+    }
+    if let Some(t) = recorded_declare_namespace_member_opt(lookup_mode, cx, name, loc.dupe()) {
+        return Ok(t);
+    }
+    if let Some(t) = flowlib_namespace_member_global_lookup(lookup_mode, cx, name, loc.dupe()) {
+        return Ok(t);
+    }
+    let t = query_var(Some(lookup_mode), cx, name, None, loc.dupe())?;
+    Ok(t)
 }
 
 pub fn intrinsic_ref<'cx>(

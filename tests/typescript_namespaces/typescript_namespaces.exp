@@ -162,6 +162,280 @@ References:
               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:2:1
+
+Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:2:1
+   2| 1 as LibMulti.Alias; // err: number ~> string
+      ^ [1]
+
+References:
+   libdef_namespace_type_reads.js:2:6
+   2| 1 as LibMulti.Alias; // err: number ~> string
+           ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:5:1
+
+Cannot cast empty string to `Alias` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:5:1
+   5| '' as LibOther.Alias; // err: string ~> number
+      ^^ [1]
+
+References:
+   libdef_namespace_type_reads.js:5:7
+   5| '' as LibOther.Alias; // err: string ~> number
+            ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:8:1
+
+Cannot cast `1` to `Alias` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:8:1
+   8| 1 as LibSameBody.Alias; // err: number ~> boolean
+      ^ [1]
+
+References:
+   libdef_namespace_type_reads.js:8:6
+   8| 1 as LibSameBody.Alias; // err: number ~> boolean
+           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:11:1
+
+Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:11:1
+   11| 1 as LibForward.Alias; // err: number ~> string
+       ^ [1]
+
+References:
+   libdef_namespace_type_reads.js:11:6
+   11| 1 as LibForward.Alias; // err: number ~> string
+            ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:14:1
+
+Cannot cast `LibOrder.Inner.Leaf.nearest` to string literal `outer` because string literal `inner` [1] is incompatible
+with string literal `outer` [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:14:1
+   14| LibOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib/namespace_type_reads.js:42:30
+   42|       declare const nearest: Shared;
+                                    ^^^^^^ [1]
+   libdef_namespace_type_reads.js:14:32
+   14| LibOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
+                                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:17:1
+
+Cannot cast `LibValueOrder.Inner.Leaf.nearestValue` to string literal `outer` because string literal `inner` [1] is
+incompatible with string literal `outer` [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:17:1
+   17| LibValueOrder.Inner.Leaf.nearestValue as "outer"; // err: "inner" ~> "outer"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib/namespace_type_reads.js:57:35
+   57|       declare const nearestValue: typeof SharedValue;
+                                         ^^^^^^^^^^^^^^^^^^ [1]
+   libdef_namespace_type_reads.js:17:42
+   17| LibValueOrder.Inner.Leaf.nearestValue as "outer"; // err: "inner" ~> "outer"
+                                                ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:20:1
+
+Cannot cast `LibNestedMerge.Inner.value` to string literal `other` because string literal `nested` [1] is incompatible
+with string literal `other` [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:20:1
+   20| LibNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib/namespace_type_reads.js:72:26
+   72|     declare const value: Alias;
+                                ^^^^^ [1]
+   libdef_namespace_type_reads.js:20:31
+   20| LibNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"
+                                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:22:1
+
+Cannot cast `LibNestedMerge.Inner.valueFromTypeof` to string literal `other` because string literal `nested value` [1]
+is incompatible with string literal `other` [2]. [incompatible-type]
+
+   libdef_namespace_type_reads.js:22:1
+   22| LibNestedMerge.Inner.valueFromTypeof as "other"; // err: "nested value" ~> "other"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   lib/namespace_type_reads.js:73:36
+   73|     declare const valueFromTypeof: typeof SharedValue;
+                                          ^^^^^^^^^^^^^^^^^^ [1]
+   libdef_namespace_type_reads.js:22:41
+   22| LibNestedMerge.Inner.valueFromTypeof as "other"; // err: "nested value" ~> "other"
+                                               ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:10:1
+
+Cannot cast `LocalMulti.value` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:10:1
+   10| LocalMulti.value as number; // err: string ~> number
+       ^^^^^^^^^^^^^^^^
+
+References:
+   local_multiple_namespaces.js:6:24
+    6|   declare const value: Shared;
+                              ^^^^^^ [1]
+   local_multiple_namespaces.js:10:21
+   10| LocalMulti.value as number; // err: string ~> number
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:21:1
+
+Cannot cast `LocalOther.value` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:21:1
+   21| LocalOther.value as string; // err: number ~> string
+       ^^^^^^^^^^^^^^^^
+
+References:
+   local_multiple_namespaces.js:17:24
+   17|   declare const value: Shared;
+                              ^^^^^^ [1]
+   local_multiple_namespaces.js:21:21
+   21| LocalOther.value as string; // err: number ~> string
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:29:1
+
+Cannot cast `1` to `Alias` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:29:1
+   29| 1 as LocalSameBody.Alias; // err: number ~> boolean
+       ^ [1]
+
+References:
+   local_multiple_namespaces.js:29:6
+   29| 1 as LocalSameBody.Alias; // err: number ~> boolean
+            ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:40:1
+
+Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:40:1
+   40| 1 as LocalForward.Alias; // err: number ~> string
+       ^ [1]
+
+References:
+   local_multiple_namespaces.js:40:6
+   40| 1 as LocalForward.Alias; // err: number ~> string
+            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:51:1
+
+Cannot cast `"other"` to `Alias` because string literal `other` [1] is incompatible with string literal
+`later value` [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:51:1
+   51| "other" as LocalValueForward.Alias; // err: "other" ~> "later value"
+       ^^^^^^^ [1]
+
+References:
+   local_multiple_namespaces.js:51:12
+   51| "other" as LocalValueForward.Alias; // err: "other" ~> "later value"
+                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:66:1
+
+Cannot cast `"other"` to `Alias` because string literal `other` [1] is incompatible with string literal
+`nested forward` [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:66:1
+   66| "other" as LocalNestedForward.Inner.Alias; // err: "other" ~> "nested forward"
+       ^^^^^^^ [1]
+
+References:
+   local_multiple_namespaces.js:66:12
+   66| "other" as LocalNestedForward.Inner.Alias; // err: "other" ~> "nested forward"
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:88:1
+
+Cannot cast `LocalOrder.Inner.Leaf.nearest` to string literal `outer` because string literal `inner` [1] is incompatible
+with string literal `outer` [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:88:1
+   88| LocalOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   local_multiple_namespaces.js:81:30
+   81|       declare const nearest: Shared;
+                                    ^^^^^^ [1]
+   local_multiple_namespaces.js:88:34
+   88| LocalOrder.Inner.Leaf.nearest as "outer"; // err: "inner" ~> "outer"
+                                        ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:90:1
+
+Cannot cast `LocalOrder.Inner.Leaf.nearestValue` to string literal `outer` because string literal `inner` [1] is
+incompatible with string literal `outer` [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:90:1
+   90| LocalOrder.Inner.Leaf.nearestValue as "outer"; // err: "inner" ~> "outer"
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   local_multiple_namespaces.js:82:35
+   82|       declare const nearestValue: typeof LocalSharedValue;
+                                         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   local_multiple_namespaces.js:90:39
+   90| LocalOrder.Inner.Leaf.nearestValue as "outer"; // err: "inner" ~> "outer"
+                                             ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- local_multiple_namespaces.js:106:1
+
+Cannot cast `LocalNestedMerge.Inner.value` to string literal `other` because string literal `nested` [1] is incompatible
+with string literal `other` [2]. [incompatible-type]
+
+   local_multiple_namespaces.js:106:1
+   106| LocalNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   local_multiple_namespaces.js:101:26
+   101|     declare const value: Alias;
+                                 ^^^^^ [1]
+   local_multiple_namespaces.js:106:33
+   106| LocalNestedMerge.Inner.value as "other"; // err: "nested" ~> "other"
+                                        ^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------- namespace_then_class.js:8:1
 
 Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -233,4 +507,4 @@ References:
 
 
 
-Found 16 errors
+Found 33 errors

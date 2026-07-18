@@ -4,7 +4,7 @@ type conflict_with_type_decl_2 = 1;
 declare namespace conflict_with_type_decl_2 {} // error
 
 declare namespace const_like {}
-declare namespace const_like {} // error
+declare namespace const_like {} // ok: repeated type-only namespaces merge
 const_like = 1; // error: reference-before-declaration of the const below
 const const_like = 1; // ok: empty-body namespace is type-only, const is in the value namespace
 

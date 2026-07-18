@@ -536,6 +536,15 @@ pub struct PredFuncInfo<L: Dupe> {
     pub arguments: ArgList<L, L>,
 }
 
+/// One resolver-recorded component of a `declare namespace` path.
+///
+/// `locs` contains every declaration fragment for this namespace path.
+#[derive(Debug, Clone, Dupe)]
+pub struct DeclareNamespaceReadPathElement<L: Dupe> {
+    pub name: FlowSmolStr,
+    pub locs: FlowVector<L>,
+}
+
 pub struct EnvInfo<L>
 where
     L: Dupe + Eq + Ord + Hash + LocSig,
@@ -550,6 +559,13 @@ where
     pub pred_func_map: FlowRedBlackTreeMap<L, PredFuncInfo<L>>,
     pub interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
+    /// For each identifier read inside a `declare namespace`, the namespace
+    /// path that was active while the resolver visited that read.
+    ///
+    /// The resolver knows the syntactic namespace nesting, but namespace member
+    /// values and types are available later during checking. This persisted map
+    /// lets checking recover that namespace context after resolver traversal ends.
+    pub declare_namespace_read_paths: FlowOrdMap<L, FlowVector<DeclareNamespaceReadPathElement<L>>>,
 }
 
 #[derive(
@@ -601,6 +617,7 @@ where
             pred_func_map: FlowRedBlackTreeMap::new(),
             interface_merge_conflicts: FlowOrdMap::new(),
             declare_class_interface_merge_conflicts: FlowOrdMap::new(),
+            declare_namespace_read_paths: FlowOrdMap::new(),
         }
     }
 }

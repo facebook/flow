@@ -22170,6 +22170,342 @@ Builtin global type ns_t
 }
 
 #[test]
+fn declare_namespace_declaration_merging_member_references() {
+    let input = r#"
+        declare namespace ns {
+          type TypeAlias = LaterType;
+          type ValueAlias = typeof laterValue;
+        }
+        declare namespace ns {
+          type LaterType = string;
+          declare const laterValue: number;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:18-20]
+1. [2:7-16]
+2. [2:19-28]
+3. [3:7-17]
+4. [3:20-37]
+5. [3:27-37]
+6. [6:7-16]
+7. [6:19-25]
+8. [7:16-26]
+9. [7:28-34]
+10. [0:0]
+Local defs:
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 1,
+        custom_error_loc_opt: None,
+        name: "TypeAlias",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 2,
+                        index: 3,
+                    },
+                ),
+            ),
+        ),
+    },
+)
+1. TypeAlias(
+    DefTypeAlias {
+        id_loc: 3,
+        custom_error_loc_opt: None,
+        name: "ValueAlias",
+        tparams: Mono,
+        body: Annot(
+            Typeof(
+                AnnotTypeof {
+                    loc: 4,
+                    qname: [
+                        "laterValue",
+                    ],
+                    t: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 5,
+                                index: 4,
+                            },
+                        ),
+                    ),
+                    targs: None,
+                },
+            ),
+        ),
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "ns",
+        values: {
+            "laterValue": (
+                8,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 4,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "LaterType": (
+                6,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 3,
+                        },
+                    ),
+                ),
+            ),
+            "TypeAlias": (
+                1,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 1,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "ValueAlias": (
+                3,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 3,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+3. TypeAlias(
+    DefTypeAlias {
+        id_loc: 6,
+        custom_error_loc_opt: None,
+        name: "LaterType",
+        tparams: Mono,
+        body: Annot(
+            String(
+                7,
+            ),
+        ),
+    },
+)
+4. Variable(
+    DefVariable {
+        id_loc: 8,
+        name: "laterValue",
+        def: Annot(
+            Number(
+                9,
+            ),
+        ),
+    },
+)
+5. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 10,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                10,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 10,
+                            index: 5,
+                        },
+                    ),
+                ),
+            ),
+            "ns": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value globalThis
+Builtin global value ns
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn declare_namespace_nested_declaration_merging_member_references() {
+    let input = r#"
+        declare namespace ns {
+          declare namespace nested {
+            type Alias = Later;
+          }
+        }
+        declare namespace ns {
+          declare namespace nested {
+            type Later = symbol;
+          }
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:18-20]
+1. [2:20-26]
+2. [3:9-14]
+3. [3:17-22]
+4. [8:9-14]
+5. [8:17-23]
+6. [0:0]
+Local defs:
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 2,
+        custom_error_loc_opt: None,
+        name: "Alias",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 3,
+                        index: 3,
+                    },
+                ),
+            ),
+        ),
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 1,
+        name: "nested",
+        values: {},
+        types: {
+            "Alias": (
+                2,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 2,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "Later": (
+                4,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 3,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "ns",
+        values: {},
+        types: {
+            "nested": (
+                1,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 1,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+3. TypeAlias(
+    DefTypeAlias {
+        id_loc: 4,
+        custom_error_loc_opt: None,
+        name: "Later",
+        tparams: Mono,
+        body: Annot(
+            Symbol(
+                5,
+            ),
+        ),
+    },
+)
+4. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 6,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                6,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 4,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "ns": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+Builtin global value globalThis
+Builtin global type ns
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
 fn declare_namespace_nested_declaration_merging_no_errors() {
     let first = r#"
         declare namespace ns {

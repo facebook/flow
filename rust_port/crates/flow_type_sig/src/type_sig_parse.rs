@@ -886,6 +886,7 @@ pub(super) mod scope {
             exports: Rc<RefCell<Exports<'arena, 'ast>>>,
         },
         DeclareNamespace {
+            name: FlowSmolStr,
             values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             parent: ScopeId,
@@ -961,8 +962,13 @@ pub(super) mod scope {
         })
     }
 
-    pub(super) fn push_declare_namespace(scopes: &mut Scopes, parent: ScopeId) -> ScopeId {
+    pub(super) fn push_declare_namespace(
+        scopes: &mut Scopes,
+        parent: ScopeId,
+        name: FlowSmolStr,
+    ) -> ScopeId {
         scopes.push(Scope::DeclareNamespace {
+            name,
             parent,
             values: BTreeMap::new(),
             types: BTreeMap::new(),
@@ -1333,8 +1339,17 @@ pub(super) mod scope {
                     id = *parent;
                 }
                 Scope::DeclareModule { parent, values, .. }
-                | Scope::DeclareNamespace { parent, values, .. }
                 | Scope::Lexical { parent, values, .. } => match values.get(name) {
+                    Some(binding) => return Some((binding.dupe(), id)),
+                    None => {
+                        id = *parent;
+                    }
+                },
+                Scope::DeclareNamespace { parent, values, .. } => match values
+                    .get(name)
+                    .map(|binding| binding.dupe())
+                    .or_else(|| lookup_merged_namespace_member_value(scopes, id, name))
+                {
                     Some(binding) => return Some((binding.dupe(), id)),
                     None => {
                         id = *parent;
@@ -1344,22 +1359,156 @@ pub(super) mod scope {
         }
     }
 
+    fn lookup_value_in_scope<'arena, 'ast>(
+        scope: &Scope<'arena, 'ast>,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        match scope {
+            Scope::Global { values, .. }
+            | Scope::DeclareModule { values, .. }
+            | Scope::DeclareNamespace { values, .. }
+            | Scope::Module { values, .. }
+            | Scope::Lexical { values, .. } => values.get(name).map(|binding| binding.dupe()),
+            Scope::ConditionalTypeExtends(_) => None,
+        }
+    }
+
+    fn lookup_scope<'arena, 'ast>(
+        name: &FlowSmolStr,
+        values: &BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+        types: &BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        types
+            .get(name)
+            .or_else(|| values.get(name))
+            .map(|b| b.dupe())
+    }
+
+    fn namespace_member_type<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        binding: BindingNode<'arena, 'ast>,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        let BindingNode::LocalBinding(node) = binding else {
+            return None;
+        };
+        match node.0.data().deref() {
+            LocalBinding::NamespaceBinding { values, types, .. } => types
+                .get(name)
+                .and_then(|entry| local_binding_node_of_namespace_entry(scopes, true, name, entry))
+                .or_else(|| {
+                    values.get(name).and_then(|entry| {
+                        local_value_binding_node_of_namespace_entry(scopes, name, entry)
+                    })
+                })
+                .map(BindingNode::LocalBinding),
+            _ => None,
+        }
+    }
+
+    fn namespace_member_value<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        binding: BindingNode<'arena, 'ast>,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        let BindingNode::LocalBinding(node) = binding else {
+            return None;
+        };
+        match node.0.data().deref() {
+            LocalBinding::NamespaceBinding { values, .. } => values
+                .get(name)
+                .and_then(|entry| local_value_binding_node_of_namespace_entry(scopes, name, entry))
+                .map(BindingNode::LocalBinding),
+            _ => None,
+        }
+    }
+
+    fn lookup_type_in_scope<'arena, 'ast>(
+        scope: &Scope<'arena, 'ast>,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        match scope {
+            Scope::Global { values, types, .. }
+            | Scope::DeclareModule { values, types, .. }
+            | Scope::DeclareNamespace { values, types, .. }
+            | Scope::Module { values, types, .. }
+            | Scope::Lexical { values, types, .. } => lookup_scope(name, values, types),
+            Scope::ConditionalTypeExtends(_) => None,
+        }
+    }
+
+    fn namespace_path_and_host(
+        scopes: &Scopes,
+        mut id: ScopeId,
+    ) -> Option<(ScopeId, Vec<FlowSmolStr>)> {
+        let mut path = Vec::new();
+        loop {
+            match scopes.get(id) {
+                Scope::DeclareNamespace { name, parent, .. } => {
+                    path.push(name.dupe());
+                    id = *parent;
+                }
+                Scope::ConditionalTypeExtends(ConditionalTypeExtends { parent, .. })
+                | Scope::Lexical { parent, .. } => {
+                    id = *parent;
+                }
+                Scope::Global { .. } | Scope::DeclareModule { .. } | Scope::Module { .. } => {
+                    path.reverse();
+                    return if path.is_empty() {
+                        None
+                    } else {
+                        Some((id, path))
+                    };
+                }
+            }
+        }
+    }
+
+    fn lookup_merged_namespace_member_type<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        let (host, path) = namespace_path_and_host(scopes, id)?;
+        for prefix_len in (1..=path.len()).rev() {
+            let mut path = path.iter().take(prefix_len);
+            let first = path.next()?;
+            let mut binding = lookup_type_in_scope(scopes.get(host), first)?;
+            for namespace_name in path {
+                binding = namespace_member_type(scopes, binding, namespace_name)?;
+            }
+            if let Some(binding) = namespace_member_type(scopes, binding, name) {
+                return Some(binding);
+            }
+        }
+        None
+    }
+
+    fn lookup_merged_namespace_member_value<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
+        name: &FlowSmolStr,
+    ) -> Option<BindingNode<'arena, 'ast>> {
+        let (host, path) = namespace_path_and_host(scopes, id)?;
+        for prefix_len in (1..=path.len()).rev() {
+            let mut path = path.iter().take(prefix_len);
+            let first = path.next()?;
+            let mut binding = lookup_value_in_scope(scopes.get(host), first)?;
+            for namespace_name in path {
+                binding = namespace_member_value(scopes, binding, namespace_name)?;
+            }
+            if let Some(binding) = namespace_member_value(scopes, binding, name) {
+                return Some(binding);
+            }
+        }
+        None
+    }
+
     pub(crate) fn lookup_type<'a, 'arena, 'ast>(
         scopes: &'a Scopes<'arena, 'ast>,
         mut id: ScopeId,
         name: &FlowSmolStr,
     ) -> Option<(BindingNode<'arena, 'ast>, ScopeId)> {
-        fn lookup_scope<'arena, 'ast>(
-            name: &FlowSmolStr,
-            values: &BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
-            types: &BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
-        ) -> Option<BindingNode<'arena, 'ast>> {
-            types
-                .get(name)
-                .or_else(|| values.get(name))
-                .map(|b| b.dupe())
-        }
-
         loop {
             match scopes.get(id) {
                 Scope::Global { values, types, .. } => {
@@ -1372,8 +1521,16 @@ pub(super) mod scope {
                     parent,
                     values,
                     types,
-                }
-                | Scope::Lexical {
+                    ..
+                } => match lookup_scope(name, values, types)
+                    .or_else(|| lookup_merged_namespace_member_type(scopes, id, name))
+                {
+                    Some(binding) => return Some((binding, id)),
+                    None => {
+                        id = *parent;
+                    }
+                },
+                Scope::Lexical {
                     parent,
                     values,
                     types,
@@ -4210,7 +4367,11 @@ pub(super) mod scope {
                 if &ref_.name == name
                     && matches!(
                         (type_only, lookup),
-                        (true, ValRefLookup::TypeRefLookup) | (false, ValRefLookup::ValueRefLookup)
+                        (true, ValRefLookup::TypeRefLookup)
+                            | (
+                                false,
+                                ValRefLookup::ValueRefLookup | ValRefLookup::TypeofRefLookup,
+                            )
                     ) =>
             {
                 let binding = if type_only {
@@ -4904,6 +5065,7 @@ pub(super) mod scope {
                 values,
                 types,
                 parent,
+                ..
             } => {
                 let (ns_values, ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
@@ -5020,6 +5182,7 @@ pub(super) mod scope {
                 values,
                 types,
                 parent,
+                ..
             } => {
                 let (ns_values, ns_types) =
                     namespace_binding_of_values_and_types(id, values, types);
@@ -12240,7 +12403,7 @@ fn namespace_decl<'arena: 'ast, 'ast, F>(
         ast::statement::declare_namespace::Id::Local(id) => {
             let id_loc = tbls.push_loc(id.loc.dupe());
             let name = id.name.dupe();
-            let scope = scope::push_declare_namespace(scopes, scope);
+            let scope = scope::push_declare_namespace(scopes, scope, name.dupe());
             for s in decl.body.1.body.iter().filter(|stmt| {
                 ast_utils::acceptable_statement_in_declaration_context(true, stmt).is_ok()
             }) {
@@ -12644,7 +12807,7 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
                     let stmts = ns.body.1.body.iter().filter(|stmt| {
                         ast_utils::acceptable_statement_in_declaration_context(true, stmt).is_ok()
                     });
-                    let ns_scope = scope::push_declare_namespace(scopes, scope);
+                    let ns_scope = scope::push_declare_namespace(scopes, scope, name.dupe());
                     for s in stmts {
                         statement(opts, ns_scope, scopes, tbls, s);
                     }
