@@ -28,4 +28,4 @@ lsp-types = "0.97"
 regex = "1.13.1"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
-tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
+tokio = { version = "1.52.4", features = ["full", "test-util", "tracing"] }

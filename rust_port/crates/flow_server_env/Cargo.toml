@@ -37,7 +37,7 @@ uuid = { version = "1.24.0", features = ["rng-getrandom", "serde", "v4", "v5", "
 vec1 = { version = "1.12.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.52.3", features = ["full", "test-util", "tracing"] }
+tokio = { version = "1.52.4", features = ["full", "test-util", "tracing"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-tokio = { version = "1.52.3", features = ["macros", "sync"], default-features = false }
+tokio = { version = "1.52.4", features = ["macros", "sync"], default-features = false }
