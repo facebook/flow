@@ -9,4 +9,4 @@ edition = "2024"
 flow_common = { path = "../flow_common" }
 flow_common_vcs = { path = "../flow_common_vcs" }
 flow_hh_logger = { path = "../flow_hh_logger" }
-regex = "1.13.0"
+regex = "1.13.1"

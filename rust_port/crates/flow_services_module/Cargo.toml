@@ -15,5 +15,5 @@ flow_hh_logger = { path = "../flow_hh_logger" }
 flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-regex = "1.13.0"
+regex = "1.13.1"
 vec1 = { version = "1.12.1", features = ["serde"] }

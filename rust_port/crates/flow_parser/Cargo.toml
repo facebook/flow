@@ -13,7 +13,7 @@ test = false
 dupe = "0.9.1"
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 logos = "0.15"
-regex = "1.13.0"
+regex = "1.13.1"
 serde = { version = "1.0.219", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 
