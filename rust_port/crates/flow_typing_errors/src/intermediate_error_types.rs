@@ -222,7 +222,6 @@ pub enum UnsupportedSyntax {
     ObjectPropertyComputedGetSet,
     InvariantSpreadArgument,
     ClassPropertyLiteral,
-    ClassPropertyComputed,
     ClassStaticBlock,
     ClassDeclareMethod,
     ClassIndexSignature,
@@ -2378,6 +2377,8 @@ pub enum Message<L: Dupe> {
         key_error_kind: InvalidObjKey,
         obj_kind: ObjKind,
     },
+
+    MessageUnsupportedComputedKeyInClass,
 
     MessageUnsupportedSyntax(UnsupportedSyntax),
     MessageUnsupportedVarianceAnnotation(FlowSmolStr),

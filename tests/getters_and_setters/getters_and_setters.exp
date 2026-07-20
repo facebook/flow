@@ -1,17 +1,19 @@
-Error ---------------------------------------------------------------------------------------------------- class.js:25:3
+Error ---------------------------------------------------------------------------------------------------- class.js:25:8
 
-Computed property keys not supported. [unsupported-syntax]
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
 
    25|   set [z](x: string) {}
-         ^^^^^^^^^^^^^^^^^^^^^
+              ^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:26:3
+Error ---------------------------------------------------------------------------------------------------- class.js:26:8
 
-Computed property keys not supported. [unsupported-syntax]
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
 
    26|   get [z](): string { return string; }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:33:35

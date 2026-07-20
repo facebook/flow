@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------------- consumer.js:10:3
+
+Cannot get `c._ident` because property `_ident` is missing in `C` [1]. [prop-missing]
+
+   consumer.js:10:3
+   10| c._ident; // ERROR: non-computed identifier member is munged
+         ^^^^^^
+
+References:
+   consumer.js:3:18
+    3| declare const c: C;
+                        ^ [1]
+
+
+
+Found 1 error

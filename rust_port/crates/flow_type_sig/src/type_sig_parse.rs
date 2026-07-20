@@ -2600,6 +2600,36 @@ pub(super) mod scope {
                         )
                     })
                     .collect(),
+                computed_own_props: sig
+                    .computed_own_props
+                    .iter()
+                    .map(|(key, prop)| {
+                        (
+                            rename_tparams_in_parsed(&body_rename_map, key),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                computed_proto_props: sig
+                    .computed_proto_props
+                    .iter()
+                    .map(|(key, prop)| {
+                        (
+                            rename_tparams_in_parsed(&body_rename_map, key),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
+                computed_static_props: sig
+                    .computed_static_props
+                    .iter()
+                    .map(|(key, prop)| {
+                        (
+                            rename_tparams_in_parsed(&body_rename_map, key),
+                            rename_tparams_in_obj_value_prop(&body_rename_map, prop),
+                        )
+                    })
+                    .collect(),
                 dict: sig
                     .dict
                     .as_ref()
@@ -5553,6 +5583,18 @@ mod class_acc {
         pub(super) proto:
             BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) own: BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        pub(super) computed_own: Vec<(
+            Parsed<'arena, 'ast>,
+            ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
+        pub(super) computed_proto: Vec<(
+            Parsed<'arena, 'ast>,
+            ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
+        pub(super) computed_static: Vec<(
+            Parsed<'arena, 'ast>,
+            ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
         pub(super) abstract_props: BTreeSet<FlowSmolStr>,
     }
@@ -5563,6 +5605,9 @@ mod class_acc {
                 static_: BTreeMap::new(),
                 proto: BTreeMap::new(),
                 own: BTreeMap::new(),
+                computed_own: Vec::new(),
+                computed_proto: Vec::new(),
+                computed_static: Vec::new(),
                 dict: None,
                 abstract_props: BTreeSet::new(),
             }
@@ -5672,6 +5717,46 @@ mod class_acc {
             }
         }
 
+        pub(super) fn add_computed_field(
+            &mut self,
+            static_: bool,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            polarity: Polarity,
+            t: Parsed<'arena, 'ast>,
+        ) {
+            let prop = ObjValueProp::ObjValueField(Box::new((id_loc, t, polarity)));
+            if static_ {
+                self.computed_static.push((key, prop));
+            } else {
+                self.computed_own.push((key, prop));
+            }
+        }
+
+        pub(super) fn add_computed_method(
+            &mut self,
+            static_: bool,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            fn_loc: LocNode<'arena>,
+            async_: bool,
+            generator: bool,
+            def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) {
+            let prop = ObjValueProp::ObjValueMethod(Box::new(Vec1::new(ObjValueMethodData {
+                id_loc,
+                fn_loc,
+                async_,
+                generator,
+                def,
+            })));
+            if static_ {
+                self.computed_static.push((key, prop));
+            } else {
+                self.computed_proto.push((key, prop));
+            }
+        }
+
         pub(super) fn class_def(
             self,
             abstract_: bool,
@@ -5686,6 +5771,9 @@ mod class_acc {
                 static_props: self.static_,
                 proto_props: self.proto,
                 own_props: self.own,
+                computed_own_props: self.computed_own,
+                computed_proto_props: self.computed_proto,
+                computed_static_props: self.computed_static,
                 dict: self.dict,
                 abstract_,
                 abstract_props: self.abstract_props,
@@ -6335,6 +6423,46 @@ fn resolve_prop_key<'ast>(
         Key::NumberLiteral((loc, _)) | Key::PrivateName(ast::PrivateName { loc, .. }) => {
             ResolvedPropKey::ComputedError { loc: loc.dupe() }
         }
+    }
+}
+
+// Parse the value type of a class field, given an already-pushed `id_loc_node`.
+// Mirrors the identifier-field logic in `class_def` but uses `id_loc_node` for
+// the missing-annotation error so callers can push the key loc first (keeping
+// packed locs in ascending order for computed keys).
+fn class_field_value_type<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
+    scope: ScopeId,
+    scopes: &mut scope::Scopes<'arena, 'ast>,
+    tbls: &mut Tables<'arena, 'ast>,
+    xs: &mut tparam_stack::TParamStack,
+    t: &'ast ast::types::AnnotationOrHint<Loc, Loc>,
+    value: &'ast ast::class::property::Value<Loc, Loc>,
+    id_loc_node: LocNode<'arena>,
+    name_for_err: &FlowSmolStr,
+) -> Parsed<'arena, 'ast> {
+    match t {
+        ast::types::AnnotationOrHint::Available(annot_t) => {
+            annot(opts, scope, scopes, tbls, xs, &annot_t.annotation)
+        }
+        ast::types::AnnotationOrHint::Missing(_) => match value {
+            ast::class::property::Value::Initialized(e) => {
+                expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, e)
+            }
+            ast::class::property::Value::Declared | ast::class::property::Value::Uninitialized => {
+                Parsed::Err(
+                    id_loc_node.dupe(),
+                    Errno::SigError(Box::new(
+                        signature_error::SignatureError::ExpectedAnnotation(
+                            id_loc_node,
+                            ExpectedAnnotationSort::Property {
+                                name: name_for_err.clone(),
+                            },
+                        ),
+                    )),
+                )
+            }
+        },
     }
 }
 
@@ -10775,8 +10903,125 @@ fn class_def<'arena: 'ast, 'ast>(
                             acc.add_accessor(*is_static, name, setter);
                         }
                     }
+                } else if let ObjKey::Computed(ck) = key {
+                    // Only a plain method whose computed key resolves to a literal
+                    // string or number (directly or through a value reference) is
+                    // recorded. Computed getters/setters and non-literal keys are
+                    // reported by the typing pipeline, so they are dropped here.
+                    if *kind == class::MethodKind::Method && !is_ts_private(ts_accessibility) {
+                        let async_ = fn_val.async_;
+                        let generator = fn_val.generator;
+                        match ck.expression.deref() {
+                            // Computed keys are never munged: the name-munging
+                            // transform only rewrites non-computed identifier keys, so
+                            // a computed underscore-prefixed key stays public at runtime.
+                            ExpressionInner::StringLiteral { loc, inner, .. } => {
+                                let fn_loc_node = tbls.push_loc(fn_loc.dupe());
+                                let id_loc = tbls.push_loc(loc.dupe());
+                                let def = function_def(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    fn_loc_node.dupe(),
+                                    fn_val,
+                                );
+                                acc.add_method(
+                                    *is_static,
+                                    inner.value.dupe(),
+                                    id_loc,
+                                    fn_loc_node,
+                                    async_,
+                                    generator,
+                                    def,
+                                );
+                            }
+                            ExpressionInner::NumberLiteral { loc, inner, .. }
+                                if flow_common::js_number::is_float_safe_integer(inner.value) =>
+                            {
+                                let name = FlowSmolStr::new(
+                                    flow_common::js_number::ecma_string_of_float(inner.value),
+                                );
+                                let fn_loc_node = tbls.push_loc(fn_loc.dupe());
+                                let id_loc = tbls.push_loc(loc.dupe());
+                                let def = function_def(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    fn_loc_node.dupe(),
+                                    fn_val,
+                                );
+                                acc.add_method(
+                                    *is_static,
+                                    name,
+                                    id_loc,
+                                    fn_loc_node,
+                                    async_,
+                                    generator,
+                                    def,
+                                );
+                            }
+                            ExpressionInner::Identifier { inner, .. } => {
+                                let fn_loc_node = tbls.push_loc(fn_loc.dupe());
+                                let ref_loc = tbls.push_loc(inner.loc.dupe());
+                                let key_ref =
+                                    val_ref(false, scope, ref_loc.dupe(), inner.name.dupe());
+                                let def = function_def(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    fn_loc_node.dupe(),
+                                    fn_val,
+                                );
+                                acc.add_computed_method(
+                                    *is_static,
+                                    key_ref,
+                                    ref_loc,
+                                    fn_loc_node,
+                                    async_,
+                                    generator,
+                                    def,
+                                );
+                            }
+                            // Any other key (`[o.p]`, `[(m as 'go')]`, ...) is
+                            // recorded as an expression resolved during merge.
+                            // `expression_for_computed_key` yields an error key for
+                            // anything it cannot represent, so an exported class fails
+                            // signature verification rather than silently dropping a
+                            // method the checker accepted.
+                            _ => {
+                                let fn_loc_node = tbls.push_loc(fn_loc.dupe());
+                                let ref_loc = tbls.push_loc(ck.expression.loc().dupe());
+                                let key_ref =
+                                    expression_for_computed_key(scope, tbls, &ck.expression);
+                                let def = function_def(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    fn_loc_node.dupe(),
+                                    fn_val,
+                                );
+                                acc.add_computed_method(
+                                    *is_static,
+                                    key_ref,
+                                    ref_loc,
+                                    fn_loc_node,
+                                    async_,
+                                    generator,
+                                    def,
+                                );
+                            }
+                        }
+                    }
                 }
-                // Skip other key types (StringLiteral, NumberLiteral, BigIntLiteral, Computed, PrivateName)
+                // Skip literal, bigint, and private-name keys.
             }
             class::BodyElement::Property(class::Property {
                 key,
@@ -10788,51 +11033,166 @@ fn class_def<'arena: 'ast, 'ast>(
                 loc: prop_loc,
                 ..
             }) => {
-                if let ObjKey::Identifier(id) = key {
-                    if opts.munge
-                        && flow_parser_utils::signature_utils::is_munged_property_string(&id.name)
-                    {
-                        continue;
-                    } else if is_ts_private(ts_accessibility) {
-                        // TS-private members have no public interface.
-                        continue;
-                    }
-
-                    let name = id.name.dupe();
-                    let (id_loc_node, parsed_t) = match t {
-                        ast::types::AnnotationOrHint::Available(annot_t) => {
-                            let id_loc_node = tbls.push_loc(id.loc.dupe());
-                            let parsed =
-                                annot(opts, scope, scopes, tbls, &mut xs, &annot_t.annotation);
-                            (id_loc_node, parsed)
-                        }
-                        ast::types::AnnotationOrHint::Missing(_) => {
-                            let prop_loc_node = tbls.push_loc(prop_loc.dupe());
-                            let id_loc_node = tbls.push_loc(id.loc.dupe());
-                            let res = match value {
-                                class::property::Value::Initialized(e) => {
-                                    expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, e)
-                                }
-                                class::property::Value::Declared
-                                | class::property::Value::Uninitialized => Parsed::Err(
-                                    prop_loc_node.dupe(),
-                                    Errno::SigError(Box::new(
-                                        signature_error::SignatureError::ExpectedAnnotation(
-                                            prop_loc_node,
-                                            ExpectedAnnotationSort::Property { name: name.clone() },
-                                        ),
-                                    )),
-                                ),
-                            };
-                            (id_loc_node, res)
-                        }
-                    };
-
-                    let polarity_val =
-                        polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                    acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                if is_ts_private(ts_accessibility) {
+                    // TS-private members have no public interface.
+                    continue;
                 }
-                // Skip other key types
+                let polarity_val = polarity(variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                match key {
+                    ObjKey::Identifier(id) => {
+                        if opts.munge
+                            && flow_parser_utils::signature_utils::is_munged_property_string(
+                                &id.name,
+                            )
+                        {
+                            continue;
+                        }
+
+                        let name = id.name.dupe();
+                        let (id_loc_node, parsed_t) = match t {
+                            ast::types::AnnotationOrHint::Available(annot_t) => {
+                                let id_loc_node = tbls.push_loc(id.loc.dupe());
+                                let parsed =
+                                    annot(opts, scope, scopes, tbls, &mut xs, &annot_t.annotation);
+                                (id_loc_node, parsed)
+                            }
+                            ast::types::AnnotationOrHint::Missing(_) => {
+                                let prop_loc_node = tbls.push_loc(prop_loc.dupe());
+                                let id_loc_node = tbls.push_loc(id.loc.dupe());
+                                let res = match value {
+                                    class::property::Value::Initialized(e) => expression(
+                                        opts,
+                                        scope,
+                                        scopes,
+                                        tbls,
+                                        FrozenKind::NotFrozen,
+                                        e,
+                                    ),
+                                    class::property::Value::Declared
+                                    | class::property::Value::Uninitialized => Parsed::Err(
+                                        prop_loc_node.dupe(),
+                                        Errno::SigError(Box::new(
+                                            signature_error::SignatureError::ExpectedAnnotation(
+                                                prop_loc_node,
+                                                ExpectedAnnotationSort::Property {
+                                                    name: name.clone(),
+                                                },
+                                            ),
+                                        )),
+                                    ),
+                                };
+                                (id_loc_node, res)
+                            }
+                        };
+                        acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                    }
+                    // Match the typing pipeline (statement.rs): a computed key is a
+                    // field only when it resolves to a single literal string or
+                    // safe-integer number, either directly or through a value
+                    // reference. bigint keys, symbol keys, and everything else are
+                    // unsupported and reported at the declaration site, so they are
+                    // dropped here rather than emitting a duplicate signature error.
+                    ObjKey::Computed(ck) => match ck.expression.deref() {
+                        // Computed keys are never munged: the name-munging transform
+                        // only rewrites non-computed identifier keys, so a computed
+                        // underscore-prefixed key stays public at runtime.
+                        ExpressionInner::StringLiteral { loc, inner, .. } => {
+                            let name = inner.value.dupe();
+                            let id_loc_node = tbls.push_loc(loc.dupe());
+                            let parsed_t = class_field_value_type(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                &mut xs,
+                                t,
+                                value,
+                                id_loc_node.dupe(),
+                                &name,
+                            );
+                            acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                        }
+                        ExpressionInner::NumberLiteral { loc, inner, .. }
+                            if flow_common::js_number::is_float_safe_integer(inner.value) =>
+                        {
+                            let name = FlowSmolStr::new(
+                                flow_common::js_number::ecma_string_of_float(inner.value),
+                            );
+                            let id_loc_node = tbls.push_loc(loc.dupe());
+                            let parsed_t = class_field_value_type(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                &mut xs,
+                                t,
+                                value,
+                                id_loc_node.dupe(),
+                                &name,
+                            );
+                            acc.add_field(*is_static, name, id_loc_node, polarity_val, parsed_t);
+                        }
+                        // `[s]` where `s` is a value reference: record the key ref
+                        // and resolve it to a name during signature merge.
+                        ExpressionInner::Identifier { inner, .. } => {
+                            let ref_loc = tbls.push_loc(inner.loc.dupe());
+                            let key_ref = val_ref(false, scope, ref_loc.dupe(), inner.name.dupe());
+                            let parsed_t = class_field_value_type(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                &mut xs,
+                                t,
+                                value,
+                                ref_loc.dupe(),
+                                &inner.name,
+                            );
+                            acc.add_computed_field(
+                                *is_static,
+                                key_ref,
+                                ref_loc,
+                                polarity_val,
+                                parsed_t,
+                            );
+                        }
+                        // Any other key (`[o.p]`, `[(s as 'foo')]`, ...) is recorded
+                        // as an expression resolved during merge. `expression_for_computed_key`
+                        // yields a resolvable reference for member expressions and literals,
+                        // and an error key for anything it cannot represent. The error key
+                        // makes an exported class fail signature verification rather than
+                        // silently dropping a member the checker accepted. bigint and
+                        // non-safe-integer number literals resolve to a non-name at merge and
+                        // are dropped, matching the unsupported-syntax error the typing
+                        // pipeline already reports for them.
+                        _ => {
+                            let ref_loc = tbls.push_loc(ck.expression.loc().dupe());
+                            let key_ref = expression_for_computed_key(scope, tbls, &ck.expression);
+                            let parsed_t = class_field_value_type(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                &mut xs,
+                                t,
+                                value,
+                                ref_loc.dupe(),
+                                &FlowSmolStr::new_inline("[computed]"),
+                            );
+                            acc.add_computed_field(
+                                *is_static,
+                                key_ref,
+                                ref_loc,
+                                polarity_val,
+                                parsed_t,
+                            );
+                        }
+                    },
+                    // Skip string/number/bigint literal and private-name keys:
+                    // these are unsupported class members flagged by the typing
+                    // pipeline.
+                    _ => {}
+                }
             }
             class::BodyElement::PrivateField(_) => {
                 // Private fields are unreachable from exports

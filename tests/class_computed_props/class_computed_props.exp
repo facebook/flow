@@ -1,0 +1,279 @@
+Error ------------------------------------------------------------------------------------------------ annotation.js:8:6
+
+Missing an annotation on property `foo`. [missing-local-annot]
+
+   8|   [s] = v; // ERROR: missing an annotation on property `foo`
+           
+
+
+Error ----------------------------------------------------------------------------------------------- annotation.js:15:3
+
+Missing an annotation on property `bar`. [missing-local-annot]
+
+   15|   [s2]; // ERROR: missing annotation (fails signature verification)
+         ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- annotation.js:15:4
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
+annotation at property `s2`: [signature-verification-failure]
+
+   15|   [s2]; // ERROR: missing annotation (fails signature verification)
+          ^^
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:10:1
+
+Cannot cast `e.foo` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   consumer.js:10:1
+   10| e.foo as 2; // ERROR: 1 is not 2
+       ^^^^^
+
+References:
+   exported.js:6:8
+    6|   [s]: 1 = 1;
+              ^ [1]
+   consumer.js:10:10
+   10| e.foo as 2; // ERROR: 1 is not 2
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:11:1
+
+Cannot cast `e.go()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   consumer.js:11:1
+   11| e.go() as string; // ERROR: number is not string
+       ^^^^^^
+
+References:
+   exported.js:7:10
+    7|   [m](): number { return 1; }
+                ^^^^^^ [1]
+   consumer.js:11:11
+   11| e.go() as string; // ERROR: number is not string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:12:1
+
+Cannot cast `e.ext` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   consumer.js:12:1
+   12| e.ext as string; // ERROR: number is not string
+       ^^^^^
+
+References:
+   exported.js:8:10
+    8|   [o.k]: number = 2;
+                ^^^^^^ [1]
+   consumer.js:12:10
+   12| e.ext as string; // ERROR: number is not string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- duplicate.js:5:4
+
+`foo` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   5|   [s]: string = 'x'; // ERROR: `foo` already declared in this class
+         ^
+
+
+Error ------------------------------------------------------------------------------------ export_signature_error.js:8:5
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   8|   [(s as 'foo')]: 1 = 1; // ERROR: cannot build a typed interface
+          ^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:18:1
+
+Cannot cast `c.foo` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
+[incompatible-type]
+
+   local.js:18:1
+   18| c.foo as 2; // ERROR: 1 is not 2
+       ^^^^^
+
+References:
+   local.js:5:8
+    5|   [s]: 1 = 1;
+              ^ [1]
+   local.js:18:10
+   18| c.foo as 2; // ERROR: 1 is not 2
+                ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:19:1
+
+Cannot cast `c[2]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   local.js:19:1
+   19| c[2] as number; // ERROR: string is not number
+       ^^^^
+
+References:
+   local.js:6:8
+    6|   [n]: string = 'x';
+              ^^^^^^ [1]
+   local.js:19:9
+   19| c[2] as number; // ERROR: string is not number
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:21:3
+
+Cannot get `c.bar` because property `bar` is missing in `C` [1]. [prop-missing]
+
+   local.js:21:3
+   21| c.bar; // ERROR: property `bar` is missing
+         ^^^
+
+References:
+   local.js:10:18
+   10| declare const c: C;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ member_key.js:7:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   7|   [o2.k]: string = 'x'; // ERROR: member key is a general string, not a literal
+         ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- member_key.js:13:1
+
+Cannot cast `c.mem` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   member_key.js:13:1
+   13| c.mem as string; // ERROR: number is not string
+       ^^^^^
+
+References:
+   member_key.js:6:10
+    6|   [o.k]: number = 1; // member-expression key resolves to `mem`
+                ^^^^^^ [1]
+   member_key.js:13:10
+   13| c.mem as string; // ERROR: number is not string
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:18:1
+
+Cannot cast `c.go(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   methods.js:18:1
+   18| c.go(1) as string; // ERROR: number is not string
+       ^^^^^^^
+
+References:
+   methods.js:5:19
+    5|   [m](x: number): number { return x; }
+                         ^^^^^^ [1]
+   methods.js:18:12
+   18| c.go(1) as string; // ERROR: number is not string
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:19:3
+
+Cannot call `c.nope` because property `nope` is missing in `C` [1]. [prop-missing]
+
+   methods.js:19:3
+   19| c.nope(); // ERROR: method is missing
+         ^^^^
+
+References:
+   methods.js:10:18
+   10| declare const c: C;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- unsupported.js:5:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   5|   [g]: number = 1; // ERROR: key is a general string, not a literal
+         ^
+
+
+Error ----------------------------------------------------------------------------------------------- unsupported.js:6:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   6|   ['a' + 'b']: number = 2; // ERROR: key is not a single literal
+         ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- unsupported.js:7:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   7|   [1.5]: number = 3; // ERROR: number key is not a safe integer
+         ^^^
+
+
+Error ----------------------------------------------------------------------------------------------- unsupported.js:8:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   8|   [123n]: number = 4; // ERROR: bigint key is unsupported
+         ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- unsupported.js:9:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   9|   [g](): number { return 1; } // ERROR: method key is not a literal
+         ^
+
+
+Error ---------------------------------------------------------------------------------------------- unsupported.js:10:8
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   10|   get [s](): number { return 1; } // ERROR: computed getter is unsupported
+              ^
+
+
+Error ---------------------------------------------------------------------------------------------- unsupported.js:11:8
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   11|   set [s](x: number) {} // ERROR: computed setter is unsupported
+              ^
+
+
+Error ---------------------------------------------------------------------------------------------- unsupported.js:16:3
+
+Cannot get `c.a` because property `a` is missing in `C` [1]. [prop-missing]
+
+   unsupported.js:16:3
+   16| c.a; // ERROR: nothing was added, property `a` is missing
+         ^
+
+References:
+   unsupported.js:14:18
+   14| declare const c: C;
+                        ^ [1]
+
+
+
+Found 23 errors

@@ -8717,6 +8717,9 @@ where
                 code("Object.assign"),
                 text(" is unsafe. Use spreads instead."),
             ]),
+            MessageUnsupportedComputedKeyInClass => friendly::Message(vec![text(
+                "Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single string or number literal.",
+            )]),
             MessageUnsupportedKeyInObject {
                 key_error_kind,
                 obj_kind,
@@ -8859,9 +8862,6 @@ where
                     }
                     ClassPropertyLiteral => {
                         friendly::Message(vec![text("Literal properties not yet supported.")])
-                    }
-                    ClassPropertyComputed => {
-                        friendly::Message(vec![text("Computed property keys not supported.")])
                     }
                     ClassStaticBlock => {
                         friendly::Message(vec![text("Class static blocks are not supported.")])

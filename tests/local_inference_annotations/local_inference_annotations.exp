@@ -251,14 +251,6 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:44:3
-
-Computed property keys not supported. [unsupported-syntax]
-
-   44|   ["computed"]() { } // unsupported, but no missing annot
-         ^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- class.js:46:23
 
 Missing an annotation on return. [missing-local-annot]
@@ -1094,4 +1086,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 126 errors
+Found 125 errors

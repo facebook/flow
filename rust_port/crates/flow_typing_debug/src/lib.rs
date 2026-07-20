@@ -2665,6 +2665,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
+        ErrorMessage::EUnsupportedComputedKeyInClass(loc) => {
+            format!(
+                "EUnsupportedComputedKeyInClass ({})",
+                string_of_aloc(None, loc)
+            )
+        }
         ErrorMessage::ETypeGuardFuncIncompatibility { use_op, reasons: _ } => {
             format!(
                 "ETypeGuardFuncIncompatibility ({})",

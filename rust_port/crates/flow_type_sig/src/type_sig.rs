@@ -890,6 +890,9 @@ pub struct ClassSig<Loc, T> {
     pub static_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub proto_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub own_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+    pub computed_own_props: Vec<(T, ObjValueProp<Loc, T>)>,
+    pub computed_proto_props: Vec<(T, ObjValueProp<Loc, T>)>,
+    pub computed_static_props: Vec<(T, ObjValueProp<Loc, T>)>,
     pub dict: Option<ObjAnnotDict<T>>,
     pub abstract_: bool,
     pub abstract_props: std::collections::BTreeSet<FlowSmolStr>,
@@ -915,6 +918,18 @@ impl<Loc, T> ClassSig<Loc, T> {
         }
         for v in self.own_props.values() {
             v.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_own_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_proto_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_static_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
         }
         if let Some(ref d) = self.dict {
             f_t(cx, &d.key);
@@ -946,6 +961,21 @@ impl<Loc, T> ClassSig<Loc, T> {
                 .own_props
                 .iter()
                 .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_own_props: self
+                .computed_own_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_proto_props: self
+                .computed_proto_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_static_props: self
+                .computed_static_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                 .collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
             abstract_: self.abstract_,

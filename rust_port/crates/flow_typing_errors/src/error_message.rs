@@ -2597,6 +2597,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         key_error_kind: InvalidObjKey,
     },
 
+    EUnsupportedComputedKeyInClass(L),
+
     EAmbiguousNumericKeyWithVariance(L),
 
     ETypeGuardFuncIncompatibility {
@@ -4178,6 +4180,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 obj_kind,
                 key_error_kind,
             },
+
+            EUnsupportedComputedKeyInClass(loc) => EUnsupportedComputedKeyInClass(f(loc)),
 
             EAmbiguousNumericKeyWithVariance(loc) => EAmbiguousNumericKeyWithVariance(f(loc)),
 
@@ -6004,6 +6008,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnsupportedSyntax(box (loc, _))
             | Self::EInternal(box (loc, _))
             | Self::EUnsupportedKeyInObject { loc, .. }
+            | Self::EUnsupportedComputedKeyInClass(loc)
             | Self::EAmbiguousNumericKeyWithVariance(loc)
             | Self::EHookRuleViolation(box EHookRuleViolationData { call_loc: loc, .. })
             | Self::EExportsAnnot(loc)
@@ -8208,6 +8213,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 obj_kind,
             }),
 
+            ErrorMessage::EUnsupportedComputedKeyInClass(_) => {
+                Normal(Message::MessageUnsupportedComputedKeyInClass)
+            }
+
             ErrorMessage::EAmbiguousNumericKeyWithVariance(_) => {
                 Normal(Message::MessageAmbiguousNumericKeyWithVariance)
             }
@@ -9755,6 +9764,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EUnsupportedExact(box (_, _)) => Some(InvalidExact),
             ErrorMessage::EUnsupportedImplements { .. } => Some(CannotImplement),
             ErrorMessage::EUnsupportedKeyInObject { .. } => Some(IllegalKey),
+            ErrorMessage::EUnsupportedComputedKeyInClass(_) => Some(IllegalKey),
             ErrorMessage::EAmbiguousNumericKeyWithVariance { .. } => Some(IllegalKey),
             ErrorMessage::EUnsupportedSetProto { .. } => Some(CannotWrite),
             ErrorMessage::EUnsupportedSyntax(box (_, _)) => Some(UnsupportedSyntax),

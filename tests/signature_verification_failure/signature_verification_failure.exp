@@ -59,20 +59,22 @@ Literal properties not yet supported. [unsupported-syntax]
         ^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:12:3
+Error ---------------------------------------------------------------------------------------------------- class.js:13:4
 
-Computed property keys not supported. [unsupported-syntax]
-
-   12|   ['a'] = 3;
-         ^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- class.js:13:3
-
-Computed property keys not supported. [unsupported-syntax]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
 
    13|   ['a' + 'b'] = 4;
-         ^^^^^^^^^^^^^^^^
+          ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- class.js:13:4
+
+Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
+string or number literal. [illegal-key]
+
+   13|   ['a' + 'b'] = 4;
+          ^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:3:13

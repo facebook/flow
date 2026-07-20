@@ -4066,6 +4066,9 @@ fn merge_this_class_t<'cx>(
         static_props,
         own_props,
         proto_props,
+        computed_own_props,
+        computed_proto_props,
+        computed_static_props,
         dict,
         tparams: _,
         abstract_,
@@ -4103,6 +4106,20 @@ fn merge_this_class_t<'cx>(
                     (Name::new(k.dupe()), p)
                 })
                 .collect();
+            for (key, prop) in &computed_static_props {
+                if let Some(name) = resolve_computed_key(&env, cx, file, key) {
+                    let p = merge_class_prop(&env, cx, file, prop);
+                    match props_map.entry(name) {
+                        std::collections::btree_map::Entry::Vacant(e) => {
+                            e.insert(p);
+                        }
+                        std::collections::btree_map::Entry::Occupied(mut e) => {
+                            let merged = merge_overloaded_property(e.get(), p);
+                            e.insert(merged);
+                        }
+                    }
+                }
+            }
             add_name_field(reason.dupe(), &mut props_map);
             let props = type_::properties::PropertiesMap::from_btree_map(props_map);
             obj_type::mk_with_proto(
@@ -4121,10 +4138,38 @@ fn merge_this_class_t<'cx>(
             let p = merge_class_prop(&env, cx, file, &prop);
             own_props_map.insert(k.dupe(), p);
         }
+        for (key, prop) in &computed_own_props {
+            if let Some(name) = resolve_computed_key(&env, cx, file, key) {
+                let p = merge_class_prop(&env, cx, file, prop);
+                match own_props_map.entry(name.into_smol_str()) {
+                    std::collections::btree_map::Entry::Vacant(e) => {
+                        e.insert(p);
+                    }
+                    std::collections::btree_map::Entry::Occupied(mut e) => {
+                        let merged = merge_overloaded_property(e.get(), p);
+                        e.insert(merged);
+                    }
+                }
+            }
+        }
         let mut proto_props_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
         for (k, prop) in proto_props {
             let p = merge_class_prop(&env, cx, file, &prop);
             proto_props_map.insert(k.dupe(), p);
+        }
+        for (key, prop) in &computed_proto_props {
+            if let Some(name) = resolve_computed_key(&env, cx, file, key) {
+                let p = merge_class_prop(&env, cx, file, prop);
+                match proto_props_map.entry(name.into_smol_str()) {
+                    std::collections::btree_map::Entry::Vacant(e) => {
+                        e.insert(p);
+                    }
+                    std::collections::btree_map::Entry::Occupied(mut e) => {
+                        let merged = merge_overloaded_property(e.get(), p);
+                        e.insert(merged);
+                    }
+                }
+            }
         }
         match &inst_kind {
             type_::InstanceKind::RecordKind { defaulted_props } => add_record_constructor(

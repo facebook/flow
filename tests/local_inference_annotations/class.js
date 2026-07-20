@@ -41,7 +41,7 @@ class C{
 
   #pmeth1() { } // ok
   #pmeth2() { return 42 } // err return
-  ["computed"]() { } // unsupported, but no missing annot
+  ["computed"]() { } // ok: literal computed key resolves to `computed`, no missing annot
 
   throwingInvariant1() { invariant() } // error: throws
   throwingInvariant2() { invariant(false) } // error: throws

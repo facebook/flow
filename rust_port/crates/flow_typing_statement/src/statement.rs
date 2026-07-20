@@ -16542,93 +16542,26 @@ pub fn mk_class_sig<'a>(
                                     }));
                                 }
                                 Key::Computed(computed_key) => {
-                                    if let Some(name) =
-                                        flow_parser::ast_utils::well_known_symbol_name(
-                                            &computed_key.expression,
-                                        )
-                                    {
-                                        let method_loc = &method.loc;
-                                        let id_loc = computed_key.expression.loc().dupe();
-                                        let (func_loc, func) = &method.value;
-                                        let kind = method.kind;
-                                        let static_ = method.static_;
-                                        let override_ = method.override_;
-                                        let ts_accessibility = &method.ts_accessibility;
-                                        let decorators = &method.decorators;
-                                        let method_comments = &method.comments;
-                                        let computed_loc = &computed_key.loc;
-                                        let computed_comments = &computed_key.comments;
+                                    let method_loc = &method.loc;
+                                    let (func_loc, func) = &method.value;
+                                    let kind = method.kind;
+                                    let static_ = method.static_;
+                                    let override_ = method.override_;
+                                    let ts_accessibility = &method.ts_accessibility;
+                                    let decorators = &method.decorators;
+                                    let method_comments = &method.comments;
+                                    let computed_loc = &computed_key.loc;
+                                    let computed_comments = &computed_key.comments;
 
-                                        check_ts_accessibility(cx, ts_accessibility);
-                                        if override_ && !cx.tslib_syntax() {
-                                            flow_js::add_output_non_speculating(
-                                                cx,
-                                                ErrorMessage::EUnsupportedSyntax(Box::new((
-                                                    method_loc.dupe(),
-                                                    UnsupportedSyntax::TSLibSyntax(
-                                                        TsLibSyntaxKind::OverrideModifier,
-                                                    ),
-                                                ))),
-                                            );
-                                            let elem_c = elem.clone();
-                                            rev_elements.push(Box::new(move |_cx| {
-                                                let Ok(v) = polymorphic_ast_mapper::class_element(
-                                                    &mut typed_ast_utils::ErrorMapper,
-                                                    &elem_c,
-                                                );
-                                                Ok(v)
-                                            }));
-                                            continue;
-                                        }
-
-                                        let computed_loc_c = computed_loc.dupe();
-                                        let computed_expr_c = computed_key.expression.clone();
-                                        let computed_comments_c = computed_comments.clone();
-                                        add_method_sig_and_element(
-                                            cx,
-                                            &tparams_map_with_this,
-                                            &mut class_sig,
-                                            &mut rev_elements,
-                                            &mut public_seen_names,
-                                            class_kind,
-                                            method_loc.dupe(),
-                                            FlowSmolStr::from(name),
-                                            id_loc.dupe(),
-                                            func_loc.dupe(),
-                                            func,
-                                            kind,
-                                            false,
-                                            static_,
-                                            override_,
-                                            ts_accessibility.clone(),
-                                            decorators,
-                                            method_comments.clone(),
-                                            Box::new(move |cx, _func_t| {
-                                                let typed_expr = crate::statement::expression(
-                                                    None,
-                                                    None,
-                                                    None,
-                                                    cx,
-                                                    &computed_expr_c,
-                                                )
-                                                .unwrap();
-                                                expression::object::Key::Computed(
-                                                    ast::ComputedKey {
-                                                        loc: computed_loc_c,
-                                                        expression: typed_expr,
-                                                        comments: computed_comments_c,
-                                                    },
-                                                )
-                                            }),
-                                        )?;
-                                    } else {
-                                        // computed LHS
-                                        let loc = &method.loc;
+                                    check_ts_accessibility(cx, ts_accessibility);
+                                    if override_ && !cx.tslib_syntax() {
                                         flow_js::add_output_non_speculating(
                                             cx,
                                             ErrorMessage::EUnsupportedSyntax(Box::new((
-                                                loc.dupe(),
-                                                UnsupportedSyntax::ClassPropertyComputed,
+                                                method_loc.dupe(),
+                                                UnsupportedSyntax::TSLibSyntax(
+                                                    TsLibSyntaxKind::OverrideModifier,
+                                                ),
                                             ))),
                                         );
                                         let elem_c = elem.clone();
@@ -16639,7 +16572,121 @@ pub fn mk_class_sig<'a>(
                                             );
                                             Ok(v)
                                         }));
+                                        continue;
                                     }
+
+                                    // The method name comes from a well-known symbol or, for a
+                                    // plain method, from a computed key that resolves to a single
+                                    // literal string or number (mirroring computed fields). In the
+                                    // literal case we keep the typed key expression so the element
+                                    // reuses it rather than re-checking it (which would duplicate
+                                    // any diagnostics the key emits).
+                                    let resolved: Option<(
+                                        FlowSmolStr,
+                                        Option<expression::Expression<ALoc, (ALoc, Type)>>,
+                                    )> = if let Some(name) =
+                                        flow_parser::ast_utils::well_known_symbol_name(
+                                            &computed_key.expression,
+                                        ) {
+                                        Some((FlowSmolStr::from(name), None))
+                                    } else if kind == ast::class::MethodKind::Method {
+                                        let k_typed = expression(
+                                            Some(EnclosingContext::IndexContext),
+                                            None,
+                                            None,
+                                            cx,
+                                            &computed_key.expression,
+                                        )?;
+                                        let (_, kt) = k_typed.loc();
+                                        let key_reason = reason_of_t(kt).dupe();
+                                        let concretized_keys = flow_js_utils::flow_js_result_to_job_error(
+                                            FlowJs::possible_concrete_types_for_computed_object_keys(
+                                                cx, &key_reason, kt,
+                                            ),
+                                        )?;
+                                        let name = match concretized_keys.as_slice() {
+                                            [single] => {
+                                                match flow_js_utils::propref_for_elem_t(cx, single)
+                                                {
+                                                    PropRef::Named { name, .. } => {
+                                                        Some(name.as_smol_str().dupe())
+                                                    }
+                                                    PropRef::Computed(_) => None,
+                                                }
+                                            }
+                                            _ => None,
+                                        };
+                                        name.map(|n| (n, Some(k_typed)))
+                                    } else {
+                                        None
+                                    };
+
+                                    let Some((name, pre_typed_key)) = resolved else {
+                                        flow_js::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EUnsupportedComputedKeyInClass(
+                                                computed_key.expression.loc().dupe(),
+                                            ),
+                                        );
+                                        let elem_c = elem.clone();
+                                        rev_elements.push(Box::new(move |_cx| {
+                                            let Ok(v) = polymorphic_ast_mapper::class_element(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                &elem_c,
+                                            );
+                                            Ok(v)
+                                        }));
+                                        continue;
+                                    };
+
+                                    let id_loc = computed_key.expression.loc().dupe();
+                                    let computed_loc_c = computed_loc.dupe();
+                                    let computed_comments_c = computed_comments.clone();
+                                    // The untyped key is only needed to re-check the key in the
+                                    // well-known-symbol path; the literal path reuses `pre_typed_key`.
+                                    let computed_expr_c = if pre_typed_key.is_none() {
+                                        Some(computed_key.expression.clone())
+                                    } else {
+                                        None
+                                    };
+                                    add_method_sig_and_element(
+                                        cx,
+                                        &tparams_map_with_this,
+                                        &mut class_sig,
+                                        &mut rev_elements,
+                                        &mut public_seen_names,
+                                        class_kind,
+                                        method_loc.dupe(),
+                                        name,
+                                        id_loc.dupe(),
+                                        func_loc.dupe(),
+                                        func,
+                                        kind,
+                                        false,
+                                        static_,
+                                        override_,
+                                        ts_accessibility.clone(),
+                                        decorators,
+                                        method_comments.clone(),
+                                        Box::new(move |cx, _func_t| {
+                                            let typed_expr = match pre_typed_key {
+                                                Some(k) => k,
+                                                None => crate::statement::expression(
+                                                    None,
+                                                    None,
+                                                    None,
+                                                    cx,
+                                                    computed_expr_c.as_ref().unwrap(),
+                                                )
+                                                .unwrap(),
+                                            };
+                                            expression::object::Key::Computed(ast::ComputedKey {
+                                                loc: computed_loc_c,
+                                                expression: typed_expr,
+                                                comments: computed_comments_c,
+                                            })
+                                        }),
+                                    )?;
                                 }
                             }
                         }
@@ -16802,23 +16849,188 @@ pub fn mk_class_sig<'a>(
                                     Ok(v)
                                 }));
                             }
-                            Key::Computed(_) => {
+                            Key::Computed(computed_key) => {
                                 let loc = &prop.loc;
-                                flow_js::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                                        loc.dupe(),
-                                        UnsupportedSyntax::ClassPropertyComputed,
-                                    ))),
-                                );
-                                let elem_c = elem.clone();
-                                rev_elements.push(Box::new(move |_cx| {
-                                    let Ok(v) = polymorphic_ast_mapper::class_element(
-                                        &mut typed_ast_utils::ErrorMapper,
-                                        &elem_c,
+                                let annot = &prop.annot;
+                                let value = &prop.value;
+                                let static_ = prop.static_;
+                                let override_ = prop.override_;
+                                let optional = prop.optional;
+                                let variance = &prop.variance;
+                                let ts_accessibility = &prop.ts_accessibility;
+                                let decorators = &prop.decorators;
+                                let prop_comments = &prop.comments;
+
+                                check_ts_accessibility(cx, ts_accessibility);
+                                if override_ && !cx.tslib_syntax() {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                                            loc.dupe(),
+                                            UnsupportedSyntax::TSLibSyntax(
+                                                TsLibSyntaxKind::OverrideModifier,
+                                            ),
+                                        ))),
                                     );
-                                    Ok(v)
-                                }));
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        Ok(v)
+                                    }));
+                                    continue;
+                                }
+                                if optional && !cx.tslib_syntax() {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                                            loc.dupe(),
+                                            UnsupportedSyntax::TSLibSyntax(
+                                                TsLibSyntaxKind::OptionalClassProperty,
+                                            ),
+                                        ))),
+                                    );
+                                }
+
+                                // A computed key that resolves to a single literal string or
+                                // number is treated as a named field, mirroring how computed
+                                // keys are handled in object literals.
+                                let k_typed = expression(
+                                    Some(EnclosingContext::IndexContext),
+                                    None,
+                                    None,
+                                    cx,
+                                    &computed_key.expression,
+                                )?;
+                                let (_, kt) = k_typed.loc();
+                                let key_reason = reason_of_t(kt).dupe();
+                                let concretized_keys = flow_js_utils::flow_js_result_to_job_error(
+                                    FlowJs::possible_concrete_types_for_computed_object_keys(
+                                        cx,
+                                        &key_reason,
+                                        kt,
+                                    ),
+                                )?;
+                                let resolved_name = match concretized_keys.as_slice() {
+                                    [single] => match flow_js_utils::propref_for_elem_t(cx, single)
+                                    {
+                                        PropRef::Named { name, .. } => {
+                                            Some(name.as_smol_str().dupe())
+                                        }
+                                        PropRef::Computed(_) => None,
+                                    },
+                                    _ => None,
+                                };
+
+                                let Some(name) = resolved_name else {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedComputedKeyInClass(
+                                            computed_key.expression.loc().dupe(),
+                                        ),
+                                    );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move |_cx| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        Ok(v)
+                                    }));
+                                    continue;
+                                };
+
+                                let id_loc = computed_key.expression.loc().dupe();
+                                let field_reason = mk_reason(
+                                    VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
+                                    loc.dupe(),
+                                );
+                                let polarity = type_annotation::polarity(
+                                        cx,
+                                        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                                        variance.as_ref(),
+                                    );
+                                let decorators_ast: Vec<_> = decorators
+                                    .iter()
+                                    .map(|d| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_decorator(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            d,
+                                        );
+                                        v
+                                    })
+                                    .collect();
+                                let suppress_missing_annot = match ts_accessibility {
+                                    Some(ast::class::ts_accessibility::TSAccessibility {
+                                        kind: ast::class::ts_accessibility::Kind::Private,
+                                        ..
+                                    }) => cx.under_declaration_context(),
+                                    _ => false,
+                                };
+                                let (field, annot_t, annot_ast, get_value) = mk_field(
+                                    cx,
+                                    suppress_missing_annot,
+                                    &tparams_map_with_this,
+                                    field_reason,
+                                    annot,
+                                    value,
+                                )?;
+                                let loc_c = loc.dupe();
+                                let annot_t_c = annot_t.dupe();
+                                let computed_loc_c = computed_key.loc.dupe();
+                                let computed_comments_c = computed_key.comments.clone();
+                                let static_c = static_;
+                                let override_c = override_;
+                                let variance_c = variance.clone();
+                                let ts_accessibility_c = ts_accessibility.clone();
+                                let prop_comments_c = prop_comments.clone();
+                                let get_element = Box::new(
+                                    move |_cx: &Context<'_>| -> Result<
+                                        ast::class::BodyElement<ALoc, (ALoc, Type)>,
+                                        JobError,
+                                    > {
+                                        Ok(BodyElement::Property(Property {
+                                            loc: (loc_c, annot_t_c.dupe()),
+                                            key: expression::object::Key::Computed(
+                                                ast::ComputedKey {
+                                                    loc: computed_loc_c,
+                                                    expression: k_typed,
+                                                    comments: computed_comments_c,
+                                                },
+                                            ),
+                                            annot: annot_ast,
+                                            value: get_value(),
+                                            static_: static_c,
+                                            override_: override_c,
+                                            optional,
+                                            variance: variance_c,
+                                            ts_accessibility: ts_accessibility_c,
+                                            decorators: decorators_ast.into(),
+                                            comments: prop_comments_c,
+                                        }))
+                                    },
+                                );
+                                check_duplicate_name(
+                                    &mut public_seen_names,
+                                    id_loc.dupe(),
+                                    &name,
+                                    static_,
+                                    false,
+                                    ClassMemberKind::ClassMemberField,
+                                );
+                                class_sig::add_field(
+                                    static_,
+                                    false,
+                                    override_,
+                                    name.dupe(),
+                                    id_loc.dupe(),
+                                    polarity,
+                                    field,
+                                    &mut class_sig,
+                                );
+                                rev_elements.push(get_element);
                             }
                         },
 
