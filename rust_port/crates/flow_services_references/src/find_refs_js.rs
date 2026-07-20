@@ -40,12 +40,10 @@ use crate::variable_find_refs;
 //
 // This will have to be revisited if we ever need to report multiple ref kinds for
 // a single location.
-fn sort_and_dedup(refs: FindRefsFound) -> FindRefsFound {
+pub fn sort_and_dedup(refs: FindRefsFound) -> FindRefsFound {
     let mut refs = refs;
-    refs.sort_by(|(_, loc1), (_, loc2)| loc1.cmp(loc2));
-    refs.reverse();
+    refs.sort_by(|(kind1, loc1), (kind2, loc2)| loc1.cmp(loc2).then_with(|| kind2.cmp(kind1)));
     refs.dedup_by(|(_, loc1), (_, loc2)| *loc1 == *loc2);
-    refs.reverse();
     refs
 }
 

@@ -57,8 +57,13 @@ use lsp_types::MessageType;
 type CheckResult<'cx> = FileArtifacts<'cx>;
 type FileArtifactsResult<'cx> = Result<CheckResult<'cx>, TypeContentsError>;
 type AcArtifactsResult<'cx> = Result<AutocompleteArtifacts<'cx>, TypeContentsError>;
+#[derive(Clone)]
+struct TypeParseArtifactsCacheEntry {
+    content: Arc<str>,
+    result: FileArtifactsResult<'static>,
+}
 type TypeParseArtifactsCache =
-    flow_common_utils::filename_cache::Cache<Result<FileArtifacts<'static>, TypeContentsError>>;
+    flow_common_utils::filename_cache::Cache<TypeParseArtifactsCacheEntry>;
 type AutocompleteArtifactsCache = flow_common_utils::filename_cache::Cache<
     Result<AutocompleteArtifacts<'static>, TypeContentsError>,
 >;
@@ -195,6 +200,7 @@ fn type_parse_artifacts_with_cache(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     master_cx: Arc<flow_typing_context::MasterContext>,
     file: flow_parser::file_key::FileKey,
+    content: Arc<str>,
     artifacts: impl FnOnce() -> (
         Option<ParseArtifacts>,
         flow_typing_errors::flow_error::ErrorSet,
@@ -207,20 +213,25 @@ fn type_parse_artifacts_with_cache(
         }
         Some(cache) => {
             let file_for_result = file.dupe();
-            let (result, did_hit) = cache.with_cache_sync(
-                |_| true,
+            let content_for_result = content.dupe();
+            let (entry, did_hit) = cache.with_cache_sync(
+                |entry| {
+                    Arc::ptr_eq(&entry.content, &content)
+                        || entry.content.as_ref() == content.as_ref()
+                },
                 file,
-                || {
-                    type_parse_artifacts(
+                || TypeParseArtifactsCacheEntry {
+                    content: content_for_result,
+                    result: type_parse_artifacts(
                         options,
                         shared_mem,
                         master_cx,
                         file_for_result,
                         artifacts(),
-                    )
+                    ),
                 },
             );
-            (result, Some(did_hit))
+            (entry.result, Some(did_hit))
         }
     }
 }
@@ -1681,6 +1692,7 @@ fn infer_type(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                content.dupe(),
                 parse_result,
             );
             match file_artifacts_result {
@@ -1799,6 +1811,7 @@ fn type_of_name(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                content.dupe(),
                 parse_result,
             );
             match file_artifacts_result {
@@ -1879,6 +1892,7 @@ fn inlay_hint(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                content.dupe(),
                 parse_result,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
@@ -2332,6 +2346,7 @@ fn coverage(
         shared_mem,
         env.master_cx.clone(),
         file_key.clone(),
+        Arc::from(content),
         intermediate_result,
     );
     let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
@@ -2569,6 +2584,7 @@ fn get_def(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
+                content.dupe(),
                 intermediate_result,
             ) {
                 (Ok(result), did_hit_cache) => (Ok(result), did_hit_cache),
@@ -3490,6 +3506,7 @@ fn find_code_actions(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                file_contents.dupe(),
                 intermediate_result,
             );
             match file_artifacts_result {
@@ -3608,6 +3625,7 @@ fn add_missing_imports(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                file_contents.dupe(),
                 intermediate_result,
             );
             match file_artifacts_result {
@@ -5008,6 +5026,7 @@ fn handle_persistent_signaturehelp_lsp(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 path.dupe(),
+                contents.dupe(),
                 intermediate_result,
             );
             let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
@@ -5181,44 +5200,66 @@ fn get_file_artifacts(
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     client_id: lsp_prot::ClientId,
     pos: &lsp_types::TextDocumentPositionParams,
-    file_input: Option<&FileInput>,
+    supplied_file_input: Option<&FileInput>,
 ) -> (
     Result<Option<(FileArtifacts<'static>, flow_parser::file_key::FileKey)>, String>,
     Option<lsp_prot::Json>,
 ) {
-    let default_file_input;
-    let file_input = match file_input {
-        Some(file_input) => file_input,
-        None => {
-            default_file_input = file_input_of_text_document_position(client_id, pos);
-            &default_file_input
-        }
-    };
-    let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
-        .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-    match of_file_input(options, env, file_input) {
-        Err(IdeFileError::Failed(reason)) => (Err(reason), None),
-        Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
-        Ok((file_key, content)) => {
-            let intermediate_result = || parse_contents(options, &content, &file_key);
-            let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
-                options,
-                type_parse_artifacts_cache.as_ref(),
-                shared_mem,
-                env.master_cx.clone(),
-                file_key.dupe(),
-                intermediate_result,
-            );
-            match file_artifacts_result {
-                Err(_parse_errors) => {
-                    let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
-                    (
-                        Err("Couldn't parse file in parse_artifacts".to_string()),
-                        Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
-                    )
-                }
-                Ok(file_artifacts) => (Ok(Some((file_artifacts, file_key))), None),
+    loop {
+        let default_file_input;
+        let file_input = match supplied_file_input {
+            Some(file_input) => file_input,
+            None => {
+                default_file_input = file_input_of_text_document_position(client_id, pos);
+                &default_file_input
             }
+        };
+        let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
+            .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
+        let result = match of_file_input(options, env, file_input) {
+            Err(IdeFileError::Failed(reason)) => (Err(reason), None),
+            Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
+            Ok((file_key, content)) => {
+                let intermediate_result = || parse_contents(options, &content, &file_key);
+                let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                    options,
+                    type_parse_artifacts_cache.as_ref(),
+                    shared_mem.dupe(),
+                    env.master_cx.clone(),
+                    file_key.dupe(),
+                    content.dupe(),
+                    intermediate_result,
+                );
+                match file_artifacts_result {
+                    Err(_parse_errors) => {
+                        let json_props = add_cache_hit_data_to_json(vec![], did_hit_cache);
+                        (
+                            Err("Couldn't parse file in parse_artifacts".to_string()),
+                            Some(lsp_prot::Json::Object(json_props.into_iter().collect())),
+                        )
+                    }
+                    Ok(file_artifacts) => (Ok(Some((file_artifacts, file_key))), None),
+                }
+            }
+        };
+        if supplied_file_input.is_some() {
+            return result;
+        }
+
+        let latest_file_input = file_input_of_text_document_position(client_id, pos);
+        let is_same_snapshot = match (file_input, &latest_file_input) {
+            (FileInput::FileName(old), FileInput::FileName(new)) => old == new,
+            (
+                FileInput::FileContent(old_filename, old_content),
+                FileInput::FileContent(new_filename, new_content),
+            ) => old_filename == new_filename && Arc::ptr_eq(old_content, new_content),
+            _ => false,
+        };
+        if is_same_snapshot {
+            return result;
+        }
+        if let Some(filename) = file_input.path_of_file_input() {
+            persistent_connection::invalidate_client_cache_entry(client_id, filename, false);
         }
     }
 }
@@ -5470,6 +5511,10 @@ fn handle_global_find_references(
                                             })
                                             .collect::<Vec<_>>()
                                     };
+                                    let refs_combined =
+                                        flow_services_references::find_refs_js::sort_and_dedup(
+                                            refs_combined,
+                                        );
                                     let response = LspMessage::ResponseMessage(
                                         id,
                                         refs_to_lsp_result(Some(&ast), refs_combined),
@@ -5904,6 +5949,7 @@ fn handle_persistent_llm_context(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
+                content.dupe(),
                 intermediate_result,
             );
             match file_artifacts_result {
@@ -6182,6 +6228,7 @@ fn prepare_document_paste(
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
+                contents.dupe(),
                 intermediate_result,
             );
             match file_artifacts_result {
@@ -6610,6 +6657,7 @@ fn live_diagnostics_of_uri(
                                     shared_mem.clone(),
                                     env.master_cx.clone(),
                                     file_key.dupe(),
+                                    content.dupe(),
                                     || intermediate_result,
                                 )
                             }
