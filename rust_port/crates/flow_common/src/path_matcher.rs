@@ -11,6 +11,7 @@ use std::path::PathBuf;
 
 use globset::GlobBuilder;
 use globset::GlobMatcher;
+use globset::escape;
 use regex::Regex;
 
 use crate::sys_utils::normalize_filename_dir_sep;
@@ -27,7 +28,6 @@ pub struct PathMatcher {
 
 #[derive(Debug, Clone)]
 pub struct RootedGlob {
-    root: PathBuf,
     matcher: GlobMatcher,
 }
 
@@ -53,47 +53,6 @@ impl FilePatternMatcher {
     }
 }
 
-fn relative_path(root: &Path, path: &Path) -> Option<PathBuf> {
-    let root = fixup_path(root);
-    let path = fixup_path(path);
-    let mut root_components = root.components();
-    let mut path_components = path.components();
-    let mut result = PathBuf::new();
-
-    loop {
-        match (root_components.next(), path_components.next()) {
-            (None, None) => return Some(result),
-            (None, Some(path_component)) => {
-                result.push(path_component.as_os_str());
-                result.extend(path_components.map(|component| component.as_os_str()));
-                return Some(result);
-            }
-            (Some(_), None) => {
-                result.push("..");
-                result.extend(root_components.map(|_| ".."));
-                return Some(result);
-            }
-            (Some(root_component), Some(path_component)) if root_component == path_component => {}
-            (Some(root_component), Some(path_component)) => {
-                if matches!(
-                    root_component,
-                    std::path::Component::Prefix(_) | std::path::Component::RootDir
-                ) || matches!(
-                    path_component,
-                    std::path::Component::Prefix(_) | std::path::Component::RootDir
-                ) {
-                    return None;
-                }
-                result.push("..");
-                result.extend(root_components.map(|_| ".."));
-                result.push(path_component.as_os_str());
-                result.extend(path_components.map(|component| component.as_os_str()));
-                return Some(result);
-            }
-        }
-    }
-}
-
 pub fn validate_glob(pattern: &str) -> Result<(), globset::Error> {
     GlobBuilder::new(pattern)
         .literal_separator(true)
@@ -103,23 +62,25 @@ pub fn validate_glob(pattern: &str) -> Result<(), globset::Error> {
 
 impl RootedGlob {
     pub fn new(root: &Path, pattern: &str) -> Result<Self, globset::Error> {
-        let matcher = GlobBuilder::new(pattern)
+        let mut root = fixup_path(root);
+        let mut pattern = pattern;
+        while let Some(relative_pattern) = pattern.strip_prefix("../") {
+            root.pop();
+            pattern = relative_pattern;
+        }
+        let root_string = root.to_string_lossy();
+        let root = escape(normalize_filename_dir_sep(&root_string).as_ref());
+        let pattern = format!("{}/{pattern}", root.trim_end_matches('/'));
+        let matcher = GlobBuilder::new(&pattern)
             .literal_separator(true)
             .build()?
             .compile_matcher();
-        Ok(Self {
-            root: fixup_path(root),
-            matcher,
-        })
+        Ok(Self { matcher })
     }
 
     pub fn is_match(&self, path: &str) -> bool {
-        let path = Path::new(path);
-        relative_path(&self.root, path).is_some_and(|relative| {
-            let relative_string = relative.to_string_lossy();
-            let relative = normalize_filename_dir_sep(&relative_string);
-            self.matcher.is_match(relative.as_ref())
-        })
+        self.matcher
+            .is_match(normalize_filename_dir_sep(path).as_ref())
     }
 
     fn supports_directory_pruning(&self) -> bool {
@@ -340,6 +301,12 @@ impl PathMatcher {
 mod tests {
     use super::*;
 
+    fn project_path(path: &str) -> String {
+        fixup_path(&Path::new("/project").join(path))
+            .to_string_lossy()
+            .into_owned()
+    }
+
     #[test]
     fn rooted_glob_is_separator_aware() {
         let glob = RootedGlob::new(Path::new("/project"), "src/*.{js,jsx}")
@@ -357,6 +324,15 @@ mod tests {
 
         assert!(glob.is_match("/project/shared/nested/foo.js"));
         assert!(!glob.is_match("/project/root/shared/nested/foo.js"));
+    }
+
+    #[test]
+    fn rooted_glob_treats_root_metacharacters_literally() {
+        let glob = RootedGlob::new(Path::new("/project/[root]"), "src/**/*.js")
+            .expect("test glob should compile");
+
+        assert!(glob.is_match("/project/[root]/src/foo.js"));
+        assert!(!glob.is_match("/project/r/src/foo.js"));
     }
 
     #[test]
@@ -475,9 +451,12 @@ mod tests {
         for (pattern, directory, descendants) in safe_recursive {
             let glob =
                 RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
-            assert!(glob.matcher.is_match(directory), "{pattern}");
+            assert!(glob.is_match(&project_path(directory)), "{pattern}");
             for descendant in descendants {
-                assert!(glob.matcher.is_match(descendant), "{pattern}: {descendant}");
+                assert!(
+                    glob.is_match(&project_path(descendant)),
+                    "{pattern}: {descendant}"
+                );
             }
             assert!(glob.supports_directory_pruning(), "{pattern}");
             assert!(
@@ -500,7 +479,7 @@ mod tests {
         for (pattern, directory) in explicit_directories {
             let glob =
                 RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
-            assert!(glob.matcher.is_match(directory), "{pattern}");
+            assert!(glob.is_match(&project_path(directory)), "{pattern}");
             assert!(glob.supports_directory_pruning(), "{pattern}");
             assert!(
                 FilePatternMatcher::Glob(glob)
@@ -531,9 +510,9 @@ mod tests {
         for (pattern, directory, descendant) in unsafe_globs {
             let glob =
                 RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
-            assert!(glob.matcher.is_match(directory), "{pattern}");
+            assert!(glob.is_match(&project_path(directory)), "{pattern}");
             assert!(
-                !glob.matcher.is_match(descendant),
+                !glob.is_match(&project_path(descendant)),
                 "{pattern}: {descendant}"
             );
             assert!(!glob.supports_directory_pruning(), "{pattern}");
