@@ -26,7 +26,7 @@ export function ShowcaseCode({children}: {children: React.Node}): React.Node {
   return children;
 }
 
-type Props = $ReadOnly<{
+type Props = Readonly<{
   eyebrow?: string,
   heading: React.Node,
   align?: 'left' | 'right',

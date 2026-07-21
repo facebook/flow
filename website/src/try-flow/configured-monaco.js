@@ -35,7 +35,7 @@ function setAutoCompleteFunction(flowService: ?FlowJsServices): void {
 let getDefFunctionForMonaco = (
   value: string,
   position: Position,
-): $ReadOnlyArray<FlowLoc> => [];
+): ReadonlyArray<FlowLoc> => [];
 
 function setGetDefFunction(flowService: ?FlowJsServices): void {
   getDefFunctionForMonaco = (value, position) =>

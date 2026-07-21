@@ -28,7 +28,7 @@ export default class FlowJsServices {
   schema: ?FlowJsConfigSchema;
   supportsParse: boolean;
   // Invariant: config is always legal under the current _flow.
-  config: {[string]: mixed};
+  config: {[string]: unknown};
 
   static init(
     withBaseUrl: string => string,
@@ -49,7 +49,7 @@ export default class FlowJsServices {
   }
 
   // Returns a new service object so that FlowJsServices can be used in states.
-  withUpdatedConfig(config: ?{[string]: mixed}): FlowJsServices {
+  withUpdatedConfig(config: ?{[string]: unknown}): FlowJsServices {
     const schema = this.schema;
     // When the current version of Flow doesn't have schema, then config is meaningless.
     if (schema == null || config == null) {
@@ -81,7 +81,7 @@ export default class FlowJsServices {
     }
   }
 
-  checkContent(filename: string, body: string): $ReadOnlyArray<FlowJsError> {
+  checkContent(filename: string, body: string): ReadonlyArray<FlowJsError> {
     return this._flow.checkContent(filename, body, this.config);
   }
 
@@ -94,7 +94,7 @@ export default class FlowJsServices {
     body: string,
     line: number,
     col: number,
-  ): $ReadOnlyArray<FlowLoc> {
+  ): ReadonlyArray<FlowLoc> {
     return this._flow.getDef(filename, body, line, col, this.config);
   }
 
@@ -110,7 +110,7 @@ export default class FlowJsServices {
   semanticDecorations(
     filename: string,
     body: string,
-  ): ?{decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}>} {
+  ): ?{decorations: ReadonlyArray<{kind: 'refined-value', range: any}>} {
     return this._flow.semanticDecorations?.(filename, body, this.config);
   }
 

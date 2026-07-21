@@ -43,7 +43,7 @@ const age: number = get(user, 'name'); // Fix - update to: get(user, 'age')
 
 type InitialStateFromHash = {
   code: string,
-  config: ?{[string]: mixed},
+  config: ?{[string]: unknown},
   version: ?string,
 };
 
@@ -255,7 +255,7 @@ component DismissIcon() {
 
 export default component TryFlow(
   defaultFlowVersion: string,
-  flowVersions: $ReadOnlyArray<string>,
+  flowVersions: ReadonlyArray<string>,
 ) {
   const {withBaseUrl} = useBaseUrlUtils();
   const [initialStateFromStorage, setInitialStateFromStorage] = useState(
@@ -268,7 +268,7 @@ export default component TryFlow(
   const tryEditorRef = useRef<HTMLDivElement | null>(null);
   const [splitRatio, setSplitRatio] = useState(0.5);
   const previousDecorationsRef = useRef(null);
-  const [errors, setErrors] = useState<$ReadOnlyArray<FlowJsError>>([]);
+  const [errors, setErrors] = useState<ReadonlyArray<FlowJsError>>([]);
   const [internalError, setInternalError] = useState('');
   const [cursorPosition, setCursorPosition] =
     useState<?{lineNumber: number, column: number}>(null);
@@ -422,7 +422,7 @@ export default component TryFlow(
   }
 
   function semanticDecorations(flowService: FlowJsServices, model: any) {
-    let decorations: $ReadOnlyArray<{kind: 'refined-value', range: any}> = [];
+    let decorations: ReadonlyArray<{kind: 'refined-value', range: any}> = [];
     try {
       decorations =
         flowService.semanticDecorations?.('-', model.getValue())?.decorations ||

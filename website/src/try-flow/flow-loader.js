@@ -12,7 +12,7 @@
 import './require_2_3_3';
 
 declare function requirejs(
-  pathList: $ReadOnlyArray<string>,
+  pathList: ReadonlyArray<string>,
   resolve: (any) => void,
 ): void;
 
@@ -94,7 +94,7 @@ function masterVersionBasePath(version: string): ?string {
   }
 }
 
-function isFlowJs(value: mixed): boolean {
+function isFlowJs(value: unknown): boolean {
   return (
     value != null &&
     typeof (value as any).checkContent === 'function' &&
@@ -118,7 +118,7 @@ function getGlobalFlow(): ?FlowJs {
   return (globalObject as any).flow;
 }
 
-function getLoadedFlow(flowModule: mixed): FlowJs {
+function getLoadedFlow(flowModule: unknown): FlowJs {
   if (isFlowJs(flowModule)) {
     return flowModule as any;
   }

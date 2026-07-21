@@ -27,8 +27,8 @@ component DocsLink(kind: 'option' | 'lint', id: string) {
 component TryFlowConfigRows(
   name: string,
   schema: FlowJsConfigSchema,
-  config: {[string]: mixed},
-  setConfig: ({[string]: mixed}) => void,
+  config: {[string]: unknown},
+  setConfig: ({[string]: unknown}) => void,
 ) {
   return (
     <>
@@ -94,7 +94,7 @@ component TryFlowConfigRows(
 
 export default component TryFlowConfigEditor(
   flowService: ?FlowJsServices,
-  setConfig: ({[string]: mixed}) => void,
+  setConfig: ({[string]: unknown}) => void,
 ) {
   if (flowService == null) {
     return 'Loading Flow configuration schema';

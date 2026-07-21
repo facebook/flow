@@ -9,11 +9,28 @@
 
 import {spawn} from 'child_process';
 
+/*::
+type CheckContentsResult = {
+  errors: Array<{
+    message: Array<{
+      descr: string,
+      loc: {
+        start: {line: number, column: number},
+        end: {line: number, column: number},
+      },
+    }>,
+    error_codes: ?Array<string>,
+  }>,
+};
+*/
+
 const MAX_UNRESOLVED_CHECK_CONTENTS = 10;
 let unresolvedCheckContents = 0;
-const checkContentsQueue /*: Array<() => void> */ = [];
+const checkContentsQueue /*: Array<() => unknown> */ = [];
 
-async function checkContents(input /*: string */) {
+async function checkContents(
+  input /*: string */,
+) /*: Promise<CheckContentsResult> */ {
   const flowProcess = spawn(process.env.FLOW_BIN_PATH || 'flow', [
     'check-contents',
     '--json',
@@ -28,29 +45,33 @@ async function checkContents(input /*: string */) {
   return JSON.parse(json);
 }
 
-async function rateLimitedCheckContents(input /*: string */) {
-  return new Promise((resolve, reject) => {
-    const run = async () => {
-      unresolvedCheckContents++;
-      try {
-        resolve(await checkContents(input));
-      } catch (error) {
-        reject(error);
-      } finally {
-        unresolvedCheckContents--;
-        const next = checkContentsQueue.shift();
-        if (next != null) {
-          next();
+async function rateLimitedCheckContents(
+  input /*: string */,
+) /*: Promise<CheckContentsResult> */ {
+  return new Promise(
+    /*:: <CheckContentsResult> */ (resolve, reject) => {
+      const run = async () => {
+        unresolvedCheckContents++;
+        try {
+          resolve(await checkContents(input));
+        } catch (error) {
+          reject(error);
+        } finally {
+          unresolvedCheckContents--;
+          const next = checkContentsQueue.shift();
+          if (next != null) {
+            next();
+          }
         }
-      }
-    };
+      };
 
-    if (unresolvedCheckContents < MAX_UNRESOLVED_CHECK_CONTENTS) {
-      run();
-    } else {
-      checkContentsQueue.push(run);
-    }
-  });
+      if (unresolvedCheckContents < MAX_UNRESOLVED_CHECK_CONTENTS) {
+        run();
+      } else {
+        checkContentsQueue.push(run);
+      }
+    },
+  );
 }
 
 export default async function getFlowMeta(

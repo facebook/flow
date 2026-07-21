@@ -99,7 +99,7 @@ component ChevronIcon() {
 }
 
 // Plain-text rendering of all errors, for the "Copy all" button.
-function errorsToText(errors: $ReadOnlyArray<FlowJsError>): string {
+function errorsToText(errors: ReadonlyArray<FlowJsError>): string {
   return errors
     .map(error => {
       const loc = error.message[0]?.loc;
@@ -181,7 +181,7 @@ function comparePosition(a: Position, b: Position): number {
   }
 }
 
-function shouldCollapse(cursorPosition: Position, json: mixed): boolean {
+function shouldCollapse(cursorPosition: Position, json: unknown): boolean {
   if (
     typeof json === 'object' &&
     json != null &&
@@ -203,10 +203,10 @@ function shouldCollapse(cursorPosition: Position, json: mixed): boolean {
 
 export default component TryFlowResults(
   flowVersion: string,
-  flowVersions: $ReadOnlyArray<string>,
+  flowVersions: ReadonlyArray<string>,
   changeFlowVersion: (SyntheticInputEvent<>) => void,
   loading: boolean,
-  errors: $ReadOnlyArray<FlowJsError>,
+  errors: ReadonlyArray<FlowJsError>,
   internalError: string,
   cursorPosition: ?Position,
   ast: interface {} | string,

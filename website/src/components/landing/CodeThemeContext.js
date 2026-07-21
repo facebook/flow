@@ -15,4 +15,5 @@ import * as React from 'react';
  * this so flow-check blocks inside Showcase rows render with a dark theme
  * regardless of the (light) site-wide default.
  */
-export const CodeThemeContext: React.Context<mixed> = React.createContext(null);
+export const CodeThemeContext: React.Context<unknown> =
+  React.createContext(null);
