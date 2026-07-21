@@ -23,10 +23,27 @@ import * as LZString from 'lz-string';
 import {useBaseUrlUtils} from '@docusaurus/useBaseUrl';
 import {usePrismTheme} from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
+import IconCopy from '@theme/Icon/Copy';
+import IconSuccess from '@theme/Icon/Success';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
 import {CodeThemeContext} from './landing/CodeThemeContext';
 import {CodeErrorPlacementContext} from './landing/CodeErrorPlacementContext';
+
+function IconExternalLink({
+  className,
+}: {
+  className?: string,
+}): React.MixedElement {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"
+      />
+    </svg>
+  );
+}
 
 type FlowErrorMessage = {
   startLine: number,
@@ -341,6 +358,7 @@ export default component FlowCheckCodeBlock(
                     description:
                       'The ARIA label for the Try button on flow-check code blocks',
                   })}>
+                  <IconExternalLink className={styles.buttonIcon} />
                   <Translate
                     id="theme.CodeBlock.try"
                     description="The try button label on flow-check code blocks">
@@ -360,17 +378,29 @@ export default component FlowCheckCodeBlock(
                 className={clsx(styles.copyButton, 'clean-btn')}
                 onClick={handleCopyCode}>
                 {showCopied ? (
-                  <Translate
-                    id="theme.CodeBlock.copied"
-                    description="The copied button label on code blocks">
-                    Copied
-                  </Translate>
+                  <>
+                    <IconSuccess
+                      className={styles.buttonIcon}
+                      aria-hidden="true"
+                    />
+                    <Translate
+                      id="theme.CodeBlock.copied"
+                      description="The copied button label on code blocks">
+                      Copied
+                    </Translate>
+                  </>
                 ) : (
-                  <Translate
-                    id="theme.CodeBlock.copy"
-                    description="The copy button label on code blocks">
-                    Copy
-                  </Translate>
+                  <>
+                    <IconCopy
+                      className={styles.buttonIcon}
+                      aria-hidden="true"
+                    />
+                    <Translate
+                      id="theme.CodeBlock.copy"
+                      description="The copy button label on code blocks">
+                      Copy
+                    </Translate>
+                  </>
                 )}
               </button>
             </div>

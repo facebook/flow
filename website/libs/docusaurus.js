@@ -113,6 +113,14 @@ declare module '@theme/Icon/Close' {
   declare module.exports: any;
 }
 
+declare module '@theme/Icon/Copy' {
+  declare module.exports: any;
+}
+
+declare module '@theme/Icon/Success' {
+  declare module.exports: any;
+}
+
 declare module '@site/src/components/NavbarThemeToggle' {
   declare module.exports: any;
 }

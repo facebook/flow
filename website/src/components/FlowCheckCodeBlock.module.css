@@ -46,12 +46,23 @@
 
 .copyButton,
 .tryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: var(--ifm-global-radius);
   color: var(--ifm-color-white);
   font-size: 0.8rem;
   user-select: none;
   padding: 0.4rem 0.5rem;
+  transition: color 150ms ease-in-out;
+}
+
+.buttonIcon {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: currentColor;
+  flex-shrink: 0;
 }
 
 /* On docs pages these blocks render inside .markdown, whose prose-link rule
@@ -64,6 +75,26 @@
   color: var(--ifm-color-white);
   line-height: normal;
   text-decoration: none;
+}
+
+/* Both controls shift to the brand yellow on hover. The chip is dark in both
+   themes, so the yellow stays legible over it. Repeats text-decoration: none so
+   the prose-link hover underline stays suppressed on the Try anchor, and beats
+   the white :hover rule above by coming later at equal specificity. */
+.codeBlockContent .buttonGroup .copyButton:hover,
+.codeBlockContent .buttonGroup .tryButton:hover {
+  color: var(--flow-yellow);
+  text-decoration: none;
+}
+
+/* The translucent-black chip above is tuned for the dark code background: black
+   over near-black stays dark, so the white label reads clearly. In light mode
+   the block is near-white (github Prism theme), so the same wash composites to a
+   mid-gray chip and the white label drops to ~2:1. Darken the chip so the label
+   keeps AA contrast on the light background. */
+:global(html[data-theme='light']) .copyButton,
+:global(html[data-theme='light']) .tryButton {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .codeBlockTitle:hover + .codeBlockContent .buttonGroup,
