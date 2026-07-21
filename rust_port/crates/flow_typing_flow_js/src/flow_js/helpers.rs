@@ -250,7 +250,7 @@ pub(super) fn perform_lookup_action<'cx>(
                     let reason_prop = reason_of_propref(propref);
                     let prop_name = name_of_propref(propref);
                     let msg = ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
-                        reason_prop: reason_prop.dupe(),
+                        prop_loc: reason_prop.loc().dupe(),
                         prop_name,
                         use_op: use_op.dupe(),
                     }));
@@ -277,7 +277,7 @@ pub(super) fn perform_lookup_action<'cx>(
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                        reason_prop: reason_prop.dupe(),
+                        prop_loc: reason_prop.loc().dupe(),
                         prop_name,
                         use_op: use_op.dupe(),
                     })),
@@ -2114,10 +2114,7 @@ pub(super) fn flow<'cx>(
                 UseTInner::UseT(_, _) => (ru, rl),
                 _ => flow_error::ordered_reasons((rl, ru)),
             };
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            )
+            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0.loc().dupe()))
         }
         Err(e) => Err(e),
     }
@@ -2201,10 +2198,7 @@ pub(super) fn unify<'cx>(
         Err(FlowJsException::LimitExceeded) => {
             let reasons =
                 flow_error::ordered_reasons((reason_of_t(t1).dupe(), reason_of_t(t2).dupe()));
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
-            )
+            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0.loc().dupe()))
         }
         Err(e) => Err(e),
     }
@@ -2263,7 +2257,7 @@ pub(super) fn type_app_variance_check<'cx>(
         flow_js_utils::add_output(
             cx,
             ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                reason_tapp: reason_tapp.dupe(),
+                reason_tapp: reason_tapp.to_error_reference(),
                 arity_loc,
                 maximum_arity: maximum_arity as i32,
             })),
@@ -2322,7 +2316,7 @@ pub(super) fn type_app_variance_check<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                            reason_tapp: reason_tapp.dupe(),
+                            reason_tapp: reason_tapp.to_error_reference(),
                             arity_loc: arity_loc.dupe(),
                             minimum_arity: minimum_arity as i32,
                         })),

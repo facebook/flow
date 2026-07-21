@@ -17,6 +17,7 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
+use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -681,8 +682,7 @@ pub mod invalid_cyclic_type_validation {
                     if !seen.contains(&root_id) {
                         seen.insert(root_id);
                         let forced_t = s.force(tied_cx, |reason| {
-                            let loc = reason.loc().dupe();
-                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc, reason.dupe())));
+                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(reason.to_error_reference());
                             super::add_annot_inference_error(tied_cx, dst_cx, msg);
                             flow_typing_type::type_::any_t::error(reason.dupe())
                         });
@@ -1954,7 +1954,7 @@ pub fn default_this_type<'cx>(
         add_output(
             cx,
             ErrorMessage::EMissingLocalAnnotation {
-                reason: reason.dupe(),
+                reason: reason.to_error_reference(),
                 hint_available: false,
                 from_generic_function: false,
             },
@@ -2854,7 +2854,7 @@ pub mod instantiation_kit {
             add_output(
                 cx,
                 ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                    reason_tapp: reason_tapp.dupe(),
+                    reason_tapp: reason_tapp.to_error_reference(),
                     arity_loc: arity_loc.dupe(),
                     maximum_arity,
                 })),
@@ -2892,7 +2892,7 @@ pub mod instantiation_kit {
                         add_output(
                             cx,
                             ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                                reason_tapp: reason_tapp.dupe(),
+                                reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
                                 minimum_arity,
                             })),
@@ -2978,7 +2978,7 @@ pub mod instantiation_kit {
                         add_output(
                             cx,
                             ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                                reason_tapp: reason_tapp.dupe(),
+                                reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
                                 maximum_arity: *maximum_arity,
                             })),
@@ -2988,7 +2988,7 @@ pub mod instantiation_kit {
                         add_output(
                             cx,
                             ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                                reason_tapp: reason_tapp.dupe(),
+                                reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
                                 minimum_arity: *minimum_arity,
                             })),
@@ -3272,8 +3272,8 @@ pub mod value_to_type_reference_transform {
                     add_output(
                         cx,
                         ErrorMessage::EMissingTypeArgs(Box::new(EMissingTypeArgsData {
-                            reason_op: reason_op.dupe(),
-                            reason_tapp: reason.dupe(),
+                            loc: reason_op.loc().dupe(),
+                            reason_tapp_desc: reason.desc.clone(),
                             arity_loc: tparams_loc,
                             min_arity,
                             max_arity: ids.len() as i32,
@@ -3311,7 +3311,7 @@ pub mod value_to_type_reference_transform {
                         cx,
                         ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
                             EnumMemberUsedAsTypeData {
-                                reason: reason_op.dupe(),
+                                reason: reason_op.to_error_reference(),
                                 enum_reason: reason.dupe(),
                             },
                         ))),
@@ -3327,7 +3327,7 @@ pub mod value_to_type_reference_transform {
                     add_output(
                         cx,
                         ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_op.dupe(),
+                            reason_use: reason_op.to_error_reference(),
                         },
                     )?;
                     Ok(any_t::error(reason.dupe()))
@@ -3337,7 +3337,7 @@ pub mod value_to_type_reference_transform {
                     add_output(
                         cx,
                         ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_op.dupe(),
+                            reason_use: reason_op.to_error_reference(),
                         },
                     )?;
                     Ok(any_t::error(reason_of_t(&t).dupe()))
@@ -3355,7 +3355,7 @@ pub mod value_to_type_reference_transform {
                 add_output(
                     cx,
                     ErrorMessage::EValueUsedAsType {
-                        reason_use: reason_op.dupe(),
+                        reason_use: reason_op.to_error_reference(),
                     },
                 )?;
                 Ok(any_t::error(r.dupe()))
@@ -3367,7 +3367,7 @@ pub mod value_to_type_reference_transform {
                 add_output(
                     cx,
                     ErrorMessage::EAnyValueUsedAsType {
-                        reason_use: reason_op.dupe(),
+                        reason_use: reason_op.to_error_reference(),
                     },
                 )?;
                 Ok(any_t::error(r.dupe()))
@@ -3377,7 +3377,7 @@ pub mod value_to_type_reference_transform {
                 add_output(
                     cx,
                     ErrorMessage::EValueUsedAsType {
-                        reason_use: reason_op.dupe(),
+                        reason_use: reason_op.to_error_reference(),
                     },
                 )?;
                 Ok(any_t::error(reason_of_t(&t).dupe()))
@@ -3632,7 +3632,7 @@ pub mod import_type_t_kit {
                 add_output_non_speculating(
                     cx,
                     ErrorMessage::EImportValueAsType(Box::new((
-                        reason.dupe(),
+                        reason.loc().dupe(),
                         FlowSmolStr::new(export_name),
                     ))),
                 );
@@ -3714,7 +3714,7 @@ pub mod import_typeof_t_kit {
                             add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EImportTypeAsTypeof(Box::new((
-                                    reason.dupe(),
+                                    reason.loc().dupe(),
                                     FlowSmolStr::new(export_name),
                                 ))),
                             );
@@ -3742,7 +3742,7 @@ pub mod import_typeof_t_kit {
                     add_output_non_speculating(
                         cx,
                         ErrorMessage::EImportTypeAsTypeof(Box::new((
-                            reason.dupe(),
+                            reason.loc().dupe(),
                             FlowSmolStr::new(export_name),
                         ))),
                     );
@@ -4138,7 +4138,7 @@ pub mod import_default_t_kit {
                         add_output(
                             cx,
                             ErrorMessage::ENoDefaultExport(Box::new((
-                                reason.dupe(),
+                                reason.loc().dupe(),
                                 module_name.dupe(),
                                 suggestion,
                             ))),
@@ -4234,7 +4234,7 @@ pub mod import_default_t_kit {
                         add_output(
                             cx,
                             ErrorMessage::ENoDefaultExport(Box::new((
-                                reason.dupe(),
+                                reason.loc().dupe(),
                                 module_name,
                                 suggestion,
                             ))),
@@ -4443,7 +4443,7 @@ pub mod import_named_t_kit {
                     add_output(
                         cx,
                         ErrorMessage::EImportTypeAsValue(Box::new((
-                            reason.dupe(),
+                            reason.loc().dupe(),
                             FlowSmolStr::new(export_name),
                         ))),
                     )?;
@@ -4468,7 +4468,7 @@ pub mod import_named_t_kit {
                 let has_default_export = combined_exports.contains_key(&Name::new("default"));
                 let msg = if num_exports == 1 && has_default_export {
                     ErrorMessage::EOnlyDefaultExport(Box::new((
-                        reason.dupe(),
+                        reason.loc().dupe(),
                         module_name.dupe(),
                         FlowSmolStr::new(export_name),
                     )))
@@ -4478,7 +4478,7 @@ pub mod import_named_t_kit {
                         combined_exports.keys().map(|n| n.as_smol_str()).collect();
                     let suggestion = typo_suggestion(&known_exports, export_name);
                     ErrorMessage::ENoNamedExport(Box::new((
-                        reason.dupe(),
+                        reason.loc().dupe(),
                         module_name.dupe(),
                         FlowSmolStr::new(export_name),
                         suggestion,
@@ -4744,7 +4744,7 @@ pub mod assert_export_is_type_t_kit {
             let reason = reason_of_t(&l).dupe();
             add_output(
                 cx,
-                ErrorMessage::EExportValueAsType(Box::new((reason.dupe(), name))),
+                ErrorMessage::EExportValueAsType(Box::new((reason.loc().dupe(), name))),
             )?;
             Ok(Type::new(TypeInner::AnyT(
                 reason,
@@ -5687,7 +5687,10 @@ pub fn check_method_unbinding<'cx>(
                             ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                                 use_op: use_op.dupe(),
                                 reason_op: reason_op_from_propref.dupe(),
-                                reason_prop: reason_of_t(t).dupe(),
+                                reason_prop: ErrorReference::new(
+                                    reason_of_t(t).def_loc().dupe(),
+                                    reason_of_t(t).desc.clone(),
+                                ),
                             })),
                         )?;
                     }
@@ -5940,7 +5943,7 @@ pub mod get_prop_t_kit {
                 };
                 let msg = flow_typing_errors::error_message::ErrorMessage::EPropNotReadable(
                     Box::new(EPropNotReadableData {
-                        reason_prop,
+                        prop_loc: reason_prop.loc().dupe(),
                         prop_name,
                         use_op,
                     }),
@@ -6126,7 +6129,7 @@ pub mod get_prop_t_kit {
                             Box::new(EnumInvalidMemberAccessData {
                                 member_name: Some(member_name.dupe()),
                                 suggestion,
-                                reason: member_reason,
+                                reason: member_reason.to_error_reference(),
                                 enum_reason: enum_reason.dupe(),
                             }),
                         ),
@@ -6623,7 +6626,8 @@ pub fn array_elem_check<'cx>(
                                                 ErrorMessage::ETupleElementNotWritable(Box::new(
                                                     ETupleElementNotWritableData {
                                                         use_op: use_op.dupe(),
-                                                        reason: reason.dupe(),
+                                                        loc: reason.loc().dupe(),
+                                                        index_def_loc: reason.def_loc().dupe(),
                                                         index: index as i32,
                                                         name: name.dupe(),
                                                     },
@@ -6637,7 +6641,8 @@ pub fn array_elem_check<'cx>(
                                                 ErrorMessage::ETupleElementNotReadable(Box::new(
                                                     ETupleElementNotReadableData {
                                                         use_op: use_op.dupe(),
-                                                        reason: reason.dupe(),
+                                                        loc: reason.loc().dupe(),
+                                                        index_def_loc: reason.def_loc().dupe(),
                                                         index: index as i32,
                                                         name: name.dupe(),
                                                     },
@@ -6682,7 +6687,7 @@ pub fn array_elem_check<'cx>(
                                                 ErrorMessage::ETupleOutOfBounds(Box::new(
                                                     ETupleOutOfBoundsData {
                                                         use_op: use_op.dupe(),
-                                                        reason: reason.dupe(),
+                                                        loc: reason.loc().dupe(),
                                                         reason_op: reason_tup.dupe(),
                                                         inexact: tuple_is_inexact,
                                                         length: elements.len() as i32,
@@ -6711,7 +6716,8 @@ pub fn array_elem_check<'cx>(
                                         ErrorMessage::ETupleNonIntegerIndex(Box::new(
                                             ETupleNonIntegerIndexData {
                                                 use_op: use_op.dupe(),
-                                                reason: index_reason.dupe(),
+                                                loc: index_reason.loc().dupe(),
+                                                index_def_loc: index_reason.def_loc().dupe(),
                                                 index: index_string.into(),
                                             },
                                         )),
@@ -6736,7 +6742,7 @@ pub fn array_elem_check<'cx>(
             add_output(
                 cx,
                 ErrorMessage::EROArrayWrite(
-                    (reason.dupe(), reason_tup.dupe()),
+                    reason.loc().dupe(),
                     VirtualUseOp::Frame(
                         std::sync::Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
                             dro.0.dupe(),
@@ -6752,10 +6758,10 @@ pub fn array_elem_check<'cx>(
     if is_index_restricted && !can_write_tuple && write_action {
         let error = match &elements {
             Some(_) => ErrorMessage::ETupleUnsafeWrite {
-                reason: reason.dupe(),
+                loc: reason.loc().dupe(),
                 use_op: use_op.dupe(),
             },
-            None => ErrorMessage::EROArrayWrite((reason.dupe(), reason_tup.dupe()), use_op.dupe()),
+            None => ErrorMessage::EROArrayWrite(reason.loc().dupe(), use_op.dupe()),
         };
         add_output(cx, error)?;
     }
@@ -7046,7 +7052,7 @@ pub fn objt_to_obj_rest<'cx>(
                         add_output(
                             cx,
                             ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                                reason_prop: reason_of_t(&fd.type_).dupe(),
+                                prop_loc: reason_of_t(&fd.type_).loc().dupe(),
                                 prop_name: Some(name.dupe()),
                                 use_op: use_op.dupe(),
                             })),
@@ -7063,7 +7069,7 @@ pub fn objt_to_obj_rest<'cx>(
                     add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: reason_of_t(type_).dupe(),
+                            prop_loc: reason_of_t(type_).loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: use_op.dupe(),
                         })),
@@ -7387,7 +7393,7 @@ pub fn flow_arith<'cx>(
             add_output(
                 cx,
                 ErrorMessage::EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
-                    reason_out: reason.dupe(),
+                    loc: reason.loc().dupe(),
                     reason_l: reason_of_t(l).dupe(),
                     reason_r: reason_of_t(r).dupe(),
                     kind,

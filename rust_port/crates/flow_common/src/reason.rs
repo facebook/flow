@@ -51,6 +51,7 @@ use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::offset_utils::OffsetTable;
 
+use crate::error_ref::ErrorReference;
 use crate::flow_import_specifier::Userland;
 use crate::subst_name::SubstName;
 
@@ -884,6 +885,11 @@ impl<A: Dupe> VirtualReason<A> {
 }
 
 impl<L: Dupe> VirtualReason<L> {
+    /// Projects this reason to the location and description used by an error.
+    pub fn to_error_reference(&self) -> ErrorReference<L> {
+        ErrorReference::new(self.loc().dupe(), self.desc.clone())
+    }
+
     pub fn new(desc: VirtualReasonDesc<L>, loc: L) -> Self {
         VirtualReason(Arc::new(VirtualReasonInner {
             desc,

@@ -156,7 +156,7 @@ pub(super) fn __flow<'cx>(
                 };
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::ERecursionLimit(Box::new((reasons.0, reasons.1))),
+                    ErrorMessage::ERecursionLimit(reasons.0.loc().dupe()),
                 );
                 break;
             }
@@ -1456,7 +1456,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: reason.dupe(),
+                            prop_loc: reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
                                 Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
@@ -1475,7 +1475,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: data.reason.dupe(),
+                            prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
                                 Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
@@ -1559,7 +1559,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: reason.dupe(),
+                            prop_loc: reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
                                 Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
@@ -1578,7 +1578,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: data.reason.dupe(),
+                            prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: UseOp::Frame(
                                 Arc::new(VirtualFrameUseOp::ReactDeepReadOnly(Box::new((
@@ -2440,7 +2440,7 @@ fn __flow_impl<'cx>(
                     let err =
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: prop,
-                            reason_prop: reason_op.dupe(),
+                            prop_loc: reason_op.loc().dupe(),
                             reason_obj: reason_o.dupe(),
                             use_op: use_op.dupe(),
                             suggestion,
@@ -2498,7 +2498,7 @@ fn __flow_impl<'cx>(
                         let err = ErrorMessage::EPropNotFoundInLookup(Box::new(
                             EPropNotFoundInLookupData {
                                 prop_name: Some(x.dupe()),
-                                reason_prop: reason_op.dupe(),
+                                prop_loc: reason_op.loc().dupe(),
                                 reason_obj: reason_o.dupe(),
                                 use_op: use_op.dupe(),
                                 suggestion: prop_typo_suggestion(cx, &prop_ids, x.as_str()),
@@ -2519,7 +2519,7 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
             let err = ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name: None,
-                reason_prop: reason_op.dupe(),
+                prop_loc: reason_op.loc().dupe(),
                 reason_obj: reason_o.dupe(),
                 use_op: use_op.dupe(),
                 suggestion: None,
@@ -3387,7 +3387,7 @@ fn __flow_impl<'cx>(
                                 cx,
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
-                                        reason_spread: reason_op.dupe(),
+                                        spread_loc: reason_op.loc().dupe(),
                                         reason_arg: reason.dupe(),
                                     },
                                 )),
@@ -3459,7 +3459,7 @@ fn __flow_impl<'cx>(
                                 cx,
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
-                                        reason_spread: reason_op.dupe(),
+                                        spread_loc: reason_op.loc().dupe(),
                                         reason_arg: reason.dupe(),
                                     },
                                 )),
@@ -4869,7 +4869,7 @@ fn __flow_impl<'cx>(
                         .replace_desc(VirtualReasonDesc::RProperty(prop_name.dupe()));
                     let error_message =
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                            reason_prop: reason_prop.dupe(),
+                            prop_loc: reason_prop.loc().dupe(),
                             reason_obj: reason.dupe(),
                             prop_name,
                             use_op: use_op.dupe(),
@@ -5527,7 +5527,10 @@ fn __flow_impl<'cx>(
         // ********************
         (TypeInner::AnyT(_, _), UseTInner::SetProtoT(_, _)) => {}
         (_, UseTInner::SetProtoT(reason_op, _)) => {
-            flow_js_utils::add_output(cx, ErrorMessage::EUnsupportedSetProto(reason_op.dupe()))?;
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EUnsupportedSetProto(reason_op.loc().dupe()),
+            )?;
         }
 
         // ********************************************************
@@ -5640,7 +5643,7 @@ fn __flow_impl<'cx>(
             add_output(
                 cx,
                 ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
-                    reason_prop: reason_prop.dupe(),
+                    prop_loc: reason_prop.loc().dupe(),
                     prop_name,
                     use_op,
                 })),
@@ -5694,7 +5697,7 @@ fn __flow_impl<'cx>(
             add_output(
                 cx,
                 ErrorMessage::EPrivateLookupFailed(Box::new((
-                    (spp_data.reason.dupe(), reason_c.dupe()),
+                    (spp_data.reason.loc().dupe(), reason_c.dupe()),
                     Name::new(spp_data.name.dupe()),
                     spp_data.use_op.dupe(),
                 ))),
@@ -5739,7 +5742,7 @@ fn __flow_impl<'cx>(
                         add_output(
                             cx,
                             ErrorMessage::EPrivateLookupFailed(Box::new((
-                                (spp_data.reason.dupe(), reason_c.dupe()),
+                                (spp_data.reason.loc().dupe(), reason_c.dupe()),
                                 name,
                                 spp_data.use_op.dupe(),
                             ))),
@@ -6247,7 +6250,7 @@ fn __flow_impl<'cx>(
             add_output(
                 cx,
                 ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
-                    reason_prop: reason_prop.dupe(),
+                    prop_loc: reason_prop.loc().dupe(),
                     prop_name,
                     use_op,
                 })),
@@ -6726,7 +6729,7 @@ fn __flow_impl<'cx>(
                 obj,
                 action,
             }),
-        ) if let TypeInner::DefT(reason_tup, obj_def_t) = obj.deref()
+        ) if let TypeInner::DefT(_reason_tup, obj_def_t) = obj.deref()
             && let DefTInner::ArrT(arrtype) = obj_def_t.deref() =>
         {
             let react_dro = match (action, arrtype.as_ref()) {
@@ -6740,7 +6743,6 @@ fn __flow_impl<'cx>(
                         react_dro: Some(_), ..
                     }),
                 ) => {
-                    let reasons = (reason_op.dupe(), reason_tup.dupe());
                     let use_op_for_err = match arrtype.as_ref() {
                         ArrType::TupleAT(box TupleATData {
                             react_dro: Some(dro),
@@ -6758,7 +6760,10 @@ fn __flow_impl<'cx>(
                         ),
                         _ => use_op.dupe(),
                     };
-                    add_output(cx, ErrorMessage::EROArrayWrite(reasons, use_op_for_err))?;
+                    add_output(
+                        cx,
+                        ErrorMessage::EROArrayWrite(reason_op.loc().dupe(), use_op_for_err),
+                    )?;
                     None
                 }
                 (
@@ -7549,9 +7554,10 @@ fn __flow_impl<'cx>(
             )?;
         }
         (_, UseTInner::ImplementsT(_, _)) => {
+            let reason = reason_of_t(l);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EUnsupportedImplements(reason_of_t(l).dupe()),
+                ErrorMessage::EUnsupportedImplements(reason.to_error_reference()),
             )?;
         }
 
@@ -8135,7 +8141,7 @@ fn __flow_impl<'cx>(
                     EnumInvalidMemberAccessData {
                         member_name: None,
                         suggestion: None,
-                        reason: reason.dupe(),
+                        reason: reason.to_error_reference(),
                         enum_reason: enum_reason.dupe(),
                     },
                 ))),
@@ -8194,7 +8200,7 @@ fn __flow_impl<'cx>(
                 cx,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
                     EnumInvalidObjectUtilTypeData {
-                        reason: op_reason.dupe(),
+                        reason: op_reason.to_error_reference(),
                         enum_reason: enum_reason.dupe(),
                     },
                 ))),
@@ -8852,7 +8858,7 @@ fn __flow_impl<'cx>(
                 _ => {
                     let use_op = flow_js_utils::use_op_of_lookup_action(action);
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                        reason_prop: reason_prop.dupe(),
+                        prop_loc: reason_prop.loc().dupe(),
                         reason_obj: strict_reason.dupe(),
                         prop_name: Some(name.dupe()),
                         use_op,
@@ -8920,7 +8926,7 @@ fn __flow_impl<'cx>(
                 _ => {
                     let use_op = flow_js_utils::use_op_of_lookup_action(action);
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                        reason_prop: reason_prop.dupe(),
+                        prop_loc: reason_prop.loc().dupe(),
                         reason_obj: strict_reason.dupe(),
                         prop_name: Some(name.dupe()),
                         use_op,
@@ -9026,7 +9032,7 @@ fn __flow_impl<'cx>(
                             let use_op = flow_js_utils::use_op_of_lookup_action(action);
                             ErrorMessage::EPropNotFoundInLookup(Box::new(
                                 EPropNotFoundInLookupData {
-                                    reason_prop: reason_prop.dupe(),
+                                    prop_loc: reason_prop.loc().dupe(),
                                     reason_obj: strict_reason.dupe(),
                                     prop_name: None,
                                     use_op,
@@ -9119,7 +9125,7 @@ fn __flow_impl<'cx>(
                             let use_op = flow_js_utils::use_op_of_lookup_action(action);
                             ErrorMessage::EPropNotFoundInLookup(Box::new(
                                 EPropNotFoundInLookupData {
-                                    reason_prop: reason_prop.dupe(),
+                                    prop_loc: reason_prop.loc().dupe(),
                                     reason_obj: strict_reason.dupe(),
                                     prop_name: None,
                                     use_op,
@@ -9588,7 +9594,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: method_reason.dupe(),
+                            prop_loc: method_reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
                                 Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
@@ -9628,7 +9634,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: data.reason.dupe(),
+                            prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
                             use_op: VirtualUseOp::Frame(
                                 Arc::new(FrameUseOp::ReactDeepReadOnly(Box::new((
@@ -9954,7 +9960,7 @@ fn __flow_impl<'cx>(
                 cx,
                 ErrorMessage::EIncompatibleProp(Box::new(EIncompatiblePropData {
                     prop: name_of_propref(propref),
-                    reason_prop: reason_of_propref(propref).dupe(),
+                    prop_loc: reason_of_propref(propref).loc().dupe(),
                     reason_obj: reason_of_t(l).dupe(),
                     special: flow_js_utils::error_message_kind_of_lower(l),
                     use_op,

@@ -21,6 +21,7 @@ use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
 use flow_common::enclosing_context::EnclosingContext;
+use flow_common::error_ref::ErrorReference;
 use flow_common::flow_import_specifier;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -11752,7 +11753,7 @@ fn simple_assignment<'a>(
                         cx,
                         ErrorMessage::EIllegalAssertOperator(Box::new(
                             EIllegalAssertOperatorData {
-                                op: mk_reason(RNonnullAssert, lhs_loc.dupe()),
+                                op_loc: lhs_loc.dupe(),
                                 obj: mk_expression_reason(unwrapped_expr),
                                 specialized: true,
                             },
@@ -14783,7 +14784,7 @@ pub fn mk_class_sig<'a>(
                         flow_js::add_output_non_speculating(
                             cx,
                             ErrorMessage::EMissingLocalAnnotation {
-                                reason: reason.dupe(),
+                                reason: reason.to_error_reference(),
                                 hint_available: false,
                                 from_generic_function: false,
                             },
@@ -14977,7 +14978,10 @@ pub fn mk_class_sig<'a>(
                         flow_js::add_output_non_speculating(
                             cx,
                             ErrorMessage::EMissingLocalAnnotation {
-                                reason: reason.dupe().reposition(annot_loc.dupe()),
+                                reason: ErrorReference::new(
+                                    annot_loc.dupe(),
+                                    reason.desc(false).clone(),
+                                ),
                                 hint_available: false,
                                 from_generic_function: false,
                             },
@@ -19836,7 +19840,7 @@ pub fn mk_func_sig<'a>(
             flow_js::add_output_non_speculating(
                 cx,
                 ErrorMessage::EMissingLocalAnnotation {
-                    reason: reason.dupe(),
+                    reason: reason.to_error_reference(),
                     hint_available: false,
                     from_generic_function,
                 },
@@ -20412,7 +20416,7 @@ fn check_possible_enum_exhaustive_check<'cx>(
                     cx,
                     ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(Box::new(
                         flow_typing_errors::error_message::EnumInvalidAbstractUseData {
-                            reason: check_reason.dupe(),
+                            reason: check_reason.to_error_reference(),
                             enum_reason: enum_reason.dupe(),
                         },
                     ))),
@@ -20628,7 +20632,7 @@ fn perform_enum_exhaustive_check<'cx>(
                 cx,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
                     flow_typing_errors::error_message::EnumNotAllCheckedData {
-                        reason: check_reason.dupe(),
+                        reason: check_reason.to_error_reference(),
                         enum_reason: enum_reason.dupe(),
                         left_to_check: left_over.keys().duped().collect(),
                         default_case_loc,
@@ -20642,7 +20646,7 @@ fn perform_enum_exhaustive_check<'cx>(
                 cx,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
                     flow_typing_errors::error_message::EnumUnknownNotCheckedData {
-                        reason: check_reason.dupe(),
+                        reason: check_reason.to_error_reference(),
                         enum_reason: enum_reason.dupe(),
                     },
                 ))),

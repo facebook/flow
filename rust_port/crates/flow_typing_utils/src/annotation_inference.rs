@@ -10,6 +10,7 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::mk_id;
@@ -161,7 +162,10 @@ fn error_unsupported<'cx>(
 
 pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -> Type {
     let loc = reason.loc().dupe();
-    let msg = ErrorMessage::ETrivialRecursiveDefinition(Box::new((loc.dupe(), reason.dupe())));
+    let msg = ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
+        loc.dupe(),
+        reason.desc(false).clone(),
+    ));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
     type_::any_t::error(reason.dupe())
 }
@@ -1053,8 +1057,8 @@ fn elab_t_concrete<'cx>(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EMissingTypeArgs(
                             Box::new(EMissingTypeArgsData {
-                                reason_op: reason.dupe(),
-                                reason_tapp,
+                                loc: reason.loc().dupe(),
+                                reason_tapp_desc: reason_tapp.desc(false).clone(),
                                 arity_loc: tparams_loc.dupe(),
                                 min_arity: tparams.iter().filter(|tp| tp.default.is_none()).count()
                                     as i32,
@@ -1102,7 +1106,7 @@ fn elab_t_concrete<'cx>(
                         flow_typing_errors::error_message::ErrorMessage::EEnumError(
                             flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType(
                                 Box::new(EnumMemberUsedAsTypeData {
-                                    reason: reason.dupe(),
+                                    reason: reason.to_error_reference(),
                                     enum_reason,
                                 }),
                             ),
@@ -1115,7 +1119,7 @@ fn elab_t_concrete<'cx>(
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_use.dupe(),
+                            reason_use: reason_use.to_error_reference(),
                         },
                     );
                     any_t::error(reason_use)
@@ -1141,7 +1145,7 @@ fn elab_t_concrete<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EAnyValueUsedAsType {
-                    reason_use: reason_use.dupe(),
+                    reason_use: reason_use.to_error_reference(),
                 },
             );
             any_t::error(reason_use)
@@ -1151,7 +1155,7 @@ fn elab_t_concrete<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EValueUsedAsType {
-                    reason_use: reason_use.dupe(),
+                    reason_use: reason_use.to_error_reference(),
                 },
             );
             any_t::error(reason_use)
@@ -1950,7 +1954,7 @@ fn elab_t_concrete<'cx>(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
                             Box::new(EPropNotFoundInLookupData {
-                                reason_prop: reason_prop.dupe(),
+                                prop_loc: reason_prop.loc().dupe(),
                                 reason_obj: reason_op.dupe(),
                                 prop_name: Some(name.dupe()),
                                 use_op: use_op.dupe(),
@@ -1971,7 +1975,7 @@ fn elab_t_concrete<'cx>(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
                             Box::new(EPropNotFoundInLookupData {
-                                reason_prop: reason_prop.dupe(),
+                                prop_loc: reason_prop.loc().dupe(),
                                 reason_obj: reason_op.dupe(),
                                 prop_name: Some(name.dupe()),
                                 use_op: use_op.dupe(),
@@ -2635,7 +2639,7 @@ fn elab_t_concrete<'cx>(
                         Box::new(EnumInvalidMemberAccessData {
                             member_name: None,
                             suggestion: None,
-                            reason: reason.dupe(),
+                            reason: reason.to_error_reference(),
                             enum_reason: enum_reason.dupe(),
                         }),
                     ),

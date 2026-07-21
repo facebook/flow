@@ -1386,7 +1386,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                            reason_tapp: reason_tapp.dupe(),
+                            reason_tapp: reason_tapp.to_error_reference(),
                             arity_loc: arity_loc.dupe(),
                             maximum_arity: maximum_arity as i32,
                         })),
@@ -1413,7 +1413,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                                 flow_js_utils::add_output(
                                     cx,
                                     ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                                        reason_tapp: reason_tapp.dupe(),
+                                        reason_tapp: reason_tapp.to_error_reference(),
                                         arity_loc: arity_loc.dupe(),
                                         minimum_arity: minimum_arity as i32,
                                     })),

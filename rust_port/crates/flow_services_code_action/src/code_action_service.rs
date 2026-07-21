@@ -1316,8 +1316,7 @@ pub fn ast_transforms_of_error(
                 ..
             },
         )) => {
-            let error_loc = reason.loc().dupe();
-            if loc_opt_intersects(loc, error_loc.dupe()) {
+            if loc_opt_intersects(loc, reason.loc.dupe()) {
                 let original_prop_name = flow_common::reason::string_of_desc::<Loc>(&reason.desc);
                 let title = format!("Replace {} with `{}`", original_prop_name, fixed_prop_name);
                 let fixed_prop_name: FlowSmolStr = fixed_prop_name.as_str().into();
@@ -1331,7 +1330,7 @@ pub fn ast_transforms_of_error(
                             loc,
                         )
                     })),
-                    target_loc: error_loc,
+                    target_loc: reason.loc.dupe(),
                     confidence: QuickfixConfidence::BestEffort,
                 }]
             } else {
@@ -1396,7 +1395,6 @@ pub fn ast_transforms_of_error(
         }) => {
             let error_loc = reason_op.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                let method_loc = reason_prop.def_loc().dupe();
                 let original = flow_common::reason::string_of_desc::<Loc>(&reason_prop.desc);
                 let title = format!("Rewrite {} as an arrow function", original);
                 vec![AstTransformOfError {
@@ -1405,7 +1403,7 @@ pub fn ast_transforms_of_error(
                     transform: untyped_ast_transform(Box::new(|ast, loc| {
                         autofix_method::replace_method_at_target(ast, loc)
                     })),
-                    target_loc: method_loc,
+                    target_loc: reason_prop.loc.dupe(),
                     confidence: QuickfixConfidence::BestEffort,
                 }]
             } else {

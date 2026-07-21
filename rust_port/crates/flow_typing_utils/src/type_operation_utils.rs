@@ -1536,7 +1536,7 @@ pub mod special_cased_functions {
                                     cx,
                                     ErrorMessage::EPropNotReadable(Box::new(
                                         EPropNotReadableData {
-                                            reason_prop,
+                                            prop_loc: reason_prop.loc().dupe(),
                                             prop_name: Some(name.dupe()),
                                             use_op: use_op.clone(),
                                         },
@@ -1593,7 +1593,7 @@ pub mod special_cased_functions {
                                     cx,
                                     ErrorMessage::EPropNotReadable(Box::new(
                                         EPropNotReadableData {
-                                            reason_prop: lreason.dupe(),
+                                            prop_loc: lreason.loc().dupe(),
                                             prop_name: Some(name.dupe()),
                                             use_op: use_op.clone(),
                                         },
@@ -1688,7 +1688,8 @@ pub mod special_cased_functions {
                                         ErrorMessage::ETupleElementNotReadable(Box::new(
                                             ETupleElementNotReadableData {
                                                 use_op: use_op.clone(),
-                                                reason: reason_arr.dupe(),
+                                                loc: reason_arr.loc().dupe(),
+                                                index_def_loc: reason_arr.def_loc().dupe(),
                                                 index: n as i32,
                                                 name: elem.name.clone(),
                                             },
@@ -2150,10 +2151,9 @@ pub mod type_assertions {
                     {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable {
-                                reason: enum_reason.dupe(),
-                                for_in: true,
-                            }),
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
+                                enum_reason.dupe(),
+                            )),
                         )
                     }
                     _ => flow_js_utils::add_output(
@@ -2293,10 +2293,9 @@ pub mod type_assertions {
                 {
                     flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable {
-                            reason: enum_reason.dupe(),
-                            for_in: false,
-                        }),
+                        ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(
+                            enum_reason.to_error_reference(),
+                        )),
                     ))?;
                     let any = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                     for targ in targs_to_infer {
@@ -2404,7 +2403,7 @@ pub mod type_assertions {
                             cx,
                             ErrorMessage::EIllegalAssertOperator(Box::new(
                                 EIllegalAssertOperatorData {
-                                    op: op_reason.dupe(),
+                                    op_loc: op_reason.loc().dupe(),
                                     obj: obj_reason.dupe(),
                                     specialized: true,
                                 },
@@ -2420,7 +2419,7 @@ pub mod type_assertions {
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
-                        op: op_reason.dupe(),
+                        op_loc: op_reason.loc().dupe(),
                         obj: obj_reason.dupe(),
                         specialized: true,
                     })),
@@ -2432,7 +2431,7 @@ pub mod type_assertions {
             _ => flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
-                    op: op_reason.dupe(),
+                    op_loc: op_reason.loc().dupe(),
                     obj: obj_reason.dupe(),
                     specialized: true,
                 })),

@@ -13,6 +13,7 @@ pub mod build_id;
 pub mod cli_overrides;
 pub mod docblock;
 pub mod enclosing_context;
+pub mod error_ref;
 pub mod files;
 pub mod flow_import_specifier;
 pub mod flow_projects;

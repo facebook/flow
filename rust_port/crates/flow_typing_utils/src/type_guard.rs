@@ -79,7 +79,7 @@ fn check_type_guard_consistency<'cx>(
                 ErrorMessage::ETypeGuardFunctionParamHavoced(Box::new(
                     ETypeGuardFunctionParamHavocedData {
                         param_reason,
-                        type_guard_reason: tg_reason.dupe(),
+                        type_guard_reason: tg_reason.to_error_reference(),
                         call_locs: havoced_loc_set.iter().cloned().collect(),
                     },
                 )),
@@ -159,8 +159,7 @@ fn check_type_guard_consistency<'cx>(
                                     cx,
                                     ErrorMessage::ENegativeTypeGuardConsistency(Box::new(
                                         ENegativeTypeGuardConsistencyData {
-                                            reason: reason.dupe(),
-                                            return_reason: return_reason.dupe(),
+                                            return_reason: return_reason.to_error_reference(),
                                             type_reason: reason_of_t(type_guard).dupe(),
                                         },
                                     )),
@@ -173,7 +172,7 @@ fn check_type_guard_consistency<'cx>(
                             cx,
                             ErrorMessage::ETypeGuardFunctionInvalidWrites(Box::new(
                                 ETypeGuardFunctionInvalidWritesData {
-                                    reason: return_reason.dupe(),
+                                    loc: return_reason.loc().dupe(),
                                     type_guard_reason: tg_reason.dupe(),
                                     write_locs,
                                 },

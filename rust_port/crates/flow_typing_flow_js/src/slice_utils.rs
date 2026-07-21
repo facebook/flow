@@ -2353,7 +2353,6 @@ pub fn resolve<'cx, A>(
                 cx,
                 ErrorMessage::EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                     reason: type_util::reason_of_t(&t).dupe(),
-                    reason_op: reason.dupe(),
                     use_op: use_op.clone(),
                 })),
             )?;

@@ -61,10 +61,8 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
-use flow_typing_errors::intermediate_error_types::EmptySide;
-use flow_typing_errors::intermediate_error_types::NullSide;
+use flow_typing_errors::intermediate_error_types::ConstantConditionWarning;
 use flow_typing_errors::intermediate_error_types::StrictComparisonInfo;
-use flow_typing_errors::intermediate_error_types::StrictComparisonKind;
 use flow_typing_exists_check::ExistsCheck;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::type_subst;
@@ -460,7 +458,7 @@ fn detect_test_prop_misses<'cx>(cx: &Context<'cx>) {
             cx,
             ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name: prop_name.dupe(),
-                reason_prop: reason_prop.dupe(),
+                prop_loc: reason_prop.loc().dupe(),
                 reason_obj: reason_obj.dupe(),
                 use_op: use_op.dupe(),
                 suggestion: suggestion.dupe(),
@@ -950,14 +948,23 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
         }
     }
     for (loc, is_truthy, show_warning, constant_condition_kind, reason) in banned_conditions {
+        let warning = if show_warning {
+            ConstantConditionWarning::Likely {
+                suggested_loc: reason
+                    .as_ref()
+                    .and_then(|reason| reason.annot_loc().or_else(|| reason.def_loc_opt()))
+                    .duped(),
+            }
+        } else {
+            ConstantConditionWarning::Definite
+        };
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::EConstantCondition(Box::new(EConstantConditionData {
                 loc,
                 is_truthy,
-                show_warning,
+                warning,
                 constant_condition_kind,
-                reason,
             })),
         );
     }
@@ -967,10 +974,8 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 struct StrictComparisonResult {
     l_reason: Reason,
     r_reason: Reason,
-    l_singleton_reason: Reason,
-    r_singleton_reason: Reason,
     primary_loc: ALoc,
-    kind: StrictComparisonKind,
+    info: StrictComparisonInfo<ALoc>,
 }
 
 fn check_strict_comparison<'cx>(
@@ -1029,13 +1034,11 @@ fn check_strict_comparison<'cx>(
                 }
                 FlowJs::speculative_subtyping_succeeds(cx, &left_filtered, &right_expanded)
             }
-            let banned = StrictComparisonResult {
+            let banned = |info| StrictComparisonResult {
                 l_reason: l_reason.dupe(),
                 r_reason: r_reason.dupe(),
-                l_singleton_reason: l_singleton_reason.dupe(),
-                r_singleton_reason: r_singleton_reason.dupe(),
                 primary_loc: loc.dupe(),
-                kind: StrictComparisonKind::StrictComparisonGeneral,
+                info,
             };
             Ok(match (left_conc_t.deref(), right_conc_t.deref()) {
                 (TypeInner::AnyT(_, _), _) | (_, TypeInner::AnyT(_, _)) => None,
@@ -1048,48 +1051,41 @@ fn check_strict_comparison<'cx>(
                     None
                 }
                 (TypeInner::DefT(_, d), _) if matches!(d.deref(), DefTInner::EmptyT) => {
-                    Some(StrictComparisonResult {
-                        kind: StrictComparisonKind::StrictComparisonEmpty {
-                            empty_side: EmptySide::Left,
-                        },
-                        ..banned
-                    })
+                    Some(banned(StrictComparisonInfo::Empty {
+                        empty: l_singleton_reason.dupe(),
+                    }))
                 }
                 (_, TypeInner::DefT(_, d)) if matches!(d.deref(), DefTInner::EmptyT) => {
-                    Some(StrictComparisonResult {
-                        kind: StrictComparisonKind::StrictComparisonEmpty {
-                            empty_side: EmptySide::Right,
-                        },
-                        ..banned
-                    })
+                    Some(banned(StrictComparisonInfo::Empty {
+                        empty: r_singleton_reason.dupe(),
+                    }))
                 }
                 (_, TypeInner::DefT(_, d))
                     if matches!(d.deref(), DefTInner::NullT)
                         && !has_null_type(cx, &left_conc_t) =>
                 {
-                    Some(StrictComparisonResult {
-                        kind: StrictComparisonKind::StrictComparisonNull {
-                            null_side: NullSide::Right,
-                        },
-                        ..banned
-                    })
+                    Some(banned(StrictComparisonInfo::Null {
+                        null_loc: r_singleton_reason.loc().dupe(),
+                        other: l_singleton_reason.dupe(),
+                    }))
                 }
                 (TypeInner::DefT(_, d), _)
                     if matches!(d.deref(), DefTInner::NullT)
                         && !has_null_type(cx, &right_conc_t) =>
                 {
-                    Some(StrictComparisonResult {
-                        kind: StrictComparisonKind::StrictComparisonNull {
-                            null_side: NullSide::Left,
-                        },
-                        ..banned
-                    })
+                    Some(banned(StrictComparisonInfo::Null {
+                        null_loc: l_singleton_reason.loc().dupe(),
+                        other: r_singleton_reason.dupe(),
+                    }))
                 }
                 _ => {
                     if filter_maybe_and_check_is_subtyping(cx, &left_conc_t, &right_conc_t)? {
                         None
                     } else {
-                        Some(banned)
+                        Some(banned(StrictComparisonInfo::General {
+                            left: l_singleton_reason.dupe(),
+                            right: r_singleton_reason.dupe(),
+                        }))
                     }
                 }
             })
@@ -1110,11 +1106,7 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobErr
                 r1: result.l_reason,
                 r2: result.r_reason,
                 loc_opt: Some(result.primary_loc),
-                strict_comparison_opt: Some(StrictComparisonInfo {
-                    left_precise_reason: result.l_singleton_reason,
-                    right_precise_reason: result.r_singleton_reason,
-                    strict_comparison_kind: result.kind,
-                }),
+                strict_comparison_opt: Some(result.info),
             })),
         );
     }
@@ -1723,7 +1715,7 @@ fn check_assert_operator<'cx>(
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
-                        op: op_reason.dupe(),
+                        op_loc: op_reason.loc().dupe(),
                         obj: obj_reason,
                         specialized: true,
                     })),
@@ -1754,7 +1746,7 @@ fn check_assert_operator<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
-                    op: op_reason.dupe(),
+                    op_loc: op_reason.loc().dupe(),
                     obj: obj_reason,
                     specialized: false,
                 })),

@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::error_ref::ErrorReference;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -61,6 +62,7 @@ use crate::intermediate_error_types::AbstractErrorKind;
 use crate::intermediate_error_types::AssignedConstLikeBindingType;
 use crate::intermediate_error_types::ClassKind;
 use crate::intermediate_error_types::ConstantConditionKind;
+use crate::intermediate_error_types::ConstantConditionWarning;
 use crate::intermediate_error_types::DeclareComponentInvalidParamKind;
 use crate::intermediate_error_types::DocblockError;
 use crate::intermediate_error_types::ExactnessErrorKind;
@@ -209,8 +211,7 @@ pub struct EPropsNotFoundInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + P
 )]
 pub struct EUnionSpeculationFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub reason: VirtualReason<L>,
-    pub op_reasons: Vec1<VirtualReason<L>>,
+    pub loc: L,
     pub branches: Vec<ErrorMessage<L>>,
 }
 
@@ -283,7 +284,7 @@ pub enum EnumKind {
 pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
@@ -332,7 +333,7 @@ pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq +
     serde::Deserialize
 )]
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
@@ -398,7 +399,7 @@ pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + Partial
     serde::Deserialize
 )]
 pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,
@@ -416,7 +417,7 @@ pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
@@ -450,7 +451,7 @@ pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
@@ -485,7 +486,7 @@ pub struct EnumIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EnumInvalidAbstractUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
 }
 
@@ -698,10 +699,8 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumMemberDuplicateValue(Box<EnumMemberDuplicateValueData<L>>),
     EnumInvalidObjectUtilType(Box<EnumInvalidObjectUtilTypeData<L>>),
     EnumInvalidObjectFunction(Box<EnumInvalidObjectFunctionData<L>>),
-    EnumNotIterable {
-        reason: VirtualReason<L>,
-        for_in: bool,
-    },
+    EnumNotIterable(ErrorReference<L>),
+    EnumNotIterableForIn(VirtualReason<L>),
     EnumMemberAlreadyChecked(Box<EnumMemberAlreadyCheckedData<L>>),
     EnumAllMembersAlreadyChecked(Box<EnumAllMembersAlreadyCheckedData<L>>),
     EnumNotAllChecked(Box<EnumNotAllCheckedData<L>>),
@@ -1001,7 +1000,7 @@ pub struct IncompatibleUpperData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop: Option<Name>,
-    pub reason_prop: VirtualReason<L>,
+    pub prop_loc: L,
     pub reason_obj: VirtualReason<L>,
     pub special: Option<LowerKind>,
     pub use_op: Option<VirtualUseOp<L>>,
@@ -1019,8 +1018,8 @@ pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EMissingTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_op: VirtualReason<L>,
-    pub reason_tapp: VirtualReason<L>,
+    pub loc: L,
+    pub reason_tapp_desc: VirtualReasonDesc<L>,
     pub arity_loc: L,
     pub min_arity: i32,
     pub max_arity: i32,
@@ -1107,7 +1106,7 @@ pub struct EExpectedBigIntLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EPropNotFoundInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Option<Name>,
-    pub reason_prop: VirtualReason<L>,
+    pub prop_loc: L,
     pub reason_obj: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
     pub suggestion: Option<FlowSmolStr>,
@@ -1220,7 +1219,7 @@ pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     serde::Deserialize
 )]
 pub struct EPropNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_prop: VirtualReason<L>,
+    pub prop_loc: L,
     pub prop_name: Option<Name>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -1237,7 +1236,7 @@ pub struct EPropNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EPropNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_prop: VirtualReason<L>,
+    pub prop_loc: L,
     pub prop_name: Option<Name>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -1272,7 +1271,8 @@ pub struct EPropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     serde::Deserialize
 )]
 pub struct EPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub loc: L,
+    pub type_param_loc: L,
     pub name: FlowSmolStr,
     pub expected_polarity: Polarity,
     pub actual_polarity: Polarity,
@@ -1399,7 +1399,7 @@ pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
 )]
 pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub reason: VirtualReason<L>,
+    pub loc: L,
     pub reason_op: VirtualReason<L>,
     pub inexact: bool,
     pub length: i32,
@@ -1419,7 +1419,8 @@ pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct ETupleNonIntegerIndexData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub reason: VirtualReason<L>,
+    pub loc: L,
+    pub index_def_loc: L,
     pub index: FlowSmolStr,
 }
 
@@ -1435,7 +1436,8 @@ pub struct ETupleNonIntegerIndexData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     serde::Deserialize
 )]
 pub struct ETupleElementNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub loc: L,
+    pub index_def_loc: L,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
     pub use_op: VirtualUseOp<L>,
@@ -1453,7 +1455,8 @@ pub struct ETupleElementNotReadableData<L: Dupe + PartialOrd + Ord + PartialEq +
     serde::Deserialize
 )]
 pub struct ETupleElementNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub loc: L,
+    pub index_def_loc: L,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
     pub use_op: VirtualUseOp<L>,
@@ -1508,7 +1511,7 @@ pub struct ETupleRequiredAfterOptionalData<L: Dupe + PartialOrd + Ord + PartialE
     serde::Deserialize
 )]
 pub struct ETupleInvalidTypeSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_spread: VirtualReason<L>,
+    pub spread_loc: L,
     pub reason_arg: VirtualReason<L>,
 }
 
@@ -1542,7 +1545,7 @@ pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct ETooManyTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_tapp: VirtualReason<L>,
+    pub reason_tapp: ErrorReference<L>,
     pub arity_loc: L,
     pub maximum_arity: i32,
 }
@@ -1559,7 +1562,7 @@ pub struct ETooManyTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct ETooFewTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_tapp: VirtualReason<L>,
+    pub reason_tapp: ErrorReference<L>,
     pub arity_loc: L,
     pub minimum_arity: i32,
 }
@@ -1578,9 +1581,8 @@ pub struct ETooFewTypeArgsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub is_truthy: bool,
-    pub show_warning: bool,
+    pub warning: ConstantConditionWarning<L>,
     pub constant_condition_kind: ConstantConditionKind,
-    pub reason: Option<VirtualReason<L>>,
 }
 
 #[derive(
@@ -1611,7 +1613,7 @@ pub struct ETypeGuardInvalidParameterData<L: Dupe + PartialOrd + Ord + PartialEq
     serde::Deserialize
 )]
 pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub loc: L,
     pub type_guard_reason: VirtualReason<L>,
     pub write_locs: Vec<L>,
 }
@@ -1628,7 +1630,7 @@ pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + Part
     serde::Deserialize
 )]
 pub struct ETypeGuardFunctionParamHavocedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub type_guard_reason: VirtualReason<L>,
+    pub type_guard_reason: ErrorReference<L>,
     pub param_reason: VirtualReason<L>,
     pub call_locs: Vec<L>,
 }
@@ -1661,8 +1663,7 @@ pub struct ETypeGuardIncompatibleWithFunctionKindData<L: Dupe + PartialOrd + Ord
     serde::Deserialize
 )]
 pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
-    pub return_reason: VirtualReason<L>,
+    pub return_reason: ErrorReference<L>,
     pub type_reason: VirtualReason<L>,
 }
 
@@ -1713,7 +1714,6 @@ pub struct EExportRenamedDefaultData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 )]
 pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
-    pub reason_op: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -2014,7 +2014,7 @@ pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EMethodUnbindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub reason_prop: VirtualReason<L>,
+    pub reason_prop: ErrorReference<L>,
     pub reason_op: VirtualReason<L>,
 }
 
@@ -2116,7 +2116,7 @@ pub struct EInvalidDeclarationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     serde::Deserialize
 )]
 pub struct ERecursiveDefinitionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub reason: ErrorReference<L>,
     pub recursion: Vec<L>,
     pub annot_locs: Vec<AnnotLoc<L>>,
 }
@@ -2232,7 +2232,7 @@ pub enum VarianceKeywordKind {
     serde::Deserialize
 )]
 pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_out: VirtualReason<L>,
+    pub loc: L,
     pub reason_l: VirtualReason<L>,
     pub reason_r: VirtualReason<L>,
     pub kind: flow_typing_type::type_::arith_kind::ArithKind,
@@ -2401,7 +2401,7 @@ pub struct EUnionOptimizationOnNonUnionData<L: Dupe + PartialOrd + Ord + Partial
     serde::Deserialize
 )]
 pub struct EIllegalAssertOperatorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub op: VirtualReason<L>,
+    pub op_loc: L,
     pub obj: VirtualReason<L>,
     pub specialized: bool,
 }
@@ -2458,28 +2458,28 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EIncompatibleProp(Box<EIncompatiblePropData<L>>),
 
-    EExportValueAsType(Box<(VirtualReason<L>, Name)>),
+    EExportValueAsType(Box<(L, Name)>),
 
-    EImportValueAsType(Box<(VirtualReason<L>, FlowSmolStr)>),
+    EImportValueAsType(Box<(L, FlowSmolStr)>),
 
-    EImportTypeAsTypeof(Box<(VirtualReason<L>, FlowSmolStr)>),
+    EImportTypeAsTypeof(Box<(L, FlowSmolStr)>),
 
-    EImportTypeAsValue(Box<(VirtualReason<L>, FlowSmolStr)>),
+    EImportTypeAsValue(Box<(L, FlowSmolStr)>),
 
-    ENoDefaultExport(Box<(VirtualReason<L>, Userland, Option<FlowSmolStr>)>),
+    ENoDefaultExport(Box<(L, Userland, Option<FlowSmolStr>)>),
 
-    EOnlyDefaultExport(Box<(VirtualReason<L>, Userland, FlowSmolStr)>),
+    EOnlyDefaultExport(Box<(L, Userland, FlowSmolStr)>),
 
-    ENoNamedExport(Box<(VirtualReason<L>, Userland, FlowSmolStr, Option<FlowSmolStr>)>),
+    ENoNamedExport(Box<(L, Userland, FlowSmolStr, Option<FlowSmolStr>)>),
 
     EMissingTypeArgs(Box<EMissingTypeArgsData<L>>),
 
     EAnyValueUsedAsType {
-        reason_use: VirtualReason<L>,
+        reason_use: ErrorReference<L>,
     },
 
     EValueUsedAsType {
-        reason_use: VirtualReason<L>,
+        reason_use: ErrorReference<L>,
     },
 
     EExpectedStringLit(Box<EExpectedStringLitData<L>>),
@@ -2518,7 +2518,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EExpectedModuleLookupFailed(Box<EExpectedModuleLookupFailedData<L>>),
 
-    EPrivateLookupFailed(Box<((VirtualReason<L>, VirtualReason<L>), Name, VirtualUseOp<L>)>),
+    EPrivateLookupFailed(Box<((L, VirtualReason<L>), Name, VirtualUseOp<L>)>),
 
     EPlatformSpecificImplementationModuleLookupFailed(
         Box<EPlatformSpecificImplementationModuleLookupFailedData<L>>,
@@ -2537,7 +2537,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ETupleNonIntegerIndex(Box<ETupleNonIntegerIndexData<L>>),
 
     ETupleUnsafeWrite {
-        reason: VirtualReason<L>,
+        loc: L,
         use_op: VirtualUseOp<L>,
     },
 
@@ -2551,9 +2551,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETupleInvalidTypeSpread(Box<ETupleInvalidTypeSpreadData<L>>),
 
-    ETupleElementAfterInexactSpread(VirtualReason<L>),
+    ETupleElementAfterInexactSpread(L),
 
-    EROArrayWrite((VirtualReason<L>, VirtualReason<L>), VirtualUseOp<L>),
+    EROArrayWrite(L, VirtualUseOp<L>),
 
     EUnionSpeculationFailed(Box<EUnionSpeculationFailedData<L>>),
 
@@ -2641,14 +2641,14 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EUseArrayLiteral(L),
 
     EMissingLocalAnnotation {
-        reason: VirtualReason<L>,
+        reason: ErrorReference<L>,
         hint_available: bool,
         from_generic_function: bool,
     },
 
     EBindingError(Box<(BindingError, L, Name, L)>),
 
-    ERecursionLimit(Box<(VirtualReason<L>, VirtualReason<L>)>),
+    ERecursionLimit(L),
 
     EUninitializedInstanceProperty(L, PropertyAssignmentKind),
 
@@ -2706,7 +2706,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvariantSubtypingWithUseOp(Box<EInvariantSubtypingWithUseOpData<L>>),
 
-    EUnsupportedImplements(VirtualReason<L>),
+    EUnsupportedImplements(ErrorReference<L>),
 
     ENotAReactComponent {
         reason: VirtualReason<L>,
@@ -2715,7 +2715,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidReactCreateElement(Box<EInvalidReactCreateElementData<L>>),
 
-    EReactElementFunArity(Box<(VirtualReason<L>, FlowSmolStr, i32)>),
+    EReactElementFunArity(Box<(L, FlowSmolStr, i32)>),
 
     EReactRefInRender {
         usage: VirtualReason<L>,
@@ -2723,9 +2723,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         in_hook: bool,
     },
 
-    EFunctionCallExtraArg(Box<(VirtualReason<L>, VirtualReason<L>, i32, VirtualUseOp<L>)>),
+    EFunctionCallExtraArg(Box<(L, VirtualReason<L>, i32, VirtualUseOp<L>)>),
 
-    EUnsupportedSetProto(VirtualReason<L>),
+    EUnsupportedSetProto(L),
 
     EDuplicateModuleProvider(Box<EDuplicateModuleProviderData<L>>),
 
@@ -2829,9 +2829,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EComponentBodyInAmbientContext(L),
 
-    ENestedComponent(VirtualReason<L>),
+    ENestedComponent(L),
 
-    ENestedHook(VirtualReason<L>),
+    ENestedHook(L),
 
     EInvalidDeclaration(Box<EInvalidDeclarationData<L>>),
 
@@ -2839,7 +2839,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EAnnotationInference(Box<(L, VirtualReason<L>, VirtualReason<L>, Option<FlowSmolStr>)>),
 
-    ETrivialRecursiveDefinition(Box<(L, VirtualReason<L>)>),
+    ETrivialRecursiveDefinition(ErrorReference<L>),
 
     EDefinitionCycle(Vec1<(VirtualReason<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
@@ -2938,7 +2938,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     // As the name suggest, don't use this for production purposes, but feel free to use it to
     // quickly test out some ideas.
-    ETemporaryHardcodedErrorForPrototyping(Box<(VirtualReason<L>, FlowSmolStr)>),
+    ETemporaryHardcodedErrorForPrototyping(Box<(L, FlowSmolStr)>),
 }
 
 #[derive(
@@ -3519,6 +3519,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             |use_op: VirtualUseOp<L>| -> VirtualUseOp<M> { mod_loc_of_virtual_use_op(&f, use_op) };
         let map_reason =
             |r: VirtualReason<L>| -> VirtualReason<M> { r.map_locs(|l: &L| f(l.dupe())) };
+        let map_desc =
+            |d: VirtualReasonDesc<L>| -> VirtualReasonDesc<M> { d.map_locs(&|l: &L| f(l.dupe())) };
+        let map_error_ref =
+            |r: ErrorReference<L>| -> ErrorReference<M> { r.map_locs(&|l: &L| f(l.dupe())) };
+        let map_warning = |warning: ConstantConditionWarning<L>| match warning {
+            ConstantConditionWarning::Definite => ConstantConditionWarning::Definite,
+            ConstantConditionWarning::Likely { suggested_loc } => {
+                ConstantConditionWarning::Likely {
+                    suggested_loc: suggested_loc.map(&f),
+                }
+            }
+        };
         let map_branch = |e: ErrorMessage<L>| -> ErrorMessage<M> {
             Self::map_loc_of_error_message(f.clone(), e)
         };
@@ -3607,13 +3619,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EIncompatibleProp(box EIncompatiblePropData {
                 use_op,
                 prop,
-                reason_prop,
+                prop_loc,
                 reason_obj,
                 special,
             }) => EIncompatibleProp(Box::new(EIncompatiblePropData {
                 use_op: use_op.map(map_use_op),
                 prop,
-                reason_prop: map_reason(reason_prop),
+                prop_loc: f(prop_loc),
                 reason_obj: map_reason(reason_obj),
                 special,
             })),
@@ -3660,13 +3672,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
-                reason_prop,
+                prop_loc,
                 reason_obj,
                 use_op,
                 suggestion,
             }) => EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name,
-                reason_prop: map_reason(reason_prop),
+                prop_loc: f(prop_loc),
                 reason_obj: map_reason(reason_obj),
                 use_op: map_use_op(use_op),
                 suggestion,
@@ -3761,21 +3773,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EPropNotReadable(box EPropNotReadableData {
-                reason_prop,
+                prop_loc,
                 prop_name,
                 use_op,
             }) => EPropNotReadable(Box::new(EPropNotReadableData {
-                reason_prop: map_reason(reason_prop),
+                prop_loc: f(prop_loc),
                 prop_name,
                 use_op: map_use_op(use_op),
             })),
 
             EPropNotWritable(box EPropNotWritableData {
-                reason_prop,
+                prop_loc,
                 prop_name,
                 use_op,
             }) => EPropNotWritable(Box::new(EPropNotWritableData {
-                reason_prop: map_reason(reason_prop),
+                prop_loc: f(prop_loc),
                 prop_name,
                 use_op: map_use_op(use_op),
             })),
@@ -3819,11 +3831,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 expected_module_purpose,
             })),
 
-            EPrivateLookupFailed(box ((r1, r2), x, op)) => EPrivateLookupFailed(Box::new((
-                (map_reason(r1), map_reason(r2)),
-                x,
-                map_use_op(op),
-            ))),
+            EPrivateLookupFailed(box ((r1, r2), x, op)) => {
+                EPrivateLookupFailed(Box::new(((f(r1), map_reason(r2)), x, map_use_op(op))))
+            }
 
             EPlatformSpecificImplementationModuleLookupFailed(
                 box EPlatformSpecificImplementationModuleLookupFailedData { loc, name },
@@ -3857,14 +3867,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ETupleOutOfBounds(box ETupleOutOfBoundsData {
                 use_op,
-                reason,
+                loc,
                 reason_op,
                 inexact,
                 length,
                 index,
             }) => ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {
                 use_op: map_use_op(use_op),
-                reason: map_reason(reason),
+                loc: f(loc),
                 reason_op: map_reason(reason_op),
                 inexact,
                 length,
@@ -3873,38 +3883,44 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ETupleNonIntegerIndex(box ETupleNonIntegerIndexData {
                 use_op,
-                reason,
+                loc,
+                index_def_loc,
                 index,
             }) => ETupleNonIntegerIndex(Box::new(ETupleNonIntegerIndexData {
                 use_op: map_use_op(use_op),
-                reason: map_reason(reason),
+                loc: f(loc),
+                index_def_loc: f(index_def_loc),
                 index,
             })),
 
-            ETupleUnsafeWrite { reason, use_op } => ETupleUnsafeWrite {
-                reason: map_reason(reason),
+            ETupleUnsafeWrite { loc, use_op } => ETupleUnsafeWrite {
+                loc: f(loc),
                 use_op: map_use_op(use_op),
             },
 
             ETupleElementNotReadable(box ETupleElementNotReadableData {
-                reason,
+                loc,
+                index_def_loc,
                 index,
                 name,
                 use_op,
             }) => ETupleElementNotReadable(Box::new(ETupleElementNotReadableData {
-                reason: map_reason(reason),
+                loc: f(loc),
+                index_def_loc: f(index_def_loc),
                 index,
                 name,
                 use_op: map_use_op(use_op),
             })),
 
             ETupleElementNotWritable(box ETupleElementNotWritableData {
-                reason,
+                loc,
+                index_def_loc,
                 index,
                 name,
                 use_op,
             }) => ETupleElementNotWritable(Box::new(ETupleElementNotWritableData {
-                reason: map_reason(reason),
+                loc: f(loc),
+                index_def_loc: f(index_def_loc),
                 index,
                 name,
                 use_op: map_use_op(use_op),
@@ -3937,31 +3953,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
-                reason_spread,
+                spread_loc,
                 reason_arg,
             }) => ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {
-                reason_spread: map_reason(reason_spread),
+                spread_loc: f(spread_loc),
                 reason_arg: map_reason(reason_arg),
             })),
 
-            ETupleElementAfterInexactSpread(reason) => {
-                ETupleElementAfterInexactSpread(map_reason(reason))
-            }
+            ETupleElementAfterInexactSpread(loc) => ETupleElementAfterInexactSpread(f(loc)),
 
-            EROArrayWrite((r1, r2), op) => {
-                EROArrayWrite((map_reason(r1), map_reason(r2)), map_use_op(op))
-            }
+            EROArrayWrite(loc, op) => EROArrayWrite(f(loc), map_use_op(op)),
 
             EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
-                reason,
-                op_reasons,
+                loc,
                 branches,
             }) => EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                 use_op: map_use_op(use_op),
-                reason: map_reason(reason),
-                op_reasons: Vec1::try_from_vec(op_reasons.into_iter().map(map_reason).collect())
-                    .unwrap(),
+                loc: f(loc),
                 branches: branches.into_iter().map(map_branch).collect(),
             })),
 
@@ -3975,15 +3984,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidConstructor(r) => EInvalidConstructor(map_reason(r)),
 
-            EInvalidObjectKit(box EInvalidObjectKitData {
-                reason,
-                reason_op,
-                use_op,
-            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                reason: map_reason(reason),
-                reason_op: map_reason(reason_op),
-                use_op: map_use_op(use_op),
-            })),
+            EInvalidObjectKit(box EInvalidObjectKitData { reason, use_op }) => {
+                EInvalidObjectKit(Box::new(EInvalidObjectKitData {
+                    reason: map_reason(reason),
+                    use_op: map_use_op(use_op),
+                }))
+            }
 
             EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 use_op,
@@ -4029,57 +4035,50 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 invalid_react: map_reason(invalid_react),
             })),
 
-            EFunctionCallExtraArg(box (rl, ru, n, op)) => EFunctionCallExtraArg(Box::new((
-                map_reason(rl),
-                map_reason(ru),
-                n,
-                map_use_op(op),
-            ))),
+            EFunctionCallExtraArg(box (rl, ru, n, op)) => {
+                EFunctionCallExtraArg(Box::new((f(rl), map_reason(ru), n, map_use_op(op))))
+            }
 
-            EExportValueAsType(box (r, s)) => EExportValueAsType(Box::new((map_reason(r), s))),
-            EImportValueAsType(box (r, s)) => EImportValueAsType(Box::new((map_reason(r), s))),
-            EImportTypeAsTypeof(box (r, s)) => EImportTypeAsTypeof(Box::new((map_reason(r), s))),
-            EImportTypeAsValue(box (r, s)) => EImportTypeAsValue(Box::new((map_reason(r), s))),
+            EExportValueAsType(box (loc, s)) => EExportValueAsType(Box::new((f(loc), s))),
+            EImportValueAsType(box (loc, s)) => EImportValueAsType(Box::new((f(loc), s))),
+            EImportTypeAsTypeof(box (loc, s)) => EImportTypeAsTypeof(Box::new((f(loc), s))),
+            EImportTypeAsValue(box (loc, s)) => EImportTypeAsValue(Box::new((f(loc), s))),
 
-            ENoDefaultExport(box (r, s1, s2)) => {
-                ENoDefaultExport(Box::new((map_reason(r), s1, s2)))
-            }
-            EOnlyDefaultExport(box (r, s1, s2)) => {
-                EOnlyDefaultExport(Box::new((map_reason(r), s1, s2)))
-            }
-            ENoNamedExport(box (r, s1, s2, s3)) => {
-                ENoNamedExport(Box::new((map_reason(r), s1, s2, s3)))
-            }
+            ENoDefaultExport(box (loc, s1, s2)) => ENoDefaultExport(Box::new((f(loc), s1, s2))),
+            EOnlyDefaultExport(box (loc, s1, s2)) => EOnlyDefaultExport(Box::new((f(loc), s1, s2))),
+            ENoNamedExport(box (loc, s1, s2, s3)) => ENoNamedExport(Box::new((f(loc), s1, s2, s3))),
 
             EMissingTypeArgs(box EMissingTypeArgsData {
-                reason_op,
-                reason_tapp,
+                loc,
+                reason_tapp_desc,
                 arity_loc,
                 min_arity,
                 max_arity,
             }) => EMissingTypeArgs(Box::new(EMissingTypeArgsData {
-                reason_op: map_reason(reason_op),
-                reason_tapp: map_reason(reason_tapp),
+                loc: f(loc),
+                reason_tapp_desc: map_desc(reason_tapp_desc),
                 arity_loc: f(arity_loc),
                 min_arity,
                 max_arity,
             })),
 
             EAnyValueUsedAsType { reason_use } => EAnyValueUsedAsType {
-                reason_use: map_reason(reason_use),
+                reason_use: map_error_ref(reason_use),
             },
 
             EValueUsedAsType { reason_use } => EValueUsedAsType {
-                reason_use: map_reason(reason_use),
+                reason_use: map_error_ref(reason_use),
             },
 
             EPolarityMismatch(box EPolarityMismatchData {
-                reason,
+                loc,
+                type_param_loc,
                 name,
                 expected_polarity,
                 actual_polarity,
             }) => EPolarityMismatch(Box::new(EPolarityMismatchData {
-                reason: map_reason(reason),
+                loc: f(loc),
+                type_param_loc: f(type_param_loc),
                 name,
                 expected_polarity,
                 actual_polarity,
@@ -4094,10 +4093,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 r1: map_reason(r1),
                 r2: map_reason(r2),
                 loc_opt: loc_opt.map(&f),
-                strict_comparison_opt: strict_comparison_opt.map(|sc| StrictComparisonInfo {
-                    left_precise_reason: map_reason(sc.left_precise_reason),
-                    right_precise_reason: map_reason(sc.right_precise_reason),
-                    strict_comparison_kind: sc.strict_comparison_kind,
+                strict_comparison_opt: strict_comparison_opt.map(|sc| match sc {
+                    StrictComparisonInfo::General { left, right } => {
+                        StrictComparisonInfo::General {
+                            left: map_reason(left),
+                            right: map_reason(right),
+                        }
+                    }
+                    StrictComparisonInfo::Null { null_loc, other } => StrictComparisonInfo::Null {
+                        null_loc: f(null_loc),
+                        other: map_reason(other),
+                    },
+                    StrictComparisonInfo::Empty { empty } => StrictComparisonInfo::Empty {
+                        empty: map_reason(empty),
+                    },
                 }),
             })),
 
@@ -4132,7 +4141,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 arity_loc,
                 maximum_arity,
             }) => ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
-                reason_tapp: map_reason(reason_tapp),
+                reason_tapp: map_error_ref(reason_tapp),
                 arity_loc: f(arity_loc),
                 maximum_arity,
             })),
@@ -4142,7 +4151,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 arity_loc,
                 minimum_arity,
             }) => ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
-                reason_tapp: map_reason(reason_tapp),
+                reason_tapp: map_error_ref(reason_tapp),
                 arity_loc: f(arity_loc),
                 minimum_arity,
             })),
@@ -4156,15 +4165,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EConstantCondition(box EConstantConditionData {
                 loc,
                 is_truthy,
-                show_warning,
+                warning,
                 constant_condition_kind,
-                reason,
             }) => EConstantCondition(Box::new(EConstantConditionData {
                 loc: f(loc),
                 is_truthy,
-                show_warning,
+                warning: map_warning(warning),
                 constant_condition_kind,
-                reason: reason.map(map_reason),
             })),
 
             EInvalidExtends(r) => EInvalidExtends(map_reason(r)),
@@ -4222,11 +4229,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ETypeGuardThisParam(reason) => ETypeGuardThisParam(map_reason(reason)),
 
             ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
-                reason,
+                loc,
                 type_guard_reason,
                 write_locs,
             }) => ETypeGuardFunctionInvalidWrites(Box::new(ETypeGuardFunctionInvalidWritesData {
-                reason: map_reason(reason),
+                loc: f(loc),
                 type_guard_reason: map_reason(type_guard_reason),
                 write_locs: write_locs.into_iter().map(&f).collect(),
             })),
@@ -4236,7 +4243,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 param_reason,
                 call_locs,
             }) => ETypeGuardFunctionParamHavoced(Box::new(ETypeGuardFunctionParamHavocedData {
-                type_guard_reason: map_reason(type_guard_reason),
+                type_guard_reason: map_error_ref(type_guard_reason),
                 param_reason: map_reason(param_reason),
                 call_locs: call_locs.into_iter().map(&f).collect(),
             })),
@@ -4248,12 +4255,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )),
 
             ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
-                reason,
                 return_reason,
                 type_reason,
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
-                reason: map_reason(reason),
-                return_reason: map_reason(return_reason),
+                return_reason: map_error_ref(return_reason),
                 type_reason: map_reason(type_reason),
             })),
 
@@ -4280,7 +4285,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 hint_available,
                 from_generic_function,
             } => EMissingLocalAnnotation {
-                reason: map_reason(reason),
+                reason: map_error_ref(reason),
                 hint_available,
                 from_generic_function,
             },
@@ -4289,9 +4294,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 EBindingError(Box::new((b, f(loc), s, f(scope))))
             }
 
-            ERecursionLimit(box (r1, r2)) => {
-                ERecursionLimit(Box::new((map_reason(r1), map_reason(r2))))
-            }
+            ERecursionLimit(loc) => ERecursionLimit(f(loc)),
 
             EUninitializedInstanceProperty(loc, e) => EUninitializedInstanceProperty(f(loc), e),
 
@@ -4308,7 +4311,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }) => EnumInvalidMemberAccess(Box::new(EnumInvalidMemberAccessData {
                         member_name,
                         suggestion,
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
                     EnumModification(box EnumModificationData { loc, enum_reason }) => {
@@ -4330,7 +4333,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason,
                         enum_reason,
                     }) => EnumInvalidObjectUtilType(Box::new(EnumInvalidObjectUtilTypeData {
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
                     EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
@@ -4340,10 +4343,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
-                    EnumNotIterable { reason, for_in } => EnumNotIterable {
-                        reason: map_reason(reason),
-                        for_in,
-                    },
+                    EnumNotIterable(reason) => EnumNotIterable(map_error_ref(reason)),
+                    EnumNotIterableForIn(reason) => EnumNotIterableForIn(map_reason(reason)),
                     EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
                         case_test_loc,
                         prev_check_loc,
@@ -4370,7 +4371,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         left_to_check,
                         default_case_loc,
                     }) => EnumNotAllChecked(Box::new(EnumNotAllCheckedData {
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                         left_to_check,
                         default_case_loc: default_case_loc.map(&f),
@@ -4379,7 +4380,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason,
                         enum_reason,
                     }) => EnumUnknownNotChecked(Box::new(EnumUnknownNotCheckedData {
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
                     EnumInvalidCheck(box EnumInvalidCheckData {
@@ -4397,7 +4398,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason,
                         enum_reason,
                     }) => EnumMemberUsedAsType(Box::new(EnumMemberUsedAsTypeData {
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
                     EnumIncompatible(box EnumIncompatibleData {
@@ -4417,7 +4418,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         reason,
                         enum_reason,
                     }) => EnumInvalidAbstractUse(Box::new(EnumInvalidAbstractUseData {
-                        reason: map_reason(reason),
+                        reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
                     })),
                     EnumInvalidMemberName(box EnumInvalidMemberNameData {
@@ -4601,10 +4602,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )),
 
             EInvalidLHSInAssignment(l) => EInvalidLHSInAssignment(f(l)),
-            EUnsupportedImplements(r) => EUnsupportedImplements(map_reason(r)),
+            EUnsupportedImplements(reason) => EUnsupportedImplements(map_error_ref(reason)),
 
-            EReactElementFunArity(box (r, s, i)) => {
-                EReactElementFunArity(Box::new((map_reason(r), s, i)))
+            EReactElementFunArity(box (loc, s, i)) => {
+                EReactElementFunArity(Box::new((f(loc), s, i)))
             }
 
             EReactRefInRender {
@@ -4617,7 +4618,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 in_hook,
             },
 
-            EUnsupportedSetProto(r) => EUnsupportedSetProto(map_reason(r)),
+            EUnsupportedSetProto(loc) => EUnsupportedSetProto(f(loc)),
 
             EDuplicateModuleProvider(box EDuplicateModuleProviderData {
                 module_name,
@@ -4810,7 +4811,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EMethodUnbinding(Box::new(EMethodUnbindingData {
                 use_op: map_use_op(use_op),
                 reason_op: map_reason(reason_op),
-                reason_prop: map_reason(reason_prop),
+                reason_prop: map_error_ref(reason_prop),
             })),
 
             EHookIncompatible(box EHookIncompatibleData {
@@ -4886,8 +4887,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EComponentMissingReturn(r) => EComponentMissingReturn(map_reason(r)),
             EComponentMissingBody(loc) => EComponentMissingBody(f(loc)),
             EComponentBodyInAmbientContext(loc) => EComponentBodyInAmbientContext(f(loc)),
-            ENestedComponent(r) => ENestedComponent(map_reason(r)),
-            ENestedHook(r) => ENestedHook(map_reason(r)),
+            ENestedComponent(loc) => ENestedComponent(f(loc)),
+            ENestedHook(loc) => ENestedHook(f(loc)),
 
             EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration,
@@ -4911,8 +4912,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 (f(loc), map_reason(r1), map_reason(r2), suggestion),
             )),
 
-            ETrivialRecursiveDefinition(box (loc, r)) => {
-                ETrivialRecursiveDefinition(Box::new((f(loc), map_reason(r))))
+            ETrivialRecursiveDefinition(reason) => {
+                ETrivialRecursiveDefinition(map_error_ref(reason))
             }
 
             EDefinitionCycle(elts) => EDefinitionCycle(
@@ -4944,7 +4945,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 recursion,
                 annot_locs,
             }) => ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
-                reason: map_reason(reason),
+                reason: map_error_ref(reason),
                 recursion: recursion.into_iter().map(&f).collect(),
                 annot_locs: annot_locs
                     .into_iter()
@@ -5079,12 +5080,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             EInvalidBinaryArith(box EInvalidBinaryArithData {
-                reason_out,
+                loc,
                 reason_l,
                 reason_r,
                 kind,
             }) => EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
-                reason_out: map_reason(reason_out),
+                loc: f(loc),
                 reason_l: map_reason(reason_l),
                 reason_r: map_reason(reason_r),
                 kind,
@@ -5406,11 +5407,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EUndocumentedFeature { loc } => EUndocumentedFeature { loc: f(loc) },
 
             EIllegalAssertOperator(box EIllegalAssertOperatorData {
-                op,
+                op_loc,
                 obj,
                 specialized,
             }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
-                op: map_reason(op),
+                op_loc: f(op_loc),
                 obj: map_reason(obj),
                 specialized,
             })),
@@ -5428,8 +5429,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ETemporaryHardcodedErrorForPrototyping(box (r, s)) => {
-                ETemporaryHardcodedErrorForPrototyping(Box::new((map_reason(r), s)))
+            ETemporaryHardcodedErrorForPrototyping(box (loc, s)) => {
+                ETemporaryHardcodedErrorForPrototyping(Box::new((f(loc), s)))
             }
         }
     }
@@ -5631,8 +5632,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
-                reason,
-                op_reasons,
+                loc,
                 branches,
             }) => {
                 let use_op = map_use_op(&f, use_op);
@@ -5642,8 +5642,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     .collect();
                 EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                     use_op,
-                    reason,
-                    op_reasons,
+                    loc,
                     branches,
                 }))
             }
@@ -5780,30 +5779,44 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
         L: Clone,
     {
         match self {
-            Self::EAnyValueUsedAsType { reason_use, .. }
-            | Self::EValueUsedAsType { reason_use, .. } => Some(reason_use.loc.dupe()),
+            Self::EAnyValueUsedAsType { reason_use } | Self::EValueUsedAsType { reason_use } => {
+                Some(reason_use.loc.dupe())
+            }
 
             Self::ENonStrictEqualityComparison(box (primary, _))
-            | Self::EInvalidTypeArgs(box (_, primary))
-            | Self::ETooFewTypeArgs(box ETooFewTypeArgsData {
-                reason_tapp: primary,
-                ..
-            })
-            | Self::ETooManyTypeArgs(box ETooManyTypeArgsData {
-                reason_tapp: primary,
-                ..
-            }) => Some(primary.loc.dupe()),
+            | Self::EInvalidTypeArgs(box (_, primary)) => Some(primary.loc.dupe()),
+
+            Self::ETooFewTypeArgs(box ETooFewTypeArgsData { reason_tapp, .. })
+            | Self::ETooManyTypeArgs(box ETooManyTypeArgsData { reason_tapp, .. }) => {
+                Some(reason_tapp.loc.dupe())
+            }
 
             Self::EComparison(box EComparisonData { r1, loc_opt, .. }) => {
                 loc_opt.as_ref().or(Some(&r1.loc)).map(|l| l.dupe())
             }
 
+            Self::EUnsupportedSetProto(loc)
+            | Self::EReactElementFunArity(box (loc, _, _))
+            | Self::ERecursionLimit(loc)
+            | Self::ENestedComponent(loc)
+            | Self::ENestedHook(loc)
+            | Self::EPolarityMismatch(box EPolarityMismatchData { loc, .. })
+            | Self::ENoNamedExport(box (loc, _, _, _))
+            | Self::EOnlyDefaultExport(box (loc, _, _))
+            | Self::ENoDefaultExport(box (loc, _, _))
+            | Self::EImportTypeAsValue(box (loc, _))
+            | Self::EImportTypeAsTypeof(box (loc, _))
+            | Self::EExportValueAsType(box (loc, _))
+            | Self::EImportValueAsType(box (loc, _))
+            | Self::ETemporaryHardcodedErrorForPrototyping(box (loc, _)) => Some(loc.dupe()),
+
+            Self::EUnsupportedImplements(reason) | Self::EMissingLocalAnnotation { reason, .. } => {
+                Some(reason.loc.dupe())
+            }
+
             Self::ESketchyNumberLint(_, reason)
             | Self::EInvalidExtends(reason)
-            | Self::EUnsupportedSetProto(reason)
-            | Self::EReactElementFunArity(box (reason, _, _))
             | Self::EReactRefInRender { usage: reason, .. }
-            | Self::EUnsupportedImplements(reason)
             | Self::EObjectComputedPropertyAssign(box (reason, _, _))
             | Self::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 reason_prop: reason,
@@ -5814,21 +5827,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EBinaryInLHS(reason)
             | Self::EInstanceofRHS(reason)
             | Self::EArithmeticOperand(reason)
-            | Self::ERecursionLimit(box (reason, _))
-            | Self::EMissingLocalAnnotation { reason, .. }
             | Self::EComponentMissingReturn(reason)
-            | Self::ENestedComponent(reason)
-            | Self::ENestedHook(reason)
             | Self::EUnsupportedExact(box (_, reason))
-            | Self::EPolarityMismatch(box EPolarityMismatchData { reason, .. })
-            | Self::ENoNamedExport(box (reason, _, _, _))
-            | Self::EOnlyDefaultExport(box (reason, _, _))
-            | Self::ENoDefaultExport(box (reason, _, _))
-            | Self::EImportTypeAsValue(box (reason, _))
-            | Self::EImportTypeAsTypeof(box (reason, _))
-            | Self::EExportValueAsType(box (reason, _))
-            | Self::EImportValueAsType(box (reason, _))
-            | Self::ETemporaryHardcodedErrorForPrototyping(box (reason, _))
             | Self::EComputedPropertyWithUnion(reason)
             | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
 
@@ -5876,13 +5876,16 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     reason,
                     ..
                 })
-                | EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
+                | EnumErrorKind::EnumNotIterable(reason),
+            ) => Some(reason.loc.dupe()),
+
+            Self::EEnumError(
+                EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                     reason,
                     ..
                 })
-                | EnumErrorKind::EnumNotIterable { reason, .. },
+                | EnumErrorKind::EnumNotIterableForIn(reason),
             )
-            | Self::ERecursiveDefinition(box ERecursiveDefinitionData { reason, .. })
             | Self::EInvalidConstructor(reason)
             | Self::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration: reason,
@@ -5890,39 +5893,44 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             })
             | Self::EBigIntRShift3(reason)
             | Self::EBigIntNumCoerce(reason)
-            | Self::EInvalidBinaryArith(box EInvalidBinaryArithData {
-                reason_out: reason, ..
-            })
             | Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple: reason,
                 ..
             })
-            | Self::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
-                reason_spread: reason,
-                ..
-            })
-            | Self::ETupleElementAfterInexactSpread(reason)
             | Self::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard_reason: reason,
                 ..
             })
             | Self::ETypeGuardParamUnbound(reason)
-            | Self::ETypeGuardThisParam(reason)
-            | Self::ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
-                reason,
-                ..
-            })
-            | Self::ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
-                return_reason: reason,
-                ..
-            })
-            | Self::ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
-                type_guard_reason: reason,
-                ..
-            })
-            | Self::EIllegalAssertOperator(box EIllegalAssertOperatorData { op: reason, .. }) => {
+            | Self::ETypeGuardThisParam(reason) => Some(reason.loc.dupe()),
+
+            Self::ERecursiveDefinition(box ERecursiveDefinitionData { reason, .. }) => {
                 Some(reason.loc.dupe())
             }
+
+            Self::EInvalidBinaryArith(box EInvalidBinaryArithData { loc, .. })
+            | Self::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
+                spread_loc: loc,
+                ..
+            })
+            | Self::ETupleElementAfterInexactSpread(loc)
+            | Self::ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
+                loc,
+                ..
+            })
+            | Self::EIllegalAssertOperator(box EIllegalAssertOperatorData {
+                op_loc: loc, ..
+            }) => Some(loc.dupe()),
+
+            Self::ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
+                return_reason,
+                ..
+            }) => Some(return_reason.loc.dupe()),
+
+            Self::ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
+                type_guard_reason,
+                ..
+            }) => Some(type_guard_reason.loc.dupe()),
 
             Self::EDefinitionCycle(dependencies) => Some(dependencies.first().0.loc.dupe()),
 
@@ -6023,7 +6031,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             })
             | Self::EInvalidGraphQL(box (loc, _))
             | Self::EAnnotationInference(box (loc, _, _, _))
-            | Self::ETrivialRecursiveDefinition(box (loc, _))
             | Self::EInvalidCatchParameterAnnotation { loc, .. }
             | Self::EInvalidMappedType { loc, .. }
             | Self::EInvalidTemplateLiteralType { loc, .. }
@@ -6054,10 +6061,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 box EUnionPartialOptimizationNonUniqueKeyData { loc, .. },
             ) => Some(loc.dupe()),
 
+            Self::ETrivialRecursiveDefinition(reason) => Some(reason.loc.dupe()),
+
             Self::ECallTypeArity(box ECallTypeArityData { call_loc, .. }) => Some(call_loc.dupe()),
-            Self::EMissingTypeArgs(box EMissingTypeArgsData { reason_op, .. }) => {
-                Some(reason_op.loc.dupe())
-            }
+            Self::EMissingTypeArgs(box EMissingTypeArgsData { loc, .. }) => Some(loc.dupe()),
             Self::EInvalidRendersTypeArgument(box EInvalidRendersTypeArgumentData {
                 loc, ..
             }) => Some(loc.dupe()),
@@ -6340,7 +6347,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             // Other error kinds
             ErrorMessage::EInternal(box (_, _)) => InternalError,
-            ErrorMessage::ERecursionLimit(box (_, _)) => RecursionLimitError,
+            ErrorMessage::ERecursionLimit(_) => RecursionLimitError,
             ErrorMessage::EDuplicateModuleProvider(box EDuplicateModuleProviderData { .. }) => {
                 DuplicateProviderError
             }
@@ -6382,8 +6389,12 @@ pub fn mk_prop_message<L>(prop: Option<&str>) -> Vec<MessageFeature<L>> {
 pub fn enum_name_of_reason<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
     reason: &VirtualReason<L>,
 ) -> Option<FlowSmolStr> {
+    enum_name_of_desc(desc_of_reason(reason))
+}
+
+pub fn enum_name_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> Option<FlowSmolStr> {
     use flow_common::reason::VirtualReasonDesc::*;
-    match desc_of_reason(reason) {
+    match desc {
         REnum { name: Some(name) } => Some(name.dupe()),
         RType(name) => Some(name.dupe()),
         _ => None,
@@ -6857,11 +6868,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => Normal(Message::MessageInvalidReactCreateElement(invalid_react)),
 
             ErrorMessage::EAnyValueUsedAsType { reason_use } => {
-                Normal(Message::MessageAnyValueUsedAsType(reason_use.desc.clone()))
+                Normal(Message::MessageAnyValueUsedAsType(reason_use.desc))
             }
 
             ErrorMessage::EValueUsedAsType { reason_use } => {
-                Normal(Message::MessageValueUsedAsType(reason_use.desc.clone()))
+                Normal(Message::MessageValueUsedAsType(reason_use.desc))
             }
 
             ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
@@ -6911,20 +6922,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 reason_obj,
-                reason_prop,
+                prop_loc,
                 use_op,
                 suggestion,
-            }) => {
-                let loc = reason_prop.loc.dupe();
-                PropMissingInLookup(Box::new(PropMissingInLookupData {
-                    loc,
-                    prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
-                    reason_obj,
-                    use_op,
-                    suggestion,
-                    reason_indexer: None,
-                }))
-            }
+            }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
+                loc: prop_loc,
+                prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
+                reason_obj,
+                use_op,
+                suggestion,
+                reason_indexer: None,
+            })),
 
             ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
                 prop_name,
@@ -7009,32 +7017,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ErrorMessage::EPropNotReadable(box EPropNotReadableData {
-                reason_prop,
+                prop_loc,
                 prop_name,
                 use_op,
-            }) => {
-                let loc = reason_prop.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessagePropNotReadable(prop_name),
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            }) => UseOp(Box::new(UseOpData {
+                loc: prop_loc,
+                message: Message::MessagePropNotReadable(prop_name),
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::EPropNotWritable(box EPropNotWritableData {
-                reason_prop,
+                prop_loc,
                 prop_name,
                 use_op,
-            }) => {
-                let loc = reason_prop.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessagePropNotWritable(prop_name),
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            }) => UseOp(Box::new(UseOpData {
+                loc: prop_loc,
+                message: Message::MessagePropNotWritable(prop_name),
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData {
                 lreason,
@@ -7061,17 +7063,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
-                reason,
+                loc,
                 branches,
-                ..
-            }) => {
-                let loc = reason.loc.dupe();
-                Speculation(Box::new(SpeculationData {
-                    loc,
-                    use_op,
-                    branches,
-                }))
-            }
+            }) => Speculation(Box::new(SpeculationData {
+                loc,
+                use_op,
+                branches,
+            })),
 
             ErrorMessage::EUnsupportedExact(box (_, lower)) => {
                 Normal(Message::MessageCannotCreateExactType(lower))
@@ -7083,9 +7081,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EUseArrayLiteral(_) => Normal(Message::MessageShouldUseArrayLiteral),
 
-            ErrorMessage::ERecursionLimit(box (..)) => {
-                Normal(Message::MessageRecursionLimitExceeded)
-            }
+            ErrorMessage::ERecursionLimit(_) => Normal(Message::MessageRecursionLimitExceeded),
 
             ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(_)) => {
                 Normal(Message::MessageEnumsNotEnabled)
@@ -7277,20 +7273,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUndocumentedFeature)
             }
 
-            ErrorMessage::EFunctionCallExtraArg(box (
-                unused_reason,
-                def_reason,
-                param_count,
-                use_op,
-            )) => UseOp(Box::new(UseOpData {
-                loc: unused_reason.loc.dupe(),
-                message: Message::MessageCannotCallFunctionWithExtraArg {
-                    def_reason,
-                    param_count,
-                },
-                explanation: None,
-                use_op,
-            })),
+            ErrorMessage::EFunctionCallExtraArg(box (loc, def_reason, param_count, use_op)) => {
+                UseOp(Box::new(UseOpData {
+                    loc,
+                    message: Message::MessageCannotCallFunctionWithExtraArg {
+                        def_reason,
+                        param_count,
+                    },
+                    explanation: None,
+                    use_op,
+                }))
+            }
             ErrorMessage::EExponentialSpread(box EExponentialSpreadData {
                 reason,
                 reasons_for_operand1,
@@ -7317,7 +7310,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageCannotAccessEnumMemberData {
                     member_name,
                     suggestion,
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                 },
             ))),
@@ -7334,8 +7327,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prev_use_loc,
                 enum_reason,
             }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { reason, for_in }) => {
-                Normal(Message::MessageCannotIterateEnum { reason, for_in })
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(reason)) => {
+                Normal(Message::MessageCannotIterateEnum(reason.desc))
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(reason)) => {
+                Normal(Message::MessageCannotIterateEnumForIn(reason))
             }
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
                 box EnumMemberAlreadyCheckedData {
@@ -7360,10 +7356,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     enum_reason,
                     left_to_check,
                     default_case_loc,
+                    ..
                 },
             )) => Normal(Message::MessageIncompleteExhausiveCheckEnum(Box::new(
                 MessageIncompleteExhausiveCheckEnumData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                     left_to_check,
                     default_case_loc,
@@ -7373,10 +7370,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumUnknownNotCheckedData {
                     reason,
                     enum_reason,
+                    ..
                 },
             )) => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns(
                 Box::new(MessageCannotExhaustivelyCheckEnumWithUnknownsData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                 }),
             )),
@@ -7398,10 +7396,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumMemberUsedAsTypeData {
                     reason,
                     enum_reason,
+                    ..
                 },
             )) => Normal(Message::MessageCannotUseEnumMemberUsedAsType(Box::new(
                 MessageCannotUseEnumMemberUsedAsTypeData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                 },
             ))),
@@ -7409,10 +7408,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumInvalidAbstractUseData {
                     reason,
                     enum_reason,
+                    ..
                 },
             )) => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums(
                 Box::new(MessageCannotExhaustivelyCheckAbstractEnumsData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                 }),
             )),
@@ -7585,16 +7585,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }),
                 ))
             }
-            ErrorMessage::ETrivialRecursiveDefinition(box (_, reason)) => Normal(
-                Message::MessageInvalidTrivialRecursiveDefinition(reason.desc.clone()),
+            ErrorMessage::ETrivialRecursiveDefinition(reason) => Normal(
+                Message::MessageInvalidTrivialRecursiveDefinition(reason.desc),
             ),
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData {
                 reason,
                 recursion,
                 annot_locs,
+                ..
             }) => Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
                 MessageDefinitionInvalidRecursiveData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     recursion,
                     annot_locs,
                 },
@@ -7800,12 +7801,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 prop,
-                reason_prop,
+                prop_loc,
                 reason_obj,
                 use_op,
                 ..
             }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
-                loc: reason_prop.loc.dupe(),
+                loc: prop_loc,
                 prop: prop.map(|n| n.into_smol_str()),
                 reason_obj,
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
@@ -7853,13 +7854,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ),
 
             ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData {
-                reason_tapp,
+                reason_tapp_desc,
                 arity_loc,
                 min_arity,
                 max_arity,
                 ..
             }) => Normal(Message::MessageCannotUseTypeWithoutAnyTypeArgs {
-                reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
+                reason_arity: VirtualReason::new(reason_tapp_desc, arity_loc),
                 min_arity,
                 max_arity,
             }),
@@ -7868,9 +7869,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_tapp,
                 arity_loc,
                 maximum_arity,
-                ..
             }) => Normal(Message::MessageCannotUseTypeWithTooManyTypeArgs {
-                reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
+                reason_arity: VirtualReason::new(reason_tapp.desc, arity_loc),
                 n: maximum_arity,
             }),
 
@@ -7878,9 +7878,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_tapp,
                 arity_loc,
                 minimum_arity,
-                ..
             }) => Normal(Message::MessageCannotUseTypeWithTooFewTypeArgs {
-                reason_arity: VirtualReason::new(reason_tapp.desc.clone(), arity_loc),
+                reason_arity: VirtualReason::new(reason_tapp.desc, arity_loc),
                 n: minimum_arity,
             }),
 
@@ -7893,15 +7892,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EConstantCondition(box EConstantConditionData {
                 is_truthy,
-                show_warning,
+                warning,
                 constant_condition_kind,
-                reason,
                 ..
             }) => Normal(Message::MessageConstantCondition {
                 is_truthy,
-                show_warning,
+                warning,
                 constant_condition_kind,
-                reason,
             }),
 
             ErrorMessage::ETypeParamArity(_, n) => {
@@ -7928,14 +7925,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }),
 
             ErrorMessage::EPolarityMismatch(box EPolarityMismatchData {
-                reason,
+                type_param_loc,
                 name,
                 expected_polarity,
                 actual_polarity,
+                ..
             }) => {
                 let reason_targ = VirtualReason::new(
                     flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                    reason.def_loc_opt.as_ref().unwrap_or(&reason.loc).dupe(),
+                    type_param_loc,
                 );
                 Normal(Message::MessageCannotUseTypeDueToPolarityMismatch {
                     reason_targ,
@@ -7971,7 +7969,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EPrivateLookupFailed(box (reasons, x, use_op)) => {
                 PropMissingInLookup(Box::new(PropMissingInLookupData {
-                    loc: reasons.0.loc.dupe(),
+                    loc: reasons.0,
                     prop: Some(format!("#{}", x).into()),
                     reason_obj: reasons.1,
                     use_op,
@@ -8060,14 +8058,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData {
-                reason,
+                loc,
                 reason_op,
                 inexact,
                 length,
                 index,
                 use_op,
             }) => UseOp(Box::new(UseOpData {
-                loc: reason.loc.dupe(),
+                loc,
                 message: Message::MessageTupleIndexOutOfBound(Box::new(
                     MessageTupleIndexOutOfBoundData {
                         reason_op,
@@ -8081,73 +8079,66 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ErrorMessage::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData {
-                reason,
+                loc,
+                index_def_loc,
                 index,
                 use_op,
-            }) => {
-                let loc = reason.loc.dupe();
-                let index_def_loc = reason.def_loc_opt.as_ref().unwrap_or(&reason.loc).dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageTupleNonIntegerIndex(Box::new(
-                        MessageTupleNonIntegerIndexData {
-                            index_def_loc,
-                            index,
-                        },
-                    )),
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            }) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageTupleNonIntegerIndex(Box::new(
+                    MessageTupleNonIntegerIndexData {
+                        index_def_loc,
+                        index,
+                    },
+                )),
+                use_op,
+                explanation: None,
+            })),
 
-            ErrorMessage::ETupleUnsafeWrite { reason, use_op } => UseOp(Box::new(UseOpData {
-                loc: reason.loc.dupe(),
+            ErrorMessage::ETupleUnsafeWrite { loc, use_op } => UseOp(Box::new(UseOpData {
+                loc,
                 message: Message::MessageTupleNonStaticallyKnownIndex,
                 use_op,
                 explanation: None,
             })),
 
             ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData {
-                reason,
+                loc,
+                index_def_loc,
                 index,
                 name,
                 use_op,
-            }) => {
-                let loc = reason.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageTupleElementNotReadable(Box::new(
-                        MessageTupleElementNotReadableData {
-                            reason,
-                            index,
-                            name,
-                        },
-                    )),
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            }) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageTupleElementNotReadable(Box::new(
+                    MessageTupleElementNotReadableData {
+                        index_def_loc,
+                        index,
+                        name,
+                    },
+                )),
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::ETupleElementNotWritable(box ETupleElementNotWritableData {
-                reason,
+                loc,
+                index_def_loc,
                 index,
                 name,
                 use_op,
-            }) => {
-                let loc = reason.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageTupleElementNotWritable(Box::new(
-                        MessageTupleElementNotWritableData {
-                            reason,
-                            index,
-                            name,
-                        },
-                    )),
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            }) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageTupleElementNotWritable(Box::new(
+                    MessageTupleElementNotWritableData {
+                        index_def_loc,
+                        index,
+                        name,
+                    },
+                )),
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::ETupleElementPolarityMismatch(
                 box ETupleElementPolarityMismatchData {
@@ -8174,15 +8165,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::EROArrayWrite(reasons, use_op) => {
-                let (lower, _) = reasons;
-                UseOp(Box::new(UseOpData {
-                    loc: lower.loc.dupe(),
-                    message: Message::MessageReadonlyArraysCannotBeWrittenTo,
-                    use_op,
-                    explanation: None,
-                }))
-            }
+            ErrorMessage::EROArrayWrite(loc, use_op) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageReadonlyArraysCannotBeWrittenTo,
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::EIncompatibleWithExact((lower, upper), use_op, kind) => {
                 let loc = lower.loc.dupe();
@@ -8289,13 +8277,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ENegativeTypeGuardConsistency(
                 box ENegativeTypeGuardConsistencyData {
-                    reason,
                     return_reason,
                     type_reason,
                 },
             ) => Normal(Message::MessageNegativeTypeGuardConsistency {
-                reason,
-                return_reason,
+                return_desc: return_reason.desc,
                 type_reason,
             }),
 
@@ -8330,7 +8316,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
                 Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
-                    type_guard_desc: type_guard_reason.desc.clone(),
+                    type_guard_desc: type_guard_reason.desc,
                     param_reason,
                     call_locs,
                 }),
@@ -8359,18 +8345,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 hint_available,
                 from_generic_function,
             } => {
+                let description = reason.desc;
                 if hint_available {
                     Normal(
-                        Message::MessageMissingAnnotationDueToContextualTypingFailure(
-                            reason.desc.clone(),
-                        ),
+                        Message::MessageMissingAnnotationDueToContextualTypingFailure(description),
                     )
                 } else if from_generic_function {
                     Normal(Message::MessageMissingAnnotationForGenericFunction(
-                        reason.desc.clone(),
+                        description,
                     ))
                 } else {
-                    Normal(Message::MessageMissingAnnotation(reason.desc.clone()))
+                    Normal(Message::MessageMissingAnnotation(description))
                 }
             }
 
@@ -8594,9 +8579,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 )),
             ),
 
-            ErrorMessage::EUnsupportedImplements(reason) => Normal(
-                Message::MessageCannotImplementNonInterface(reason.desc.clone()),
-            ),
+            ErrorMessage::EUnsupportedImplements(reason) => {
+                Normal(Message::MessageCannotImplementNonInterface(reason.desc))
+            }
 
             ErrorMessage::ENotAReactComponent { reason, use_op } => {
                 let loc = reason.loc.dupe();
@@ -8793,7 +8778,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum(
                 Box::new(MessageCannotInstantiateObjectUtilTypeWithEnumData {
-                    description: reason.desc.clone(),
+                    description: reason.desc,
                     enum_reason,
                 }),
             )),
@@ -8875,16 +8860,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_prop,
             }) => {
                 let loc = reason_op.loc.dupe();
-                let context_loc = reason_prop
-                    .def_loc_opt
-                    .as_ref()
-                    .unwrap_or(&reason_prop.loc)
-                    .dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageMethodUnbinding {
                         reason_op,
-                        context_loc,
+                        context_loc: reason_prop.loc,
                     },
                     use_op,
                     explanation: None,
@@ -9206,7 +9186,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box MatchNonExplicitEnumCheckData { .. },
             ))
             | Self::EUninitializedInstanceProperty(_, _)
-            | Self::ETrivialRecursiveDefinition(box (_, _))
+            | Self::ETrivialRecursiveDefinition(_)
             | Self::EAnyValueUsedAsType { .. }
             | Self::EValueUsedAsType { .. }
             | Self::EUnusedPromise { .. }
@@ -9444,7 +9424,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
                 box EnumInvalidObjectFunctionData { .. },
             )) => Some(NotAnObject),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { .. }) => Some(NotIterable),
+            ErrorMessage::EEnumError(
+                EnumErrorKind::EnumNotIterable(_) | EnumErrorKind::EnumNotIterableForIn(_),
+            ) => Some(NotIterable),
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
                 box EnumMemberAlreadyCheckedData { .. },
             )) => Some(InvalidExhaustiveCheck),
@@ -9687,7 +9669,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             ErrorMessage::EReactElementFunArity(box (_, _, _)) => Some(MissingArg),
             ErrorMessage::EReactRefInRender { .. } => Some(ReactRuleRef),
-            ErrorMessage::ERecursionLimit(box (_, _)) => None,
+            ErrorMessage::ERecursionLimit(_) => None,
             ErrorMessage::EROArrayWrite(_, use_op) => {
                 Self::react_rule_of_use_op(&Some(use_op.dupe()), CannotWrite)
             }
@@ -9762,7 +9744,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EUnreachable { .. } => Some(UnreachableCode),
             ErrorMessage::EUnsupportedExact(box (_, _)) => Some(InvalidExact),
-            ErrorMessage::EUnsupportedImplements { .. } => Some(CannotImplement),
+            ErrorMessage::EUnsupportedImplements(_) => Some(CannotImplement),
             ErrorMessage::EUnsupportedKeyInObject { .. } => Some(IllegalKey),
             ErrorMessage::EUnsupportedComputedKeyInClass(_) => Some(IllegalKey),
             ErrorMessage::EAmbiguousNumericKeyWithVariance { .. } => Some(IllegalKey),
@@ -9837,7 +9819,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => Some(ReactRuleHook),
             ErrorMessage::EInvalidGraphQL { .. } => Some(InvalidGraphQL),
             ErrorMessage::EAnnotationInference { .. } => Some(InvalidExportedAnnotation),
-            ErrorMessage::ETrivialRecursiveDefinition { .. } => Some(RecursiveDefinition),
+            ErrorMessage::ETrivialRecursiveDefinition(_) => Some(RecursiveDefinition),
             ErrorMessage::EDefinitionCycle { .. } => Some(DefinitionCycle),
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData { .. }) => {
                 Some(RecursiveDefinition)

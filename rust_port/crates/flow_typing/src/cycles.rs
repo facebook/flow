@@ -32,7 +32,7 @@ fn handle_element(cx: &Context, elt: &Element) -> bool {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
-                    reason: reason.dupe(),
+                    reason: reason.to_error_reference(),
                     recursion: recursion.clone(),
                     annot_locs: annot_locs.clone(),
                 })),

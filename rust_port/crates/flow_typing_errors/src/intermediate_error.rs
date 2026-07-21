@@ -128,6 +128,7 @@ use super::intermediate_error_types::MessageTupleIndexOutOfBoundData;
 use super::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use super::intermediate_error_types::RootMessage;
+use super::intermediate_error_types::StrictComparisonInfo;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
@@ -644,7 +645,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
             FlowErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 reason_obj,
-                reason_prop,
+                prop_loc,
                 use_op,
                 suggestion,
             }) => {
@@ -655,7 +656,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                         EPropNotFoundInLookupData {
                             prop_name: prop_name.clone(),
                             reason_obj: reason_obj.dupe(),
-                            reason_prop: reason_prop.dupe(),
+                            prop_loc: prop_loc.dupe(),
                             use_op: use_op_new,
                             suggestion: suggestion.clone(),
                         },
@@ -5343,35 +5344,27 @@ where
                 match strict_comparison_opt {
                     None => features.push(text(".")),
                     Some(info) => {
-                        use crate::intermediate_error_types::StrictComparisonKind::*;
-                        let left_precise_reason = &info.left_precise_reason;
-                        let right_precise_reason = &info.right_precise_reason;
-                        match &info.strict_comparison_kind {
-                            StrictComparisonGeneral => {
+                        match info {
+                            StrictComparisonInfo::General { left, right } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    ref_(left_precise_reason),
+                                    ref_(left),
                                     text(" is not a subtype of "),
-                                    ref_(right_precise_reason),
+                                    ref_(right),
                                     text(" and "),
-                                    ref_(right_precise_reason),
+                                    ref_(right),
                                     text(" is not a subtype of "),
-                                    ref_(left_precise_reason),
+                                    ref_(left),
                                     text(". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. "),
                                     text("If that happens, you can cast one side to the union of both types to pass the flow check. "),
                                 ]);
                             }
-                            StrictComparisonNull { null_side } => {
-                                use crate::intermediate_error_types::NullSide;
-                                let (null_side_reason, the_other_side_reason) = match null_side {
-                                    NullSide::Left => (left_precise_reason, right_precise_reason),
-                                    NullSide::Right => (right_precise_reason, left_precise_reason),
-                                };
+                            StrictComparisonInfo::Null { null_loc, other } => {
                                 features.extend(vec![
                                     text(", because"),
-                                    friendly::no_desc_ref(&loc_of_aloc(&null_side_reason.loc)),
+                                    friendly::no_desc_ref(&loc_of_aloc(null_loc)),
                                     text(" is null and "),
-                                    ref_(the_other_side_reason),
+                                    ref_(other),
                                     text(" does not contain null. "),
                                     text("Perhaps you meant to use "),
                                     code("=="),
@@ -5382,14 +5375,10 @@ where
                                     text("?"),
                                 ]);
                             }
-                            StrictComparisonEmpty { empty_side } => {
-                                use crate::intermediate_error_types::EmptySide;
+                            StrictComparisonInfo::Empty { empty } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    match empty_side {
-                                        EmptySide::Left => ref_(left_precise_reason),
-                                        EmptySide::Right => ref_(right_precise_reason),
-                                    },
+                                    ref_(empty),
                                     text(" is empty. "),
                                 ]);
                             }
@@ -5572,41 +5561,44 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnum { reason, for_in } => {
+            MessageCannotIterateEnumForIn(reason) => {
                 use super::error_message::enum_name_of_reason;
-                if *for_in {
-                    let suggestion = match enum_name_of_reason(reason) {
-                        Some(enum_name) => vec![
-                            text(" "),
-                            text("You can use "),
-                            code(&format!("for (... of {}.members()) {{ ... }}", enum_name)),
-                            text(" to iterate over the enum's members."),
-                        ],
-                        None => vec![],
-                    };
-                    let mut features = vec![
-                        text("Cannot iterate using a "),
-                        code("for...in"),
-                        text(" loop because "),
-                        ref_(reason),
-                        text(" is not an object, null, or undefined."),
-                    ];
-                    features.extend(suggestion);
-                    friendly::Message(features)
-                } else {
-                    let suggestion = match enum_name_of_reason(reason) {
-                        Some(enum_name) => vec![
-                            text(" "),
-                            text("You can use "),
-                            code(&format!("{}.members()", enum_name)),
-                            text(" to get an iterator for the enum's members."),
-                        ],
-                        None => vec![],
-                    };
-                    let mut features = vec![desc(reason), text(" is not an iterable.")];
-                    features.extend(suggestion);
-                    friendly::Message(features)
-                }
+                let suggestion = match enum_name_of_reason(reason) {
+                    Some(enum_name) => vec![
+                        text(" "),
+                        text("You can use "),
+                        code(&format!("for (... of {}.members()) {{ ... }}", enum_name)),
+                        text(" to iterate over the enum's members."),
+                    ],
+                    None => vec![],
+                };
+                let mut features = vec![
+                    text("Cannot iterate using a "),
+                    code("for...in"),
+                    text(" loop because "),
+                    ref_(reason),
+                    text(" is not an object, null, or undefined."),
+                ];
+                features.extend(suggestion);
+                friendly::Message(features)
+            }
+            MessageCannotIterateEnum(description) => {
+                use super::error_message::enum_name_of_desc;
+                let suggestion = match enum_name_of_desc(description) {
+                    Some(enum_name) => vec![
+                        text(" "),
+                        text("You can use "),
+                        code(&format!("{}.members()", enum_name)),
+                        text(" to get an iterator for the enum's members."),
+                    ],
+                    None => vec![],
+                };
+                let mut features = vec![
+                    friendly::desc_of_reason_desc(description),
+                    text(" is not an iterable."),
+                ];
+                features.extend(suggestion);
+                friendly::Message(features)
             }
             MessageCannotIterateWithForIn(reason) => friendly::Message(vec![
                 text("Cannot iterate using a "),
@@ -8521,13 +8513,13 @@ where
                 friendly::Message(features)
             }
             MessageTupleElementNotReadable(box MessageTupleElementNotReadableData {
-                reason,
+                index_def_loc,
                 index,
                 name,
             }) => {
                 let index_ref = friendly::MessageFeature::Reference(
                     vec![friendly::MessageInline::Code(format!("{}", index))],
-                    loc_of_aloc(reason.def_loc()),
+                    loc_of_aloc(index_def_loc),
                 );
                 let label = match name {
                     Some(n) => vec![text(" labeled "), code(n)],
@@ -8539,13 +8531,13 @@ where
                 friendly::Message(features)
             }
             MessageTupleElementNotWritable(box MessageTupleElementNotWritableData {
-                reason,
+                index_def_loc,
                 index,
                 name,
             }) => {
                 let index_ref = friendly::MessageFeature::Reference(
                     vec![friendly::MessageInline::Code(format!("{}", index))],
-                    loc_of_aloc(reason.def_loc()),
+                    loc_of_aloc(index_def_loc),
                 );
                 let label = match name {
                     Some(n) => vec![text(" labeled "), code(n)],
@@ -8626,12 +8618,11 @@ where
                 ref_(upper),
             ]),
             MessageNegativeTypeGuardConsistency {
-                reason: _,
-                return_reason,
+                return_desc,
                 type_reason,
             } => friendly::Message(vec![
                 text("Cannot return "),
-                desc(return_reason),
+                friendly::desc_of_reason_desc(return_desc),
                 text(" because the negation of the predicate encoded in this expression"),
                 text(" needs to completely refine away the guard type "),
                 ref_(type_reason),
@@ -9695,13 +9686,16 @@ where
             ]),
             MessageConstantCondition {
                 is_truthy,
-                show_warning,
+                warning,
                 constant_condition_kind,
-                reason,
             } => {
                 use crate::intermediate_error_types::ConstantConditionKind;
+                use crate::intermediate_error_types::ConstantConditionWarning;
                 let truthy_str = if *is_truthy { "truthy" } else { "falsy" };
-                let likely_str = if *show_warning { " likely" } else { "" };
+                let likely_str = match warning {
+                    ConstantConditionWarning::Definite => "",
+                    ConstantConditionWarning::Likely { .. } => " likely",
+                };
                 let base_message = vec![text(&format!(
                     "This condition is{} {}.",
                     likely_str, truthy_str
@@ -9717,10 +9711,7 @@ where
                         vec![text(" Perhaps you meant to call the function?")]
                     }
                 };
-                let warning_message = if *show_warning {
-                    let suggested_loc = reason
-                        .as_ref()
-                        .and_then(|r| r.annot_loc().or_else(|| r.def_loc_opt()));
+                let warning_message = if let ConstantConditionWarning::Likely { suggested_loc } = warning {
                     let mut msg = vec![
                         text(
                             "\n[WARNING]: Flow's type inference may be incorrect that it could be null ",
@@ -9730,7 +9721,7 @@ where
                         ),
                         text("If the check is valid, you might want to make"),
                     ];
-                    match suggested_loc {
+                    match suggested_loc.as_ref() {
                         Some(loc) => msg.push(friendly::no_desc_ref(&loc_of_aloc(loc))),
                         None => msg.push(text(" the type of this expression")),
                     }

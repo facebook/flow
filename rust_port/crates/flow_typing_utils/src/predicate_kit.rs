@@ -1786,7 +1786,7 @@ fn prop_exists_test_generic<'cx>(
                                         cx,
                                         ErrorMessage::EPropNotReadable(Box::new(
                                             EPropNotReadableData {
-                                                reason_prop: reason.dupe(),
+                                                prop_loc: reason.loc().dupe(),
                                                 prop_name: Some(Name::new(key)),
                                                 use_op: unknown_use(),
                                             },
@@ -1846,7 +1846,8 @@ fn prop_exists_test_generic<'cx>(
                                     ErrorMessage::ETupleElementNotReadable(Box::new(
                                         ETupleElementNotReadableData {
                                             use_op: unknown_use(),
-                                            reason: reason.dupe(),
+                                            loc: reason.loc().dupe(),
+                                            index_def_loc: reason.def_loc().dupe(),
                                             index: i as i32,
                                             name: name.as_ref().map(|n| n.dupe()),
                                         },
@@ -2277,7 +2278,7 @@ fn sentinel_prop_test_generic<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
-                            reason_prop: reason_of_t(obj).dupe(),
+                            prop_loc: reason_of_t(obj).loc().dupe(),
                             prop_name: Some(Name::new(key)),
                             use_op: unknown_use(),
                         })),
@@ -2337,7 +2338,8 @@ fn sentinel_prop_test_generic<'cx>(
                         ErrorMessage::ETupleElementNotReadable(Box::new(
                             ETupleElementNotReadableData {
                                 use_op: unknown_use(),
-                                reason: reason_of_t(tuple).dupe(),
+                                loc: reason_of_t(tuple).loc().dupe(),
+                                index_def_loc: reason_of_t(tuple).def_loc().dupe(),
                                 index: i as i32,
                                 name: name.as_ref().map(|n| n.dupe()),
                             },

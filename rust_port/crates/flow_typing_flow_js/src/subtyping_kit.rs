@@ -13,6 +13,7 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
+use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -423,7 +424,10 @@ fn funt_to_funt_check_this_contravariant<'cx>(
                     ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                         use_op: use_op.dupe(),
                         reason_op: lreason.dupe(),
-                        reason_prop: type_util::reason_of_t(this_param1).clone(),
+                        reason_prop: ErrorReference::new(
+                            type_util::reason_of_t(this_param1).def_loc().dupe(),
+                            type_util::reason_of_t(this_param1).desc(false).clone(),
+                        ),
                     })),
                 )?;
             }

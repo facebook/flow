@@ -1084,10 +1084,7 @@ pub fn mk_type_destructor<'cx>(
     ) {
         Ok(result) => Ok(result),
         Err(FlowJsException::LimitExceeded) => {
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::ERecursionLimit(Box::new((reason.dupe(), reason.dupe()))),
-            )?;
+            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reason.loc().dupe()))?;
             let result = any_t::why(AnySource::AnyError(None), reason.dupe());
             let mut evaluated = cx.evaluated();
             evaluated.insert(id, result.dupe());

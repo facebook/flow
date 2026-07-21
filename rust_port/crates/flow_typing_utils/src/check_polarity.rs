@@ -89,7 +89,8 @@ fn check_polarity_impl<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPolarityMismatch(Box::new(EPolarityMismatchData {
-                            reason: reason.dupe(),
+                            loc: reason.loc().dupe(),
+                            type_param_loc: reason.def_loc().dupe(),
                             name: name.string_of_subst_name().dupe(),
                             expected_polarity: tp.polarity,
                             actual_polarity: polarity,

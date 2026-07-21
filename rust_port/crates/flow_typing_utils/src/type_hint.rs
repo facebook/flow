@@ -343,8 +343,7 @@ fn synthesis_speculation_call<'cx>(
                 cx,
                 ErrorMessage::EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                     use_op: unknown_use(),
-                    reason: reason.dupe(),
-                    op_reasons: Vec1::new(call_reason.dupe()),
+                    loc: reason.loc().dupe(),
                     branches: vec![],
                 })),
             )?;

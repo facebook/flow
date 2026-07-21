@@ -920,7 +920,7 @@ fn resolve_annotated_function<'cx>(
     {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::ENestedHook(reason.dupe()),
+            flow_typing_errors::error_message::ErrorMessage::ENestedHook(reason.loc().dupe()),
         );
     }
     if function_.async_ && *effect_ == ast::function::Effect::Hook && !cx.async_component_syntax() {
@@ -1176,7 +1176,9 @@ fn resolve_annotated_component<'cx>(
         {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                flow_typing_errors::error_message::ErrorMessage::ENestedComponent(reason.dupe()),
+                flow_typing_errors::error_message::ErrorMessage::ENestedComponent(
+                    reason.loc().dupe(),
+                ),
             );
         }
         if component.async_ && !cx.async_component_syntax() {
@@ -1867,7 +1869,7 @@ fn resolve_binding<'cx>(
                         flow_js_utils::add_output_non_speculating(
                             cx,
                             flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                                reason: ctx_reason.dupe(),
+                                reason: ctx_reason.to_error_reference(),
                                 hint_available: true,
                                 from_generic_function: false,
                             },
@@ -1883,7 +1885,7 @@ fn resolve_binding<'cx>(
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                        reason: ctx_reason.dupe(),
+                        reason: ctx_reason.to_error_reference(),
                         hint_available: false,
                         from_generic_function: false,
                     },
@@ -1905,7 +1907,7 @@ fn resolve_binding<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EMissingLocalAnnotation {
-                    reason: unannotated_reason.dupe(),
+                    reason: unannotated_reason.to_error_reference(),
                     hint_available: false,
                     from_generic_function: false,
                 },
@@ -2116,7 +2118,7 @@ fn resolve_inferred_function<'cx>(
     {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::ENestedHook(reason.dupe()),
+            flow_typing_errors::error_message::ErrorMessage::ENestedHook(reason.loc().dupe()),
         );
     }
     if function_.async_

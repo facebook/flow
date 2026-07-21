@@ -177,10 +177,7 @@ pub(super) fn evaluate_type_destructor<'cx>(
     match evaluate_type_destructor_(cx, trace, use_op.dupe(), reason, t, d, tvar) {
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::ERecursionLimit(Box::new((reason.dupe(), reason.dupe()))),
-            )?;
+            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reason.loc().dupe()))?;
             rec_flow_t(
                 cx,
                 trace,

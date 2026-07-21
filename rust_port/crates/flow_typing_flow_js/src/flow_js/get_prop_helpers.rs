@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_common::error_ref::ErrorReference;
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_type::type_::GenericTData;
@@ -191,7 +192,7 @@ pub(super) fn get_private_prop<'cx>(
         [] => flow_js_utils::add_output(
             cx,
             ErrorMessage::EPrivateLookupFailed(Box::new((
-                (reason_op.dupe(), reason_c.dupe()),
+                (reason_op.loc().dupe(), reason_c.dupe()),
                 Name::new(prop_name.dupe()),
                 use_op.dupe(),
             ))),
@@ -260,7 +261,10 @@ pub(super) fn get_private_prop<'cx>(
                                                 EMethodUnbindingData {
                                                     use_op: use_op.dupe(),
                                                     reason_op: reason_op.dupe(),
-                                                    reason_prop: reason_of_t(t).dupe(),
+                                                    reason_prop: ErrorReference::new(
+                                                        reason_of_t(t).def_loc().dupe(),
+                                                        reason_of_t(t).desc(false).clone(),
+                                                    ),
                                                 },
                                             )),
                                         )?;
@@ -271,7 +275,7 @@ pub(super) fn get_private_prop<'cx>(
                             None => flow_js_utils::add_output(
                                 cx,
                                 ErrorMessage::EPrivateLookupFailed(Box::new((
-                                    (reason_op.dupe(), reason_c.dupe()),
+                                    (reason_op.loc().dupe(), reason_c.dupe()),
                                     name,
                                     use_op.dupe(),
                                 ))),
@@ -396,7 +400,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     cx,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
-                        reason_prop: reason.dupe(),
+                        prop_loc: reason.loc().dupe(),
                         reason_obj: reason_obj.dupe(),
                         use_op: use_op.dupe(),
                         suggestion: None,
@@ -409,7 +413,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     cx,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
-                        reason_prop: reason.dupe(),
+                        prop_loc: reason.loc().dupe(),
                         reason_obj: reason_obj.dupe(),
                         use_op: use_op.dupe(),
                         suggestion: None,
@@ -544,7 +548,7 @@ pub(super) fn write_obj_prop<'cx>(
                         cx,
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: Some(name.dupe()),
-                            reason_prop: reason_prop.dupe(),
+                            prop_loc: reason_prop.loc().dupe(),
                             reason_obj: reason_obj.dupe(),
                             use_op: use_op.dupe(),
                             suggestion: prop_typo_suggestion(

@@ -531,8 +531,6 @@ pub enum ConstantConditionKind {
 #[derive(
     Debug,
     Clone,
-    Dupe,
-    Copy,
     PartialEq,
     Eq,
     PartialOrd,
@@ -541,46 +539,9 @@ pub enum ConstantConditionKind {
     serde::Serialize,
     serde::Deserialize
 )]
-pub enum NullSide {
-    Left,
-    Right,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    Dupe,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum EmptySide {
-    Left,
-    Right,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    Dupe,
-    Copy,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum StrictComparisonKind {
-    StrictComparisonGeneral,
-    StrictComparisonNull { null_side: NullSide },
-    StrictComparisonEmpty { empty_side: EmptySide },
+pub enum ConstantConditionWarning<L: Dupe> {
+    Definite,
+    Likely { suggested_loc: Option<L> },
 }
 
 #[derive(
@@ -594,10 +555,18 @@ pub enum StrictComparisonKind {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct StrictComparisonInfo<L: Dupe> {
-    pub left_precise_reason: VirtualReason<L>,
-    pub right_precise_reason: VirtualReason<L>,
-    pub strict_comparison_kind: StrictComparisonKind,
+pub enum StrictComparisonInfo<L: Dupe> {
+    General {
+        left: VirtualReason<L>,
+        right: VirtualReason<L>,
+    },
+    Null {
+        null_loc: L,
+        other: VirtualReason<L>,
+    },
+    Empty {
+        empty: VirtualReason<L>,
+    },
 }
 
 #[derive(
@@ -1603,14 +1572,14 @@ pub struct MessageSketchyNullCheckData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleElementNotReadableData<L: Dupe> {
-    pub reason: VirtualReason<L>,
+    pub index_def_loc: L,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleElementNotWritableData<L: Dupe> {
-    pub reason: VirtualReason<L>,
+    pub index_def_loc: L,
     pub index: i32,
     pub name: Option<FlowSmolStr>,
 }
@@ -1808,10 +1777,9 @@ pub enum Message<L: Dupe> {
         Box<MessageCannotInstantiateObjectUtilTypeWithEnumData<L>>,
     ),
 
-    MessageCannotIterateEnum {
-        reason: VirtualReason<L>,
-        for_in: bool,
-    },
+    MessageCannotIterateEnum(VirtualReasonDesc<L>),
+
+    MessageCannotIterateEnumForIn(VirtualReason<L>),
 
     MessageCannotIterateWithForIn(VirtualReason<L>),
     MessageCannotMutateThisPrototype,
@@ -2199,8 +2167,7 @@ pub enum Message<L: Dupe> {
     },
 
     MessageNegativeTypeGuardConsistency {
-        reason: VirtualReason<L>,
-        return_reason: VirtualReason<L>,
+        return_desc: VirtualReasonDesc<L>,
         type_reason: VirtualReason<L>,
     },
 
@@ -2465,9 +2432,8 @@ pub enum Message<L: Dupe> {
 
     MessageConstantCondition {
         is_truthy: bool,
-        show_warning: bool,
+        warning: ConstantConditionWarning<L>,
         constant_condition_kind: ConstantConditionKind,
-        reason: Option<VirtualReason<L>>,
     },
 }
 

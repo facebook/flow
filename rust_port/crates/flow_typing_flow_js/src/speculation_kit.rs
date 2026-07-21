@@ -538,23 +538,18 @@ where
         match spec {
             CasesSpec::UnionCases {
                 use_op,
-                reason_op: r,
+                reason_op: _,
                 l,
                 us,
                 ..
             } => {
-                let reason = type_util::reason_of_t(l).dupe();
+                let loc = type_util::reason_of_t(l).loc().dupe();
                 assert!(us.len() == msgs.len());
-                let mut op_reasons = Vec1::new(r.dupe());
-                for u in us.iter() {
-                    op_reasons.push(type_util::reason_of_t(u).dupe());
-                }
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                         use_op: use_op.dupe(),
-                        reason,
-                        op_reasons,
+                        loc,
                         branches: msgs,
                     })),
                 )?;
@@ -626,20 +621,13 @@ where
                                 use_op, ..
                             }),
                         ..
-                    }) => {
-                        let mut op_reasons = Vec1::new(r.dupe());
-                        for t in ls.iter() {
-                            op_reasons.push(type_util::reason_of_t(t).dupe());
-                        }
-                        ErrorMessage::EUnionSpeculationFailed(Box::new(
-                            EUnionSpeculationFailedData {
-                                use_op: use_op.dupe(),
-                                reason: reason.dupe(),
-                                op_reasons,
-                                branches: msgs,
-                            },
-                        ))
-                    }
+                    }) => ErrorMessage::EUnionSpeculationFailed(Box::new(
+                        EUnionSpeculationFailedData {
+                            use_op: use_op.dupe(),
+                            loc: reason.loc().dupe(),
+                            branches: msgs,
+                        },
+                    )),
                     _ => {
                         let use_op = type_util::use_op_of_use_t(upper);
                         let loc = flow_js_utils::error_message_loc_of_upper(upper);

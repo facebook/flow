@@ -1934,7 +1934,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
-            reason_prop,
+            prop_loc,
             reason_obj,
             special: _,
             prop: _,
@@ -1942,72 +1942,72 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "EIncompatibleProp(Box::new(EIncompatiblePropData {{ reason_prop = {}; reason_obj = {}; special = _; prop = _; use_op = _ }}))",
-                dump_reason(cx, reason_prop),
+                string_of_aloc(None, prop_loc),
                 dump_reason(cx, reason_obj)
             )
         }
-        ErrorMessage::EExportValueAsType(box (reason, name)) => {
+        ErrorMessage::EExportValueAsType(box (loc, name)) => {
             format!(
                 "EExportValueAsType(Box::new(({}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 name.as_str()
             )
         }
-        ErrorMessage::EImportValueAsType(box (reason, s)) => {
+        ErrorMessage::EImportValueAsType(box (loc, s)) => {
             format!(
                 "EImportValueAsType(Box::new(({}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 s
             )
         }
-        ErrorMessage::EImportTypeAsTypeof(box (reason, s)) => {
+        ErrorMessage::EImportTypeAsTypeof(box (loc, s)) => {
             format!(
                 "EImportTypeAsTypeof(Box::new(({}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 s
             )
         }
-        ErrorMessage::EImportTypeAsValue(box (reason, s)) => {
+        ErrorMessage::EImportTypeAsValue(box (loc, s)) => {
             format!(
                 "EImportTypeAsValue(Box::new(({}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 s
             )
         }
-        ErrorMessage::ENoDefaultExport(box (reason, module_name, _)) => {
+        ErrorMessage::ENoDefaultExport(box (loc, module_name, _)) => {
             format!(
                 "ENoDefaultExport(Box::new(({}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 module_name.display()
             )
         }
-        ErrorMessage::EOnlyDefaultExport(box (reason, module_name, export_name)) => {
+        ErrorMessage::EOnlyDefaultExport(box (loc, module_name, export_name)) => {
             format!(
                 "EOnlyDefaultExport(Box::new(({}, {}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 module_name.display(),
                 export_name
             )
         }
-        ErrorMessage::ENoNamedExport(box (reason, module_name, export_name, _)) => {
+        ErrorMessage::ENoNamedExport(box (loc, module_name, export_name, _)) => {
             format!(
                 "ENoNamedExport(Box::new(({}, {}, {})))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 module_name.display(),
                 export_name
             )
         }
         ErrorMessage::EMissingTypeArgs(box EMissingTypeArgsData {
-            reason_op,
-            reason_tapp,
+            loc,
+            reason_tapp_desc,
             arity_loc,
             min_arity,
             max_arity,
         }) => {
             format!(
                 "EMissingTypeArgs(Box::new(EMissingTypeArgsData {{ reason_op={}; reason_tapp={}; reason_arity={}; min_arity={}; max_arity={} }}))",
-                dump_reason(cx, reason_op),
-                dump_reason(cx, reason_tapp),
+                string_of_aloc(None, loc),
+                format_args!("{:?}", reason_tapp_desc),
                 string_of_aloc(None, arity_loc),
                 min_arity,
                 max_arity
@@ -2016,13 +2016,21 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EAnyValueUsedAsType { reason_use } => {
             format!(
                 "EAnyValueUsedAsType {{ use = {} }}",
-                dump_reason(cx, reason_use)
+                format_args!(
+                    "{} {:?}",
+                    string_of_aloc(None, &reason_use.loc),
+                    reason_use.desc
+                )
             )
         }
         ErrorMessage::EValueUsedAsType { reason_use } => {
             format!(
                 "EValueUsedAsType {{ use = {} }}",
-                dump_reason(cx, reason_use)
+                format_args!(
+                    "{} {:?}",
+                    string_of_aloc(None, &reason_use.loc),
+                    reason_use.desc
+                )
             )
         }
         ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
@@ -2075,7 +2083,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
             prop_name,
-            reason_prop,
+            prop_loc,
             reason_obj,
             use_op,
             suggestion,
@@ -2091,7 +2099,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EPropNotFoundInLookup ({}, {}, {}, {}, {})",
                 prop_str,
-                dump_reason(cx, reason_prop),
+                string_of_aloc(None, prop_loc),
                 dump_reason(cx, reason_obj),
                 string_of_use_op(use_op),
                 suggestion_str
@@ -2203,7 +2211,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EPropNotReadable(box EPropNotReadableData {
-            reason_prop,
+            prop_loc,
             prop_name,
             use_op,
         }) => {
@@ -2213,13 +2221,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "EPropNotReadable(Box::new(EPropNotReadableData {{ reason_prop = {}; prop_name = {}; use_op = {} }}))",
-                dump_reason(cx, reason_prop),
+                string_of_aloc(None, prop_loc),
                 prop_str,
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::EPropNotWritable(box EPropNotWritableData {
-            reason_prop,
+            prop_loc,
             prop_name,
             use_op,
         }) => {
@@ -2229,7 +2237,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "EPropNotWritable(Box::new(EPropNotWritableData {{ reason_prop = {}; prop_name = {}; use_op = {} }}))",
-                dump_reason(cx, reason_prop),
+                string_of_aloc(None, prop_loc),
                 prop_str,
                 string_of_use_op(use_op)
             )
@@ -2255,14 +2263,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EPolarityMismatch(box EPolarityMismatchData {
-            reason,
+            loc,
             name,
             expected_polarity,
             actual_polarity,
+            ..
         }) => {
             format!(
                 "EPolarityMismatch(Box::new(EPolarityMismatchData {{ reason={}; name={:?}; expected_polarity={}; actual_polarity={} }}))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 name,
                 expected_polarity.string(),
                 actual_polarity.string()
@@ -2305,7 +2314,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EPrivateLookupFailed(box ((reason1, reason2), x, use_op)) => {
             format!(
                 "EPrivateLookupFailed(Box::new(({}, {}), {}, {}))",
-                dump_reason(cx, reason1),
+                string_of_aloc(None, reason1),
                 dump_reason(cx, reason2),
                 x.as_str(),
                 string_of_use_op(use_op)
@@ -2395,18 +2404,18 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
-            reason_spread,
+            spread_loc,
             reason_arg,
         }) => {
             format!(
                 "ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {{reason_spread = {}; reason_arg = {}}}))",
-                dump_reason(cx, reason_spread),
+                string_of_aloc(None, spread_loc),
                 dump_reason(cx, reason_arg)
             )
         }
         ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData {
             use_op,
-            reason,
+            loc,
             reason_op,
             inexact,
             length,
@@ -2415,7 +2424,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {{ use_op = {}; reason = {}; reason_op = {}; inexact = {}; length = {}; index = {} }}))",
                 string_of_use_op(use_op),
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 dump_reason(cx, reason_op),
                 inexact,
                 length,
@@ -2424,45 +2433,48 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::ETupleNonIntegerIndex(box ETupleNonIntegerIndexData {
             use_op,
-            reason,
+            loc,
             index,
+            ..
         }) => {
             format!(
                 "ETupleNonIntegerIndex(Box::new(ETupleNonIntegerIndexData {{ use_op = {}; reason = {}; index = {} }}))",
                 string_of_use_op(use_op),
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 index
             )
         }
-        ErrorMessage::ETupleUnsafeWrite { reason, use_op } => {
+        ErrorMessage::ETupleUnsafeWrite { loc, use_op } => {
             format!(
                 "ETupleUnsafeWrite {{ reason = {}; use_op = {} }}",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::ETupleElementNotReadable(box ETupleElementNotReadableData {
-            reason,
+            loc,
             index,
             name: _,
             use_op,
+            ..
         }) => {
             format!(
                 "ETupleElementNotReadable(Box::new(ETupleElementNotReadableData {{ reason = {}; index = {}; use_op = {} }}))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 index,
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::ETupleElementNotWritable(box ETupleElementNotWritableData {
-            reason,
+            loc,
             index,
             name: _,
             use_op,
+            ..
         }) => {
             format!(
                 "ETupleElementNotWritable(Box::new(ETupleElementNotWritableData {{ reason = {}; index = {}; use_op = {} }}))",
-                dump_reason(cx, reason),
+                string_of_aloc(None, loc),
                 index,
                 string_of_use_op(use_op)
             )
@@ -2485,33 +2497,28 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::ETupleElementAfterInexactSpread(reason) => {
+        ErrorMessage::ETupleElementAfterInexactSpread(loc) => {
             format!(
                 "ETupleElementAfterInexactSpread ({})",
-                dump_reason(cx, reason)
+                string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::EROArrayWrite((reason1, reason2), use_op) => {
+        ErrorMessage::EROArrayWrite(loc, use_op) => {
             format!(
-                "EROArrayWrite ({}, {}, {})",
-                dump_reason(cx, reason1),
-                dump_reason(cx, reason2),
+                "EROArrayWrite ({}, {})",
+                string_of_aloc(None, loc),
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
             use_op,
-            reason,
-            op_reasons,
+            loc,
             branches: _,
         }) => {
-            let op_reasons_str: Vec<String> =
-                op_reasons.iter().map(|r| dump_reason(cx, r)).collect();
             format!(
-                "EUnionSpeculationFailed {{ use_op = {}; reason = {}; op_reasons = [{}]; branches = _ }}",
+                "EUnionSpeculationFailed {{ use_op = {}; loc = {}; branches = _ }}",
                 string_of_use_op(use_op),
-                dump_reason(cx, reason),
-                op_reasons_str.join(",")
+                string_of_aloc(None, loc),
             )
         }
         ErrorMessage::EIncompatibleWithExact((reason1, reason2), use_op, _) => {
@@ -2575,7 +2582,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "ETooManyTypeArgs ({}, {}, {})",
-                dump_reason(cx, reason_tapp),
+                format_args!(
+                    "{} {:?}",
+                    string_of_aloc(None, &reason_tapp.loc),
+                    reason_tapp.desc
+                ),
                 string_of_aloc(None, arity_loc),
                 maximum_arity
             )
@@ -2587,7 +2598,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "ETooFewTypeArgs ({}, {}, {})",
-                dump_reason(cx, reason_tapp),
+                format_args!(
+                    "{} {:?}",
+                    string_of_aloc(None, &reason_tapp.loc),
+                    reason_tapp.desc
+                ),
                 string_of_aloc(None, arity_loc),
                 minimum_arity
             )
@@ -2724,7 +2739,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             hint_available: _,
             from_generic_function: _,
         } => {
-            format!("EMissingLocalAnnotation ({})", dump_reason(cx, reason))
+            format!(
+                "EMissingLocalAnnotation ({} {:?})",
+                string_of_aloc(None, &reason.loc),
+                reason.desc
+            )
         }
         ErrorMessage::EBindingError(box (_binding_error, loc, x, entry_loc)) => {
             format!(
@@ -2734,12 +2753,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, entry_loc)
             )
         }
-        ErrorMessage::ERecursionLimit(box (reason1, reason2)) => {
-            format!(
-                "ERecursionLimit(Box::new(({}, {})))",
-                dump_reason(cx, reason1),
-                dump_reason(cx, reason2)
-            )
+        ErrorMessage::ERecursionLimit(loc) => {
+            format!("ERecursionLimit({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EUninitializedInstanceProperty(loc, err) => {
             let err_str = match err {
@@ -2845,15 +2860,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EUnreachable(loc) => {
             format!("EUnreachable ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
-            reason,
-            reason_op,
-            use_op,
-        }) => {
+        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { reason, use_op }) => {
             format!(
-                "EInvalidObjectKit(Box::new(EInvalidObjectKitData {{ reason = {}; reason_op = {}; use_op = {} }}))",
+                "EInvalidObjectKit(Box::new(EInvalidObjectKitData {{ reason = {}; use_op = {} }}))",
                 dump_reason(cx, reason),
-                dump_reason(cx, reason_op),
                 string_of_use_op(use_op)
             )
         }
@@ -2941,7 +2951,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EUnsupportedImplements(reason) => {
-            format!("EUnsupportedImplements ({})", dump_reason(cx, reason))
+            format!(
+                "EUnsupportedImplements ({} {:?})",
+                string_of_aloc(None, &reason.loc),
+                reason.desc
+            )
         }
         ErrorMessage::ENotAReactComponent { reason, use_op } => {
             format!(
@@ -2950,25 +2964,20 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EReactElementFunArity(box (reason, _, _)) => {
-            format!("EReactElementFunArity ({})", dump_reason(cx, reason))
+        ErrorMessage::EReactElementFunArity(box (loc, _, _)) => {
+            format!("EReactElementFunArity ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EFunctionCallExtraArg(box (
-            unused_reason,
-            def_reason,
-            param_count,
-            use_op,
-        )) => {
+        ErrorMessage::EFunctionCallExtraArg(box (loc, def_reason, param_count, use_op)) => {
             format!(
                 "EFunctionCallExtraArg(Box::new(({}, {}, {}, {})))",
-                dump_reason(cx, unused_reason),
+                string_of_aloc(None, loc),
                 dump_reason(cx, def_reason),
                 param_count,
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EUnsupportedSetProto(reason) => {
-            format!("EUnsupportedSetProto ({})", dump_reason(cx, reason))
+        ErrorMessage::EUnsupportedSetProto(loc) => {
+            format!("EUnsupportedSetProto ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EDuplicateModuleProvider(box EDuplicateModuleProviderData {
             module_name,
@@ -3312,7 +3321,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     "EEnumError (EnumInvalidMemberAccess ({}) ({}) ({}) ({}))",
                     member_str,
                     suggestion_str,
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason)
                 )
             }
@@ -3341,7 +3350,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }) => {
                 format!(
                     "EEnumError (EnumInvalidObjectUtilType ({}) ({}))",
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason)
                 )
             }
@@ -3355,13 +3364,17 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     dump_reason(cx, enum_reason)
                 )
             }
-            EnumErrorKind::EnumNotIterable { reason, for_in } => {
+            EnumErrorKind::EnumNotIterable(reason) => {
                 format!(
-                    "EEnumError (EnumNotIterable ({}) (for_in = {}))",
-                    dump_reason(cx, reason),
-                    for_in
+                    "EEnumError (EnumNotIterable ({} {:?}))",
+                    string_of_aloc(None, &reason.loc),
+                    reason.desc
                 )
             }
+            EnumErrorKind::EnumNotIterableForIn(reason) => format!(
+                "EEnumError (EnumNotIterableForIn ({}))",
+                dump_reason(cx, reason)
+            ),
             EnumErrorKind::EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
                 case_test_loc,
                 prev_check_loc,
@@ -3398,7 +3411,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 };
                 format!(
                     "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason),
                     left_to_check.join(", "),
                     default_str
@@ -3410,7 +3423,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }) => {
                 format!(
                     "EEnumError (EnumUnknownNotChecked ({}) ({}))",
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason)
                 )
             }
@@ -3438,7 +3451,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }) => {
                 format!(
                     "EEnumError (EnumMemberUsedAsType ({}) ({}))",
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason)
                 )
             }
@@ -3472,7 +3485,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }) => {
                 format!(
                     "EEnumError (EnumInvalidAbstractUse ({}) ({}))",
-                    dump_reason(cx, reason),
+                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
                     dump_reason(cx, enum_reason)
                 )
             }
@@ -3660,11 +3673,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::ENestedComponent(r) => {
-            format!("ENestedComponent ({})", dump_reason(cx, r))
+        ErrorMessage::ENestedComponent(loc) => {
+            format!("ENestedComponent ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::ENestedHook(r) => {
-            format!("ENestedHook ({})", dump_reason(cx, r))
+        ErrorMessage::ENestedHook(loc) => {
+            format!("ENestedHook ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData { declaration, .. }) => {
             format!(
@@ -3690,7 +3703,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 "EMethodUnbinding ({}) ({}) ({})",
                 string_of_use_op(use_op),
                 dump_reason(cx, reason_op),
-                dump_reason(cx, reason_prop)
+                string_of_aloc(None, &reason_prop.loc)
             )
         }
         ErrorMessage::EHookIncompatible(box EHookIncompatibleData {
@@ -3743,11 +3756,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 dump_reason(cx, reason)
             )
         }
-        ErrorMessage::ETrivialRecursiveDefinition(box (loc, reason)) => {
+        ErrorMessage::ETrivialRecursiveDefinition(reason) => {
             format!(
                 "ETrivialRecursiveDefinition ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, reason)
+                string_of_aloc(None, &reason.loc),
+                format_args!("{:?}", reason.desc)
             )
         }
         ErrorMessage::EDefinitionCycle(_) => "EDefinitionCycle".to_string(),
@@ -3804,14 +3817,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!("EVarianceKeyword ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData {
-            reason_out,
+            loc,
             reason_l,
             reason_r,
             kind,
         }) => {
             format!(
                 "EInvalidBinaryArith ({}, {}, {}, {:?})",
-                dump_reason(cx, reason_out),
+                string_of_aloc(None, loc),
                 dump_reason(cx, reason_l),
                 dump_reason(cx, reason_r),
                 kind
@@ -3908,12 +3921,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!("ECannotCallReactComponent ({})", dump_reason(cx, reason))
         }
         ErrorMessage::ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
-            reason,
+            return_reason,
             ..
         }) => {
             format!(
                 "ENegativeTypeGuardConsistency ({})",
-                dump_reason(cx, reason)
+                string_of_aloc(None, &return_reason.loc)
             )
         }
         ErrorMessage::EMatchError(e) => match e {
@@ -4088,13 +4101,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EIllegalAssertOperator(box EIllegalAssertOperatorData {
             obj,
-            op,
+            op_loc,
             specialized,
         }) => {
             format!(
                 "EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {{obj={}, op={}, specialized={}}}))",
                 dump_reason(cx, obj),
-                dump_reason(cx, op),
+                string_of_aloc(None, op_loc),
                 specialized
             )
         }
@@ -4115,10 +4128,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, read_loc)
             )
         }
-        ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (reason, _)) => {
+        ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (loc, _)) => {
             format!(
                 "ETemporaryHardcodedErrorForPrototyping(Box::new(({}, _)))",
-                dump_reason(cx, reason)
+                string_of_aloc(None, loc)
             )
         }
         ErrorMessage::ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
@@ -4139,26 +4152,20 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EConstantCondition(box EConstantConditionData {
             loc,
             is_truthy,
-            show_warning,
+            warning,
             constant_condition_kind,
-            reason,
         }) => {
             let kind_str = match constant_condition_kind {
                 ConstantConditionKind::UnawaitedPromise => "UnawaitedPromise",
                 ConstantConditionKind::UncalledFunction => "UncalledFunction",
                 ConstantConditionKind::ConstCondGeneral => "General",
             };
-            let reason_str = match reason {
-                Some(r) => dump_reason(cx, r),
-                None => "None".to_string(),
-            };
             format!(
-                "EInvalidComparison ({}). is_truthy={} show_warning={} constant_condition_kind={} reason={}",
+                "EInvalidComparison ({}). is_truthy={} warning={:?} constant_condition_kind={}",
                 string_of_aloc(None, loc),
                 is_truthy,
-                show_warning,
-                kind_str,
-                reason_str
+                warning,
+                kind_str
             )
         }
         ErrorMessage::EDeclareComponentInvalidParam { loc, kind } => {

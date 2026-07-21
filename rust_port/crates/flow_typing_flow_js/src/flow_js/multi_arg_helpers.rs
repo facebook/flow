@@ -225,10 +225,7 @@ pub(super) fn multiflow_partial<'cx>(
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EFunctionCallExtraArg(Box::new((
-                            flow_common::reason::mk_reason(
-                                VirtualReasonDesc::RFunctionUnusedArgument,
-                                reason_of_t(first_unused_arg).loc().dupe(),
-                            ),
+                            reason_of_t(first_unused_arg).loc().dupe(),
                             def_reason.dupe(),
                             original_parlist_len as i32,
                             use_op.dupe(),
@@ -548,7 +545,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     let reason = reason_of_resolved_param(arg);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::ETupleElementAfterInexactSpread(reason.dupe()),
+                        ErrorMessage::ETupleElementAfterInexactSpread(reason.loc().dupe()),
                     )?;
                 }
                 // match arg with
