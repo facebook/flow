@@ -1,10 +1,15 @@
 {
   "private": true,
-  "workspaces": [
-    "newtests",
-    "packages/flow-dev-tools",
-    "packages/flow-remove-types"
-  ],
+  "workspaces": {
+    "packages": [
+      "newtests",
+      "packages/flow-dev-tools",
+      "packages/flow-remove-types"
+    ],
+    "nohoist": [
+      "flow-remove-types/**"
+    ]
+  },
   "resolutions": {
     "handlebars": ">=4.0.14",
     "lodash": ">=4.17.14",
