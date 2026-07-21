@@ -13,11 +13,14 @@ import {
   useEffect,
   useRef,
   useContext,
+  useMemo,
   type MixedElement,
 } from 'react';
 import clsx from 'clsx';
 import {Highlight} from 'prism-react-renderer';
 import copy from 'copy-text-to-clipboard';
+import * as LZString from 'lz-string';
+import {useBaseUrlUtils} from '@docusaurus/useBaseUrl';
 import {usePrismTheme} from '@docusaurus/theme-common';
 import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
@@ -153,6 +156,7 @@ export default component FlowCheckCodeBlock(
   }, []);
 
   const button = useRef<React.ElementRef<'button'> | null>(null);
+  const {withBaseUrl} = useBaseUrlUtils();
   const defaultPrismTheme = usePrismTheme();
   const overrideTheme = useContext(CodeThemeContext);
   const prismTheme = overrideTheme ?? defaultPrismTheme;
@@ -187,6 +191,21 @@ export default component FlowCheckCodeBlock(
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
   };
+
+  // Load the example into Try Flow via its URL hash. Format `0` carries the
+  // code alone (see getHashedValue in try-flow/TryFlow.js); flow-check blocks
+  // have no per-example config or version, so code-only round-trips exactly.
+  // compressToEncodedURIComponent('') is '', which getHashedValue rejects, so
+  // an empty block has no valid Try URL and we hide the button below.
+  const tryFlowUrl = useMemo(
+    () =>
+      code === ''
+        ? null
+        : withBaseUrl('/try/') +
+          '#0' +
+          LZString.compressToEncodedURIComponent(code),
+    [code, withBaseUrl],
+  );
 
   return (
     <Highlight
@@ -308,30 +327,53 @@ export default component FlowCheckCodeBlock(
                 );
               })()}
 
-            <button
-              ref={button}
-              type="button"
-              aria-label={translate({
-                id: 'theme.CodeBlock.copyButtonAriaLabel',
-                message: '',
-                description: 'The ARIA label for copy code blocks button',
-              })}
-              className={clsx(styles.copyButton, 'clean-btn')}
-              onClick={handleCopyCode}>
-              {showCopied ? (
-                <Translate
-                  id="theme.CodeBlock.copied"
-                  description="The copied button label on code blocks">
-                  Copied
-                </Translate>
-              ) : (
-                <Translate
-                  id="theme.CodeBlock.copy"
-                  description="The copy button label on code blocks">
-                  Copy
-                </Translate>
+            <div className={styles.buttonGroup}>
+              {tryFlowUrl != null && (
+                <a
+                  className={clsx(styles.tryButton, 'clean-btn')}
+                  href={tryFlowUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={translate({
+                    id: 'theme.CodeBlock.tryButtonAriaLabel',
+                    message:
+                      'Open this example in Try Flow (opens in a new tab)',
+                    description:
+                      'The ARIA label for the Try button on flow-check code blocks',
+                  })}>
+                  <Translate
+                    id="theme.CodeBlock.try"
+                    description="The try button label on flow-check code blocks">
+                    Try
+                  </Translate>
+                </a>
               )}
-            </button>
+
+              <button
+                ref={button}
+                type="button"
+                aria-label={translate({
+                  id: 'theme.CodeBlock.copyButtonAriaLabel',
+                  message: '',
+                  description: 'The ARIA label for copy code blocks button',
+                })}
+                className={clsx(styles.copyButton, 'clean-btn')}
+                onClick={handleCopyCode}>
+                {showCopied ? (
+                  <Translate
+                    id="theme.CodeBlock.copied"
+                    description="The copied button label on code blocks">
+                    Copied
+                  </Translate>
+                ) : (
+                  <Translate
+                    id="theme.CodeBlock.copy"
+                    description="The copy button label on code blocks">
+                    Copy
+                  </Translate>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

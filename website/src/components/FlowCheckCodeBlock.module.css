@@ -31,22 +31,44 @@
   border-radius: 0;
 }
 
-.copyButton {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--ifm-global-radius);
-  color: var(--ifm-color-white);
-  opacity: 0;
-  user-select: none;
-  padding: 0.4rem 0.5rem;
+/* Holds the Try and Copy buttons in the top-right corner and drives the
+   shared hover-reveal, so the two buttons always fade in and out together. */
+.buttonGroup {
   position: absolute;
-  right: calc(var(--ifm-pre-padding) / 2);
   top: calc(var(--ifm-pre-padding) / 2);
+  right: calc(var(--ifm-pre-padding) / 2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
   transition: opacity 200ms ease-in-out;
 }
 
-.codeBlockTitle:hover + .codeBlockContent .copyButton,
-.codeBlockContent:hover > .copyButton,
-.copyButton:focus {
+.copyButton,
+.tryButton {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--ifm-global-radius);
+  color: var(--ifm-color-white);
+  font-size: 0.8rem;
+  user-select: none;
+  padding: 0.4rem 0.5rem;
+}
+
+/* On docs pages these blocks render inside .markdown, whose prose-link rule
+   (custom.css) underlines every <a> and recolors it on hover. The Try button
+   is an anchor, so keep it identical to the Copy button: no underline in any
+   state, always white. Scoped through .codeBlockContent to outweigh that rule.
+   line-height: normal matches the anchor's height to the <button>. */
+.codeBlockContent .buttonGroup .tryButton,
+.codeBlockContent .buttonGroup .tryButton:hover {
+  color: var(--ifm-color-white);
+  line-height: normal;
+  text-decoration: none;
+}
+
+.codeBlockTitle:hover + .codeBlockContent .buttonGroup,
+.codeBlockContent:hover > .buttonGroup,
+.buttonGroup:focus-within {
   opacity: 1;
 }
 
