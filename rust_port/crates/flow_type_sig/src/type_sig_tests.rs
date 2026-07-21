@@ -20696,6 +20696,672 @@ Builtin global type Foo
 }
 
 #[test]
+fn builtin_interface_merge_tparam_defaults() {
+    let input = r#"
+        interface Foo<T, U> {
+          a: T;
+        }
+        interface Foo<X, Y = X> {
+          b: Y;
+        }
+    "#;
+    let output = print_builtins(vec![input]);
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [1:13-19]
+2. [1:14-15]
+3. [1:17-18]
+4. [2:2-3]
+5. [2:5-6]
+6. [4:21-22]
+7. [5:2-3]
+8. [5:5-6]
+9. [0:0]
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Poly(
+            (
+                1,
+                [
+                    TParam {
+                        name_loc: 2,
+                        name: "T",
+                        polarity: Neutral,
+                        bound: None,
+                        default: None,
+                        is_const: false,
+                    },
+                    TParam {
+                        name_loc: 3,
+                        name: "U",
+                        polarity: Neutral,
+                        bound: None,
+                        default: Some(
+                            Annot(
+                                Bound(
+                                    AnnotBound {
+                                        ref_loc: 6,
+                                        name: "T",
+                                    },
+                                ),
+                            ),
+                        ),
+                        is_const: false,
+                    },
+                ],
+            ),
+        ),
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    (
+                        Some(
+                            4,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 5,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+                "b": InterfaceField(
+                    (
+                        Some(
+                            7,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 8,
+                                    name: "U",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            abstract_: false,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 9,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                9,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 9,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+Builtin global value globalThis
+Builtin global type Foo
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&output));
+}
+
+#[test]
+fn builtin_interface_merge_repeated_tparam_defaults() {
+    let input = r#"
+        interface Foo<T = string> {
+          a: T;
+        }
+        interface Foo<U = number> {
+          b: U;
+        }
+    "#;
+    let output = print_builtins(vec![input]);
+    let expected_output = r#"
+Locs:
+0. [1:10-13]
+1. [1:13-25]
+2. [1:14-15]
+3. [1:18-24]
+4. [2:2-3]
+5. [2:5-6]
+6. [5:2-3]
+7. [5:5-6]
+8. [0:0]
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 0,
+        name: "Foo",
+        tparams: Poly(
+            (
+                1,
+                [
+                    TParam {
+                        name_loc: 2,
+                        name: "T",
+                        polarity: Neutral,
+                        bound: None,
+                        default: Some(
+                            Annot(
+                                String(
+                                    3,
+                                ),
+                            ),
+                        ),
+                        is_const: false,
+                    },
+                ],
+            ),
+        ),
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    (
+                        Some(
+                            4,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 5,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+                "b": InterfaceField(
+                    (
+                        Some(
+                            6,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 7,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            abstract_: false,
+        },
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 8,
+        name: "globalThis",
+        values: {
+            "globalThis": (
+                8,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+Builtin global value globalThis
+Builtin global type Foo
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&output));
+}
+
+#[test]
+fn builtin_declare_class_interface_merge_tparam_default() {
+    let input = r#"
+        declare class C<T> {
+          x: T;
+        }
+        interface C<U = string> {
+          y: U;
+        }
+    "#;
+    let output = print_builtins(vec![input]);
+    let expected_output = r#"
+Locs:
+0. [1:14-15]
+1. [1:15-18]
+2. [1:16-17]
+3. [2:2-3]
+4. [2:5-6]
+5. [4:16-22]
+6. [5:2-3]
+7. [5:5-6]
+8. [0:0]
+Local defs:
+0. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 0,
+        nominal_id_loc: 0,
+        name: "C",
+        def: DeclareClassSig {
+            tparams: Poly(
+                (
+                    1,
+                    [
+                        TParam {
+                            name_loc: 2,
+                            name: "T",
+                            polarity: Neutral,
+                            bound: None,
+                            default: Some(
+                                Annot(
+                                    String(
+                                        5,
+                                    ),
+                                ),
+                            ),
+                            is_const: false,
+                        },
+                    ],
+                ),
+            ),
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {
+                "x": InterfaceField(
+                    (
+                        Some(
+                            3,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 4,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            proto_props: {
+                "y": InterfaceField(
+                    (
+                        Some(
+                            6,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 7,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            static_dict: None,
+            abstract_: false,
+            abstract_props: {},
+        },
+        namespace_types: {},
+    },
+)
+1. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 8,
+        name: "globalThis",
+        values: {
+            "C": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                8,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 8,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value C
+Builtin global value globalThis
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&output));
+}
+
+#[test]
+fn builtin_namespace_merge_tparam_defaults() {
+    let input = r#"
+        declare namespace N {
+          interface Foo<T> { a: T; }
+          declare class C<T> { x: T; }
+        }
+        declare namespace N {
+          interface Foo<U = string> { b: U; }
+          interface C<U = string> { y: U; }
+        }
+    "#;
+    let output = print_builtins(vec![input]);
+    let expected_output = r#"
+Locs:
+0. [1:18-19]
+1. [2:12-15]
+2. [2:15-18]
+3. [2:16-17]
+4. [2:21-22]
+5. [2:24-25]
+6. [3:16-17]
+7. [3:17-20]
+8. [3:18-19]
+9. [3:23-24]
+10. [3:26-27]
+11. [6:20-26]
+12. [6:30-31]
+13. [6:33-34]
+14. [7:18-24]
+15. [7:28-29]
+16. [7:31-32]
+17. [0:0]
+Local defs:
+0. Interface(
+    DefInterface {
+        id_loc: 1,
+        name: "Foo",
+        tparams: Poly(
+            (
+                2,
+                [
+                    TParam {
+                        name_loc: 3,
+                        name: "T",
+                        polarity: Neutral,
+                        bound: None,
+                        default: Some(
+                            Annot(
+                                String(
+                                    11,
+                                ),
+                            ),
+                        ),
+                        is_const: false,
+                    },
+                ],
+            ),
+        ),
+        def: InterfaceSig {
+            extends: [],
+            props: {
+                "a": InterfaceField(
+                    (
+                        Some(
+                            4,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 5,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+                "b": InterfaceField(
+                    (
+                        Some(
+                            12,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 13,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_props: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            abstract_: false,
+        },
+    },
+)
+1. DeclareClassBinding(
+    DefDeclareClassBinding {
+        id_loc: 6,
+        nominal_id_loc: 6,
+        name: "C",
+        def: DeclareClassSig {
+            tparams: Poly(
+                (
+                    7,
+                    [
+                        TParam {
+                            name_loc: 8,
+                            name: "T",
+                            polarity: Neutral,
+                            bound: None,
+                            default: Some(
+                                Annot(
+                                    String(
+                                        14,
+                                    ),
+                                ),
+                            ),
+                            is_const: false,
+                        },
+                    ],
+                ),
+            ),
+            extends: ClassImplicitExtends,
+            mixins: [],
+            implements: [],
+            static_props: {},
+            own_props: {
+                "x": InterfaceField(
+                    (
+                        Some(
+                            9,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 10,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            proto_props: {
+                "y": InterfaceField(
+                    (
+                        Some(
+                            15,
+                        ),
+                        Annot(
+                            Bound(
+                                AnnotBound {
+                                    ref_loc: 16,
+                                    name: "T",
+                                },
+                            ),
+                        ),
+                        Neutral,
+                    ),
+                ),
+            },
+            computed_own_props: [],
+            computed_proto_props: [],
+            computed_static_props: [],
+            static_calls: [],
+            calls: [],
+            constructs: [],
+            dict: None,
+            static_dict: None,
+            abstract_: false,
+            abstract_props: {},
+        },
+        namespace_types: {},
+    },
+)
+2. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 0,
+        name: "N",
+        values: {
+            "C": (
+                6,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "Foo": (
+                1,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 1,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+3. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 17,
+        name: "globalThis",
+        values: {
+            "N": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                17,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 17,
+                            index: 3,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {},
+    },
+)
+Builtin global value N
+Builtin global value globalThis
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&output));
+}
+
+#[test]
 fn builtin_interface_merge_tparam_mismatch() {
     let input = r#"
         interface Foo<T> {

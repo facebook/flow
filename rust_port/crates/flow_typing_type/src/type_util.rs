@@ -1076,9 +1076,11 @@ where
                 originate_from_import,
             })),
             MergedDeclaration {
+                conflict,
                 first_decl,
                 current_decl,
             } => MergedDeclaration {
+                conflict: conflict.dupe(),
                 first_decl: mod_reason(first_decl),
                 current_decl: mod_reason(current_decl),
             },

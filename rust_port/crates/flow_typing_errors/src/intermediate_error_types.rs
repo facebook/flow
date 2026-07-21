@@ -33,6 +33,7 @@ use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
 use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::SignatureError;
+use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
 use flow_typing_type::type_::union_rep::OptimizedError;
@@ -1149,6 +1150,7 @@ pub enum RootMessage<L: Dupe> {
         originate_from_import: bool,
     },
     RootCannotMergeDeclaration {
+        conflict: MergedDeclarationConflict,
         first_decl: VirtualReason<L>,
     },
     RootCannotCreateElement(VirtualReasonDesc<L>),

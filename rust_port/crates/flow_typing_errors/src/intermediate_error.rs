@@ -38,6 +38,7 @@ use flow_typing_type::type_::FunCallMethodData;
 use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
+use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -1557,6 +1558,7 @@ where
                             }
 
                             VirtualRootUseOp::MergedDeclaration {
+                                conflict,
                                 first_decl,
                                 current_decl,
                             } => root(
@@ -1564,6 +1566,7 @@ where
                                 frames,
                                 current_decl,
                                 RootMessage::RootCannotMergeDeclaration {
+                                    conflict: conflict.dupe(),
                                     first_decl: first_decl.clone(),
                                 },
                                 custom_error_message,
@@ -4671,12 +4674,22 @@ where
                         )
                     }
                 }
-                RootMessage::RootCannotMergeDeclaration { first_decl } => (
+                RootMessage::RootCannotMergeDeclaration {
+                    conflict,
+                    first_decl,
+                } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
                         text("Cannot merge this interface declaration with previous declaration "),
                         friendly::ref_map(&loc_of_aloc, first_decl),
-                        text(" because of conflicting property types"),
+                        text(match conflict {
+                            MergedDeclarationConflict::Property => {
+                                " because of conflicting property types"
+                            }
+                            MergedDeclarationConflict::TypeParamDefault => {
+                                " because of conflicting type parameter defaults"
+                            }
+                        }),
                     ]),
                 ),
                 RootMessage::RootCannotCreateElement(component) => (

@@ -1068,6 +1068,24 @@ pub struct TypeArgCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd + Ord>
 #[derive(
     Debug,
     Clone,
+    Copy,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum MergedDeclarationConflict {
+    Property,
+    TypeParamDefault,
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
@@ -1113,6 +1131,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
     ConformToCommonInterface(Box<ConformToCommonInterfaceData<L>>),
     MergedDeclaration {
+        conflict: MergedDeclarationConflict,
         first_decl: VirtualReason<L>,
         current_decl: VirtualReason<L>,
     },

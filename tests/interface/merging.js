@@ -36,3 +36,19 @@ three_way.first as string; // ok
 three_way.second as number; // ok
 three_way.third as boolean; // ok
 three_way.first as number; // error: string ~> number
+
+// Type parameter defaults are normalized positionally before comparison.
+interface SameDefault<T = string> { a: T; }
+interface SameDefault<U = string> { b: U; }
+
+interface RenamedDefault<T, U = T> { a: U; }
+interface RenamedDefault<X, Y = X> { b: Y; }
+
+// A conflicting repeated default is rejected during post-inference validation.
+interface ConflictingDefault<T = string> { a: T; }
+interface ConflictingDefault<U = number> { b: U; } // ERROR
+
+// The first declaration that supplies a default is the comparison baseline.
+interface LaterDefault<T> { a: T; }
+interface LaterDefault<U = string> { b: U; }
+interface LaterDefault<V = number> { c: V; } // ERROR

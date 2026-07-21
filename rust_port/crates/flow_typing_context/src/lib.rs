@@ -84,6 +84,7 @@ use flow_typing_type::type_::EvalIdCacheMap;
 use flow_typing_type::type_::EvalReposCacheMap;
 use flow_typing_type::type_::FixCacheMap;
 use flow_typing_type::type_::IdCacheMap;
+use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::Type;
@@ -1568,12 +1569,10 @@ impl<'cx> Context<'cx> {
     }
 
     /// The list of "these two types should be the same, and here's why"
-    /// obligations that interface declaration merging produces. Each tuple
-    /// is one shared field between two merging declarations: post-inference
-    /// will substitute the current declaration's type parameters into the
-    /// canonical declaration's namespace, `unify` the resulting types, and
-    /// anyone who wrote disagreeing types gets a `MergedDeclaration` error
-    /// pointing at both decls.
+    /// obligations that interface declaration merging produces. Post-inference
+    /// substitutes the current declaration's type parameters into the earlier
+    /// declaration's namespace and unifies shared fields and repeated type
+    /// parameter defaults.
     pub fn interface_merge_unify_tasks(
         &self,
     ) -> Vec<(UseOp, FlowOrdMap<SubstName, Type>, Type, Type)> {
@@ -1584,6 +1583,7 @@ impl<'cx> Context<'cx> {
             .declare_class_interface_merge_conflicts
             .dupe();
         let fields = self.0.ccx.merging_interface_field_types.borrow();
+        let typeparams = self.0.ccx.merging_interface_typeparams.borrow();
         let walk =
             |good_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
              bad_reason: &dyn Fn(ALoc) -> VirtualReason<ALoc>,
@@ -1600,6 +1600,7 @@ impl<'cx> Context<'cx> {
                         };
                         let current_decl = bad_reason(bad_loc.dupe());
                         let use_op = UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                            conflict: MergedDeclarationConflict::Property,
                             first_decl: first_decl.dupe(),
                             current_decl,
                         }));
@@ -1612,6 +1613,63 @@ impl<'cx> Context<'cx> {
                                     bad_t.dupe(),
                                     good_t.dupe(),
                                 ));
+                            }
+                        }
+                    }
+
+                    let declaration_locs: Vec<&ALoc> =
+                        std::iter::once(good_loc).chain(bad_locs.iter()).collect();
+                    let declaration_tparams: Option<Vec<_>> = declaration_locs
+                        .iter()
+                        .map(|loc| typeparams.get(*loc))
+                        .collect();
+                    let Some(declaration_tparams) = declaration_tparams else {
+                        continue;
+                    };
+                    let Some(arity) = declaration_tparams.first().map(|tparams| tparams.len())
+                    else {
+                        continue;
+                    };
+                    if declaration_tparams
+                        .iter()
+                        .any(|tparams| tparams.len() != arity)
+                    {
+                        continue;
+                    }
+
+                    let mut first_defaults: Vec<Option<(ALoc, Type)>> =
+                        std::iter::repeat_with(|| None).take(arity).collect();
+                    for (decl_loc, tparams) in declaration_locs.iter().zip(declaration_tparams) {
+                        for (index, (tparam, _)) in tparams.iter().enumerate() {
+                            let Some(default) = tparam.default.as_ref() else {
+                                continue;
+                            };
+                            match &first_defaults[index] {
+                                None => {
+                                    first_defaults[index] =
+                                        Some(((*decl_loc).dupe(), default.dupe()));
+                                }
+                                Some((first_loc, first_default)) => {
+                                    let reason_for_loc = |loc: &ALoc| {
+                                        if loc == good_loc {
+                                            good_reason(loc.dupe())
+                                        } else {
+                                            bad_reason(loc.dupe())
+                                        }
+                                    };
+                                    let use_op =
+                                        UseOp::Op(Arc::new(RootUseOp::MergedDeclaration {
+                                            conflict: MergedDeclarationConflict::TypeParamDefault,
+                                            first_decl: reason_for_loc(first_loc),
+                                            current_decl: reason_for_loc(decl_loc),
+                                        }));
+                                    acc.push((
+                                        use_op,
+                                        self.interface_tparam_subst_map(decl_loc, first_loc),
+                                        default.dupe(),
+                                        first_default.dupe(),
+                                    ));
+                                }
                             }
                         }
                     }

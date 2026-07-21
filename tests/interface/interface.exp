@@ -884,6 +884,48 @@ References:
                           ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- merging.js:49:11
+
+Cannot merge this interface declaration with previous declaration interface type [1] because of conflicting type
+parameter defaults because number [2] is incompatible with string [3]. [incompatible-type]
+
+   merging.js:49:11
+   49| interface ConflictingDefault<U = number> { b: U; } // ERROR
+                 ^^^^^^^^^^^^^^^^^^
+
+References:
+   merging.js:48:11
+   48| interface ConflictingDefault<T = string> { a: T; }
+                 ^^^^^^^^^^^^^^^^^^ [1]
+   merging.js:49:34
+   49| interface ConflictingDefault<U = number> { b: U; } // ERROR
+                                        ^^^^^^ [2]
+   merging.js:48:34
+   48| interface ConflictingDefault<T = string> { a: T; }
+                                        ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- merging.js:54:11
+
+Cannot merge this interface declaration with previous declaration interface type [1] because of conflicting type
+parameter defaults because number [2] is incompatible with string [3]. [incompatible-type]
+
+   merging.js:54:11
+   54| interface LaterDefault<V = number> { c: V; } // ERROR
+                 ^^^^^^^^^^^^
+
+References:
+   merging.js:53:11
+   53| interface LaterDefault<U = string> { b: U; }
+                 ^^^^^^^^^^^^ [1]
+   merging.js:54:28
+   54| interface LaterDefault<V = number> { c: V; } // ERROR
+                                  ^^^^^^ [2]
+   merging.js:53:28
+   53| interface LaterDefault<U = string> { b: U; }
+                                  ^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------ primitives.js:1:1
 
 Cannot cast `undefined` to interface type because undefined [1] is incompatible with interface type [2].
@@ -1406,4 +1448,4 @@ References:
 
 
 
-Found 83 errors
+Found 85 errors

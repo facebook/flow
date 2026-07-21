@@ -29,3 +29,12 @@ pair.second as number; // ERROR
 pair.same("") as number;
 pair.same("") as string; // ERROR
 pair.same(0); // ERROR
+
+declare class SameClassDefault<T = string> {}
+interface SameClassDefault<U = string> {}
+
+interface SameReverseClassDefault<T = string> {}
+declare class SameReverseClassDefault<U = string> {}
+
+declare class ConflictingClassDefault<T = string> {}
+interface ConflictingClassDefault<U = number> {} // ERROR

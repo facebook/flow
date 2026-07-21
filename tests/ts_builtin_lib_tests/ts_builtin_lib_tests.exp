@@ -580,20 +580,6 @@ Illegal name. [unsupported-syntax]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------- <BUILTINS>/lib.es2024.sharedmemory.d.ts:41:27
-
-Cannot use `BigInt64Array` [1] without 1 type argument. [missing-type-arg]
-
-   <BUILTINS>/lib.es2024.sharedmemory.d.ts:41:27
-    41|     waitAsync(typedArray: BigInt64Array, index: number, value: bigint, timeout?: number): { async: false; value: "not-equal" | "timed-out"; } | { async: true; value: Promise<"ok" | "timed-out">; };
-                                  ^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2023.array.d.ts:783:24
-   783| interface BigInt64Array<TArrayBuffer extends ArrayBufferLike> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:229:39
 
 Cannot resolve name `U`. [cannot-resolve-name]
@@ -682,4 +668,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 70 errors
+Found 69 errors

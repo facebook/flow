@@ -1296,7 +1296,7 @@ fn check_general_post_inference_validations<'cx>(cx: &Context<'cx>) -> Result<()
     Ok(())
 }
 
-fn check_interface_merge_prop_conflicts<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
+fn check_interface_merge_conflicts<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
     for (use_op, tparam_subst_map, bad_t, good_t) in cx.interface_merge_unify_tasks().iter() {
         let bad_t = type_subst::subst(
             cx,
@@ -1881,7 +1881,7 @@ pub fn post_merge_checks<'cx>(
     }
     check_polarity_fn(cx)?;
     check_general_post_inference_validations(cx)?;
-    check_interface_merge_prop_conflicts(cx)?;
+    check_interface_merge_conflicts(cx)?;
     detect_sketchy_null_checks(cx, tast);
     detect_non_voidable_properties(cx);
     detect_test_prop_misses(cx);

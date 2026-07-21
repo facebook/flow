@@ -445,5 +445,26 @@ References:
                                         ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- type_param_renaming.js:40:11
 
-Found 26 errors
+Cannot merge this interface declaration with previous declaration class interface type [1] because of conflicting type
+parameter defaults because number [2] is incompatible with string [3]. [incompatible-type]
+
+   type_param_renaming.js:40:11
+   40| interface ConflictingClassDefault<U = number> {} // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   type_param_renaming.js:39:15
+   39| declare class ConflictingClassDefault<T = string> {}
+                     ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   type_param_renaming.js:40:39
+   40| interface ConflictingClassDefault<U = number> {} // ERROR
+                                             ^^^^^^ [2]
+   type_param_renaming.js:39:43
+   39| declare class ConflictingClassDefault<T = string> {}
+                                                 ^^^^^^ [3]
+
+
+
+Found 27 errors

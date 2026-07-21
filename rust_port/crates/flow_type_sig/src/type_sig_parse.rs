@@ -1719,13 +1719,6 @@ pub(super) mod scope {
         );
     }
 
-    fn tparams_arity(tparams: &TParams<LocNode<'_>, Parsed<'_, '_>>) -> usize {
-        match tparams {
-            TParams::Mono => 0,
-            TParams::Poly(box (_, params)) => params.len(),
-        }
-    }
-
     mod type_param_renaming {
         use std::collections::BTreeSet;
 
@@ -2688,6 +2681,37 @@ pub(super) mod scope {
             }
         }
 
+        pub(super) fn merge_tparams<'arena, 'ast>(
+            existing_tparams: &mut TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+            current_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) -> bool {
+            match (existing_tparams, current_tparams) {
+                (TParams::Mono, TParams::Mono) => true,
+                (
+                    TParams::Poly(box (_, existing_params)),
+                    TParams::Poly(box (_, current_params)),
+                ) if existing_params.len() == current_params.len() => {
+                    let rename_map = current_params
+                        .iter()
+                        .zip(existing_params.iter())
+                        .map(|(current, existing)| (current.name.dupe(), existing.name.dupe()))
+                        .collect();
+                    for (existing_tparam, current_tparam) in
+                        existing_params.iter_mut().zip(current_params)
+                    {
+                        if existing_tparam.default.is_none() {
+                            existing_tparam.default = current_tparam
+                                .default
+                                .as_ref()
+                                .map(|default| rename_tparams_in_parsed(&rename_map, default));
+                        }
+                    }
+                    true
+                }
+                _ => false,
+            }
+        }
+
         pub(super) fn rename_interface_sig<'arena, 'ast>(
             from_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
             to_tparams: &TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
@@ -2956,10 +2980,13 @@ pub(super) mod scope {
             let merge_name = name.dupe();
             let merged_def = Lazy::new(Box::new(
                 move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
-                    let forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
+                    let mut forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
                     match new_def.get_forced(opts, scopes, tbls) {
                         Def::Interface(iface) => {
-                            if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface.tparams) {
+                            if type_param_renaming::merge_tparams(
+                                &mut forced_dc.tparams,
+                                &iface.tparams,
+                            ) {
                                 let iface_id_loc_local = iface.id_loc.dupe();
                                 let iface_def_local = iface.def.clone();
                                 merge_interface_into_declare_class_sig(
@@ -3042,9 +3069,11 @@ pub(super) mod scope {
                                 let new_val = new_def.get_forced(opts, scopes, tbls);
                                 match (old_val, new_val) {
                                     (Def::Interface(old_iface), Def::Interface(new_iface)) => {
-                                        if tparams_arity(&old_iface.tparams)
-                                            == tparams_arity(&new_iface.tparams)
-                                        {
+                                        let mut merged_tparams = old_iface.tparams.clone();
+                                        if type_param_renaming::merge_tparams(
+                                            &mut merged_tparams,
+                                            &new_iface.tparams,
+                                        ) {
                                             let merged_sig = merge_interface_sigs(
                                                 old_iface.id_loc.dupe(),
                                                 new_iface.id_loc.dupe(),
@@ -3057,7 +3086,7 @@ pub(super) mod scope {
                                             Def::Interface(Box::new(DefInterface {
                                                 id_loc: old_iface.id_loc.dupe(),
                                                 name: old_iface.name.dupe(),
-                                                tparams: old_iface.tparams.clone(),
+                                                tparams: merged_tparams,
                                                 def: merged_sig,
                                             }))
                                         } else {
@@ -3253,9 +3282,11 @@ pub(super) mod scope {
                             let merge_name = name.dupe();
                             Lazy::new(Box::new(
                                 move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
-                                    let forced_dc = def.get_forced(opts, scopes, tbls).clone();
-                                    if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface_tp)
-                                    {
+                                    let mut forced_dc = def.get_forced(opts, scopes, tbls).clone();
+                                    if type_param_renaming::merge_tparams(
+                                        &mut forced_dc.tparams,
+                                        &iface_tp,
+                                    ) {
                                         merge_interface_into_declare_class_sig(
                                             merge_id_loc.dupe(),
                                             iface_id_loc.dupe(),
@@ -4501,7 +4532,11 @@ pub(super) mod scope {
                 let new_val = new_def.get_forced(opts, scopes, tbls);
                 match (old_val, new_val) {
                     (Def::Interface(old_iface), Def::Interface(new_iface)) => {
-                        if tparams_arity(&old_iface.tparams) == tparams_arity(&new_iface.tparams) {
+                        let mut merged_tparams = old_iface.tparams.clone();
+                        if type_param_renaming::merge_tparams(
+                            &mut merged_tparams,
+                            &new_iface.tparams,
+                        ) {
                             let merged_sig = merge_interface_sigs(
                                 old_iface.id_loc.dupe(),
                                 new_iface.id_loc.dupe(),
@@ -4514,7 +4549,7 @@ pub(super) mod scope {
                             Def::Interface(Box::new(DefInterface {
                                 id_loc: old_iface.id_loc.dupe(),
                                 name: old_iface.name.dupe(),
-                                tparams: old_iface.tparams.clone(),
+                                tparams: merged_tparams,
                                 def: merged_sig,
                             }))
                         } else {
@@ -4638,10 +4673,13 @@ pub(super) mod scope {
         let existing_binding_loc = existing_entry.0.dupe();
         let merged_def = Lazy::new(Box::new(
             move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
-                let forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
+                let mut forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
                 match iface_def.get_forced(opts, scopes, tbls) {
                     Def::Interface(iface) => {
-                        if tparams_arity(&forced_dc.tparams) == tparams_arity(&iface.tparams) {
+                        if type_param_renaming::merge_tparams(
+                            &mut forced_dc.tparams,
+                            &iface.tparams,
+                        ) {
                             let iface_id_loc_local = iface.id_loc.dupe();
                             let iface_def_local = iface.def.clone();
                             merge_interface_into_declare_class_sig(
