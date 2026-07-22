@@ -746,8 +746,24 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       }
     }
     if (needsFlowServer) {
-      // We never want a flowCmd to automatically start a server
-      args = [args[0], '--no-auto-start', ...args.slice(1)];
+      // We never want a flowCmd to auto-start a server. `--no-auto-start` binds
+      // to whichever command's parser recognises it, so for a command that only
+      // dispatches to a subcommand (e.g. `fox` -> `ls`/`compile`) it must follow
+      // the subcommand token rather than the parent.
+      const subcommandParents = new Set(['fox']);
+      let commandTokens = 1;
+      if (
+        args.length >= 2 &&
+        subcommandParents.has(args[0]) &&
+        !args[1].startsWith('-')
+      ) {
+        commandTokens = 2;
+      }
+      args = [
+        ...args.slice(0, commandTokens),
+        '--no-auto-start',
+        ...args.slice(commandTokens),
+      ];
     }
     const ret = this._cloneWithAction(async (builder, env) => {
       const [code, stdout, stderr] = await builder.flowCmd(args, stdinFile);
