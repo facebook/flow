@@ -2108,6 +2108,8 @@ pub(super) fn make_options(
                 files_implicitly_include_root,
                 format_bracket_spacing,
                 format_single_quotes,
+                #[cfg(fbcode_build)]
+                    fox: _,
                 gc_worker_custom_major_ratio,
                 gc_worker_custom_minor_max_size,
                 gc_worker_custom_minor_ratio,

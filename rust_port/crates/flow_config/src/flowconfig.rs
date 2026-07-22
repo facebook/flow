@@ -112,6 +112,8 @@ pub mod opts {
         pub format_bracket_spacing: Option<bool>,
         /// prefer single-quoted strings
         pub format_single_quotes: Option<bool>,
+        #[cfg(fbcode_build)]
+        pub fox: bool,
         /// Gc.control's custom_major_ratio
         pub gc_worker_custom_major_ratio: Option<u32>,
         /// Gc.control's custom_minor_max_size
@@ -285,6 +287,8 @@ pub mod opts {
             files_implicitly_include_root: true,
             format_bracket_spacing: None,
             format_single_quotes: None,
+            #[cfg(fbcode_build)]
+            fox: false,
             gc_worker_custom_major_ratio: None,
             gc_worker_custom_minor_max_size: None,
             gc_worker_custom_minor_ratio: None,
@@ -3071,6 +3075,20 @@ pub mod opts {
             parser(values, config).map_err(|err| error_of_opt_error(key, err))?;
         }
 
+        // `experimental.fox` is Meta-only; parsed only under fbcode_build, unrecognized elsewhere.
+        #[cfg(fbcode_build)]
+        if let Some(values) = raw_opts.0.shift_remove("experimental.fox") {
+            parse_boolean(
+                |opts, v| {
+                    opts.fox = v;
+                    Ok(())
+                },
+                values,
+                config,
+            )
+            .map_err(|err| error_of_opt_error("experimental.fox", err))?;
+        }
+
         for (key, values) in raw_opts.0 {
             // If the user specified any options that aren't defined, issue a warning
             let msg = format!("Unsupported option specified! ({})", key);
@@ -4033,6 +4051,57 @@ mod tests {
             );
 
             assert!(matches!(result, Err(Error(2, _))));
+        }
+    }
+
+    #[cfg(fbcode_build)]
+    #[test]
+    fn experimental_fox_is_supported() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "experimental.fox=true".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(warnings) => {
+                assert!(warnings.is_empty());
+                assert!(config.options.fox);
+            }
+            Err(Error(line, message)) => {
+                panic!("experimental.fox errored at line {}: {}", line, message)
+            }
+        }
+    }
+
+    #[cfg(not(fbcode_build))]
+    #[test]
+    fn experimental_fox_is_unsupported_in_open_source() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "experimental.fox=true".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(warnings) => {
+                assert_eq!(warnings.len(), 1);
+                assert_eq!(
+                    warnings[0].1.as_str(),
+                    "Unsupported option specified! (experimental.fox)"
+                );
+            }
+            Err(Error(line, message)) => {
+                panic!("experimental.fox errored at line {}: {}", line, message)
+            }
         }
     }
 }
