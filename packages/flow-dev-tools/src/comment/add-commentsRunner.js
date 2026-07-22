@@ -8,42 +8,23 @@
  * @format
  */
 
-const path = require('path');
-const {realpathSync} = require('fs');
-const {format} = require('util');
-
 const {readFile, writeFile} = require('fs').promises;
-const {
-  mainLocOfError,
-  prettyPrintError,
-  mergedMessagesOfError,
-  prettyPrintMessageOfError,
-} = require('../flowResult');
 const getPathToLoc = require('./getPathToLoc').default;
 const {
   getFlowErrors,
   filterErrors,
   mainSourceLocOfError,
 } = require('../errors');
-const {
-  NORMAL,
-  JSX,
-  JSX_FRAGMENT,
-  TEMPLATE,
-  default: getContext,
-} = require('./getContext');
+const getContext = require('./getContext').default;
 const getAst = require('./getAst').default;
 
 import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
-import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
-import type {Context} from './getContext';
-const {formatComment, addCommentToText} = require('./commentMutator');
+import type {FlowLoc, FlowError} from '../flowResult';
+const {addCommentToText} = require('./commentMutator');
 
 export type Suppression = {
   loc: FlowLoc,
-  isError: boolean,
-  lints: Set<string>,
   error_codes: Array<string>,
 };
 
@@ -67,7 +48,6 @@ async function runner(args: Args): Promise<void> {
 }
 
 async function addComments(args: Args, errors: Array<FlowError>) {
-  const seen = new Set<string>();
   let filenameToLineToLocsMap: Map<
     string,
     Map<number, Suppression>,
@@ -80,17 +60,6 @@ async function addComments(args: Args, errors: Array<FlowError>) {
     if (loc != null && loc.source != null) {
       const source = loc.source;
       const lineToLocsMap = filenameToLineToLocsMap.get(source) || new Map();
-      const isError = error.kind !== 'lint';
-      let lints = new Set<string>();
-      if (error.kind === 'lint') {
-        // \u0060 is `. using the escape to avoid a syntax highlighting bug in vscode-language-babel
-        const match = /\(\u0060([^\u0060]+)\u0060\)$/.exec(
-          error.message[0].descr,
-        );
-        if (match) {
-          lints.add(match[1]);
-        }
-      }
       function joinSuppression(
         prevValue: ?Suppression,
         newValue: Suppression,
@@ -100,16 +69,12 @@ async function addComments(args: Args, errors: Array<FlowError>) {
         }
         return {
           loc: newValue.loc,
-          isError: newValue.isError || prevValue.isError,
-          lints: new Set([...newValue.lints, ...prevValue.lints]),
           error_codes: [...newValue.error_codes, ...prevValue.error_codes],
         };
       }
       const prevValue: ?Suppression = lineToLocsMap.get(loc.start.line);
       const value = joinSuppression(prevValue, {
         loc,
-        isError,
-        lints,
         error_codes,
       });
       lineToLocsMap.set(loc.start.line, value);
@@ -183,7 +148,7 @@ async function addCommentsToCode(
   const ast = await getAst(code, flowBinPath);
 
   let commentCount = 0;
-  for (let {loc, isError, lints, error_codes} of locs) {
+  for (let {loc, error_codes} of locs) {
     if (error_code != null) {
       error_codes = error_codes.filter(c => c === error_code);
     }
@@ -212,38 +177,7 @@ async function addCommentsToCode(
   return [code, commentCount];
 }
 
-function addCommentToCode(
-  comment: string,
-  code: string,
-  loc: FlowLoc,
-  path: Array<PathNode>,
-): string {
-  return addCommentsToCodeInternal([comment], code, loc, path);
-}
-
-const NO_LOCATION = '[No location]';
-const NO_FILE = '[No file]';
-
-function getStringOfLocation(loc: ?FlowLoc): string {
-  if (loc == null) {
-    return NO_LOCATION;
-  }
-  return format('%s:%s', loc.source || NO_FILE, loc.start.line);
-}
-
-function relativizeStringOfLocation(root: string, str: string): string {
-  if (str === NO_LOCATION) {
-    return str;
-  }
-  let [source, line] = str.split(':', 2);
-  if (source === NO_FILE) {
-    return str;
-  }
-  return format('%s:%s', path.relative(root, source), line);
-}
-
 module.exports = {
   addCommentsToCode,
-  addCommentToCode,
   default: runner,
 };

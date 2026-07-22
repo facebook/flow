@@ -13,14 +13,10 @@ import typeof Base from './Base';
 module.exports = {
   'add-comments': () => require('../comment/add-commentsCommand'),
   'check-test': () => require('../check-test/checkTestCommand'),
-  'error-summary': () => require('../error-summary/error-summaryCommand'),
   help: () => require('../help/helpCommand'),
   'new-test': () => require('../new-test/new-testCommand'),
-  'optimal-per-directory-enforcement': () =>
-    require('../optimal-per-directory-enforcement/optimal-per-directory-enforcementCommand'),
   ping: () => require('../ping/pingCommand'),
   record: () => require('../record/recordCommand'),
-  'remove-comments': () => require('../comment/remove-commentsCommand'),
   test: () => require('../test/testCommand'),
   'update-suppressions': () =>
     require('../update-suppressions/update-suppressionsCommand'),
@@ -32,8 +28,6 @@ module.exports = {
   // @fb-only: 'list-commits': () => require('../facebook/release/list-commitsCommand'),
   // prettier-ignore
   // @fb-only: 'new-version': () => require('../facebook/release/new-versionCommand'),
-  // prettier-ignore
-  // @fb-only: 'suppression-primary-locations': () => require('../facebook/suppression-primary-locations/suppression-primary-locationsCommand'),
   // prettier-ignore
   // @fb-only: 'windtunnel-prof': () => require('../facebook/windtunnel-prof/windtunnel-profCommand'),
   // prettier-ignore

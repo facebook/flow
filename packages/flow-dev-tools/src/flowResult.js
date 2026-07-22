@@ -169,15 +169,6 @@ function prettyPrintError(error: FlowError): string {
   return messages.map(prettyPrintMessage.bind(null, mainFile)).join('\n');
 }
 
-function prettyPrintMessageOfError(
-  error: FlowError,
-  message: FlowMessage,
-): string {
-  let mainLoc = mainLocOfError(error);
-  const mainFile = (mainLoc && mainLoc.source) || '[No file]';
-  return prettyPrintMessage(mainFile, message);
-}
-
 function mkComment(descr: string): FlowMessage {
   return {descr, type: 'Comment'};
 }
@@ -296,8 +287,4 @@ module.exports = {
   difference,
   prettyPrintWithHeader,
   prettyPrint,
-  mainLocOfError,
-  mergedMessagesOfError,
-  prettyPrintError,
-  prettyPrintMessageOfError,
 };

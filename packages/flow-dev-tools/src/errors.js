@@ -86,40 +86,6 @@ function isUnusedSuppression(error: FlowError): boolean {
   );
 }
 
-async function getUnusedSuppressionErrors(
-  bin: string,
-  errorCheckCommand: ErrorCheckCommand,
-  root: string,
-  flowconfigName: string,
-): Promise<Array<FlowError>> {
-  const result: FlowResult = await getFlowErrorsWithWarnings(
-    bin,
-    errorCheckCommand,
-    root,
-    flowconfigName,
-  );
-
-  return result.errors.filter(isUnusedSuppression);
-}
-
-function collateLocs(errors: Array<FlowError>): Map<string, Array<FlowLoc>> {
-  const errorsByFile = collateErrors(errors);
-  const locsByFile = new Map<string, Array<FlowLoc>>();
-  for (const [file, errors] of errorsByFile) {
-    locsByFile.set(
-      file,
-      errors.reduce((acc, error) => {
-        const loc = error.message[0].loc;
-        if (loc != null) {
-          acc.push(loc);
-        }
-        return acc;
-      }, []),
-    );
-  }
-  return locsByFile;
-}
-
 function mainSourceLocOfError(error: FlowError): ?FlowLoc {
   const {operation, message} = error;
   for (const msg of [operation, ...message]) {
@@ -160,8 +126,6 @@ module.exports = {
   getFlowErrorsWithWarnings,
   getFlowErrors,
   isUnusedSuppression,
-  getUnusedSuppressionErrors,
-  collateLocs,
   mainSourceLocOfError,
   filterErrors,
   collateErrors,
