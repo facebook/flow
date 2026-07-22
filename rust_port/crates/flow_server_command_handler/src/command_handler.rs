@@ -3770,19 +3770,25 @@ fn send_command_summary(duration: f64, name: &str) {
 fn send_ephemeral_response<T>(
     cmd_str: &str,
     request_id: &str,
-    _client_context: &lsp_prot::LoggingContext,
+    client_context: &lsp_prot::LoggingContext,
+    duration: f64,
     result: Result<
         (T, server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
     >,
 ) -> Result<T, ()> {
     match result {
-        Ok((ret, response, _json_data)) => {
+        Ok((ret, response, json_data)) => {
+            let json_data = json_data.unwrap_or(serde_json::Value::Null);
+            let profiling = command_profiling_json(duration);
+            flow_event_logger::ephemeral_command_success(&json_data, client_context, &profiling);
             flow_server_env::monitor_rpc::respond_to_request(request_id.to_string(), response);
             flow_hh_logger::info!("Finished {}", cmd_str);
             Ok(ret)
         }
-        Err((exn_str, _json_data)) => {
+        Err((exn_str, json_data)) => {
+            let json_data = json_data.unwrap_or(serde_json::Value::Null);
+            flow_event_logger::ephemeral_command_failure(&json_data, client_context);
             flow_server_env::monitor_rpc::request_failed(request_id.to_string(), exn_str);
             Err(())
         }
@@ -3841,7 +3847,8 @@ fn wrap_ephemeral_handler(
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
                 .map_err(EphemeralHandlerError::Failure)
         });
-    send_command_summary(start.elapsed().as_secs_f64(), cmd_str);
+    let duration = start.elapsed().as_secs_f64();
+    send_command_summary(duration, cmd_str);
     let to_send: Result<
         ((), server_prot::response::Response, Option<lsp_prot::Json>),
         (String, Option<lsp_prot::Json>),
@@ -3850,7 +3857,7 @@ fn wrap_ephemeral_handler(
         Err(EphemeralHandlerError::Failure(f)) => Err(f),
         Err(EphemeralHandlerError::Canceled) => return Err(EphemeralWrapError::Canceled),
     };
-    send_ephemeral_response(cmd_str, request_id, client_context, to_send)
+    send_ephemeral_response(cmd_str, request_id, client_context, duration, to_send)
         .map_err(|()| EphemeralWrapError::SendFailed)?;
     Ok(())
 }
@@ -3897,8 +3904,9 @@ fn wrap_immediate_ephemeral_handler(
             };
             handle_ephemeral_uncaught_exception(cmd_str, exn_str)
         });
-    send_command_summary(start.elapsed().as_secs_f64(), cmd_str);
-    send_ephemeral_response(cmd_str, request_id, client_context, result)?;
+    let duration = start.elapsed().as_secs_f64();
+    send_command_summary(duration, cmd_str);
+    send_ephemeral_response(cmd_str, request_id, client_context, duration, result)?;
     Ok(())
 }
 
@@ -4210,7 +4218,7 @@ fn handle_persistent_uncaught_exception(
     }
 }
 
-fn persistent_profiling_json(duration_secs: f64) -> lsp_prot::ProfilingFinished {
+fn command_profiling_json(duration_secs: f64) -> lsp_prot::ProfilingFinished {
     serde_json::json!({
         "timing": {
             "total_wall_duration": duration_secs,
@@ -4293,7 +4301,7 @@ fn wrap_persistent_handler<T: Default>(
         None => result,
     };
     let duration = start.elapsed().as_secs_f64();
-    let profiling = persistent_profiling_json(duration);
+    let profiling = command_profiling_json(duration);
     let ret = send_persistent_response(client_id, profiling.clone(), result);
     send_command_summary(duration, &lsp_prot::string_of_request(&request));
     Ok(ret)
@@ -7649,7 +7657,7 @@ fn wrap_immediate_persistent_handler<T: Default>(
         Some((response, metadata)) => (T::default(), response, metadata),
         None => result,
     };
-    let profiling = persistent_profiling_json(start.elapsed().as_secs_f64());
+    let profiling = command_profiling_json(start.elapsed().as_secs_f64());
     send_persistent_response(client_id, profiling, result)
 }
 
