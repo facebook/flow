@@ -779,6 +779,61 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  // Read a file the command wrote under the project dir and assert its contents. Useful for tools
+  // (e.g. `fox compile`) whose output lands on disk rather than on stdout. The read is an action, so
+  // this must precede any stage-2 assertions (stdout/exitCodes) in the chain.
+  verifyFileContents: (
+    relPath: string,
+    expected: string,
+  ) => TestStepSecondStage = (relPath, expected) => {
+    const assertLoc = searchStackForTestAssertion();
+    let actual = '';
+    return this._cloneWithAction(async (builder, env) => {
+      // Surface a missing/unreadable file as a normal assertion diff (expected vs "<file missing>")
+      // rather than aborting the step with a raw filesystem error.
+      try {
+        actual = await builder.readFileInDir(relPath);
+      } catch {
+        actual = '<file missing>';
+      }
+    })._cloneWithAssertion((reason, env) => {
+      const suggestion: Suggestion = {
+        method: 'verifyFileContents',
+        args: [relPath, actual],
+      };
+      return simpleDiffAssertion(
+        expected,
+        actual,
+        assertLoc,
+        reason,
+        relPath,
+        suggestion,
+      );
+    });
+  };
+
+  // Assert a path does NOT exist under the project dir (e.g. a failed compile installed nothing).
+  verifyNoFile: (relPath: string) => TestStepSecondStage = relPath => {
+    const assertLoc = searchStackForTestAssertion();
+    let existed = false;
+    return this._cloneWithAction(async (builder, env) => {
+      existed = await builder.fileExistsInDir(relPath);
+    })._cloneWithAssertion((reason, env) => {
+      const suggestion: Suggestion = {
+        method: 'verifyNoFile',
+        args: [relPath],
+      };
+      return simpleDiffAssertion(
+        'absent',
+        existed ? 'present' : 'absent',
+        assertLoc,
+        reason,
+        relPath,
+        suggestion,
+      );
+    });
+  };
+
   dontMindServerDeath: () => TestStepFirstStage = () => {
     const ret = this._cloneWithAction(async (builder, env) => {});
     ret._allowServerToDie = true;

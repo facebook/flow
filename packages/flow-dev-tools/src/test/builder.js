@@ -14,7 +14,7 @@ const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
 const {createWriteStream, realpathSync, lstatSync} = require('fs');
 // $FlowFixMe[prop-missing]
-const {appendFile, readdir, readFile, unlink, writeFile, cp, symlink} =
+const {access, appendFile, readdir, readFile, unlink, writeFile, cp, symlink} =
   require('fs').promises;
 const {platform, tmpdir} = require('os');
 const {basename, dirname, extname, join, sep: dir_sep} = require('path');
@@ -235,6 +235,21 @@ class TestBuilder {
     const contents = buffer.toString().replace(searchValue, replaceValue);
     await writeFile(filename, contents);
     await this.forceRecheck([filename]);
+  }
+
+  async readFileInDir(relPath: string): Promise<string> {
+    const buffer = await readFile(join(this.dir, relPath));
+    return buffer.toString();
+  }
+
+  async fileExistsInDir(relPath: string): Promise<boolean> {
+    try {
+      // `access` checks existence without reading the file into memory.
+      await access(join(this.dir, relPath));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   async mockShellCommand(name: string): Promise<void> {
