@@ -1,18 +1,3 @@
-=== remove-comments keeps remaining flowlint suppressions ===
-Removed 1 comments in 1 files
->>> remove_partial/test.js
-function f(x: ?number) {
-  // flowlint-next-line, sketchy-null-number:off
-  if (x) {}
-}
-
-=== remove-comments removes empty flowlint suppressions ===
-Removed 1 comments in 1 files
->>> remove_empty/test.js
-function f(x: number) {
-  if (x) {}
-}
-
 === update-suppressions preserves eslint suppressions and adds missing ones ===
 Removed 1 comments in 1 files
 Added 1 comments in 1 files

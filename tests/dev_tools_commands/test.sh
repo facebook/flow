@@ -4,19 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-write_flowconfig_with_lints() {
-  local root=$1
-  mkdir -p "$root"
-  cat > "$root/.flowconfig" <<'EOF'
-[options]
-all=true
-include_warnings=true
-
-[lints]
-all=error
-EOF
-}
-
 write_flowconfig() {
   local root=$1
   mkdir -p "$root"
@@ -43,29 +30,7 @@ flow_bin_arg() {
 
 FLOW_BIN=$(flow_bin_arg)
 
-printf "=== remove-comments keeps remaining flowlint suppressions ===\n"
-write_flowconfig_with_lints remove_partial
-cat > remove_partial/test.js <<'EOF'
-function f(x: ?number) {
-  // flowlint-next-line sketchy-null-string:off, sketchy-null-number:off
-  if (x) {}
-}
-EOF
-assert_ok "$FLOW" dev-tools remove-comments --bin "$FLOW_BIN" --check full-check remove_partial
-print_file remove_partial/test.js
-
-printf "\n=== remove-comments removes empty flowlint suppressions ===\n"
-write_flowconfig_with_lints remove_empty
-cat > remove_empty/test.js <<'EOF'
-function f(x: number) {
-  // flowlint-next-line sketchy-null-string:off
-  if (x) {}
-}
-EOF
-assert_ok "$FLOW" dev-tools remove-comments --bin "$FLOW_BIN" --check full-check remove_empty
-print_file remove_empty/test.js
-
-printf "\n=== update-suppressions preserves eslint suppressions and adds missing ones ===\n"
+printf "=== update-suppressions preserves eslint suppressions and adds missing ones ===\n"
 write_flowconfig update_suppressions
 cat > update_suppressions/test.js <<'EOF'
 // $FlowFixMe[incompatible-type] eslint-disable-next-line no-fallthrough

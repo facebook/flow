@@ -10,4 +10,3 @@ pub(crate) mod comment_mutator;
 pub(crate) mod get_ast;
 pub(crate) mod get_context;
 pub(crate) mod get_path_to_loc;
-pub mod remove_comments;

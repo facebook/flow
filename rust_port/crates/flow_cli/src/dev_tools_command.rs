@@ -18,7 +18,6 @@ use crate::command_utils;
 #[derive(Clone)]
 enum DevToolsSubcommand {
     AddComments,
-    RemoveComments,
     UpdateSuppressions,
 }
 
@@ -159,24 +158,6 @@ fn add_comments_spec() -> command_spec::Spec {
     .anon("ROOT", &arg_spec::string())
 }
 
-fn remove_comments_spec() -> command_spec::Spec {
-    dev_tools_common_spec(
-        "remove-comments",
-        "Removes unused flow comments",
-        format!(
-            "Usage: {} dev-tools remove-comments [OPTION]... ROOT\n\nQueries Flow for the unused error suppressions for ROOT. Then removes them from the code.\n",
-            command_utils::exe_name()
-        ),
-    )
-    .flag(
-        "--include-flowtest",
-        &arg_spec::truthy(),
-        "Also remove comments from files that end in -flowtest.js or are in a __flowtests__ directory",
-        None,
-    )
-    .anon("ROOT", &arg_spec::string())
-}
-
 fn update_suppressions_spec() -> command_spec::Spec {
     dev_tools_common_spec(
         "update-suppressions",
@@ -240,10 +221,6 @@ fn root_spec() -> command_spec::Spec {
                 &[
                     ("add-comments".to_string(), "Adds flow comments".to_string(),),
                     (
-                        "remove-comments".to_string(),
-                        "Removes unused flow comments".to_string(),
-                    ),
-                    (
                         "update-suppressions".to_string(),
                         "Adds and removes suppression comments".to_string(),
                     ),
@@ -257,7 +234,6 @@ fn root_spec() -> command_spec::Spec {
             None,
             arg_spec::command_flag(vec![
                 ("add-comments", DevToolsSubcommand::AddComments),
-                ("remove-comments", DevToolsSubcommand::RemoveComments),
                 (
                     "update-suppressions",
                     DevToolsSubcommand::UpdateSuppressions,
@@ -276,7 +252,6 @@ pub(crate) fn command() -> command_spec::Command {
                 None,
                 arg_spec::command_flag(vec![
                     ("add-comments", DevToolsSubcommand::AddComments),
-                    ("remove-comments", DevToolsSubcommand::RemoveComments),
                     (
                         "update-suppressions",
                         DevToolsSubcommand::UpdateSuppressions,
@@ -289,11 +264,6 @@ pub(crate) fn command() -> command_spec::Command {
             DevToolsSubcommand::AddComments => command_spec::command(add_comments_spec(), |args| {
                 run_or_exit(run_add_comments(args))
             }),
-            DevToolsSubcommand::RemoveComments => {
-                command_spec::command(remove_comments_spec(), |args| {
-                    run_or_exit(run_remove_comments(args))
-                })
-            }
             DevToolsSubcommand::UpdateSuppressions => {
                 command_spec::command(update_suppressions_spec(), |args| {
                     run_or_exit(run_update_suppressions(args))
@@ -323,19 +293,6 @@ fn run_add_comments(args: &arg_spec::Values) -> io::Result<()> {
         error_check_command: get_check(args),
         root: parse_single_root(args),
     })
-}
-
-fn run_remove_comments(args: &arg_spec::Values) -> io::Result<()> {
-    flow_dev_tools::comment::remove_comments::runner(
-        flow_dev_tools::comment::remove_comments::Args {
-            bin: get_bin(args),
-            flowconfig_name: get_flowconfig_name(args),
-            error_check_command: get_check(args),
-            root: parse_single_root(args),
-            include_flowtest: command_spec::get(args, "--include-flowtest", &arg_spec::truthy())
-                .unwrap(),
-        },
-    )
 }
 
 fn run_update_suppressions(args: &arg_spec::Values) -> io::Result<()> {

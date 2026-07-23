@@ -73,39 +73,6 @@ pub(crate) fn is_unused_suppression(error: &FlowError) -> bool {
     }
 }
 
-pub(crate) fn get_unused_suppression_errors(
-    bin: &str,
-    error_check_command: ErrorCheckCommand,
-    root: &Path,
-    flowconfig_name: &str,
-) -> io::Result<Vec<FlowError>> {
-    let result = get_flow_errors_with_warnings(bin, error_check_command, root, flowconfig_name)?;
-
-    Ok(result
-        .errors
-        .into_iter()
-        .filter(is_unused_suppression)
-        .collect())
-}
-
-pub(crate) fn collate_locs(errors: Vec<FlowError>) -> BTreeMap<String, Vec<FlowLoc>> {
-    collate_errors(errors)
-        .into_iter()
-        .map(|(file, errors)| {
-            let locs = errors
-                .into_iter()
-                .filter_map(|error| {
-                    error
-                        .message
-                        .first()
-                        .and_then(|message| message.loc.clone())
-                })
-                .collect();
-            (file, locs)
-        })
-        .collect()
-}
-
 pub(crate) fn main_source_loc_of_error(error: &FlowError) -> Option<FlowLoc> {
     error
         .operation
