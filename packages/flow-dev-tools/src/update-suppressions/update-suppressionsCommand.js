@@ -8,108 +8,16 @@
  * @format
  */
 
-import type {Flag} from '../command/Base';
-import type {ErrorCheckCommand} from '../errors';
+const {default: Base} = require('../command/Base');
 
-const {realpathSync} = require('fs');
-const {format} = require('util');
-const {resolve} = require('path');
-
-const {commonFlags, default: Base} = require('../command/Base');
-const findFlowBin = require('../command/findFlowBin').default;
-
-export opaque type RootPath: string = string;
-export opaque type RootName: string = string;
-
-export type Args = {
-  bin: string,
-  diffBin: ?string,
-  flowconfigName: string,
-  errorCheckCommand: ErrorCheckCommand,
-  comment: string,
-  roots: Array<RootPath>,
-  rootNames: Array<RootName>,
-  includeFlowtest: boolean,
-  only: ?('add' | 'remove'),
-  ...
-};
-
-class UpdateSuppressionsCommand extends Base<Args> {
-  static processArgv(argv: Object): Args {
-    if (argv._.length < 1) {
-      this.showUsage(this.BAD_ARGS);
-    }
-
-    return {
-      bin: findFlowBin(argv.bin),
-      diffBin: argv['diffBin'] ? findFlowBin(argv['diffBin']) : null,
-      flowconfigName: argv.flowconfigName,
-      errorCheckCommand: argv.check,
-      roots: argv._.map(root => realpathSync(resolve(process.cwd(), root))),
-      rootNames: ((argv.sites || '') as RootName)
-        .split(',')
-        .map(site => site.trim()),
-      includeFlowtest: !!argv['include-flowtest'],
-      comment: argv['comment'] ? argv['comment'] : '',
-      only: argv['only'],
-    };
-  }
-
-  static async run(args: Args): Promise<void> {
-    require('./update-suppressionsRunner').default(args);
+class UpdateSuppressionsCommand extends Base<{}> {
+  static async go(): Promise<void> {
+    process.stderr.write('use `flow dev-tools update-suppressions` instead\n');
+    process.exit(this.BAD_ARGS);
   }
 
   static description(): string {
-    return 'Adds and removes suppression comments';
-  }
-
-  static async usage(): Promise<string> {
-    return `usage: ${process.argv[1]} update-suppressions [OPTION]... ROOT [ROOT...]
-
-Removes unnecessary, and adds necessary, error suppression comments for ROOT.
-`;
-  }
-
-  static getFlags(): Array<Flag> {
-    return [
-      commonFlags.bin,
-      commonFlags.flowconfigName,
-      commonFlags.errorCheckCommand,
-      {
-        type: 'boolean',
-        name: 'include-flowtest',
-        description:
-          'Also remove comments from files that end in ' +
-          '-flowtest.js or are in a __flowtests__ directory',
-      },
-      {
-        type: 'string',
-        name: 'sites',
-        argName: 'SITE[,SITE[,...]]',
-        description: 'Comma-delimited list of site names for each ROOT',
-      },
-      {
-        type: 'string',
-        name: 'comment',
-        argName: '<COMMENT>',
-        description:
-          'Comment to include with the suppression. Automatically prepends $FlowFixMe',
-      },
-      {
-        type: 'string',
-        name: 'only',
-        argName: '"add" | "remove"',
-        description:
-          'Use --only add to only add comments and --only remove to only remove comments',
-      },
-      {
-        type: 'string',
-        name: 'diffBin',
-        argName: 'path/to/bin',
-        description:
-          'Path to another binary to use. If specified, update-suppressions will remove suppressions if they are used in both of the two binaries, and suppress errors in either',
-      },
-    ];
+    return 'use `flow dev-tools update-suppressions` instead';
   }
 }
 
