@@ -270,214 +270,46 @@ async function runOneTest(opts: {
       }
     } else if (config.shell !== '') {
       // Shell/script mode
-      if (config.shell.endsWith('.js')) {
-        // Run as Node.js test script — use a single TestContext for both
-        // auto-start and test execution so they share output state.
-        const ctx = new TestContext({
-          flowBin,
-          testDir: workDir,
-          logFile,
-          monitorLogFile,
-          noFlowlib,
-          waitForRecheck: config.wait_for_recheck,
-          fileWatcher: config.file_watcher,
-          longLivedWorkers,
-          savedState,
-          tempDir: tmpParent,
-        });
+      // Run as bash script (original test.sh)
+      const scriptPath = join(workDir, config.shell);
+      const noFlowlibEnv = noFlowlib ? '1' : '';
+      const thisDir = resolve(__dirname, '../../../../scripts');
+      // Construct the flowlib bash variable from the boolean
+      const flowlibVal = noFlowlib ? ' --no-flowlib' : '';
 
-        if (config.auto_start) {
-          const startArgs = config.start_args
-            ? splitShellArgs(config.start_args)
-            : [];
+      const bashEnv: {[string]: string | void} = {
+        ...env,
+        NO_FLOWLIB: noFlowlibEnv || undefined,
+      };
 
-          if (savedState) {
-            // Handle saved state: create saved state, then start with
-            // --saved-state-fetcher (mirroring bash start_flow_unsafe
-            // and the general cmd mode's saved state path).
-            let flowconfigName = '.flowconfig';
-            for (let i = 0; i < startArgs.length; i++) {
-              if (
-                startArgs[i] === '--flowconfig-name' &&
-                i + 1 < startArgs.length
-              ) {
-                flowconfigName = startArgs[i + 1];
-              }
-            }
+      // Pass all dynamic values via environment variables to avoid
+      // shell injection when paths contain spaces or special characters.
+      const scriptEnv: {[string]: string | void} = {
+        ...bashEnv,
+        _CT_FLOW_BIN: flowBin,
+        _CT_LOG_FILE: logFile,
+        _CT_MONITOR_LOG_FILE: monitorLogFile,
+        _CT_TEMP_DIR: tmpParent,
+        _CT_SAVED_STATE: savedState ? '1' : '0',
+        _CT_FLOWLIB: flowlibVal,
+        _CT_WAIT_FOR_RECHECK: config.wait_for_recheck,
+        _CT_FILE_WATCHER: config.file_watcher,
+        _CT_LONG_LIVED_WORKERS: longLivedWorkers,
+        _CT_THIS_DIR: thisDir,
+        _CT_ERR_FILE: errFile,
+        _CT_START_ARGS: config.start_args,
+        _CT_AUTO_START: config.auto_start ? '1' : '0',
+        _CT_SCRIPT_PATH: scriptPath,
+      };
 
-            const ok = await ctx.createSavedState(workDir, flowconfigName);
-            if (!ok) {
-              outContent = 'Failed to generate saved state\n';
-              returnStatus = RUNTEST_ERROR;
-            } else {
-              const startResult = await execFilePromise(
-                flowBin,
-                [
-                  'start',
-                  '.',
-                  ...(noFlowlib ? ['--no-flowlib'] : []),
-                  '--wait',
-                  '--wait-for-recheck',
-                  config.wait_for_recheck,
-                  '--saved-state-fetcher',
-                  'local',
-                  '--saved-state-no-fallback',
-                  '--file-watcher',
-                  config.file_watcher,
-                  '--log-file',
-                  logFile,
-                  '--monitor-log-file',
-                  monitorLogFile,
-                  '--long-lived-workers',
-                  longLivedWorkers,
-                  ...startArgs,
-                ],
-                {cwd: workDir, env},
-              );
-              errContent += startResult.stderr;
-              if (startResult.code !== 0) {
-                outContent =
-                  'flow start exited code ' + startResult.code + '\n';
-                returnStatus = RUNTEST_ERROR;
-              } else {
-                serverStarted = true;
-              }
-            }
-          } else {
-            // Start server directly (suppressing stdout, capturing stderr
-            // to errFile — matches bash's `> /dev/null 2>> "$abs_err_file"`)
-            const startResult = await execFilePromise(
-              flowBin,
-              [
-                'start',
-                '.',
-                ...(noFlowlib ? ['--no-flowlib'] : []),
-                '--wait',
-                '--wait-for-recheck',
-                config.wait_for_recheck,
-                '--file-watcher',
-                config.file_watcher,
-                '--log-file',
-                logFile,
-                '--monitor-log-file',
-                monitorLogFile,
-                '--long-lived-workers',
-                longLivedWorkers,
-                ...startArgs,
-              ],
-              {cwd: workDir, env},
-            );
-            errContent += startResult.stderr;
-            if (startResult.code !== 0) {
-              outContent = 'flow start exited code ' + startResult.code + '\n';
-              returnStatus = RUNTEST_ERROR;
-            } else {
-              serverStarted = true;
-            }
-          }
-        }
-
-        if (returnStatus !== RUNTEST_ERROR) {
-          try {
-            // Require the test script from the ORIGINAL test directory
-            // (not the temp copy) so that:
-            // 1. The babel transform in bin/tool applies (it only covers
-            //    files under testsDir, not temp dirs).
-            // 2. Relative require()s like '../test_helpers' resolve
-            //    correctly against the original tests/ tree.
-            const originalScriptPath = join(
-              testDir,
-              config.cwd || '',
-              config.shell,
-            );
-            // $FlowFixMe[unsupported-syntax] - dynamic require for test script loading
-            const testModule = require(originalScriptPath);
-            // Clear the module cache so that subsequent tests with the same
-            // script name get a fresh module.
-            // Capture the resolved path immediately after require() succeeds,
-            // before the test runs (which might modify or delete files).
-            const resolvedPath = require.resolve(originalScriptPath);
-            delete require.cache[resolvedPath];
-            const testFn =
-              typeof testModule === 'function'
-                ? testModule
-                : testModule.default || testModule;
-            if (typeof testFn !== 'function') {
-              throw new Error(
-                config.shell +
-                  ' does not export a function (got ' +
-                  typeof testFn +
-                  ')',
-              );
-            }
-            await testFn(ctx);
-            outContent = ctx.getOutput();
-          } catch (e) {
-            outContent = ctx.getOutput();
-            outContent += config.shell + ' exited code 1\n';
-            if (e.stack) {
-              errContent += e.stack + '\n';
-            } else if (e.message) {
-              errContent += e.message + '\n';
-            }
-            returnStatus = RUNTEST_ERROR;
-          }
-
-          // Stop server — only attempt if one was started, to avoid
-          // spawning a useless process when auto_start is false.
-          // Only clear the flag if stop succeeds so the finally block
-          // can retry if the server is unresponsive.
-          if (serverStarted) {
-            const stopResult = await execFilePromise(flowBin, ['stop', '.'], {
-              cwd: workDir,
-              env,
-            });
-            if (stopResult.code === 0) {
-              serverStarted = false;
-            }
-          }
-        }
-      } else {
-        // Run as bash script (original test.sh)
-        const scriptPath = join(workDir, config.shell);
-        const noFlowlibEnv = noFlowlib ? '1' : '';
-        const thisDir = resolve(__dirname, '../../../../scripts');
-        // Construct the flowlib bash variable from the boolean
-        const flowlibVal = noFlowlib ? ' --no-flowlib' : '';
-
-        const bashEnv: {[string]: string | void} = {
-          ...env,
-          NO_FLOWLIB: noFlowlibEnv || undefined,
-        };
-
-        // Pass all dynamic values via environment variables to avoid
-        // shell injection when paths contain spaces or special characters.
-        const scriptEnv: {[string]: string | void} = {
-          ...bashEnv,
-          _CT_FLOW_BIN: flowBin,
-          _CT_LOG_FILE: logFile,
-          _CT_MONITOR_LOG_FILE: monitorLogFile,
-          _CT_TEMP_DIR: tmpParent,
-          _CT_SAVED_STATE: savedState ? '1' : '0',
-          _CT_FLOWLIB: flowlibVal,
-          _CT_WAIT_FOR_RECHECK: config.wait_for_recheck,
-          _CT_FILE_WATCHER: config.file_watcher,
-          _CT_LONG_LIVED_WORKERS: longLivedWorkers,
-          _CT_THIS_DIR: thisDir,
-          _CT_ERR_FILE: errFile,
-          _CT_START_ARGS: config.start_args,
-          _CT_AUTO_START: config.auto_start ? '1' : '0',
-          _CT_SCRIPT_PATH: scriptPath,
-        };
-
-        // Build a bash command that includes all helper functions and variables
-        // matching what run-one-test provides.
-        // All dynamic values are read from environment variables set above
-        // to avoid shell injection issues with paths containing spaces.
-        const bashCmd = [
-          'bash',
-          '-c',
-          `set -e
+      // Build a bash command that includes all helper functions and variables
+      // matching what run-one-test provides.
+      // All dynamic values are read from environment variables set above
+      // to avoid shell injection issues with paths containing spaces.
+      const bashCmd = [
+        'bash',
+        '-c',
+        `set -e
 to_bash_path() {
   if command -v cygpath > /dev/null 2>&1; then
     cygpath -u "$1"
@@ -680,37 +512,36 @@ set -e
 
 exit $_script_exit
 `,
-        ];
+      ];
 
-        const result = await execFilePromise(bashCmd[0], bashCmd.slice(1), {
-          cwd: workDir,
-          env: scriptEnv,
-        });
-        // The bash script handles its own server start/stop via the
-        // inline `"$FLOW" stop . ...` at the end, so the server is
-        // already stopped when we get here — no safety cleanup needed.
-        serverStarted = false;
-        outContent = result.stdout;
-        if (config.ignore_stderr) {
-          errContent = result.stderr;
-        } else {
-          outContent += result.stderr;
-        }
+      const result = await execFilePromise(bashCmd[0], bashCmd.slice(1), {
+        cwd: workDir,
+        env: scriptEnv,
+      });
+      // The bash script handles its own server start/stop via the
+      // inline `"$FLOW" stop . ...` at the end, so the server is
+      // already stopped when we get here — no safety cleanup needed.
+      serverStarted = false;
+      outContent = result.stdout;
+      if (config.ignore_stderr) {
+        errContent = result.stderr;
+      } else {
+        outContent += result.stderr;
+      }
 
-        if (result.code !== 0) {
-          // When auto-start fails, the inline bash script already prints
-          // "flow start exited code N" and exits — the original bash
-          // runner skips the test script entirely and does NOT print an
-          // additional shell exit line.  But when the test script itself
-          // fails, the original bash runner DOES print
-          // "<shell> exited code N".  Distinguish the two cases by
-          // checking whether stdout already contains the start-failure
-          // message.
-          if (!/flow start exited code/.test(outContent)) {
-            outContent += config.shell + ' exited code ' + result.code + '\n';
-          }
-          returnStatus = RUNTEST_ERROR;
+      if (result.code !== 0) {
+        // When auto-start fails, the inline bash script already prints
+        // "flow start exited code N" and exits — the original bash
+        // runner skips the test script entirely and does NOT print an
+        // additional shell exit line.  But when the test script itself
+        // fails, the original bash runner DOES print
+        // "<shell> exited code N".  Distinguish the two cases by
+        // checking whether stdout already contains the start-failure
+        // message.
+        if (!/flow start exited code/.test(outContent)) {
+          outContent += config.shell + ' exited code ' + result.code + '\n';
         }
+        returnStatus = RUNTEST_ERROR;
       }
     } else {
       // General cmd mode
