@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
 use std::sync::Arc;
+use std::time::Duration;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -3043,6 +3044,12 @@ pub enum InternalError {
     ImplicitInstantiationInvariant(FlowSmolStr),
     MethodBivariantInvariant(FlowSmolStr),
     WorkerCanceled,
+}
+
+impl InternalError {
+    pub fn check_timeout(elapsed: Duration) -> Self {
+        Self::CheckTimeout(format!("{:.2}", elapsed.as_secs_f64()))
+    }
 }
 
 #[derive(
@@ -6437,9 +6444,7 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
         InternalError::InterfaceTypeSpread => "unexpected spread property in interface".into(),
         InternalError::DebugThrow => "debug throw".into(),
         InternalError::ParseJobException(exc) => format!("uncaught exception: {}", exc).into(),
-        InternalError::CheckTimeout(s) => {
-            format!("check job timed out after {:.2} seconds", s).into()
-        }
+        InternalError::CheckTimeout(s) => format!("check job timed out after {} seconds", s).into(),
         InternalError::CheckJobException(exc) => format!("uncaught exception: {}", exc).into(),
         InternalError::UnexpectedAnnotationInference(s) => {
             format!("unexpected {} in annotation inference", s).into()
@@ -10017,5 +10022,20 @@ where
             current_binding_loc: f(current_binding_loc),
             existing_binding_loc: f(existing_binding_loc),
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_timeout_preserves_three_digit_seconds() {
+        let error = InternalError::check_timeout(Duration::from_millis(100_003));
+
+        assert_eq!(
+            string_of_internal_error(&error).to_string(),
+            "check job timed out after 100.00 seconds"
+        );
     }
 }

@@ -1269,10 +1269,7 @@ pub fn mk_check(
                 source: Some(file),
                 ..LOC_NONE
             });
-            CheckJobOutcome::PerFileError((
-                file_loc,
-                InternalError::CheckTimeout(format!("{:.3}", t.elapsed.as_secs_f64())),
-            ))
+            CheckJobOutcome::PerFileError((file_loc, InternalError::check_timeout(t.elapsed)))
         }
         Err(flow_utils_concurrency::job_error::JobError::DebugThrow { loc }) => {
             CheckJobOutcome::PerFileError((loc, InternalError::DebugThrow))
