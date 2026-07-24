@@ -1,3 +1,9 @@
+### 0.324.0
+
+New Features:
+* .flowconfig's `[include]` and `[ignore]` sections can now be configured using globs, in addition to the current regex based system. Right now, glob items must be specified with `glob:` prefix. Globs do not support `<PROJECT_ROOT>`, since they are assumed to start from the project root.
+* Class fields and methods whose computed key resolves to a literal string or number are now supported and type-checked as named members.
+
 ### 0.323.0
 
 No behavioral changes in this release
