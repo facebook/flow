@@ -343,6 +343,18 @@ fn get_next_append_const(
     })
 }
 
+pub(crate) fn get_all_flow_files(flowconfig_name: &str, root: &Path) -> Vec<String> {
+    let config_path = root.join(flowconfig_name);
+    let config_path = config_path.to_string_lossy().to_string();
+    let (flowconfig, _) = command_utils::read_config_and_hash_or_exit(&config_path, true);
+    let options = command_utils::file_options_of_flowconfig(root, &flowconfig);
+    let empty_libs = Arc::new(BTreeSet::new());
+    let mut next_files = get_ls_files(root, false, options, empty_libs, false, None);
+    let config_file = flow_server_files::server_files_js::config_file(flowconfig_name, root);
+    next_files = get_next_append_const(next_files, vec![config_file]);
+    files::get_all(&mut *next_files).into_iter().collect()
+}
+
 fn main_impl(args: &arg_spec::Values) {
     let base_flags = command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;

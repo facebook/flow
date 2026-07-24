@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub(crate) mod get_flow_files;
 mod update_suppressions;
 
 pub use update_suppressions::Args;

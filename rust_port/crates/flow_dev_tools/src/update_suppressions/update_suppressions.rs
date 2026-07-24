@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::fs;
 use std::io;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
@@ -16,7 +17,6 @@ use regex::Captures;
 use regex::Regex;
 use serde_json::Value;
 
-use crate::ErrorCheckCommand;
 use crate::comment::comment_mutator::CommentAst;
 use crate::comment::comment_mutator::add_comment_to_text;
 use crate::comment::comment_mutator::find_start_of_line;
@@ -28,12 +28,11 @@ use crate::comment::get_context::get_context;
 use crate::comment::get_path_to_loc::get_path_to_loc;
 use crate::errors::collate_errors;
 use crate::errors::filter_errors;
-use crate::errors::get_flow_errors_with_warnings;
 use crate::errors::is_unused_suppression;
+use crate::flow_result::FlowError;
 use crate::flow_result::FlowLoc;
+use crate::flow_result::FlowResult;
 use crate::flow_result::required_offset;
-use crate::update_suppressions::get_flow_files::get_flow_files;
-use crate::update_suppressions::get_flow_files::normalize_flow_path_key;
 
 static SITE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\bsite=([a-z,_]+)\)").expect("site regex should compile"));
@@ -58,24 +57,37 @@ pub enum Only {
     Remove,
 }
 
-#[derive(Clone, Debug)]
-pub struct Args {
-    pub bin: String,
-    pub diff_bin: Option<String>,
-    pub flowconfig_name: String,
-    pub error_check_command: ErrorCheckCommand,
+pub struct Args<LoadRoot> {
     pub comment: String,
     pub roots: Vec<PathBuf>,
     pub root_names: Vec<String>,
     pub include_flowtest: bool,
     pub only: Option<Only>,
+    pub load_root: LoadRoot,
+}
+
+#[derive(Clone, Debug)]
+struct RootInput {
+    name: String,
+    files: Vec<String>,
+    errors: Vec<FlowError>,
+}
+
+impl RootInput {
+    fn from_json(name: String, files: Vec<String>, result: Value) -> io::Result<Self> {
+        let result: FlowResult = serde_json::from_value(result).map_err(io::Error::other)?;
+        Ok(Self {
+            name,
+            files,
+            errors: result.errors,
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
 struct UnusedSuppressions {
     roots: BTreeSet<String>,
     loc: FlowLoc,
-    bins: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -109,54 +121,30 @@ impl OrderedStrings {
     }
 }
 
-fn get_files(args: &Args) -> io::Result<BTreeMap<String, BTreeSet<String>>> {
-    let bin = &args.bin;
-    let roots = &args.roots;
-    let root_names = &args.root_names;
-    let flowconfig_name = &args.flowconfig_name;
-    let mut roots_by_file: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let mut index = 0;
-    while index < roots.len() {
-        let root = &roots[index];
-        let Some(root_name) = root_names.get(index) else {
-            return Err(io::Error::other(format!(
-                "name for {} not set",
-                root.to_string_lossy()
-            )));
-        };
-        let files = get_flow_files(bin, root, flowconfig_name)?;
-        for file in files {
-            let result = roots_by_file
-                .entry(normalize_flow_path_key(&file))
-                .or_default();
-            result.insert(root_name.clone());
-        }
-        index += 1;
-    }
-    Ok(roots_by_file)
+fn normalize_flow_path_key(path: &str) -> String {
+    path.trim_end_matches('\r').replace('\\', "/")
 }
 
-fn get_errors_for_all_roots_for_binary(
-    bin: &str,
-    roots: &[PathBuf],
-    root_names: &[String],
-    error_check_command: ErrorCheckCommand,
-    flowconfig_name: &str,
+fn get_files(roots: &[RootInput]) -> BTreeMap<String, BTreeSet<String>> {
+    let mut roots_by_file: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for root in roots {
+        for file in &root.files {
+            let result = roots_by_file
+                .entry(normalize_flow_path_key(file))
+                .or_default();
+            result.insert(root.name.clone());
+        }
+    }
+    roots_by_file
+}
+
+fn get_errors_for_all_roots(
+    roots: &[RootInput],
     only: Option<Only>,
-    mut errors_by_file: BTreeMap<String, BTreeMap<i64, ErrorsForLine>>,
 ) -> io::Result<BTreeMap<String, BTreeMap<i64, ErrorsForLine>>> {
-    let mut index = 0;
-    while index < roots.len() {
-        let root = &roots[index];
-        let Some(root_name) = root_names.get(index) else {
-            return Err(io::Error::other(format!(
-                "name for {} not set",
-                root.to_string_lossy()
-            )));
-        };
-        let errors =
-            get_flow_errors_with_warnings(bin, error_check_command, root, flowconfig_name)?.errors;
-        for (file, errors_in_file) in collate_errors(errors) {
+    let mut errors_by_file: BTreeMap<String, BTreeMap<i64, ErrorsForLine>> = BTreeMap::new();
+    for root in roots {
+        for (file, errors_in_file) in collate_errors(root.errors.clone()) {
             let errors_by_line = errors_by_file.entry(file).or_default();
             let errors_in_file_with_main_source_locs = filter_errors(&errors_in_file);
             for error in errors_in_file_with_main_source_locs {
@@ -183,13 +171,11 @@ fn get_errors_for_all_roots_for_binary(
                 if is_unused_suppression(&error) && only != Some(Only::Add) {
                     match &mut data_for_line.unused_suppressions {
                         Some(unused_suppressions) => {
-                            unused_suppressions.roots.insert(root_name.clone());
-                            unused_suppressions.bins.insert(bin.to_string());
+                            unused_suppressions.roots.insert(root.name.clone());
                         }
                         None => {
                             data_for_line.unused_suppressions = Some(UnusedSuppressions {
-                                roots: BTreeSet::from([root_name.clone()]),
-                                bins: BTreeSet::from([bin.to_string()]),
+                                roots: BTreeSet::from([root.name.clone()]),
                                 loc,
                             });
                         }
@@ -201,41 +187,6 @@ fn get_errors_for_all_roots_for_binary(
                 }
             }
         }
-        index += 1;
-    }
-    Ok(errors_by_file)
-}
-
-fn get_errors_for_all_roots(
-    args: &Args,
-) -> io::Result<BTreeMap<String, BTreeMap<i64, ErrorsForLine>>> {
-    let bin = &args.bin;
-    let diff_bin = &args.diff_bin;
-    let error_check_command = args.error_check_command;
-    let roots = &args.roots;
-    let root_names = &args.root_names;
-    let flowconfig_name = &args.flowconfig_name;
-    let only = args.only;
-    let mut errors_by_file = BTreeMap::new();
-    errors_by_file = get_errors_for_all_roots_for_binary(
-        bin,
-        roots,
-        root_names,
-        error_check_command,
-        flowconfig_name,
-        only,
-        errors_by_file,
-    )?;
-    if let Some(diff_bin) = diff_bin {
-        errors_by_file = get_errors_for_all_roots_for_binary(
-            diff_bin,
-            roots,
-            root_names,
-            error_check_command,
-            flowconfig_name,
-            only,
-            errors_by_file,
-        )?;
     }
     Ok(errors_by_file)
 }
@@ -350,30 +301,19 @@ fn update_error_suppression(
 fn update_suppressions(
     filename: &str,
     all_roots: &BTreeSet<String>,
-    num_bins: usize,
     errors: &BTreeMap<i64, ErrorsForLine>,
     comment: &str,
-    flow_bin_path: &str,
 ) -> io::Result<()> {
     let contents = fs::read(filename)?;
-    let contents = update_suppressions_in_text(
-        contents,
-        all_roots,
-        num_bins,
-        errors,
-        comment,
-        flow_bin_path,
-    )?;
+    let contents = update_suppressions_in_text(contents, all_roots, errors, comment)?;
     fs::write(filename, contents)
 }
 
 fn update_suppressions_in_text(
     mut contents: Vec<u8>,
     all_roots: &BTreeSet<String>,
-    num_bins: usize,
     errors_by_line: &BTreeMap<i64, ErrorsForLine>,
     comment: &str,
-    _flow_bin_path: &str,
 ) -> io::Result<Vec<u8>> {
     let mut errors = errors_by_line.iter().collect::<Vec<_>>();
     // Sort in reverse order so that we remove comments later in the file first. Otherwise, the
@@ -436,10 +376,7 @@ fn update_suppressions_in_text(
         let beginning_of_line =
             find_start_of_line(&contents, required_offset(&error_loc.start, "error start")?);
 
-        /* Check if suppression is unused in all binaries */
-        if let Some(unused_suppressions) = unused_suppressions
-            && unused_suppressions.bins.len() == num_bins
-        {
+        if let Some(unused_suppressions) = unused_suppressions {
             // Need to remove a suppression
             let loc = &unused_suppressions.loc;
             let orig_start = required_offset(&loc.start, "unused suppression start")?;
@@ -500,15 +437,30 @@ fn is_flowtest(filename: &str) -> bool {
     FLOWTEST_SUFFIX_REGEX.is_match(filename) || FLOWTEST_DIR_REGEX.is_match(filename)
 }
 
-pub fn runner(args: Args) -> io::Result<()> {
+pub fn runner<LoadRoot>(mut args: Args<LoadRoot>) -> io::Result<()>
+where
+    LoadRoot: FnMut(&Path) -> io::Result<(Vec<String>, Value)>,
+{
+    let mut roots = Vec::with_capacity(args.roots.len());
+    for (index, root) in args.roots.iter().enumerate() {
+        let Some(root_name) = args.root_names.get(index) else {
+            return Err(io::Error::other(format!(
+                "name for {} not set",
+                root.display()
+            )));
+        };
+        let (files, result) = (args.load_root)(root)?;
+        roots.push(RootInput::from_json(root_name.clone(), files, result)?);
+    }
+
     let mut ignored_file_count = 0;
     let mut ignored_error_count = 0;
     let mut removed_error_count = 0;
     let mut added_suppression_count = 0;
     let mut files_with_unused_suppressions_count = 0;
     let mut files_with_needed_suppressions_count = 0;
-    let roots_by_file = get_files(&args)?;
-    let raw_errors = get_errors_for_all_roots(&args)?;
+    let roots_by_file = get_files(&roots);
+    let raw_errors = get_errors_for_all_roots(&roots, args.only)?;
     let mut errors = Vec::new();
     for (filename, errors_for_file) in raw_errors {
         // Filter out flowtests and generate stats
@@ -553,14 +505,7 @@ pub fn runner(args: Args) -> io::Result<()> {
             let Some(all_roots) = roots_by_file.get(&file_key) else {
                 return Err(io::Error::other(format!("{} not in any site???", filename)));
             };
-            update_suppressions(
-                &filename,
-                all_roots,
-                if args.diff_bin.is_some() { 2 } else { 1 },
-                &errors_for_file,
-                &args.comment,
-                &args.bin,
-            )?;
+            update_suppressions(&filename, all_roots, &errors_for_file, &args.comment)?;
         }
     }
     println!(

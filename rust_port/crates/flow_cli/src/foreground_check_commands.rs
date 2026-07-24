@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use flow_common::options::SavedStateFetcher;
@@ -177,6 +179,69 @@ fn prepare_full_check(
         options,
         flowconfig: flowconfig_for_assert,
     }
+}
+
+pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json::Value {
+    let PreparedFullCheck {
+        options,
+        flowconfig: flowconfig_for_assert,
+    } = prepare_full_check(
+        flowconfig_name.to_string(),
+        root.to_path_buf(),
+        command_utils::OptionsFlags {
+            all: false,
+            debug: false,
+            flowconfig_flags: Default::default(),
+            include_warnings: true,
+            max_warnings: None,
+            max_workers: None,
+            merge_timeout: None,
+            munge_underscore_members: false,
+            no_flowlib: false,
+            profile: false,
+            quiet: true,
+            slow_to_check_logging: Default::default(),
+            strip_root: false,
+            temp_dir: None,
+            verbose: None,
+            wait_for_recheck: None,
+            vpn_less: None,
+            include_suppressions: false,
+            estimate_recheck_time: None,
+            long_lived_workers: None,
+            distributed: false,
+            no_autoimports: true,
+        },
+        false,
+    );
+    flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
+    command_utils::assert_version(&flowconfig_for_assert);
+    let _shared_mem_config = command_utils::shm_config(&Default::default(), &flowconfig_for_assert);
+    let result = Rc::new(RefCell::new(None));
+    let result_for_check = Rc::clone(&result);
+    let init_id = flow_common_utils::random_id::short_string();
+    flow_server::server::check_once(
+        &init_id,
+        options,
+        move |(errors, warnings, suppressed_errors, _)| {
+            let value = json_output::full_status_json_of_errors(
+                None,
+                &suppressed_errors,
+                json_output::JsonVersion::JsonV1,
+                &None,
+                flow_parser::offset_utils::OffsetKind::Utf8,
+                errors,
+                warnings,
+            )(vec![]);
+            result_for_check.borrow_mut().replace(value);
+            Box::new(|_| ())
+        },
+        None,
+    );
+    result
+        .borrow_mut()
+        .take()
+        .expect("check_once should format its errors")
 }
 
 fn check_main(

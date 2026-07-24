@@ -6,6 +6,7 @@
  */
 
 use std::collections::BTreeSet;
+use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -83,6 +84,31 @@ fn request_status(
             lazy_stats,
         } => (status_response, lazy_stats),
         response => command_utils::failwith_bad_response(&request, &response),
+    }
+}
+
+pub(crate) fn status_json(flowconfig_name: &str, root: &Path) -> io::Result<serde_json::Value> {
+    let (response, _) = request_status(flowconfig_name, root, &ConnectParams::default(), true);
+    match response {
+        server_prot::response::StatusResponse::ERRORS {
+            errors,
+            warnings,
+            suppressed_errors,
+        } => Ok(json_output::full_status_json_of_errors(
+            None,
+            &suppressed_errors,
+            json_output::JsonVersion::JsonV1,
+            &None,
+            flow_parser::offset_utils::OffsetKind::Utf8,
+            &errors,
+            &warnings,
+        )(vec![])),
+        server_prot::response::StatusResponse::NO_ERRORS => {
+            Ok(serde_json::json!({"passed": true, "errors": []}))
+        }
+        server_prot::response::StatusResponse::NOT_COVERED => {
+            Err(io::Error::other("Flow server did not cover this root"))
+        }
     }
 }
 

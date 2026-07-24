@@ -9,6 +9,14 @@ function takesNumber(x: number) {}
 // $FlowFixMe[incompatible-type]
 takesNumber("nope");
 
+=== update-suppressions reads errors from the server ===
+Removed 0 comments in 0 files
+Added 1 comments in 1 files
+>>> update_suppressions_status/test.js
+function takesNumber(x: number) {}
+// $FlowFixMe[incompatible-type]
+takesNumber("nope");
+
 === update-suppressions updates site annotations across roots ===
 Removed 1 comments in 1 files
 Added 0 comments in 0 files

@@ -108,12 +108,6 @@ fn dev_tools_common_spec(name: &str, doc: &str, usage: String) -> command_spec::
         usage,
     ))
     .flag(
-        "--bin",
-        &arg_spec::optional(arg_spec::string()),
-        "Path to the flow binary",
-        None,
-    )
-    .flag(
         "--flowconfigName",
         &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
         "Name of the flowconfig to use in checking",
@@ -133,15 +127,24 @@ fn dev_tools_common_spec(name: &str, doc: &str, usage: String) -> command_spec::
     )
 }
 
+fn add_bin_flag(spec: command_spec::Spec) -> command_spec::Spec {
+    spec.flag(
+        "--bin",
+        &arg_spec::optional(arg_spec::string()),
+        "Path to the flow binary",
+        None,
+    )
+}
+
 fn add_comments_spec() -> command_spec::Spec {
-    dev_tools_common_spec(
+    add_bin_flag(dev_tools_common_spec(
         "add-comments",
         "Adds flow comments",
         format!(
             "Usage: {} dev-tools add-comments [OPTION]... ROOT\n\nQueries Flow for the errors for ROOT. The errors automatically have a comment added on the line before them.\n",
             command_utils::exe_name()
         ),
-    )
+    ))
     .flag(
         "--comment",
         &arg_spec::optional(arg_spec::string()),
@@ -189,18 +192,6 @@ fn update_suppressions_spec() -> command_spec::Spec {
         "--only",
         &arg_spec::optional(only_flag()),
         "Use --only add to only add comments and --only remove to only remove comments",
-        None,
-    )
-    .flag(
-        "--diffBin",
-        &arg_spec::optional(arg_spec::string()),
-        "Path to another binary to use",
-        None,
-    )
-    .flag(
-        "--diff-bin",
-        &arg_spec::optional(arg_spec::string()),
-        "Path to another binary to use",
         None,
     )
     .anon("ROOT...", &arg_spec::list_of(arg_spec::string()))
@@ -296,18 +287,9 @@ fn run_add_comments(args: &arg_spec::Values) -> io::Result<()> {
 }
 
 fn run_update_suppressions(args: &arg_spec::Values) -> io::Result<()> {
-    let diff_bin = if args.contains_key("--diffBin") {
-        get_optional_string(args, "--diffBin")
-    } else {
-        get_optional_string(args, "--diff-bin")
-    }
-    .map(|bin| command_utils::expand_path(&bin));
-
+    let flowconfig_name = get_flowconfig_name(args);
+    let error_check_command = get_check(args);
     flow_dev_tools::update_suppressions::runner(flow_dev_tools::update_suppressions::Args {
-        bin: get_bin(args),
-        diff_bin,
-        flowconfig_name: get_flowconfig_name(args),
-        error_check_command: get_check(args),
         comment: get_optional_string(args, "--comment").unwrap_or_default(),
         roots: parse_roots(args),
         root_names: get_optional_string(args, "--sites")
@@ -318,5 +300,18 @@ fn run_update_suppressions(args: &arg_spec::Values) -> io::Result<()> {
         include_flowtest: command_spec::get(args, "--include-flowtest", &arg_spec::truthy())
             .unwrap(),
         only: command_spec::get(args, "--only", &arg_spec::optional(only_flag())).unwrap(),
+        load_root: move |root: &std::path::Path| {
+            let root = command_utils::guess_root(&flowconfig_name, root.to_str());
+            let files = crate::ls_command::get_all_flow_files(&flowconfig_name, &root);
+            let result = match error_check_command {
+                ErrorCheckCommand::Status => {
+                    crate::status_command::status_json(&flowconfig_name, &root)?
+                }
+                ErrorCheckCommand::Check | ErrorCheckCommand::FullCheck => {
+                    crate::foreground_check_commands::full_check_json(&flowconfig_name, &root)
+                }
+            };
+            Ok((files, result))
+        },
     })
 }

@@ -39,8 +39,18 @@ const ok: number = 1;
 function takesNumber(x: number) {}
 takesNumber("nope");
 EOF
-assert_ok "$FLOW" dev-tools update-suppressions --bin "$FLOW_BIN" --check full-check update_suppressions
+assert_ok "$FLOW" dev-tools update-suppressions --check check update_suppressions
 print_file update_suppressions/test.js
+
+printf "\n=== update-suppressions reads errors from the server ===\n"
+write_flowconfig update_suppressions_status
+cat > update_suppressions_status/test.js <<'EOF'
+function takesNumber(x: number) {}
+takesNumber("nope");
+EOF
+assert_ok "$FLOW" dev-tools update-suppressions --check status update_suppressions_status
+assert_ok "$FLOW" stop update_suppressions_status >/dev/null 2>&1
+print_file update_suppressions_status/test.js
 
 printf "\n=== update-suppressions updates site annotations across roots ===\n"
 mkdir -p update_sites/foo update_sites/bar
@@ -72,7 +82,7 @@ function f(x: ?number) {
   if (x) {}
 }
 EOF
-assert_ok "$FLOW" dev-tools update-suppressions --bin "$FLOW_BIN" --check full-check --sites foo,bar update_sites/foo update_sites/bar
+assert_ok "$FLOW" dev-tools update-suppressions --check check --sites foo,bar update_sites/foo update_sites/bar
 print_file update_sites/shared.js
 
 printf "\n=== add-comments adds suppressions for errors ===\n"
