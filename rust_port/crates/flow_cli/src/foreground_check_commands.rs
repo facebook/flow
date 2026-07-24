@@ -7,6 +7,7 @@
 
 use std::collections::BTreeSet;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use flow_common::options::SavedStateFetcher;
@@ -132,6 +133,52 @@ fn format_errors(
     })
 }
 
+struct PreparedFullCheck {
+    options: Arc<flow_common::options::Options>,
+    flowconfig: flow_config::FlowConfig,
+}
+
+fn prepare_full_check(
+    flowconfig_name: String,
+    root: PathBuf,
+    options_flags: command_utils::OptionsFlags,
+    ignore_version: bool,
+) -> PreparedFullCheck {
+    let flowconfig_path = root.join(&flowconfig_name);
+    let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
+    let (flowconfig, flowconfig_hash) =
+        command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+    let flowconfig_for_assert = flowconfig.clone();
+    let lazy_mode = Some(flow_config::LazyMode::NonLazy);
+    // Saved state doesn't make sense for `flow full-check`, so disable it.
+    let saved_state_options_flags = command_utils::SavedStateFlags {
+        // None would mean we would just use the value in the .flowconfig, if available.
+        // Instead, let's override that and turn off saved state entirely.
+        saved_state_fetcher: Some(SavedStateFetcher::DummyFetcher),
+        saved_state_force_recheck: false,
+        saved_state_no_fallback: false,
+        saved_state_skip_version_check: false,
+        saved_state_verify: false,
+    };
+    let mut options = Arc::new(command_utils::make_options(
+        flowconfig_name,
+        flowconfig_hash,
+        flowconfig,
+        lazy_mode,
+        root,
+        options_flags,
+        saved_state_options_flags,
+    ));
+    // Auto-imports indexing is only useful for IDE/LSP features (autocomplete,
+    // code actions). Foreground check commands never serve those requests, so
+    // skip building the export index to save time and memory.
+    Arc::make_mut(&mut options).autoimports = false;
+    PreparedFullCheck {
+        options,
+        flowconfig: flowconfig_for_assert,
+    }
+}
+
 fn check_main(
     base_flags: command_utils::BaseFlags,
     error_flags: command_utils::ErrorFlagsArgs,
@@ -147,37 +194,10 @@ fn check_main(
 ) {
     let flowconfig_name = base_flags.flowconfig_name;
     let root = command_utils::guess_root(&flowconfig_name, path_opt.as_deref());
-    let flowconfig_path = root.join(&flowconfig_name);
-    let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
-    let (flowconfig, flowconfig_hash) =
-        command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
-    let flowconfig_for_assert = flowconfig.clone();
-    let mut options = {
-        let lazy_mode = Some(flow_config::LazyMode::NonLazy);
-        // Saved state doesn't make sense for `flow full-check`, so disable it.
-        let saved_state_options_flags = command_utils::SavedStateFlags {
-            // None would mean we would just use the value in the .flowconfig, if available.
-            // Instead, let's override that and turn off saved state entirely.
-            saved_state_fetcher: Some(SavedStateFetcher::DummyFetcher),
-            saved_state_force_recheck: false,
-            saved_state_no_fallback: false,
-            saved_state_skip_version_check: false,
-            saved_state_verify: false,
-        };
-        Arc::new(command_utils::make_options(
-            flowconfig_name,
-            flowconfig_hash,
-            flowconfig,
-            lazy_mode,
-            root.clone(),
-            options_flags.clone(),
-            saved_state_options_flags,
-        ))
-    };
-    // Auto-imports indexing is only useful for IDE/LSP features (autocomplete,
-    // code actions). Foreground check commands never serve those requests, so
-    // skip building the export index to save time and memory.
-    Arc::make_mut(&mut options).autoimports = false;
+    let PreparedFullCheck {
+        options,
+        flowconfig: flowconfig_for_assert,
+    } = prepare_full_check(flowconfig_name, root, options_flags, ignore_version);
     let init_id = flow_common_utils::random_id::short_string();
     let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
     // initialize loggers before doing too much, especially anything that might exit

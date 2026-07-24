@@ -7,6 +7,7 @@
 
 use std::collections::BTreeSet;
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
 
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -66,21 +67,32 @@ fn spec(
     spec.anon("root", &arg_spec::optional(arg_spec::string()))
 }
 
-fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &ConnectParams) {
-    let include_warnings = args.error_flags.include_warnings;
+fn request_status(
+    flowconfig_name: &str,
+    root: &Path,
+    connect_flags: &ConnectParams,
+    include_warnings: bool,
+) -> (
+    server_prot::response::StatusResponse,
+    server_prot::response::LazyStats,
+) {
     let request = server_prot::request::Command::STATUS { include_warnings };
-    let (response, lazy_stats) = match command_utils::connect_and_make_request(
-        flowconfig_name,
-        connect_flags,
-        &args.root,
-        &request,
-    ) {
+    match command_utils::connect_and_make_request(flowconfig_name, connect_flags, root, &request) {
         server_prot::response::Response::STATUS {
             status_response,
             lazy_stats,
         } => (status_response, lazy_stats),
         response => command_utils::failwith_bad_response(&request, &response),
-    };
+    }
+}
+
+fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &ConnectParams) {
+    let (response, lazy_stats) = request_status(
+        flowconfig_name,
+        &args.root,
+        connect_flags,
+        args.error_flags.include_warnings,
+    );
     let strip_root = if args.strip_root {
         Some(args.root.clone())
     } else {
