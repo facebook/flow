@@ -383,9 +383,9 @@ bcrypt-pbkdf@^1.0.0:
     tweetnacl "^0.14.3"
 
 brace-expansion@^1.1.7:
-  version "1.1.13"
-  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.13.tgz#d37875c01dc9eff988dd49d112a57cb67b54efe6"
-  integrity sha512-9ZLprWS6EENmhEOpjCYW2c8VkmOvckIJZfkr7rBW6dObmfgJ/L1GpSYW5Hpo9lDz4D1+n0Ckz8rU7FwHDQiG/w==
+  version "1.1.16"
+  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.16.tgz#723d3a30c0558c225abc9fc479a73e14e26c3c2f"
+  integrity sha512-IDw48K2/2kRkg9LdJxurvq3lV3aBgq0REY89duEqFRthjlPdXHKMj7EnQOXVckxzgisinf3nHfrcE2FufFLXMw==
   dependencies:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
