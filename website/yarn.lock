@@ -6623,9 +6623,9 @@ dom-converter@^0.2.0:
     utila "~0.4"
 
 dom-iterator@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/dom-iterator/-/dom-iterator-1.0.0.tgz#9c09899846ec41c2d257adc4d6015e4759ef05ad"
-  integrity sha512-7dsMOQI07EMU98gQM8NSB3GsAiIeBYIPKpnxR3c9xOvdvBjChAcOM0iJ222I3p5xyiZO9e5oggkNaCusuTdYig==
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/dom-iterator/-/dom-iterator-1.0.2.tgz#6b239349ccadbd595055da5e0a7386cce9f0aa7b"
+  integrity sha512-BMelEjhy08OpoWF3v/jrPtx7PZCyP1VM9yiB7rJk19UVmt7zTN5rqoC0Jea+EyT0M6v/VokL0LxIlGLUOBJZ2g==
   dependencies:
     component-props "1.1.1"
     component-xor "0.0.4"
