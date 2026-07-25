@@ -108,26 +108,6 @@ function getPathToLoc(errorLoc: FlowLoc, astRoot: ASTNode): ?Array<PathNode> {
   );
 }
 
-function getNodeAtRange(range: [number, number], astRoot: ASTNode): ?ASTNode {
-  const path = findPathToLocation(
-    astRoot,
-    node => node.range[0] <= range[0] && range[1] <= node.range[1],
-  );
-
-  const lastPathItem = path.pop();
-  if (
-    lastPathItem != null &&
-    // We only care about exact matches
-    lastPathItem.ast.range[0] === range[0] &&
-    lastPathItem.ast.range[1] === range[1]
-  ) {
-    return lastPathItem.ast;
-  }
-
-  return null;
-}
-
 module.exports = {
-  getNodeAtRange,
   default: getPathToLoc,
 };

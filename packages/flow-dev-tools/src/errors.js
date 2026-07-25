@@ -23,25 +23,16 @@ async function getFlowErrorsImpl(
   bin: string,
   errorCheckCommand: ErrorCheckCommand,
   root: string,
-  withWarnings: boolean,
   flowconfigName: string,
 ) {
-  const includeWarnings = withWarnings ? '--include-warnings' : '';
   const flowconfigNameFlag = '--flowconfig-name ' + flowconfigName;
   const cmd = match (errorCheckCommand) {
     'full-check' | 'check' =>
-      format(
-        '%s full-check --json %s %s %s',
-        bin,
-        includeWarnings,
-        flowconfigNameFlag,
-        root,
-      ),
+      format('%s full-check --json %s %s', bin, flowconfigNameFlag, root),
     'status' =>
       format(
-        '%s status --no-auto-start --json %s %s %s',
+        '%s status --no-auto-start --json %s %s',
         bin,
-        includeWarnings,
         flowconfigNameFlag,
         root,
       ),
@@ -60,30 +51,13 @@ async function getFlowErrorsImpl(
   throw new Error(format('Flow check failed!', err, stdout, stderr));
 }
 
-function getFlowErrorsWithWarnings(
-  bin: string,
-  errorCheckCommand: ErrorCheckCommand,
-  root: string,
-  flowconfigName: string,
-): Promise<FlowResult> {
-  return getFlowErrorsImpl(bin, errorCheckCommand, root, true, flowconfigName);
-}
-
 async function getFlowErrors(
   bin: string,
   errorCheckCommand: ErrorCheckCommand,
   root: string,
   flowconfigName: string,
 ): Promise<FlowResult> {
-  return getFlowErrorsImpl(bin, errorCheckCommand, root, false, flowconfigName);
-}
-
-function isUnusedSuppression(error: FlowError): boolean {
-  return (
-    (error.message[0].descr === 'Error suppressing comment' &&
-      error.message[1].descr === 'Unused suppression') ||
-    error.message[0].descr.startsWith('Unused suppression comment.')
-  );
+  return getFlowErrorsImpl(bin, errorCheckCommand, root, flowconfigName);
 }
 
 function mainSourceLocOfError(error: FlowError): ?FlowLoc {
@@ -103,30 +77,8 @@ function filterErrors(errors: Array<FlowError>): Array<FlowError> {
   return errors.filter(e => mainSourceLocOfError(e) != null);
 }
 
-function collateErrors(
-  errors: Array<FlowError>,
-): Map<string, Array<FlowError>> {
-  const errorsByFile = new Map<string, Array<FlowError>>();
-  for (const error of errors) {
-    const message = error.message[0];
-    const loc = message.loc;
-    if (loc) {
-      const source = loc.source;
-      if (source) {
-        const fileErrors: Array<FlowError> = errorsByFile.get(source) || [];
-        fileErrors.push(error);
-        errorsByFile.set(source, fileErrors);
-      }
-    }
-  }
-  return errorsByFile;
-}
-
 module.exports = {
-  getFlowErrorsWithWarnings,
   getFlowErrors,
-  isUnusedSuppression,
   mainSourceLocOfError,
   filterErrors,
-  collateErrors,
 };

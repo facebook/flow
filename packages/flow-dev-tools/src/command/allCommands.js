@@ -18,8 +18,6 @@ module.exports = {
   ping: () => require('../ping/pingCommand'),
   record: () => require('../record/recordCommand'),
   test: () => require('../test/testCommand'),
-  'update-suppressions': () =>
-    require('../update-suppressions/update-suppressionsCommand'),
   // prettier-ignore
   // @fb-only: cgroups: () => require('../facebook/cgroups/cgroupsCommand'),
   // prettier-ignore
