@@ -8,6 +8,7 @@
 pub mod comment;
 mod errors;
 mod flow_result;
+pub mod runtests;
 pub mod update_suppressions;
 mod utils;
 

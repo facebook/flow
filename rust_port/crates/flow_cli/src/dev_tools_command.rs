@@ -9,6 +9,7 @@ use std::io;
 use std::path::PathBuf;
 
 use flow_dev_tools::ErrorCheckCommand;
+use flow_dev_tools::runtests;
 use flow_dev_tools::update_suppressions::Only;
 
 use crate::command_spec;
@@ -18,6 +19,7 @@ use crate::command_utils;
 #[derive(Clone)]
 enum DevToolsSubcommand {
     AddComments,
+    Runtests,
     UpdateSuppressions,
 }
 
@@ -197,6 +199,152 @@ fn update_suppressions_spec() -> command_spec::Spec {
     .anon("ROOT...", &arg_spec::list_of(arg_spec::string()))
 }
 
+fn runtests_spec() -> command_spec::Spec {
+    command_spec::Spec::new(
+        "runtests",
+        "Runs Flow's check tests (tests/ directory)",
+        command_spec::Visibility::Public,
+        format!(
+            r#"Usage: {} dev-tools runtests [OPTION]... [TEST_FILTER]
+
+Runs Flow's bash-style tests from the tests/ directory using the cross-platform Rust runner."#,
+            command_utils::exe_name()
+        ),
+    )
+    .flag(
+        "--tests-dir",
+        &arg_spec::optional(arg_spec::string()),
+        "Path to tests directory",
+        None,
+    )
+    .flag(
+        "-d",
+        &arg_spec::optional(arg_spec::string()),
+        "Flow root containing tests/",
+        None,
+    )
+    .flag(
+        "--filter",
+        &arg_spec::optional(arg_spec::string()),
+        "Regular expression to filter test names",
+        None,
+    )
+    .flag(
+        "-f",
+        &arg_spec::optional(arg_spec::string()),
+        "Regular expression to filter test names",
+        None,
+    )
+    .flag(
+        "--test",
+        &arg_spec::optional(arg_spec::string()),
+        "Run a specific test",
+        None,
+    )
+    .flag(
+        "-t",
+        &arg_spec::optional(arg_spec::string()),
+        "Run a specific test",
+        None,
+    )
+    .flag(
+        "--run-test",
+        &arg_spec::optional(arg_spec::string()),
+        "Run a specific test (Buck/TPX compatibility)",
+        None,
+    )
+    .flag(
+        "--parallelism",
+        &arg_spec::optional(arg_spec::uint()),
+        "Number of tests to run in parallel",
+        None,
+    )
+    .flag(
+        "-p",
+        &arg_spec::optional(arg_spec::uint()),
+        "Number of tests to run in parallel",
+        None,
+    )
+    .flag(
+        "--check-only",
+        &arg_spec::truthy(),
+        "Only run full-check tests",
+        None,
+    )
+    .flag("-c", &arg_spec::truthy(), "Only run full-check tests", None)
+    .flag(
+        "--saved-state",
+        &arg_spec::truthy(),
+        "Test using saved state",
+        None,
+    )
+    .flag("-s", &arg_spec::truthy(), "Test using saved state", None)
+    .flag(
+        "--long-lived-workers",
+        &arg_spec::truthy(),
+        "Test with long-lived workers",
+        None,
+    )
+    .flag(
+        "-L",
+        &arg_spec::truthy(),
+        "Test with long-lived workers",
+        None,
+    )
+    .flag(
+        "--record",
+        &arg_spec::truthy(),
+        "Re-record failing tests to update expected output",
+        None,
+    )
+    .flag("-r", &arg_spec::truthy(), "Re-record failing tests", None)
+    .flag(
+        "--quiet",
+        &arg_spec::truthy(),
+        "Quiet output (hides status, just prints results)",
+        None,
+    )
+    .flag("-q", &arg_spec::truthy(), "Quiet output", None)
+    .flag(
+        "--verbose",
+        &arg_spec::truthy(),
+        "Verbose output (shows skipped tests)",
+        None,
+    )
+    .flag("-v", &arg_spec::truthy(), "Verbose output", None)
+    .flag(
+        "--json",
+        &arg_spec::truthy(),
+        "Output results as a JSON map",
+        None,
+    )
+    .flag(
+        "-j",
+        &arg_spec::truthy(),
+        "Output results as a JSON map",
+        None,
+    )
+    .flag(
+        "--list",
+        &arg_spec::truthy(),
+        "List tests that will be run",
+        None,
+    )
+    .flag(
+        "-l",
+        &arg_spec::truthy(),
+        "List tests that will be run",
+        None,
+    )
+    .flag(
+        "--list-tests",
+        &arg_spec::truthy(),
+        "List tests that will be run (Buck/TPX compatibility)",
+        None,
+    )
+    .anon("TEST_FILTER", &arg_spec::string())
+}
+
 fn root_spec() -> command_spec::Spec {
     command_spec::Spec::new(
         "dev-tools",
@@ -211,6 +359,7 @@ fn root_spec() -> command_spec::Spec {
                 1,
                 &[
                     ("add-comments".to_string(), "Adds flow comments".to_string(),),
+                    ("runtests".to_string(), "Runs Flow check tests".to_string()),
                     (
                         "update-suppressions".to_string(),
                         "Adds and removes suppression comments".to_string(),
@@ -225,6 +374,7 @@ fn root_spec() -> command_spec::Spec {
             None,
             arg_spec::command_flag(vec![
                 ("add-comments", DevToolsSubcommand::AddComments),
+                ("runtests", DevToolsSubcommand::Runtests),
                 (
                     "update-suppressions",
                     DevToolsSubcommand::UpdateSuppressions,
@@ -243,6 +393,7 @@ pub(crate) fn command() -> command_spec::Command {
                 None,
                 arg_spec::command_flag(vec![
                     ("add-comments", DevToolsSubcommand::AddComments),
+                    ("runtests", DevToolsSubcommand::Runtests),
                     (
                         "update-suppressions",
                         DevToolsSubcommand::UpdateSuppressions,
@@ -255,6 +406,7 @@ pub(crate) fn command() -> command_spec::Command {
             DevToolsSubcommand::AddComments => command_spec::command(add_comments_spec(), |args| {
                 run_or_exit(run_add_comments(args))
             }),
+            DevToolsSubcommand::Runtests => command_spec::command(runtests_spec(), run_runtests),
             DevToolsSubcommand::UpdateSuppressions => {
                 command_spec::command(update_suppressions_spec(), |args| {
                     run_or_exit(run_update_suppressions(args))
@@ -263,6 +415,52 @@ pub(crate) fn command() -> command_spec::Command {
         };
         command_utils::run_command(&command, &argv);
     })
+}
+
+fn run_runtests(args: &arg_spec::Values) {
+    let json_output = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap()
+        || command_spec::get(args, "-j", &arg_spec::truthy()).unwrap();
+    let args = runtests::Args {
+        current_version: flow_common::flow_version::version().to_owned(),
+        tests_dir: get_optional_string(args, "--tests-dir"),
+        dir: get_optional_string(args, "-d"),
+        filter: get_optional_string(args, "--filter").or_else(|| get_optional_string(args, "-f")),
+        test: get_optional_string(args, "--test").or_else(|| get_optional_string(args, "-t")),
+        run_test: get_optional_string(args, "--run-test"),
+        positional_filter: command_spec::get(args, "TEST_FILTER", &arg_spec::string()).unwrap(),
+        parallelism: command_spec::get(
+            args,
+            "--parallelism",
+            &arg_spec::optional(arg_spec::uint()),
+        )
+        .unwrap()
+        .or_else(|| command_spec::get(args, "-p", &arg_spec::optional(arg_spec::uint())).unwrap()),
+        check_only: command_spec::get(args, "--check-only", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-c", &arg_spec::truthy()).unwrap(),
+        saved_state: command_spec::get(args, "--saved-state", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-s", &arg_spec::truthy()).unwrap(),
+        long_lived_workers: command_spec::get(args, "--long-lived-workers", &arg_spec::truthy())
+            .unwrap()
+            || command_spec::get(args, "-L", &arg_spec::truthy()).unwrap(),
+        record: command_spec::get(args, "--record", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-r", &arg_spec::truthy()).unwrap(),
+        quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-q", &arg_spec::truthy()).unwrap(),
+        verbose: command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-v", &arg_spec::truthy()).unwrap(),
+        json_output,
+        list: command_spec::get(args, "--list", &arg_spec::truthy()).unwrap()
+            || command_spec::get(args, "-l", &arg_spec::truthy()).unwrap(),
+        list_tests: command_spec::get(args, "--list-tests", &arg_spec::truthy()).unwrap(),
+    };
+    match runtests::run(args) {
+        Ok(true) => {}
+        Ok(false) => std::process::exit(1),
+        Err(err) => flow_common_exit_status::exit_with_msg(
+            flow_common_exit_status::FlowExitStatus::UnknownError,
+            &format!("runtests failed: {err}"),
+        ),
+    }
 }
 
 fn run_or_exit(result: io::Result<()>) {
