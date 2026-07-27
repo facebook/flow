@@ -306,7 +306,7 @@ jobs:
         path: bin/rust-port-linux
     - run: chmod +x bin/rust-port-linux/flow
     - name: Run Rust port tests
-      run: ./runtests.sh bin/rust-port-linux/flow
+      run: bin/rust-port-linux/flow dev-tools runtests
   runtests_macos_arm:
     runs-on: macos-15
     needs:
@@ -324,7 +324,7 @@ jobs:
         path: bin/rust-port-macos-arm64
     - run: chmod +x bin/rust-port-macos-arm64/flow
     - name: Run Rust port tests
-      run: ./runtests.sh bin/rust-port-macos-arm64/flow
+      run: bin/rust-port-macos-arm64/flow dev-tools runtests
   tool_test_linux:
     runs-on: ubuntu-22.04
     needs:
