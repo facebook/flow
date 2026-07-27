@@ -115,8 +115,9 @@ run_codegen "ESTree predicates" \
     --estree-predicates
 run_arc_f "${estree_pkg}/generated/predicates.js"
 
-# 6. ESTree selector types (--estree-selectors) — for flow-estree
-run_codegen "ESTree selector types" \
+# 6. Minimal ESTree selector types used to check flow-estree's sources. The
+#    package build generates the complete declaration directly into dist/.
+run_codegen "ESTree selector source types" \
     "${estree_pkg}/generated/HermesESTreeSelectorTypes.js.flow" \
     --estree-selectors
 run_arc_f "${estree_pkg}/generated/HermesESTreeSelectorTypes.js.flow"

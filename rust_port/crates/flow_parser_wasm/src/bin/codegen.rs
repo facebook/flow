@@ -73,8 +73,9 @@
 //!
 //! ## ESTree selector types (`--estree-selectors`)
 //!
-//! Generates `generated/HermesESTreeSelectorTypes.js.flow` for the
-//! flow-estree package. Mirrors upstream's `genSelectorTypes.js`:
+//! Generates the minimal `generated/HermesESTreeSelectorTypes.js.flow` used to
+//! type-check flow-estree's sources. The package build generates the complete
+//! declaration directly into dist, matching upstream's two-stage build:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \

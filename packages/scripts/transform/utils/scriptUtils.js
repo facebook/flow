@@ -39,9 +39,11 @@ export type ESTreeJSON = ReadonlyArray<
 
 const FLOW_ESTREE_JSON_FILE = path.resolve(__dirname, '../FlowESTreeJSON.json');
 
-export const GetTransformESTreeJSON: () => ESTreeJSON = () =>
+export const GetFlowESTreeJSON: () => ESTreeJSON = () =>
   // $FlowExpectedError[unsupported-syntax]
   require(FLOW_ESTREE_JSON_FILE);
+
+export const GetTransformESTreeJSON: () => ESTreeJSON = GetFlowESTreeJSON;
 
 export const TransformESTreePackage: 'flow-estree' = 'flow-estree';
 export const TransformPackage: 'flow-transform' = 'flow-transform';
@@ -85,7 +87,7 @@ function header(flow: FlowStyle, skipFormat: boolean): string {
 type ArtifactOptions = Readonly<{
   code: string,
   flow?: FlowStyle,
-  package: 'flow-transform',
+  package: 'flow-estree' | 'flow-transform',
   file: string,
   skipFormat?: boolean,
 }>;

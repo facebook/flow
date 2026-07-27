@@ -94,6 +94,10 @@ for package in "${PACKAGES[@]}"; do
   fi
 done
 
+# Replace flow-estree's source-only selector declaration with the complete
+# declaration shipped to package consumers.
+yarn babel-node "$THIS_DIR/genSelectorTypes.js"
+
 for generator in \
   genTransformCloneTypes.js \
   genTransformModifyTypes.js \
