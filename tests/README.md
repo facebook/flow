@@ -4,6 +4,9 @@ This directory contains the test suite for Flow. Each subdirectory represents a 
 
 For all commands described below, they must be run from the project root (flow).
 
+These tests are run by the Rust test runner, `<flow> dev-tools runtests`, where
+`<flow>` is the path to a Flow binary.
+
 ## Quick Start
 
 ### OSS Build (using Make)
@@ -13,36 +16,36 @@ For all commands described below, they must be run from the project root (flow).
 make
 
 # Run all tests
-./runtests.sh bin/flow
+bin/flow dev-tools runtests
 
 # Run a specific test
-./runtests.sh -t <test_name> bin/flow
+bin/flow dev-tools runtests -t <test_name>
 
 # Example: run the records test
-./runtests.sh -t records bin/flow
+bin/flow dev-tools runtests -t records
 ```
 
 ### Meta Internal Development (using Buck)
 
 ```bash
-./runtests.sh -t mytest $(buck2 build //flow:flow --show-full-output | awk '{print $2}')
+$(buck2 build //flow:flow --show-full-output | awk '{print $2}') dev-tools runtests -t mytest
 ```
 
 ## Common Commands
 
 ### Run tests matching a pattern
 ```bash
-./runtests.sh <flow_binary> -f "^record"  # All tests starting with "record"
+<flow_binary> dev-tools runtests -f "^record"  # All tests starting with "record"
 ```
 
 ### List tests without running them
 ```bash
-./runtests.sh -l <flow_binary>
+<flow_binary> dev-tools runtests -l
 ```
 
 ### Update expected output after intentional changes
 ```bash
-./runtests.sh -t <test_name> -r <flow_binary>
+<flow_binary> dev-tools runtests -t <test_name> -r
 ```
 
 This re-records the test output. Use this when you've intentionally changed Flow's behavior and need to update the `.exp` files.
@@ -132,11 +135,11 @@ Make sure you're using the full absolute path to the flow binary:
 
 ```bash
 # Wrong (relative path may fail)
-./runtests.sh -t mytest ../bin/flow
+../bin/flow dev-tools runtests -t mytest
 
 # Correct (absolute path)
-./runtests.sh -t mytest /full/path/to/bin/flow
+/full/path/to/bin/flow dev-tools runtests -t mytest
 
 # Or use command substitution (Meta only)
-./runtests.sh -t mytest $(buck2 build //flow:flow --show-full-output | awk '{print $2}')
+$(buck2 build //flow:flow --show-full-output | awk '{print $2}') dev-tools runtests -t mytest
 ```

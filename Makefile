@@ -37,7 +37,7 @@ do-test-js: bin/flow.js
 	$(NODE) src/__tests__/flow_dot_js_smoke_test.js $(realpath bin/flow.js)
 
 do-test:
-	./runtests.sh bin/flow$(EXE)
+	bin/flow$(EXE) dev-tools runtests
 	bin/flow$(EXE) check packages/flow-dev-tools
 	${MAKE} do-test-tool
 	./tool test

@@ -8,7 +8,7 @@
 
 assert_ok "$FLOW" stop 2> /dev/null > /dev/null
 
-# These are set by runtests.sh
+# These are set by `flow dev-tools runtests`
 TEST_TMP_DIR=${FLOW_TEMP_DIR:-${TMPDIR:-${TEMP:-${TMP:-/tmp}}}}
 unset FLOW_TEMP_DIR
 unset FLOW_LOG_FILE
