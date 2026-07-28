@@ -23,9 +23,14 @@ import type {SuiteResult} from './runTestSuite';
 const testSuiteRegex = /(.*)[\/\\]test.js/;
 
 async function findTestSuites(testsDir: string): Promise<Array<string>> {
-  const testSuites = await glob(format('%s/**/test.js', testsDir), {
-    cwd: __dirname,
-  });
+  // glob patterns must use unix separators; an absolute Windows path has
+  // backslashes that minimatch would treat as escapes (matching nothing).
+  const testSuites = await glob(
+    format('%s/**/test.js', testsDir).replace(/\\/g, '/'),
+    {
+      cwd: __dirname,
+    },
+  );
   // On Windows, glob still uses unix dir separators, so we need to normalize
   return testSuites.map(normalize);
 }
@@ -111,9 +116,12 @@ async function findTestsByRun(
     return new Set();
   }
 
-  const results = await glob(format('%s/**/results.json', runDir), {
-    cwd: __dirname,
-  });
+  const results = await glob(
+    format('%s/**/results.json', runDir).replace(/\\/g, '/'),
+    {
+      cwd: __dirname,
+    },
+  );
 
   let resultContents = await Promise.all(
     results.map(async filename => {

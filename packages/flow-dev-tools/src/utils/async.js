@@ -13,8 +13,8 @@ import type {Options as GlobOptions} from 'glob';
 const {exec: cp_exec} = require('child_process');
 const {createInterface: rl_createInterface} = require('readline');
 const {format} = require('util');
+const {mkdir: fs_mkdir} = require('fs').promises;
 const glob_glob = require('glob');
-const mkdirp_mkdirp = require('mkdirp');
 const rimraf_rimraf = require('rimraf');
 
 const {splitIntoChunks} = require('./string');
@@ -83,15 +83,7 @@ function rimraf(path: string): Promise<void> {
 }
 
 function mkdirp(dir: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    mkdirp_mkdirp(dir, err => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  return fs_mkdir(dir, {recursive: true}).then(() => {});
 }
 
 function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
