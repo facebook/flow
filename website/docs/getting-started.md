@@ -192,7 +192,7 @@ following content:
 
 ```json
 {
-  "env": ["node", "dom", "bom", "cssom", "serviceworkers", "jsx"]
+  "env": ["node", "geometry", "html", "streams", "web-animations", "dom", "bom", "cssom", "serviceworkers", "jsx"]
 }
 ```
 
