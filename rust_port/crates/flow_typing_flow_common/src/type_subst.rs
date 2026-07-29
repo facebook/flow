@@ -628,6 +628,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                     tparams: xs,
                     t_out: inner,
                     id: poly_id,
+                    strictness_kind,
                 }) = def_t.deref()
                 {
                     let prev_change_id = self.change_id;
@@ -731,6 +732,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                                 tparams: xs_new.map_or_else(|| xs.dupe(), Into::into),
                                 t_out: inner_prime,
                                 id: new_id,
+                                strictness_kind: *strictness_kind,
                             }))),
                         ))
                     } else {
@@ -913,6 +915,7 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                 proto_t: t_prime.proto_t.dupe(),
                 call_t: t_prime.call_t,
                 reachable_targs: reachable_targs.into(),
+                strictness_kind: t_prime.strictness_kind,
             })
         }
     }

@@ -1,7 +1,7 @@
 // @flow
-// Negative: declaring a fresh interface in a .js file with an object-typed
-// `extends` must still error. The gate is consumer-keyed -- the relaxation
-// only applies in .ts files. This pins that behavior.
+// Negative: a Flow interface cannot extend a Flow object type.
+// Both sides retain Flow strictness through the inheritance check,
+// so the resolved object type is still not inheritable.
 
 type Base = {a: number, b: string};
 

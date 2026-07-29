@@ -35,6 +35,7 @@ pub mod span_map;
 pub mod string_utils;
 pub mod subst_name;
 pub mod sys_utils;
+pub mod type_strictness;
 pub mod verbose;
 
 pub use flow_common_leb128 as leb128;

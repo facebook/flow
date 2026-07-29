@@ -32,6 +32,7 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnifyCause;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
@@ -379,6 +380,7 @@ pub fn mapped_type_of_keys<'cx>(
     let obj_reason = reason.dupe().replace_desc(VirtualReasonDesc::RObjectType);
     let slice = object::Slice {
         reason: obj_reason,
+        strictness_kind: TypeStrictnessKind::Flow,
         props,
         flags,
         frozen: false,
@@ -687,6 +689,7 @@ pub fn run<'cx>(
         let mk_object = |slice: &object::Slice| -> Type {
             let object::Slice {
                 reason: r,
+                strictness_kind,
                 props,
                 flags,
                 frozen: _,
@@ -723,6 +726,7 @@ pub fn run<'cx>(
                 id,
                 proto,
                 generics.clone(),
+                *strictness_kind,
             )
         };
         let ts = x.mapped_ref(mk_object);
@@ -764,6 +768,7 @@ pub fn run<'cx>(
          -> Result<Type, FlowJsException> {
             let object::Slice {
                 reason: config_reason,
+                strictness_kind: config_strictness_kind,
                 props: config_props,
                 flags: config_flags,
                 frozen: _,
@@ -810,6 +815,7 @@ pub fn run<'cx>(
                 Some(defaults_slice) => {
                     let object::Slice {
                         reason: defaults_reason,
+                        strictness_kind: _,
                         props: defaults_props,
                         flags: defaults_flags,
                         frozen: _,
@@ -1002,6 +1008,9 @@ pub fn run<'cx>(
                 }
             };
             let call = None;
+            let strictness_kind = defaults
+                .map(|defaults| config_strictness_kind.join(defaults.strictness_kind))
+                .unwrap_or(*config_strictness_kind);
             // Finish creating our props object.
             let id = cx.generate_property_map(props_map);
             let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
@@ -1018,6 +1027,7 @@ pub fn run<'cx>(
                 id,
                 proto,
                 generics,
+                strictness_kind,
             ))
         };
 

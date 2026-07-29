@@ -1,3 +1,22 @@
+Error -------------------------------------------------------------------------------------------- flow_consumer.ts:17:1
+
+Cannot cast `tsString` to `FlowHasLength` because string [1], a primitive, cannot be used as a subtype of
+`FlowHasLength` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype
+of an interface. [incompatible-type]
+
+   flow_consumer.ts:17:1
+   17| tsString satisfies FlowHasLength; // ERROR: TypeScript value to Flow interface
+       ^^^^^^^^
+
+References:
+   flow_consumer.ts:16:25
+   16| declare const tsString: string;
+                               ^^^^^^ [1]
+   flow_consumer.ts:17:20
+   17| tsString satisfies FlowHasLength; // ERROR: TypeScript value to Flow interface
+                          ^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:35:1
 
 Cannot cast `s` to `HasFoo` because property `foo` is missing in `String` [1] but exists in `HasFoo` [2].
@@ -107,4 +126,4 @@ References:
 
 
 
-Found 6 errors
+Found 7 errors

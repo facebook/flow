@@ -53,6 +53,7 @@ use flow_common::reason::string_of_aloc;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_common::slow_to_check_logging::SlowToCheckLogging;
 use flow_common::subst_name::SubstName;
+use flow_common::type_strictness::TypeStrictnessKind;
 use flow_common::verbose::Verbose;
 use flow_data_structure_wrapper::int_map::IntHashMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -979,6 +980,10 @@ impl<'cx> Context<'cx> {
 
     pub fn file(&self) -> &FileKey {
         &self.0.file
+    }
+
+    pub fn type_strictness_kind(&self) -> TypeStrictnessKind {
+        TypeStrictnessKind::from_is_typescript(files::has_ts_ext(self.file()))
     }
 
     pub fn check_budget(&self) -> Result<(), JobError> {

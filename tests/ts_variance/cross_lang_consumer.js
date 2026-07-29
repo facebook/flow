@@ -1,10 +1,37 @@
 // @flow
-// .js consumer of the same .ts-defined generic. The gate keys on
-// Files.has_ts_ext (Context.file cx), so a .js context stays strict --
-// Box<Dog> -> Box<Animal> still errors here, even though the same flow
-// is accepted from a .ts consumer in cross_lang_consumer.ts.
+// .js consumer of the same .ts-defined generic. The imported type retains
+// TypeScript's covariant treatment of its neutral parameter.
 
-import {type Animal, type Dog, Box} from "./cross_lang_lib";
+import {
+  type Animal,
+  type AnimalMethod,
+  type Dog,
+  type DogMethod,
+  type MutableTuple,
+  type MutableValue,
+  type NarrowValue,
+  type OptionalValues,
+  type PresentValue,
+  type ReadonlyTuple,
+  type ReadonlyValue,
+  type WideValue,
+  Box,
+} from "./cross_lang_lib";
 
 declare const dogBox: Box<Dog>;
-const a: Box<Animal> = dogBox; // ERROR in .js: Neutral T is invariant
+const a: Box<Animal> = dogBox; // OK: Box comes from .ts
+
+declare const dogMethod: DogMethod;
+const animalMethod: AnimalMethod = dogMethod; // OK: methods come from .ts
+
+declare const readonlyValue: ReadonlyValue;
+const mutableValue: MutableValue = readonlyValue; // OK: properties come from .ts
+
+declare const mutableTuple: MutableTuple;
+const readonlyTuple: ReadonlyTuple = mutableTuple; // OK: tuples come from .ts
+
+declare const narrowValue: NarrowValue;
+const wideValue: WideValue = narrowValue; // OK: properties come from .ts
+
+declare const presentValue: PresentValue;
+const optionalValues: OptionalValues = presentValue; // OK: optional properties come from .ts

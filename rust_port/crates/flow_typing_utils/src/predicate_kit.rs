@@ -1075,6 +1075,7 @@ fn call_latent_pred<'cx>(
                         tparams: ids,
                         t_out: t_out_inner,
                         id: _,
+                        strictness_kind: _,
                     }) => {
                         let reason_tapp = r;
                         let fun_t_c = t.dupe();

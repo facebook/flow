@@ -911,6 +911,7 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             tparams,
             t_out,
             id: _,
+            strictness_kind,
         }) => {
             let mut tparams_changed = false;
             let tparams_prime: Rc<[TypeParam]> = tparams
@@ -932,6 +933,7 @@ pub fn def_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     tparams: tparams_prime,
                     t_out: t_out_prime,
                     id: poly::Id::generate_id(),
+                    strictness_kind: *strictness_kind,
                 })))
             }
         }
@@ -1153,6 +1155,7 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             type_guard: type_guard_prime,
             def_reason: t.def_reason.dupe(),
             effect_: t.effect_.clone(),
+            strictness_kind: t.strictness_kind,
         })
     }
 }
@@ -1232,6 +1235,7 @@ pub fn inst_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             inst_react_dro: i.inst_react_dro.clone(),
             inst_abstract: i.inst_abstract,
             inst_abstract_props: i.inst_abstract_props.clone(),
+            strictness_kind: i.strictness_kind,
         })
     }
 }
@@ -1741,6 +1745,7 @@ pub fn obj_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             proto_t: proto_t_prime,
             call_t: call_t_prime,
             reachable_targs: reachable_targs_prime,
+            strictness_kind: t.strictness_kind,
         })
     }
 }
@@ -1840,6 +1845,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             elements,
             arity,
             inexact,
+            strictness_kind,
         }) => {
             // let elem_t' = self#type_ cx map_cx elem_t in
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
@@ -1857,6 +1863,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     elements: elements_prime,
                     arity: *arity,
                     inexact: *inexact,
+                    strictness_kind: *strictness_kind,
                 })))
             }
         }

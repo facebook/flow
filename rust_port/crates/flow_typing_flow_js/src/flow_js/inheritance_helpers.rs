@@ -14,6 +14,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
+use flow_typing_type::type_::TypeStrictnessKind;
 
 use super::helpers::*;
 use super::*;
@@ -75,6 +76,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
     proto_props_id: properties::Id,
     call_id: Option<i32>,
     inst_dict: &Option<DictType>,
+    strictness_kind: TypeStrictnessKind,
 ) -> Type {
     let own_props = cx.find_props(own_props_id);
     let proto_props = cx.find_props(proto_props_id);
@@ -102,6 +104,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
         proto_t: Type::new(TypeInner::ObjProtoT(reason_struct.dupe())),
         call_t: call_id,
         reachable_targs: Rc::from([]),
+        strictness_kind,
     };
     Type::new(TypeInner::DefT(
         reason_struct,
@@ -118,6 +121,7 @@ pub(super) fn structural_subtype<'cx>(
     trace: DepthTrace,
     use_op: UseOp,
     upper_inst_abstract: bool,
+    strictness_kind: TypeStrictnessKind,
     lower: &Type,
     reason_struct: &Reason,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
@@ -147,6 +151,7 @@ pub(super) fn structural_subtype<'cx>(
                 proto_props_id,
                 call_id,
                 inst_dict,
+                strictness_kind,
             );
             let lower = Type::new(TypeInner::DefT(
                 lreason.dupe(),
@@ -159,6 +164,7 @@ pub(super) fn structural_subtype<'cx>(
                     proto_t: lproto.dupe(),
                     call_t: lcall,
                     reachable_targs: lreachable_targs.dupe(),
+                    strictness_kind: l_obj.strictness_kind,
                 }))),
             ));
             rec_flow_t(cx, trace, use_op, (&lower, &o))?;
@@ -169,6 +175,7 @@ pub(super) fn structural_subtype<'cx>(
                 trace,
                 use_op,
                 upper_inst_abstract,
+                strictness_kind,
                 lower,
                 reason_struct,
                 (
@@ -189,6 +196,7 @@ pub(super) fn inst_structural_subtype<'cx>(
     trace: DepthTrace,
     use_op: UseOp,
     upper_inst_abstract: bool,
+    strictness_kind: TypeStrictnessKind,
     lower: &Type,
     reason_struct: &Reason,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
@@ -204,13 +212,17 @@ pub(super) fn inst_structural_subtype<'cx>(
     let own_props = cx.find_props(own_props_id);
     let proto_props = cx.find_props(proto_props_id);
     let call_t = call_id.map(|id| cx.find_call(id));
-    let read_only_if_lit = |p: &Property| -> PropertyType {
+    let read_only_if_lit = |p: &Property| -> Property {
         match p.deref() {
-            PropertyInner::Field(fd) if lit => PropertyType::OrdinaryField {
-                type_: fd.type_.dupe(),
-                polarity: Polarity::Positive,
-            },
-            _ => property::property_type(p),
+            PropertyInner::Field(fd) if lit => {
+                Property::new(PropertyInner::Field(Box::new(FieldData {
+                    preferred_def_locs: fd.preferred_def_locs.clone(),
+                    key_loc: fd.key_loc.dupe(),
+                    type_: fd.type_.dupe(),
+                    polarity: Polarity::Positive,
+                })))
+            }
+            _ => p.dupe(),
         }
     };
     if let Some(dict) = inst_dict {
@@ -305,10 +317,15 @@ pub(super) fn inst_structural_subtype<'cx>(
                             lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
                                 Box::new(LookupPropForSubtypingData {
                                     use_op: use_op.dupe(),
-                                    prop: PropertyType::OrdinaryField {
-                                        type_: t.dupe(),
-                                        polarity,
-                                    },
+                                    prop: Property::new(PropertyInner::Field(Box::new(
+                                        FieldData {
+                                            preferred_def_locs: fd.preferred_def_locs.clone(),
+                                            key_loc: fd.key_loc.dupe(),
+                                            type_: t.dupe(),
+                                            polarity,
+                                        },
+                                    ))),
+                                    strictness_kind,
                                     prop_name: name.dupe(),
                                     reason_lower: lreason.dupe(),
                                     reason_upper: reason_struct.dupe(),
@@ -340,6 +357,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                                 Box::new(LookupPropForSubtypingData {
                                     use_op: use_op.dupe(),
                                     prop: read_only_if_lit(p),
+                                    strictness_kind,
                                     prop_name: name.dupe(),
                                     reason_lower: lreason.dupe(),
                                     reason_upper: reason_struct.dupe(),
@@ -373,6 +391,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                         LookupPropForSubtypingData {
                             use_op: use_op.dupe(),
                             prop: read_only_if_lit(p),
+                            strictness_kind,
                             prop_name: name.dupe(),
                             reason_lower: lreason.dupe(),
                             reason_upper: reason_struct.dupe(),
@@ -522,6 +541,7 @@ pub(super) fn check_super<'cx>(
     t: &Type,
     x: &Name,
     p: &Property,
+    strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     let use_op = UseOp::Frame(
         Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
@@ -536,7 +556,7 @@ pub(super) fn check_super<'cx>(
     let reason_prop = lreason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
-    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), p.dupe())));
+    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), p.dupe(), strictness_kind)));
     let t = if flow_js_utils::is_munged_prop_name(cx, x) {
         // munge names beginning with single _
         Type::new(TypeInner::ObjProtoT(reason_of_t(t).dupe()))

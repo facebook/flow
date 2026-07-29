@@ -1,6 +1,12 @@
-// .ts consumer: the gate kicks in (Files.has_ts_ext returns true for
-// this file), so Box<Dog> -> Box<Animal> is accepted via the relaxed
-// covariant treatment of Neutral tparams.
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// .ts consumer: Box<Dog> -> Box<Animal> uses the generic's relaxed
+// covariant treatment of neutral type parameters.
 
 import {type Animal, type Dog, Box} from "./cross_lang_lib";
 

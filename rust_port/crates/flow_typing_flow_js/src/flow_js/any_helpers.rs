@@ -39,7 +39,8 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                     arity,
                     inexact,
                     react_dro,
-                    ..
+                    strictness_kind,
+                    elem_t: _,
                 }) => {
                     let new_elements = elements
                         .iter()
@@ -63,6 +64,7 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                                 elements: new_elements,
                                 arity: arity.clone(),
                                 inexact: *inexact,
+                                strictness_kind: *strictness_kind,
                             },
                         ))))),
                     ));
@@ -285,6 +287,7 @@ pub(super) fn any_prop_inst<'cx>(
         class_private_static_methods: _,
         inst_abstract: _,
         inst_abstract_props: _,
+        strictness_kind: _,
     } = **inst;
 
     any_prop_to_type_args(

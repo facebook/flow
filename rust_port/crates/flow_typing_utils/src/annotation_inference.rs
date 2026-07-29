@@ -1027,6 +1027,7 @@ fn elab_t_concrete<'cx>(
                     tparams: ids,
                     t_out,
                     id,
+                    strictness_kind: _,
                 }) if flow_common::files::has_ts_ext(cx.file())
                     && ids.iter().all(|tp| tp.default.is_some()) =>
                 {
@@ -1546,6 +1547,7 @@ fn elab_t_concrete<'cx>(
                         tparams_loc,
                         tparams: xs,
                         t_out,
+                        strictness_kind,
                         ..
                     }) => {
                         if let TypeInner::DefT(class_r2, inner_def_t) = t_out.deref() {
@@ -1566,6 +1568,7 @@ fn elab_t_concrete<'cx>(
                                         vec1::Vec1::try_from_vec(xs.to_vec())
                                             .expect("tparams should be non-empty"),
                                         t_out,
+                                        *strictness_kind,
                                     )
                                 } else {
                                     error_unsupported(
@@ -1613,6 +1616,7 @@ fn elab_t_concrete<'cx>(
                 tparams: xs,
                 t_out,
                 id,
+                strictness_kind: _,
             }) = def_t.deref() =>
         {
             let ts: Rc<[Type]> = data
@@ -2017,6 +2021,7 @@ fn elab_t_concrete<'cx>(
                             arity,
                             inexact,
                             react_dro: _,
+                            strictness_kind,
                         }) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::TupleAT(Box::new(
@@ -2026,6 +2031,7 @@ fn elab_t_concrete<'cx>(
                                     elements: elements.dupe(),
                                     arity: *arity,
                                     inexact: *inexact,
+                                    strictness_kind: *strictness_kind,
                                 },
                             ))))),
                         )),

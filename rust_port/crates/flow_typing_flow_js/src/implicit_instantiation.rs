@@ -940,6 +940,7 @@ fn reverse_obj_kit_rest<'cx>(
         let tool = object::ResolveTool::Resolve(object::Resolve::Next);
         let options = object::spread::Target::Value {
             make_seal: obj_type::mk_seal(false, false),
+            strictness_kind: cx.type_strictness_kind(),
         };
         let state = object::spread::State {
             todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(
@@ -1012,6 +1013,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 arity: (len, len),
                 inexact: false,
                 react_dro: None,
+                strictness_kind: Default::default(),
             }));
             let reason_out = reason
                 .dupe()

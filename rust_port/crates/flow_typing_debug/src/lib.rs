@@ -861,10 +861,10 @@ fn dump_use_t_<CX>(
                 format!(
                     "LookupPropForSubtyping ({}, {})",
                     string_of_use_op(use_op),
-                    normalized_prop(tvars, prop)
+                    normalized_prop(tvars, &type_::property::property_type(prop))
                 )
             }
-            type_::LookupAction::SuperProp(box (_, p)) => {
+            type_::LookupAction::SuperProp(box (_, p, _)) => {
                 format!("Super {}", dump_prop_(depth - 1, tvars, cx, p))
             }
             type_::LookupAction::MatchProp(box type_::LookupActionMatchPropData {
@@ -953,6 +953,7 @@ fn dump_use_t_<CX>(
         };
         let s = type_::object::Slice {
             reason: reason.clone(),
+            strictness_kind: type_::TypeStrictnessKind::Flow,
             props,
             flags,
             frozen: false,
@@ -1017,10 +1018,10 @@ fn dump_use_t_<CX>(
                          state: &type_::object::spread::State|
          -> String {
             let target_str = match target {
-                type_::object::spread::Target::Annot { make_exact } => {
+                type_::object::spread::Target::Annot { make_exact, .. } => {
                     format!("Annot {{ make_exact={} }}", make_exact)
                 }
-                type_::object::spread::Target::Value { make_seal } => {
+                type_::object::spread::Target::Value { make_seal, .. } => {
                     format!("Value {{make_seal={}", bool_of_sealtype(make_seal))
                 }
             };

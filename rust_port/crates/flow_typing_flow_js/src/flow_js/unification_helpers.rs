@@ -14,6 +14,7 @@ use flow_typing_errors::error_message::ETupleArityMismatchData;
 use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeStrictnessKind;
 
 use super::constraint_helpers::*;
 use super::helpers::*;
@@ -218,6 +219,7 @@ fn __unify_inner<'cx>(
                                 arity: lower_arity,
                                 inexact: lower_inexact,
                                 react_dro: _,
+                                strictness_kind: lower_strictness_kind,
                             }),
                             ArrType::TupleAT(box TupleATData {
                                 elem_t: _,
@@ -225,6 +227,7 @@ fn __unify_inner<'cx>(
                                 arity: upper_arity,
                                 inexact: upper_inexact,
                                 react_dro: _,
+                                strictness_kind: upper_strictness_kind,
                             }),
                         ) => {
                             let (num_req1, num_total1) = lower_arity;
@@ -264,7 +267,9 @@ fn __unify_inner<'cx>(
                                                 Polarity::equal(p1, Polarity::Neutral)
                                                     && Polarity::equal(p2, Polarity::Positive);
                                             if !(Polarity::equal(p1, p2)
-                                                || (flow_common::files::has_ts_ext(cx.file())
+                                                || (lower_strictness_kind
+                                                    .join(*upper_strictness_kind)
+                                                    .is_typescript_loose()
                                                     && ts_safe_direction))
                                             {
                                                 add_output(
@@ -441,6 +446,7 @@ fn __unify_inner<'cx>(
                                             ureason,
                                             p1,
                                             p2,
+                                            l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
                                     }
                                     (Some(p1), None) => {
@@ -453,6 +459,7 @@ fn __unify_inner<'cx>(
                                             lreason,
                                             ureason,
                                             udict,
+                                            l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
                                     }
                                     (None, Some(p2)) => {
@@ -465,6 +472,7 @@ fn __unify_inner<'cx>(
                                             ureason,
                                             lreason,
                                             ldict,
+                                            l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
                                     }
                                     // | (None, None) -> ()
@@ -629,6 +637,7 @@ pub(super) fn unify_props<'cx>(
     r2: &Reason,
     p1: &Property,
     p2: &Property,
+    strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     let use_op = UseOp::Frame(
         Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
@@ -689,8 +698,7 @@ pub(super) fn unify_props<'cx>(
             // Error if polarity is not compatible both ways.
             let polarity1 = property::polarity(p1);
             let polarity2 = property::polarity(p2);
-            if !flow_common::files::has_ts_ext(cx.file()) && !Polarity::equal(polarity1, polarity2)
-            {
+            if !strictness_kind.is_typescript_loose() && !Polarity::equal(polarity1, polarity2) {
                 add_output(
                     cx,
                     ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
@@ -717,6 +725,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
     prop_obj_reason: &Reason,
     dict_reason: &Reason,
     dict: Option<&DictType>,
+    strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     // prop_obj_reason: reason of the object containing the prop
     // dict_reason: reason of the object potentially containing a dictionary
@@ -748,7 +757,17 @@ pub(super) fn unify_prop_with_dict<'cx>(
                 type_: dict_t.value.dupe(),
                 polarity: dict_t.dict_polarity,
             })));
-            unify_props(cx, trace, use_op, x, prop_obj_reason, dict_reason, p, &p2)
+            unify_props(
+                cx,
+                trace,
+                use_op,
+                x,
+                prop_obj_reason,
+                dict_reason,
+                p,
+                &p2,
+                strictness_kind,
+            )
         }
         None => add_output(
             cx,

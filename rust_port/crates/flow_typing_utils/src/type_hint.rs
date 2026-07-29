@@ -525,6 +525,7 @@ fn instantiate_callee<'cx>(
                     tparams,
                     t_out,
                     id: _,
+                    strictness_kind: _,
                 }) => {
                     if let Some((class_r, inst_r, i, this, this_name)) =
                         if let TypeInner::DefT(class_r, inner_def) = t_out.deref()
@@ -731,6 +732,7 @@ fn instantiate_component<'cx>(
                 tparams,
                 t_out,
                 id: _,
+                strictness_kind: _,
             }) if *cx.jsx() == JsxMode::JsxReact => {
                 let reason = &instantiation_hint.jsx_reason;
                 let jsx_targs = &instantiation_hint.jsx_targs;
@@ -863,6 +865,7 @@ fn type_of_hint_decomposition<'cx>(
             type_guard,
             def_reason: reason.dupe(),
             effect_: ReactEffectType::AnyEffect,
+            strictness_kind: Default::default(),
         };
         Type::new(TypeInner::DefT(
             reason.dupe(),
@@ -906,6 +909,7 @@ fn type_of_hint_decomposition<'cx>(
                             type_guard: func.type_guard.clone(),
                             def_reason: func.def_reason.dupe(),
                             effect_: func.effect_.clone(),
+                            strictness_kind: func.strictness_kind,
                         };
                         Type::new(TypeInner::DefT(
                             fun_reason.dupe(),
@@ -923,6 +927,7 @@ fn type_of_hint_decomposition<'cx>(
                 tparams,
                 t_out: instance_type,
                 id: _,
+                strictness_kind,
             }) = def.deref()
         {
             let ctor_method = get_constructor_method_type(instance_type)?;
@@ -938,6 +943,7 @@ fn type_of_hint_decomposition<'cx>(
                             tparams: tparams2,
                             t_out,
                             id: _,
+                            strictness_kind: strictness_kind2,
                         }) = inner_def.deref()
                     {
                         let t_out = mod_ctor_return(&instance_type, t_out);
@@ -950,6 +956,7 @@ fn type_of_hint_decomposition<'cx>(
                                 tparams: combined_tparams.into(),
                                 t_out,
                                 id: poly::Id::generate_id(),
+                                strictness_kind: strictness_kind.join(*strictness_kind2),
                             }))),
                         )))
                     } else {
@@ -961,6 +968,7 @@ fn type_of_hint_decomposition<'cx>(
                                 tparams: tparams.dupe(),
                                 t_out,
                                 id: poly::Id::generate_id(),
+                                strictness_kind: *strictness_kind,
                             }))),
                         )))
                     }
@@ -1150,6 +1158,7 @@ fn type_of_hint_decomposition<'cx>(
                                     tparams,
                                     t_out,
                                     id: _,
+                                    strictness_kind,
                                 }) => Type::new(TypeInner::DefT(
                                     poly_reason.dupe(),
                                     DefT::new(DefTInner::PolyT(Box::new(PolyTData {
@@ -1157,6 +1166,7 @@ fn type_of_hint_decomposition<'cx>(
                                         tparams: tparams.dupe(),
                                         t_out: get_this_t(t_out)?,
                                         id: poly::Id::generate_id(),
+                                        strictness_kind: *strictness_kind,
                                     }))),
                                 )),
                                 _ => get_this_t(&get_t(cx, t))?,

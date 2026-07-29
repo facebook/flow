@@ -876,6 +876,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         arity,
                                         inexact,
                                         react_dro: None,
+                                        strictness_kind: Default::default(),
                                     },
                                 ))))),
                             ))
@@ -1198,6 +1199,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             type_guard,
             def_reason,
             effect_,
+            strictness_kind: _,
         } = ft;
         let (args, spread_arg) = flatten_call_arg(cx, use_op.dupe(), reason_op, resolved)?;
         let parlist: Vec<(Option<FlowSmolStr>, Type)> = params

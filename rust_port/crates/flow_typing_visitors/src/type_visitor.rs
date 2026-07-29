@@ -878,6 +878,7 @@ pub fn obj_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         // by traversing the other fields. Until substitution keeps track of polarity, visitng the
         // other fields will be more accurate
         reachable_targs: _,
+        strictness_kind: _,
     } = obj;
     let acc = visitor.obj_flags(cx, pole, acc, flags);
     let acc = visitor.props(cx, pole, acc, props_tmap.dupe());

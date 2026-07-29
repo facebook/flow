@@ -1,11 +1,10 @@
 // @flow
-// .js consumer of a .ts-declared object-typed shape. The relaxation is
-// keyed on the consumer file's extension, so this must still error with
-// `[cannot-implement]` (or equivalent).
+// .js consumer of a .ts-declared object-typed shape. The imported shape
+// retains TypeScript's structural implements semantics.
 
 import type {Shape} from "./class_implements_lib";
 
-class JsImpl implements Shape { // ERROR: cannot-implement in .js
+class JsImpl implements Shape { // OK: Shape comes from .ts
   a: number = 1;
   b: string = "x";
 }

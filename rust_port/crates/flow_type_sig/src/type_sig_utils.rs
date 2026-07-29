@@ -12,6 +12,7 @@ use std::rc::Rc;
 use dupe::Dupe;
 use flow_common::packed_locs;
 use flow_common::platform_set::PlatformSet;
+use flow_common::type_strictness::TypeStrictnessKind;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
@@ -33,7 +34,7 @@ use crate::type_sig_parse as parse;
 fn parse_libs<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
-    ordered_asts: &[&'ast Program<Loc, Loc>],
+    ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
 ) -> (
     parse::scope::Scopes<'arena, 'ast>,
     parse::Tables<'arena, 'ast>,
@@ -51,8 +52,9 @@ fn parse_libs<'arena: 'ast, 'ast>(
 ) {
     let mut scopes = parse::scope::Scopes::new();
     let global_scope = parse::scope::create_global(&mut scopes);
-    let mut tbls = parse::Tables::new(arenas);
-    for ast in ordered_asts {
+    let mut tbls = parse::Tables::new(arenas, TypeStrictnessKind::Flow);
+    for (ast, strictness_kind) in ordered_asts {
+        tbls.set_strictness_kind(*strictness_kind);
         // For builtins, each lib file is parsed separately into an unresolved global
         // scope. The parsed lib files are then combined before resolving names. The
         // proceses of combining deals with overridden definitions. Finally, the
@@ -119,6 +121,7 @@ fn pack_builtins<'arena: 'ast, 'ast>(
         pattern_defs,
         patterns,
         additional_errors,
+        strictness_kind: _,
     } = tbls;
     let locs = locs.compact_without_merge();
     let module_refs = module_refs.compact_without_merge();
@@ -156,7 +159,6 @@ fn pack_builtins<'arena: 'ast, 'ast>(
 
         (global_values, global_types, global_modules)
     };
-
     let builtins = Builtins {
         module_refs,
         local_defs,
@@ -185,8 +187,10 @@ fn parse_module<'arena: 'ast, 'ast>(
     Rc<RefCell<parse::Exports<'arena, 'ast>>>,
 ) {
     let mut scopes = parse::scope::Scopes::new();
+    let strictness_kind =
+        TypeStrictnessKind::from_is_typescript(opts.is_ts_file || opts.is_dts_file);
     let scope = parse::scope::create_module(&mut scopes, strict, platform_availability_set);
-    let mut tbls = parse::Tables::new(arenas);
+    let mut tbls = parse::Tables::new(arenas, strictness_kind);
     let file_loc = tbls.push_loc(Loc { source, ..LOC_NONE });
     for stmt in ast.statements.iter() {
         parse::statement(opts, scope, &mut scopes, &mut tbls, stmt);
@@ -197,6 +201,7 @@ fn parse_module<'arena: 'ast, 'ast>(
 
 fn parse_libdef_file_as_empty_module<'arena: 'ast, 'ast>(
     arenas: &'arena bumpalo::Bump,
+    strictness_kind: TypeStrictnessKind,
     strict: bool,
     platform_availability_set: Option<PlatformSet>,
     source: Option<FileKey>,
@@ -208,7 +213,7 @@ fn parse_libdef_file_as_empty_module<'arena: 'ast, 'ast>(
 ) {
     let mut scopes = parse::scope::Scopes::new();
     let scope = parse::scope::create_module(&mut scopes, strict, platform_availability_set);
-    let mut tbls = parse::Tables::new(arenas);
+    let mut tbls = parse::Tables::new(arenas, strictness_kind);
     let file_loc = tbls.push_loc(Loc { source, ..LOC_NONE });
     let exports = parse::scope::exports_exn(&mut scopes, scope);
     (scopes, tbls, file_loc, exports)
@@ -256,6 +261,7 @@ fn pack<'arena, 'ast>(
         pattern_defs,
         patterns,
         additional_errors,
+        strictness_kind: _,
     } = tbls;
 
     // compact
@@ -306,7 +312,7 @@ fn pack<'arena, 'ast>(
 pub fn parse_and_pack_builtins<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
-    ordered_asts: &[&'ast Program<Loc, Loc>],
+    ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Builtins<Loc>) {
     let (scopes, tbls, globals) = parse_libs(opts, arenas, ordered_asts);
     pack_builtins(opts, scopes, tbls, globals)
@@ -329,6 +335,7 @@ pub fn parse_and_pack_module<'arena: 'ast, 'ast>(
             // https://github.com/facebook/flow/issues/9262
             parse_libdef_file_as_empty_module(
                 arenas,
+                TypeStrictnessKind::from_is_typescript(opts.is_ts_file || opts.is_dts_file),
                 strict,
                 platform_availability_set,
                 source.dupe(),

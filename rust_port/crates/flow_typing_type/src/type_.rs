@@ -50,6 +50,7 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name::SubstName;
+pub use flow_common::type_strictness::TypeStrictnessKind;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -414,6 +415,7 @@ pub struct PolyTData {
     pub tparams: Rc<[TypeParam]>,
     pub t_out: Type,
     pub id: poly::Id,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4482,6 +4484,7 @@ pub struct FunType {
     pub type_guard: Option<TypeGuard>,
     pub def_reason: Reason,
     pub effect_: ReactEffectType,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4811,6 +4814,7 @@ pub struct TupleATData {
     /// It ranges from the number of required elements, to the total number of elements.
     pub arity: (i32, i32),
     pub inexact: bool,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -4844,6 +4848,7 @@ pub struct ObjType {
     /// targs to avoid traversing the full objtype structure during any-propagation
     /// and instead pollute the reachable_targs directly. *)
     pub reachable_targs: Rc<[(Type, Polarity)]>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 /// Object.assign(target, source1, ...source2) first resolves target then the sources.
@@ -4943,6 +4948,7 @@ pub struct DerivedType {
     pub own: FlowOrdMap<Name, Property>,
     pub proto: FlowOrdMap<Name, Property>,
     pub static_: FlowOrdMap<Name, Property>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 /// LookupT is a general-purpose tool for traversing prototype chains in search
@@ -4993,7 +4999,8 @@ pub struct WritePropData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LookupPropForSubtypingData {
     pub use_op: UseOp,
-    pub prop: PropertyType,
+    pub prop: Property,
+    pub strictness_kind: TypeStrictnessKind,
     pub prop_name: Name,
     pub reason_lower: Reason,
     pub reason_upper: Reason,
@@ -5012,7 +5019,7 @@ pub enum LookupAction {
     WriteProp(Box<WritePropData>),
     LookupPropForTvarPopulation { polarity: Polarity, tout: Type },
     LookupPropForSubtyping(Box<LookupPropForSubtypingData>),
-    SuperProp(Box<(UseOp, Property)>),
+    SuperProp(Box<(UseOp, Property, TypeStrictnessKind)>),
     MatchProp(Box<LookupActionMatchPropData>),
 }
 
@@ -5495,6 +5502,7 @@ pub struct InstTypeInner {
     pub inst_react_dro: Option<ReactDro>,
     pub inst_abstract: bool,
     pub inst_abstract_props: FlowOrdSet<Name>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6860,6 +6868,7 @@ pub mod properties {
                     tparams,
                     t_out,
                     id,
+                    strictness_kind,
                 }) => {
                     let new_t_out = unbind_this_method(t_out);
                     if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
@@ -6872,6 +6881,7 @@ pub mod properties {
                                 tparams: tparams.dupe(),
                                 t_out: new_t_out,
                                 id: id.dupe(),
+                                strictness_kind: *strictness_kind,
                             }))),
                         ))
                     }
@@ -8374,6 +8384,7 @@ pub mod object {
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Slice {
         pub reason: Reason,
+        pub strictness_kind: TypeStrictnessKind,
         pub props: properties::PropertiesMap,
         pub flags: Flags,
         pub frozen: bool,
@@ -8452,11 +8463,30 @@ pub mod object {
         pub enum Target {
             // When spreading values, the result is exact if all of the input types are
             // also exact. If any input type is inexact, the output is inexact.
-            Value { make_seal: SealType },
+            Value {
+                make_seal: SealType,
+                strictness_kind: TypeStrictnessKind,
+            },
             // It's more flexible to allow annotations to specify whether they should be
             // exact or not. If the spread type is annotated to be exact, any inexact
             // input types will cause a type error.
-            Annot { make_exact: bool },
+            Annot {
+                make_exact: bool,
+                strictness_kind: TypeStrictnessKind,
+            },
+        }
+
+        impl Target {
+            pub fn strictness_kind(&self) -> TypeStrictnessKind {
+                match self {
+                    Target::Value {
+                        strictness_kind, ..
+                    }
+                    | Target::Annot {
+                        strictness_kind, ..
+                    } => *strictness_kind,
+                }
+            }
         }
     }
 
@@ -11482,6 +11512,7 @@ pub fn mk_methodtype(
         type_guard,
         def_reason,
         effect_,
+        strictness_kind: TypeStrictnessKind::Flow,
     }
 }
 
@@ -11638,12 +11669,31 @@ pub fn mk_objecttype(
     pmap: properties::Id,
     proto: Type,
 ) -> ObjType {
+    mk_objecttype_with_strictness(
+        flags,
+        reachable_targs,
+        call,
+        pmap,
+        proto,
+        TypeStrictnessKind::Flow,
+    )
+}
+
+pub fn mk_objecttype_with_strictness(
+    flags: Option<Flags>,
+    reachable_targs: Option<Rc<[(Type, Polarity)]>>,
+    call: Option<i32>,
+    pmap: properties::Id,
+    proto: Type,
+    strictness_kind: TypeStrictnessKind,
+) -> ObjType {
     ObjType {
         flags: flags.unwrap_or_else(default_flags),
         proto_t: proto,
         props_tmap: pmap,
         call_t: call,
         reachable_targs: reachable_targs.unwrap_or_else(|| Rc::from([])),
+        strictness_kind,
     }
 }
 

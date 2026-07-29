@@ -396,6 +396,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
         effect_: effect_.clone(),
         type_guard,
         def_reason: reason.dupe(),
+        strictness_kind: cx.type_strictness_kind(),
     };
     let statics_t = match statics {
         Some(t) => t.dupe(),
@@ -419,7 +420,12 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
             type_env::bind_function_this(cx, this_type, loc);
         }
     }
-    type_util::poly_type_of_tparams(type_::poly::Id::generate_id(), tparams.clone(), t)
+    type_util::poly_type_of_tparams(
+        type_::poly::Id::generate_id(),
+        tparams.clone(),
+        t,
+        cx.type_strictness_kind(),
+    )
 }
 
 pub fn methodtype<'a, C: crate::func_params_intf::Config>(
@@ -454,23 +460,30 @@ pub fn methodtype<'a, C: crate::func_params_intf::Config>(
         Kind::TypeGuard(g) => Some(g.dupe()),
         _ => None,
     };
+    let mut funtype = type_::mk_boundfunctiontype(
+        param_this_t,
+        Some(effect_.clone()),
+        params_tlist,
+        rest_param,
+        reason.dupe(),
+        Some(params_names),
+        type_guard,
+        type_util::type_t_of_annotated_or_inferred(return_t).dupe(),
+    );
+    funtype.strictness_kind = cx.type_strictness_kind();
     let t = Type::new(type_::TypeInner::DefT(
         reason.dupe(),
         type_::DefT::new(type_::DefTInner::FunT(
             type_::dummy_static(reason.dupe()),
-            Rc::new(type_::mk_boundfunctiontype(
-                param_this_t,
-                Some(effect_.clone()),
-                params_tlist,
-                rest_param,
-                reason.dupe(),
-                Some(params_names),
-                type_guard,
-                type_util::type_t_of_annotated_or_inferred(return_t).dupe(),
-            )),
+            Rc::new(funtype),
         )),
     ));
-    type_util::poly_type_of_tparams(type_::poly::Id::generate_id(), tparams.clone(), t)
+    type_util::poly_type_of_tparams(
+        type_::poly::Id::generate_id(),
+        tparams.clone(),
+        t,
+        cx.type_strictness_kind(),
+    )
 }
 
 pub fn gettertype<C: ConfigTypes>(x: &Func<C>) -> Type {

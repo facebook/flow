@@ -63,6 +63,7 @@ use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
@@ -1211,6 +1212,7 @@ fn __flow_impl<'cx>(
                     arity,
                     inexact,
                     react_dro: _,
+                    strictness_kind,
                 }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
@@ -1223,6 +1225,7 @@ fn __flow_impl<'cx>(
                         elements: elements.dupe(),
                         arity: *arity,
                         inexact: *inexact,
+                        strictness_kind: *strictness_kind,
                     },
                 ))))),
             ));
@@ -1305,6 +1308,7 @@ fn __flow_impl<'cx>(
                 tparams,
                 t_out,
                 id,
+                strictness_kind,
             }) = def_t.deref()
                 && let TypeInner::DefT(r, inner_def) = t_out.deref()
                 && let DefTInner::FunT(s, funtype) = inner_def.deref()
@@ -1325,6 +1329,7 @@ fn __flow_impl<'cx>(
                     tparams: tparams.dupe(),
                     t_out: new_t_out,
                     id: id.dupe(),
+                    strictness_kind: *strictness_kind,
                 }))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
@@ -1365,6 +1370,7 @@ fn __flow_impl<'cx>(
                         tparams,
                         t_out,
                         id: poly_id,
+                        strictness_kind,
                     }) = inner_def.deref()
                         && let TypeInner::DefT(rf, fun_def) = t_out.deref()
                         && let DefTInner::FunT(s, funtype) = fun_def.deref()
@@ -1385,6 +1391,7 @@ fn __flow_impl<'cx>(
                             tparams: tparams.dupe(),
                             t_out: new_t_out,
                             id: poly_id.dupe(),
+                            strictness_kind: *strictness_kind,
                         }))),
                     ));
                     let new_id = cx.make_call_prop(call);
@@ -1895,6 +1902,7 @@ fn __flow_impl<'cx>(
             tparams,
             id: id1,
             t_out,
+            strictness_kind: lower_strictness_kind,
         }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
             && let DefTInner::PolyT(box PolyTData {
@@ -1902,6 +1910,7 @@ fn __flow_impl<'cx>(
                 tparams: _,
                 id: id2,
                 t_out: _,
+                strictness_kind: upper_strictness_kind,
             }) = c2_def.deref()
             && id1 == id2
             && ts1.len() == ts2.len()
@@ -1922,6 +1931,7 @@ fn __flow_impl<'cx>(
                 targs,
                 tparams_loc.dupe(),
                 &Vec1::try_from_vec(tparams.to_vec()).unwrap(),
+                lower_strictness_kind.join(*upper_strictness_kind),
             )?;
         }
         // This is the case which implements the expansion for our
@@ -1939,6 +1949,7 @@ fn __flow_impl<'cx>(
             tparams: xs1,
             t_out: t1,
             id: id1,
+            strictness_kind: _,
         }) = def_t.deref()
             && let TypeInner::DefT(_, c2_def) = c2.deref()
             && let DefTInner::PolyT(box PolyTData {
@@ -1946,6 +1957,7 @@ fn __flow_impl<'cx>(
                 tparams: xs2,
                 t_out: t2,
                 id: id2,
+                strictness_kind: _,
             }) = c2_def.deref() =>
         {
             let (op1_eff, op2_eff) = match root_of_use_op(use_op) {
@@ -2166,6 +2178,7 @@ fn __flow_impl<'cx>(
             tparams: ids,
             t_out,
             id,
+            strictness_kind: _,
         }) = def_t.deref()
             && flow_common::files::has_ts_ext(cx.file())
             && ids.iter().all(|tp| tp.default.is_some()) =>
@@ -3886,6 +3899,7 @@ fn __flow_impl<'cx>(
                 tparams_loc,
                 tparams: xs,
                 t_out,
+                strictness_kind,
                 ..
             }) = def_t.deref()
                 && let TypeInner::DefT(class_r, inner_def) = t_out.deref()
@@ -3921,6 +3935,7 @@ fn __flow_impl<'cx>(
                 tparams_loc.dupe(),
                 Vec1::try_from_vec(xs.to_vec()).unwrap(),
                 class_t,
+                *strictness_kind,
             );
             rec_flow(
                 cx,
@@ -3961,6 +3976,7 @@ fn __flow_impl<'cx>(
             tparams: xs,
             t_out: t,
             id,
+            strictness_kind: _,
         }) = def_t.deref() =>
         {
             let ts_val = ts
@@ -4993,6 +5009,7 @@ fn __flow_impl<'cx>(
                         inst.proto_props.dupe(),
                         inst.inst_call_t,
                         &inst.inst_dict,
+                        inst.strictness_kind,
                     );
                     let obj2 = inst_type_to_obj_type(
                         cx,
@@ -5001,6 +5018,7 @@ fn __flow_impl<'cx>(
                         inst_super.proto_props.dupe(),
                         inst_super.inst_call_t,
                         &inst_super.inst_dict,
+                        inst_super.strictness_kind,
                     );
                     rec_unify(
                         cx,
@@ -5016,7 +5034,10 @@ fn __flow_impl<'cx>(
                         let id = eval::Id::generate_id();
                         let destructor =
                             Rc::new(Destructor::SpreadType(Box::new(DestructorSpreadTypeData(
-                                object::spread::Target::Annot { make_exact: false },
+                                object::spread::Target::Annot {
+                                    make_exact: false,
+                                    strictness_kind: cx.type_strictness_kind(),
+                                },
                                 flow_data_structure_wrapper::list::FlowOcamlList::new(),
                                 None,
                             ))));
@@ -6050,6 +6071,7 @@ fn __flow_impl<'cx>(
             let spread_tool = object::ResolveTool::Resolve(object::Resolve::Next);
             let spread_target = object::spread::Target::Value {
                 make_seal: obj_type::mk_seal(false, false),
+                strictness_kind: cx.type_strictness_kind(),
             };
             let spread_state = object::spread::State {
                 todo_rev: flow_data_structure_wrapper::list::FlowOcamlList::unit(
@@ -6191,7 +6213,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             match action {
-                box LookupAction::SuperProp(box (_, lp)) if property::write_t(lp).is_none() => {
+                box LookupAction::SuperProp(box (_, lp, _)) if property::write_t(lp).is_none() => {
                     // Without this exception, we will call rec_flow_p where
                     // `write_t lp = None` and `write_t up = Some`, which is a polarity
                     // mismatch error. Instead of this, we could "read" `mixed` from
@@ -6910,6 +6932,7 @@ fn __flow_impl<'cx>(
                     arity: (num_req, num_total),
                     inexact,
                     react_dro,
+                    strictness_kind,
                 }) => ArrType::TupleAT(Box::new(TupleATData {
                     elem_t: elem_t.dupe(),
                     elements: elements[i.min(elements.len())..].to_vec().into(),
@@ -6919,6 +6942,7 @@ fn __flow_impl<'cx>(
                     ),
                     inexact: *inexact,
                     react_dro: react_dro.clone(),
+                    strictness_kind: *strictness_kind,
                 })),
             };
             let a = Type::new(TypeInner::DefT(
@@ -7261,6 +7285,7 @@ fn __flow_impl<'cx>(
                     arity,
                     inexact,
                     react_dro,
+                    strictness_kind,
                 }) => ArrType::TupleAT(Box::new(TupleATData {
                     elem_t: array_elem(f(elem_t, None, false)?)?,
                     react_dro: react_dro.clone(),
@@ -7280,6 +7305,7 @@ fn __flow_impl<'cx>(
                         .into(),
                     arity: new_arity(*arity),
                     inexact: *inexact,
+                    strictness_kind: *strictness_kind,
                 })),
                 ArrType::ROArrayAT(box (elemt, dro)) => {
                     ArrType::ROArrayAT(Box::new((array_elem(f(elemt, None, false)?)?, dro.clone())))
@@ -7495,11 +7521,22 @@ fn __flow_impl<'cx>(
             let inst = &inst_t.inst;
             let upper_inst_abstract = inst.inst_abstract;
             let super_ = &inst_t.super_;
+            let implementor_strictness_kind = match t.deref() {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(instance) = def_t.deref() => {
+                    instance.inst.strictness_kind
+                }
+                TypeInner::DefT(_, def_t) if let DefTInner::ObjT(obj) = def_t.deref() => {
+                    obj.strictness_kind
+                }
+                _ => TypeStrictnessKind::Flow,
+            };
+            let strictness_kind = inst.strictness_kind.join(implementor_strictness_kind);
             structural_subtype(
                 cx,
                 trace,
                 use_op.dupe(),
                 upper_inst_abstract,
+                strictness_kind,
                 t,
                 reason_inst,
                 (
@@ -7525,7 +7562,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(reason_obj, def_t), UseTInner::ImplementsT(use_op, implementor))
             if let DefTInner::ObjT(obj) = def_t.deref()
-                && flow_common::files::has_ts_ext(cx.file())
+                && obj.strictness_kind.is_typescript_loose()
                 && obj_type::get_dict_opt(&obj.flags.obj_kind).is_none() =>
         {
             // TS-mode: a class may `implements` a resolved object type
@@ -7541,6 +7578,7 @@ fn __flow_impl<'cx>(
                 call_t,
                 proto_t: _,
                 reachable_targs: _,
+                strictness_kind: _,
             } = obj.as_ref();
             let proto_props = cx.generate_property_map(properties::PropertiesMap::new());
             structural_subtype(
@@ -7548,6 +7586,7 @@ fn __flow_impl<'cx>(
                 trace,
                 use_op.dupe(),
                 false,
+                obj.strictness_kind,
                 implementor,
                 reason_obj,
                 (props_tmap.dupe(), proto_props, *call_t, None, &None),
@@ -7589,13 +7628,34 @@ fn __flow_impl<'cx>(
                 own,
                 proto,
                 static_: static_props,
+                strictness_kind,
             } = derived;
             for (x, p) in own.iter() {
-                check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
+                check_super(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    reason,
+                    ureason,
+                    l,
+                    x,
+                    p,
+                    strictness_kind.join(inst_t.inst.strictness_kind),
+                )?;
             }
             for (x, p) in proto.iter() {
                 if inherited_method(x) {
-                    check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
+                    check_super(
+                        cx,
+                        trace,
+                        use_op.dupe(),
+                        reason,
+                        ureason,
+                        l,
+                        x,
+                        p,
+                        strictness_kind.join(inst_t.inst.strictness_kind),
+                    )?;
                 }
             }
             // TODO: inherited_method logic no longer applies for statics. It used to
@@ -7604,7 +7664,17 @@ fn __flow_impl<'cx>(
             // special meaning on the static object.
             for (x, p) in static_props.iter() {
                 if inherited_method(x) {
-                    check_super(cx, trace, use_op.dupe(), reason, ureason, st, x, p)?;
+                    check_super(
+                        cx,
+                        trace,
+                        use_op.dupe(),
+                        reason,
+                        ureason,
+                        st,
+                        x,
+                        p,
+                        strictness_kind.join(inst_t.inst.strictness_kind),
+                    )?;
                 }
             }
         }
@@ -7615,8 +7685,11 @@ fn __flow_impl<'cx>(
                 reason,
                 derived_type: derived,
             }),
-        ) if matches!(def_t.deref(), DefTInner::ObjT(_))
-            && flow_common::files::has_ts_ext(cx.file()) =>
+        ) if let DefTInner::ObjT(obj) = def_t.deref()
+            && obj
+                .strictness_kind
+                .join(derived.strictness_kind)
+                .is_typescript_loose() =>
         {
             // TS-mode: an interface may extend a resolved object type
             // (e.g. `interface X extends Omit<Y, K>`). Run the same
@@ -7626,13 +7699,34 @@ fn __flow_impl<'cx>(
                 own,
                 proto,
                 static_: _,
+                strictness_kind,
             } = derived;
             for (x, p) in own.iter() {
-                check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
+                check_super(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    reason,
+                    ureason,
+                    l,
+                    x,
+                    p,
+                    strictness_kind.join(obj.strictness_kind),
+                )?;
             }
             for (x, p) in proto.iter() {
                 if inherited_method(x) {
-                    check_super(cx, trace, use_op.dupe(), reason, ureason, l, x, p)?;
+                    check_super(
+                        cx,
+                        trace,
+                        use_op.dupe(),
+                        reason,
+                        ureason,
+                        l,
+                        x,
+                        p,
+                        strictness_kind.join(obj.strictness_kind),
+                    )?;
                 }
             }
         }
@@ -8846,6 +8940,7 @@ fn __flow_impl<'cx>(
                     prop_name,
                     reason_lower,
                     reason_upper,
+                    ..
                 }) => {
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                         prop_name: Some(prop_name.dupe()),
@@ -8914,6 +9009,7 @@ fn __flow_impl<'cx>(
                     prop_name,
                     reason_lower,
                     reason_upper,
+                    ..
                 }) => {
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                         prop_name: Some(prop_name.dupe()),
@@ -9018,6 +9114,7 @@ fn __flow_impl<'cx>(
                                 prop_name,
                                 reason_lower,
                                 reason_upper,
+                                ..
                             },
                         ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
@@ -9111,6 +9208,7 @@ fn __flow_impl<'cx>(
                                 prop_name,
                                 reason_lower,
                                 reason_upper,
+                                ..
                             },
                         ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
@@ -9302,10 +9400,9 @@ fn __flow_impl<'cx>(
             && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
             && let DefTInner::InstanceT(inst_t) = inner_def.deref()
             && {
-                let is_ts = flow_common::files::has_ts_ext(cx.file());
                 match &inst_t.inst.inst_kind {
                     InstanceKind::InterfaceKind { .. } => true,
-                    InstanceKind::ClassKind => is_ts,
+                    InstanceKind::ClassKind => inst_t.inst.strictness_kind.is_typescript_loose(),
                     InstanceKind::RecordKind { .. } => false,
                 }
             } =>
@@ -9314,6 +9411,16 @@ fn __flow_impl<'cx>(
             let own_props = inst_t.inst.own_props.dupe();
             let inst_kind = &inst_t.inst.inst_kind;
             let upper_inst_abstract = inst_t.inst.inst_abstract;
+            let lower_strictness_kind = match ext_l.deref() {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(instance) = def_t.deref() => {
+                    instance.inst.strictness_kind
+                }
+                TypeInner::DefT(_, def_t) if let DefTInner::ObjT(obj) = def_t.deref() => {
+                    obj.strictness_kind
+                }
+                _ => TypeStrictnessKind::Flow,
+            };
+            let strictness_kind = inst_t.inst.strictness_kind.join(lower_strictness_kind);
             // In TS mode, classes are structural and `constructor` is not part of
             // the structural shape, so drop it from proto_props before checking.
             // Matches TS, where `const c: C = { x: 1 }` is accepted.
@@ -9349,6 +9456,7 @@ fn __flow_impl<'cx>(
                 trace,
                 use_op.dupe(),
                 upper_inst_abstract,
+                strictness_kind,
                 ext_l,
                 reason_inst,
                 (

@@ -58,6 +58,7 @@ use flow_typing_type::type_::NamedSymbol;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_util;
 use vec1::Vec1;
 
@@ -1683,6 +1684,7 @@ fn merge_annot<'cx>(
                 loc,
                 elems,
                 inexact,
+                strictness_kind,
             } = inner.as_ref();
             let reason = reason::mk_annot_reason(RTupleType, loc.dupe());
             let unresolved: Vec<type_::UnresolvedParam> = elems
@@ -1737,8 +1739,16 @@ fn merge_annot<'cx>(
                 }))
             };
             let id = eval_id_of_aloc(cx, loc.dupe());
-            flow_js_utils::mk_tuple_type(cx, id, mk_type_destructor, *inexact, reason, unresolved)
-                .unwrap()
+            flow_js_utils::mk_tuple_type(
+                cx,
+                *strictness_kind,
+                id,
+                mk_type_destructor,
+                *inexact,
+                reason,
+                unresolved,
+            )
+            .unwrap()
         }
         Annot::Array(box (loc, t)) => {
             let reason = reason::mk_annot_reason(RArrayType, loc.dupe());
@@ -2406,6 +2416,7 @@ fn merge_annot<'cx>(
                 props,
                 computed_props,
                 proto,
+                strictness_kind,
             } = inner.as_ref();
             let reason = reason::mk_annot_reason(RObjectType, loc.dupe());
             let obj_kind = match obj_kind {
@@ -2445,7 +2456,14 @@ fn merge_annot<'cx>(
                 };
                 let call = call.map(|t| cx.make_call_prop(t));
                 cx.add_property_map(id.dupe(), props_map.dupe());
-                let obj_type = type_::mk_objecttype(Some(flags), None, call, id, proto);
+                let obj_type = type_::mk_objecttype_with_strictness(
+                    Some(flags),
+                    None,
+                    call,
+                    id,
+                    proto,
+                    *strictness_kind,
+                );
                 if obj_kind == type_::ObjKind::Exact {
                     let reason_op =
                         reason::mk_annot_reason(RExactType(Arc::new(RObjectType)), loc.dupe());
@@ -2499,9 +2517,17 @@ fn merge_annot<'cx>(
             }
         }
         Annot::ObjSpreadAnnot(inner) => {
-            let AnnotObjSpreadAnnot { loc, exact, elems } = inner.as_ref();
+            let AnnotObjSpreadAnnot {
+                loc,
+                exact,
+                elems,
+                strictness_kind,
+            } = inner.as_ref();
             let reason = reason::mk_annot_reason(RObjectType, loc.dupe());
-            let target = type_::object::spread::Target::Annot { make_exact: *exact };
+            let target = type_::object::spread::Target::Annot {
+                make_exact: *exact,
+                strictness_kind: *strictness_kind,
+            };
             let merge_slice = |dict: &Option<ObjAnnotDict<Pack::Packed<ALoc>>>,
                                props: &BTreeMap<
                 FlowSmolStr,
@@ -2597,7 +2623,7 @@ fn merge_annot<'cx>(
             let id = cx.make_aloc_id(loc);
             merge_interface(env, cx, file, reason, None, id, def, true, false, vec![])
         }
-        Annot::ObjectBuiltin(box loc) => {
+        Annot::ObjectBuiltin(box (loc, strictness_kind)) => {
             // TS-only `object`: an empty interface that rejects primitives. Built
             // here (in the signature path) so it behaves identically to the
             // checking-path builtin in type_annotation.rs.
@@ -2611,6 +2637,7 @@ fn merge_annot<'cx>(
                 constructs: vec![],
                 dict: None,
                 abstract_: false,
+                strictness_kind: *strictness_kind,
             };
             merge_interface(env, cx, file, reason, None, id, &def, true, true, vec![])
         }
@@ -2625,6 +2652,7 @@ fn merge_annot<'cx>(
                 variance_op,
                 optional,
                 inline_keyof,
+                strictness_kind,
             } = inner.as_ref();
             let source_type = merge_impl(env, cx, file, source_type, false, false);
             let mut env = env.dupe();
@@ -2640,6 +2668,7 @@ fn merge_annot<'cx>(
                         tparams: vec![tp.clone()].into(),
                         t_out: prop_type,
                         id,
+                        strictness_kind: *strictness_kind,
                     }))),
                 ))
             };
@@ -2657,6 +2686,7 @@ fn merge_annot<'cx>(
                         tparams: vec![tp.clone()].into(),
                         t_out: name_t,
                         id,
+                        strictness_kind: *strictness_kind,
                     }))),
                 ))
             });
@@ -2916,6 +2946,7 @@ fn merge_value<'cx>(
                 inner.loc.dupe(),
                 &inner.module_name,
                 &inner.props,
+                inner.strictness_kind,
             )
         }
         Value::ObjLit(inner) => merge_object_lit(
@@ -2928,6 +2959,7 @@ fn merge_value<'cx>(
             &inner.props,
             false,
             as_const,
+            inner.strictness_kind,
         ),
         Value::ObjSpreadLit(inner) => merge_obj_spread_lit(
             env,
@@ -2939,30 +2971,35 @@ fn merge_value<'cx>(
             &inner.elems,
             false,
             as_const,
+            inner.strictness_kind,
         ),
-        Value::EmptyConstArrayLit(box loc) => {
-            let reason = reason::mk_reason(RConstArrayLit, loc.dupe());
-            let elem_t = type_::empty_t::make(reason::mk_reason(REmptyArrayElement, loc.dupe()));
+        Value::EmptyConstArrayLit(inner) => {
+            let reason = reason::mk_reason(RConstArrayLit, inner.loc.dupe());
+            let elem_t =
+                type_::empty_t::make(reason::mk_reason(REmptyArrayElement, inner.loc.dupe()));
             let arrtype = type_::ArrType::TupleAT(Box::new(TupleATData {
                 elem_t,
                 elements: vec![].into(),
                 react_dro: None,
                 arity: (0, 0),
                 inexact: false,
+                strictness_kind: inner.strictness_kind,
             }));
             Type::new(type_::TypeInner::DefT(
                 reason,
                 type_::DefT::new(type_::DefTInner::ArrT(Rc::new(arrtype))),
             ))
         }
-        Value::ArrayLit(box (loc, t, ts)) => {
+        Value::ArrayLit(inner) => {
+            let loc = &inner.loc;
             let reason = if as_const {
                 reason::mk_reason(RConstArrayLit, loc.dupe())
             } else {
                 reason::mk_reason(RArrayLit, loc.dupe())
             };
-            let t = merge_impl(env, cx, file, t, as_const, false);
-            let ts: Vec<Type> = ts
+            let t = merge_impl(env, cx, file, &inner.elem_t, as_const, false);
+            let ts: Vec<Type> = inner
+                .elements
                 .iter()
                 .map(|t| merge_impl(env, cx, file, t, as_const, false))
                 .collect();
@@ -3007,6 +3044,7 @@ fn merge_value<'cx>(
                     react_dro: None,
                     arity: (num_elts, num_elts),
                     inexact: false,
+                    strictness_kind: inner.strictness_kind,
                 }))
             } else {
                 type_::ArrType::ArrayAT(Box::new(ArrayATData {
@@ -3031,6 +3069,7 @@ fn merge_declare_module_implicitly_exported_object<'cx>(
     loc: ALoc,
     module_name: &flow_common::flow_import_specifier::Userland,
     props: &BTreeMap<FlowSmolStr, ObjValueProp<ALoc, Pack::Packed<ALoc>>>,
+    strictness_kind: TypeStrictnessKind,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
 
@@ -3043,7 +3082,7 @@ fn merge_declare_module_implicitly_exported_object<'cx>(
             (Name::new(key.dupe()), p)
         })
         .collect();
-    obj_type::mk_with_proto(
+    obj_type::mk_with_proto_and_strictness(
         cx,
         reason,
         type_::ObjKind::Exact,
@@ -3052,6 +3091,7 @@ fn merge_declare_module_implicitly_exported_object<'cx>(
         Some(props_map),
         None,
         proto,
+        strictness_kind,
     )
 }
 
@@ -3065,6 +3105,7 @@ fn merge_object_lit<'cx>(
     props: &BTreeMap<FlowSmolStr, ObjValueProp<ALoc, Pack::Packed<ALoc>>>,
     for_export: bool,
     as_const: bool,
+    strictness_kind: TypeStrictnessKind,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
 
@@ -3088,7 +3129,7 @@ fn merge_object_lit<'cx>(
             (Name::new(key.dupe()), p)
         })
         .collect();
-    obj_type::mk_with_proto(
+    obj_type::mk_with_proto_and_strictness(
         cx,
         reason,
         type_::ObjKind::Exact,
@@ -3097,6 +3138,7 @@ fn merge_object_lit<'cx>(
         Some(props_map),
         None,
         proto_t,
+        strictness_kind,
     )
 }
 
@@ -3110,6 +3152,7 @@ fn merge_obj_spread_lit<'cx>(
     elems: &Vec1<ObjValueSpreadElem<ALoc, Pack::Packed<ALoc>>>,
     for_export: bool,
     as_const: bool,
+    strictness_kind: TypeStrictnessKind,
 ) -> Type {
     let reason = reason::mk_obj_lit_reason(as_const, frozen, || false, loc.dupe());
     // TODO: fix spread to use provided __proto__ prop
@@ -3158,7 +3201,10 @@ fn merge_obj_spread_lit<'cx>(
     } else {
         type_::object::spread::SealType::Sealed
     };
-    let target = type_::object::spread::Target::Value { make_seal };
+    let target = type_::object::spread::Target::Value {
+        make_seal,
+        strictness_kind,
+    };
     let use_op = type_::UseOp::Op(Arc::new(type_::RootUseOp::ObjectSpread {
         op: reason.dupe(),
     }));
@@ -3422,6 +3468,7 @@ fn merge_tparams_targs<'cx>(
     reason: Reason,
     t: impl FnOnce(&Context<'cx>, &MergeEnv, Vec<(SubstName, Reason, Type, Polarity)>) -> Type,
     tparams: &TParams<ALoc, Pack::Packed<ALoc>>,
+    strictness_kind: type_::TypeStrictnessKind,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     match tparams {
@@ -3445,6 +3492,7 @@ fn merge_tparams_targs<'cx>(
                     tparams: tparams_vec.into(),
                     t_out,
                     id,
+                    strictness_kind,
                 }))),
             ))
         }
@@ -3685,6 +3733,7 @@ fn merge_interface<'cx>(
         constructs,
         dict,
         abstract_,
+        strictness_kind: _,
     } = def;
     let static_ = {
         let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
@@ -3752,7 +3801,10 @@ fn merge_interface<'cx>(
                     }
                 }
             });
-        let (own_props, proto_props) = {
+        let (own_props, proto_props): (
+            type_::properties::PropertiesMap,
+            type_::properties::PropertiesMap,
+        ) = {
             let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
             let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
             for (k, prop) in props {
@@ -3865,6 +3917,7 @@ fn merge_interface<'cx>(
             // Other interfaces stay non-abstract.
             inst_abstract: *abstract_,
             inst_abstract_props: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
+            strictness_kind: def.strictness_kind,
         });
         (inst, make_super)
     };
@@ -4073,6 +4126,7 @@ fn merge_this_class_t<'cx>(
         tparams: _,
         abstract_,
         abstract_props,
+        strictness_kind: _,
     } = def;
     let class_name_owned = class_name;
     move |env: &MergeEnv, targs: Vec<(SubstName, Reason, Type, Polarity)>, rec_type: Type| {
@@ -4215,6 +4269,7 @@ fn merge_this_class_t<'cx>(
                 .generate_property_map(type_::properties::PropertiesMap::new()),
             inst_abstract: abstract_,
             inst_abstract_props: abstract_props.iter().map(|n| Name::new(n.dupe())).collect(),
+            strictness_kind: def.strictness_kind,
         });
         type_util::class_type(
             Type::new(type_::TypeInner::ThisInstanceT(Box::new(
@@ -4278,7 +4333,7 @@ fn merge_class<'cx>(
         *result_cell.borrow_mut() = Some(class_t.dupe());
         class_t
     };
-    merge_tparams_targs(env, cx, file, reason, t, tparams)
+    merge_tparams_targs(env, cx, file, reason, t, tparams, def.strictness_kind)
 }
 
 fn merge_record<'cx>(
@@ -4327,7 +4382,7 @@ fn merge_record<'cx>(
         *result_cell.borrow_mut() = Some(class_t.dupe());
         class_t
     };
-    merge_tparams_targs(env, cx, file, reason, t, tparams)
+    merge_tparams_targs(env, cx, file, reason, t, tparams, def.strictness_kind)
 }
 
 fn merge_fun_statics<'cx>(
@@ -4501,13 +4556,14 @@ fn merge_fun<'cx>(
             type_guard,
             def_reason: reason2.dupe(),
             effect_,
+            strictness_kind: def_ref.strictness_kind,
         };
         Type::new(type_::TypeInner::DefT(
             reason2.dupe(),
             type_::DefT::new(type_::DefTInner::FunT(statics.dupe(), Rc::new(funtype))),
         ))
     };
-    merge_tparams_targs(env, cx, file, reason, t, &def.tparams)
+    merge_tparams_targs(env, cx, file, reason, t, &def.tparams, def.strictness_kind)
 }
 
 fn merge_component<'cx>(
@@ -4594,7 +4650,7 @@ fn merge_component<'cx>(
             ))),
         ))
     };
-    merge_tparams_targs(env, cx, file, reason, t, &def.tparams)
+    merge_tparams_targs(env, cx, file, reason, t, &def.tparams, def.strictness_kind)
 }
 
 fn merge_type_alias<'cx>(
@@ -4605,6 +4661,7 @@ fn merge_type_alias<'cx>(
     name: &FlowSmolStr,
     tparams: &TParams<ALoc, Pack::Packed<ALoc>>,
     body: &Pack::Packed<ALoc>,
+    strictness_kind: type_::TypeStrictnessKind,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
 
@@ -4684,6 +4741,7 @@ fn merge_type_alias<'cx>(
         reason,
         t,
         tparams,
+        strictness_kind,
     )
 }
 
@@ -4697,6 +4755,7 @@ fn merge_opaque_type<'cx>(
     lower_bound: Option<&Pack::Packed<ALoc>>,
     upper_bound: Option<&Pack::Packed<ALoc>>,
     body: Option<&Pack::Packed<ALoc>>,
+    strictness_kind: type_::TypeStrictnessKind,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     let name_owned = name.dupe();
@@ -4740,6 +4799,7 @@ fn merge_opaque_type<'cx>(
         reason,
         t,
         tparams,
+        strictness_kind,
     )
 }
 
@@ -4773,6 +4833,7 @@ fn merge_declare_class<'cx>(
         static_dict: _,
         abstract_,
         abstract_props,
+        strictness_kind: _,
     } = def;
     let this_reason = reason.dupe().replace_desc(RThisType);
     let class_name_owned = class_name.dupe();
@@ -4977,6 +5038,7 @@ fn merge_declare_class<'cx>(
                 .generate_property_map(type_::properties::PropertiesMap::new()),
             inst_abstract: *abstract_,
             inst_abstract_props: abstract_props.iter().map(|n| Name::new(n.dupe())).collect(),
+            strictness_kind: def.strictness_kind,
         });
         type_util::class_type(
             Type::new(type_::TypeInner::ThisInstanceT(Box::new(
@@ -5022,6 +5084,7 @@ fn merge_declare_class<'cx>(
         reason,
         t,
         tparams,
+        def.strictness_kind,
     )
 }
 
@@ -5080,6 +5143,7 @@ pub fn merge_def<'cx>(
             &inner.name,
             &inner.tparams,
             &inner.body,
+            inner.strictness_kind,
         ),
         Def::OpaqueType(inner) => {
             let id = type_::nominal::Id::UserDefinedOpaqueTypeId(Box::new(
@@ -5098,6 +5162,7 @@ pub fn merge_def<'cx>(
                 inner.lower_bound.as_ref(),
                 inner.upper_bound.as_ref(),
                 inner.body.as_ref(),
+                inner.strictness_kind,
             )
         }
         Def::Interface(inner) => {
@@ -5129,6 +5194,7 @@ pub fn merge_def<'cx>(
                 reason.dupe(),
                 t,
                 tparams,
+                def.strictness_kind,
             )
         }
         Def::ClassBinding(inner) => {
@@ -5250,6 +5316,7 @@ pub fn merge_def<'cx>(
                 reason,
                 t,
                 tparams,
+                inner.strictness_kind,
             )
         }
         Def::DisabledComponentBinding(_)
@@ -5535,6 +5602,7 @@ pub fn merge_cjs_export_t<'cx>(
                         &inner.props,
                         true,
                         false,
+                        inner.strictness_kind,
                     ),
                 )
             }
@@ -5552,6 +5620,7 @@ pub fn merge_cjs_export_t<'cx>(
                         &inner.elems,
                         true,
                         false,
+                        inner.strictness_kind,
                     ),
                 )
             }

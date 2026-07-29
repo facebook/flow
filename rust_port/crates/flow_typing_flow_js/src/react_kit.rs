@@ -47,7 +47,6 @@ use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::PropRef;
-use flow_typing_type::type_::PropertyType;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
 use flow_typing_type::type_::SpecializedCallee;
@@ -56,6 +55,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeDestructorT;
 use flow_typing_type::type_::TypeDestructorTInner;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnifyCause;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
@@ -1052,10 +1052,17 @@ pub fn run<'cx>(
             let action =
                 LookupAction::LookupPropForSubtyping(Box::new(LookupPropForSubtypingData {
                     use_op: use_op.dupe(),
-                    prop: PropertyType::OrdinaryField {
-                        type_: key_t,
-                        polarity: Polarity::Positive,
-                    },
+                    prop: flow_typing_type::type_::Property::new(
+                        flow_typing_type::type_::PropertyInner::Field(Box::new(
+                            flow_typing_type::type_::FieldData {
+                                preferred_def_locs: None,
+                                key_loc: None,
+                                type_: key_t,
+                                polarity: Polarity::Positive,
+                            },
+                        )),
+                    ),
+                    strictness_kind: TypeStrictnessKind::Flow,
                     prop_name: prop_name.dupe(),
                     reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
                     reason_upper: reason_key.dupe(),
@@ -1138,6 +1145,7 @@ pub fn run<'cx>(
                                     proto_t: obj_t.proto_t.dupe(),
                                     call_t: obj_t.call_t,
                                     reachable_targs: obj_t.reachable_targs.dupe(),
+                                    strictness_kind: obj_t.strictness_kind,
                                 }))),
                             ))),
                             nominal_type_args: opq.nominal_type_args.dupe(),

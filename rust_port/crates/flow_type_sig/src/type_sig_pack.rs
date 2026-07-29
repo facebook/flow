@@ -804,6 +804,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
             name,
             def,
             tparams,
+            strictness_kind,
         } => {
             let id_loc = pack_loc(id_loc);
             let def = {
@@ -816,6 +817,7 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 name: name.dupe(),
                 def,
                 tparams,
+                strictness_kind: *strictness_kind,
             }))
         }
         parse::LocalBinding::ConstRefBinding { id_loc, name, ref_ } => {
@@ -1297,7 +1299,10 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                 info,
             }
         }
-        parse::ModuleKind::CJSModuleProps(props) => {
+        parse::ModuleKind::CJSModuleProps {
+            props,
+            strictness_kind,
+        } => {
             let file_loc = pack_loc(file_loc);
             let props = props
                 .iter()
@@ -1316,6 +1321,7 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                     frozen: true,
                     proto: None,
                     props,
+                    strictness_kind: *strictness_kind,
                 },
             )))));
             let info = CJSModuleInfo {
@@ -1330,7 +1336,10 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                 info,
             }
         }
-        parse::ModuleKind::CJSDeclareModule(props) => {
+        parse::ModuleKind::CJSDeclareModule {
+            props,
+            strictness_kind,
+        } => {
             let file_loc = pack_loc(file_loc);
             let props = props
                 .iter()
@@ -1354,6 +1363,7 @@ pub(crate) fn pack_exports<'arena, 'ast>(
                             module_name.dupe(),
                         ),
                         props,
+                        strictness_kind: *strictness_kind,
                     },
                 )),
             )));

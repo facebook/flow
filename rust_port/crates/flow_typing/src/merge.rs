@@ -2072,7 +2072,10 @@ pub fn module_type_copied<'cx>(
 
 fn merge_libs_from_ordered_asts(
     sig_opts: &TypeSigOptions,
-    ordered_asts: &[&ast::Program<Loc, Loc>],
+    ordered_asts: &[(
+        &ast::Program<Loc, Loc>,
+        flow_common::type_strictness::TypeStrictnessKind,
+    )],
 ) -> (
     flow_error::ErrorSet,
     compact_table::Table<Loc>,
@@ -2114,21 +2117,31 @@ fn merge_libs_from_ordered_asts(
 pub fn merge_lib_files(
     project_opts: &flow_common::flow_projects::ProjectsOptions,
     sig_opts: &TypeSigOptions,
-    ordered_asts_with_scoped_projects: &[(Option<String>, Arc<ast::Program<Loc, Loc>>)],
+    ordered_asts_with_scoped_projects: &[(
+        Option<String>,
+        flow_common::type_strictness::TypeStrictnessKind,
+        Arc<ast::Program<Loc, Loc>>,
+    )],
 ) -> (flow_error::ErrorSet, MasterContext) {
     let builtin_leader_file_key = ordered_asts_with_scoped_projects
         .first()
-        .and_then(|(_, ast)| ast.loc.source.dupe());
+        .and_then(|(_, _, ast)| ast.loc.source.dupe());
 
-    let mut grouped: Vec<(Option<FlowProjects>, Vec<&ast::Program<Loc, Loc>>)> = Vec::new();
-    for (scoped_project_key, ast) in ordered_asts_with_scoped_projects.iter() {
+    let mut grouped: Vec<(
+        Option<FlowProjects>,
+        Vec<(
+            &ast::Program<Loc, Loc>,
+            flow_common::type_strictness::TypeStrictnessKind,
+        )>,
+    )> = Vec::new();
+    for (scoped_project_key, strictness_kind, ast) in ordered_asts_with_scoped_projects.iter() {
         let scoped_key = scoped_project_key
             .as_ref()
             .map(|k| FlowProjects::from_project_str(project_opts, k));
         let found = grouped.iter_mut().find(|(k, _)| k == &scoped_key);
         match found {
-            None => grouped.push((scoped_key, vec![ast.as_ref()])),
-            Some((_, list)) => list.push(ast.as_ref()),
+            None => grouped.push((scoped_key, vec![(ast.as_ref(), *strictness_kind)])),
+            Some((_, list)) => list.push((ast.as_ref(), *strictness_kind)),
         }
     }
     let non_scoped_asts: Option<Vec<_>> = grouped

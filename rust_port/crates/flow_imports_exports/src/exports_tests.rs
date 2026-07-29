@@ -90,7 +90,7 @@ fn print_builtins(contents_indent: &str) -> Vec<Export> {
     let arena = bumpalo::Bump::new();
     let mut opts = sig_opts();
     opts.for_builtins = true;
-    let asts = [&ast];
+    let asts = [(&ast, flow_common::type_strictness::TypeStrictnessKind::Flow)];
     let (_errors, _locs, packed_sig) =
         type_sig_utils::parse_and_pack_builtins(&opts, &arena, &asts);
     let exports = of_builtins(&packed_sig);

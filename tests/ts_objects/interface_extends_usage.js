@@ -3,7 +3,11 @@
 // Using the imported interface from .js works -- the SuperT check ran at
 // the .ts declaration site, not here.
 
-import type {Ext} from "./interface_extends_lib";
+import type {Base, Ext} from "./interface_extends_lib";
+
+interface JsExtFromTs extends Omit<Base, "b"> {
+  c: boolean;
+}
 
 declare const x: Ext;
 x.a as number; // OK

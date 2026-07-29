@@ -624,6 +624,7 @@ pub mod object_expression_acc {
                     };
                     let target = spread::Target::Value {
                         make_seal: flow_typing_flow_common::obj_type::mk_seal(frozen, as_const),
+                        strictness_kind: cx.type_strictness_kind(),
                     };
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
                     let state = spread::State {
@@ -1804,6 +1805,7 @@ pub fn opaque_type<'a>(
                     r,
                     DefT::new(DefTInner::TypeT(TypeTKind::OpaqueKind, nominal_t)),
                 )),
+                cx.type_strictness_kind(),
             );
             if let (Some(l), Some(u)) = (&lower_bound_t, &underlying_t) {
                 cx.add_post_inference_subtyping_check(l.dupe(), unknown_use(), u.dupe());
@@ -4477,6 +4479,7 @@ pub fn type_alias<'a>(
                 r.dupe(),
                 DefT::new(DefTInner::TypeT(type_::TypeTKind::TypeAliasKind, alias_t)),
             )),
+            cx.type_strictness_kind(),
         )
     };
     let type_ = if cx.enable_custom_error() {
@@ -4534,6 +4537,7 @@ pub fn type_alias<'a>(
                         r.dupe(),
                         DefT::new(DefTInner::TypeT(type_::TypeTKind::TypeAliasKind, nominal_t)),
                     )),
+                    cx.type_strictness_kind(),
                 )
             }
             _ => normal_type_alias(),
@@ -6924,6 +6928,7 @@ fn expression_<'a>(
                         react_dro: None,
                         arity: (0, 0),
                         inexact: false,
+                        strictness_kind: cx.type_strictness_kind(),
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -14325,6 +14330,7 @@ fn static_method_call_object<'a>(
                         .into(),
                         arity: (2, 2),
                         inexact: false,
+                        strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),
             ));

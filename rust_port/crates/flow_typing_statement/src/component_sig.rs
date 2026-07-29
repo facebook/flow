@@ -272,5 +272,6 @@ pub fn component_type<'a, C: crate::component_params_intf::Config>(
         type_::poly::Id::generate_id(),
         tparams,
         t,
+        cx.type_strictness_kind(),
     ))
 }

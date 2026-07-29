@@ -1019,6 +1019,7 @@ fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
                 tparams,
                 t_out,
                 id,
+                strictness_kind,
             }) => match t_out.deref() {
                 TypeInner::DefT(inner_reason, inner_def_t)
                     if let DefTInner::FunT(_, fun_t) = inner_def_t.deref() =>
@@ -1034,6 +1035,7 @@ fn replace_function_statics(function_t: Type, statics_t: &Type) -> Type {
                             tparams: tparams.dupe(),
                             t_out: new_t_out,
                             id: id.dupe(),
+                            strictness_kind: *strictness_kind,
                         }))),
                     ))
                 }

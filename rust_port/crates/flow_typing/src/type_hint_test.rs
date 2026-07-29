@@ -256,16 +256,25 @@ mod tests {
         }
 
         fn init_master_cx() -> Arc<MasterContext> {
-            let asts: Vec<(Option<String>, Arc<ast::Program<Loc, Loc>>)> =
-                flow_flowlib::contents_list(false)
-                    .into_iter()
-                    .rev()
-                    .map(|(filename, lib_content)| {
-                        let lib_file = FileKey::new(FileKeyInner::LibFile(filename.to_string()));
-                        let ast = parse_content(&lib_file, lib_content);
-                        (None, Arc::new(ast))
-                    })
-                    .collect();
+            let asts: Vec<(
+                Option<String>,
+                flow_common::type_strictness::TypeStrictnessKind,
+                Arc<ast::Program<Loc, Loc>>,
+            )> = flow_flowlib::contents_list(false)
+                .into_iter()
+                .rev()
+                .map(|(filename, lib_content)| {
+                    let lib_file = FileKey::new(FileKeyInner::LibFile(filename.to_string()));
+                    let ast = parse_content(&lib_file, lib_content);
+                    (
+                        None,
+                        flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
+                            flow_common::files::has_ts_ext(&lib_file),
+                        ),
+                        Arc::new(ast),
+                    )
+                })
+                .collect();
             let sig_opts = TypeSigOptions {
                 munge: false,
                 facebook_key_mirror: false,
@@ -364,6 +373,7 @@ mod tests {
                     type_guard: None,
                     def_reason: dummy_reason(),
                     effect_: ReactEffectType::AnyEffect,
+                    strictness_kind: flow_common::type_strictness::TypeStrictnessKind::Flow,
                 }),
             )),
         ))
@@ -522,6 +532,7 @@ mod tests {
                         inst_react_dro: None,
                         inst_abstract: false,
                         inst_abstract_props: FlowOrdSet::new(),
+                        strictness_kind: flow_common::type_strictness::TypeStrictnessKind::Flow,
                     }),
                     static_: Type::new(TypeInner::ObjProtoT(dummy_reason())),
                     super_: Type::new(TypeInner::ObjProtoT(dummy_reason())),

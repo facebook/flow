@@ -18,7 +18,8 @@ use flow_typing_type::type_::Flags;
 use flow_typing_type::type_::ObjKind;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
-use flow_typing_type::type_::mk_objecttype;
+use flow_typing_type::type_::TypeStrictnessKind;
+use flow_typing_type::type_::mk_objecttype_with_strictness;
 use flow_typing_type::type_::obj_proto;
 use flow_typing_type::type_::object::spread::SealType;
 use flow_typing_type::type_::properties;
@@ -43,6 +44,30 @@ pub fn mk_with_proto(
     id: Option<properties::Id>,
     proto: Type,
 ) -> Type {
+    mk_with_proto_and_strictness(
+        cx,
+        reason,
+        obj_kind,
+        reachable_targs,
+        call,
+        props,
+        id,
+        proto,
+        cx.type_strictness_kind(),
+    )
+}
+
+pub fn mk_with_proto_and_strictness(
+    cx: &Context,
+    reason: Reason,
+    obj_kind: ObjKind,
+    reachable_targs: Option<Rc<[(Type, Polarity)]>>,
+    call: Option<Type>,
+    props: Option<properties::PropertiesMap>,
+    id: Option<properties::Id>,
+    proto: Type,
+    strictness_kind: TypeStrictnessKind,
+) -> Type {
     let flags = Flags {
         obj_kind,
         react_dro: None,
@@ -61,12 +86,13 @@ pub fn mk_with_proto(
     };
     Type::new(TypeInner::DefT(
         reason,
-        DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype(
+        DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype_with_strictness(
             Some(flags),
             reachable_targs,
             call,
             pmap,
             proto,
+            strictness_kind,
         )))),
     ))
 }

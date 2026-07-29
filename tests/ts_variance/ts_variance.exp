@@ -1,24 +1,3 @@
-Error ------------------------------------------------------------------------------------- cross_lang_consumer.js:10:24
-
-Cannot assign `dogBox` to `a` because in type argument `T` [1]: `Animal` [2] is incompatible with `Dog` [3].
-[incompatible-type]
-
-   cross_lang_consumer.js:10:24
-   10| const a: Box<Animal> = dogBox; // ERROR in .js: Neutral T is invariant
-                              ^^^^^^
-
-References:
-   cross_lang_lib.ts:10:26
-   10| export declare class Box<T> {
-                                ^ [1]
-   cross_lang_consumer.js:10:14
-   10| const a: Box<Animal> = dogBox; // ERROR in .js: Neutral T is invariant
-                    ^^^^^^ [2]
-   cross_lang_consumer.js:9:27
-    9| declare const dogBox: Box<Dog>;
-                                 ^^^ [3]
-
-
 Error --------------------------------------------------------------------------------------- extends_implements.ts:36:8
 
 Cannot extend `Parent` [1] with `Child` because in property `tag`: string literal `c` [2] is incompatible with union
@@ -35,6 +14,27 @@ References:
    extends_implements.ts:33:8
    33|   tag: "a" | "b";
               ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- flow_consumer.ts:28:44
+
+Cannot assign `tsDogFlowBox` to `tsAnimalFlowBox` because in type argument `T` [1]: property `bark` is missing in
+`TsAnimal` [2] but exists in `TsDog` [3]. [incompatible-type]
+
+   flow_consumer.ts:28:44
+   28| const tsAnimalFlowBox: FlowBox<TsAnimal> = tsDogFlowBox; // ERROR: Flow generic with TypeScript arguments
+                                                  ^^^^^^^^^^^^
+
+References:
+   flow_lib.js:8:30
+    8| export declare class FlowBox<T> {
+                                    ^ [1]
+   flow_consumer.ts:28:32
+   28| const tsAnimalFlowBox: FlowBox<TsAnimal> = tsDogFlowBox; // ERROR: Flow generic with TypeScript arguments
+                                      ^^^^^^^^ [2]
+   flow_consumer.ts:27:37
+   27| declare const tsDogFlowBox: FlowBox<TsDog>;
+                                           ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- method_bivariance.ts:50:29

@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 class A {
   m(): void {}
   n = (): void => {}
@@ -54,3 +61,17 @@ i.n; // OK
 // Calling methods is always OK (unchanged behavior)
 a.m(); // OK
 i.m(); // OK
+
+class PrivateMethod {
+  #method(): void {}
+
+  unbind(): void {
+    const method = this.#method; // OK in .ts
+    method();
+  }
+}
+
+import {FlowClass} from "./flow_lib";
+
+declare const flowImported: FlowClass;
+flowImported.method; // OK: the consumer is .ts

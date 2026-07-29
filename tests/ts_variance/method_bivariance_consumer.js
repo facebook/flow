@@ -1,8 +1,8 @@
 // @flow
-// .js consumer of the same method-syntax shape that .ts accepts via
-// bivariance. The gate keys on Files.has_ts_ext (Context.file cx), so a
-// .js context must NOT relax method-syntax param checking -- the narrower
-// param assignment that's accepted in .ts via bivariance still errors here.
+// Flow-authored method shapes remain contravariant.
+// The consumer extension is irrelevant because both participating object
+// types retain Flow strictness through the compatibility check.
+// The narrower method parameter must therefore still be rejected.
 
 declare class Animal {
   name: string;

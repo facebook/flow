@@ -250,6 +250,7 @@ fn mark_local_binding<'arena, 'ast>(
             name: _,
             def,
             tparams: _,
+            strictness_kind: _,
         } => {
             mark_loc(marker, id_loc);
             let parsed = def.get_forced(opts, scopes, tbls);
@@ -808,14 +809,14 @@ pub(super) fn mark_exports<'arena, 'ast>(
         match &exports.kind {
             parse::ModuleKind::UnknownModule => {}
             parse::ModuleKind::CJSModule(t) => mark_parsed(opts, scopes, tbls, marker, t),
-            parse::ModuleKind::CJSModuleProps(props) => {
+            parse::ModuleKind::CJSModuleProps { props, .. } => {
                 mark_loc(marker, file_loc);
                 for (loc, t) in props.values() {
                     mark_loc(marker, loc);
                     mark_parsed(opts, scopes, tbls, marker, t);
                 }
             }
-            parse::ModuleKind::CJSDeclareModule(props) => {
+            parse::ModuleKind::CJSDeclareModule { props, .. } => {
                 mark_loc(marker, file_loc);
                 for b in props.values() {
                     marker.mark_local_binding(opts, scopes, tbls, b);

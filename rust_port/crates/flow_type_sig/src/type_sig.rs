@@ -27,6 +27,7 @@ use std::collections::BTreeSet;
 use dupe::Dupe;
 use flow_common::flow_import_specifier;
 use flow_common::polarity::Polarity;
+use flow_common::type_strictness::TypeStrictnessKind;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use vec1::Vec1;
@@ -232,6 +233,7 @@ pub struct FunSig<Loc, T> {
     pub return_: T,
     pub type_guard: Option<TypeGuard<Loc, T>>,
     pub effect_: ReactEffect<Loc>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 impl<Loc, T> FunSig<Loc, T> {
@@ -275,6 +277,7 @@ impl<Loc, T> FunSig<Loc, T> {
             return_: f_t(cx, &self.return_),
             type_guard: self.type_guard.as_ref().map(|tg| tg.map(cx, &f_loc, &f_t)),
             effect_: self.effect_.map(cx, &f_loc),
+            strictness_kind: self.strictness_kind,
         }
     }
 }
@@ -325,6 +328,7 @@ pub struct ComponentSig<Loc, T> {
     pub params: Vec<ComponentParam<Loc, T>>,
     pub rest_param: Option<ComponentRestParam<T>>,
     pub renders: T,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 impl<Loc, T> ComponentSig<Loc, T> {
@@ -362,6 +366,7 @@ impl<Loc, T> ComponentSig<Loc, T> {
                 .collect(),
             rest_param: self.rest_param.as_ref().map(|rp| rp.map(cx, &f_t)),
             renders: f_t(cx, &self.renders),
+            strictness_kind: self.strictness_kind,
         }
     }
 }
@@ -896,6 +901,7 @@ pub struct ClassSig<Loc, T> {
     pub dict: Option<ObjAnnotDict<T>>,
     pub abstract_: bool,
     pub abstract_props: std::collections::BTreeSet<FlowSmolStr>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 impl<Loc, T> ClassSig<Loc, T> {
@@ -980,6 +986,7 @@ impl<Loc, T> ClassSig<Loc, T> {
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
             abstract_: self.abstract_,
             abstract_props: self.abstract_props.clone(),
+            strictness_kind: self.strictness_kind,
         }
     }
 }
@@ -1003,6 +1010,7 @@ pub struct DeclareClassSig<Loc, T> {
     pub static_dict: Option<ObjAnnotDict<T>>,
     pub abstract_: bool,
     pub abstract_props: std::collections::BTreeSet<FlowSmolStr>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 impl<Loc, T> DeclareClassSig<Loc, T> {
@@ -1112,6 +1120,7 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
             static_dict: self.static_dict.as_ref().map(|d| d.map(cx, &f_t)),
             abstract_: self.abstract_,
             abstract_props: self.abstract_props.clone(),
+            strictness_kind: self.strictness_kind,
         }
     }
 }
@@ -1130,6 +1139,7 @@ pub struct InterfaceSig<Loc, T> {
     /// Read at `merge_interface` in `type_sig_merge.rs` to set `inst_abstract`
     /// so the abstract bit survives cross-module type-sig roundtripping.
     pub abstract_: bool,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 impl<Loc, T> InterfaceSig<Loc, T> {
@@ -1183,6 +1193,7 @@ impl<Loc, T> InterfaceSig<Loc, T> {
             constructs: self.constructs.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
             abstract_: self.abstract_,
+            strictness_kind: self.strictness_kind,
         }
     }
 }
@@ -1248,6 +1259,7 @@ pub struct DefTypeAlias<Loc, T> {
     pub name: FlowSmolStr,
     pub tparams: TParams<Loc, T>,
     pub body: T,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
@@ -1258,6 +1270,7 @@ pub struct DefOpaqueType<Loc, T> {
     pub lower_bound: Option<T>,
     pub upper_bound: Option<T>,
     pub body: Option<T>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
@@ -1349,6 +1362,7 @@ pub struct DefParameter<Loc, T> {
     pub name: FlowSmolStr,
     pub def: T,
     pub tparams: TParams<Loc, T>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
@@ -1587,6 +1601,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 name: inner.name.dupe(),
                 tparams: inner.tparams.map(cx, &f_loc, &f_t),
                 body: f_t(cx, &inner.body),
+                strictness_kind: inner.strictness_kind,
             })),
             Def::OpaqueType(inner) => Def::OpaqueType(Box::new(DefOpaqueType {
                 id_loc: f_loc(cx, &inner.id_loc),
@@ -1595,6 +1610,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 lower_bound: inner.lower_bound.as_ref().map(|t| f_t(cx, t)),
                 upper_bound: inner.upper_bound.as_ref().map(|t| f_t(cx, t)),
                 body: inner.body.as_ref().map(|t| f_t(cx, t)),
+                strictness_kind: inner.strictness_kind,
             })),
             Def::Interface(inner) => Def::Interface(Box::new(DefInterface {
                 id_loc: f_loc(cx, &inner.id_loc),
@@ -1700,6 +1716,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
                 name: inner.name.dupe(),
                 def: f_t(cx, &inner.def),
                 tparams: inner.tparams.map(cx, &f_loc, &f_t),
+                strictness_kind: inner.strictness_kind,
             })),
             Def::EnumBinding(inner) => Def::EnumBinding(Box::new(DefEnumBinding {
                 id_loc: f_loc(cx, &inner.id_loc),
@@ -1755,6 +1772,7 @@ pub struct ValueDeclareModuleImplicitlyExportedObject<Loc, T> {
     pub loc: Loc,
     pub module_name: flow_import_specifier::Userland,
     pub props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1763,6 +1781,7 @@ pub struct ValueObjLit<Loc, T> {
     pub frozen: bool,
     pub proto: Option<(Loc, T)>,
     pub props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1771,6 +1790,21 @@ pub struct ValueObjSpreadLit<Loc, T> {
     pub frozen: bool,
     pub proto: Option<(Loc, T)>,
     pub elems: Vec1<ObjValueSpreadElem<Loc, T>>,
+    pub strictness_kind: TypeStrictnessKind,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueEmptyConstArrayLit<Loc> {
+    pub loc: Loc,
+    pub strictness_kind: TypeStrictnessKind,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueArrayLit<Loc, T> {
+    pub loc: Loc,
+    pub elem_t: T,
+    pub elements: Vec<T>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1789,8 +1823,8 @@ pub enum Value<Loc, T> {
     DeclareModuleImplicitlyExportedObject(Box<ValueDeclareModuleImplicitlyExportedObject<Loc, T>>),
     ObjLit(Box<ValueObjLit<Loc, T>>),
     ObjSpreadLit(Box<ValueObjSpreadLit<Loc, T>>),
-    EmptyConstArrayLit(Box<Loc>),
-    ArrayLit(Box<(Loc, T, Vec<T>)>),
+    EmptyConstArrayLit(Box<ValueEmptyConstArrayLit<Loc>>),
+    ArrayLit(Box<ValueArrayLit<Loc, T>>),
     AsConst(Box<Value<Loc, T>>),
 }
 
@@ -1836,24 +1870,31 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
                 inner.loc.hash(state);
                 inner.module_name.hash(state);
                 inner.props.hash(state);
+                inner.strictness_kind.hash(state);
             }
             Value::ObjLit(inner) => {
                 inner.loc.hash(state);
                 inner.frozen.hash(state);
                 inner.proto.hash(state);
                 inner.props.hash(state);
+                inner.strictness_kind.hash(state);
             }
             Value::ObjSpreadLit(inner) => {
                 inner.loc.hash(state);
                 inner.frozen.hash(state);
                 inner.proto.hash(state);
                 inner.elems.hash(state);
+                inner.strictness_kind.hash(state);
             }
-            Value::EmptyConstArrayLit(loc) => loc.hash(state),
+            Value::EmptyConstArrayLit(inner) => {
+                inner.loc.hash(state);
+                inner.strictness_kind.hash(state);
+            }
             Value::ArrayLit(inner) => {
-                inner.0.hash(state);
-                inner.1.hash(state);
-                inner.2.hash(state);
+                inner.loc.hash(state);
+                inner.elem_t.hash(state);
+                inner.elements.hash(state);
+                inner.strictness_kind.hash(state);
             }
             Value::AsConst(v) => v.hash(state),
         }
@@ -1915,11 +1956,11 @@ impl<Loc, T> Value<Loc, T> {
                     elem.iter(cx, f_loc, f_t);
                 }
             }
-            Value::EmptyConstArrayLit(loc) => f_loc(cx, loc),
+            Value::EmptyConstArrayLit(inner) => f_loc(cx, &inner.loc),
             Value::ArrayLit(inner) => {
-                f_loc(cx, &inner.0);
-                f_t(cx, &inner.1);
-                for t in &inner.2 {
+                f_loc(cx, &inner.loc);
+                f_t(cx, &inner.elem_t);
+                for t in &inner.elements {
                     f_t(cx, t);
                 }
             }
@@ -1973,6 +2014,7 @@ impl<Loc, T> Value<Loc, T> {
                             .iter()
                             .map(|(k, v)| (k.dupe(), v.map(cx, f_loc, f_t)))
                             .collect(),
+                        strictness_kind: inner.strictness_kind,
                     },
                 ))
             }
@@ -1988,6 +2030,7 @@ impl<Loc, T> Value<Loc, T> {
                     .iter()
                     .map(|(k, v)| (k.dupe(), v.map(cx, f_loc, f_t)))
                     .collect(),
+                strictness_kind: inner.strictness_kind,
             })),
             Value::ObjSpreadLit(inner) => Value::ObjSpreadLit(Box::new(ValueObjSpreadLit {
                 loc: f_loc(cx, &inner.loc),
@@ -1997,13 +2040,20 @@ impl<Loc, T> Value<Loc, T> {
                     .as_ref()
                     .map(|(loc, t)| (f_loc(cx, loc), f_t(cx, t))),
                 elems: inner.elems.mapped_ref(|elem| elem.map(cx, f_loc, f_t)),
+                strictness_kind: inner.strictness_kind,
             })),
-            Value::EmptyConstArrayLit(loc) => Value::EmptyConstArrayLit(Box::new(f_loc(cx, loc))),
-            Value::ArrayLit(inner) => Value::ArrayLit(Box::new((
-                f_loc(cx, &inner.0),
-                f_t(cx, &inner.1),
-                inner.2.iter().map(|t| f_t(cx, t)).collect(),
-            ))),
+            Value::EmptyConstArrayLit(inner) => {
+                Value::EmptyConstArrayLit(Box::new(ValueEmptyConstArrayLit {
+                    loc: f_loc(cx, &inner.loc),
+                    strictness_kind: inner.strictness_kind,
+                }))
+            }
+            Value::ArrayLit(inner) => Value::ArrayLit(Box::new(ValueArrayLit {
+                loc: f_loc(cx, &inner.loc),
+                elem_t: f_t(cx, &inner.elem_t),
+                elements: inner.elements.iter().map(|t| f_t(cx, t)).collect(),
+                strictness_kind: inner.strictness_kind,
+            })),
             Value::AsConst(v) => Value::AsConst(Box::new(v.map(cx, &f_loc, &f_t))),
         }
     }
@@ -2037,6 +2087,7 @@ pub struct AnnotTuple<Loc, T> {
     pub loc: Loc,
     pub elems: Vec<TupleElement<Loc, T>>,
     pub inexact: bool,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2123,6 +2174,7 @@ pub struct AnnotMappedTypeAnnot<Loc, T> {
     pub variance_op: Option<ast::types::object::MappedTypeVarianceOp>,
     pub optional: ast::types::object::MappedTypeOptionalFlag,
     pub inline_keyof: bool,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2132,6 +2184,7 @@ pub struct AnnotObjAnnot<Loc, T> {
     pub props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
     pub computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
     pub proto: ObjAnnotProto<Loc, T>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2139,6 +2192,7 @@ pub struct AnnotObjSpreadAnnot<Loc, T> {
     pub loc: Loc,
     pub exact: bool,
     pub elems: Vec1<ObjSpreadAnnotElem<Loc, T>>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2157,7 +2211,7 @@ pub enum Annot<Loc, T> {
     Exists(Box<Loc>),
     // TS-only `object` builtin: a structurally-empty interface that rejects
     // primitives. See type_annotation.rs / subtyping_kit.rs.
-    ObjectBuiltin(Box<Loc>),
+    ObjectBuiltin(Box<(Loc, TypeStrictnessKind)>),
     Optional(Box<T>),
     Maybe(Box<(Loc, T)>),
     Union(Box<AnnotUnion<Loc, T>>),
@@ -2222,8 +2276,8 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             | Annot::BigInt(l)
             | Annot::String(l)
             | Annot::Boolean(l)
-            | Annot::Exists(l)
-            | Annot::ObjectBuiltin(l) => l.hash(state),
+            | Annot::Exists(l) => l.hash(state),
+            Annot::ObjectBuiltin(inner) => inner.hash(state),
             Annot::Optional(t) => t.hash(state),
             Annot::Maybe(inner) => {
                 inner.0.hash(state);
@@ -2425,8 +2479,8 @@ impl<Loc, T> Annot<Loc, T> {
             | Annot::BigInt(box loc)
             | Annot::String(box loc)
             | Annot::Boolean(box loc)
-            | Annot::Exists(box loc)
-            | Annot::ObjectBuiltin(box loc) => f_loc(cx, loc),
+            | Annot::Exists(box loc) => f_loc(cx, loc),
+            Annot::ObjectBuiltin(box (loc, _)) => f_loc(cx, loc),
             Annot::Optional(box t) => f_t(cx, t),
             Annot::Maybe(inner) => {
                 f_loc(cx, &inner.0);
@@ -2750,7 +2804,9 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::String(loc) => Annot::String(Box::new(f_loc(cx, loc))),
             Annot::Boolean(loc) => Annot::Boolean(Box::new(f_loc(cx, loc))),
             Annot::Exists(loc) => Annot::Exists(Box::new(f_loc(cx, loc))),
-            Annot::ObjectBuiltin(loc) => Annot::ObjectBuiltin(Box::new(f_loc(cx, loc))),
+            Annot::ObjectBuiltin(box (loc, strictness_kind)) => {
+                Annot::ObjectBuiltin(Box::new((f_loc(cx, loc), *strictness_kind)))
+            }
             Annot::Optional(t) => Annot::Optional(Box::new(f_t(cx, t))),
             Annot::Maybe(inner) => Annot::Maybe(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
             Annot::Union(inner) => Annot::Union(Box::new(AnnotUnion {
@@ -2773,6 +2829,7 @@ impl<Loc, T> Annot<Loc, T> {
                     .map(|elem| elem.map(cx, &f_loc, &f_t))
                     .collect(),
                 inexact: inner.inexact,
+                strictness_kind: inner.strictness_kind,
             })),
             Annot::Array(inner) => Annot::Array(Box::new((f_loc(cx, &inner.0), f_t(cx, &inner.1)))),
             Annot::ReadOnlyArray(inner) => {
@@ -2930,6 +2987,7 @@ impl<Loc, T> Annot<Loc, T> {
                     variance_op: inner.variance_op,
                     optional: inner.optional,
                     inline_keyof: inner.inline_keyof,
+                    strictness_kind: inner.strictness_kind,
                 }))
             }
             Annot::ObjAnnot(inner) => Annot::ObjAnnot(Box::new(AnnotObjAnnot {
@@ -2952,11 +3010,13 @@ impl<Loc, T> Annot<Loc, T> {
                     .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                     .collect(),
                 proto: inner.proto.map(cx, &f_loc, &f_t),
+                strictness_kind: inner.strictness_kind,
             })),
             Annot::ObjSpreadAnnot(inner) => Annot::ObjSpreadAnnot(Box::new(AnnotObjSpreadAnnot {
                 loc: f_loc(cx, &inner.loc),
                 exact: inner.exact,
                 elems: inner.elems.mapped_ref(|elem| elem.map(cx, &f_loc, &f_t)),
+                strictness_kind: inner.strictness_kind,
             })),
             Annot::InlineInterface(inner) => Annot::InlineInterface(Box::new((
                 f_loc(cx, &inner.0),

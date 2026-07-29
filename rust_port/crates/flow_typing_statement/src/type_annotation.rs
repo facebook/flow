@@ -1061,6 +1061,7 @@ fn convert_inner<'a>(
             let id = mk_eval_id(cx, loc.dupe());
             let t = match flow_js_utils::mk_tuple_type(
                 cx,
+                cx.type_strictness_kind(),
                 id,
                 |cx, use_op, reason, t, destructor, eval_id| {
                     FlowJs::mk_possibly_evaluated_destructor_for_annotations(
@@ -2855,6 +2856,7 @@ fn convert_inner<'a>(
                         type_guard,
                         def_reason: reason.dupe(),
                         effect_: effect_flag,
+                        strictness_kind: cx.type_strictness_kind(),
                     }),
                 )),
             ));
@@ -2862,7 +2864,13 @@ fn convert_inner<'a>(
                 None => ft,
                 Some((ref tparams_loc, ref tparams_nel)) => {
                     let id = cx.make_source_poly_id(false, tparams_loc);
-                    type_util::poly_type(id, tparams_loc.dupe(), tparams_nel.clone(), ft)
+                    type_util::poly_type(
+                        id,
+                        tparams_loc.dupe(),
+                        tparams_nel.clone(),
+                        ft,
+                        cx.type_strictness_kind(),
+                    )
                 }
             };
             ast::types::Type::new(TypeInner::Function {
@@ -3090,6 +3098,7 @@ fn convert_inner<'a>(
                     cx.make_source_poly_id(false, &prop_loc),
                     Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam_for_prop))),
                     prop_type_t,
+                    cx.type_strictness_kind(),
                 );
                 let (poly_name_type, name_type_ast) = match name_type {
                     None => (None, None),
@@ -3102,6 +3111,7 @@ fn convert_inner<'a>(
                             cx.make_source_poly_id(false, &name_loc),
                             Some((key_tparam.loc.dupe(), vec1::Vec1::new(tparam.clone()))),
                             name_t,
+                            cx.type_strictness_kind(),
                         );
                         (Some(poly_nt.dupe()), Some(nt_ast))
                     }
@@ -4187,6 +4197,7 @@ fn convert_object<'a>(
         pmap: type_::properties::PropertiesMap,
         proto: Type,
     ) -> (Reason, ObjType) {
+        let strictness_kind = cx.type_strictness_kind();
         let pmap_props = pmap;
         let pmap_id = if src_loc && type_env::in_toplevel_scope(cx) {
             cx.make_source_property_map(pmap_props, false, &loc)
@@ -4209,7 +4220,14 @@ fn convert_object<'a>(
             react_dro: None,
         };
         let reason = reason::mk_annot_reason(reason::VirtualReasonDesc::RObjectType, loc);
-        let obj_t = mk_objecttype(Some(flags), None, call_id, pmap_id, proto);
+        let obj_t = type_::mk_objecttype_with_strictness(
+            Some(flags),
+            None,
+            call_id,
+            pmap_id,
+            proto,
+            strictness_kind,
+        );
         (reason, obj_t)
     }
 
@@ -4942,7 +4960,10 @@ fn convert_object<'a>(
         }
         _ => {
             let reason = reason::mk_reason(reason::VirtualReasonDesc::RObjectType, loc.dupe());
-            let target = object::spread::Target::Annot { make_exact: exact };
+            let target = object::spread::Target::Annot {
+                make_exact: exact,
+                strictness_kind: cx.type_strictness_kind(),
+            };
 
             fn acc_element_to_operand(el: &AccElement, reason: &Reason) -> object::spread::Operand {
                 match el {

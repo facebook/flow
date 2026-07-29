@@ -148,6 +148,7 @@ pub(super) fn perform_lookup_action<'cx>(
         LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
             use_op,
             prop: up,
+            strictness_kind,
             prop_name,
             reason_lower,
             reason_upper,
@@ -162,25 +163,29 @@ pub(super) fn perform_lookup_action<'cx>(
                 ))),
                 Arc::new(use_op.dupe()),
             );
-            subtyping_kit::rec_flow_p(
+            let up_type = property::property_type(up);
+            subtyping_kit::rec_flow_p_with_lower_upper_property(
                 cx,
                 Some(trace),
                 use_op,
+                prop.map(|lp| (lp, up)),
+                *strictness_kind,
                 true,
                 lreason,
                 ureason,
                 propref,
                 p,
-                up,
+                &up_type,
             )?;
         }
-        LookupAction::SuperProp(box (use_op, lp)) => {
+        LookupAction::SuperProp(box (use_op, lp, strictness_kind)) => {
             let lp_type = property::property_type(lp);
             subtyping_kit::rec_flow_p_with_lower_upper_property(
                 cx,
                 Some(trace),
                 use_op.dupe(),
                 prop.map(|up| (lp, up)),
+                *strictness_kind,
                 true,
                 ureason,
                 lreason,
@@ -2249,6 +2254,7 @@ pub(super) fn type_app_variance_check<'cx>(
     targs: Vec<(Type, Type)>,
     tparams_loc: ALoc,
     tparams: &Vec1<TypeParam>,
+    strictness_kind: flow_typing_type::type_::TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     let minimum_arity = flow_js_utils::poly_minimum_arity(tparams);
     let maximum_arity = tparams.len();
@@ -2295,7 +2301,7 @@ pub(super) fn type_app_variance_check<'cx>(
                         trace,
                         (t2, &UseT::new(UseTInner::UseT(use_op, t1.dupe()))),
                     ),
-                    Polarity::Neutral if flow_common::files::has_ts_ext(cx.file()) => {
+                    Polarity::Neutral if strictness_kind.is_typescript_loose() => {
                         // TS treats Neutral (read-write) tparam slots as covariant in
                         // instantiation, not invariant. Match that by doing a covariant
                         // subtype check in .ts instead of unification.

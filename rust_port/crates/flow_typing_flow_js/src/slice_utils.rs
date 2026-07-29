@@ -67,13 +67,14 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeDestructorT;
 use flow_typing_type::type_::TypeDestructorTInner;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::empty_t;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::inter_rep;
-use flow_typing_type::type_::mk_objecttype;
+use flow_typing_type::type_::mk_objecttype_with_strictness;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::object;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
@@ -99,6 +100,7 @@ pub fn mk_object_type<'cx>(
     id: properties::Id,
     proto: Type,
     generics: object::GenericSpreadId,
+    strictness_kind: TypeStrictnessKind,
 ) -> Type {
     let reason = if invalidate_aliases {
         reason.dupe().update_desc(|d| d.invalidate_rtype_alias())
@@ -139,12 +141,13 @@ pub fn mk_object_type<'cx>(
         None => {
             let t = Type::new(TypeInner::DefT(
                 reason.dupe(),
-                DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype(
+                DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype_with_strictness(
                     Some(flags.clone()),
                     Some(Rc::from(reachable_targs)),
                     call,
                     id,
                     proto,
+                    strictness_kind,
                 )))),
             ));
             if wrap_on_exact_obj && obj_type::is_exact(&flags.obj_kind) {
@@ -334,6 +337,7 @@ pub fn object_slice<'cx>(
     frozen: bool,
     reachable_targs: Rc<[(Type, Polarity)]>,
     generics: object::GenericSpreadId,
+    strictness_kind: TypeStrictnessKind,
 ) -> object::Slice {
     let props_map = cx.find_props(id);
     let props: properties::PropertiesMap = props_map
@@ -355,6 +359,7 @@ pub fn object_slice<'cx>(
     };
     object::Slice {
         reason: r.dupe(),
+        strictness_kind,
         props,
         flags,
         frozen,
@@ -454,6 +459,7 @@ fn spread2<'cx>(
         inexact_reason1,
         object::Slice {
             reason: r1,
+            strictness_kind: strictness_kind1,
             props: props1,
             flags: flags1,
             frozen: frozen1,
@@ -467,6 +473,7 @@ fn spread2<'cx>(
         _inexact_reason2,
         object::Slice {
             reason: r2,
+            strictness_kind: strictness_kind2,
             props: props2,
             flags: flags2,
             frozen: frozen2,
@@ -662,6 +669,7 @@ fn spread2<'cx>(
             inexact_reason,
             object::Slice {
                 reason: reason.dupe(),
+                strictness_kind: strictness_kind1.join(*strictness_kind2),
                 props,
                 flags,
                 frozen,
@@ -679,6 +687,7 @@ pub fn spread<'cx>(
     cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
+    strictness_kind: TypeStrictnessKind,
     nel: (
         object::spread::AccElement,
         flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement>,
@@ -712,6 +721,7 @@ pub fn spread<'cx>(
                         None,
                         object::Slice {
                             reason: inline.reason.dupe(),
+                            strictness_kind,
                             props,
                             flags,
                             frozen: false,
@@ -747,6 +757,7 @@ pub fn spread_mk_object<'cx>(
 ) -> Type {
     let object::Slice {
         reason: _,
+        strictness_kind,
         props,
         flags,
         frozen: _,
@@ -769,11 +780,11 @@ pub fn spread_mk_object<'cx>(
         }
     };
     let (exact, sealed) = match target {
-        object::spread::Target::Annot { make_exact } => {
+        object::spread::Target::Annot { make_exact, .. } => {
             // Type spread result is exact if annotated to be exact
             (*make_exact, object::spread::SealType::Sealed)
         }
-        object::spread::Target::Value { make_seal } => {
+        object::spread::Target::Value { make_seal, .. } => {
             // Value spread result is exact if all inputs are exact
             (obj_type::is_exact(&flags.obj_kind), *make_seal)
         }
@@ -821,6 +832,7 @@ pub fn spread_mk_object<'cx>(
         id,
         proto,
         generics,
+        target.strictness_kind().join(strictness_kind),
     )
 }
 
@@ -851,7 +863,7 @@ pub fn object_spread<'cx, A>(
     let curr_resolve_idx = state.curr_resolve_idx;
     for slice in x.iter() {
         match options {
-            object::spread::Target::Annot { make_exact }
+            object::spread::Target::Annot { make_exact, .. }
                 if *make_exact && slice.flags.obj_kind == ObjKind::Inexact =>
             {
                 add_output(
@@ -952,7 +964,14 @@ pub fn object_spread<'cx, A>(
         }
     }
 
-    let t = match spread(dict_check, cx, &use_op, &reason, (resolved, acc)) {
+    let t = match spread(
+        dict_check,
+        cx,
+        &use_op,
+        &reason,
+        options.strictness_kind(),
+        (resolved, acc),
+    ) {
         Ok(result) => {
             let (first, rest) = result.split_off_first();
             match rest.len() {
@@ -1052,6 +1071,7 @@ fn check_config2<'cx>(
         id,
         proto,
         generics,
+        slice.strictness_kind,
     );
     (t, duplicate_props_in_spread, ref_prop_in_spread)
 }
@@ -1168,6 +1188,7 @@ pub fn object_rest<'cx, A>(
                 merge_mode: &object::rest::MergeMode,
                 object::Slice {
                     reason: r1,
+                    strictness_kind,
                     props: props1,
                     flags: flags1,
                     frozen: _,
@@ -1177,6 +1198,7 @@ pub fn object_rest<'cx, A>(
                 }: &object::Slice,
                 object::Slice {
                     reason: r2,
+                    strictness_kind: _,
                     props: props2,
                     flags: flags2,
                     frozen: _,
@@ -1346,6 +1368,7 @@ pub fn object_rest<'cx, A>(
             id,
             proto,
             generics.clone(),
+            *strictness_kind,
         ))
     };
     match state {
@@ -1398,6 +1421,7 @@ pub fn object_make_exact<'cx>(
 ) -> Result<Type, FlowJsException> {
     let mk_exact_object = |object::Slice {
                                reason: r,
+                               strictness_kind,
                                props,
                                flags,
                                frozen: _,
@@ -1465,6 +1489,7 @@ pub fn object_make_exact<'cx>(
                     id,
                     proto,
                     generics.clone(),
+                    *strictness_kind,
                 ))
             }
         }
@@ -1493,6 +1518,7 @@ pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object:
     let polarity = Polarity::Positive;
     let mk_read_only_object = |object::Slice {
                                    reason: r,
+                                   strictness_kind,
                                    props,
                                    flags,
                                    frozen: _,
@@ -1533,6 +1559,7 @@ pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object:
             id,
             proto,
             generics.clone(),
+            *strictness_kind,
         )
     };
     let mapped: Vec<Type> = x.iter().map(mk_read_only_object).collect();
@@ -1566,6 +1593,7 @@ pub fn object_update_optionality<'cx>(
 ) -> Type {
     let mk_object = |object::Slice {
                          reason: r,
+                         strictness_kind,
                          props,
                          flags,
                          frozen,
@@ -1631,6 +1659,7 @@ pub fn object_update_optionality<'cx>(
             id,
             proto,
             generics.clone(),
+            *strictness_kind,
         )
     };
     let mapped: Vec<Type> = x.iter().map(mk_object).collect();
@@ -1665,6 +1694,7 @@ pub fn intersect2<'cx>(
     reason: &Reason,
     object::Slice {
         reason: r1,
+        strictness_kind: _,
         props: props1,
         flags: flags1,
         frozen: frozen1,
@@ -1674,6 +1704,7 @@ pub fn intersect2<'cx>(
     }: &object::Slice,
     object::Slice {
         reason: r2,
+        strictness_kind: _,
         props: props2,
         flags: flags2,
         frozen: frozen2,
@@ -1792,6 +1823,7 @@ pub fn intersect2_with_reason<'cx>(
     let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RObjectType, intersection_loc);
     object::Slice {
         reason,
+        strictness_kind: x1.strictness_kind.join(x2.strictness_kind),
         props,
         flags,
         frozen,
@@ -1874,6 +1906,7 @@ pub fn interface_slice<'cx>(
     id: properties::Id,
     generics: object::GenericSpreadId,
 ) -> object::Slice {
+    let strictness_kind = inst.strictness_kind;
     let obj_kind = match (&inst.inst_kind, &inst.inst_dict) {
         (_, Some(dict)) => ObjKind::Indexed(dict.clone()),
         (InstanceKind::RecordKind { .. }, _) => ObjKind::Exact,
@@ -1892,6 +1925,7 @@ pub fn interface_slice<'cx>(
         false,
         Rc::from([]),
         generics,
+        strictness_kind,
     )
 }
 
@@ -1969,6 +2003,7 @@ pub fn resolve<'cx, A>(
                     false,
                     obj.reachable_targs.dupe(),
                     t_generic_id,
+                    obj.strictness_kind,
                 ));
                 return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
             }
@@ -2056,6 +2091,7 @@ pub fn resolve<'cx, A>(
                 };
                 let x = Vec1::new(object::Slice {
                     reason: reason.dupe(),
+                    strictness_kind: TypeStrictnessKind::Flow,
                     props: properties::PropertiesMap::new(),
                     flags,
                     frozen: true,
@@ -2079,6 +2115,7 @@ pub fn resolve<'cx, A>(
                 };
                 let x = Vec1::new(object::Slice {
                     reason: reason.dupe(),
+                    strictness_kind: TypeStrictnessKind::Flow,
                     props: properties::PropertiesMap::new(),
                     flags,
                     frozen: true,
@@ -2106,6 +2143,7 @@ pub fn resolve<'cx, A>(
                     | object::Tool::ReactConfig(box ObjectToolReactConfigData { .. }) => {
                         Vec1::new(object::Slice {
                             reason: reason.dupe(),
+                            strictness_kind: TypeStrictnessKind::Flow,
                             props: properties::PropertiesMap::new(),
                             flags,
                             frozen: true,
@@ -2126,6 +2164,7 @@ pub fn resolve<'cx, A>(
                         };
                         Vec1::new(object::Slice {
                             reason: reason.dupe(),
+                            strictness_kind: TypeStrictnessKind::Flow,
                             props: properties::PropertiesMap::new(),
                             flags,
                             frozen: true,
@@ -2144,6 +2183,7 @@ pub fn resolve<'cx, A>(
                     arity,
                     inexact,
                     react_dro,
+                    strictness_kind,
                 }) if matches!(tool, object::Tool::ReadOnly) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
@@ -2171,6 +2211,7 @@ pub fn resolve<'cx, A>(
                                     arity: *arity,
                                     inexact: *inexact,
                                     react_dro: react_dro.clone(),
+                                    strictness_kind: *strictness_kind,
                                 },
                             ))))),
                         )),
@@ -2182,6 +2223,7 @@ pub fn resolve<'cx, A>(
                     arity,
                     inexact,
                     react_dro,
+                    strictness_kind,
                 }) if matches!(tool, object::Tool::Partial) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
@@ -2219,6 +2261,7 @@ pub fn resolve<'cx, A>(
                                     arity,
                                     inexact: *inexact,
                                     react_dro: react_dro.clone(),
+                                    strictness_kind: *strictness_kind,
                                 },
                             ))))),
                         )),
@@ -2230,6 +2273,7 @@ pub fn resolve<'cx, A>(
                     arity,
                     inexact,
                     react_dro,
+                    strictness_kind,
                 }) if matches!(tool, object::Tool::Required) => {
                     let elements: Vec<TupleElement> = elements
                         .iter()
@@ -2270,6 +2314,7 @@ pub fn resolve<'cx, A>(
                                     arity,
                                     inexact: *inexact,
                                     react_dro: react_dro.clone(),
+                                    strictness_kind: *strictness_kind,
                                 },
                             ))))),
                         )),
@@ -2409,6 +2454,7 @@ pub fn super_<'cx, A>(
                 intersect2(cx, reason, &acc, &slice);
             let acc = object::Slice {
                 reason: reason.dupe(),
+                strictness_kind: acc.strictness_kind.join(slice.strictness_kind),
                 props,
                 flags,
                 frozen,
@@ -2594,6 +2640,7 @@ pub fn map_object<'cx>(
     let mapped_type_optionality = &mapped_type_flags.optional;
     let object::Slice {
         reason: _,
+        strictness_kind,
         props,
         flags,
         frozen,
@@ -2937,6 +2984,7 @@ pub fn map_object<'cx>(
         id,
         proto,
         generics.clone(),
+        *strictness_kind,
     ))
 }
 

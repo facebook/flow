@@ -295,6 +295,7 @@ fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
                 tparams,
                 t_out,
                 id,
+                strictness_kind,
             }) => {
                 let FilterResult { type_, changed } = f(t_out.dupe());
                 match type_.deref() {
@@ -309,6 +310,7 @@ fn map_poly(f: &dyn Fn(Type) -> FilterResult, t: Type) -> FilterResult {
                                 tparams: tparams.dupe(),
                                 t_out: type_,
                                 id: id.dupe(),
+                                strictness_kind: *strictness_kind,
                             }))),
                         )),
                         changed,

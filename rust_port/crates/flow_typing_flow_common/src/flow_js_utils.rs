@@ -63,6 +63,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnaryArithKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
@@ -411,6 +412,7 @@ pub fn extract_class_ctor_t<'cx>(
                         tparams,
                         t_out,
                         id: _,
+                        strictness_kind,
                     }) = def_t.deref() =>
                 {
                     find_ctor(concretize, cx, t_out)?.map(|ctor| {
@@ -421,6 +423,7 @@ pub fn extract_class_ctor_t<'cx>(
                                 tparams: tparams.dupe(),
                                 t_out: ctor,
                                 id: poly::Id::generate_id(),
+                                strictness_kind: *strictness_kind,
                             }))),
                         ))
                     })
@@ -1354,7 +1357,7 @@ pub fn use_op_of_lookup_action(action: &flow_typing_type::type_::LookupAction) -
         LookupAction::ReadProp(box ReadPropData { use_op, .. })
         | LookupAction::WriteProp(box WritePropData { use_op, .. })
         | LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData { use_op, .. })
-        | LookupAction::SuperProp(box (use_op, _))
+        | LookupAction::SuperProp(box (use_op, _, _))
         | LookupAction::MatchProp(box LookupActionMatchPropData { use_op, .. }) => use_op.dupe(),
         LookupAction::LookupPropForTvarPopulation { .. } => unknown_use(),
     }
@@ -2549,6 +2552,7 @@ pub fn obj_key_mirror<'cx>(
                 proto_t: o.proto_t.dupe(),
                 call_t: o.call_t,
                 reachable_targs: o.reachable_targs.dupe(),
+                strictness_kind: o.strictness_kind,
             }
             .into(),
         )),
@@ -3542,6 +3546,7 @@ pub mod import_type_t_kit {
                     tparams: typeparams,
                     t_out,
                     id,
+                    strictness_kind,
                 }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def) => match inner_def.deref() {
                         DefTInner::ClassT(inst) => match inst.deref() {
@@ -3570,6 +3575,7 @@ pub mod import_type_t_kit {
                                     tparams_loc.dupe(),
                                     typeparams.dupe(),
                                     inner,
+                                    *strictness_kind,
                                 ))
                             }
                             _ => {
@@ -3585,6 +3591,7 @@ pub mod import_type_t_kit {
                                     tparams_loc.dupe(),
                                     typeparams.dupe(),
                                     type_t,
+                                    *strictness_kind,
                                 ))
                             }
                         },
@@ -3678,6 +3685,7 @@ pub mod import_typeof_t_kit {
                     tparams_loc,
                     tparams: typeparams,
                     t_out,
+                    strictness_kind,
                     ..
                 }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def) => match inner_def.deref() {
@@ -3708,6 +3716,7 @@ pub mod import_typeof_t_kit {
                                         typeof_t,
                                     )),
                                 )),
+                                *strictness_kind,
                             )
                         }
                         DefTInner::TypeT(_, _) => {
@@ -5680,7 +5689,7 @@ pub fn check_method_unbinding<'cx>(
                     },
                 )),
                 None => {
-                    if !flow_common::files::has_ts_ext(cx.file()) {
+                    if !cx.type_strictness_kind().is_typescript_loose() {
                         let reason_op_from_propref = reason_of_propref(propref);
                         add_output(
                             cx,
@@ -6578,6 +6587,7 @@ pub fn array_elem_check<'cx>(
             arity: _,
             inexact,
             react_dro,
+            strictness_kind: _,
         }) => {
             let elem_t = union_void_if_instructed(elem_t.dupe());
             (
@@ -7608,6 +7618,7 @@ pub fn validate_tuple_elements<'cx>(
 
 pub fn mk_tuple_type<'cx, F>(
     cx: &Context<'cx>,
+    strictness_kind: TypeStrictnessKind,
     id: flow_typing_type::type_::eval::Id,
     mk_type_destructor: F,
     inexact: bool,
@@ -7724,6 +7735,7 @@ where
                             arity,
                             inexact,
                             react_dro: None,
+                            strictness_kind,
                         }),
                     )))),
                 )))

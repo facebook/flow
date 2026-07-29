@@ -2138,6 +2138,7 @@ pub fn make_exact_object(
             proto_t: obj.proto_t.dupe(),
             call_t: obj.call_t,
             reachable_targs: obj.reachable_targs.dupe(),
+            strictness_kind: obj.strictness_kind,
         }))),
     ))
 }
@@ -2178,6 +2179,7 @@ pub fn poly_type(
     tparams_loc: ALoc,
     tparams: vec1::Vec1<crate::type_::TypeParam>,
     t: Type,
+    strictness_kind: crate::type_::TypeStrictnessKind,
 ) -> Type {
     use crate::type_::DefT;
     use crate::type_::DefTInner;
@@ -2194,6 +2196,7 @@ pub fn poly_type(
             tparams: tparams.into_vec().into(),
             t_out: t,
             id,
+            strictness_kind,
         }))),
     ))
 }
@@ -2203,10 +2206,11 @@ pub fn poly_type_of_tparam_list(
     tparams_loc: ALoc,
     tparams: Rc<[crate::type_::TypeParam]>,
     t: Type,
+    strictness_kind: crate::type_::TypeStrictnessKind,
 ) -> Type {
     match vec1::Vec1::try_from_vec(tparams.to_vec()) {
         Err(_) => t,
-        Ok(tparams_nel) => poly_type(id, tparams_loc, tparams_nel, t),
+        Ok(tparams_nel) => poly_type(id, tparams_loc, tparams_nel, t, strictness_kind),
     }
 }
 
@@ -2214,10 +2218,13 @@ pub fn poly_type_of_tparams(
     id: crate::type_::poly::Id,
     tparams: crate::type_::TypeParams,
     t: Type,
+    strictness_kind: crate::type_::TypeStrictnessKind,
 ) -> Type {
     match tparams {
         None => t,
-        Some((tparams_loc, tparams_nel)) => poly_type(id, tparams_loc, tparams_nel, t),
+        Some((tparams_loc, tparams_nel)) => {
+            poly_type(id, tparams_loc, tparams_nel, t, strictness_kind)
+        }
     }
 }
 
@@ -2796,6 +2803,7 @@ pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type
                     tparams,
                     t_out,
                     id,
+                    strictness_kind,
                 }) => Type::new(TypeInner::DefT(
                     r.dupe(),
                     DefT::new(DefTInner::PolyT(Box::new(PolyTData {
@@ -2803,6 +2811,7 @@ pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type
                         tparams: tparams.dupe(),
                         t_out: go(t_out.dupe(), override_return_t),
                         id: id.dupe(),
+                        strictness_kind: *strictness_kind,
                     }))),
                 )),
                 _ => t.dupe(),

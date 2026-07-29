@@ -567,11 +567,15 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
                     .get(filename)
                     .ok_or_else(|| format!("File `{}` has not been registered", filename))?;
                 let file_key = FileKey::new(FileKeyInner::LibFile(filename.to_string()));
+                let strictness_kind =
+                    flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
+                        flow_common::files::has_ts_ext(&file_key),
+                    );
                 let parsed = parse_file(file_key, content, &options);
                 if !parsed.parse_errors.is_empty() {
                     Err(format!("Failed to parse builtin `{}`", filename))
                 } else {
-                    Ok((None, parsed.ast))
+                    Ok((None, strictness_kind, parsed.ast))
                 }
             })
             .collect::<Result<Vec<_>, _>>()

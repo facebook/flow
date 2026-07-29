@@ -1,0 +1,6 @@
+[libs]
+a_flow.js
+b_ts.d.ts
+
+[options]
+all=true

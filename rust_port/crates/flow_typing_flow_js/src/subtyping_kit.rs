@@ -110,6 +110,7 @@ use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnifyCause;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionEnumSet;
@@ -165,8 +166,9 @@ fn add_output_prop_polarity_mismatch<'cx>(
     lreason: &Reason,
     ureason: &Reason,
     props: Vec<(Option<Name>, (Polarity, Polarity))>,
+    strictness_kind: flow_typing_type::type_::TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
-    if flow_common::files::has_ts_ext(cx.file()) {
+    if strictness_kind.is_typescript_loose() {
         Ok(())
     } else if let Ok(props) = Vec1::try_from_vec(props) {
         flow_js_utils::add_output(
@@ -200,6 +202,7 @@ fn rec_flow_p_inner<'cx>(
     use_op: UseOp,
     lower_upper_property: Option<(&Property, &Property)>,
     lower_upper_subtyping_obj_ts: Option<(&Type, &Type)>,
+    strictness_kind: TypeStrictnessKind,
     upper_object_reason: &Reason,
     report_polarity: bool,
     propref: &PropRef,
@@ -207,7 +210,7 @@ fn rec_flow_p_inner<'cx>(
     up: &PropertyType,
 ) -> Result<Vec<(Option<Name>, (Polarity, Polarity))>, FlowJsException> {
     if let Some((lower_property, upper_property)) = lower_upper_property
-        && flow_common::files::has_ts_ext(cx.file())
+        && strictness_kind.is_typescript_loose()
         && let (PropertyInner::Method { type_: lt, .. }, PropertyInner::Method { type_: ut, .. }) =
             (lower_property.deref(), upper_property.deref())
         && try_method_bivariant(
@@ -231,7 +234,7 @@ fn rec_flow_p_inner<'cx>(
                 type_: ut,
                 polarity: Polarity::Neutral,
             },
-        ) if flow_common::files::has_ts_ext(cx.file()) => {
+        ) if strictness_kind.is_typescript_loose() => {
             // TS treats read-write-on-both-sides property type mismatch in
             // extends/implements/instantiation contexts as covariant, not invariant.
             // Match that by skipping unification and doing a covariant subtype check.
@@ -416,9 +419,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
             )?;
         }
         // lower bound method, upper bound function
-        // This is always banned, as it would allow methods to be unbound through casting
+        // Flow files ban this because it would allow methods to be unbound through casting.
         (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
-            if !unbound && !flow_common::files::has_ts_ext(cx.file()) {
+            if !unbound && !cx.type_strictness_kind().is_typescript_loose() {
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
@@ -1117,6 +1120,7 @@ fn flow_obj_to_obj<'cx>(
         props_tmap: lflds,
         proto_t: lproto,
         reachable_targs: _,
+        strictness_kind: lstrictness_kind,
     } = &**l_obj;
     let ObjType {
         flags: rflags,
@@ -1124,7 +1128,9 @@ fn flow_obj_to_obj<'cx>(
         props_tmap: uflds,
         proto_t: uproto,
         reachable_targs: _,
+        strictness_kind: ustrictness_kind,
     } = &**u_obj;
+    let strictness_kind = lstrictness_kind.join(*ustrictness_kind);
 
     // if inflowing type is literal (thus guaranteed to be
     // unaliased), propertywise subtyping is sound
@@ -1174,6 +1180,7 @@ fn flow_obj_to_obj<'cx>(
                     use_op_k.dupe(),
                     None,
                     Some((&l_t, &u_t)),
+                    strictness_kind,
                     ureason,
                     false,
                     &PropRef::Computed(uk.dupe()),
@@ -1186,7 +1193,14 @@ fn flow_obj_to_obj<'cx>(
                         polarity: *upolarity,
                     },
                 )?;
-                add_output_prop_polarity_mismatch(cx, use_op_k, lreason, ureason, errs)?;
+                add_output_prop_polarity_mismatch(
+                    cx,
+                    use_op_k,
+                    lreason,
+                    ureason,
+                    errs,
+                    strictness_kind,
+                )?;
             }
             let use_op_v = VirtualUseOp::Frame(
                 Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
@@ -1215,6 +1229,7 @@ fn flow_obj_to_obj<'cx>(
                     use_op_v.dupe(),
                     None,
                     Some((&l_t, &u_t)),
+                    strictness_kind,
                     ureason,
                     true,
                     &PropRef::Computed(uv.dupe()),
@@ -1227,7 +1242,14 @@ fn flow_obj_to_obj<'cx>(
                         polarity: *upolarity,
                     },
                 )?;
-                add_output_prop_polarity_mismatch(cx, use_op_v, lreason, ureason, errs)?;
+                add_output_prop_polarity_mismatch(
+                    cx,
+                    use_op_v,
+                    lreason,
+                    ureason,
+                    errs,
+                    strictness_kind,
+                )?;
             }
         }
         _ => {}
@@ -1239,7 +1261,7 @@ fn flow_obj_to_obj<'cx>(
     // reports those as excess properties, so this is a known compatibility gap.
     if rflags.obj_kind == ObjKind::Exact
         && !flow_common::reason::is_literal_object_reason(ureason)
-        && !flow_common::files::has_ts_ext(cx.file())
+        && !strictness_kind.is_typescript_loose()
     {
         if !obj_type::is_exact(&lflags.obj_kind) {
             let l_t = Type::new(TypeInner::DefT(
@@ -1370,7 +1392,7 @@ fn flow_obj_to_obj<'cx>(
                 (Some(lp), _) => {
                     if lit {
                         // prop from unaliased LB: check <:
-                        let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
+                        let bivariant_handled = if strictness_kind.is_typescript_loose() {
                             if let (
                                 PropertyInner::Method { type_: lt, .. },
                                 PropertyInner::Method { type_: ut, .. },
@@ -1398,7 +1420,7 @@ fn flow_obj_to_obj<'cx>(
                         }
                     } else {
                         // prop from aliased LB
-                        let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
+                        let bivariant_handled = if strictness_kind.is_typescript_loose() {
                             if let (
                                 PropertyInner::Method { type_: lt, .. },
                                 PropertyInner::Method { type_: ut, .. },
@@ -1424,7 +1446,7 @@ fn flow_obj_to_obj<'cx>(
                                         type_: ref ut,
                                         polarity: Polarity::Neutral,
                                     },
-                                ) if flow_common::files::has_ts_ext(cx.file()) => {
+                                ) if strictness_kind.is_typescript_loose() => {
                                     // TS treats read-write-on-both-sides property type mismatch
                                     // in extends/implements/instantiation as covariant, not
                                     // invariant. Skip the try_unify path and do a covariant
@@ -1490,6 +1512,7 @@ fn flow_obj_to_obj<'cx>(
                                         mk_use_op(),
                                         None,
                                         Some((&l_t, &u_t)),
+                                        strictness_kind,
                                         ureason,
                                         true,
                                         &mk_propref(),
@@ -1557,6 +1580,7 @@ fn flow_obj_to_obj<'cx>(
                                 mk_use_op(),
                                 None,
                                 Some((&l_t, &u_t)),
+                                strictness_kind,
                                 ureason,
                                 true,
                                 &mk_propref(),
@@ -1646,10 +1670,8 @@ fn flow_obj_to_obj<'cx>(
                                     lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
                                         Box::new(LookupPropForSubtypingData {
                                             use_op: use_op.dupe(),
-                                            prop: PropertyType::OrdinaryField {
-                                                type_: fd.type_.dupe(),
-                                                polarity: Polarity::Positive,
-                                            },
+                                            prop: up.dupe(),
+                                            strictness_kind,
                                             prop_name: name.dupe(),
                                             reason_lower: lreason.dupe(),
                                             reason_upper: ureason.dupe(),
@@ -1692,7 +1714,8 @@ fn flow_obj_to_obj<'cx>(
                                             LookupAction::LookupPropForSubtyping(Box::new(
                                                 LookupPropForSubtypingData {
                                                     use_op: use_op.dupe(),
-                                                    prop: property::property_type(up),
+                                                    prop: up.dupe(),
+                                                    strictness_kind,
                                                     prop_name: name.dupe(),
                                                     reason_lower: lreason.dupe(),
                                                     reason_upper: ureason.dupe(),
@@ -1872,7 +1895,7 @@ fn flow_obj_to_obj<'cx>(
             })),
         )?;
     }
-    if !flow_common::files::has_ts_ext(cx.file()) {
+    if !strictness_kind.is_typescript_loose() {
         if let Ok(props) = Vec1::try_from_vec(rhs_neutral_optional) {
             let t1 = Type::new(TypeInner::DefT(
                 lreason.dupe(),
@@ -1907,7 +1930,7 @@ fn flow_obj_to_obj<'cx>(
             PropertyType::OrdinaryField {
                 type_: ut,
                 polarity: Polarity::Neutral,
-            } if flow_common::files::has_ts_ext(cx.file()) => {
+            } if strictness_kind.is_typescript_loose() => {
                 // TS treats missing optional Neutral properties as covariantly
                 // filled rather than invariantly demanded. Replace the unify with
                 // a covariant `any ~> ut` flow so any genuine type-arg
@@ -1959,7 +1982,14 @@ fn flow_obj_to_obj<'cx>(
         }
     }
 
-    add_output_prop_polarity_mismatch(cx, use_op.dupe(), lreason, ureason, polarity_mismatch_errs)?;
+    add_output_prop_polarity_mismatch(
+        cx,
+        use_op.dupe(),
+        lreason,
+        ureason,
+        polarity_mismatch_errs,
+        strictness_kind,
+    )?;
 
     // Any properties in l but not u must match indexer
     match &udict {
@@ -2035,13 +2065,21 @@ fn flow_obj_to_obj<'cx>(
                             use_op.dupe(),
                             None,
                             Some((&l_t, &u_t)),
+                            strictness_kind,
                             ureason,
                             true,
                             &propref,
                             &lp_type,
                             &up_type,
                         )?;
-                        add_output_prop_polarity_mismatch(cx, use_op, lreason, ureason, errs)?;
+                        add_output_prop_polarity_mismatch(
+                            cx,
+                            use_op,
+                            lreason,
+                            ureason,
+                            errs,
+                            l_obj.strictness_kind.join(u_obj.strictness_kind),
+                        )?;
                     }
                     Ok(())
                 };
@@ -2185,13 +2223,21 @@ fn flow_obj_to_obj<'cx>(
                             use_op.dupe(),
                             None,
                             Some((&l_t, &u_t)),
+                            strictness_kind,
                             ureason,
                             true,
                             &propref,
                             &lp_type,
                             &up_type,
                         )?;
-                        add_output_prop_polarity_mismatch(cx, use_op, lreason, ureason, errs)?;
+                        add_output_prop_polarity_mismatch(
+                            cx,
+                            use_op,
+                            lreason,
+                            ureason,
+                            errs,
+                            l_obj.strictness_kind.join(u_obj.strictness_kind),
+                        )?;
                     }
                 }
                 _ => {}
@@ -4009,6 +4055,7 @@ pub fn rec_sub_t<'cx>(
                     proto_t: dummy_prototype(),
                     call_t: obj.call_t,
                     reachable_targs: Rc::from([]),
+                    strictness_kind: obj.strictness_kind,
                 };
                 FlowJs::rec_flow(
                     cx,
@@ -4811,9 +4858,18 @@ pub fn rec_sub_t<'cx>(
         }
         // InstanceT -> ObjT
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if matches!(ld.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }))
-                && matches!(ud.deref(), DefTInner::ObjT(obj) if obj.flags.obj_kind == ObjKind::Exact)
-                && !flow_common::files::has_ts_ext(cx.file()) =>
+            if let DefTInner::InstanceT(inst) = ld.deref()
+                && matches!(
+                    inst.inst.inst_kind,
+                    InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. }
+                )
+                && let DefTInner::ObjT(obj) = ud.deref()
+                && obj.flags.obj_kind == ObjKind::Exact
+                && !inst
+                    .inst
+                    .strictness_kind
+                    .join(obj.strictness_kind)
+                    .is_typescript_loose() =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output(
@@ -4840,7 +4896,10 @@ pub fn rec_sub_t<'cx>(
             let uproto = &u_obj.proto_t;
             let ucall = u_obj.call_t;
 
-            let suppress_class_to_object_error = flow_common::files::has_ts_ext(cx.file())
+            let suppress_class_to_object_error = inst
+                .strictness_kind
+                .join(u_obj.strictness_kind)
+                .is_typescript_loose()
                 && match inst_kind {
                     InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => true,
                     InstanceKind::RecordKind { .. } => false,
@@ -4917,7 +4976,8 @@ pub fn rec_sub_t<'cx>(
                                 ))),
                                 Arc::new(use_op.dupe()),
                             );
-                            let bivariant_handled = if flow_common::files::has_ts_ext(cx.file()) {
+                            let strictness_kind = inst.strictness_kind.join(u_obj.strictness_kind);
+                            let bivariant_handled = if strictness_kind.is_typescript_loose() {
                                 if let (
                                     PropertyInner::Method { type_: lt, .. },
                                     PropertyInner::Method { type_: ut, .. },
@@ -4937,6 +4997,7 @@ pub fn rec_sub_t<'cx>(
                                     prop_use_op,
                                     None,
                                     Some((l, u)),
+                                    inst.strictness_kind.join(u_obj.strictness_kind),
                                     ureason,
                                     true,
                                     &propref,
@@ -4975,7 +5036,10 @@ pub fn rec_sub_t<'cx>(
                                                 LookupAction::LookupPropForSubtyping(Box::new(
                                                     LookupPropForSubtypingData {
                                                         use_op: use_op.dupe(),
-                                                        prop: property::property_type(up),
+                                                        prop: up.dupe(),
+                                                        strictness_kind: inst
+                                                            .strictness_kind
+                                                            .join(u_obj.strictness_kind),
                                                         prop_name: name.dupe(),
                                                         reason_lower: lreason.dupe(),
                                                         reason_upper: ureason.dupe(),
@@ -4996,7 +5060,14 @@ pub fn rec_sub_t<'cx>(
                 }
                 acc
             };
-            add_output_prop_polarity_mismatch(cx, use_op.dupe(), lreason, ureason, errs)?;
+            add_output_prop_polarity_mismatch(
+                cx,
+                use_op.dupe(),
+                lreason,
+                ureason,
+                errs,
+                inst.strictness_kind.join(u_obj.strictness_kind),
+            )?;
             FlowJs::rec_flow(
                 cx,
                 trace,
@@ -5326,7 +5397,10 @@ pub fn rec_sub_t<'cx>(
                     tuple_view,
                     react_dro,
                 }) = arr1.as_ref()
-                && matches!(ud.deref(), DefTInner::ArrT(arr) if matches!(arr.as_ref(), ArrType::TupleAT(box TupleATData { .. }))) =>
+                && let DefTInner::ArrT(arr2) = ud.deref()
+                && let ArrType::TupleAT(box TupleATData {
+                    strictness_kind, ..
+                }) = arr2.as_ref() =>
         {
             match tuple_view {
                 None => {
@@ -5345,6 +5419,7 @@ pub fn rec_sub_t<'cx>(
                                 arity: tv.arity,
                                 inexact: tv.inexact,
                                 react_dro: react_dro.clone(),
+                                strictness_kind: *strictness_kind,
                             },
                         ))))),
                     ));
@@ -5451,6 +5526,7 @@ pub fn rec_sub_t<'cx>(
                 proto_t: o.proto_t.dupe(),
                 call_t: None,
                 reachable_targs: o.reachable_targs.dupe(),
+                strictness_kind: o.strictness_kind,
             };
             let obj_t = Type::new(TypeInner::DefT(
                 reason.dupe(),
@@ -5493,10 +5569,13 @@ pub fn rec_sub_t<'cx>(
         // egregious to emit this constraint. This only serves to maintain buggy
         // behavior, which should be fixed, and this code removed.
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
-            if matches!(ld.deref(), DefTInner::FunT(_, _))
+            if let DefTInner::FunT(_, fun) = ld.deref()
                 && let DefTInner::ObjT(obj) = ud.deref()
                 && matches!(obj.flags.obj_kind, ObjKind::Exact | ObjKind::Indexed(_))
-                && (!flow_common::files::has_ts_ext(cx.file())
+                && (!fun
+                    .strictness_kind
+                    .join(obj.strictness_kind)
+                    .is_typescript_loose()
                     || obj.flags.obj_kind != ObjKind::Exact) =>
         {
             let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
@@ -5608,9 +5687,10 @@ pub fn rec_sub_t<'cx>(
                     | DefTInner::UniqueSymbolT(_)
             ) && (matches!(
                 ud.deref(),
-                DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
-            ) || matches!(ud.deref(), DefTInner::ObjT(_)))
-                && flow_common::files::has_ts_ext(cx.file()) =>
+                DefTInner::InstanceT(inst)
+                    if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { reject_primitives: false, .. })
+                        && inst.inst.strictness_kind.is_typescript_loose()
+            ) || matches!(ud.deref(), DefTInner::ObjT(obj) if obj.strictness_kind.is_typescript_loose())) =>
         {
             let builtin_name = match l.deref() {
                 TypeInner::DefT(_, ld)
@@ -6269,6 +6349,7 @@ pub fn rec_flow_p<'cx>(
         trace,
         use_op,
         None,
+        TypeStrictnessKind::Flow,
         report_polarity,
         lreason,
         ureason,
@@ -6283,6 +6364,7 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
     trace: Option<DepthTrace>,
     use_op: UseOp,
     lower_upper_property: Option<(&Property, &Property)>,
+    strictness_kind: TypeStrictnessKind,
     report_polarity: bool,
     lreason: &Reason,
     ureason: &Reason,
@@ -6296,12 +6378,13 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
         use_op.dupe(),
         lower_upper_property,
         None,
+        strictness_kind,
         ureason,
         report_polarity,
         propref,
         lp,
         up,
     )?;
-    add_output_prop_polarity_mismatch(cx, use_op, lreason, ureason, errs)?;
+    add_output_prop_polarity_mismatch(cx, use_op, lreason, ureason, errs, strictness_kind)?;
     Ok(())
 }

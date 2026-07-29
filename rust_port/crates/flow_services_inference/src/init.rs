@@ -63,12 +63,22 @@ fn load_lib_files(
     (Exports, Vec<(FlowProjects, Exports)>),
 ) {
     let mut ok = true;
-    let mut ordered_asts: Vec<(Option<String>, Arc<ast::Program<Loc, Loc>>)> = Vec::new();
+    let mut ordered_asts: Vec<(
+        Option<String>,
+        flow_common::type_strictness::TypeStrictnessKind,
+        Arc<ast::Program<Loc, Loc>>,
+    )> = Vec::new();
     for (scoped_dir_opt, file) in files {
         let lib_file = FileKey::lib_file_of_absolute(file);
         match reader.get_ast(&lib_file) {
             Some(ast) => {
-                ordered_asts.push((scoped_dir_opt.clone(), ast));
+                ordered_asts.push((
+                    scoped_dir_opt.clone(),
+                    flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
+                        flow_common::files::has_ts_ext(&lib_file),
+                    ),
+                    ast,
+                ));
             }
             None => {
                 flow_hh_logger::info!("Failed to find {:?} in parsing heap.", lib_file);
@@ -117,7 +127,7 @@ fn load_lib_files(
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
                         .iter()
-                        .map(|(_, ast)| {
+                        .map(|(_, _, ast)| {
                             let loc = &ast.loc;
                             let source = loc
                                 .source

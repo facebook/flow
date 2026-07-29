@@ -620,12 +620,12 @@ pub fn mk_check_file(
                     let binding_kind = type_sig_merge::def_binding_kind(&def);
                     let reason = type_sig_merge::def_reason(&def);
                     let type_ =
-                        |const_decl: bool,
-                         file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
-                         cx: &Context<'static>,
-                         reason: reason::Reason,
-                         def: Rc<Pack::PackedDef<ALoc>>|
-                         -> Type {
+                        move |const_decl: bool,
+                              file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
+                              cx: &Context<'static>,
+                              reason: reason::Reason,
+                              def: Rc<Pack::PackedDef<ALoc>>|
+                              -> Type {
                             let reason_for_tvar = reason.dupe();
                             let file_cell2 = file_cell.dupe();
                             let reason2 = reason.dupe();

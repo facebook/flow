@@ -1114,6 +1114,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
         .iter()
         .map(|(name, prop)| (Name::new(name.dupe()), prop.dupe()))
         .collect();
+    let strictness_kind = cx.type_strictness_kind();
     InstType::new(InstTypeInner {
         class_id: s.id.dupe(),
         inst_react_dro: None,
@@ -1146,6 +1147,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             .iter()
             .map(|name| Name::new(name.dupe()))
             .collect(),
+        strictness_kind,
     })
 }
 
@@ -1670,6 +1672,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
                 own: own_name_map,
                 proto: proto_name_map,
                 static_: static_name_map,
+                strictness_kind: cx.type_strictness_kind(),
             },
         }))),
     );
@@ -2466,7 +2469,12 @@ pub fn classtype<'a, C: crate::func_params_intf::Config>(
         (t_inner, t_outer)
     };
     let poly = |t: Type| -> Type {
-        type_util::poly_type_of_tparams(poly::Id::generate_id(), x.tparams.clone(), t)
+        type_util::poly_type_of_tparams(
+            poly::Id::generate_id(),
+            x.tparams.clone(),
+            t,
+            cx.type_strictness_kind(),
+        )
     };
     (t_inner, poly(t_outer), inst_prop_ids)
 }

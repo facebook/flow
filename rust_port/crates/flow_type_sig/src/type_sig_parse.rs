@@ -28,6 +28,7 @@ use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::platform_set::PlatformSet;
 use flow_common::polarity::Polarity;
+use flow_common::type_strictness::TypeStrictnessKind;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::IdentifierInner;
@@ -230,8 +231,14 @@ pub(super) enum TsPendingExport<'arena, 'ast> {
 pub(super) enum ModuleKind<'arena, 'ast> {
     UnknownModule,
     CJSModule(Parsed<'arena, 'ast>),
-    CJSModuleProps(BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>),
-    CJSDeclareModule(BTreeMap<FlowSmolStr, LocalDefNode<'arena, 'ast>>),
+    CJSModuleProps {
+        props: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
+        strictness_kind: TypeStrictnessKind,
+    },
+    CJSDeclareModule {
+        props: BTreeMap<FlowSmolStr, LocalDefNode<'arena, 'ast>>,
+        strictness_kind: TypeStrictnessKind,
+    },
     ESModule {
         names: BTreeMap<FlowSmolStr, Export<'arena, 'ast>>,
         stars: Vec<(LocNode<'arena>, ModuleRefNode<'arena>)>,
@@ -282,6 +289,7 @@ pub(super) enum LocalBinding<'arena, 'ast> {
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, Parsed<'arena, 'ast>>,
         tparams: TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        strictness_kind: TypeStrictnessKind,
     },
     ConstRefBinding {
         id_loc: LocNode<'arena>,
@@ -574,10 +582,11 @@ pub(super) struct Tables<'arena, 'ast> {
     pub(super) pattern_defs: Builder<'arena, Parsed<'arena, 'ast>>,
     pub(super) patterns: Builder<'arena, Pattern<'arena, 'ast>>,
     pub(super) additional_errors: Vec<signature_error::BindingValidation<LocNode<'arena>>>,
+    pub(super) strictness_kind: TypeStrictnessKind,
 }
 
 impl<'arena, 'ast> Tables<'arena, 'ast> {
-    pub(super) fn new(arena: &'arena bumpalo::Bump) -> Self {
+    pub(super) fn new(arena: &'arena bumpalo::Bump, strictness_kind: TypeStrictnessKind) -> Self {
         Tables {
             locs: Builder::new(arena),
             local_defs: Builder::new(arena),
@@ -586,7 +595,37 @@ impl<'arena, 'ast> Tables<'arena, 'ast> {
             pattern_defs: Builder::new(arena),
             patterns: Builder::new(arena),
             additional_errors: Vec::new(),
+            strictness_kind,
         }
+    }
+
+    pub(super) fn set_strictness_kind(&mut self, strictness_kind: TypeStrictnessKind) {
+        self.strictness_kind = strictness_kind;
+    }
+
+    // Builtin files share these tables, and a definition may be forced after a later file is parsed.
+    fn lazy<T: 'ast>(
+        &self,
+        value: Box<
+            dyn FnOnce(
+                    &TypeSigOptions,
+                    &mut scope::Scopes<'arena, 'ast>,
+                    &mut Tables<'arena, 'ast>,
+                ) -> T
+                + 'ast,
+        >,
+    ) -> Lazy<'arena, 'ast, T>
+    where
+        'arena: 'ast,
+    {
+        let strictness_kind = self.strictness_kind;
+        Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let previous = tbls.strictness_kind;
+            tbls.strictness_kind = strictness_kind;
+            let value = value(opts, scopes, tbls);
+            tbls.strictness_kind = previous;
+            value
+        }))
     }
 
     pub(super) fn push_loc(&mut self, loc: Loc) -> LocNode<'arena> {
@@ -777,8 +816,8 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
                 };
             }
             ModuleKind::CJSModule(_)
-            | ModuleKind::CJSModuleProps(_)
-            | ModuleKind::CJSDeclareModule(_) => {
+            | ModuleKind::CJSModuleProps { .. }
+            | ModuleKind::CJSDeclareModule { .. } => {
                 // indeterminate
             }
         }
@@ -796,8 +835,8 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
                 };
             }
             ModuleKind::CJSModule(_)
-            | ModuleKind::CJSModuleProps(_)
-            | ModuleKind::CJSDeclareModule(_) => {
+            | ModuleKind::CJSModuleProps { .. }
+            | ModuleKind::CJSDeclareModule { .. } => {
                 // indeterminate
             }
         }
@@ -807,8 +846,8 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
         match &self.kind {
             ModuleKind::UnknownModule
             | ModuleKind::CJSModule(_)
-            | ModuleKind::CJSModuleProps(_)
-            | ModuleKind::CJSDeclareModule(_) => {
+            | ModuleKind::CJSModuleProps { .. }
+            | ModuleKind::CJSDeclareModule { .. } => {
                 self.kind = ModuleKind::CJSModule(t);
             }
             ModuleKind::ESModule { .. } => {
@@ -817,17 +856,25 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
         }
     }
 
-    fn cjs_declare_module_set_prop(&mut self, name: FlowSmolStr, prop: LocalDefNode<'arena, 'ast>) {
+    fn cjs_declare_module_set_prop(
+        &mut self,
+        name: FlowSmolStr,
+        prop: LocalDefNode<'arena, 'ast>,
+        strictness_kind: TypeStrictnessKind,
+    ) {
         match &mut self.kind {
             ModuleKind::UnknownModule => {
                 let mut props = BTreeMap::new();
                 props.insert(name, prop);
-                self.kind = ModuleKind::CJSDeclareModule(props);
+                self.kind = ModuleKind::CJSDeclareModule {
+                    props,
+                    strictness_kind,
+                };
             }
-            ModuleKind::CJSDeclareModule(props) => {
+            ModuleKind::CJSDeclareModule { props, .. } => {
                 props.insert(name, prop);
             }
-            ModuleKind::CJSModuleProps(_)
+            ModuleKind::CJSModuleProps { .. }
             | ModuleKind::CJSModule(_)
             | ModuleKind::ESModule { .. } => {
                 // indeterminate
@@ -854,8 +901,8 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
                 };
             }
             ModuleKind::CJSModule(_)
-            | ModuleKind::CJSModuleProps(_)
-            | ModuleKind::CJSDeclareModule(_) => {
+            | ModuleKind::CJSModuleProps { .. }
+            | ModuleKind::CJSDeclareModule { .. } => {
                 // indeterminate
             }
         }
@@ -1971,6 +2018,7 @@ pub(super) mod scope {
                                     )
                                 })
                                 .collect(),
+                            strictness_kind: inner.strictness_kind,
                         },
                     ))
                 }
@@ -1991,6 +2039,7 @@ pub(super) mod scope {
                             )
                         })
                         .collect(),
+                    strictness_kind: inner.strictness_kind,
                 })),
                 Value::ObjSpreadLit(inner) => Value::ObjSpreadLit(Box::new(ValueObjSpreadLit {
                     loc: inner.loc.dupe(),
@@ -2002,14 +2051,18 @@ pub(super) mod scope {
                     elems: inner.elems.mapped_ref(|elem| {
                         rename_tparams_in_obj_value_spread_elem(rename_map, elem)
                     }),
+                    strictness_kind: inner.strictness_kind,
                 })),
-                Value::ArrayLit(box (loc, t, ts)) => Value::ArrayLit(Box::new((
-                    loc.dupe(),
-                    rename_tparams_in_parsed(rename_map, t),
-                    ts.iter()
+                Value::ArrayLit(inner) => Value::ArrayLit(Box::new(ValueArrayLit {
+                    loc: inner.loc.dupe(),
+                    elem_t: rename_tparams_in_parsed(rename_map, &inner.elem_t),
+                    elements: inner
+                        .elements
+                        .iter()
                         .map(|t| rename_tparams_in_parsed(rename_map, t))
                         .collect(),
-                ))),
+                    strictness_kind: inner.strictness_kind,
+                })),
                 Value::AsConst(value) => {
                     Value::AsConst(Box::new(rename_tparams_in_value(rename_map, value)))
                 }
@@ -2085,6 +2138,7 @@ pub(super) mod scope {
                         variance_op: inner.variance_op,
                         optional: inner.optional,
                         inline_keyof: inner.inline_keyof,
+                        strictness_kind: inner.strictness_kind,
                     }))
                 }
                 Annot::ObjAnnot(inner) => Annot::ObjAnnot(Box::new(AnnotObjAnnot {
@@ -2111,6 +2165,7 @@ pub(super) mod scope {
                         })
                         .collect(),
                     proto: rename_tparams_in_obj_annot_proto(rename_map, &inner.proto),
+                    strictness_kind: inner.strictness_kind,
                 })),
                 Annot::ObjSpreadAnnot(inner) => {
                     Annot::ObjSpreadAnnot(Box::new(AnnotObjSpreadAnnot {
@@ -2119,6 +2174,7 @@ pub(super) mod scope {
                         elems: inner.elems.mapped_ref(|elem| {
                             rename_tparams_in_obj_spread_annot_elem(rename_map, elem)
                         }),
+                        strictness_kind: inner.strictness_kind,
                     }))
                 }
                 Annot::InlineInterface(box (loc, def)) => Annot::InlineInterface(Box::new((
@@ -2272,6 +2328,7 @@ pub(super) mod scope {
                     one_sided: type_guard.one_sided,
                 }),
                 effect_: sig.effect_.clone(),
+                strictness_kind: sig.strictness_kind,
             }
         }
 
@@ -2297,6 +2354,7 @@ pub(super) mod scope {
                     t: rename_tparams_in_parsed(&body_rename_map, &param.t),
                 }),
                 renders: rename_tparams_in_parsed(&body_rename_map, &sig.renders),
+                strictness_kind: sig.strictness_kind,
             }
         }
 
@@ -2629,6 +2687,7 @@ pub(super) mod scope {
                     .map(|dict| rename_tparams_in_obj_annot_dict(&body_rename_map, dict)),
                 abstract_: sig.abstract_,
                 abstract_props: sig.abstract_props.clone(),
+                strictness_kind: sig.strictness_kind,
             }
         }
 
@@ -2678,6 +2737,7 @@ pub(super) mod scope {
                     .as_ref()
                     .map(|dict| rename_tparams_in_obj_annot_dict(rename_map, dict)),
                 abstract_: sig.abstract_,
+                strictness_kind: sig.strictness_kind,
             }
         }
 
@@ -2813,6 +2873,7 @@ pub(super) mod scope {
             static_dict: dc_sig.static_dict.clone(),
             abstract_: dc_sig.abstract_,
             abstract_props: dc_sig.abstract_props.clone(),
+            strictness_kind: dc_sig.strictness_kind.join(iface_sig.strictness_kind),
         }
     }
 
@@ -2899,6 +2960,7 @@ pub(super) mod scope {
             constructs,
             dict,
             abstract_,
+            strictness_kind: old_sig.strictness_kind.join(new_sig.strictness_kind),
         }
     }
 
@@ -2965,7 +3027,7 @@ pub(super) mod scope {
                         id_loc: dc_id_loc.dupe(),
                         nominal_id_loc: dc_nominal_id_loc.dupe(),
                         name: dc_name.dupe(),
-                        def: Lazy::new(Box::new(|_, _, _| {
+                        def: tbls.lazy(Box::new(|_, _, _| {
                             unreachable!("placeholder during interface merge")
                         })),
                         namespace_types: dc_namespace_types.clone(),
@@ -2978,7 +3040,7 @@ pub(super) mod scope {
             };
             let merge_dc_id_loc = dc_id_loc.dupe();
             let merge_name = name.dupe();
-            let merged_def = Lazy::new(Box::new(
+            let merged_def = tbls.lazy(Box::new(
                 move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
                     let mut forced_dc = dc_def.get_forced(opts, scopes, tbls).clone();
                     match new_def.get_forced(opts, scopes, tbls) {
@@ -3051,7 +3113,7 @@ pub(super) mod scope {
                                 &mut *data,
                                 LocalBinding::TypeBinding {
                                     id_loc: existing_id_loc.dupe(),
-                                    def: Lazy::new(Box::new(|_, _, _| unreachable!("placeholder"))),
+                                    def: tbls.lazy(Box::new(|_, _, _| unreachable!("placeholder"))),
                                 },
                             );
                             match old {
@@ -3063,7 +3125,7 @@ pub(super) mod scope {
                         let merge_existing_id_loc = existing_id_loc.dupe();
                         let merge_id_loc = id_loc.dupe();
                         let merge_name = name.dupe();
-                        let merged_def = Lazy::new(Box::new(
+                        let merged_def = tbls.lazy(Box::new(
                             move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
                                 let old_val = old_def.get_forced(opts, scopes, tbls);
                                 let new_val = new_def.get_forced(opts, scopes, tbls);
@@ -3229,7 +3291,7 @@ pub(super) mod scope {
                         &mut *data,
                         LocalBinding::TypeBinding {
                             id_loc: tb_id_loc.dupe(),
-                            def: Lazy::new(Box::new(|_, _, _| {
+                            def: tbls.lazy(Box::new(|_, _, _| {
                                 unreachable!("placeholder during declare-class peek")
                             })),
                         },
@@ -3280,7 +3342,7 @@ pub(super) mod scope {
                             let iface_sig = iface_sig.clone();
                             let merge_id_loc = id_loc.dupe();
                             let merge_name = name.dupe();
-                            Lazy::new(Box::new(
+                            tbls.lazy(Box::new(
                                 move |opts, scopes, tbls: &mut Tables<'arena, 'ast>| {
                                     let mut forced_dc = def.get_forced(opts, scopes, tbls).clone();
                                     if type_param_renaming::merge_tparams(
@@ -3612,6 +3674,7 @@ pub(super) mod scope {
                 name: name.clone(),
                 def,
                 tparams,
+                strictness_kind: tbls.strictness_kind,
             },
             k,
         );
@@ -4130,6 +4193,7 @@ pub(super) mod scope {
         id: ScopeId,
         name: FlowSmolStr,
         prop: (LocNode<'arena>, Parsed<'arena, 'ast>),
+        strictness_kind: TypeStrictnessKind,
     ) {
         match scopes.get(id) {
             Scope::Module { exports, .. } | Scope::DeclareModule { exports, .. } => {
@@ -4172,12 +4236,15 @@ pub(super) mod scope {
         };
         modify_exports(scopes, id, |exports| {
             match &mut exports.kind {
-                ModuleKind::UnknownModule | ModuleKind::CJSDeclareModule(_) => {
+                ModuleKind::UnknownModule | ModuleKind::CJSDeclareModule { .. } => {
                     let mut props = BTreeMap::new();
                     props.insert(name, prop);
-                    exports.kind = ModuleKind::CJSModuleProps(props);
+                    exports.kind = ModuleKind::CJSModuleProps {
+                        props,
+                        strictness_kind,
+                    };
                 }
-                ModuleKind::CJSModuleProps(props) => {
+                ModuleKind::CJSModuleProps { props, .. } => {
                     props.insert(name, prop);
                 }
                 ModuleKind::CJSModule(_) => {
@@ -4193,6 +4260,7 @@ pub(super) mod scope {
     pub(super) fn finalize_declare_module_exports_exn<'arena, 'ast>(
         scopes: &mut Scopes<'arena, 'ast>,
         scope: ScopeId,
+        strictness_kind: TypeStrictnessKind,
     ) {
         enum Action<'arena, 'ast> {
             CommonJSModule {
@@ -4216,7 +4284,7 @@ pub(super) mod scope {
                         // has explicit exports so do nothing here
                         return;
                     }
-                    ModuleKind::CJSModule(_) | ModuleKind::CJSModuleProps(_) => {
+                    ModuleKind::CJSModule(_) | ModuleKind::CJSModuleProps { .. } => {
                         // Always auto export all local types for CJS declare modules
                         let mut export_types = Vec::new();
                         for (name, binding) in types {
@@ -4301,7 +4369,7 @@ pub(super) mod scope {
                             export_types,
                         }
                     }
-                    ModuleKind::CJSDeclareModule(_) => panic!(
+                    ModuleKind::CJSDeclareModule { .. } => panic!(
                         "only call finalize_declare_module_exports_exn once per DeclareModule"
                     ),
                 }
@@ -4323,7 +4391,7 @@ pub(super) mod scope {
             } => {
                 modify_exports(scopes, scope, |exports| {
                     for (name, node) in export_values {
-                        exports.cjs_declare_module_set_prop(name, node);
+                        exports.cjs_declare_module_set_prop(name, node, strictness_kind);
                     }
                     for (name, t) in export_types {
                         exports.add_type(name, t);
@@ -5554,6 +5622,7 @@ mod obj_annot_acc {
             mut self,
             loc: LocNode<'arena>,
             exact: bool,
+            strictness_kind: TypeStrictnessKind,
         ) -> Parsed<'arena, 'ast> {
             let (last, tail) = if let Some(slice) = self.head_slice() {
                 (slice, self.tail)
@@ -5595,11 +5664,17 @@ mod obj_annot_acc {
                     props,
                     computed_props,
                     proto,
+                    strictness_kind,
                 }))));
             }
             let elems = Vec1::from_vec_push(tail, last);
             Parsed::Annot(Box::new(ParsedAnnot::ObjSpreadAnnot(Box::new(
-                AnnotObjSpreadAnnot { loc, exact, elems },
+                AnnotObjSpreadAnnot {
+                    loc,
+                    exact,
+                    elems,
+                    strictness_kind,
+                },
             ))))
         }
     }
@@ -5801,6 +5876,7 @@ mod class_acc {
             tparams: TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
             extends: ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>>,
             implements: Vec<Parsed<'arena, 'ast>>,
+            strictness_kind: TypeStrictnessKind,
         ) -> ClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
             ClassSig {
                 tparams,
@@ -5815,6 +5891,7 @@ mod class_acc {
                 dict: self.dict,
                 abstract_,
                 abstract_props: self.abstract_props,
+                strictness_kind,
             }
         }
     }
@@ -6032,6 +6109,7 @@ mod declare_class_acc {
             extends: ClassExtends<LocNode<'arena>, Parsed<'arena, 'ast>>,
             mixins: Vec<ClassMixins<LocNode<'arena>, Parsed<'arena, 'ast>>>,
             implements: Vec<Parsed<'arena, 'ast>>,
+            strictness_kind: TypeStrictnessKind,
         ) -> DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
             let mut computed_own = self.computed_own;
             computed_own.reverse();
@@ -6057,6 +6135,7 @@ mod declare_class_acc {
                 static_dict: self.static_dict,
                 abstract_,
                 abstract_props: self.abstract_props,
+                strictness_kind,
             }
         }
     }
@@ -6188,6 +6267,7 @@ mod interface_acc {
             self,
             abstract_: bool,
             extends: Vec<Parsed<'arena, 'ast>>,
+            strictness_kind: TypeStrictnessKind,
         ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
             let mut computed_props = self.computed_props;
             computed_props.reverse();
@@ -6199,6 +6279,7 @@ mod interface_acc {
                 constructs: self.constructs,
                 dict: self.dict,
                 abstract_,
+                strictness_kind,
             }
         }
     }
@@ -6307,6 +6388,7 @@ mod object_literal_acc {
             mut self,
             loc: LocNode<'arena>,
             frozen: bool,
+            strictness_kind: TypeStrictnessKind,
         ) -> Parsed<'arena, 'ast> {
             let mut elems = match self.head_slice() {
                 None => self.tail,
@@ -6322,6 +6404,7 @@ mod object_literal_acc {
                     frozen,
                     proto: self.proto,
                     props: BTreeMap::new(),
+                    strictness_kind,
                 }))));
             }
             if elems.len() == 1
@@ -6333,6 +6416,7 @@ mod object_literal_acc {
                     frozen,
                     proto: self.proto,
                     props,
+                    strictness_kind,
                 }))));
             }
 
@@ -6342,6 +6426,7 @@ mod object_literal_acc {
                     frozen,
                     proto: self.proto,
                     elems: Vec1::try_from_vec(elems).unwrap(),
+                    strictness_kind,
                 },
             ))))
         }
@@ -6655,6 +6740,7 @@ fn annot_with_loc<'arena, 'ast>(
                 loc,
                 elems,
                 inexact: inner.inexact,
+                strictness_kind: tbls.strictness_kind,
             }))))
         }
         TypeInner::Union { inner, .. } => {
@@ -6748,7 +6834,7 @@ fn annot_with_loc<'arena, 'ast>(
                 loc.dupe(),
                 fsig,
             ))))));
-            let def = acc.interface_def(*abstract_, vec![]);
+            let def = acc.interface_def(*abstract_, vec![], tbls.strictness_kind);
             Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
         }
         TypeInner::ConstructorType { inner: func, .. } => {
@@ -7046,6 +7132,7 @@ fn function_type<'arena, 'ast>(
         return_,
         type_guard,
         effect_,
+        strictness_kind: tbls.strictness_kind,
     }
 }
 
@@ -7193,6 +7280,7 @@ fn component_type<'arena, 'ast>(
         params: parsed_params,
         rest_param,
         renders,
+        strictness_kind: tbls.strictness_kind,
     }
 }
 
@@ -7581,6 +7669,7 @@ fn object_type<'arena, 'ast>(
                 variance_op: *variance_op,
                 optional: p.optional.clone(),
                 inline_keyof,
+                strictness_kind: tbls.strictness_kind,
             },
         ))))
     }
@@ -7637,7 +7726,7 @@ fn object_type<'arena, 'ast>(
         }
     }
 
-    acc.object_type(loc, exact)
+    acc.object_type(loc, exact, tbls.strictness_kind)
 }
 
 fn interface_def<'arena, 'ast>(
@@ -7670,7 +7759,7 @@ fn interface_def<'arena, 'ast>(
     if added_this {
         let _removed = xs.remove_all(&this_name);
     }
-    acc.interface_def(false, extends)
+    acc.interface_def(false, extends, tbls.strictness_kind)
 }
 
 fn interface_props<'arena, 'ast>(
@@ -8526,7 +8615,10 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         }
         // TS-only: lowercase `object` is the builtin that rejects primitives.
         "object" if opts.is_ts_file => match targs {
-            None => Parsed::Annot(Box::new(ParsedAnnot::ObjectBuiltin(Box::new(loc)))),
+            None => Parsed::Annot(Box::new(ParsedAnnot::ObjectBuiltin(Box::new((
+                loc,
+                tbls.strictness_kind,
+            ))))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
         // TS-only: `ThisType<T>` is a marker that Flow reduces to a
@@ -8538,7 +8630,11 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
         "ThisType" if opts.is_ts_file => match targs {
             Some(type_args) if type_args.arguments.len() == 1 => {
                 annot(opts, scope, scopes, tbls, xs, &type_args.arguments[0]);
-                let def = interface_acc::InterfaceAcc::empty().interface_def(false, Vec::new());
+                let def = interface_acc::InterfaceAcc::empty().interface_def(
+                    false,
+                    Vec::new(),
+                    tbls.strictness_kind,
+                );
                 Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))))
             }
             _ => Parsed::Err(loc, Errno::CheckError),
@@ -9330,7 +9426,7 @@ fn key_mirror<'arena, 'ast>(
         }
     }
 
-    acc.object_lit(loc, false)
+    acc.object_lit(loc, false, tbls.strictness_kind)
 }
 
 fn jsx_element<'arena, 'ast>(
@@ -9492,7 +9588,7 @@ fn expression<'arena: 'ast, 'ast>(
                 let splice_loc = id_loc.dupe();
                 let name = id.name.dupe();
                 let child_scope = scope::push_lex(scopes, scope);
-                let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+                let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                     tbls.splice(splice_loc, |tbls| {
                         class_def(opts, child_scope, scopes, tbls, inner.as_ref())
                     })
@@ -9529,7 +9625,7 @@ fn expression<'arena: 'ast, 'ast>(
                     let splice_loc = id_loc.dupe();
                     let name = id.name.dupe();
                     let child_scope = scope::push_lex(scopes, scope);
-                    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                         tbls.splice(splice_loc, |tbls| {
                             function_def(
                                 opts,
@@ -9609,7 +9705,12 @@ fn expression<'arena: 'ast, 'ast>(
             } = inner.expression.deref()
             {
                 if array_inner.elements.is_empty() {
-                    return Parsed::Value(Box::new(ParsedValue::EmptyConstArrayLit(Box::new(loc))));
+                    return Parsed::Value(Box::new(ParsedValue::EmptyConstArrayLit(Box::new(
+                        ValueEmptyConstArrayLit {
+                            loc,
+                            strictness_kind: tbls.strictness_kind,
+                        },
+                    ))));
                 }
             }
 
@@ -10261,7 +10362,7 @@ fn param<'arena: 'ast, 'ast>(
                     tbls,
                     id_loc,
                     name.clone(),
-                    Lazy::new(Box::new(move |_, _, _| name_t)),
+                    tbls.lazy(Box::new(move |_, _, _| name_t)),
                     tparams.clone(),
                     |_, _, _| {},
                 );
@@ -10284,7 +10385,7 @@ fn param<'arena: 'ast, 'ast>(
                     Rc::new(RefCell::new(None));
                 let pattern_def_node = {
                     let shared_t = shared_t.dupe();
-                    Lazy::new(Box::new(move |_, _, tbls: &mut Tables<'arena, 'ast>| {
+                    tbls.lazy(Box::new(move |_, _, tbls: &mut Tables<'arena, 'ast>| {
                         let borrow = shared_t.borrow();
                         let t = borrow
                             .as_ref()
@@ -10299,7 +10400,7 @@ fn param<'arena: 'ast, 'ast>(
                     scopes,
                     tbls,
                     &mut |tbls, scopes, id_loc, name, p| {
-                        let def = Lazy::new(Box::new(move |_, _, _| Parsed::Pattern(p)));
+                        let def = tbls.lazy(Box::new(move |_, _, _| Parsed::Pattern(p)));
                         scope::bind_var(
                             scope,
                             scopes,
@@ -10351,7 +10452,7 @@ fn param<'arena: 'ast, 'ast>(
                     Rc::new(RefCell::new(None));
                 let pattern_def_node = {
                     let shared_t = shared_t.clone();
-                    Lazy::new(Box::new(move |_, _, tbls: &mut Tables<'arena, 'ast>| {
+                    tbls.lazy(Box::new(move |_, _, tbls: &mut Tables<'arena, 'ast>| {
                         let borrow = shared_t.borrow();
                         let t = borrow
                             .as_ref()
@@ -10366,7 +10467,7 @@ fn param<'arena: 'ast, 'ast>(
                     scopes,
                     tbls,
                     &mut |tbls, scopes, id_loc, name, p| {
-                        let def = Lazy::new(Box::new(move |_, _, _| Parsed::Pattern(p)));
+                        let def = tbls.lazy(Box::new(move |_, _, _| Parsed::Pattern(p)));
                         scope::bind_var(
                             scope,
                             scopes,
@@ -10455,7 +10556,7 @@ fn rest_param<'arena: 'ast, 'ast>(
                     id.name.dupe(),
                     {
                         let t = t.clone();
-                        Lazy::new(Box::new(move |_, _, _| t))
+                        tbls.lazy(Box::new(move |_, _, _| t))
                     },
                     tparams.clone(),
                     |_, _, _| {},
@@ -10647,6 +10748,7 @@ fn function_def_helper<'arena: 'ast, 'ast>(
         return_,
         type_guard,
         effect_,
+        strictness_kind: tbls.strictness_kind,
     }
 }
 
@@ -10758,6 +10860,7 @@ fn component_sig_helper<'arena: 'ast, 'ast>(
         params: params_vec,
         rest_param: rest_param_opt,
         renders,
+        strictness_kind: tbls.strictness_kind,
     }
 }
 
@@ -11408,7 +11511,13 @@ fn class_def<'arena: 'ast, 'ast>(
         }
     }
 
-    acc.class_def(abstract_, tparams, extends, implements)
+    acc.class_def(
+        abstract_,
+        tparams,
+        extends,
+        implements,
+        tbls.strictness_kind,
+    )
 }
 
 fn object_literal<'arena: 'ast, 'ast>(
@@ -11689,7 +11798,7 @@ fn object_literal<'arena: 'ast, 'ast>(
             }
         }
     }
-    acc.object_lit(loc, frozen)
+    acc.object_lit(loc, frozen, tbls.strictness_kind)
 }
 
 fn array_literal<'arena: 'ast, 'ast>(
@@ -11735,7 +11844,12 @@ fn array_literal<'arena: 'ast, 'ast>(
         )
     } else {
         let first = acc.remove(0);
-        Parsed::Value(Box::new(ParsedValue::ArrayLit(Box::new((loc, first, acc)))))
+        Parsed::Value(Box::new(ParsedValue::ArrayLit(Box::new(ValueArrayLit {
+            loc,
+            elem_t: first,
+            elements: acc,
+            strictness_kind: tbls.strictness_kind,
+        }))))
     }
 }
 
@@ -11885,6 +11999,7 @@ fn declare_class_def<'arena, 'ast>(
         extends,
         parsed_mixins,
         parsed_implements,
+        tbls.strictness_kind,
     )
 }
 
@@ -11936,7 +12051,7 @@ fn type_alias_decl<'arena: 'ast, 'ast>(
     let t_clone = t.clone();
     let name_string = name.to_string();
 
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps_clone.as_ref());
@@ -11947,6 +12062,7 @@ fn type_alias_decl<'arena: 'ast, 'ast>(
                 name: name_string.into(),
                 tparams,
                 body,
+                strictness_kind: tbls.strictness_kind,
             }))
         })
     }));
@@ -11977,7 +12093,7 @@ fn opaque_type_decl<'arena: 'ast, 'ast>(
     let id_loc_node_for_def = id_loc_node.dupe();
     let name_string = name.clone();
 
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
@@ -11997,6 +12113,7 @@ fn opaque_type_decl<'arena: 'ast, 'ast>(
                 lower_bound,
                 upper_bound,
                 body,
+                strictness_kind: tbls.strictness_kind,
             }))
         })
     }));
@@ -12050,7 +12167,7 @@ fn const_var_init_decl<'arena: 'ast, 'ast>(
                     let splice_loc = fn_id_loc_node.dupe();
                     let fn_scope = scope::push_lex(scopes, scope);
 
-                    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                         tbls.splice(splice_loc.dupe(), |tbls| {
                             let mut xs = tparam_stack::TParamStack::new();
                             function_def(opts, fn_scope, scopes, tbls, &mut xs, splice_loc, f)
@@ -12085,7 +12202,7 @@ fn const_var_init_decl<'arena: 'ast, 'ast>(
                 }
                 None => {
                     let splice_loc = sig_loc_node.dupe();
-                    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                         tbls.splice(splice_loc.dupe(), |tbls| {
                             let mut xs = tparam_stack::TParamStack::new();
                             function_def(opts, scope, scopes, tbls, &mut xs, splice_loc, f)
@@ -12114,7 +12231,7 @@ fn const_var_init_decl<'arena: 'ast, 'ast>(
             let loc_node = tbls.push_loc(loc.dupe());
             let splice_loc = loc_node.dupe();
 
-            let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                 tbls.splice(splice_loc.dupe(), |tbls| {
                     let mut xs = tparam_stack::TParamStack::new();
                     function_def(opts, scope, scopes, tbls, &mut xs, splice_loc, f)
@@ -12133,7 +12250,7 @@ fn const_var_init_decl<'arena: 'ast, 'ast>(
         // const x = ... fallback
         _ => {
             let splice_loc = id_loc.dupe();
-            let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                 tbls.splice(splice_loc, |tbls| {
                     expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, expr)
                 })
@@ -12175,7 +12292,7 @@ fn variable_decl<'arena: 'ast, 'ast>(
                 }
                 _ => {
                     let id_loc_node_for_def = id_loc_node.dupe();
-                    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+                    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
                             annot_or_hint(
                                 ExpectedAnnotationSort::VariableDefinition { name: name.clone() },
@@ -12199,7 +12316,7 @@ fn variable_decl<'arena: 'ast, 'ast>(
             let splice_loc_cell: std::rc::Rc<std::cell::OnceCell<LocNode<'arena>>> =
                 std::rc::Rc::new(std::cell::OnceCell::new());
             let splice_loc_cell_dupe = splice_loc_cell.dupe();
-            let pattern_def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let pattern_def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                 let splice_loc = splice_loc_cell_dupe
                     .get()
                     .expect("splice_loc should be set")
@@ -12231,7 +12348,7 @@ fn variable_decl<'arena: 'ast, 'ast>(
                 scopes,
                 tbls,
                 &mut |tbls, scopes, id_loc, name, p| {
-                    let def = Lazy::new(Box::new(move |_, _, _| Parsed::Pattern(p)));
+                    let def = tbls.lazy(Box::new(move |_, _, _| Parsed::Pattern(p)));
                     scope::bind_var(scope, scopes, tbls, kind, id_loc, name, def, k);
                 },
                 def,
@@ -12247,7 +12364,7 @@ fn variable_decl<'arena: 'ast, 'ast>(
             let splice_loc_cell: std::rc::Rc<std::cell::OnceCell<LocNode<'arena>>> =
                 std::rc::Rc::new(std::cell::OnceCell::new());
             let splice_loc_cell_dupe = splice_loc_cell.dupe();
-            let pattern_def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let pattern_def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                 let splice_loc = splice_loc_cell_dupe
                     .get()
                     .expect("splice_loc should be set")
@@ -12278,7 +12395,7 @@ fn variable_decl<'arena: 'ast, 'ast>(
                 scopes,
                 tbls,
                 &mut |tbls, scopes, id_loc, name, p| {
-                    let def = Lazy::new(Box::new(move |_, _, _| Parsed::Pattern(p)));
+                    let def = tbls.lazy(Box::new(move |_, _, _| Parsed::Pattern(p)));
                     scope::bind_var(scope, scopes, tbls, kind, id_loc, name, def, k);
                 },
                 def,
@@ -12401,7 +12518,7 @@ fn record_def<'arena: 'ast, 'ast>(
         }
     }
 
-    acc.class_def(false, tparams, extends, implements)
+    acc.class_def(false, tparams, extends, implements, tbls.strictness_kind)
 }
 
 fn record_decl<'arena: 'ast, 'ast>(
@@ -12420,7 +12537,7 @@ fn record_decl<'arena: 'ast, 'ast>(
 
     let def = if opts.enable_records {
         let id_loc_node_for_def = id_loc_node.dupe();
-        Some(Lazy::new(Box::new(move |opts, scopes, tbls| {
+        Some(tbls.lazy(Box::new(move |opts, scopes, tbls| {
             tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
                 record_def(opts, scope, scopes, tbls, decl)
             })
@@ -12453,7 +12570,7 @@ fn class_decl<'arena: 'ast, 'ast>(
     let name = id.name.dupe();
     let id_loc_node = tbls.push_loc(id.loc.dupe());
     let id_loc_node_for_def = id_loc_node.dupe();
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             class_def(opts, scope, scopes, tbls, decl)
         })
@@ -12482,7 +12599,7 @@ fn function_decl<'arena: 'ast, 'ast>(
     let id_loc_node = tbls.push_loc(id_ident.loc.dupe());
     let id_loc_node_for_def = id_loc_node.dupe();
 
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         let mut xs = tparam_stack::TParamStack::new();
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             function_def(
@@ -12528,7 +12645,7 @@ fn component_decl<'arena: 'ast, 'ast>(
     let enable_component_syntax = opts.enable_component_syntax;
 
     let def = if enable_component_syntax {
-        Some(Lazy::new(Box::new(move |opts, scopes, tbls| {
+        Some(tbls.lazy(Box::new(move |opts, scopes, tbls| {
             tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
                 component_def(opts, scope, scopes, tbls, decl)
             })
@@ -12562,7 +12679,7 @@ fn declare_component_decl<'arena: 'ast, 'ast>(
     let id_loc_node = tbls.push_loc(decl.id.loc.dupe());
     let id_loc_node_for_def = id_loc_node.dupe();
 
-    let def = Some(Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = Some(tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             declare_component_def(opts, scope, scopes, tbls, decl)
         })
@@ -12607,7 +12724,7 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
             match id_annot {
                 ast::types::AnnotationOrHint::Available(type_annot) => {
                     let t = annot(opts, scope, scopes, tbls, &mut xs, &type_annot.annotation);
-                    let def = Lazy::new(Box::new(move |_, _, _| t));
+                    let def = tbls.lazy(Box::new(move |_, _, _| t));
                     scope::bind_var(
                         scope,
                         scopes,
@@ -12626,7 +12743,7 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
                     {
                         Some(t) => {
                             let id_loc_for_bind = id_loc_node.dupe();
-                            let def = Lazy::new(Box::new(move |_, _, _| t));
+                            let def = tbls.lazy(Box::new(move |_, _, _| t));
                             scope::bind_var(
                                 scope,
                                 scopes,
@@ -12640,7 +12757,7 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
                         }
                         None => {
                             let id_loc_node_for_bind = id_loc_node.dupe();
-                            let def = Lazy::new(Box::new(move |_, _, _| {
+                            let def = tbls.lazy(Box::new(move |_, _, _| {
                                 Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_node))))
                             }));
                             scope::bind_var(
@@ -12683,7 +12800,7 @@ fn declare_function_decl<'arena: 'ast, 'ast>(
             let fn_loc_node_for_def = fn_loc_node.dupe();
             let t = &fn_annot.annotation;
 
-            let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+            let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
                 tbls.splice(fn_loc_node_for_def, |tbls| {
                     use ast::types as T;
                     match t.deref() {
@@ -12735,6 +12852,7 @@ fn declare_function_decl<'arena: 'ast, 'ast>(
                                 return_,
                                 type_guard,
                                 effect_: effect_val,
+                                strictness_kind: tbls.strictness_kind,
                             }
                         }
                         _ => panic!("unexpected declare function annot"),
@@ -12770,7 +12888,7 @@ fn declare_class_decl<'arena: 'ast, 'ast>(
     let id_loc_node_for_def = id_loc_node.dupe();
     let decl_clone = decl.clone();
 
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             declare_class_def(opts, scope, scopes, tbls, &decl_clone)
         })
@@ -12888,7 +13006,7 @@ fn interface_decl<'arena: 'ast, 'ast>(
     let id_loc_node = tbls.push_loc(decl.id.loc.dupe());
     let id_loc_node_for_def = id_loc_node.dupe();
 
-    let def = Lazy::new(Box::new(move |opts, scopes, tbls| {
+    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
         tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
             let mut xs = tparam_stack::TParamStack::new();
             let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
@@ -12991,7 +13109,7 @@ fn enum_decl<'arena: 'ast, 'ast>(
     let ambient = opts.is_dts_file || declared;
     let is_ts_file = opts.is_ts_file;
     let def = if opts.enable_enums {
-        Some(Lazy::new(Box::new(move |_, _, tbls| {
+        Some(tbls.lazy(Box::new(move |_, _, tbls| {
             tbls.splice(splice_loc, |tbls| {
                 enum_def(is_ts_file, ambient, tbls, &body_loc, body)
             })
@@ -13566,7 +13684,13 @@ fn assignment<'arena: 'ast, 'ast>(
                 let id_loc = tbls.push_loc(prop_id.loc.dupe());
                 let t = expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, &a.right);
                 let name = prop_id.name.dupe();
-                scope::cjs_set_prop(scopes, scope, name.clone(), (id_loc, t));
+                scope::cjs_set_prop(
+                    scopes,
+                    scope,
+                    name.clone(),
+                    (id_loc, t),
+                    tbls.strictness_kind,
+                );
                 return;
             }
 
@@ -13575,7 +13699,13 @@ fn assignment<'arena: 'ast, 'ast>(
                 let id_loc = tbls.push_loc(prop_id.loc.dupe());
                 let t = expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, &a.right);
                 let name = prop_id.name.dupe();
-                scope::cjs_set_prop(scopes, scope, name.clone(), (id_loc, t));
+                scope::cjs_set_prop(
+                    scopes,
+                    scope,
+                    name.clone(),
+                    (id_loc, t),
+                    tbls.strictness_kind,
+                );
                 return;
             }
         }
@@ -13988,7 +14118,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                             // import Foo = A.B.C: qualified name form is not supported;
                             // bind as any so downstream code doesn't break.
                             let id_loc_for_any = id_loc.dupe();
-                            let def = Lazy::new(Box::new(move |_, _, _| {
+                            let def = tbls.lazy(Box::new(move |_, _, _| {
                                 Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(id_loc_for_any))))
                             }));
                             scope::bind_var(
@@ -14038,7 +14168,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
                     Err(_) => {}
                 }
             }
-            scope::finalize_declare_module_exports_exn(scopes, scope);
+            scope::finalize_declare_module_exports_exn(scopes, scope, tbls.strictness_kind);
         }
         S::DeclareNamespace {
             loc: _,

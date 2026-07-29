@@ -305,6 +305,7 @@ fn check_polarity_impl<'cx>(
                     class_private_static_methods: _,
                     inst_abstract: _,
                     inst_abstract_props: _,
+                    strictness_kind: _,
                 } = instance_t.inst.deref();
                 check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.static_)?;
                 check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.super_)?;
@@ -370,6 +371,7 @@ fn check_polarity_impl<'cx>(
                     type_guard,
                     def_reason: _,
                     effect_: _,
+                    strictness_kind: _,
                 } = f.deref();
                 let inv_polarity = Polarity::inv(polarity);
                 for param in params.iter() {
@@ -426,6 +428,7 @@ fn check_polarity_impl<'cx>(
                     proto_t,
                     call_t,
                     reachable_targs: _,
+                    strictness_kind: _,
                 } = obj.deref();
                 check_polarity_propmap(
                     cx,

@@ -2855,7 +2855,7 @@ mod type_converter {
 
         fn obj_exact(target: &spread::Target) -> Result<bool, Error> {
             match target {
-                spread::Target::Annot { make_exact } => Ok(*make_exact),
+                spread::Target::Annot { make_exact, .. } => Ok(*make_exact),
                 spread::Target::Value { .. } => {
                     Err(terr(ErrorKind::BadEvalT, Some("spread-target-value"), None))
                 }

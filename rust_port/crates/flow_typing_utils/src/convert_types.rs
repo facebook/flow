@@ -684,6 +684,7 @@ fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
             tparams,
             t_out,
             id,
+            strictness_kind: _,
         }) => json_with_type(
             "Poly",
             vec![
@@ -788,6 +789,7 @@ fn arrtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, arrtype: &ArrType) -> Jso
             elements,
             arity: (min_arity, max_arity),
             inexact,
+            strictness_kind: _,
         }) => {
             json!({
                 "kind": "TupleAT",
@@ -928,7 +930,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
             operand_slice_opt,
         )) => {
             let target_json = match target {
-                object::spread::Target::Value { make_seal } => {
+                object::spread::Target::Value { make_seal, .. } => {
                     let seal_str = match make_seal {
                         object::spread::SealType::Sealed => "Sealed",
                         object::spread::SealType::Frozen => "Frozen",
@@ -936,7 +938,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
                     };
                     json!({"kind": "Value", "make_seal": seal_str})
                 }
-                object::spread::Target::Annot { make_exact } => {
+                object::spread::Target::Annot { make_exact, .. } => {
                     json!({"kind": "Annot", "make_exact": make_exact})
                 }
             };

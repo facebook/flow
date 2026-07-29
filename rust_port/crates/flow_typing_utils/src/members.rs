@@ -413,6 +413,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                             arity: arity1,
                             inexact: inexact1,
                             react_dro: dro1,
+                            strictness_kind: strictness_kind1,
                         }),
                         ArrType::TupleAT(box TupleATData {
                             elem_t: et2,
@@ -420,6 +421,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                             arity: arity2,
                             inexact: inexact2,
                             react_dro: dro2,
+                            strictness_kind: strictness_kind2,
                         }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
@@ -464,6 +466,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                         .collect(),
                                     arity: *arity1,
                                     inexact: *inexact1,
+                                    strictness_kind: strictness_kind1.join(*strictness_kind2),
                                 },
                             ))))),
                         ))
