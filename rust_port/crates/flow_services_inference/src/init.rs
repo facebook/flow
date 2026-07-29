@@ -218,7 +218,7 @@ pub fn init(
             cx.post_inference_cleanup();
             let mut error_map = BTreeMap::new();
             let mut warning_map = BTreeMap::new();
-            for (file, _) in aloc_tables.iter() {
+            for file in aloc_tables.keys() {
                 error_map.insert(file.dupe(), ErrorSet::empty());
                 warning_map.insert(file.dupe(), ErrorSet::empty());
             }
