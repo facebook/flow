@@ -2006,10 +2006,10 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             false,
             state,
             |visitor| {
-                for (_, env_key) in statics.iter() {
+                for env_key in statics.values() {
                     visitor.add(id_loc.dupe(), env_key.dupe());
                 }
-                for (_, env_key) in namespace_types.iter() {
+                for env_key in namespace_types.values() {
                     visitor.add(id_loc.dupe(), env_key.dupe());
                 }
             },
@@ -2056,10 +2056,10 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
             false,
             state,
             |visitor| {
-                for (_, env_key) in statics.iter() {
+                for env_key in statics.values() {
                     visitor.add(id_loc.dupe(), env_key.dupe());
                 }
-                for (_, env_key) in namespace_types.iter() {
+                for env_key in namespace_types.values() {
                     visitor.add(id_loc.dupe(), env_key.dupe());
                 }
             },
@@ -3522,7 +3522,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 false,
                 state,
                 |visitor| {
-                    for (_, env_key) in namespace_types.iter() {
+                    for env_key in namespace_types.values() {
                         visitor.add(id_loc.dupe(), env_key.dupe());
                     }
                 },
@@ -3569,7 +3569,7 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                 false,
                 state,
                 |visitor| {
-                    for (_, env_key) in namespace_types.iter() {
+                    for env_key in namespace_types.values() {
                         visitor.add(id_loc.dupe(), env_key.dupe());
                     }
                 },

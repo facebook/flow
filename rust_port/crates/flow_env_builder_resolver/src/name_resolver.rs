@@ -4628,7 +4628,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             (bindings, non_binding_leaves)
         };
 
-        for (_, binding_list) in bindings.iter() {
+        for binding_list in bindings.values() {
             for (kind, id) in binding_list.iter() {
                 match kind {
                     VariableKind::Var | VariableKind::Let => {}
