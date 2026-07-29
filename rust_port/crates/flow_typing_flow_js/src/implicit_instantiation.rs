@@ -1202,7 +1202,7 @@ fn merge_lower_bounds<'cx>(cx: &Context<'cx>, t: &Type) -> Result<Option<Type>, 
             match constraints {
                 constraint::Constraints::Unresolved(bounds) => {
                     let upper = bounds.borrow().upper.clone();
-                    for (key, _) in upper.iter() {
+                    for key in upper.keys() {
                         if let UseTInner::ReposUseT(box ReposUseTData { type_: ref l, .. }) =
                             *key.use_t
                         {
