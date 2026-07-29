@@ -21,6 +21,8 @@ use flow_aloc::ALoc;
 use flow_common::reason::Reason;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::ALocTy;
+use flow_common_ty::ty::Decl;
+use flow_common_ty::ty::Elt;
 use flow_lazy::Lazy;
 use flow_parser::ast;
 use flow_parser_utils::file_sig::FileSig;
@@ -227,6 +229,12 @@ pub fn type_to_desc_for_errors(
         // The location might still be non-ideal, but at least the description makes sense.
         _ => match from_type(genv, t) {
             Err(_) => Err(desc.clone()),
+            // A class/enum/component value reads best as `class Foo`/`enum E`/
+            // `component Foo` (its reason description, matching hover) instead of the
+            // misleading `typeof Foo` that `typify_elt` would produce for these decls.
+            Ok(Elt::Decl(
+                Decl::ClassDecl(_) | Decl::EnumDecl(_) | Decl::NominalComponentDecl(_),
+            )) => Err(desc.clone()),
             Ok(elt) => match flow_common_ty::ty_utils::typify_elt(elt) {
                 None => Err(desc.clone()),
                 Some(t) => Ok(t),
