@@ -13,7 +13,8 @@
 // $FlowExpectedError[untyped-import]
 import {transformSync} from '@babel/core';
 
-import hermesParserPlugin from '../src';
+// $FlowExpectedError[untyped-import] The re-export shim is intentionally untyped.
+import hermesParserPlugin from '..';
 import * as HermesParser from 'flow-parser';
 
 const MODULE_PREAMBLE = '// @flow\n\n"use strict";\n\n';

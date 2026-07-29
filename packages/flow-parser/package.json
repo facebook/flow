@@ -9,6 +9,7 @@
     "email": "flow@fb.com"
   },
   "files": [
+    "babel-plugin.js",
     "dist",
     "README.md"
   ],

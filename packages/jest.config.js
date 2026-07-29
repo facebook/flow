@@ -45,6 +45,14 @@ module.exports = {
     // the modules themselves
     ...workspaceModuleNameMappers,
 
+    // The babel plugin ships as a plain re-export shim at the package root,
+    // not `src/index.js` like the other workspaces.
+    '^babel-plugin-syntax-flow-parser$': path.resolve(
+      __dirname,
+      'babel-plugin-syntax-flow-parser',
+      'index.js',
+    ),
+
     '^flow-parser$': path.resolve(
       __dirname,
       'flow-parser',
@@ -57,6 +65,12 @@ module.exports = {
       'flow-parser',
       '__test_utils__',
       '$1',
+    ),
+
+    '^flow-parser/babel-plugin$': path.resolve(
+      __dirname,
+      'flow-parser',
+      'babel-plugin.js',
     ),
 
     '^flow-parser/(.*)$': path.resolve(

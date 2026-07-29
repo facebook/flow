@@ -14,13 +14,11 @@ PACKAGES=(
   flow-parser
   flow-eslint
   flow-transform
-  babel-plugin-syntax-flow-parser
 )
 
 BOOTSTRAP_PACKAGES=(
   flow-estree
   flow-parser
-  babel-plugin-syntax-flow-parser
 )
 
 # The parser override in babel.config.js requires the workspace plugin to be

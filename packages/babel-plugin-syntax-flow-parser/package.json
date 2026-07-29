@@ -3,17 +3,17 @@
   "version": "0.0.1",
   "description": "Babel plugin which switches Babel to use flow-parser.",
   "homepage": "https://flow.org",
-  "main": "dist/index.js",
+  "main": "index.js",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/flow.git"
   },
   "dependencies": {
-    "flow-parser": "0.324.0"
+    "flow-parser": "*"
   },
   "files": [
-    "dist",
+    "index.js",
     "LICENSE",
     "README.md"
   ],

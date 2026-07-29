@@ -38,10 +38,9 @@ module.exports = {
           // Use flow-parser as Babel's parser so it understands newer
           // Flow syntax (e.g. `as` casts) beyond what the bundled @babel/parser
           // supports. Disabled by `SKIP_HERMES_PARSER_OVERRIDE=1` during the
-          // build's bootstrap phase — `babel-plugin-syntax-flow-parser`
-          // and its workspace dependencies (`flow-parser`, `flow-estree`) have
-          // to be built before this plugin can be
-          // required.
+          // build's bootstrap phase — the plugin's dependency chain
+          // (`flow-parser`, `flow-estree`) has to be built before the plugin
+          // can be required.
           test: filename =>
             filename != null &&
             !filename.includes('/babel-plugin-syntax-flow-parser/__tests__/'),
@@ -55,11 +54,10 @@ function overrideEnabled() {
   if (process.env.SKIP_HERMES_PARSER_OVERRIDE) {
     return false;
   }
-  // Fresh checkouts won't have the plugin built yet; skip rather than crash so
-  // the build script can bootstrap it.
+  // The plugin re-exports `flow-parser/babel-plugin`, which requires
+  // `flow-parser` to be built. Fresh checkouts won't have it yet; skip rather
+  // than crash so the build script can bootstrap it.
   const path = require('path');
   const fs = require('fs');
-  return fs.existsSync(
-    path.resolve(__dirname, 'babel-plugin-syntax-flow-parser/dist/index.js'),
-  );
+  return fs.existsSync(path.resolve(__dirname, 'flow-parser/dist/index.js'));
 }

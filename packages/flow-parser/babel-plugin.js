@@ -10,47 +10,50 @@
 
 'use strict';
 
-import type {ParserOptions} from 'flow-parser';
+// This file ships as-is (it is not run through the `dist` build), so it must be
+// runtime-valid CommonJS. Flow types are written in comment syntax accordingly.
 
-import * as HermesParser from 'flow-parser';
+/*:: import type {ParserOptions} from 'flow-parser'; */
 
+const FlowParser = require('flow-parser');
+
+/*::
 type Options = {
-  /**
-   * When set to 'flow', will check files for a `@flow` annotation to apply
-   * this plugin, otherwise falling back to Babel's parser.
-   *
-   * This is independent of `parserOpts.flow`, which may customise 'detect'
-   * behaviour within hermes-parser (downstream from this plugin).
-   *
-   * Defaults to 'all'.
-   */
+  // When set to 'flow', will check files for a `@flow` annotation to apply
+  // this plugin, otherwise falling back to Babel's parser.
+  //
+  // This is independent of `parserOpts.flow`, which may customise 'detect'
+  // behaviour within hermes-parser (downstream from this plugin).
+  //
+  // Defaults to 'all'.
   parseLangTypes?: 'flow' | 'all',
 };
+*/
 
-export default function BabelPluginSyntaxHermesParser(
+module.exports = function BabelPluginSyntaxFlowParser(
   // $FlowExpectedError[unclear-type] We don't have types for this.
-  api: any,
-  options: Options,
-): Readonly<{...}> {
+  api /*: any */,
+  options /*: Options */,
+) /*: Readonly<{...}> */ {
   api.assertVersion('^7.0.0 || ^8.0.0-alpha.6');
 
   const {parseLangTypes = 'all'} = options;
 
-  let curParserOpts: ParserOptions = {};
-  let curFilename: ?string = null;
+  let curParserOpts /*: ParserOptions */ = {};
+  let curFilename /*: ?string */ = null;
 
   return {
-    name: 'syntax-hermes-parser',
+    name: 'syntax-flow-parser',
 
     manipulateOptions(
-      opts: Readonly<{parserOpts: ParserOptions, filename?: ?string}>,
+      opts /*: Readonly<{parserOpts: ParserOptions, filename?: ?string}> */,
     ) {
       curParserOpts = opts.parserOpts;
       curFilename = opts.filename;
     },
 
     // API suggested via https://babeljs.io/docs/babel-parser#will-the-babel-parser-support-a-plugin-system
-    parserOverride(code: string) {
+    parserOverride(code /*: string */) {
       const filename = curFilename;
       if (
         filename != null &&
@@ -59,9 +62,9 @@ export default function BabelPluginSyntaxHermesParser(
         return;
       }
 
-      const parserOpts: ParserOptions = {};
+      const parserOpts /*: ParserOptions */ = {};
       for (const [key, value] of Object.entries(curParserOpts)) {
-        if (HermesParser.ParserOptionsKeys.has(key)) {
+        if (FlowParser.ParserOptionsKeys.has(key)) {
           // $FlowExpectedError[incompatible-type]
           parserOpts[key] = value;
         }
@@ -75,7 +78,7 @@ export default function BabelPluginSyntaxHermesParser(
         parserOpts.flow = 'all';
       }
 
-      return HermesParser.parse(code, {
+      return FlowParser.parse(code, {
         ...parserOpts,
         babel: true,
       });
@@ -85,4 +88,4 @@ export default function BabelPluginSyntaxHermesParser(
       curParserOpts = {};
     },
   };
-}
+};

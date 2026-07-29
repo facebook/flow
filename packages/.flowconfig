@@ -29,6 +29,7 @@ munge_underscores=true
 module.name_mapper='^flow-parser$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/index.js'
 module.name_mapper='^flow-parser/\(.*\)$' -> '<PROJECT_ROOT>/flow-parser/oxidized-src/\1'
 module.name_mapper='^flow-parser/__test_utils__/\(.*\)$' -> '<PROJECT_ROOT>/flow-parser/__test_utils__/\1'
+module.name_mapper='^flow-parser/babel-plugin$' -> '<PROJECT_ROOT>/flow-parser/babel-plugin.js'
 module.name_mapper='^flow-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js'
 module.name_mapper='^flow-eslint$' -> '<PROJECT_ROOT>/flow-eslint/src/index.js'
 module.name_mapper='^flow-transform$' -> '<PROJECT_ROOT>/flow-transform/src/index.js'
