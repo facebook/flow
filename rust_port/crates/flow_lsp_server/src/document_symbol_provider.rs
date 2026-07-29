@@ -116,7 +116,7 @@ fn mk(
 ) -> DocumentSymbol {
     let range = loc_to_lsp_range(loc);
     let selection_range = loc_to_lsp_range(selection);
-    let children = children.and_then(|c| if c.is_empty() { None } else { Some(c) });
+    let children = children.filter(|c| !c.is_empty());
     #[allow(deprecated)]
     DocumentSymbol {
         name,
