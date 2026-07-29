@@ -2037,7 +2037,7 @@ pub fn quick_error_fun_as_obj<'cx>(
                 add_output(cx, error_message)?;
                 Ok(true)
             } else {
-                for (x, _) in props_not_found.iter() {
+                for x in props_not_found.keys() {
                     let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                         EPropNotFoundInSubtypingData {
                             prop_name: Some(x.dupe()),
