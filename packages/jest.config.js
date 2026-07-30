@@ -29,6 +29,14 @@ module.exports = {
   clearMocks: true,
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: false,
+  // Limit test discovery to packages owned by this workspace.
+  roots: [
+    '<rootDir>/babel-plugin-syntax-flow-parser',
+    '<rootDir>/flow-eslint',
+    '<rootDir>/flow-estree',
+    '<rootDir>/flow-parser',
+    '<rootDir>/flow-transform',
+  ],
   // The glob patterns Jest uses to detect test files
   testMatch: ['**/__tests__/**/*-test.js'],
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
