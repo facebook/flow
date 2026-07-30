@@ -160,8 +160,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:87:7
 
-Cannot cast `o.type` to empty because at least one member of property `type` [1], e.g. string literal `baz` [2], is
-incompatible with empty [3]. [incompatible-type]
+Cannot cast `o.type` to empty because in at least one member of property `type` [1]: `"baz"` [2] is incompatible with
+`empty` [3]. [incompatible-type]
 
    test.js:87:7
    87|       o.type as empty; // error

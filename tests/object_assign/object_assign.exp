@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:16:21
 
-Cannot assign `Bad.foo()` to `bad` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `Bad.foo()` to `bad` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:16:21
    16|   var bad: number = Bad.foo();
@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:29:22
 
-Cannot assign `Good.foo()` to `good` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `Good.foo()` to `good` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:29:22
    29|   var good: number = Good.foo();
@@ -49,7 +49,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:36:23
 
-Cannot assign `A.Good.foo()` to `good_` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `A.Good.foo()` to `good_` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:36:23
    36|   var good_: number = A.Good.foo(); // string ~> number
@@ -66,7 +66,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:39:22
 
-Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `f()` to `bad_` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:39:22
    39|   var bad_: number = f(); // error: string ~> number
@@ -97,7 +97,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:41:23
 
-Cannot assign `A.Bad.foo()` to `bad__` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `A.Bad.foo()` to `bad__` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:41:23
    41|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
@@ -148,7 +148,7 @@ References:
 Error --------------------------------------------------------------------------------------------- intersection.js:6:15
 
 Incorrect arguments passed to `Object.assign` because: [incompatible-use]
- - Either incorrect arguments passed to `Object.assign` because number [1] is incompatible with string [2].
+ - Either incorrect arguments passed to `Object.assign` because `number` [1] is incompatible with `string` [2].
  - Or incorrect arguments passed to `Object.assign` because property `foo` is missing in object type [3].
 
    intersection.js:6:15
@@ -171,7 +171,7 @@ Error --------------------------------------------------------------------------
 
 Incorrect arguments passed to `Object.assign` because: [incompatible-use]
  - Either incorrect arguments passed to `Object.assign` because property `bar` is missing in object type [1].
- - Or incorrect arguments passed to `Object.assign` because string [2] is incompatible with number [3].
+ - Or incorrect arguments passed to `Object.assign` because `string` [2] is incompatible with `number` [3].
 
    intersection.js:7:15
    7| Object.assign(inter1, {bar: ''});; // error
@@ -279,7 +279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- scope.js:32:3
 
-Cannot cast `obj.attr` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `obj.attr` to number because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:32:3
    32|   obj.attr as number;

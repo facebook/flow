@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:7:1
 
-Cannot cast `Foo` to component because in property `bar`: string [1] is incompatible with number [2].
+Cannot cast `Foo` to component because in property `bar`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    class_to_component_type.js:7:1
@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:8:1
 
-Cannot cast `Foo` to component because in property `bar`: string [1] is incompatible with number [2].
+Cannot cast `Foo` to component because in property `bar`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    class_to_component_type.js:8:1
@@ -37,8 +37,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either in the first parameter: `Foo` [1] is incompatible with string [2].
- - Or in the first parameter: `Foo` [1] is incompatible with null [3].
+ - Either in the first parameter: `Foo` [1] is incompatible with `string` [2].
+ - Or in the first parameter: `Foo` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -62,8 +62,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either in property `current`: `Foo` [1] is incompatible with string [2].
- - Or in property `current`: `Foo` [1] is incompatible with null [3].
+ - Either in property `current`: `Foo` [1] is incompatible with `string` [2].
+ - Or in property `current`: `Foo` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -88,7 +88,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
  - Either `ImNotARefSetter` [1] is incompatible with function type [2].
- - Or `ImNotARefSetter` [1] is incompatible with null [3].
+ - Or `ImNotARefSetter` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -167,7 +167,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
  - Either in the first parameter: `ComponentNarrower` [1] is incompatible with `Component` [2].
- - Or in the first parameter: `ComponentNarrower` [1] is incompatible with null [3].
+ - Or in the first parameter: `ComponentNarrower` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -192,7 +192,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
  - Either in property `current`: `ComponentNarrower` [1] is incompatible with `Component` [2].
- - Or in property `current`: `ComponentNarrower` [1] is incompatible with null [3].
+ - Or in property `current`: `ComponentNarrower` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -327,8 +327,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:22:41
 
 Cannot create `C` element because in property `ref`: [incompatible-type]
- - Either in property `current`: number [1] is incompatible with string [2].
- - Or in property `current`: number [1] is incompatible with null [3].
+ - Either in property `current`: `number` [1] is incompatible with `string` [2].
+ - Or in property `current`: `number` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -352,8 +352,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:25:49
 
 Cannot create `C` element because in property `key`: [incompatible-type]
- - Either object literal [1] is incompatible with string [2].
- - Or object literal [1] is incompatible with number [3].
+ - Either object literal [1] is incompatible with `string` [2].
+ - Or object literal [1] is incompatible with `number` [3].
 
    create_element.js:25:49
    25| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
@@ -388,7 +388,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:1
 
-Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `3` to `React.ElementRef` because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    destructors.js:14:1
    14| 3 as React.ElementRef<typeof C>; // Error, 3 is not void.
@@ -453,7 +453,8 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:10:1
 
-Cannot cast `C` to component because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `C` to component because in property `bar`: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    everything_implicit_instantiation.js:10:1
    10| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error
@@ -470,8 +471,8 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:11:1
 
-Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: number [3] is
-incompatible with string [4]. [incompatible-type]
+Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: `number` [3] is
+incompatible with `string` [4]. [incompatible-type]
 
    everything_implicit_instantiation.js:11:1
      11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
@@ -530,7 +531,8 @@ References:
 Error ------------------------------------------------------------------------------------------ function_lower.js:17:10
 
 All branches are incompatible: [incompatible-type]
- - Either class `NotAComponent` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either class `NotAComponent` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
@@ -559,7 +561,8 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:20:1
 
 Cannot cast `NotAFunctionComponent` to component because: [incompatible-type]
- - Either class `NotAComponent` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either class `NotAComponent` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
@@ -587,7 +590,7 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
 
-Cannot cast `Foo` to component because in property `bar`: number [1] is incompatible with string [2].
+Cannot cast `Foo` to component because in property `bar`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_to_component_type.js:5:1
@@ -605,7 +608,7 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:6:1
 
-Cannot cast `Foo` to component because in property `bar`: number [1] is incompatible with string [2].
+Cannot cast `Foo` to component because in property `bar`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_to_component_type.js:6:1
@@ -798,7 +801,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- get_set_props.js:11:19
 
-Cannot assign `3` to `x.displayName` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `x.displayName` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    get_set_props.js:11:19
    11|   x.displayName = 3; // Error num ~> string
@@ -812,7 +815,8 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:11:1
 
-Cannot cast `C` to component because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `C` to component because in property `bar`: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    props_implicit_instantiation.js:11:1
    11| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
@@ -829,8 +833,8 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:12:1
 
-Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: number [3] is
-incompatible with string [4]. [incompatible-type]
+Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: `number` [3] is
+incompatible with `string` [4]. [incompatible-type]
 
    props_implicit_instantiation.js:12:1
      12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
@@ -853,7 +857,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props1` to object type because in property `bar`: number [1] is incompatible with string [2].
+Cannot cast `props1` to object type because in property `bar`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1
@@ -871,7 +875,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props1` to object type because in property `foo`: string [1] is incompatible with number [2].
+Cannot cast `props1` to object type because in property `foo`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1
@@ -889,7 +893,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:21:1
 
-Cannot cast `props2` to empty because props of component B [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `props2` to empty because `{readonly bar: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    props_implicit_instantiation.js:21:1
    21| props2 as empty; // error
@@ -906,7 +910,7 @@ References:
 
 Error --------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:6:1
 
-Cannot cast `instance` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `instance` to empty because `Promise<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:6:1
    6| instance as empty; // error
@@ -923,7 +927,8 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `refSetter` to empty because `(Promise<string> | null) => unknown` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -940,7 +945,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `refSetter` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -957,7 +962,7 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `refSetter` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error
@@ -974,7 +979,8 @@ References:
 
 Error -------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:11:1
 
-Cannot cast `refSetter` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `refSetter` to empty because `{writeonly current: Promise<string> | null, ...}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:11:1
    11| refSetter as empty; // error

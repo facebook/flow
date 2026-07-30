@@ -57,7 +57,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:16
 
-Cannot assign `5` to `t` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `5` to `t` because `5` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test2.js:4:16
    4| const t: arg = 5;

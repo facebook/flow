@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------- declare_class.js:13:3
 
-Cannot cast `a.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:13:3
    13|   a.foo as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:22:3
 
-Cannot cast `B.bar` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `B.bar` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:22:3
    22|   B.bar as empty; // ERROR
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:32:3
 
-Cannot cast `c.baz()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `c.baz()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:32:3
    32|   c.baz() as empty; // ERROR
@@ -51,7 +51,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:50:9
 
-Cannot call `F` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `F` with `42` bound to `x` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class.js:50:9
    50|   new F(42); // ERROR
@@ -65,7 +65,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:61:3
 
-Cannot cast `e.prop` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `e.prop` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:61:3
    61|   e.prop as empty; // ERROR
@@ -82,7 +82,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:15:3
 
-Cannot cast `a.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    interface.js:15:3
    15|   a.foo as empty; // ERROR
@@ -99,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:34:3
 
-Cannot cast `c.bar()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `c.bar()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    interface.js:34:3
    34|   c.bar() as empty; // ERROR
@@ -116,7 +116,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:45:3
 
-Cannot cast `d.baz` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `d.baz` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    interface.js:45:3
    45|   d.baz as empty; // ERROR
@@ -133,7 +133,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:59:3
 
-Cannot cast `e.message` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `e.message` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    interface.js:59:3
    59|   e.message as empty; // ERROR

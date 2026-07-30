@@ -319,7 +319,7 @@ Cannot cast `x` to `T` because: [incompatible-type]
  - Or string [1] is incompatible with string literal `a98` [99].
  - Or string [1] is incompatible with string literal `a99` [100].
  - Or string [1] is incompatible with string literal `a100` [101].
- - Or string [1] is incompatible with function type [102].
+ - Or `string` [1] is incompatible with `() => void` [102].
 
    file.js:107:1
    107| x as T; // error

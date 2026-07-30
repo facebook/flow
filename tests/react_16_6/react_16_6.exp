@@ -1,8 +1,9 @@
 Error ------------------------------------------------------------------------------------------------ Suspense.js:10:23
 
 Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
- - Either function [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or function [1] is incompatible with `React.Portal` [3].
+ - Either `() => React.MixedElement` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Or `() => React.MixedElement` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -29,8 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
-Cannot call `React.lazy` with function bound to `component` because in the return value: function [1] is incompatible
-with `Promise` [2]. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: `(x: Props) => React.Node` [1]
+is incompatible with `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
 
    lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
@@ -54,7 +55,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because in the return value: class `ClassComponent` [1] is
-incompatible with `Promise` [2]. [incompatible-type]
+incompatible with `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -165,8 +166,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:21:39
 
-Cannot create `LazyFunctionComponent` element because in property `foo`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot create `LazyFunctionComponent` element because in property `foo`: `"string"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    lazy.js:21:39
    21| const _d = <LazyFunctionComponent foo="string" />; // Error wrong type for foo
@@ -216,7 +217,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36
 
-Cannot create `LazyClassComponent` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `LazyClassComponent` element because in property `foo`: `"string"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    lazy.js:30:36
@@ -231,7 +232,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lazy_ref.js:22:40
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `ref.moo` with `0` bound to `x` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lazy_ref.js:22:40
    22|       <Lazy ref={ref => ref && ref.moo(0)} />;
@@ -281,7 +282,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:14:31
 
-Cannot create `MemoComponent` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `MemoComponent` element because in property `foo`: `"string"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    memo.js:14:31
@@ -332,8 +333,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:21:40
 
-Cannot create `MemoComponentWithEqual` element because in property `foo`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot create `MemoComponentWithEqual` element because in property `foo`: `"string"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    memo.js:21:40
    21| const _h = <MemoComponentWithEqual foo="string" />; // Error wrong type for foo
@@ -369,7 +370,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43
 
-Cannot call `ref.moo` with `0` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `ref.moo` with `0` bound to `x` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    memo_ref.js:18:43
    18|   return <Memo ref={ref => ref && ref.moo(0)} />;

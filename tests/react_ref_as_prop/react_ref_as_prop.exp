@@ -92,7 +92,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:18:1
 
-Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `null` to `React.ElementRef` because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    implicit_instantiation.js:18:1
    18| null as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // error: null ~> void
@@ -182,7 +182,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- implicit_instantiation.js:37:1
 
-Cannot cast `null` to `React.ElementRef` because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `null` to `React.ElementRef` because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    implicit_instantiation.js:37:1
    37| null as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty
@@ -230,7 +230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:7:24
 
-Cannot create `FnWithoutRefProp` element because in property `foo`: number [1] is incompatible with string [2].
+Cannot create `FnWithoutRefProp` element because in property `foo`: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    jsx_checking.js:7:24
@@ -305,7 +305,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- jsx_checking.js:17:26
 
-Cannot create `CompWithoutRefProp` element because in property `foo`: number [1] is incompatible with string [2].
+Cannot create `CompWithoutRefProp` element because in property `foo`: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    jsx_checking.js:17:26

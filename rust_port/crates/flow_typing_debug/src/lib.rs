@@ -59,6 +59,7 @@ use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
@@ -224,6 +225,7 @@ use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::string_of_ctor;
 use flow_typing_type::type_::string_of_use_ctor;
 use flow_typing_type::type_::string_of_use_op;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_util::reason_of_t;
 
 pub fn string_of_selector(selector: &Selector) -> String {
@@ -2935,6 +2937,27 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 "EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
                 dump_reason(cx, reason_lower),
                 dump_reason(cx, reason_upper),
+                string_of_use_op(use_op)
+            )
+        }
+        ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+            lower_loc,
+            upper_loc,
+            lower_desc,
+            upper_desc,
+            use_op,
+            ..
+        }) => {
+            let dump_type_or_desc = |type_or_desc: &TypeOrTypeDescT<ALoc>| match type_or_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EIncompatibleTypesWithUseOp {{ lower_loc = {}; upper_loc = {}; lower = {}; upper = {}; use_op = {} }}",
+                string_of_aloc(None, lower_loc),
+                string_of_aloc(None, upper_loc),
+                dump_type_or_desc(lower_desc),
+                dump_type_or_desc(upper_desc),
                 string_of_use_op(use_op)
             )
         }

@@ -21,7 +21,7 @@ Found 1 error
 === block 3 ===
 Error ------------------------------------------------------------------------------ -:5:11
 
-Cannot assign `'hello'` to `obj.foo` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `'hello'` to `obj.foo` because `"hello"` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:5:11
    5| obj.foo = 'hello'; // Error!
@@ -38,8 +38,8 @@ Found 1 error
 === block 4 ===
 Error ------------------------------------------------------------------------------ -:8:21
 
-Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: null [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: `null` [1] is incompatible
+with `string` [2]. [incompatible-type]
 
    -:8:21
    8| acceptsObject({foo: null});      // Error!
@@ -172,7 +172,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:11:11
 
-Cannot assign `true` to `obj.foo` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `true` to `obj.foo` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:11:11
    11| obj.foo = true; // Error - `foo` is of type `number`
@@ -398,8 +398,8 @@ Found 1 error
 Error ----------------------------------------------------------------------------- -:13:15
 
 Cannot call `acceptsValues` with `true` bound to `v` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    -:13:15
    13| acceptsValues(true); // Error!
@@ -419,7 +419,7 @@ Found 1 error
 === block 33 ===
 Error ----------------------------------------------------------------------------- -:12:12
 
-Cannot call `acceptsStr` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `acceptsStr` with `1` bound to `x` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:12
    12| acceptsStr(1); // Error!

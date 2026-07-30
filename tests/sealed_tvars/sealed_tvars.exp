@@ -154,7 +154,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:4:14
 
-Cannot assign `10` to `x` because number [1] is incompatible with `C` [2]. [incompatible-type]
+Cannot assign `10` to `x` because `10` [1] is incompatible with `C` [2]. [incompatible-type]
 
    import.js:4:14
    4| var x: E.C = 10;
@@ -177,7 +177,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error --------------------------------------------------------------------------------------------------- react.js:21:10
 
-Cannot cast `Dialog.c` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Dialog.c` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    react.js:21:10
    21|   return Dialog.c as empty;
@@ -208,7 +208,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:20:12
 
-Cannot return `42` because number [1] is incompatible with constructor void return [2]. [incompatible-type]
+Cannot return `42` because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    regression_tests.js:20:12
    20|     return 42;
@@ -294,7 +294,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:54:14
 
-Cannot cast `42` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `42` to empty because `ModScope` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    regression_tests.js:54:14
    54| 42 as any as ModScope as empty; // string ~> empty, not num ~> empty
@@ -393,7 +393,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:118:19
 
-Cannot assign function to `x` because function [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign function to `x` because `(x: any) => any` [1] is incompatible with `number` [2]. [incompatible-type]
 
    regression_tests.js:118:19
    118|   var x: number = (x) => x;
@@ -458,7 +458,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:154:31
 
-Cannot assign function to `defaultValue` because function [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign function to `defaultValue` because `(x: A) => 42` [1] is incompatible with `boolean` [2].
+[incompatible-type]
 
    regression_tests.js:154:31
    154|     B(defaultValue: boolean = (x: A) => 42): void {}
@@ -472,7 +473,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- regression_tests.js:160:14
 
-Cannot assign `C` to `foo` because class `C` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `C` to `foo` because class `C` [1] is incompatible with `number` [2]. [incompatible-type]
 
    regression_tests.js:160:14
    160|    w({ foo = C, bar}: { bar: number, foo?: number }): void { }

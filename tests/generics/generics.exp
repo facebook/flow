@@ -66,7 +66,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:17:16
 
-Cannot assign `d.x` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `d.x` to `s` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    generics.js:17:16
    17| var s:string = d.x;
@@ -83,7 +83,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:25:16
 
-Cannot assign `e.set(...)` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `e.set(...)` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    generics.js:25:16
    25| var x:string = e.set(0);
@@ -100,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:25:16
 
-Cannot assign `e.set(...)` to `x` because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `e.set(...)` to `x` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    generics.js:25:16
    25| var x:string = e.set(0);
@@ -117,7 +117,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ generics.js:36:41
 
-Cannot assign `h1` to `h2` because in type argument `X` [1]: string [2] is incompatible with number [3].
+Cannot assign `h1` to `h2` because in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    generics.js:36:41

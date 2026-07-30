@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ class_iterator.js:39:31
 
 Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > the return value > type argument
-`Yield` [1]: string [2] is incompatible with number [3]. [incompatible-type]
+`Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    class_iterator.js:39:31
      39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
@@ -21,8 +21,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
 
-Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator` [1] is incompatible with boolean [2].
-[incompatible-type]
+Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator<number, void, void>` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    iterator.js:6:1
    6| foo[Symbol.iterator] as boolean; // Error
@@ -53,7 +53,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:5
 
-Cannot cast `x` to boolean because symbol [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `symbol` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    symbol.js:23:5
    23|     x as boolean; // Error
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:26:5
 
-Cannot cast `x` to symbol because boolean [1] is incompatible with symbol [2]. [incompatible-type]
+Cannot cast `x` to symbol because `boolean` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    symbol.js:26:5
    26|     x as symbol; // Error
@@ -87,7 +87,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- symbol.js:45:27
 
-Cannot assign `Symbol.toPrimitive` to `y` because `$SymbolToPrimitive` [1] is incompatible with `$SymbolMatch` [2].
+Cannot assign `Symbol.toPrimitive` to `y` because `symbol` [1] is incompatible with `$SymbolMatch` [2].
 [incompatible-type]
 
    symbol.js:45:27
@@ -178,7 +178,7 @@ References:
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:18:1
 
 Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return value > type argument `Yield` [1]:
-string [2] is incompatible with number [3]. [incompatible-type]
+`string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    type_well_known_symbol.js:18:1
      18| bad as Iterable<number>; // ERROR

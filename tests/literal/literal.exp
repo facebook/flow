@@ -29,7 +29,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:18:19
 
-Cannot assign `object[APIKeys.NAME]` to `name` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `object[APIKeys.NAME]` to `name` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    enum_client.js:18:19
    18| var name:number = object[APIKeys.NAME]; // error: object.name is a string
@@ -46,7 +47,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- enum_client.js:22:18
 
-Cannot assign `tuple[indices.red]` to `red` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `tuple[indices.red]` to `red` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    enum_client.js:22:18
    22| var red:string = tuple[indices.red]; // error: tuple[0] is a number

@@ -904,8 +904,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:205:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `3` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    imported.js:205:11
    205|   set({f: 3}); // error 3 ~> 1|2
@@ -967,8 +967,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:233:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    imported.js:233:11
    233|   set({f: "blah"}); // error "blah" ~> number
@@ -982,8 +982,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:241:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    imported.js:241:11
    241|   set({f: "blah"}); // error "blah" ~> number
@@ -997,7 +997,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:247:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    imported.js:247:11
@@ -1179,7 +1179,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:377:11
 
-Cannot assign `"a"` to `x1[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x1[0]` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imported.js:377:11
    377|   x1[0] = "a"; // error string ~> number
@@ -1193,7 +1193,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:381:11
 
-Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x2[0]` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imported.js:381:11
    381|   x2[0] = "a"; // error string ~> number
@@ -2134,7 +2134,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o3.f` to union type because: [incompatible-type]
  - Either in property `a`: string [1] is incompatible with string literal `a` [2].
- - Or object literal [3] is incompatible with string literal `foo` [4].
+ - Or object literal [3] is incompatible with `"foo"` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2160,8 +2160,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:217:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `3` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    local.js:217:11
    217|   set({f: 3}); // error 3 ~> 1|2
@@ -2223,8 +2223,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:245:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    local.js:245:11
    245|   set({f: "blah"}); // error
@@ -2238,8 +2238,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:253:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    local.js:253:11
    253|   set({f: "blah"}); // error "blah" ~> number
@@ -2253,7 +2253,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:259:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
+Cannot call `set` with object literal bound to `y` because in property `f`: `"blah"` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    local.js:259:11
@@ -2510,7 +2510,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:455:11
 
-Cannot assign `"a"` to `x1[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x1[0]` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:455:11
    455|   x1[0] = "a"; // error string ~> number
@@ -2524,7 +2524,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:459:11
 
-Cannot assign `"a"` to `x2[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x2[0]` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:459:11
    459|   x2[0] = "a"; // error string ~> number
@@ -2609,7 +2609,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:493:5
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:493:5
    493|     x as number; // error string ~> number
@@ -2626,7 +2626,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:530:14
 
-Cannot assign `"a"` to `obj.prop` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `obj.prop` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local.js:530:14
    530|   obj.prop = "a"; // error string ~> number
@@ -2903,7 +2903,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- react.js:7:9
 
-Cannot create `MyDiv` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `MyDiv` element because in property `id`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    react.js:7:9
    7|     id={1} // error on id number ~> string
@@ -2917,7 +2917,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- react.js:9:7
 
-Cannot cast `e` to empty because `Event` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `e` to empty because `Event` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    react.js:9:7
    9|       e as empty; // error empty ~> Event

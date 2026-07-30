@@ -8,7 +8,7 @@ Cannot resolve name `x`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:18:7
 
-Cannot call `f2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f2` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof.js:18:7
    18| f2(1, 'a'); // error
@@ -22,7 +22,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:21:12
 
-Cannot call `f3` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f3` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof.js:21:12
    21| f3({f: 1}, 'a'); // error
@@ -36,7 +36,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:24:20
 
-Cannot call `f4` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f4` because in array element: `"1"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof.js:24:20
    24| f4({f: [1, 2, 3]}, '1'); // error
@@ -50,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:26:10
 
-Cannot call `poly1` with `2` bound to `y` because number [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot call `poly1` with `2` bound to `y` because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof.js:26:10
    26| poly1(1, 2); // TODO okay
@@ -64,7 +64,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:27:10
 
-Cannot call `poly1` with `'a'` bound to `y` because string [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot call `poly1` with `'a'` bound to `y` because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof.js:27:10
    27| poly1(1, 'a'); // error (TODO string ~> number)
@@ -78,7 +78,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:30:15
 
-Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `poly2` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof.js:30:15
    30| poly2({f: 1}, 'a'); // error string ~> number
@@ -92,7 +92,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:32:15
 
-Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible with `V` [2]. [incompatible-type]
+Cannot call `poly3` with `3` bound to `y` because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof.js:32:15
    32| poly3({f: 1}, 3); // TODO okay
@@ -106,7 +106,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:33:15
 
-Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible with `V` [2]. [incompatible-type]
+Cannot call `poly3` with `'a'` bound to `y` because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof.js:33:15
    33| poly3({f: 1}, 'a'); // error (TODO string ~> number)
@@ -120,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:46:1
 
-Cannot cast `r1` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r1` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof.js:46:1
@@ -138,7 +138,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:49:1
 
-Cannot cast `r2` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r2` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof.js:49:1
@@ -156,7 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:54:1
 
-Cannot cast `r4` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
+Cannot cast `r4` to function type because in the return value: `unknown` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    function_typeof.js:54:1
@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:60:1
 
-Cannot cast `r6` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r6` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof.js:60:1
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:63:1
 
-Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
+Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    function_typeof.js:63:1
@@ -304,7 +304,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:20:7
 
-Cannot call `f2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f2` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof_import.js:20:7
    20| f2(1, 'a'); // error
@@ -318,7 +318,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:23:12
 
-Cannot call `f3` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f3` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof_import.js:23:12
    23| f3({f: 1}, 'a'); // error
@@ -332,7 +332,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:26:20
 
-Cannot call `f4` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f4` because in array element: `"1"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof_import.js:26:20
    26| f4({f: [1, 2, 3]}, '1'); // error
@@ -346,7 +346,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:28:10
 
-Cannot call `poly1` with `2` bound to `y` because number [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot call `poly1` with `2` bound to `y` because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof_import.js:28:10
    28| poly1(1, 2); // TODO okay
@@ -360,7 +360,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:29:10
 
-Cannot call `poly1` with `'a'` bound to `y` because string [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot call `poly1` with `'a'` bound to `y` because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof_import.js:29:10
    29| poly1(1, 'a'); // error (TODO string ~> number)
@@ -374,7 +374,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:32:15
 
-Cannot call `poly2` with `'a'` bound to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `poly2` with `'a'` bound to `y` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_typeof_import.js:32:15
    32| poly2({f: 1}, 'a'); // error string ~> number
@@ -388,7 +388,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:34:15
 
-Cannot call `poly3` with `3` bound to `y` because number [1] is incompatible with `V` [2]. [incompatible-type]
+Cannot call `poly3` with `3` bound to `y` because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof_import.js:34:15
    34| poly3({f: 1}, 3); // TODO okay
@@ -402,7 +402,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:35:15
 
-Cannot call `poly3` with `'a'` bound to `y` because string [1] is incompatible with `V` [2]. [incompatible-type]
+Cannot call `poly3` with `'a'` bound to `y` because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_typeof_import.js:35:15
    35| poly3({f: 1}, 'a'); // error (TODO string ~> number)
@@ -416,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:38:1
 
-Cannot cast `r1` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r1` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof_import.js:38:1
@@ -434,7 +434,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:41:1
 
-Cannot cast `r2` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r2` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof_import.js:41:1
@@ -452,7 +452,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:52:1
 
-Cannot cast `r6` to function type because in the return value: number [1] is incompatible with string [2].
+Cannot cast `r6` to function type because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    function_typeof_import.js:52:1
@@ -470,7 +470,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:55:1
 
-Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
+Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    function_typeof_import.js:55:1
@@ -524,7 +524,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- maybe.js:9:1
 
-Cannot cast `'foo'` to `typeof x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'foo'` to `typeof x` because `"foo"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    maybe.js:9:1
    9| 'foo' as typeof x; // error: string ~> number
@@ -538,7 +538,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:9:1
 
-Cannot cast `null` to `typeof x` because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `null` to `typeof x` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:9:1
    9| null as typeof x; // error: null ~> $Optional<number> (i.e., void|number)
@@ -584,7 +584,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:65:26
 
-Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `e` because `"asdf"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    typeof.js:65:26
    65| var e: typeof numValue = 'asdf'; // Error: string ~> number
@@ -621,7 +621,7 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:95:1
 
-Cannot cast `g` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `g` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typeof.js:95:1
    95| g as string; // error
@@ -638,7 +638,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:101:1
 
-Cannot cast `i.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `i.p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typeof.js:101:1
    101| i.p as string; // error
@@ -656,8 +656,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- union.js:9:1
 
 Cannot cast `null` to `typeof x` because: [incompatible-type]
- - Either null [1] is incompatible with number [2].
- - Or null [1] is incompatible with string [3].
+ - Either `null` [1] is incompatible with `number` [2].
+ - Or `null` [1] is incompatible with `string` [3].
 
    union.js:9:1
    9| null as typeof x; // error: null ~> number|string
@@ -674,7 +674,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ with-targs.js:9:1
 
-Cannot cast `new FooClass()` to `Foo` because in type argument `T` [1]: string [2] is incompatible with number [3].
+Cannot cast `new FooClass()` to `Foo` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    with-targs.js:9:1
@@ -695,7 +695,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:10:1
 
-Cannot cast `barF()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `barF()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    with-targs.js:10:1
    10| barF() as number; // error: string ~> number
@@ -712,8 +712,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:11:1
 
-Cannot cast `new FooClassStringExported()` to `FooClassExported` because in type argument `T` [1]: string [2] is
-incompatible with number [3]. [incompatible-type]
+Cannot cast `new FooClassStringExported()` to `FooClassExported` because in type argument `T` [1]: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
    with-targs.js:11:1
    11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
@@ -733,7 +733,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:12:1
 
-Cannot cast `barFExported()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `barFExported()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    with-targs.js:12:1
    12| barFExported() as number; // error: string ~> number
@@ -835,8 +835,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:32:26
 
-Cannot call `barGeneric` with function bound to `cb` because in the return value: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `barGeneric` with function bound to `cb` because in the return value: `1` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    with-targs.js:32:26
    32| barGeneric<string>(() => 1); // error: number ~> string
@@ -850,7 +850,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:34:1
 
-Cannot cast `barGeneric(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `barGeneric(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    with-targs.js:34:1
    34| barGeneric(() => 1) as string; // error: number ~> string
@@ -867,8 +867,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:36:34
 
-Cannot call `barGenericExported` with function bound to `cb` because in the return value: number [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot call `barGenericExported` with function bound to `cb` because in the return value: `1` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    with-targs.js:36:34
    36| barGenericExported<string>(() => 1); // error: number ~> string
@@ -882,7 +882,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:38:1
 
-Cannot cast `barGenericExported(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `barGenericExported(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    with-targs.js:38:1
    38| barGenericExported(() => 1) as string; // error: number ~> string

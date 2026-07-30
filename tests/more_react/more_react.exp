@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- inexact_props.js:44:34
 
-Cannot create `YComponent` element because in property `p3`: null or undefined [1] is incompatible with string [2].
+Cannot create `YComponent` element because in property `p3`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    inexact_props.js:44:34
@@ -108,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
-Cannot create `D` element because props [1] is incompatible with empty [1]. [incompatible-type]
+Cannot create `D` element because `{}` [1] is incompatible with `empty` [1]. [incompatible-type]
 
    subclassComponent.js:29:2
    29| <D></D>; // error
@@ -123,7 +123,7 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `D` [1] is incompatible with string [2].
+ - Either class `D` [1] is incompatible with `string` [2].
  - Or `D` [1] is incompatible with `Component` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -164,7 +164,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
-Cannot create `E` element because props [1] is incompatible with empty [1]. [incompatible-type]
+Cannot create `E` element because `{}` [1] is incompatible with `empty` [1]. [incompatible-type]
 
    subclassComponent.js:30:2
    30| <E></E>; // error
@@ -179,7 +179,7 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `E` [1] is incompatible with string [2].
+ - Either class `E` [1] is incompatible with `string` [2].
  - Or `E` [1] is incompatible with `Component` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -220,7 +220,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
-Cannot create `F` element because props [1] is incompatible with empty [1]. [incompatible-type]
+Cannot create `F` element because `{}` [1] is incompatible with `empty` [1]. [incompatible-type]
 
    subclassComponent.js:31:2
    31| <F></F>; // error
@@ -235,7 +235,7 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `F` [1] is incompatible with string [2].
+ - Either class `F` [1] is incompatible with `string` [2].
  - Or `F` [1] is incompatible with `Component` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

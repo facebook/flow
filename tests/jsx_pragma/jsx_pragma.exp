@@ -8,7 +8,7 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------- children_not_added_to_props.js:8:1
 
-Cannot cast `result` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `result` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    children_not_added_to_props.js:8:1
    8| result as string; // error
@@ -67,7 +67,7 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- member-expression-pragma.js:8:18
 
-Cannot assign `<Component />` to `a` because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `<Component />` to `a` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    member-expression-pragma.js:8:18
    8| const a: empty = <Component />; // Error: void ~> empty
@@ -84,7 +84,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- respect_local_scope.js:4:2
 
-Cannot create `Bar` element because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `Bar` element because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    respect_local_scope.js:4:2
    4| <Bar />; // error: number ~> string
@@ -101,7 +101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- respect_local_scope.js:8:4
 
-Cannot create `Bar` element because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot create `Bar` element because `123` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    respect_local_scope.js:8:4
    8|   <Bar />; // error: number ~> boolean
@@ -118,7 +118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:14:11
 
-Cannot create `Bar` element because in property `x`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `Bar` element because in property `x`: `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    respect_local_scope.js:14:11
    14|   <Bar x={123} />; // error: number ~> string
@@ -132,7 +132,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:20:4
 
-Cannot create `Bar` element because null [1] is incompatible with object type [2]. [incompatible-type]
+Cannot create `Bar` element because `null` [1] is incompatible with `{x: string, ...}` [2]. [incompatible-type]
 
    respect_local_scope.js:20:4
    20|   <Bar />; // error: null ~> object type
@@ -149,7 +149,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:26:9
 
-Cannot create `Bar` element because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Bar` element because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    respect_local_scope.js:26:9
    26|   <Bar>{true}{null}</Bar> // error
@@ -163,7 +163,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:26:15
 
-Cannot create `Bar` element because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `Bar` element because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    respect_local_scope.js:26:15
    26|   <Bar>{true}{null}</Bar> // error
@@ -177,7 +177,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:12
 
-Cannot create `Bar` element because in property `key`: string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot create `Bar` element because in property `key`: `"hi"` [1] is incompatible with `boolean` [2].
+[incompatible-type]
 
    respect_local_scope.js:32:12
    32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
@@ -191,7 +192,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:21
 
-Cannot create `Bar` element because in property `ref`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Bar` element because in property `ref`: `"bye"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    respect_local_scope.js:32:21
    32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
@@ -298,8 +300,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- text_trimming.js:39:10
 
-Cannot create `Bar` element because boolean [1] is incompatible with string literal `should be true` [2].
-[incompatible-type]
+Cannot create `Bar` element because `true` [1] is incompatible with `"should be true"` [2]. [incompatible-type]
 
    text_trimming.js:39:10
    39|   <Bar> {true}

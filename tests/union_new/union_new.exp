@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- issue-1462-i.js:21:9
 
-Cannot call `print` with `val.foo` bound to `x` because array type [1] is incompatible with number [2].
+Cannot call `print` with `val.foo` bound to `x` because `Array<number>` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    issue-1462-i.js:21:9
@@ -19,8 +19,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
 Cannot call `check_fun` with function bound to `_` because: [incompatible-type]
- - Either in the return value: string [1] is incompatible with number [2].
- - Or in the return value: number [3] is incompatible with string [4].
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
+ - Or in the return value: `number` [3] is incompatible with `string` [4].
 
    test10.js:38:11
    38| check_fun((x) => x);
@@ -74,8 +74,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
 Cannot call `foo` with function bound to `x` because: [incompatible-type]
- - Either in the return value: boolean [1] is incompatible with string [2].
- - Or in the return value: string [3] is incompatible with boolean [4].
+ - Either in the return value: `boolean` [1] is incompatible with `string` [2].
+ - Or in the return value: `string` [3] is incompatible with `boolean` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -102,8 +102,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
 
 Cannot call `bar` with function bound to `x` because: [incompatible-type]
- - Either in the return value: boolean [1] is incompatible with string [2].
- - Or in the return value: string [3] is incompatible with boolean [4].
+ - Either in the return value: `boolean` [1] is incompatible with `string` [2].
+ - Or in the return value: `string` [3] is incompatible with `boolean` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -129,7 +129,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `[].concat(...)[1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([] as Array<empty>).concat([0, 1])[1] as string;
@@ -146,7 +146,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test17.js:7:1
 
-Cannot cast `[].concat(...)[1]` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `[].concat(...)[1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test17.js:7:1
    7| ([] as Array<empty>).concat([0, 1])[1] as string;
@@ -211,8 +211,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test26.js:8:1
 
 Cannot call `foo` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or number [3] is incompatible with string [4].
+ - Either `string` [1] is incompatible with `number` [2].
+ - Or `number` [3] is incompatible with `string` [4].
 
    test26.js:8:1
    8| foo(x) as number | string;
@@ -236,8 +236,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- test26.js:13:1
 
 Cannot call `foo` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or number [1] is incompatible with string [3].
+ - Either `string` [1] is incompatible with `number` [2].
+ - Or `number` [1] is incompatible with `string` [3].
 
    test26.js:13:1
    13| foo(y) as T;
@@ -258,7 +258,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- test26.js:20:14
 
 Cannot call `(new Record()).set` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
+ - Either `"42"` [1] is incompatible with `number` [2].
  - Or string literal `foo` [3] is incompatible with string literal `bar` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -285,7 +285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test33.js:10:1
 
-Cannot cast `bar()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `bar()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test33.js:10:1
    10| bar() as string; // error: number ~> string
@@ -302,7 +302,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test34.js:8:5
 
-Cannot cast `x.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test34.js:8:5
     8|     x.foo as empty; // error: string ~> empty
@@ -319,7 +319,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test35.js:8:1
 
-Cannot cast `ret` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `ret` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test35.js:8:1
    8| ret as empty; // err, string ~> empty (matched case 2)
@@ -336,7 +336,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to array type because in array element: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
@@ -353,7 +354,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to array type because in array element: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
@@ -370,8 +372,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test9.js:16:27
 
-Cannot call `square` with `x` bound to `x` because null or undefined [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `square` with `x` bound to `x` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test9.js:16:27
    16| foo((x): number => square(x))

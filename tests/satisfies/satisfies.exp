@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- satisfies.js:9:3
 
-Cannot cast `"hello"` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `"hello"` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    satisfies.js:9:3
    9|   "hello" satisfies number; // ERROR: string is not a number
@@ -61,7 +61,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ satisfies.js:63:8
 
-Cannot cast object literal to object type because in property `x`: string [1] is incompatible with number [2].
+Cannot cast object literal to object type because in property `x`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    satisfies.js:63:8
@@ -105,7 +105,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- satisfies.js:140:3
 
-Cannot cast `1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `1` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    satisfies.js:140:3
    140|   1 satisfies empty; // ERROR

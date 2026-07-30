@@ -29,8 +29,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:15:24
 
-Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `Children.map` with function bound to `fn` because in the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    api.js:15:24
    15| na(Children.map(a, (x: string) => x as string)); // Error
@@ -44,8 +44,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:15:24
 
-Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `Children.map` with function bound to `fn` because in the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    api.js:15:24
    15| na(Children.map(a, (x: string) => x as string)); // Error
@@ -88,8 +88,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:18:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
-with nullable number [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `number` [1] is incompatible
+with `null` [2]. [incompatible-type]
 
    api.js:18:25
    18| Children.forEach(a, (x: number) => {}); // Error
@@ -103,8 +103,38 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:18:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
-with null or undefined [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `number` [1] is incompatible
+with `void` [2]. [incompatible-type]
+
+   api.js:18:25
+   18| Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:18:25
+
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `number` [1] is incompatible
+with `null` [2]. [incompatible-type]
+
+   api.js:18:25
+   18| Children.forEach(a, (x: number) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:6:24
+    6| const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:18:25
+
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `number` [1] is incompatible
+with `void` [2]. [incompatible-type]
 
    api.js:18:25
    18| Children.forEach(a, (x: number) => {}); // Error
@@ -118,8 +148,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
-with nullable number [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `null` [2]. [incompatible-type]
 
    api.js:20:25
    20| Children.forEach(a, (x: string) => {}); // Error
@@ -133,8 +163,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
-with number [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    api.js:20:25
    20| Children.forEach(a, (x: string) => {}); // Error
@@ -148,8 +178,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
-with null or undefined [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `void` [2]. [incompatible-type]
+
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:6:10
+    6| const a: ChildrenArray<?number> = [
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
+
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `null` [2]. [incompatible-type]
 
    api.js:20:25
    20| Children.forEach(a, (x: string) => {}); // Error
@@ -163,8 +208,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:20:25
 
-Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
-with number [2]. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `void` [2]. [incompatible-type]
+
+   api.js:20:25
+   20| Children.forEach(a, (x: string) => {}); // Error
+                               ^^^^^^ [1]
+
+References:
+   api.js:6:24
+    6| const a: ChildrenArray<?number> = [
+                              ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- api.js:20:25
+
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: `string` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    api.js:20:25
    20| Children.forEach(a, (x: string) => {}); // Error
@@ -178,7 +238,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:23:3
 
-Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `s` with `Children.count(...)` bound to `x` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    api.js:23:3
@@ -196,7 +256,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:26:3
 
-Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `s` with `Children.only(...)` bound to `x` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    api.js:26:3
@@ -214,7 +274,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:26:3
 
-Cannot call `s` with `Children.only(...)` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `s` with `Children.only(...)` bound to `x` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    api.js:26:3
@@ -262,7 +322,7 @@ References:
 Error ---------------------------------------------------------------------------------------- builtin_intrinsic.js:25:4
 
 Cannot create `builtin` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -342,7 +402,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ component.js:41:4
 
 Cannot create `MyComponent` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [4].
 
@@ -385,7 +445,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:27:6
 
-Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `Array<() => 42>` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:27:6
@@ -404,7 +464,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:32:6
 
-Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `Array<(() => 42) | " ">` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:32:6
@@ -419,7 +479,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:33:6
 
-Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `Array<" " | (() => 42)>` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:33:6
@@ -434,8 +494,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:43:12
 
-Cannot create `Fun` element because in property `children` > the return value: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `Fun` element because in property `children` > the return value: `"42"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    fun.js:43:12
    43|     return '42'; // Error: Must return a number.
@@ -449,7 +509,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:41:5
 
-Cannot cast `data.bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `data.bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    fun.js:41:5
    41|     data.bar as string; // Error: `bar` is a number.
@@ -516,7 +576,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:49:7
 
-Cannot create `Fun` element because in property `children`: undefined [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `void` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:49:7
@@ -531,7 +591,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:50:7
 
-Cannot create `Fun` element because in property `children`: null [1] is incompatible with `Fn` [2]. [incompatible-type]
+Cannot create `Fun` element because in property `children`: `null` [1] is incompatible with `Fn` [2].
+[incompatible-type]
 
    fun.js:50:7
    50| <Fun>{null}</Fun>; // Error: `null` is not allowed.
@@ -545,7 +606,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:51:7
 
-Cannot create `Fun` element because in property `children`: boolean [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `true` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:51:7
@@ -560,7 +621,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:52:7
 
-Cannot create `Fun` element because in property `children`: boolean [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `false` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:52:7
@@ -575,8 +636,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:53:7
 
-Cannot create `Fun` element because in property `children`: number [1] is incompatible with `Fn` [2].
-[incompatible-type]
+Cannot create `Fun` element because in property `children`: `0` [1] is incompatible with `Fn` [2]. [incompatible-type]
 
    fun.js:53:7
    53| <Fun>{0}</Fun>; // Error: `number`s are not allowed.
@@ -590,8 +650,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:54:7
 
-Cannot create `Fun` element because in property `children`: number [1] is incompatible with `Fn` [2].
-[incompatible-type]
+Cannot create `Fun` element because in property `children`: `42` [1] is incompatible with `Fn` [2]. [incompatible-type]
 
    fun.js:54:7
    54| <Fun>{42}</Fun>; // Error: `number`s are not allowed.
@@ -638,7 +697,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:63:13
 
-Cannot create `Obj` element because in property `children.foo`: string [1] is incompatible with number [2].
+Cannot create `Obj` element because in property `children.foo`: `"1"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    fun.js:63:13
@@ -653,7 +712,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:63:23
 
-Cannot create `Obj` element because in property `children.bar`: string [1] is incompatible with number [2].
+Cannot create `Obj` element because in property `children.bar`: `"2"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    fun.js:63:23
@@ -668,8 +727,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:64:6
 
-Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
-[incompatible-type]
+Cannot create `Obj` element because in property `children`: `Array<{bar: 2, foo: 1}>` [1] is incompatible with
+`Data` [2]. [incompatible-type]
 
    fun.js:64:6
             v
@@ -687,8 +746,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:69:6
 
-Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
-[incompatible-type]
+Cannot create `Obj` element because in property `children`: `Array<{bar: 2, foo: 1} | " ">` [1] is incompatible with
+`Data` [2]. [incompatible-type]
 
    fun.js:69:6
    69| <Obj>{{foo: 1, bar: 2}} </Obj>; // Error: Spaces make it an array.
@@ -702,8 +761,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:70:6
 
-Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
-[incompatible-type]
+Cannot create `Obj` element because in property `children`: `Array<" " | {bar: 2, foo: 1}>` [1] is incompatible with
+`Data` [2]. [incompatible-type]
 
    fun.js:70:6
    70| <Obj> {{foo: 1, bar: 2}}</Obj>; // Error: Spaces make it an array.
@@ -717,8 +776,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:75:16
 
-Cannot create `FunArrayOnly` element because in property `children`: function [1] is incompatible with array type [2].
-[incompatible-type]
+Cannot create `FunArrayOnly` element because in property `children`: `() => 42` [1] is incompatible with
+`Array<Fn>` [2]. [incompatible-type]
 
    fun.js:75:16
    75| <FunArrayOnly>{() => 42}</FunArrayOnly>; // Error: A single expression is not
@@ -777,8 +836,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:96:16
 
-Cannot create `FunArrayOnly` element because in property `children`: function [1] is incompatible with array type [2].
-[incompatible-type]
+Cannot create `FunArrayOnly` element because in property `children`: `() => 42` [1] is incompatible with
+`Array<Fn>` [2]. [incompatible-type]
 
    fun.js:96:16
    96| <FunArrayOnly>{() => 42}</FunArrayOnly>;
@@ -794,7 +853,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with `Fn` [2].
- - Or children array [3] is incompatible with `Fn` [4].
+ - Or `Array<Array<() => number>>` [3] is incompatible with `Fn` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -823,7 +882,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
  - Either in array element: array literal [1] is incompatible with `Fn` [2].
- - Or children array [3] is incompatible with `Fn` [4].
+ - Or `Array<Array<() => number> | (() => 42)>` [3] is incompatible with `Fn` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -887,8 +946,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:142:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either undefined [1] is incompatible with `Fn` [2].
- - Or undefined [1] is incompatible with array type [3].
+ - Either `void` [1] is incompatible with `Fn` [2].
+ - Or `void` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:142:12
    142| <FunArray>{undefined}</FunArray>; // Error: `undefined` is not allowed.
@@ -906,8 +965,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:143:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either null [1] is incompatible with `Fn` [2].
- - Or null [1] is incompatible with array type [3].
+ - Either `null` [1] is incompatible with `Fn` [2].
+ - Or `null` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:143:12
    143| <FunArray>{null}</FunArray>; // Error: `null` is not allowed.
@@ -925,8 +984,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:144:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either boolean [1] is incompatible with `Fn` [2].
- - Or boolean [1] is incompatible with array type [3].
+ - Either `true` [1] is incompatible with `Fn` [2].
+ - Or `true` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:144:12
    144| <FunArray>{true}</FunArray>; // Error: `boolean`s are not allowed.
@@ -944,8 +1003,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:145:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either boolean [1] is incompatible with `Fn` [2].
- - Or boolean [1] is incompatible with array type [3].
+ - Either `false` [1] is incompatible with `Fn` [2].
+ - Or `false` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:145:12
    145| <FunArray>{false}</FunArray>; // Error: `boolean`s are not allowed.
@@ -963,8 +1022,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:146:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either number [1] is incompatible with `Fn` [2].
- - Or number [1] is incompatible with array type [3].
+ - Either `0` [1] is incompatible with `Fn` [2].
+ - Or `0` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:146:12
    146| <FunArray>{0}</FunArray>; // Error: `boolean`s are not allowed.
@@ -982,8 +1041,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:147:12
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either number [1] is incompatible with `Fn` [2].
- - Or number [1] is incompatible with array type [3].
+ - Either `42` [1] is incompatible with `Fn` [2].
+ - Or `42` [1] is incompatible with `Array<Fn>` [3].
 
    fun.js:147:12
    147| <FunArray>{42}</FunArray>; // Error: `boolean`s are not allowed.
@@ -1002,7 +1061,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
  - Either React element [1] is incompatible with `Fn` [2].
- - Or React element [1] is incompatible with array type [3].
+ - Or `{...}` [1] is incompatible with `Array<Fn>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1049,8 +1108,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either in array element: string [1] is incompatible with boolean [2].
- - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `"  "` [1] is incompatible with `boolean` [2].
+ - Or in array element: `"  "` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<typeof Tab, React.ElementConfig<typeof Tab>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1074,8 +1134,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either in array element: string [1] is incompatible with boolean [2].
- - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `"  "` [1] is incompatible with `boolean` [2].
+ - Or in array element: `"  "` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<typeof Tab, React.ElementConfig<typeof Tab>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1099,8 +1160,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either in array element: string [1] is incompatible with boolean [2].
- - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `"  "` [1] is incompatible with `boolean` [2].
+ - Or in array element: `"  "` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<typeof Tab, React.ElementConfig<typeof Tab>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1125,7 +1187,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or React element [4] is incompatible with boolean [5].
+ - Or `{...}` [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1153,7 +1215,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or in array element: React element [4] is incompatible with boolean [5].
+ - Or in array element: `{...}` [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1184,7 +1246,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or in array element: React element [4] is incompatible with boolean [5].
+ - Or in array element: `{...}` [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1309,7 +1371,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:20:8
 
-Cannot create `Text` element because in property `children`: undefined [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `void` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:20:8
@@ -1324,7 +1386,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:21:8
 
-Cannot create `Text` element because in property `children`: null [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:21:8
@@ -1339,7 +1401,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:22:8
 
-Cannot create `Text` element because in property `children`: boolean [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `true` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:22:8
@@ -1354,7 +1416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:23:8
 
-Cannot create `Text` element because in property `children`: boolean [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `false` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:23:8
@@ -1369,7 +1431,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:24:8
 
-Cannot create `Text` element because in property `children`: number [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:24:8
@@ -1384,7 +1446,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:25:8
 
-Cannot create `Text` element because in property `children`: number [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `42` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:25:8
@@ -1399,7 +1461,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:26:7
 
-Cannot create `Text` element because in property `children`: React element [1] is incompatible with string [2].
+Cannot create `Text` element because in property `children`: `{...}` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:26:7
@@ -1414,8 +1476,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:35:7
 
-Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
-[incompatible-type]
+Cannot create `Text` element because in property `children`: `Array<"Hello, " | "world!">` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    text.js:35:7
    35| <Text>{'Hello, '}{'world!'}</Text>; // Error: We did not allow an array.
@@ -1429,8 +1491,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:36:7
 
-Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
-[incompatible-type]
+Cannot create `Text` element because in property `children`: `Array<"Hello, " | "world!">` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    text.js:36:7
    36| <Text>Hello, {'world!'}</Text>; // Error: We did not allow an array.
@@ -1444,8 +1506,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:37:7
 
-Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
-[incompatible-type]
+Cannot create `Text` element because in property `children`: `Array<"Hello, world!" | "  ">` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    text.js:37:7
    37| <Text>{'Hello, world!'}  </Text>; // Error: Spaces cause there to be an array.
@@ -1459,8 +1521,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:38:7
 
-Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
-[incompatible-type]
+Cannot create `Text` element because in property `children`: `Array<"  " | "Hello, world!">` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    text.js:38:7
    38| <Text>  {'Hello, world!'}</Text>; // Error: Spaces cause there to be an array.
@@ -1657,7 +1719,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuple.js:34:12
 
-Cannot create `TupleOne` element because in property `children`: boolean [1] is incompatible with tuple type [2].
+Cannot create `TupleOne` element because in property `children`: `true` [1] is incompatible with `[boolean]` [2].
 [incompatible-type]
 
    tuple.js:34:12
@@ -1673,8 +1735,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:32:4
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or object literal [1] is incompatible with boolean [3].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Or object literal [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1695,8 +1757,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:35:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2].
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either `"Hello, world!"` [1] is incompatible with `boolean` [2].
+ - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1717,8 +1779,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:36:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2].
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either `"Hello, world!"` [1] is incompatible with `boolean` [2].
+ - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1739,8 +1801,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:37:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either `42` [1] is incompatible with `boolean` [2].
+ - Or `42` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1761,8 +1823,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either in array element: number [1] is incompatible with boolean [2].
- - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `1` [1] is incompatible with `boolean` [2].
+ - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1786,8 +1848,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:39:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either in array element: string [1] is incompatible with boolean [2].
- - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `"a"` [1] is incompatible with `boolean` [2].
+ - Or in array element: `"a"` [1] is incompatible with
+   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1811,8 +1874,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:40:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either in array element: number [1] is incompatible with boolean [2].
- - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
+ - Either in array element: `1` [1] is incompatible with `boolean` [2].
+ - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1834,4 +1897,4 @@ References:
 
 
 
-Found 101 errors
+Found 105 errors

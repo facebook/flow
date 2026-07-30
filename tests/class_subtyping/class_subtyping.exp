@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:6:44
 
-Cannot assign `c` to `a` because in type argument `Z` [1]: boolean [2] is incompatible with array type [3].
+Cannot assign `c` to `a` because in type argument `Z` [1]: `boolean` [2] is incompatible with `Array<boolean>` [3].
 [incompatible-type]
 
    test3.js:6:44

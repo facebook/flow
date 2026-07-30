@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- import_meta.js:5:1
 
-Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is incompatible with number literal `1` [2].
+Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    import_meta.js:5:1
@@ -23,7 +23,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- import_meta.js:6:1
 
-Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is incompatible with number literal `1` [2].
+Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    import_meta.js:6:1
@@ -41,7 +41,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ new_target.js:3:3
 
-Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    new_target.js:3:3
    3|   new.target as boolean; // Error
@@ -55,7 +55,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_target.js:11:5
 
-Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    new_target.js:11:5
    11|     new.target as boolean; // Error

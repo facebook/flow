@@ -49,7 +49,7 @@ Found 1 error
 === block 9 ===
 Error ---------------------------------------------------------------- -:2:48
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:2:48
    2| const fn3: {f: (number) => void} = {f: (x) => {x as string}}; // Error
@@ -159,8 +159,29 @@ Found 1 error
 Error ---------------------------------------------------------------- -:8:10
 
 Cannot call `setStr` with `maybeString` bound to the first parameter because: [incompatible-type]
- - Either null or undefined [1] is incompatible with function type [2].
- - Or null or undefined [1] is incompatible with string [3].
+ - Either `null` [1] is incompatible with `(string) => string` [2].
+ - Or `null` [1] is incompatible with `string` [3].
+
+   -:8:10
+      8|   setStr(maybeString); // Error
+                  ^^^^^^^^^^^
+
+References:
+   -:7:30
+      7|   declare const maybeString: ?string;
+                                      ^^^^^^^ [1]
+   <BUILTINS>/react.js:1370:39
+   1370|     type ReactSetStateFunction<S> = ((S => S) | S) => void;
+                                               ^^^^^^ [2]
+   -:5:34
+      5|   const [str, setStr] = useState("");
+                                          ^^ [3]
+
+Error ---------------------------------------------------------------- -:8:10
+
+Cannot call `setStr` with `maybeString` bound to the first parameter because: [incompatible-type]
+ - Either `void` [1] is incompatible with `(string) => string` [2].
+ - Or `void` [1] is incompatible with `string` [3].
 
    -:8:10
       8|   setStr(maybeString); // Error
@@ -178,7 +199,7 @@ References:
                                           ^^ [3]
 
 
-Found 1 error
+Found 2 errors
 
 === block 17 ===
 No errors!
@@ -319,7 +340,7 @@ References:
 
 Error ---------------------------------------------------------------- -:4:12
 
-Cannot assign `value` to `cached` because `unknown` [1] is incompatible with null [2]. [incompatible-type]
+Cannot assign `value` to `cached` because `unknown` [1] is incompatible with `null` [2]. [incompatible-type]
 
 All writes to `cached` must be compatible with the type of its initializer [3]. Add an annotation to `cached` [3] if a
 different type is desired.

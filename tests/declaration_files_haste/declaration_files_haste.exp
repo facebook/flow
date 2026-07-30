@@ -77,7 +77,7 @@ Cannot resolve module `SomeOtherModule`. [cannot-resolve-module]
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:7:1
 
-Cannot cast `min.fun()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `min.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    foo/bar/nested_test.js:7:1
    7| min.fun() as string;
@@ -94,7 +94,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- foo/bar/nested_test.js:8:1
 
-Cannot cast `corge.fun()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `corge.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    foo/bar/nested_test.js:8:1
    8| corge.fun() as string;
@@ -136,7 +136,7 @@ References:
 Error -------------------------------------------------------------------------------- generic_record_operations.js:16:8
 
 Cannot call `record.set` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
+ - Either `"bad"` [1] is incompatible with `number` [2].
  - Or string literal `qux` [3] is incompatible with string literal `foo` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -165,7 +165,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `overridden.set` because: [incompatible-type]
  - Either string literal `foo` [1] is incompatible with string literal `bar` [2].
- - Or null [3] is incompatible with string [4].
+ - Or `null` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -191,7 +191,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
-Cannot cast `Implicit.fun()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `Implicit.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:4:1
    4| Implicit.fun() as string;
@@ -208,7 +208,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `Flow.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Flow.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:8:1
    8| Flow.x as empty; // error: should be number
@@ -225,7 +225,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Cannot cast `NotFlowShadowed.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `NotFlowShadowed.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:20:1
    20| NotFlowShadowed.x as empty; // error: should be number

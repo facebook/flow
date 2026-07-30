@@ -18,8 +18,8 @@ string or number literal. [illegal-key]
 
 Error --------------------------------------------------------------------------------------------------- class.js:33:35
 
-Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError` because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError` because `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    class.js:33:35
    33| var testGetterWithError: string = foo.goodGetterWithAnnotation; // Error number ~> string
@@ -36,7 +36,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:37:32
 
-Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because `"hello"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    class.js:37:32
@@ -51,8 +51,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:39:44
 
-Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `null` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   class.js:39:44
+   39| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   class.js:15:43
+   15|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
+                                                 ^^^^^^^ [1]
+   class.js:39:35
+   39| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- class.js:39:44
+
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `void` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    class.js:39:44
    39| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -69,7 +87,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:25:3
 
-Cannot shadow proto property `propOverriddenWithGetter` [1] because number [2] is incompatible with string [3].
+Cannot shadow proto property `propOverriddenWithGetter` [1] because `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    declare_class.js:25:3
@@ -90,7 +108,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:28:3
 
-Cannot shadow proto property `propOverriddenWithSetter` [1] because string [2] is incompatible with number [3].
+Cannot shadow proto property `propOverriddenWithSetter` [1] because `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    declare_class.js:28:3
@@ -111,8 +129,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- declare_class.js:37:36
 
-Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    declare_class.js:37:36
    37| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
@@ -129,7 +147,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- declare_class.js:42:32
 
-Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because `"hello"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declare_class.js:42:32
@@ -144,8 +162,26 @@ References:
 
 Error ------------------------------------------------------------------------------------------- declare_class.js:44:44
 
-Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `null` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   declare_class.js:44:44
+   44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_class.js:15:43
+   15|   get propWithSubtypingGetterAndSetter(): ?number;
+                                                 ^^^^^^^ [1]
+   declare_class.js:44:35
+   44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- declare_class.js:44:44
+
+Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `void` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    declare_class.js:44:44
    44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -181,8 +217,8 @@ Computed getters and setters are not yet supported. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- object.js:59:35
 
-Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError` because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError` because `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    object.js:59:35
    59| var testGetterWithError: string = obj.goodGetterWithAnnotation; // Error number ~> string
@@ -199,7 +235,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.js:63:32
 
-Cannot assign `'hello'` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+Cannot assign `'hello'` to `obj.goodSetterWithAnnotation` because `"hello"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object.js:63:32
@@ -214,8 +250,26 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.js:65:44
 
-Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `null` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   object.js:65:44
+   65| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object.js:26:43
+   26|   get propWithSubtypingGetterAndSetter(): ?number {
+                                                 ^^^^^^^ [1]
+   object.js:65:35
+   65| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                         ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- object.js:65:44
+
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `void` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    object.js:65:44
    65| var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -248,7 +302,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- object.js:74:3
 
 Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
-`A` [1] is incompatible with number [2]. [incompatible-type]
+`A` [1] is incompatible with `number` [2]. [incompatible-type]
 
    object.js:74:3
    74|   obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
@@ -265,7 +319,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:76:1
 
-Cannot cast `obj['stringLiteral']` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `obj['stringLiteral']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    object.js:76:1
    76| obj['stringLiteral'] as string; // err, num !~> string
@@ -282,7 +336,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.js:77:24
 
-Cannot assign `'foo'` to `obj['stringLiteral']` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'foo'` to `obj['stringLiteral']` because `"foo"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    object.js:77:24
    77| obj['stringLiteral'] = 'foo'; // err, string !~> num
@@ -296,8 +351,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_type.js:36:38
 
-Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `obj.goodGetterWithAnnotation` to `testGetterWithError2` because `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    object_type.js:36:38
    36|   var testGetterWithError2: string = obj.goodGetterWithAnnotation; // Error number ~> string
@@ -314,7 +369,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_type.js:41:34
 
-Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
+Cannot assign `"hello"` to `obj.goodSetterWithAnnotation` because `"hello"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_type.js:41:34
@@ -329,8 +384,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_type.js:43:46
 
-Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `null` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   object_type.js:43:46
+   43|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_type.js:19:43
+   19|   get propWithSubtypingGetterAndSetter(): ?number, // OK
+                                                 ^^^^^^^ [1]
+   object_type.js:43:37
+   43|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+                                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- object_type.js:43:46
+
+Cannot assign `obj.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because `void` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    object_type.js:43:46
    43|   var testSubtypingGetterAndSetter: number = obj.propWithSubtypingGetterAndSetter; // Error ?number ~> number
@@ -363,7 +436,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- object_type.js:52:5
 
 Cannot assign `obj.exampleOfOrderOfGetterAndSetterReordered` to `testExampleOrOrderOfGetterAndSetterReordered` because
-`A` [1] is incompatible with number [2]. [incompatible-type]
+`A` [1] is incompatible with `number` [2]. [incompatible-type]
 
    object_type.js:52:5
    52|     obj.exampleOfOrderOfGetterAndSetterReordered; // Error A ~> B
@@ -455,4 +528,4 @@ References:
 
 
 
-Found 28 errors
+Found 32 errors

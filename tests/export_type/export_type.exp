@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ importer.js:11:23
 
-Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `b` because `"asdf"` [1] is incompatible with `inlinedType1` [2]. [incompatible-type]
 
    importer.js:11:23
    11| var b: inlinedType1 = 'asdf'; // Error: string ~> number
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:14:26
 
-Cannot assign `'asdf'` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `d` because `"asdf"` [1] is incompatible with `standaloneType1` [2]. [incompatible-type]
 
    importer.js:14:26
    14| var d: standaloneType1 = 'asdf'; // Error: string ~> number
@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:17:18
 
-Cannot assign `'asdf'` to `f` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `f` because `"asdf"` [1] is incompatible with `talias1` [2]. [incompatible-type]
 
    importer.js:17:18
    17| var f: talias1 = 'asdf'; // Error: string ~> number
@@ -42,7 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:20:18
 
-Cannot assign `'asdf'` to `h` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `h` because `"asdf"` [1] is incompatible with `talias3` [2]. [incompatible-type]
 
    importer.js:20:18
    20| var h: talias3 = 'asdf'; // Error: string ~> number
@@ -56,7 +56,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:24:18
 
-Cannot assign `'asdf'` to `j` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `j` because `"asdf"` [1] is incompatible with `talias4` [2]. [incompatible-type]
 
    importer.js:24:18
    24| var j: talias4 = 'asdf'; // Error: string ~> number
@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:29:22
 
-Cannot assign object literal to `l` because in property `prop`: string [1] is incompatible with number [2].
+Cannot assign object literal to `l` because in property `prop`: `"asdf"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    importer.js:29:22
@@ -85,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:32:23
 
-Cannot assign object literal to `n` because in property `prop`: number [1] is incompatible with string [2].
+Cannot assign object literal to `n` because in property `prop`: `42` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    importer.js:32:23
@@ -124,7 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.js:42:1
 
-Cannot cast `5` to `ClsType` because number [1] is incompatible with `Cls` [2]. [incompatible-type]
+Cannot cast `5` to `ClsType` because `5` [1] is incompatible with `ClsType` [2]. [incompatible-type]
 
    importer.js:42:1
    42| 5 as ClsType;
@@ -138,7 +138,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- types_only.js:5:23
 
-Cannot assign `'asdf'` to `b` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `b` because `"asdf"` [1] is incompatible with `inlinedType1` [2]. [incompatible-type]
 
    types_only.js:5:23
    5| var b: inlinedType1 = 'asdf'; // Error: string ~> number

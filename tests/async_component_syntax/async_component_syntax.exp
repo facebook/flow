@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:20:37
 
-Cannot create `AsyncWithProps` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `AsyncWithProps` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:20:37
@@ -15,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:48
 
-Cannot create `AsyncWithProps` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `AsyncWithProps` element because in property `bar`: `42` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:20:48
@@ -30,7 +30,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:10
 
-Cannot return `result` because `Promise` [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `result` because `Promise<string>` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:47:10
      47|   return result;
@@ -47,7 +47,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:64:10
 
-Cannot return `await Promise.resolve(...)` because `Promise` [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `await Promise.resolve(...)` because `Promise<"hello">` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    test.js:64:10
      64|   return await Promise.resolve("hello");

@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- fileA1.js:16:1
 
-Cannot cast `data.propA` to empty because `Readonly` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `{readonly propA: Data, ...}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    fileA1.js:16:1
    16| data.propA as empty; // error obj ~> empty
@@ -17,7 +18,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- fileA1.js:16:1
 
-Cannot cast `data.propA` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `{readonly propA: Data, readonly propB: string, ...}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    fileA1.js:16:1
    16| data.propA as empty; // error obj ~> empty
@@ -34,7 +36,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- fileB1.js:16:1
 
-Cannot cast `data.propA` to empty because `Readonly` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `{readonly propA: Data, ...}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    fileB1.js:16:1
    16| data.propA as empty; // error obj ~> empty
@@ -51,7 +54,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- fileB1.js:16:1
 
-Cannot cast `data.propA` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `{readonly propA: Data, readonly propB: string, ...}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    fileB1.js:16:1
    16| data.propA as empty; // error obj ~> empty

@@ -18,12 +18,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- bigint.js:20:8
 
 Cannot call `BigInt` with `null` bound to `value` because: [incompatible-type]
- - Either null [1] is incompatible with boolean [2].
- - Or null [1] is incompatible with string [3].
- - Or null [1] is incompatible with number [4].
- - Or null [1] is incompatible with bigint [5].
- - Or null [1] is incompatible with interface type [6].
- - Or null [1] is incompatible with read-only array type [7].
+ - Either `null` [1] is incompatible with `boolean` [2].
+ - Or `null` [1] is incompatible with `string` [3].
+ - Or `null` [1] is incompatible with `number` [4].
+ - Or `null` [1] is incompatible with `bigint` [5].
+ - Or `null` [1] is incompatible with `interface {}` [6].
+ - Or `null` [1] is incompatible with `ReadonlyArray<unknown>` [7].
 
    bigint.js:20:8
      20| BigInt(null); // error
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:25:5
 
-Cannot cast `foo` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `bigint` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    bigint.js:25:5
    25|     foo as empty; // error
@@ -282,7 +282,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imported.js:5:1
 
-Cannot cast `x` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1n` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:5:1
    5| x as empty; // error
@@ -299,7 +299,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- imported.js:8:1
 
-Cannot cast `y` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `bigint` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:8:1
    8| y as empty; // error
@@ -316,7 +316,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:11:1
 
-Cannot cast `z` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `z` to empty because `-1n` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:11:1
    11| z as empty; // error
@@ -333,7 +333,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:14:1
 
-Cannot cast `a` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a` to empty because `bigint` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:14:1
    14| a as empty; // error
@@ -350,7 +350,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:17:1
 
-Cannot cast `c` to empty because bigint [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `c` to empty because `bigint` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:17:1
    17| c as empty; // error
@@ -525,7 +525,7 @@ Unsupported key in object literal. Only identifier, string literal, and number l
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `1` [1] is incompatible with `bigints` [2]. [incompatible-type]
+Cannot return `x` because `1` [1] is incompatible with `bigints` [2]. [incompatible-type]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -542,7 +542,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:5:10
 
-Cannot return `x` because number literal `2` [1] is incompatible with `bigints` [2]. [incompatible-type]
+Cannot return `x` because `2` [1] is incompatible with `bigints` [2]. [incompatible-type]
 
    unions.js:5:10
    5|   return x; // fast path error
@@ -559,7 +559,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `1n` [1] is incompatible with `nums` [2]. [incompatible-type]
+Cannot return `x` because `1n` [1] is incompatible with `nums` [2]. [incompatible-type]
 
    unions.js:9:10
    9|   return x; // fast path error
@@ -576,7 +576,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:9:10
 
-Cannot return `x` because bigint literal `2n` [1] is incompatible with `nums` [2]. [incompatible-type]
+Cannot return `x` because `2n` [1] is incompatible with `nums` [2]. [incompatible-type]
 
    unions.js:9:10
    9|   return x; // fast path error

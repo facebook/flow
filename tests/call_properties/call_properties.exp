@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------------- A.js:8:10
 
-Cannot return `f()` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `f()` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:8:10
    8|   return f();
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:13:12
 
-Cannot call `f` with `"hello"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f` with `"hello"` bound to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    A.js:13:12
    13|   return f("hello");
@@ -75,7 +75,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:5:61
 
-Cannot assign function to `b` because in the return value: string [1] is incompatible with number [2].
+Cannot assign function to `b` because in the return value: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    B.js:5:61
@@ -90,7 +90,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:8:52
 
-Cannot assign function to `c` because in the first parameter: number [1] is incompatible with string [2].
+Cannot assign function to `c` because in the first parameter: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    B.js:8:52
@@ -119,7 +119,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- C.js:8:10
 
-Cannot return `x` because in the return value: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x` because in the return value: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    C.js:8:10
    8|   return x;
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:13:10
 
-Cannot return `x` because in the first parameter: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x` because in the first parameter: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    C.js:13:10
    13|   return x;
@@ -202,7 +202,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
 Cannot return `x` because: [incompatible-type]
- - Either in the return value: string [1] is incompatible with number [2].
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
  - Or function type [3] requires another argument from function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -245,7 +245,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- F.js:6:46
 
-Cannot assign function to `b` because in the return value: string [1] is incompatible with number [2].
+Cannot assign function to `b` because in the return value: `"hi"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    F.js:6:46
@@ -319,8 +319,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
 
-Cannot cast function to `O` because in the return value: number [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot cast function to `O` because in the return value: `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    internal_slot.js:6:2
    6| (function() { return 0 }) as O; // err: number ~> void
@@ -352,8 +351,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
 
-Cannot cast function to `I` because in the return value: number [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot cast function to `I` because in the return value: `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    internal_slot.js:14:2
    14| (function() { return 0 }) as I; // err: number ~> void
@@ -370,7 +368,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:20:1
 
-Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `C1()` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    internal_slot.js:20:1
    20| C1() as empty; // error: void ~> empty
@@ -401,7 +399,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- internal_slot.js:28:16
 
-Cannot call `annot_callable` with `0` bound to the first parameter because number [1] is incompatible with string [2].
+Cannot call `annot_callable` with `0` bound to the first parameter because `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    internal_slot.js:28:16
@@ -416,7 +414,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:29:1
 
-Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `annot_callable(...)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    internal_slot.js:29:1
    29| annot_callable("foo") as empty; // error: number ~> empty

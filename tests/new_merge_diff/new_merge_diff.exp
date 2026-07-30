@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:4:1
 
-Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x1` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:4:1
     4| x1 as empty;
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ main.js:4:1
 
-Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x1` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:4:1
     4| x1 as empty;
@@ -35,8 +35,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:34:1
 
 Cannot cast `0` to `S4` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `R` [3].
+ - Either `0` [1] is incompatible with `string` [2].
+ - Or `0` [1] is incompatible with `R4` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:35:1
 
-Cannot cast `0` to `R4` because number [1] is incompatible with `R` [2]. [incompatible-type]
+Cannot cast `0` to `R4` because `0` [1] is incompatible with `R4` [2]. [incompatible-type]
 
    main.js:35:1
    35| 0 as R4; // error number ~> R (obj)

@@ -168,7 +168,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- const.js:21:1
 
-Cannot cast `foo` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `foo` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    const.js:21:1
    21| foo as number; // error: string ~> number
@@ -185,7 +185,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- const.js:22:1
 
-Cannot cast `bar` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `bar` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    const.js:22:1
    22| bar as number; // error: string ~> number
@@ -202,7 +202,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- const.js:26:3
 
-Cannot cast `baz` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `baz` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    const.js:26:3
    26|   baz as number; // error: string ~> number
@@ -233,7 +233,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- declared.js:5:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:5:3
    5|   x as string; // error: should read the first x
@@ -264,7 +264,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:11:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:11:3
    11|   x as string; // error: should read the first x
@@ -309,7 +309,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:23:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:23:3
    23|   x as string; // error: should read the first x
@@ -340,7 +340,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:29:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:29:3
    29|   x as string; // error: should read the first x
@@ -371,7 +371,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:35:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:35:3
    35|   x as string; // error: should read the first x
@@ -402,7 +402,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:42:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:42:3
    42|   x as string; // error: should read the first x
@@ -433,7 +433,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:48:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:48:3
    48|   x as string; // error: should read the first x
@@ -464,7 +464,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- declared.js:54:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declared.js:54:3
    54|   x as string; // error: should read the first x
@@ -1333,7 +1333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- rec_decls.js:32:33
 
-Cannot assign `a` to object type because number [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign `a` to object type because `number` [1] is incompatible with `{a: number}` [2]. [incompatible-type]
 
    rec_decls.js:32:33
    32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
@@ -1759,7 +1759,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:92:23
 
-Cannot assign `f` to `x` because in the return value: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `f` to `x` because in the return value: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    scope.js:92:23
    92|     x: () => string = f // error: number ~> string
@@ -1776,7 +1777,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- scope.js:103:12
 
-Cannot return `x()` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x()` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:103:12
    103|     return x(); // error: string ~> number
@@ -1801,7 +1802,7 @@ Cannot resolve name `b`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------------------------- scope.js:118:5
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    scope.js:118:5
    118|     a as string; // error a ~> number
@@ -1818,7 +1819,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:119:5
 
-Cannot cast `b` to number because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `b` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:119:5
    119|     b as number; // error boolean ~> number
@@ -1835,7 +1836,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:120:5
 
-Cannot cast `c` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `c` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    scope.js:120:5
    120|     c as boolean; // error string ~> boolean
@@ -1868,7 +1869,7 @@ Cannot resolve name `forwardRef`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------------------------- scope.js:137:5
 
-Cannot cast `y` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    scope.js:137:5
    137|     y as string; // error number ~> string
@@ -1939,7 +1940,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:192:3
 
-Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:192:3
    192|   x as number; // error null ~> number
@@ -1956,7 +1957,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- scope.js:199:3
 
-Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    scope.js:199:3
    199|   x as number; // error null ~> number
@@ -2085,7 +2086,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ tdz.js:96:3
 
-Cannot call `f` with `a` bound to `n` because uninitialized variable [1] is incompatible with number [2].
+Cannot call `f` with `a` bound to `n` because uninitialized variable [1] is incompatible with `number` [2].
 [incompatible-type]
 
    tdz.js:96:3

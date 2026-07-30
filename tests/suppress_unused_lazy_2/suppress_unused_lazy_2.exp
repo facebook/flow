@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:1
 
-Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    cycle_b.js:15:1
    15| 1 as string; // error
@@ -23,7 +23,7 @@ Merge skipped 0 of 3 modules
 Check will skip 0 of 3 files
 Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:1
 
-Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    cycle_b.js:15:1
    15| 1 as string; // error

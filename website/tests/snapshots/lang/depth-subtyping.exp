@@ -59,8 +59,7 @@ No errors!
 === block 8 ===
 Error ------------------------------------------------------------------------ -:4:5
 
-Cannot cast `obj.foo` to string because property `foo` of unknown type [1] is incompatible with string [2].
-[incompatible-type]
+Cannot cast `obj.foo` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:4:5
    4|     obj.foo as string; // Error!

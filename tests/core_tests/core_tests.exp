@@ -48,7 +48,7 @@ Cannot assign `1` to `JSON.parse` because property `parse` is not writable. [can
 
 Error -------------------------------------------------------------------------------------------- json_stringify.js:7:1
 
-Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `JSON.stringify(...)` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    json_stringify.js:7:1
       7| JSON.stringify(bad1) as string;
@@ -67,8 +67,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3]: string [4] is incompatible with tuple
-      type [5]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: `"foo"` [4] is incompatible with
+      `Readonly<[key: any, value: any]>` [5]
 
    map.js:28:21
      28|     let x = new Map(['foo', 123]); // error
@@ -93,8 +93,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3]: number [4] is incompatible with tuple
-      type [5]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: `123` [4] is incompatible with
+      `Readonly<[key: any, value: any]>` [5]
 
    map.js:28:21
      28|     let x = new Map(['foo', 123]); // error
@@ -119,8 +119,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `0`: string [4] is incompatible
-      with number [5]
+    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `0`: `"foo"` [4] is incompatible
+      with `number` [5]
 
    map.js:29:42
      29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -145,8 +145,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `1`: number [4] is incompatible
-      with string [5]
+    - in property `@@iterator` > the return value > type argument `Yield` [3] > index `1`: `123` [4] is incompatible
+      with `string` [5]
 
    map.js:29:42
      29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -169,7 +169,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5
 
-Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x.get(...)` to boolean because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    map.js:34:5
      34|     x.get('foo') as boolean; // error, string | void
@@ -186,7 +186,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ map.js:34:5
 
-Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x.get(...)` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    map.js:34:5
    34|     x.get('foo') as boolean; // error, string | void
@@ -203,7 +203,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- map.js:35:11
 
-Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `x.get` with `123` bound to `key` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    map.js:35:11
    35|     x.get(123); // error, wrong key type
@@ -220,7 +220,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either boolean [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or boolean [1] is incompatible with read-only array type [3].
+ - Or `boolean` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -243,7 +243,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -266,7 +266,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either string [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or string [1] is incompatible with read-only array type [3].
+ - Or `string` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -289,7 +289,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -312,7 +312,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -335,7 +335,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -358,7 +358,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------ tagged_template.js:5:12
 
-Cannot call `tag` with string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `tag` with string bound to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    tagged_template.js:5:12
    5|   tag`foo${'bad'}bar${2}`; // ERROR: string !~> number
@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:18:12
 
-Cannot call `tag` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `tag` because in array element: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    tagged_template.js:18:12
    18|   tag`foo${'bad'}`; // ERROR: string !~> number
@@ -42,7 +42,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:25:5
 
-Cannot cast `quasis.raw` to empty because read-only array type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    tagged_template.js:25:5
      25|     quasis.raw as empty; // ERROR
@@ -59,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:34:3
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:34:3
      34|   x as empty; // ERROR
@@ -92,7 +93,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:45:3
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:45:3
      45|   x as empty; // ERROR
@@ -109,7 +110,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:3:1
 
-Cannot cast template string to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast template string to number because `"baz"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    template.js:3:1
    3| `baz` as number; // ERROR
@@ -123,15 +124,21 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- template.js:6:8
 
-Cannot coerce object literal to string because object literal [1] should not be coerced. [incompatible-type]
+Cannot coerce object literal to string because object literal [1] is incompatible with `string` [2]. [incompatible-type]
 
+   template.js:6:8
    6| `foo ${{bar: 123}} baz`; // ERROR: object can't be appended
              ^^^^^^^^^^ [1]
+
+References:
+   template.js:6:1
+   6| `foo ${{bar: 123}} baz`; // ERROR: object can't be appended
+      ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ template.js:22:10
 
-Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:22:10
    22|   `foo ${x}`; // ERROR
@@ -141,11 +148,14 @@ References:
    template.js:21:20
    21|   declare const x: boolean;
                           ^^^^^^^ [1]
+   template.js:22:3
+   22|   `foo ${x}`; // ERROR
+         ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- template.js:23:6
 
-Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:23:6
    23|   `${x} bar`; // ERROR
@@ -155,11 +165,14 @@ References:
    template.js:21:20
    21|   declare const x: boolean;
                           ^^^^^^^ [1]
+   template.js:23:3
+   23|   `${x} bar`; // ERROR
+         ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ template.js:24:19
 
-Cannot coerce `x` to string because boolean [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:24:19
    24|   `foo ${'bar'} ${x}`; // ERROR
@@ -169,11 +182,14 @@ References:
    template.js:21:20
    21|   declare const x: boolean;
                           ^^^^^^^ [1]
+   template.js:24:3
+   24|   `foo ${'bar'} ${x}`; // ERROR
+         ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ template.js:28:10
 
-Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:28:10
    28|   `foo ${x}`; // ERROR
@@ -183,11 +199,14 @@ References:
    template.js:27:20
    27|   declare const x: unknown;
                           ^^^^^^^ [1]
+   template.js:28:3
+   28|   `foo ${x}`; // ERROR
+         ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- template.js:29:6
 
-Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:29:6
    29|   `${x} bar`; // ERROR
@@ -197,11 +216,14 @@ References:
    template.js:27:20
    27|   declare const x: unknown;
                           ^^^^^^^ [1]
+   template.js:29:3
+   29|   `${x} bar`; // ERROR
+         ^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ template.js:30:19
 
-Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    template.js:30:19
    30|   `foo ${'bar'} ${x}`; // ERROR
@@ -211,6 +233,9 @@ References:
    template.js:27:20
    27|   declare const x: unknown;
                           ^^^^^^^ [1]
+   template.js:30:3
+   30|   `foo ${'bar'} ${x}`; // ERROR
+         ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 

@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:9
 
-Cannot create `F` element because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `F` element because in property `foo`: `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:7:9
    7| <F foo={0} />; // error: number ~> string
@@ -47,8 +47,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with component [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `component(...empty)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

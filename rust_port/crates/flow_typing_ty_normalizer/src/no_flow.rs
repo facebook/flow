@@ -237,7 +237,7 @@ pub fn type_to_desc_for_errors(
             )) => Err(desc.clone()),
             Ok(elt) => match flow_common_ty::ty_utils::typify_elt(elt) {
                 None => Err(desc.clone()),
-                Some(t) => Ok(t),
+                Some(t) => Ok(flow_common_ty::ty_utils::patch_up_react_types(t)),
             },
         },
     }

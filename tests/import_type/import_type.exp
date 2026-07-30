@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------- import_type.js:13:18
 
-Cannot assign `foo1Inst` to `a2` because `ClassFoo1` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `foo1Inst` to `a2` because `ClassFoo1` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_type.js:13:18
    13| var a2: number = foo1Inst; // Error: ClassFoo1 ~> number
@@ -33,7 +33,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:24:18
 
-Cannot assign `foo2Inst` to `b2` because `ClassFoo2` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `foo2Inst` to `b2` because `ClassFoo2` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_type.js:24:18
    24| var b2: number = foo2Inst; // Error: ClassFoo2 ~> number
@@ -82,7 +82,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:44:18
 
-Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `foo4Inst` to `d2` because `ClassFoo4` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_type.js:44:18
    44| var d2: number = foo4Inst; // Error: ClassFoo4 ~> number
@@ -131,7 +131,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:56:18
 
-Cannot assign `givesAFoo3Obj()` to `e2` because `AliasFoo3` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `givesAFoo3Obj()` to `e2` because `AliasFoo3` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_type.js:56:18
    56| var e2: number = givesAFoo3Obj(); // Error: AliasFoo3 ~> number
@@ -198,7 +198,7 @@ classes. If you intended to import the type of a value use `import typeof` inste
 
 Error --------------------------------------------------------------------------------------------- import_type.js:109:1
 
-Cannot cast `'str'` to `T` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'str'` to `T` because `"str"` [1] is incompatible with `T` [2]. [incompatible-type]
 
    import_type.js:109:1
    109| 'str' as T; // error
@@ -212,7 +212,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_type.js:117:1
 
-Cannot cast `'str'` to `U` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'str'` to `U` because `"str"` [1] is incompatible with `T` [2]. [incompatible-type]
 
    import_type.js:117:1
    117| 'str' as U; // error

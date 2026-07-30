@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- array_lib.js:6:7
 
-Cannot call `foo` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `foo` with `x` bound to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    array_lib.js:6:7
    6|   foo(x);
@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:11:17
 
-Cannot assign `b[0]` to `d` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `b[0]` to `d` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    array_lib.js:11:17
    11| var d: number = b[0];
@@ -155,7 +155,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:57
 
-Cannot call `Array.of` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `Array.of` because in array element: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    array_lib.js:80:57
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -169,7 +169,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:60
 
-Cannot call `Array.of` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `Array.of` because in array element: `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
    array_lib.js:80:60
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -197,7 +197,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- at.js:7:8
 
-Cannot call `arr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `arr.at` with `"1"` bound to `index` because `"1"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    at.js:7:8
      7| arr.at("1"); // ERROR
@@ -225,7 +226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ at.js:15:10
 
-Cannot call `roArr.at` with `"1"` bound to `index` because string [1] is incompatible with number [2].
+Cannot call `roArr.at` with `"1"` bound to `index` because `"1"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    at.js:15:10
@@ -255,8 +256,8 @@ References:
 Error ----------------------------------------------------------------------------- filter_error_msg_quality_test.js:3:9
 
 Cannot call `str_arr.filter` because: [incompatible-type]
- - Either in the return value: number [1] is incompatible with boolean [2].
- - Or in array element: string [3] is incompatible with boolean [4].
+ - Either in the return value: `number` [1] is incompatible with `boolean` [2].
+ - Or in array element: `string` [3] is incompatible with `boolean` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -283,8 +284,8 @@ References:
 Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
 
 Cannot call `nullable_str_arr.filter` because: [incompatible-type]
- - Either in array element: null or undefined [1] is incompatible with string [2].
- - Or function [3] is incompatible with class `Boolean` [4].
+ - Either in array element: `null` [1] is incompatible with `string` [2].
+ - Or `(s: ?string) => boolean` [3] is incompatible with class `Boolean` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -339,7 +340,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:42
 
-Cannot assign `arr1.flat()` to `result1_3` because in array element: number [1] is incompatible with string [2].
+Cannot assign `arr1.flat()` to `result1_3` because in array element: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    flat.js:5:42

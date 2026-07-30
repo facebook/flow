@@ -30,7 +30,7 @@ No errors!
 === block 6 ===
 Error -------------------------------------------------------------------- -:7:25
 
-Cannot assign `"hi"` to `y` because string [1] is incompatible with `MyOpaqueType` [2]. [incompatible-type]
+Cannot assign `"hi"` to `y` because `"hi"` [1] is incompatible with `MyOpaqueType` [2]. [incompatible-type]
 
    -:7:25
    7| const y: MyOpaqueType = "hi"; // Error! `MyOpaqueType` is not interchangeable with `string`

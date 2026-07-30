@@ -8,7 +8,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
-Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `3` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:2:1
    2| 3 as string; // not suppressed due to missing code
@@ -30,7 +30,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `3` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:5:1
    5| 3 as string; // not suppressed due to missing code
@@ -53,7 +53,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
-Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `3` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:11:1
    11| 3 as string;
@@ -76,7 +76,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
-Cannot cast `3` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `3` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:14:1
    14| 3 as string; // not suppressed due to missing code
@@ -98,7 +98,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:19:1
    19| y.x as string; // not suppressed due to missing code

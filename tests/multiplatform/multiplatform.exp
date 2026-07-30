@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------- android_and_common.android.js:1:27
 
-Cannot conform to common interface module because in property `foo`: number [1] is incompatible with string [2].
+Cannot conform to common interface module because in property `foo`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- android_only_use.android.js:2:1
 
-Cannot cast `require(...).foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `require(...).foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    android_only_use.android.js:2:1
    2| require('./android_and_common').foo as string; // error: android_and_common.android is actually imported
@@ -43,8 +43,8 @@ flow config. [invalid-supports-platform]
 
 Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
 
-Cannot conform to common interface module because in property `default`: exports [1] is incompatible with string [2].
-[incompatible-type]
+Cannot conform to common interface module because in property `default`: `{readonly bar: 2, readonly foo: 1}` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because in property `default`: number [1] is incompatible with string [2].
+Cannot conform to common interface module because in property `default`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -111,8 +111,8 @@ References:
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because in property `foo`: [incompatible-type]
- - Either in the return value: boolean [1] is incompatible with string [2].
- - Or in the return value: number [3] is incompatible with string [2].
+ - Either in the return value: `boolean` [1] is incompatible with `string` [2].
+ - Or in the return value: `number` [3] is incompatible with `string` [2].
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -135,8 +135,8 @@ References:
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
 
 Cannot conform to common interface module because in property `foo`: [incompatible-type]
- - Either in the return value: string [1] is incompatible with number [2].
- - Or in the return value: boolean [3] is incompatible with number [2].
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
+ - Or in the return value: `boolean` [3] is incompatible with `number` [2].
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -158,7 +158,7 @@ References:
 
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because in property `a`: number [1] is incompatible with string [2].
+Cannot conform to common interface module because in property `a`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -264,7 +264,7 @@ platforms: `android`, `ios`. Support for the `ios` platform is missing. [missing
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:1
 
-Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o1` to empty because `MyType` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test_interface_import.js:8:1
    8| o1 as empty; // error

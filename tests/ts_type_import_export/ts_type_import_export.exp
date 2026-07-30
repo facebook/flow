@@ -8,7 +8,7 @@ Cannot import the type `MyType` as a value. Use `import type` instead. [import-t
 
 Error ------------------------------------------------------------------------------------------------- importer.ts:13:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `MyType` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer.ts:13:1
    13| x satisfies string; // ERROR: number ~> string (proves the type was resolved)
@@ -25,7 +25,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.ts:16:1
 
-Cannot cast `y.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `y.x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    importer.ts:16:1
    16| y.x satisfies number; // ERROR: string ~> number (proves the interface resolved)
@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- importer.ts:25:1
 
-Cannot cast `lt` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `lt` to number because `LocalType` [1] is incompatible with `number` [2]. [incompatible-type]
 
    importer.ts:25:1
    25| lt satisfies number; // ERROR
@@ -129,7 +129,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:14:1
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `a` to string because `FromType` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer_reexport.ts:14:1
    14| a satisfies string; // ERROR: number ~> string
@@ -146,7 +146,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:17:1
 
-Cannot cast `b.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `b.x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    importer_reexport.ts:17:1
    17| b.x satisfies number; // ERROR: string ~> number
@@ -205,7 +205,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:25:1
 
-Cannot cast `fromValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `fromValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer_reexport.ts:25:1
    25| fromValue satisfies string; // ERROR: number ~> string
@@ -222,7 +222,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:38:1
 
-Cannot cast `c` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `c` to string because `FromType` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer_reexport.ts:38:1
    38| c satisfies string; // ERROR: number ~> string
@@ -239,7 +239,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:41:1
 
-Cannot cast `d.x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `d.x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    importer_reexport.ts:41:1
    41| d.x satisfies number; // ERROR: string ~> number
@@ -298,7 +298,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:48:1
 
-Cannot cast `impValue` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `impValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    importer_reexport.ts:48:1
    48| impValue satisfies string; // ERROR: number ~> string

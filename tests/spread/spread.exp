@@ -42,8 +42,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:5
 
-Cannot call `foo` with `bar(...)` bound to `x` because `ComponentType` [1] is incompatible with class `C` [2].
-[incompatible-type]
+Cannot call `foo` with `bar(...)` bound to `x` because `component(ref?: React.RefSetter<C>)` [1] is incompatible with
+class `C` [2]. [incompatible-type]
 
    error_positions.js:11:5
    11| foo(bar(C)) as F<typeof C>; // error on call
@@ -215,7 +215,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test10.js:3:1
 
-Cannot cast `o.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test10.js:3:1
    3| o.p as empty; // error: number ~> empty
@@ -232,7 +232,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test11.js:14:3
 
-Cannot cast `ret` to empty because object literal [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `ret` to empty because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test11.js:14:3
    14|   ret as empty; //err
@@ -252,7 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:8:17
 
-Cannot assign `o.y` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `o.y` to `y` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test3.js:8:17
    8| var y: number = o.y; // Error string ~> number
@@ -269,7 +269,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:9:17
 
-Cannot assign `o.z` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `o.z` to `z` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test3.js:9:17
    9| var z: number = o.z; // Error string ~> number
@@ -331,7 +331,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
-Cannot cast object literal to object type because in property `q`: string [1] is incompatible with number [2].
+Cannot cast object literal to object type because in property `q`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test8.js:7:2
@@ -349,7 +349,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
-Cannot cast object literal to object type because in property `p`: number [1] is incompatible with string [2].
+Cannot cast object literal to object type because in property `p`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test8.js:8:2

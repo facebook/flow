@@ -12,6 +12,10 @@ mod tests {
     use dupe::Dupe;
     use flow_aloc::ALoc;
     use flow_common::reason::Name;
+    use flow_parser::file_key::FileKey;
+    use flow_parser::file_key::FileKeyInner;
+    use flow_parser::loc::Loc;
+    use flow_parser::loc::Position;
     use flow_parser::loc_sig::LocSig;
 
     use crate::ty::AnyKind;
@@ -24,6 +28,12 @@ mod tests {
     use crate::ty::PropSource;
     use crate::ty::Ty;
     use crate::ty::UnsoundnessKind;
+    use crate::ty::Utility;
+    use crate::ty_symbol::Provenance;
+    use crate::ty_symbol::RemoteInfo;
+    use crate::ty_symbol::Symbol;
+    use crate::ty_utils::patch_up_react_symbol;
+    use crate::ty_utils::patch_up_react_types;
     use crate::ty_utils::simplify_type;
 
     // Helper to create a field property
@@ -48,6 +58,44 @@ mod tests {
             obj_def_loc: None,
             obj_props: Arc::from(props),
         }))
+    }
+
+    #[test]
+    fn test_patch_up_react_symbol() {
+        let position = Position { line: 1, column: 0 };
+        let symbol = Symbol {
+            sym_provenance: Provenance::Library(RemoteInfo { imported_as: None }),
+            sym_def_loc: ALoc::of_loc(Loc {
+                source: Some(FileKey::new(FileKeyInner::LibFile("react.js".to_string()))),
+                start: position,
+                end: position,
+            }),
+            sym_name: Name::new("Portal"),
+            sym_anonymous: false,
+        };
+
+        let patched = patch_up_react_symbol(&symbol).unwrap();
+        assert_eq!(patched.sym_name, Name::new("React.Portal"));
+
+        let internal_symbol = Symbol {
+            sym_provenance: Provenance::Local,
+            sym_def_loc: ALoc::none(),
+            sym_name: Name::new("React$RendersExactly"),
+            sym_anonymous: false,
+        };
+        let patched = patch_up_react_symbol(&internal_symbol).unwrap();
+        assert_eq!(patched.sym_name, Name::new("React.RendersExactly"));
+
+        let element_config = Arc::new(Ty::Utility(Utility::ReactElementConfigType(Arc::new(
+            Ty::Num,
+        ))));
+        let patched = patch_up_react_types(element_config);
+        assert!(matches!(
+            patched.as_ref(),
+            Ty::Generic(box (symbol, _, Some(args)))
+                if symbol.sym_name == Name::new("React.ElementConfig")
+                    && matches!(args.as_ref(), [type_] if matches!(type_.as_ref(), Ty::Num))
+        ));
     }
 
     // {f: number} | {f: number}

@@ -23,8 +23,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:11
 
-Cannot call `bar` with object literal bound to `config` because in property `foo`: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `bar` with object literal bound to `config` because in property `foo`: `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:8:11
    8| bar({foo: ""});
@@ -38,7 +38,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:3:9
 
-Cannot assign `null` to `a.foo` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `null` to `a.foo` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test2.js:3:9
    3| a.foo = null; // But this is an error
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test2.js:10:34
 
-Cannot assign object literal to `d` because in property `foo`: null [1] is incompatible with string [2].
+Cannot assign object literal to `d` because in property `foo`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test2.js:10:34
@@ -118,8 +118,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- test3_exact_annot.js:7:1
 
-Cannot cast `a.b` to number because `void` (due to access of non-existent property `b`) [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast `a.b` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test3_exact_annot.js:7:1
    7| a.b as number; // error: property `b` not found

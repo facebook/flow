@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- baz/boz.js:1:19
 
-Cannot assign `3` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `a` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    baz/boz.js:1:19
    1| const a: string = 3;
@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ foo.js:1:19
 
-Cannot assign `3` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `a` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    foo.js:1:19
    1| const a: string = 3;

@@ -22,7 +22,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- require.js:9:14
 
-Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
+Cannot call `takesAString` with `A.numberValue` bound to `str` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    require.js:9:14
@@ -40,7 +40,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- require.js:14:14
 
-Cannot call `takesAString` with `B.numberValue` bound to `str` because number [1] is incompatible with string [2].
+Cannot call `takesAString` with `B.numberValue` bound to `str` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    require.js:14:14

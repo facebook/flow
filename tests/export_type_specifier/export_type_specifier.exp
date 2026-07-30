@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- import.js:11:1
 
-Cannot cast `t` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `t` to empty because `RenamedT` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:11:1
    11| t as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:15:1
 
-Cannot cast `s` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `s` to empty because `S` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:15:1
    15| s as empty; // ERROR
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:19:1
 
-Cannot cast `r` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `r` to empty because `R` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:19:1
    19| r as empty; // ERROR
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:23:1
 
-Cannot cast `rt` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `rt` to empty because `RenamedT` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:23:1
    23| rt as empty; // ERROR

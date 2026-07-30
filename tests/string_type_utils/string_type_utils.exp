@@ -155,7 +155,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-suffix.js:6:1
 
-Cannot cast `percent` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `percent` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import-suffix.js:6:1
     6| percent as empty; // ERROR
@@ -202,7 +202,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:12:3
 
-Cannot cast `x` to `DataProp` because string [1] is incompatible with template literal type [2]. [incompatible-type]
+Cannot cast `x` to `DataProp` because `string` [1] is incompatible with ``${"data-"}${string}`` [2]. [incompatible-type]
 
    prefix.js:12:3
    12|   x as DataProp; // ERROR
@@ -269,7 +269,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:57:5
 
-Cannot cast `x` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    prefix.js:57:5
    57|     x as empty; // ERROR
@@ -286,8 +286,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:70:3
 
-Cannot cast `dataProp` to `DataFooProp` because template literal type [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `dataProp` to `DataFooProp` because `string` [1] is incompatible with ``${"data-foo-"}${string}`` [2].
+[incompatible-type]
 
    prefix.js:70:3
    70|   dataProp as DataFooProp; // ERROR
@@ -376,7 +376,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:98:3
 
-Cannot cast `x` to `StringPrefix` because template literal type [1] is incompatible with template literal type [2].
+Cannot cast `x` to `StringPrefix` because `string` [1] is incompatible with ``${"foo"}${"xxx"}`` [2].
 [incompatible-type]
 
    prefix.js:98:3
@@ -430,7 +430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- prefix.js:111:45
 
-Cannot instantiate `StringPrefix` because in type argument `R`: number literal `1` [1] is incompatible with string [2].
+Cannot instantiate `StringPrefix` because in type argument `R`: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    prefix.js:111:45
@@ -481,8 +481,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:134:7
 
-Cannot assign `obj` to `validKeyInvalidValue` because in property `foobar`: number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot assign `obj` to `validKeyInvalidValue` because in property `foobar`: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    prefix.js:134:7
    134|   } = obj; // ERROR
@@ -529,7 +529,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:12:3
 
-Cannot cast `x` to `Percent` because string [1] is incompatible with template literal type [2]. [incompatible-type]
+Cannot cast `x` to `Percent` because `string` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
 
    suffix.js:12:3
    12|   x as Percent; // ERROR
@@ -564,7 +564,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:41:5
 
-Cannot cast `x` to empty because template literal type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    suffix.js:41:5
    41|     x as empty; // ERROR
@@ -581,7 +581,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:55:3
 
-Cannot cast `bar` to `FooBar` because template literal type [1] is incompatible with template literal type [2].
+Cannot cast `bar` to `FooBar` because `string` [1] is incompatible with ``${string}${"foobar"}`` [2].
 [incompatible-type]
 
    suffix.js:55:3
@@ -671,8 +671,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:83:3
 
-Cannot cast `x` to `StringSuffix` because template literal type [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `x` to `StringSuffix` because `string` [1] is incompatible with ``${"xxx"}${"!"}`` [2]. [incompatible-type]
 
    suffix.js:83:3
    83|   x as StringSuffix<'!', 'xxx'>; // ERROR
@@ -725,7 +724,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- suffix.js:96:45
 
-Cannot instantiate `StringSuffix` because in type argument `R`: number literal `1` [1] is incompatible with string [2].
+Cannot instantiate `StringSuffix` because in type argument `R`: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    suffix.js:96:45

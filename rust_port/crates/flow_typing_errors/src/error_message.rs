@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
+use std::hash::Hasher;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -107,6 +108,7 @@ use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
 use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use crate::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use crate::intermediate_error_types::MessageExponentialSpreadData;
+use crate::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
 use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use crate::intermediate_error_types::MessageInvalidEnumMemberCheckData;
@@ -1771,6 +1773,72 @@ pub struct EIncompatibleWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub explanation: Option<Explanation<L>>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct EIncompatibleTypesWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub use_op: VirtualUseOp<L>,
+    pub lower_loc: L,
+    pub lower_def_loc: L,
+    pub upper_loc: L,
+    pub upper_def_loc: L,
+    pub lower_desc: TypeOrTypeDesc<L>,
+    pub upper_desc: TypeOrTypeDesc<L>,
+    pub explanation: Option<Explanation<L>>,
+}
+
+// Source references preserve provenance while type descriptions keep distinct inferred branches
+// from collapsing when they happen to originate at the same locations.
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTypesWithUseOpData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.lower_loc == other.lower_loc
+            && self.lower_def_loc == other.lower_def_loc
+            && self.upper_loc == other.upper_loc
+            && self.upper_def_loc == other.upper_def_loc
+            && self.lower_desc == other.lower_desc
+            && self.upper_desc == other.upper_desc
+            && self.explanation == other.explanation
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EIncompatibleTypesWithUseOpData<L> {}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
+    for EIncompatibleTypesWithUseOpData<L>
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.lower_loc.hash(state);
+        self.lower_def_loc.hash(state);
+        self.upper_loc.hash(state);
+        self.upper_def_loc.hash(state);
+        self.lower_desc.hash(state);
+        self.upper_desc.hash(state);
+        self.explanation.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd
+    for EIncompatibleTypesWithUseOpData<L>
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypesWithUseOpData<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.lower_loc.cmp(&other.lower_loc))
+            .then_with(|| self.lower_def_loc.cmp(&other.lower_def_loc))
+            .then_with(|| self.upper_loc.cmp(&other.upper_loc))
+            .then_with(|| self.upper_def_loc.cmp(&other.upper_def_loc))
+            .then_with(|| self.lower_desc.cmp(&other.lower_desc))
+            .then_with(|| self.upper_desc.cmp(&other.upper_desc))
+            .then_with(|| self.explanation.cmp(&other.explanation))
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -2704,6 +2772,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EInvalidLHSInAssignment(L),
 
     EIncompatibleWithUseOp(Box<EIncompatibleWithUseOpData<L>>),
+
+    EIncompatibleTypesWithUseOp(Box<EIncompatibleTypesWithUseOpData<L>>),
 
     EInvariantSubtypingWithUseOp(Box<EInvariantSubtypingWithUseOpData<L>>),
 
@@ -4007,6 +4077,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: map_use_op(use_op),
                 reason_lower: map_reason(reason_lower),
                 reason_upper: map_reason(reason_upper),
+                explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
+            })),
+
+            EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+                use_op,
+                lower_loc,
+                lower_def_loc,
+                upper_loc,
+                upper_def_loc,
+                lower_desc,
+                upper_desc,
+                explanation,
+            }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
+                use_op: map_use_op(use_op),
+                lower_loc: f(lower_loc),
+                lower_def_loc: f(lower_def_loc),
+                upper_loc: f(upper_loc),
+                upper_def_loc: f(upper_def_loc),
+                lower_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_desc),
+                upper_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_desc),
                 explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
             })),
 
@@ -5549,6 +5639,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             };
 
         match msg {
+            EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+                use_op,
+                lower_loc,
+                lower_def_loc,
+                upper_loc,
+                upper_def_loc,
+                lower_desc,
+                upper_desc,
+                explanation,
+            }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
+                use_op: map_use_op(&f, use_op),
+                lower_loc,
+                lower_def_loc,
+                upper_loc,
+                upper_def_loc,
+                lower_desc: f(lower_desc),
+                upper_desc: f(upper_desc),
+                explanation,
+            })),
+
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
                 sub_component,
                 lower_loc,
@@ -5746,6 +5856,10 @@ where
         ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { use_op, .. }) => {
             util(use_op)
         }
+        ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+            use_op,
+            ..
+        }) => util(use_op),
         ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
             use_op,
             ..
@@ -6226,6 +6340,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EFunctionCallExtraArg { .. }
             | Self::ENotAReactComponent { .. }
             | Self::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { .. })
+            | Self::EIncompatibleTypesWithUseOp(..)
             | Self::EInvariantSubtypingWithUseOp(..)
             | Self::EEnumError(EnumErrorKind::EnumIncompatible(box EnumIncompatibleData {
                 ..
@@ -7124,6 +7239,29 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
                 reason_lower,
                 reason_upper,
+                use_op,
+                explanation,
+            })),
+
+            ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+                lower_loc,
+                lower_def_loc,
+                upper_def_loc,
+                lower_desc,
+                upper_desc,
+                use_op,
+                explanation,
+                ..
+            }) => UseOp(Box::new(UseOpData {
+                loc: lower_loc.dupe(),
+                message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
+                    MessageIncompatibleGeneralWithPrintedTypesData {
+                        lower_loc: lower_def_loc,
+                        upper_loc: upper_def_loc,
+                        lower_desc: expect_type_desc(lower_desc),
+                        upper_desc: expect_type_desc(upper_desc),
+                    },
+                )),
                 use_op,
                 explanation,
             })),
@@ -9575,6 +9713,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ))
             | ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
                 use_op, ..
+            })
+            | ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+                use_op,
+                ..
             }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType),
             ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
                 use_op,

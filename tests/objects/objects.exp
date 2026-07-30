@@ -87,7 +87,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:15:9
 
-Cannot assign `y` to `x` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `y` to `x` because in property `foo`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    compatibility.js:15:9
    15|     x = y; // 1 error: number !~> string
@@ -134,7 +134,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
 
-Cannot assign `y` to `x` because in property `foo`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y` to `x` because in property `foo`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    compatibility.js:23:9
    23|     x = y; // 1 error: string !~> number
@@ -212,7 +212,7 @@ References:
 
 Error -------------------------------------------------------------------------- different_call_prop_no_fast_path.js:8:1
 
-Cannot cast `MyThunk` to `ThunkType` because in the return value: number [1] is incompatible with string [2].
+Cannot cast `MyThunk` to `ThunkType` because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    different_call_prop_no_fast_path.js:8:1
@@ -258,7 +258,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:6:1
 
-Cannot cast `x[123]` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x[123]` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:6:1
    6| x[123] as boolean; // error, string !~> boolean
@@ -275,7 +275,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:7:1
 
-Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x.bar` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:7:1
    7| x.bar as boolean; // error, string !~> boolean
@@ -292,7 +292,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:8:1
 
-Cannot cast `x['123']` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x['123']` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    objects.js:8:1
    8| x['123'] as boolean; // error, string !~> boolean
@@ -309,7 +309,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:9:12
 
-Cannot assign `false` to `x['123']` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `false` to `x['123']` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    objects.js:9:12
    9| x['123'] = false; // error, boolean !~> string
@@ -323,7 +323,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:10:10
 
-Cannot assign `false` to `x[123]` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `false` to `x[123]` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    objects.js:10:10
    10| x[123] = false; // error, boolean !~> string
@@ -366,7 +366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- objects.js:15:12
 
-Cannot assign `123` to `y['foo']` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `y['foo']` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    objects.js:15:12
    15| y['foo'] = 123; // error, number !~> string
@@ -394,7 +394,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:18:1
 
-Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompatible with string [2].
+Cannot cast `y['hasOwnProperty']` to string because `(prop: unknown) => boolean` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    objects.js:18:1
@@ -412,7 +412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- unaliased_assign.js:26:11
 
-Cannot assign `10` to `obj.x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `10` to `obj.x` because `10` [1] is incompatible with `"hey"` [2]. [incompatible-type]
 
    unaliased_assign.js:26:11
    26|   obj.x = 10;  // error

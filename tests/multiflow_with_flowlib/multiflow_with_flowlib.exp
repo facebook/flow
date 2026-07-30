@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- spread.js:14:42
 
-Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2]. [incompatible-type]
+Cannot call `funWithRestArray` because `"bye"` [1] is incompatible with `123` [2]. [incompatible-type]
 
    spread.js:14:42
    14| funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);
@@ -14,7 +14,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:14:42
 
-Cannot call `funWithRestArray` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `funWithRestArray` because in array element: `"bye"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    spread.js:14:42
    14| funWithRestArray('hi', ...iterableOf123, 'bye', ...iterableOf123);

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- __tests__/test.js:11:1
 
-Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `fragment` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    __tests__/test.js:11:1
    11| fragment as string; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- __tests__/test.js:21:1
 
-Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `query` to string because `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
    __tests__/test.js:21:1
    21| query as string; // ERROR
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- non-prefixed.js:11:1
 
-Cannot cast `fragment` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `fragment` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    non-prefixed.js:11:1
    11| fragment as string; // ERROR
@@ -51,7 +51,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- non-prefixed.js:21:1
 
-Cannot cast `query` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `query` to string because `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
    non-prefixed.js:21:1
    21| query as string; // ERROR

@@ -73,7 +73,7 @@ References:
 Error -------------------------------------------------------------------------------------- method_bivariance.ts:113:43
 
 Cannot assign `wrongOverloadedEventLike` to `overloadedWrongKey` because in property `addEventListener` > the first
-parameter: string [1] is incompatible with number literal `2` [2]. [incompatible-type]
+parameter: `string` [1] is incompatible with `2` [2]. [incompatible-type]
 
    method_bivariance.ts:113:43
    113| const overloadedWrongKey: BaseEventLike = wrongOverloadedEventLike; // ERROR: no overload accepts string events
@@ -93,7 +93,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `wrongOverloadedEventLike` to `overloadedWrongKey` because in the second parameter of property
 `addEventListener`: [incompatible-type]
  - Either in the first parameter: property `bark` is missing in `Animal` [1] but exists in `Dog` [2].
- - Or `Listener` [3] is incompatible with null [4].
+ - Or `(event: Dog) => void` [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -119,8 +119,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- method_bivariance.ts:124:35
 
-Cannot assign `restSource` to `restMismatch` because in property `cb`: number [1] is incompatible with array type [2].
-[incompatible-type]
+Cannot assign `restSource` to `restMismatch` because in property `cb`: `number` [1] is incompatible with
+`Array<string>` [2]. [incompatible-type]
 
    method_bivariance.ts:124:35
    124| const restMismatch: FixedTarget = restSource; // ERROR: number/string[] incompatible
@@ -199,8 +199,8 @@ References:
 
 Error ---------------------------------------------------------------------------- optional_property_invariance.ts:30:12
 
-Cannot call `strict` with object literal bound to `x` because in property `a`: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `strict` with object literal bound to `x` because in property `a`: `42` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    optional_property_invariance.ts:30:12
    30| strict({a: 42}); // ERROR: number not assignable to string
@@ -232,7 +232,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tuple_polarity.ts:19:30
 
-Cannot assign `roNum` to `c` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `roNum` to `c` because in index `0`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tuple_polarity.ts:19:30
    19| const c: readonly [string] = roNum; // ERROR: number vs string
@@ -249,7 +249,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- type_arg_variance.ts:20:24
 
-Cannot assign `numBox` to `b` because in type argument `T` [1]: number [2] is incompatible with string [3].
+Cannot assign `numBox` to `b` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    type_arg_variance.ts:20:24

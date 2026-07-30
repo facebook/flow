@@ -180,7 +180,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:74:1
 
-Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
    class_interface_subtyping.js:74:1
@@ -198,7 +198,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:75:1
 
-Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
    class_interface_subtyping.js:75:1
@@ -216,7 +216,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:1
 
-Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:76:1
@@ -234,7 +234,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:1
 
-Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:77:1
@@ -252,7 +252,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- class_method.js:6:12
 
-Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `this.prop` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_method.js:6:12
    6|     return this.prop; // Error - number ~> string
@@ -269,7 +269,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:10:12
 
-Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `this.prop` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_method.js:10:12
    10|     return this.prop; // Error - number ~> string
@@ -286,7 +286,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:14:12
 
-Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `this.prop` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_method.js:14:12
    14|     return this.prop; // Error - number ~> string
@@ -303,7 +303,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:18:12
 
-Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `this.prop` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_method.js:18:12
    18|     return this.prop; // Error - number ~> string
@@ -497,7 +497,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:19:1
 
-Cannot cast `n.method()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `n.method()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_poly_method.js:19:1
    19| n.method() as string; // error (number incompatible with string)
@@ -514,7 +514,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:21:1
 
-Cannot cast `s.method()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `s.method()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class_poly_method.js:21:1
    21| s.method() as number; // error (number incompatible with string)
@@ -567,22 +567,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
-Cannot define method `foo` [1] on `B` because in type argument `T` [2]: `unknown` [2] is incompatible with `T` [2].
-[incompatible-type]
-
-   class_poly_method.js:28:5
-   28|     foo<X>(this: B<X>) : void
-           ^^^ [1]
-
-References:
-   class_poly_method.js:27:17
-   27| declare class B<T> {
-                       ^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
-
-Cannot define method `foo` [1] on `B` because in type argument `T` [2]: `unknown` [2] is incompatible with `X` [2].
+Cannot define method `foo` [1] on `B` because in type argument `T` [2]: `unknown` [2] is incompatible with `empty` [2].
 [incompatible-type]
 
    class_poly_method.js:28:5
@@ -777,7 +762,7 @@ References:
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:78:1
 
-Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:78:1
@@ -795,7 +780,7 @@ References:
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:79:1
 
-Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:79:1
@@ -813,7 +798,7 @@ References:
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:1
 
-Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:80:1
@@ -831,7 +816,7 @@ References:
 
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:1
 
-Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:81:1
@@ -1017,7 +1002,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:12:19
 
-Cannot call `myFun.bind` because in property `prop`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `myFun.bind` because in property `prop`: `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    declare_function.js:12:19
    12| myFun.bind({prop: true}); // Error - boolean ~> number
@@ -1031,8 +1016,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:13:1
 
-Cannot call `myFun.apply` because in the `this` parameter > property `prop`: number [1] is incompatible with
-boolean [2]. [incompatible-type]
+Cannot call `myFun.apply` because in the `this` parameter > property `prop`: `number` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    declare_function.js:13:1
    13| myFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
@@ -1049,8 +1034,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:14:1
 
-Cannot call `myFun.call` because in the `this` parameter > property `prop`: number [1] is incompatible with boolean [2].
-[incompatible-type]
+Cannot call `myFun.call` because in the `this` parameter > property `prop`: `number` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    declare_function.js:14:1
    14| myFun.call({prop: true}); // Error - boolean ~> number
@@ -1067,7 +1052,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:15:23
 
-Cannot call `myPolyFun.bind` because in property `prop`: boolean [1] is incompatible with number [2].
+Cannot call `myPolyFun.bind` because in property `prop`: `true` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declare_function.js:15:23
@@ -1082,8 +1067,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:16:1
 
-Cannot call `myPolyFun.apply` because in the `this` parameter > property `prop`: number [1] is incompatible with
-boolean [2]. [incompatible-type]
+Cannot call `myPolyFun.apply` because in the `this` parameter > property `prop`: `number` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    declare_function.js:16:1
    16| myPolyFun.apply({prop: true}, [] as Array<number>); // Error - boolean ~> number
@@ -1100,8 +1085,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:17:1
 
-Cannot call `myPolyFun.call` because in the `this` parameter > property `prop`: number [1] is incompatible with
-boolean [2]. [incompatible-type]
+Cannot call `myPolyFun.call` because in the `this` parameter > property `prop`: `number` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    declare_function.js:17:1
    17| myPolyFun.call({prop: true}); // Error - boolean ~> number
@@ -1133,8 +1118,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:20:1
 
-Cannot call `myFun.apply` because in the `this` parameter: object type [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot call `myFun.apply` because in the `this` parameter: `{readonly prop: number, ...}` [1] is incompatible with
+`void` [2]. [incompatible-type]
 
    declare_function.js:20:1
    20| myFun.apply(); // Error - void ~> number
@@ -1151,8 +1136,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:21:1
 
-Cannot call `myFun.call` because in the `this` parameter: object type [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot call `myFun.call` because in the `this` parameter: `{readonly prop: number, ...}` [1] is incompatible with
+`void` [2]. [incompatible-type]
 
    declare_function.js:21:1
    21| myFun.call(); // Error - void ~> number
@@ -1184,8 +1169,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:23:1
 
-Cannot call `myPolyFun.apply` because in the `this` parameter: object type [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot call `myPolyFun.apply` because in the `this` parameter: `{readonly prop: number, ...}` [1] is incompatible with
+`void` [2]. [incompatible-type]
 
    declare_function.js:23:1
    23| myPolyFun.apply(); // Error - void ~> number
@@ -1202,8 +1187,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_function.js:24:1
 
-Cannot call `myPolyFun.call` because in the `this` parameter: object type [1] is incompatible with undefined [2].
-[incompatible-type]
+Cannot call `myPolyFun.call` because in the `this` parameter: `{readonly prop: number, ...}` [1] is incompatible with
+`void` [2]. [incompatible-type]
 
    declare_function.js:24:1
    24| myPolyFun.call(); // Error - void ~> number
@@ -1220,7 +1205,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- function_type.js:5:9
 
-Cannot call `x.bind` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `x.bind` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:5:9
    5| (x.bind("")()); // error: number incompatible with string
@@ -1234,7 +1219,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:12:8
 
-Cannot call `y.bind` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `y.bind` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:12:8
    12| y.bind(""); // error: number incompatible with string
@@ -1248,7 +1233,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:15:1
 
-Cannot cast `y` to `F` because in type argument `T` [1]: number [2] is incompatible with string [3]. [incompatible-type]
+Cannot cast `y` to `F` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
+[incompatible-type]
 
    function_type.js:15:1
    15| y as F<string>; // error: number incompatible with string
@@ -1268,7 +1254,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:20:1
 
-Cannot cast `z.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_type.js:20:1
    20| z.bind(3)() as string; // error: number incompatible with string
@@ -1285,7 +1271,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:21:1
 
-Cannot cast `z.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `z.bind(...)()` to number because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_type.js:21:1
    21| z.bind("")() as number; // error: number incompatible with string
@@ -1302,7 +1288,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:30:1
 
-Cannot cast `x` to `BotFn` because in the `this` parameter: number [1] is incompatible with `unknown` [2].
+Cannot cast `x` to `BotFn` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    function_type.js:30:1
@@ -1320,8 +1306,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:30:1
 
-Cannot cast `x` to `BotFn` because in the return value: undefined [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `x` to `BotFn` because in the return value: `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_type.js:30:1
    30| x as BotFn; // error
@@ -1338,8 +1323,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:3:10
 
-Cannot define method `foo2` [1] on `A` because class `this` type [2] is incompatible with number [3].
-[incompatible-type]
+Cannot define method `foo2` [1] on `A` because `Class<this>` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:3:10
    3|   static foo2(this : number) {} // error
@@ -1356,7 +1340,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:5:10
 
-Cannot define method `foo4` [1] on `A` because class `this` type [2] is incompatible with `A` [3]. [incompatible-type]
+Cannot define method `foo4` [1] on `A` because `Class<this>` [2] is incompatible with `A` [3]. [incompatible-type]
 
    incompatible_this_param.js:5:10
    5|   static foo4(this : A) {} // error
@@ -1373,7 +1357,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- incompatible_this_param.js:7:3
 
-Cannot define method `bar2` [1] on `A` because `A` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `bar2` [1] on `A` because `A` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:7:3
    7|   bar2 (this : number) {} // error
@@ -1407,8 +1391,7 @@ References:
 
 Error --------------------------------------------------------------------------------- incompatible_this_param.js:14:10
 
-Cannot define method `foo2` [1] on `B` because class `this` type [2] is incompatible with number [3].
-[incompatible-type]
+Cannot define method `foo2` [1] on `B` because `Class<this>` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:14:10
    14|   static foo2(this : number) : void, // error
@@ -1425,7 +1408,7 @@ References:
 
 Error --------------------------------------------------------------------------------- incompatible_this_param.js:16:10
 
-Cannot define method `foo4` [1] on `B` because class `this` type [2] is incompatible with `B` [3]. [incompatible-type]
+Cannot define method `foo4` [1] on `B` because `Class<this>` [2] is incompatible with `B` [3]. [incompatible-type]
 
    incompatible_this_param.js:16:10
    16|   static foo4(this : B) : void, // error
@@ -1442,7 +1425,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:18:3
 
-Cannot define method `bar2` [1] on `B` because `B` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `bar2` [1] on `B` because `B` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:18:3
    18|   bar2 (this : number) : void, // error
@@ -1476,7 +1459,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:25:3
 
-Cannot define method `bar2` [1] on `C` because `C` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `bar2` [1] on `C` because `C` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:25:3
    25|   bar2 (this : number) : void, // error
@@ -1493,7 +1476,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- incompatible_this_param.js:38:3
 
-Cannot define method `bar2` [1] on `E` because `E` [2] is incompatible with number [3]. [incompatible-type]
+Cannot define method `bar2` [1] on `E` because `E` [2] is incompatible with `number` [3]. [incompatible-type]
 
    incompatible_this_param.js:38:3
    38|   bar2 (this : number) : void, // error
@@ -1596,8 +1579,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:35:1
 
-Cannot cast `foo` to `typeof bar2` because in the `this` parameter: number [1] is incompatible with implicit `this`
-parameter of function [2]. [incompatible-type]
+Cannot cast `foo` to `typeof bar2` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
    mixed_inference.js:35:1
    35| foo as typeof bar2; // mixed incompatible with number
@@ -1614,8 +1597,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:36:1
 
-Cannot cast `foo` to `typeof baz2` because in the `this` parameter: number [1] is incompatible with implicit `this`
-parameter of function [2]. [incompatible-type]
+Cannot cast `foo` to `typeof baz2` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
    mixed_inference.js:36:1
    36| foo as typeof baz2; // mixed incompatible with number
@@ -1632,8 +1615,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:37:1
 
-Cannot cast `foo` to `typeof o2.m` because in the `this` parameter: number [1] is incompatible with implicit `this`
-parameter of function [2]. [incompatible-type]
+Cannot cast `foo` to `typeof o2.m` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
    mixed_inference.js:37:1
    37| foo as typeof o2.m; // mixed incompatible with number
@@ -1650,8 +1633,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mixed_inference.js:38:1
 
-Cannot cast `foo` to `typeof o2.n` because in the `this` parameter: number [1] is incompatible with implicit `this`
-parameter of function [2]. [incompatible-type]
+Cannot cast `foo` to `typeof o2.n` because in the `this` parameter: `number` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
    mixed_inference.js:38:1
    38| foo as typeof o2.n; // mixed incompatible with number
@@ -1877,7 +1860,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:79:1
 
-Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
    object_interface_subtyping.js:79:1
@@ -1895,7 +1878,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:80:1
 
-Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
    object_interface_subtyping.js:80:1
@@ -1913,7 +1896,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:1
 
-Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:81:1
@@ -1931,7 +1914,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:1
 
-Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:82:1
@@ -1949,7 +1932,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:85:1
 
-Cannot cast `cme` to `I_Function_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cme` to `I_Function_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Function_this` [2]. [incompatible-type]
 
    object_interface_subtyping.js:85:1
@@ -1967,7 +1950,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:86:1
 
-Cannot cast `cme` to `I_Method_this` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cme` to `I_Method_this` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `I_Method_this` [2]. [incompatible-type]
 
    object_interface_subtyping.js:86:1
@@ -1985,7 +1968,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:1
 
-Cannot cast `cme` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cme` to `I_Function_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:87:1
@@ -2003,7 +1986,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:1
 
-Cannot cast `cme` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
+Cannot cast `cme` to `I_Method_mixed` because in property `x` > the `this` parameter: `empty` [1] is incompatible with
 `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:88:1
@@ -2146,7 +2129,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:1
 
-Cannot cast `baz.bind(...)()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to string because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:55:1
    55| baz.bind({f : 3})() as string; // error : number incompatible with string
@@ -2163,7 +2146,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:1
 
-Cannot cast `baz.bind(...)()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `baz.bind(...)()` to number because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:56:1
    56| baz.bind({f : ""})() as number; // error : number incompatible with string
@@ -2180,7 +2163,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:1
 
-Cannot cast `baz2.bind(...)(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `baz2.bind(...)(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:62:1
    62| (baz2 as (this: NumOrStr, x: ?NumOrStr) => NumOrStr).bind(3)("") as string; // error : number incompatible with string
@@ -2196,4 +2179,4 @@ References:
 
 
 
-Found 123 errors
+Found 122 errors

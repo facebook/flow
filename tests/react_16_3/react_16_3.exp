@@ -37,8 +37,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:19:38
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
- - Either in property `current`: `ButtonInstance` [1] is incompatible with `DivInstance` [2].
- - Or in property `current`: `ButtonInstance` [1] is incompatible with null [3].
+ - Either in property `current`: `CommonInstance` [1] is incompatible with `DivInstance` [2].
+ - Or in property `current`: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -62,8 +62,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:22:38
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: `ButtonInstance` [1] is incompatible with `DivInstance` [2].
- - Or in the first parameter: `ButtonInstance` [1] is incompatible with null [3].
+ - Either in the first parameter: `CommonInstance` [1] is incompatible with `DivInstance` [2].
+ - Or in the first parameter: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -87,8 +87,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:35
 
 Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
- - Either in property `current`: `AInstance` [1] is incompatible with `ButtonInstance` [2].
- - Or in property `current`: `AInstance` [1] is incompatible with `DivInstance` [3].
+ - Either in property `current`: `CommonInstance` [1] is incompatible with `ButtonInstance` [2].
+ - Or in property `current`: `CommonInstance` [1] is incompatible with `DivInstance` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

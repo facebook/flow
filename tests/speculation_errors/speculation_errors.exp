@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:4:1
 
-Cannot cast `bad.get()` to `Obj2` because null [1] is incompatible with `Obj2` [2]. [incompatible-type]
+Cannot cast `bad.get()` to `Obj2` because `null` [1] is incompatible with `{foo: string}` [2]. [incompatible-type]
 
    bad_interaction_with_evalt.js:4:1
    4| bad.get() as Obj2; // only subtyping error
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:21
 
-Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
+Cannot cast `any` to object type because in property `b`: `boolean` [1] is incompatible with `2` [2].
 [incompatible-type]
 
    errors_intersection.js:13:21
@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:42
 
-Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
+Cannot cast `any` to object type because in property `a`: `boolean` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    errors_intersection.js:13:42
@@ -47,7 +47,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:63
 
-Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
+Cannot cast `any` to object type because in property `c`: `boolean` [1] is incompatible with `3` [2].
 [incompatible-type]
 
    errors_intersection.js:13:63
@@ -63,8 +63,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `1` [2].
- - Or string [3] is incompatible with number literal `1` [2].
+ - Either `boolean` [1] is incompatible with `1` [2].
+ - Or `string` [3] is incompatible with `1` [2].
 
    errors_intersection.js:20:8
               v
@@ -90,8 +90,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `2` [2].
- - Or string [3] is incompatible with number literal `2` [2].
+ - Either `boolean` [1] is incompatible with `2` [2].
+ - Or `string` [3] is incompatible with `2` [2].
 
    errors_intersection.js:20:8
               v
@@ -117,8 +117,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:20:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `3` [2].
- - Or string [3] is incompatible with number literal `3` [2].
+ - Either `boolean` [1] is incompatible with `3` [2].
+ - Or `string` [3] is incompatible with `3` [2].
 
    errors_intersection.js:20:8
               v
@@ -144,8 +144,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:27:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `1` [2].
- - Or string [3] is incompatible with number literal `1` [2].
+ - Either `boolean` [1] is incompatible with `1` [2].
+ - Or `string` [3] is incompatible with `1` [2].
 
    errors_intersection.js:27:8
               v
@@ -170,7 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:28:15
 
-Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
+Cannot cast `any` to object type because in property `b`: `boolean` [1] is incompatible with `2` [2].
 [incompatible-type]
 
    errors_intersection.js:28:15
@@ -185,7 +185,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:30:15
 
-Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
+Cannot cast `any` to object type because in property `c`: `boolean` [1] is incompatible with `3` [2].
 [incompatible-type]
 
    errors_intersection.js:30:15
@@ -201,8 +201,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:38:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `2` [2].
- - Or string [3] is incompatible with number literal `2` [2].
+ - Either `boolean` [1] is incompatible with `2` [2].
+ - Or `string` [3] is incompatible with `2` [2].
 
    errors_intersection.js:38:8
               v
@@ -227,7 +227,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:40:15
 
-Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
+Cannot cast `any` to object type because in property `a`: `boolean` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    errors_intersection.js:40:15
@@ -242,7 +242,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:41:15
 
-Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
+Cannot cast `any` to object type because in property `c`: `boolean` [1] is incompatible with `3` [2].
 [incompatible-type]
 
    errors_intersection.js:41:15
@@ -258,8 +258,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:49:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `3` [2].
- - Or string [3] is incompatible with number literal `3` [2].
+ - Either `boolean` [1] is incompatible with `3` [2].
+ - Or `string` [3] is incompatible with `3` [2].
 
    errors_intersection.js:49:8
               v
@@ -284,7 +284,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:50:15
 
-Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
+Cannot cast `any` to object type because in property `b`: `boolean` [1] is incompatible with `2` [2].
 [incompatible-type]
 
    errors_intersection.js:50:15
@@ -299,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:51:15
 
-Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
+Cannot cast `any` to object type because in property `a`: `boolean` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    errors_intersection.js:51:15
@@ -314,7 +314,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:60:34
 
-Cannot cast `any` to object type because in property `a.b`: boolean [1] is incompatible with number literal `42` [2].
+Cannot cast `any` to object type because in property `a.b`: `boolean` [1] is incompatible with `42` [2].
 [incompatible-type]
 
    errors_intersection.js:60:34
@@ -330,8 +330,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:64:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either in property `b`: boolean [1] is incompatible with number literal `42` [2].
- - Or in property `b`: object type [3] is incompatible with number literal `42` [2].
+ - Either in property `b`: `boolean` [1] is incompatible with `42` [2].
+ - Or in property `b`: `{}` [3] is incompatible with `42` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -354,8 +354,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- errors_intersection.js:68:8
 
-Cannot cast `any` to number literal `42` because boolean [1] is incompatible with number literal `42` [2].
-[incompatible-type]
+Cannot cast `any` to number literal `42` because `boolean` [1] is incompatible with `42` [2]. [incompatible-type]
 
    errors_intersection.js:68:8
    68| any as boolean as 42; // Error: number ~> boolean
@@ -370,8 +369,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:69:1
 
 Cannot cast `any` to number literal `42` because: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `42` [2].
- - Or object type [3] is incompatible with number literal `42` [2].
+ - Either `boolean` [1] is incompatible with `42` [2].
+ - Or `{}` [3] is incompatible with `42` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -395,8 +394,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:70:1
 
 Cannot cast `any` to number literal `42` because: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `42` [2].
- - Or object type [3] is incompatible with number literal `42` [2].
+ - Either `boolean` [1] is incompatible with `42` [2].
+ - Or `{}` [3] is incompatible with `42` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -420,8 +419,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:72:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
    errors_intersection.js:72:1
    72| any as number & string as true; // Error
@@ -442,8 +441,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:73:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -467,8 +466,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -492,8 +491,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:75:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -517,8 +516,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:77:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
    errors_intersection.js:77:8
    77| any as {readonly a: number & string} as {readonly a: true}; // Error
@@ -539,8 +538,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
    errors_intersection.js:79:8
               v
@@ -567,8 +566,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -598,8 +597,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -629,8 +628,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:79:8
 
 Cannot cast `any` to object type because in property `d`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -660,8 +659,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
- - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: `number` [1] is incompatible with `true` [2].
+ - Or in index `0`: `string` [3] is incompatible with `true` [2].
 
    errors_intersection.js:92:8
               v
@@ -688,8 +687,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
- - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: `number` [1] is incompatible with `true` [2].
+ - Or in index `0`: `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -719,8 +718,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
- - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: `number` [1] is incompatible with `true` [2].
+ - Or in index `0`: `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -750,8 +749,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:92:8
 
 Cannot cast `any` to object type because in property `d`: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
- - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: `number` [1] is incompatible with `true` [2].
+ - Or in index `0`: `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -781,8 +780,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:104:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:104:1
@@ -807,9 +806,9 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:105:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either string [1] is incompatible with boolean literal `true` [2].
+ - Either `string` [1] is incompatible with `true` [2].
  - Or boolean literal `false` [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
 
    errors_intersection.js:105:1
    105| any as (string & false) & number as true; // Error: should be flattened
@@ -833,8 +832,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -862,8 +861,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:107:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -891,8 +890,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:108:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
  - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -920,10 +919,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:110:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or string [5] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `number` [3] is incompatible with `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
+ - Or `string` [5] is incompatible with `true` [2].
 
    errors_intersection.js:110:1
    110| any as number & number & number & string as true; // Error: should be flattened
@@ -950,10 +949,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:111:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or string [5] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `number` [3] is incompatible with `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
+ - Or `string` [5] is incompatible with `true` [2].
 
    errors_intersection.js:111:1
    111| any as number & number & (number & string) as true; // Error: should be flattened
@@ -980,10 +979,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:112:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or string [5] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `number` [3] is incompatible with `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
+ - Or `string` [5] is incompatible with `true` [2].
 
    errors_intersection.js:112:1
    112| any as number & (number & (number & string)) as true; // Error: should be flattened
@@ -1010,10 +1009,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:113:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either string [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or number [5] is incompatible with boolean literal `true` [2].
+ - Either `string` [1] is incompatible with `true` [2].
+ - Or `number` [3] is incompatible with `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
+ - Or `number` [5] is incompatible with `true` [2].
 
    errors_intersection.js:113:1
    113| any as (string & number) & number & number as true; // Error: should be flattened
@@ -1040,10 +1039,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:114:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either string [1] is incompatible with boolean literal `true` [2].
- - Or number [3] is incompatible with boolean literal `true` [2].
- - Or number [4] is incompatible with boolean literal `true` [2].
- - Or number [5] is incompatible with boolean literal `true` [2].
+ - Either `string` [1] is incompatible with `true` [2].
+ - Or `number` [3] is incompatible with `true` [2].
+ - Or `number` [4] is incompatible with `true` [2].
+ - Or `number` [5] is incompatible with `true` [2].
 
    errors_intersection.js:114:1
    114| any as ((string & number) & number) & number as true; // Error: should be flattened
@@ -1070,8 +1069,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:116:1
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or object type [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `{}` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1095,8 +1094,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:117:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or object type [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `{}` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1120,8 +1119,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:117:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or object type [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `{}` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1145,8 +1144,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or string [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `string` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1170,8 +1169,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:121:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2].
- - Or object type [3] is incompatible with boolean literal `true` [2].
+ - Either `number` [1] is incompatible with `true` [2].
+ - Or `{}` [3] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1195,10 +1194,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:127:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
- - Or in index `0` > index `1`: `B` [3] is incompatible with number [2].
- - Or in index `0` > index `1`: `C` [4] is incompatible with number [2].
- - Or in index `0` > index `1`: `D` [5] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `B` [3] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `C` [4] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `D` [5] is incompatible with `number` [2].
 
    errors_intersection.js:127:1
    127| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
@@ -1225,9 +1224,9 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:130:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
- - Or in index `0` > index `1`: `C` [3] is incompatible with number [2].
- - Or in index `0` > index `1`: `D` [4] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `C` [3] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `D` [4] is incompatible with `number` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1254,8 +1253,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:133:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
- - Or in index `0` > index `1`: `C` [3] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with `number` [2].
+ - Or in index `0` > index `1`: `C` [3] is incompatible with `number` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1279,8 +1278,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:136:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index `0` > index `1`: `C` [1] is incompatible with number [2].
- - Or in index `0`: object type [3] is incompatible with tuple type [4].
+ - Either in index `0` > index `1`: `C` [1] is incompatible with `number` [2].
+ - Or in index `0`: `{}` [3] is incompatible with `[null, number]` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1432,7 +1431,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:13:6
 
-Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `b`: `2` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:13:6
@@ -1447,7 +1446,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:13:12
 
-Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `a`: `1` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:13:12
@@ -1462,7 +1461,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:13:18
 
-Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `c`: `3` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:13:18
@@ -1478,8 +1477,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:16:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `2` [1] is incompatible with `boolean` [2].
+ - Or `2` [1] is incompatible with `string` [3].
 
    errors_union.js:16:6
    16| ({b: 2, a: 1, c: 3}) as {
@@ -1497,8 +1496,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:16:12
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `1` [1] is incompatible with `boolean` [2].
+ - Or `1` [1] is incompatible with `string` [3].
 
    errors_union.js:16:12
    16| ({b: 2, a: 1, c: 3}) as {
@@ -1516,8 +1515,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:16:18
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `3` [1] is incompatible with `boolean` [2].
+ - Or `3` [1] is incompatible with `string` [3].
 
    errors_union.js:16:18
    16| ({b: 2, a: 1, c: 3}) as {
@@ -1534,7 +1533,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:23:6
 
-Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `b`: `2` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:23:6
@@ -1550,8 +1549,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:23:12
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `1` [1] is incompatible with `boolean` [2].
+ - Or `1` [1] is incompatible with `string` [3].
 
    errors_union.js:23:12
    23| ({b: 2, a: 1, c: 3}) as {a: boolean | string, b: boolean, c: boolean};
@@ -1568,7 +1567,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:23:18
 
-Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `c`: `3` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:23:18
@@ -1584,8 +1583,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:26:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `2` [1] is incompatible with `boolean` [2].
+ - Or `2` [1] is incompatible with `string` [3].
 
    errors_union.js:26:6
    26| ({b: 2, a: 1, c: 3}) as {a: boolean, b: boolean | string, c: boolean};
@@ -1602,7 +1601,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:26:12
 
-Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `a`: `1` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:26:12
@@ -1617,7 +1616,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:26:18
 
-Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `c`: `3` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:26:18
@@ -1632,7 +1631,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:29:6
 
-Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `b`: `2` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:29:6
@@ -1647,7 +1646,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:29:12
 
-Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `a`: `1` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:29:12
@@ -1663,8 +1662,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:29:18
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with string [3].
+ - Either `3` [1] is incompatible with `boolean` [2].
+ - Or `3` [1] is incompatible with `string` [3].
 
    errors_union.js:29:18
    29| ({b: 2, a: 1, c: 3}) as {a: boolean, b: boolean, c: boolean | string};
@@ -1681,7 +1680,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:32:10
 
-Cannot cast object literal to object type because in property `a.b`: number [1] is incompatible with boolean [2].
+Cannot cast object literal to object type because in property `a.b`: `42` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    errors_union.js:32:10
@@ -1697,8 +1696,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:36:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either in property `b`: number [1] is incompatible with boolean [2].
- - Or in property `b`: number [1] is incompatible with object type [3].
+ - Either in property `b`: `42` [1] is incompatible with `boolean` [2].
+ - Or in property `b`: `42` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1721,7 +1720,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:38:1
 
-Cannot cast `42` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `42` to boolean because `42` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    errors_union.js:38:1
    38| 42 as boolean; // Error: number ~> boolean
@@ -1736,8 +1735,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:39:1
 
 Cannot cast `42` to union type because: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `boolean` [2].
+ - Or `42` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1758,8 +1757,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:40:1
 
 Cannot cast `42` to union type because: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `boolean` [2].
+ - Or `42` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1780,8 +1779,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:43:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either in property `y`: string [1] is incompatible with number [2].
- - Or in property `x`: number [3] is incompatible with string [4].
+ - Either in property `y`: `"abc"` [1] is incompatible with `number` [2].
+ - Or in property `x`: `123` [3] is incompatible with `string` [4].
 
    errors_union.js:43:2
    43| ({x: 123, y: 'abc'}) as {x: number, y: number} | {x: string, y: string}; // Error
@@ -1805,8 +1804,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:48:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either in property `y`: string [1] is incompatible with number [2].
- - Or in property `x`: number [3] is incompatible with string [4].
+ - Either in property `y`: `"abc"` [1] is incompatible with `number` [2].
+ - Or in property `x`: `123` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1833,8 +1832,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:52:2
 
 Cannot cast object literal to `Point` because: [incompatible-type]
- - Either in property `y`: string [1] is incompatible with number [2].
- - Or in property `x`: number [3] is incompatible with string [4].
+ - Either in property `y`: `"abc"` [1] is incompatible with `number` [2].
+ - Or in property `x`: `123` [3] is incompatible with `string` [4].
 
    errors_union.js:52:2
    52| ({x: 123, y: 'abc'}) as Point; // Error
@@ -1858,8 +1857,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:54:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    errors_union.js:54:1
    54| true as number | string; // Error
@@ -1877,8 +1876,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:55:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1899,8 +1898,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:56:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1921,8 +1920,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:57:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1943,8 +1942,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:59:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    errors_union.js:59:6
    59| ({a: true}) as {a: number | string}; // Error
@@ -1962,8 +1961,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:62:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    errors_union.js:62:6
    62|   a: true, // Error: should be grouped
@@ -1981,8 +1980,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:63:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2003,8 +2002,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:64:6
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2025,8 +2024,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:65:6
 
 Cannot cast object literal to object type because in property `d`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2047,8 +2046,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:75:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either in index `0`: boolean [1] is incompatible with number [2].
- - Or in index `0`: boolean [1] is incompatible with string [3].
+ - Either in index `0`: `true` [1] is incompatible with `number` [2].
+ - Or in index `0`: `true` [1] is incompatible with `string` [3].
 
    errors_union.js:75:6
    75|   a: [true], // Error: should be grouped
@@ -2069,8 +2068,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:76:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either in index `0`: boolean [1] is incompatible with number [2].
- - Or in index `0`: boolean [1] is incompatible with string [3].
+ - Either in index `0`: `true` [1] is incompatible with `number` [2].
+ - Or in index `0`: `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2094,8 +2093,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:77:6
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either in index `0`: boolean [1] is incompatible with number [2].
- - Or in index `0`: boolean [1] is incompatible with string [3].
+ - Either in index `0`: `true` [1] is incompatible with `number` [2].
+ - Or in index `0`: `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2119,8 +2118,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:78:6
 
 Cannot cast object literal to object type because in property `d`: [incompatible-type]
- - Either in index `0`: boolean [1] is incompatible with number [2].
- - Or in index `0`: boolean [1] is incompatible with string [3].
+ - Either in index `0`: `true` [1] is incompatible with `number` [2].
+ - Or in index `0`: `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2144,8 +2143,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:86:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
  - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
 
    errors_union.js:86:1
@@ -2167,9 +2166,9 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:87:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
+ - Either `true` [1] is incompatible with `string` [2].
  - Or boolean literal `true` [1] is incompatible with boolean literal `false` [3].
- - Or boolean [1] is incompatible with number [4].
+ - Or `true` [1] is incompatible with `number` [4].
 
    errors_union.js:87:1
    87| true as (string | false) | number; // Error: should be flattened
@@ -2190,8 +2189,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:88:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
  - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2216,8 +2215,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:89:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
  - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2242,8 +2241,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:90:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
  - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2268,10 +2267,10 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:92:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with number [3].
- - Or boolean [1] is incompatible with number [4].
- - Or boolean [1] is incompatible with string [5].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `number` [4].
+ - Or `true` [1] is incompatible with `string` [5].
 
    errors_union.js:92:1
    92| true as number | number | number | string; // Error: should be flattened
@@ -2295,10 +2294,10 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:93:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with number [3].
- - Or boolean [1] is incompatible with number [4].
- - Or boolean [1] is incompatible with string [5].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `number` [4].
+ - Or `true` [1] is incompatible with `string` [5].
 
    errors_union.js:93:1
    93| true as number | number | (number | string); // Error: should be flattened
@@ -2322,10 +2321,10 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:94:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with number [3].
- - Or boolean [1] is incompatible with number [4].
- - Or boolean [1] is incompatible with string [5].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `number` [4].
+ - Or `true` [1] is incompatible with `string` [5].
 
    errors_union.js:94:1
    94| true as number | (number | (number | string)); // Error: should be flattened
@@ -2349,10 +2348,10 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:95:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
- - Or boolean [1] is incompatible with number [4].
- - Or boolean [1] is incompatible with number [5].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `number` [4].
+ - Or `true` [1] is incompatible with `number` [5].
 
    errors_union.js:95:1
    95| true as (string | number) | number | number; // Error: should be flattened
@@ -2376,10 +2375,10 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:96:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
- - Or boolean [1] is incompatible with number [4].
- - Or boolean [1] is incompatible with number [5].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+ - Or `true` [1] is incompatible with `number` [4].
+ - Or `true` [1] is incompatible with `number` [5].
 
    errors_union.js:96:1
    96| true as ((string | number) | number) | number; // Error: should be flattened
@@ -2403,8 +2402,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:98:1
 
 Cannot cast `true` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with object type [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2425,8 +2424,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:99:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with object type [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2447,8 +2446,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:99:15
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with object type [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2469,8 +2468,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:100:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2491,8 +2490,8 @@ References:
 Error ------------------------------------------------------------------------------------------- errors_union.js:100:15
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with object type [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `{}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2513,10 +2512,10 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:103:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
- - Or in index `0` > index `1`: number [1] is incompatible with `B` [3].
- - Or in index `0` > index `1`: number [1] is incompatible with `C` [4].
- - Or in index `0` > index `1`: number [1] is incompatible with `D` [5].
+ - Either in index `0` > index `1`: `number` [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `B` [3].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `C` [4].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `D` [5].
 
    errors_union.js:103:8
    103| any as [[null, number]] as [[null, A] | [null, B]] | [[null, C] | [null, D]];
@@ -2543,9 +2542,9 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:106:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
- - Or in index `0` > index `1`: number [1] is incompatible with `C` [3].
- - Or in index `0` > index `1`: number [1] is incompatible with `D` [4].
+ - Either in index `0` > index `1`: `number` [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `C` [3].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `D` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2572,8 +2571,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:109:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
- - Or in index `0` > index `1`: number [1] is incompatible with `C` [3].
+ - Either in index `0` > index `1`: `number` [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: `number` [1] is incompatible with `C` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2597,8 +2596,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:112:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index `0` > index `1`: number [1] is incompatible with `C` [2].
- - Or in index `0`: tuple type [3] is incompatible with object type [4].
+ - Either in index `0` > index `1`: `number` [1] is incompatible with `C` [2].
+ - Or in index `0`: `[null, number]` [3] is incompatible with `{}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2639,8 +2638,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:19:1
 
 Cannot call `a` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    intersection-function.js:19:1
    19| a(true);
@@ -2661,8 +2660,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:23:1
 
 Cannot call `b` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `{p: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2686,8 +2685,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:24:1
 
 Cannot call `b` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
- - Or object literal [3] is incompatible with string [4].
+ - Either in property `p`: `42` [1] is incompatible with `string` [2].
+ - Or object literal [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2714,8 +2713,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:30:1
 
 Cannot call `c` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2739,8 +2738,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:31:1
 
 Cannot call `c` because: [incompatible-type]
- - Either in property `a.b`: number [1] is incompatible with string [2].
- - Or in property `a.b`: number [1] is incompatible with boolean [3].
+ - Either in property `a.b`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a.b`: `42` [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2764,8 +2763,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:36:1
 
 Cannot call `d` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `{a: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2789,8 +2788,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:37:1
 
 Cannot call `d` because: [incompatible-type]
- - Either in property `a`: number [1] is incompatible with string [2].
- - Or in property `a`: number [1] is incompatible with object type [3].
+ - Either in property `a`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a`: `42` [1] is incompatible with `{b: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2814,8 +2813,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:38:1
 
 Cannot call `d` because: [incompatible-type]
- - Either in property `a.b`: number [1] is incompatible with string [2].
- - Or in property `a`: object literal [3] is incompatible with string [4].
+ - Either in property `a.b`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a`: object literal [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2844,7 +2843,7 @@ Error --------------------------------------------------------------------------
 Cannot call `e` because: [incompatible-type]
  - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with `X` [3].
+ - Or `42` [1] is incompatible with `X` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2868,7 +2867,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:44:1
 
 Cannot call `e` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
+ - Either in property `p`: `number` [1] is incompatible with `string` [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2918,7 +2917,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:46:1
 
 Cannot call `e` because: [incompatible-type]
- - Either in property `p`: boolean [1] is incompatible with string [2].
+ - Either in property `p`: `true` [1] is incompatible with `string` [2].
  - Or object literal [3] is incompatible with `X` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2948,7 +2947,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-type]
  - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `42` [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2972,8 +2971,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:52:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
- - Or object literal [3] is incompatible with read-only array type [4].
+ - Either in property `p`: `42` [1] is incompatible with `string` [2].
+ - Or object literal [3] is incompatible with `ReadonlyArray<string>` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3001,7 +3000,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either property `p` is missing in object literal [1] but exists in interface type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
+ - Or object literal [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3025,7 +3024,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
+ - Either in property `p`: `number` [1] is incompatible with `string` [2].
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3078,7 +3077,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:56:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3106,8 +3105,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with string [2].
- - Or in array element: number [1] is incompatible with string [3].
+ - Either in index `0`: `number` [1] is incompatible with `string` [2].
+ - Or in array element: `number` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3131,7 +3130,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:58:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3159,8 +3158,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
- - Or in property `p`: number [3] is incompatible with string [4].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
+ - Or in property `p`: `number` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3187,8 +3186,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:63:1
 
 Cannot call `g` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `Z` [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `Z` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3213,7 +3212,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `g` because: [incompatible-type]
  - Either object literal [1] is incompatible with `Z` [2].
- - Or object literal [1] is incompatible with string [3].
+ - Or object literal [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3237,7 +3236,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:68:1
 
 Cannot call `h` because: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
+ - Either `2` [1] is incompatible with `{}` [2].
  - Or no more than 2 arguments are expected by function type [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3262,7 +3261,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:72:1
 
 Cannot call `i` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
+ - Either `42` [1] is incompatible with `string` [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3290,8 +3289,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:76:1
 
 Cannot call `j` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [3] is incompatible with string [4].
+ - Either `2` [1] is incompatible with `string` [2].
+ - Or `1` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3318,8 +3317,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:80:1
 
 Cannot call `k` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
- - Or number [3] is incompatible with string [4].
+ - Either in property `p`: `2` [1] is incompatible with `string` [2].
+ - Or `1` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3346,8 +3345,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:84:1
 
 Cannot call `m` because: [incompatible-type]
- - Either in type argument `T` [1]: number [2] is incompatible with string [3].
- - Or in property `p`: number [2] is incompatible with string [4].
+ - Either in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
+ - Or in property `p`: `number` [2] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3374,8 +3373,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- nullish.js:6:1
 
 Cannot cast `42` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with null [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3396,8 +3395,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- nullish.js:7:1
 
 Cannot cast `42` to union type because: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with null [3].
+ - Either `42` [1] is incompatible with `{}` [2].
+ - Or `42` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3418,8 +3417,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- nullish.js:8:1
 
 Cannot cast `42` to union type because: [incompatible-type]
- - Either number [1] is incompatible with tuple type [2].
- - Or number [1] is incompatible with null [3].
+ - Either `42` [1] is incompatible with `Readonly<[]>` [2].
+ - Or `42` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3440,8 +3439,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- nullish.js:9:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either object literal [1] is incompatible with string [2].
- - Or object literal [1] is incompatible with null [3].
+ - Either object literal [1] is incompatible with `string` [2].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3463,7 +3462,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to union type because: [incompatible-type]
  - Either property `p` is missing in object literal [1] but exists in object type [2].
- - Or object literal [1] is incompatible with null [3].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3484,8 +3483,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- nullish.js:11:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either object literal [1] is incompatible with tuple type [2].
- - Or object literal [1] is incompatible with null [3].
+ - Either object literal [1] is incompatible with `Readonly<[]>` [2].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3506,8 +3505,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- nullish.js:12:1
 
 Cannot cast array literal to union type because: [incompatible-type]
- - Either empty array literal [1] is incompatible with string [2].
- - Or empty array literal [1] is incompatible with null [3].
+ - Either `Array<empty>` [1] is incompatible with `string` [2].
+ - Or `Array<empty>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3528,8 +3527,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- nullish.js:13:1
 
 Cannot cast array literal to union type because: [incompatible-type]
- - Either empty array literal [1] is incompatible with object type [2].
- - Or empty array literal [1] is incompatible with null [3].
+ - Either `Array<empty>` [1] is incompatible with `{}` [2].
+ - Or `Array<empty>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3551,7 +3550,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast array literal to union type because: [incompatible-type]
  - Either empty array literal [1] has 0 elements but tuple type [2] has 1 element.
- - Or empty array literal [1] is incompatible with null [3].
+ - Or `Array<empty>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3571,7 +3570,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ numeric_sentinel.js:9:3
 
-Cannot cast `x1.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x1.p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    numeric_sentinel.js:9:3
    9|   x1.p as string; // should error
@@ -3588,7 +3587,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:20:3
 
-Cannot cast `x2.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x2.p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    numeric_sentinel.js:20:3
    20|   x2.p as string; // should error
@@ -3605,7 +3604,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:31:3
 
-Cannot cast `x3.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x3.p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    numeric_sentinel.js:31:3
    31|   x3.p as string; // should error
@@ -3622,7 +3621,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- numeric_sentinel.js:35:3
 
-Cannot cast `x3.p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x3.p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    numeric_sentinel.js:35:3
    35|   x3.p as string; // should error
@@ -3639,7 +3638,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- sentinel.js:9:17
 
-Cannot cast object literal to `X` because in property `p`: string [1] is incompatible with number [2].
+Cannot cast object literal to `X` because in property `p`: `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    sentinel.js:9:17
@@ -3669,8 +3668,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:18:1
 
 Cannot cast `true` to `A` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    union.js:18:1
    18| true as A;
@@ -3688,8 +3687,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:21:1
 
 Cannot cast `42` to `B` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `{p: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3710,8 +3709,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:22:2
 
 Cannot cast object literal to `B` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
- - Or object literal [3] is incompatible with string [4].
+ - Either in property `p`: `42` [1] is incompatible with `string` [2].
+ - Or object literal [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3735,8 +3734,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:25:1
 
 Cannot cast `42` to `C` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3757,8 +3756,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:26:2
 
 Cannot cast object literal to `C` because: [incompatible-type]
- - Either in property `a.b`: number [1] is incompatible with string [2].
- - Or in property `a.b`: number [1] is incompatible with boolean [3].
+ - Either in property `a.b`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a.b`: `42` [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3782,8 +3781,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:29:1
 
 Cannot cast `42` to `D` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with object type [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `{a: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3804,8 +3803,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
 Cannot cast object literal to `D` because: [incompatible-type]
- - Either in property `a`: number [1] is incompatible with string [2].
- - Or in property `a`: number [1] is incompatible with object type [3].
+ - Either in property `a`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a`: `42` [1] is incompatible with `{b: string}` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3829,8 +3828,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:31:2
 
 Cannot cast object literal to `D` because: [incompatible-type]
- - Either in property `a.b`: number [1] is incompatible with string [2].
- - Or in property `a`: object literal [3] is incompatible with string [4].
+ - Either in property `a.b`: `42` [1] is incompatible with `string` [2].
+ - Or in property `a`: object literal [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3859,7 +3858,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `42` to `E` because: [incompatible-type]
  - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with `X` [3].
+ - Or `42` [1] is incompatible with `X` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3880,7 +3879,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:36:1
 
 Cannot cast `new Y()` to `E` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
+ - Either in property `p`: `number` [1] is incompatible with `string` [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3924,7 +3923,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:38:2
 
 Cannot cast object literal to `E` because: [incompatible-type]
- - Either in property `p`: boolean [1] is incompatible with string [2].
+ - Either in property `p`: `true` [1] is incompatible with `string` [2].
  - Or object literal [3] is incompatible with `X` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3951,7 +3950,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `42` to `F` because: [incompatible-type]
  - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with read-only array type [3].
+ - Or `42` [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3972,8 +3971,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2
 
 Cannot cast object literal to `F` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
- - Or object literal [3] is incompatible with read-only array type [4].
+ - Either in property `p`: `42` [1] is incompatible with `string` [2].
+ - Or object literal [3] is incompatible with `ReadonlyArray<string>` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3998,7 +3997,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to `F` because: [incompatible-type]
  - Either property `p` is missing in object literal [1] but exists in interface type [2].
- - Or object literal [1] is incompatible with read-only array type [3].
+ - Or object literal [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4019,7 +4018,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:44:1
 
 Cannot cast `new Y()` to `F` because: [incompatible-type]
- - Either in property `p`: number [1] is incompatible with string [2].
+ - Either in property `p`: `number` [1] is incompatible with `string` [2].
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -4066,7 +4065,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:46:8
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -4091,8 +4090,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:47:11
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either in index `0`: number [1] is incompatible with string [2].
- - Or in array element: number [1] is incompatible with string [3].
+ - Either in index `0`: `number` [1] is incompatible with `string` [2].
+ - Or in array element: `number` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4116,7 +4115,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:48:14
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -4141,8 +4140,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:49:16
 
 Cannot cast `null` to `F` because: [incompatible-type]
- - Either in array element: number [1] is incompatible with string [2].
- - Or in property `p`: number [3] is incompatible with string [4].
+ - Either in array element: `number` [1] is incompatible with `string` [2].
+ - Or in property `p`: `number` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4169,8 +4168,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:52:1
 
 Cannot cast `42` to `G` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `Z` [3].
+ - Either `42` [1] is incompatible with `string` [2].
+ - Or `42` [1] is incompatible with `Z` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4192,7 +4191,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to `G` because: [incompatible-type]
  - Either object literal [1] is incompatible with `Z` [2].
- - Or object literal [1] is incompatible with string [3].
+ - Or object literal [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4213,8 +4212,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:56:12
 
 Cannot cast `new W()` to `M` because: [incompatible-type]
- - Either in type argument `T` [1]: number [2] is incompatible with string [3].
- - Or in property `p`: number [2] is incompatible with string [4].
+ - Either in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
+ - Or in property `p`: `number` [2] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

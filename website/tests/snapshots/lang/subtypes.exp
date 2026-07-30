@@ -90,8 +90,8 @@ References:
 
 Error ------------------------------------------------------------------------------- -:9:1
 
-Cannot cast `f2` to `FuncType` because in the first parameter: union type [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot cast `f2` to `FuncType` because in the first parameter: `empty` [1] is incompatible with `2` [2].
+[incompatible-type]
 
    -:9:1
    9| f2 as FuncType; // Error

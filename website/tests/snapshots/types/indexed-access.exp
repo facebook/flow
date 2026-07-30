@@ -31,7 +31,7 @@ No errors!
 === block 6 ===
 Error ----------------------------------------------------------------------- -:7:19
 
-Cannot assign `getProp(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `getProp(...)` to `y` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:7:19
    7| const y: string = getProp({a: 42}, 'a'); // Error - `number` is not a `string`

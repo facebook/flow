@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- constrain_array.js:5:1
 
-Cannot cast `x[0]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[0]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    constrain_array.js:5:1
    5| x[0] as empty; /// error from num and str
@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- constrain_array.js:6:8
 
-Cannot call `x.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `x.push` because in array element: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    constrain_array.js:6:8
    6| x.push('a'); // error
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- constrain_array.js:8:5
 
-Cannot assign `100` to `x` because number [1] is incompatible with `x` [2]. [incompatible-type]
+Cannot assign `100` to `x` because `100` [1] is incompatible with `Array<number>` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [2]. Add an annotation to `x` [2] if a different
 type is desired.
@@ -84,7 +84,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:11:5
 
-Cannot assign `100` to `y` because number [1] is incompatible with empty array literal [2]. [incompatible-type]
+Cannot assign `100` to `y` because `100` [1] is incompatible with `Array<empty>` [2]. [incompatible-type]
 
 All writes to `y` must be compatible with the type of its initializer [2]. Add an annotation to `y` [2] if a different
 type is desired.
@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:15:8
 
-Cannot assign array literal to `z` because in array element: number [1] is incompatible with string [2].
+Cannot assign array literal to `z` because in array element: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
 All writes to `z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different
@@ -151,7 +151,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:25:8
 
-Cannot call `u.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `u.push` because in array element: `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    constrain_array.js:25:8
    25| u.push(42); // error
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- constrain_array.js:30:12
 
-Cannot call `xin.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `xin.push` because in array element: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    constrain_array.js:30:12
    30|   xin.push('a'); // error
@@ -195,7 +195,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error --------------------------------------------------------------------------------------------------- globals.js:4:1
 
-Cannot cast `x` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    globals.js:4:1
    4| x as empty;
@@ -230,7 +230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- globals.js:6:1
 
-Cannot cast `y` to empty because `Promise` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `Promise<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    globals.js:6:1
    6| y as empty;
@@ -247,7 +247,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- havoc.js:8:1
 
-Cannot cast `ya` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `ya` to number because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    havoc.js:8:1
    8| ya as number;
@@ -264,8 +264,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- havoc.js:13:47
 
-Cannot call `mandatory` with `externalProps.s` bound to `s` because null or undefined [1] is incompatible with object
-type [2]. [incompatible-type]
+Cannot call `mandatory` with `externalProps.s` bound to `s` because `null` [1] is incompatible with
+`{field: string}` [2]. [incompatible-type]
+
+   havoc.js:13:47
+   13| externalProps.s && modifyProps() && mandatory(externalProps.s);
+                                                     ^^^^^^^^^^^^^^^
+
+References:
+   havoc.js:10:26
+   10| const externalProps: {s: ?{field: string}} = {s: {field: 'foo'}};
+                                ^^^^^^^^^^^^^^^^ [1]
+   havoc.js:11:23
+   11| function mandatory(s: {field: string}) {}
+                             ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- havoc.js:13:47
+
+Cannot call `mandatory` with `externalProps.s` bound to `s` because `void` [1] is incompatible with
+`{field: string}` [2]. [incompatible-type]
 
    havoc.js:13:47
    13| externalProps.s && modifyProps() && mandatory(externalProps.s);
@@ -282,7 +300,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- havoc.js:27:38
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    havoc.js:27:38
    27| typeof x === 'string' && havoc() && (x as string);
@@ -299,7 +317,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ initialize.js:8:1
 
-Cannot cast `x` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    initialize.js:8:1
    8| x as number; // error
@@ -316,7 +334,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:20:1
 
-Cannot cast `y` to number because possibly uninitialized variable [1] is incompatible with number [2].
+Cannot cast `y` to number because possibly uninitialized variable [1] is incompatible with `number` [2].
 [incompatible-type]
 
    initialize.js:20:1
@@ -364,7 +382,7 @@ Variable `w` [1] is never initialized, annotated, or assigned to. [invalid-decla
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:28:1
 
-Cannot cast `w` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `w` to number because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    initialize.js:28:1
    28| w as number; // Error, w is never initialized or assigned so cast to number is incorrect
@@ -381,7 +399,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- loops.js:11:21
 
-Cannot assign `x` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `y` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    loops.js:11:21
    11|     var y: number = x; // error: boolean !~> number
@@ -398,7 +416,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- loops.js:13:19
 
-Cannot assign `z` to `w` because possibly uninitialized variable [1] is incompatible with number [2].
+Cannot assign `z` to `w` because possibly uninitialized variable [1] is incompatible with `number` [2].
 [incompatible-type]
 
    loops.js:13:19
@@ -416,7 +434,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- loops.js:13:19
 
-Cannot assign `z` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `z` to `w` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    loops.js:13:19
    13|   var w: number = z; // 2 errors: ?string !~> number
@@ -433,7 +451,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- loops.js:24:5
 
-Cannot cast `a` to string because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `a` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    loops.js:24:5
    24|     a as string; // Error
@@ -450,7 +468,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refi.js:24:3
 
-Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refi.js:24:3
    24|   y as empty;
@@ -467,7 +485,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refi.js:24:3
 
-Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refi.js:24:3
    24|   y as empty;
@@ -484,7 +502,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refi.js:24:3
 
-Cannot cast `y` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    refi.js:24:3
    24|   y as empty;
@@ -501,7 +519,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- shadow_havoc.js:18:1
 
-Cannot cast `aa` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `aa` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    shadow_havoc.js:18:1
    18| aa as number; // fail
@@ -518,7 +536,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:7
 
-Cannot assign `x` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `y` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
 type is desired.
@@ -541,7 +559,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot assign `'a'` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'a'` to `z` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `z` must be compatible with the type of its initial assignment [3]. Add an annotation to `z` [4] if a
 different type is desired.
@@ -564,7 +582,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:6
 
-Cannot assign `'hello world'` to `a2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'hello world'` to `a2` because `"hello world"` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `a2` must be compatible with the type of its initializer [3]. Add an annotation to `a2` [3] if a different
 type is desired.
@@ -584,7 +602,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:1
 
-Cannot cast `a2` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `a2` to number because `"hello world"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:28:1
    28| a2 as number;
@@ -601,7 +619,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:31:10
 
-Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:31:10
    31|   return x;
@@ -632,7 +650,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:1
 
-Cannot cast `ya` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `ya` to number because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:37:1
    37| ya as number;
@@ -649,7 +667,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:6
 
-Cannot assign `'a'` to `ya` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'a'` to `ya` because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:38:6
    38| ya = 'a';
@@ -663,7 +681,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:41:10
 
-Cannot return `y.foo` because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `y.foo` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:41:10
    41|   return y.foo;
@@ -680,7 +698,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:6
 
-Cannot assign `y` to `x2` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `y` to `x2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `x2` must be compatible with the type of its initializer [3]. Add an annotation to `x2` [3] if a different
 type is desired.
@@ -703,7 +721,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:9
 
-Cannot cast `p11` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `p11` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:54:9
    54| if (y11[p11 as empty]) {
@@ -734,7 +752,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undef_class.js:4:1
 
-Cannot cast `x` to `C` because number [1] is incompatible with `C` [2]. [incompatible-type]
+Cannot cast `x` to `C` because `number` [1] is incompatible with `C` [2]. [incompatible-type]
 
    undef_class.js:4:1
    4| x as C; // Error, number ~> C
@@ -750,4 +768,4 @@ References:
 
 
 
-Found 46 errors
+Found 47 errors

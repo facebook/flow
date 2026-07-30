@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- element_type.js:5:1
 
-Cannot cast `'hello world'` to `Arr_Elem` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'hello world'` to `Arr_Elem` because `"hello world"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    element_type.js:5:1
    5| 'hello world' as Arr_Elem;
@@ -14,7 +15,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- element_type.js:16:1
 
-Cannot cast `'hello world'` to `Obj_Elem` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'hello world'` to `Obj_Elem` because `"hello world"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    element_type.js:16:1
    16| 'hello world' as Obj_Elem;
@@ -42,7 +44,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:5:17
 
-Cannot return `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `0` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    non_maybe_type.js:5:17
    5|   } else return 0; // this should be an error
@@ -56,7 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:10:1
 
-Cannot cast `0` to `NonNullable` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `0` to `NonNullable` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    non_maybe_type.js:10:1
    10| 0 as NonNullable<null>; // error
@@ -70,7 +72,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
 
-Cannot cast `null` to `NonNullable` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `null` to `NonNullable` because `null` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:17:1
    17| null as NonNullable<unknown>;
@@ -84,7 +86,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
 
-Cannot cast `undefined` to `NonNullable` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `undefined` to `NonNullable` because `void` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:18:1
    18| undefined as NonNullable<unknown>;
@@ -98,7 +100,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:49:1
 
-Cannot cast `'hi'` to `NonNullable` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'hi'` to `NonNullable` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    non_maybe_type.js:49:1
    49| 'hi' as NonNullable<empty>; // Error
@@ -112,7 +114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:53:1
 
-Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `true` to `NonMaybeNumber` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    non_maybe_type.js:53:1
    53| true as NonMaybeNumber; // Error
@@ -126,7 +128,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:54:1
 
-Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `undefined` to `NonMaybeNumber` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    non_maybe_type.js:54:1
    54| undefined as NonMaybeNumber; // Error
@@ -140,7 +142,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- property_type.js:6:1
 
-Cannot cast `42` to `Obj_Prop_x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `42` to `Obj_Prop_x` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    property_type.js:6:1
    6| 42 as Obj_Prop_x;
@@ -154,7 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- property_type.js:10:15
 
-Cannot return `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `0` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    property_type.js:10:15
    10|   else return 0;
@@ -362,7 +364,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:25:32
 
-Cannot call `fn2(...)` with `'foo'` bound to the first parameter because string [1] is incompatible with number [2].
+Cannot call `fn2(...)` with `'foo'` bound to the first parameter because `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    tvar4.js:25:32
@@ -377,8 +379,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:33:53
 
-Cannot call `fn3(...)` with object literal bound to the first parameter because in property `foo`: number [1] is
-incompatible with string [2]. [incompatible-type]
+Cannot call `fn3(...)` with object literal bound to the first parameter because in property `foo`: `42` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    tvar4.js:33:53
    33| fn3((x: {foo: string, p: number, ...}) => {})({foo: 42});
@@ -408,7 +410,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- tvar4.js:40:17
 
 Cannot call `a` with object literal bound to the first parameter because object literal [1] is incompatible with
-`T` [2]. [incompatible-type]
+`empty` [2]. [incompatible-type]
 
    tvar4.js:40:17
    40|   return p => a({p});
@@ -422,7 +424,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar4.js:44:29
 
-Cannot call `fn4(...)` with `42` bound to the first parameter because number [1] is incompatible with string [2].
+Cannot call `fn4(...)` with `42` bound to the first parameter because `42` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    tvar4.js:44:29
@@ -466,8 +468,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar5.js:5:12
 
-Cannot call `unReadOnly` with `foo` bound to `thing` because object type [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot call `unReadOnly` with `foo` bound to `thing` because `{readonly foo: string, ...}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    tvar5.js:5:12
    5| unReadOnly(foo) as empty; // error
@@ -485,8 +487,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:2:38
 
 Cannot assign `true` to `x1` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    union.js:2:38
    2| var x1: NonNullable<number|string> = true; // err, boolean ~> number|string
@@ -504,8 +506,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:4:50
 
 Cannot assign `true` to `x3` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    union.js:4:50
    4| var x3: ({p:number, ...}|{p:string, ...})["p"] = true; // err, boolean ~> number|string
@@ -523,8 +525,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:10:1
 
 Cannot cast `null` to `P2` because: [incompatible-type]
- - Either null [1] is incompatible with string [2].
- - Or null [1] is incompatible with number [3].
+ - Either `null` [1] is incompatible with `string` [2].
+ - Or `null` [1] is incompatible with `number` [3].
 
    union.js:10:1
    10| null as P2; // err, null ~> string|number

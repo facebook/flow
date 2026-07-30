@@ -875,46 +875,13 @@ impl flow_common_ty::ty::TyEndoTy<ALoc, Loc> for PatchUpReactMapper {
     //         args_opt
     fn on_t(&mut self, loc: &Loc, t: ALocTy) -> ALocTy {
         match t.as_ref() {
-            ty::Ty::Generic(box (symbol, kind, args_opt))
-                if !symbol.sym_anonymous
-                    && matches!(
-                        &symbol.sym_provenance,
-                        flow_common_ty::ty_symbol::Provenance::Library(ri)
-                        if ri.imported_as.is_none()
-                    )
-                    && is_react_loc(&symbol.sym_def_loc) =>
-            {
-                // Check if name matches one of the React type names
-                let name_str = symbol.sym_name.as_str();
-                let is_react_name = matches!(
-                    name_str,
-                    "ChildrenArray"
-                        | "ComponentType"
-                        | "Context"
-                        | "MixedElement"
-                        | "ElementConfig"
-                        | "ElementProps"
-                        | "ElementRef"
-                        | "ElementType"
-                        | "Key"
-                        | "Node"
-                        | "Portal"
-                        | "RefObject"
-                        | "RefSetter"
-                        | "PropsOf"
-                        | "PropOf"
-                        | "RefOf"
-                );
-                if is_react_name {
+            ty::Ty::Generic(box (symbol, kind, args_opt)) => {
+                if let Some(new_symbol) = flow_common_ty::ty_utils::patch_up_react_symbol(symbol) {
                     let args_opt = args_opt.as_ref().map(|args| {
                         let mapped: Arc<[ALocTy]> =
                             args.iter().map(|arg| self.on_t(loc, arg.dupe())).collect();
                         mapped
                     });
-                    let new_symbol = Symbol {
-                        sym_name: flow_common::reason::Name::new(format!("React.{name_str}")),
-                        ..symbol.clone()
-                    };
                     Arc::new(ty::Ty::Generic(Box::new((new_symbol, *kind, args_opt))))
                 } else {
                     self.default_on_t(loc, t)
@@ -968,46 +935,13 @@ impl flow_common_ty::ty::TyEndoTy<ALoc, Loc> for StylizeTyMapper {
                 self.on_union(loc, t.dupe(), *from_bounds)
             }
             // React name fixup (inherited from patch_up_react_mapper)
-            ty::Ty::Generic(box (symbol, kind, args_opt))
-                if !symbol.sym_anonymous
-                    && matches!(
-                        &symbol.sym_provenance,
-                        flow_common_ty::ty_symbol::Provenance::Library(ri)
-                        if ri.imported_as.is_none()
-                    )
-                    && is_react_loc(&symbol.sym_def_loc) =>
-            {
-                // Check if name matches one of the React type names
-                let name_str = symbol.sym_name.as_str();
-                let is_react_name = matches!(
-                    name_str,
-                    "ChildrenArray"
-                        | "ComponentType"
-                        | "Context"
-                        | "MixedElement"
-                        | "ElementConfig"
-                        | "ElementProps"
-                        | "ElementRef"
-                        | "ElementType"
-                        | "Key"
-                        | "Node"
-                        | "Portal"
-                        | "RefObject"
-                        | "RefSetter"
-                        | "PropsOf"
-                        | "PropOf"
-                        | "RefOf"
-                );
-                if is_react_name {
+            ty::Ty::Generic(box (symbol, kind, args_opt)) => {
+                if let Some(new_symbol) = flow_common_ty::ty_utils::patch_up_react_symbol(symbol) {
                     let args_opt = args_opt.as_ref().map(|args| {
                         let mapped: Arc<[ALocTy]> =
                             args.iter().map(|arg| self.on_t(loc, arg.dupe())).collect();
                         mapped
                     });
-                    let new_symbol = Symbol {
-                        sym_name: flow_common::reason::Name::new(format!("React.{name_str}")),
-                        ..symbol.clone()
-                    };
                     Arc::new(ty::Ty::Generic(Box::new((new_symbol, *kind, args_opt))))
                 } else {
                     self.default_on_t(loc, t)
@@ -1472,45 +1406,13 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
 
     fn super_on_t(&mut self, env: &Loc, t: ALocTy) -> ALocTy {
         match t.as_ref() {
-            ty::Ty::Generic(box (symbol, kind, args_opt))
-                if !symbol.sym_anonymous
-                    && matches!(
-                        &symbol.sym_provenance,
-                        flow_common_ty::ty_symbol::Provenance::Library(ri)
-                        if ri.imported_as.is_none()
-                    )
-                    && is_react_loc(&symbol.sym_def_loc) =>
-            {
-                let name_str = symbol.sym_name.as_str();
-                let is_react_name = matches!(
-                    name_str,
-                    "ChildrenArray"
-                        | "ComponentType"
-                        | "Context"
-                        | "MixedElement"
-                        | "ElementConfig"
-                        | "ElementProps"
-                        | "ElementRef"
-                        | "ElementType"
-                        | "Key"
-                        | "Node"
-                        | "Portal"
-                        | "RefObject"
-                        | "RefSetter"
-                        | "PropsOf"
-                        | "PropOf"
-                        | "RefOf"
-                );
-                if is_react_name {
+            ty::Ty::Generic(box (symbol, kind, args_opt)) => {
+                if let Some(new_symbol) = flow_common_ty::ty_utils::patch_up_react_symbol(symbol) {
                     let args_opt = args_opt.as_ref().map(|args| {
                         let mapped: Arc<[ALocTy]> =
                             args.iter().map(|arg| self.on_t(env, arg.dupe())).collect();
                         mapped
                     });
-                    let new_symbol = Symbol {
-                        sym_name: flow_common::reason::Name::new(format!("React.{name_str}")),
-                        ..symbol.clone()
-                    };
                     Arc::new(ty::Ty::Generic(Box::new((new_symbol, *kind, args_opt))))
                 } else {
                     <Self as flow_common_ty::ty::TyEndoTy<ALoc, Loc>>::default_on_t(self, env, t)

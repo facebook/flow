@@ -14,7 +14,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
 
-Cannot assign `x.parent` to `x` because null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
+Cannot assign `x.parent` to `x` because `null` [1] is incompatible with `Bar` [2]. [incompatible-type]
+
+   assignment.js:16:14
+   16|   while (x = x.parent) { // can't assign x to ?Bar
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:15:19
+   15| function bar0(x : Bar) {
+                         ^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:16:14
+
+Cannot assign `x.parent` to `x` because `void` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    assignment.js:16:14
    16|   while (x = x.parent) { // can't assign x to ?Bar
@@ -73,7 +90,30 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- assignment.js:29:14
 
-Cannot assign `y.parent` to `y` because null or undefined [1] is incompatible with `Bar` [2]. [incompatible-type]
+Cannot assign `y.parent` to `y` because `null` [1] is incompatible with `Bar` [2]. [incompatible-type]
+
+All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
+type is desired.
+
+   assignment.js:29:14
+   29|   while (y = y.parent) { // constrain write error
+                    ^^^^^^^^
+
+References:
+   assignment.js:11:11
+   11|   parent: ?Bar;
+                 ^^^^ [1]
+   assignment.js:27:19
+   27| function bar2(x : Bar) {
+                         ^^^ [2]
+   assignment.js:28:7
+   28|   var y = x;
+             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:29:14
+
+Cannot assign `y.parent` to `y` because `void` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
 All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
 type is desired.
@@ -110,7 +150,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- assignment.js:37:9
 
-Cannot assign `null` to `x` because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `null` to `x` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -742,8 +782,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
-Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because object type [1] is incompatible with
-`Type` [2]. [incompatible-type]
+Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `{...}` [1] is incompatible with `Type` [2].
+[incompatible-type]
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -1665,7 +1705,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- func_call_precision.js:8:1
 
-Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    func_call_precision.js:8:1
    8| x as number; // error
@@ -1682,7 +1722,24 @@ References:
 
 Error -------------------------------------------------------------------------------------- func_call_recursive.js:10:3
 
-Cannot cast `x` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   func_call_recursive.js:10:3
+   10|   x as number;
+         ^
+
+References:
+   func_call_recursive.js:1:8
+    1| var x: ?number = 0;
+              ^^^^^^^ [1]
+   func_call_recursive.js:10:8
+   10|   x as number;
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- func_call_recursive.js:10:3
+
+Cannot cast `x` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    func_call_recursive.js:10:3
    10|   x as number;
@@ -1741,7 +1798,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- heap_defassign.js:8:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:8:21
    8|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1772,7 +1829,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:14:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:14:21
    14|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1803,7 +1860,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:20:21
 
-Cannot assign `obj.p` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:20:21
    20|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1834,7 +1891,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:28:21
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `y` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:28:21
    28|     var y: number = obj.p;      // error, obj.p : number | string
@@ -1851,7 +1908,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:36:21
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `y` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:36:21
    36|     var y: number = obj.p;      // error, obj.p : number | string
@@ -1868,7 +1925,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:60:25
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `y` because `"hey"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:60:25
    60|         var y: number = obj.p;  // error, string ~/~ number
@@ -1885,7 +1942,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:60:25
 
-Cannot assign `obj.p` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `y` because `"hey"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:60:25
    60|         var y: number = obj.p;  // error, string ~/~ number
@@ -1902,7 +1959,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:63:20
 
-Cannot assign `obj.p` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `obj.p` to `z` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    heap_defassign.js:63:20
    63|     var z:string = obj.p;       // error, number ~/~ string
@@ -1919,7 +1976,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:83:21
 
-Cannot assign `obj.p` to `z` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.p` to `z` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    heap_defassign.js:83:21
    83|     var z: number = obj.p;      // error, (number | string) ~/~ number
@@ -2009,7 +2066,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:18:5
 
-Cannot cast `x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:18:5
    18|     x as empty; // ERROR: `2` remains
@@ -2068,7 +2125,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
 
-Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:25:5
    25|     x as empty; // ERROR: it is `1`
@@ -2085,7 +2142,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
 
-Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:25:5
    25|     x as empty; // ERROR: it is `1`
@@ -2130,7 +2187,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:37:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:37:5
    37|     x as empty; // ERROR: still `number`
@@ -2161,7 +2218,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:44:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:44:5
    44|     x as empty; // ERROR: it is `1`
@@ -2324,7 +2381,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:86:5
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:86:5
    86|     x as empty; // ERROR: still `string`
@@ -2428,7 +2485,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:114:5
 
-Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:114:5
    114|     x as empty; // ERROR: it is `1`
@@ -2487,7 +2544,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:127:5
 
-Cannot cast `x` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    ident.js:127:5
    127|     x as empty; // ERROR: it is `1`
@@ -7862,7 +7919,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7103.js:13:15
 
-Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `box` to empty because `{readonly type: "BAD", readonly value: string}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    issue-7103.js:13:15
    13|       return (box as empty).value;
@@ -7893,7 +7951,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7104.js:20:15
 
-Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `box` to empty because `{readonly type: "BAD", readonly value: string}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    issue-7104.js:20:15
    20|       return (box as empty).value; // error, but no underconstrained error
@@ -7972,7 +8031,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
 
-Cannot cast `box` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `box` to empty because `{readonly type: "BAD", readonly value: string}` [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    issue-7105.js:9:39
    9|         yield { type: "DONE", value: (box as empty).value }; // TODO(T225770374)
@@ -8045,7 +8105,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-7541.js:5:9
 
-Cannot assign `2` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `2` to `a` because `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `a` must be compatible with the type of its initializer [3]. Add an annotation to `a` [3] if a different
 type is desired.
@@ -8194,7 +8254,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:20:5
 
-Cannot cast `x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    member.js:20:5
    20|     x as empty; // ERROR: `2` remains
@@ -8298,7 +8358,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:41:5
 
-Cannot cast `O.x` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `O.x` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    member.js:41:5
    41|     O.x as empty; // ERROR: `2` remains
@@ -8357,7 +8417,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:59:5
 
-Cannot cast `x.value` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.value` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    member.js:59:5
    59|     x.value as empty; // ERROR
@@ -8821,7 +8881,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:8:17
 
-Cannot call `takesString` with `x` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:8:17
    8|     takesString(x); // error
@@ -8943,7 +9004,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:21:17
 
-Cannot call `takesNumber` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `takesNumber` with `x` bound to `x` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    mixed.js:21:17
    21|     takesNumber(x); // error
@@ -9065,7 +9127,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:34:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `boolean` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:34:17
    34|     takesString(x); // error
@@ -9190,7 +9253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
 
-Cannot call `takesString` with `x` bound to `x` because unknown function [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because `unknown` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    mixed.js:47:17
@@ -9222,7 +9285,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
 
-Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:53:17
    53|     takesString(x); // error
@@ -9239,7 +9303,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
 
-Cannot call `takesString` with `x` bound to `x` because object [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `{readonly [string]: unknown}` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    mixed.js:53:17
    53|     takesString(x); // error
@@ -9270,7 +9335,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:59:17
 
-Cannot call `takesString` with `x` bound to `x` because read-only array type [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because `ReadonlyArray<unknown>` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    mixed.js:59:17
@@ -9302,7 +9367,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:65:17
 
-Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because `void` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    mixed.js:65:17
@@ -9334,7 +9399,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:71:17
 
-Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:71:17
    71|     takesString(x); // error
@@ -9365,7 +9431,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:77:17
 
-Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:77:17
    77|     takesString(x); // error
@@ -9382,7 +9449,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:77:17
 
-Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because `void` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    mixed.js:77:17
@@ -9414,7 +9481,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:83:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `true` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:83:17
    83|     takesString(x); // error
@@ -9445,7 +9513,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:89:17
 
-Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `takesString` with `x` bound to `x` because `false` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:89:17
    89|     takesString(x); // error
@@ -9521,7 +9590,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:97:7
 
-Cannot cast `x['foo']` to string because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x['foo']` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    mixed.js:97:7
    97|       x['foo'] as string; // error, mixed
@@ -9676,8 +9745,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:119:17
 
-Cannot call `takesString` with `x[0]` bound to `x` because array element of refined `unknown` [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `takesString` with `x[0]` bound to `x` because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    mixed.js:119:17
    119|     takesString(x[0]); // error
@@ -10051,7 +10120,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- number.js:6:7
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:6:7
    6|       x as void; // error
@@ -10118,7 +10187,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:15:5
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:15:5
    15|     x as void; // error
@@ -10260,7 +10329,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:49:7
 
-Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:49:7
    49|       x as void; // error
@@ -10277,7 +10346,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:49:7
 
-Cannot cast `x` to undefined because number literal `0` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `0` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:49:7
    49|       x as void; // error
@@ -10322,7 +10391,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:53:7
 
-Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:53:7
    53|       x as void; // error
@@ -10339,7 +10408,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:53:7
 
-Cannot cast `x` to undefined because number literal `1` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:53:7
    53|       x as void; // error
@@ -10477,7 +10546,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:95:14
 
-Cannot return `s` because number [1] is incompatible with `Mode` [2]. [incompatible-type]
+Cannot return `s` because `3` [1] is incompatible with `Mode` [2]. [incompatible-type]
 
    number.js:95:14
    95|       return s; // error
@@ -10584,7 +10653,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:124:7
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `-1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    number.js:124:7
    124|       x as void; // error
@@ -10802,7 +10871,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:4:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `{a: false, b: string, c: true}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    object_prop_exists.js:4:5
    4|     x as empty; // ERROR
@@ -10847,7 +10917,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:7:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `{a: true, b: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:7:5
    7|     x as empty; // ERROR
@@ -10908,7 +10978,8 @@ Property `c` is not readable. [cannot-read]
 
 Error --------------------------------------------------------------------------------------- object_prop_exists.js:16:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `{a: false, b: string, writeonly c: true}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    object_prop_exists.js:16:5
    16|     x as empty; // ERROR
@@ -10939,7 +11010,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prop_exists.js:18:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `{a: true, b: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:18:5
    18|     x as empty; // ERROR
@@ -10956,7 +11027,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prop_exists.js:18:5
 
-Cannot cast `x` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `{a: false, b: string, writeonly c: true}` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    object_prop_exists.js:18:5
    18|     x as empty; // ERROR
@@ -10973,7 +11045,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:25:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: false, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:25:16
    25|         return result as empty; // good error: result not refined to empty
@@ -11007,7 +11079,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:31:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: void, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:31:16
    31|         return result as empty; // good error: result not refined to empty
@@ -11041,7 +11113,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:37:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: null, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:37:16
    37|         return result as empty; // good error: result not refined to empty
@@ -11075,7 +11147,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:43:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: null, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:43:16
    43|         return result as empty; // good error: result not refined to empty
@@ -11109,7 +11181,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:49:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: null, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:49:16
    49|         return result as empty; // good error: result not refined to empty
@@ -11143,7 +11215,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:55:16
 
-Cannot cast `result` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `result` to empty because `{ok: void, ...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_prop_exists.js:55:16
    55|         return result as empty; // good error: result not refined to empty, and only reference the void case
@@ -11205,7 +11277,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:6:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_union_number_keys.js:6:5
    6|     x[1] as empty; // ERROR
@@ -11264,7 +11336,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:13:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_union_number_keys.js:13:5
    13|     x[1] as empty; // ERROR
@@ -11397,7 +11469,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:36:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_union_number_keys.js:36:5
    36|     x[1] as empty; // ERROR
@@ -11456,7 +11528,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:43:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_union_number_keys.js:43:5
    43|     x[1] as empty; // ERROR
@@ -11557,7 +11629,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
 
-Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:24:5
    24|     foo as empty; // error
@@ -11574,7 +11646,41 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
 
-Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   opaque_type.js:24:5
+   24|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:22
+   18|   declare const foo: ?Foo;
+                            ^^^^ [1]
+   opaque_type.js:24:12
+   24|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
+
+Cannot cast `foo` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   opaque_type.js:24:5
+   24|     foo as empty; // error
+           ^^^
+
+References:
+   opaque_type.js:18:23
+   18|   declare const foo: ?Foo;
+                             ^^^ [1]
+   opaque_type.js:24:12
+   24|     foo as empty; // error
+                  ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
+
+Cannot cast `foo` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:24:5
    24|     foo as empty; // error
@@ -11619,7 +11725,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
 
-Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:28:5
    28|     foo as empty; // error
@@ -11636,7 +11742,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
 
-Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:28:5
    28|     foo as empty; // error
@@ -11681,7 +11787,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
 
-Cannot cast `foo` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:32:5
    32|     foo as empty; // error
@@ -11698,7 +11804,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
 
-Cannot cast `foo` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    opaque_type.js:32:5
    32|     foo as empty; // error
@@ -11869,7 +11975,24 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
 
-Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x[y.z]` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   property.js:71:12
+   71|     return x[y.z];  // error
+                  ^^^^^^
+
+References:
+   property.js:68:32
+   68| function c2(x: {[key: string]: ?string}, y: {z: string, ...}): string {
+                                      ^^^^^^^ [1]
+   property.js:68:64
+   68| function c2(x: {[key: string]: ?string}, y: {z: string, ...}): string {
+                                                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ property.js:71:12
+
+Cannot return `x[y.z]` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    property.js:71:12
    71|     return x[y.z];  // error
@@ -11914,7 +12037,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:4:24
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `y` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:4:24
    4|         var y:string = x; // Error
@@ -11949,8 +12072,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinements.js:5:13
 
 Cannot assign `false` to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with null [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `null` [3].
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
@@ -11976,7 +12099,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
 
-Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `z` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:7:20
    7|     var z:string = x; // Error: number ~> string
@@ -12010,7 +12133,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:13:24
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `y` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:13:24
    13|         var y:string = x;  // Error
@@ -12027,7 +12150,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:13:24
 
-Cannot assign `x` to `y` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `y` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:13:24
    13|         var y:string = x;  // Error
@@ -12045,8 +12168,8 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:14:13
 
 Cannot assign `false` to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with null [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `null` [3].
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
@@ -12072,7 +12195,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:16:20
 
-Cannot assign `x` to `z` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `z` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:16:20
    16|     var z:string = x;  // Error
@@ -12089,7 +12212,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:24:13
 
-Cannot assign `"hello"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"hello"` to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -12109,7 +12232,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:27:13
 
-Cannot assign `"hello"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"hello"` to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -12129,7 +12252,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:36:20
 
-Cannot assign `x` to `z` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `z` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:36:20
    36|     var z:string = x;  // Error
@@ -12147,8 +12270,8 @@ References:
 Error --------------------------------------------------------------------------------------------- refinements.js:42:14
 
 Cannot assign `false` to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with null [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `null` [3].
 
 All writes to `x` must be compatible with the type of its initializer [4]. Add an annotation to `x` [4] if a different
 type is desired.
@@ -12174,7 +12297,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:43:24
 
-Cannot assign `x` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `y` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:43:24
    43|         var y:string = x;  // Error
@@ -12208,7 +12331,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:45:20
 
-Cannot assign `x` to `z` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `x` to `z` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:45:20
    45|     var z:string = x; // Error: null ~> string
@@ -12242,7 +12365,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:51:10
 
-Cannot assign string to `x` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign string to `x` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -12262,7 +12385,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:53:13
 
-Cannot assign `0` to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `0` to `x` because `0` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -12282,7 +12405,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:55:20
 
-Cannot assign `x` to `z` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `z` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    refinements.js:55:20
    55|     var z:number = x; // Error
@@ -12313,7 +12436,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:87:9
 
-Cannot cast `x` to string because object type [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `{foo: null, ...}` [1] is incompatible with `string` [2]. [incompatible-type]
 
    refinements.js:87:9
    87|         x as string; // error
@@ -12330,7 +12453,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:6:7
 
-Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `"foo"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:6:7
    6|       x as void; // error
@@ -12397,7 +12520,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:15:5
 
-Cannot cast `x` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:15:5
    15|     x as void; // error
@@ -12539,7 +12662,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:49:7
 
-Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `"foo"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:49:7
    49|       x as void; // error
@@ -12556,7 +12679,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:49:7
 
-Cannot cast `x` to undefined because string literal `foo` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `"foo"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:49:7
    49|       x as void; // error
@@ -12601,7 +12724,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:53:7
 
-Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `"bar"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:53:7
    53|       x as void; // error
@@ -12618,7 +12741,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:53:7
 
-Cannot cast `x` to undefined because string literal `bar` [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `"bar"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string.js:53:7
    53|       x as void; // error
@@ -12905,8 +13028,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- super_member.js:13:14
 
-Cannot return `super.prop` because property `prop` of unknown type [1] is incompatible with string [2].
-[incompatible-type]
+Cannot return `super.prop` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    super_member.js:13:14
    13|       return super.prop; // error, unknown type passed to string expected
@@ -12965,7 +13087,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- switch.js:8:14
 
-Cannot return `text` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `text` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    switch.js:8:14
    8|       return text; // error, should return string
@@ -13395,7 +13517,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:89:7
 
-Cannot cast `x.kindTypo` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x.kindTypo` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:89:7
    89|       x.kindTypo as string; // typos can't be used, though
@@ -13496,7 +13618,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:113:7
 
-Cannot cast `x.legnth` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x.legnth` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:113:7
    113|       x.legnth as string; // error: number literal 0 !~> string
@@ -13555,7 +13677,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:118:7
 
-Cannot cast `y.legnth` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.legnth` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:118:7
    118|       y.legnth as string; // error: number literal 0 !~> string
@@ -13637,7 +13759,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:123:7
 
-Cannot cast `z.toStirng` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `z.toStirng` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:123:7
    123|       z.toStirng as string; // error: number literal 0 !~> string
@@ -13719,7 +13841,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:128:7
 
-Cannot cast `q.valeuOf` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `q.valeuOf` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:128:7
    128|       q.valeuOf as string; // error: number literal 0 !~> string
@@ -13801,7 +13923,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:140:7
 
-Cannot cast `t.calll` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `t.calll` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tagged_union.js:140:7
    140|       t.calll as string; // error: number literal 0 !~> string
@@ -13942,7 +14064,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:7
 
-Cannot cast `x.badStr` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.badStr` to empty because `"bad"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_union.js:157:7
    157|       x.badStr as empty; // error: 'bad' !~> empty
@@ -13987,7 +14109,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:7
 
-Cannot cast `x.badNum` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.badNum` to empty because `123` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_union.js:160:7
    160|       x.badNum as empty; // error: 123 !~> empty
@@ -14032,7 +14154,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:7
 
-Cannot cast `x.badBool` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.badBool` to empty because `true` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_union.js:163:7
    163|       x.badBool as empty; // error: true !~> empty
@@ -15211,7 +15333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- tuple_union.js:6:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple_union.js:6:5
    6|     x[1] as empty; // ERROR
@@ -15270,7 +15392,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:17:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple_union.js:17:5
    17|     x[1] as empty; // ERROR
@@ -15329,7 +15451,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:28:5
 
-Cannot cast `x[1]` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x[1]` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple_union.js:28:5
    28|     x[1] as empty; // ERROR
@@ -15472,7 +15594,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:53:5
 
-Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `[false, string, true]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple_union.js:53:5
    53|     x as empty; // ERROR
@@ -15517,7 +15639,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:56:5
 
-Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `[true, number]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple_union.js:56:5
    56|     x as empty; // ERROR
@@ -15592,7 +15714,8 @@ Tuple element at index `2` [1] labeled `c` is not readable. [cannot-read]
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:65:5
 
-Cannot cast `x` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `[false, string, writeonly c: true]` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    tuple_union.js:65:5
    65|     x as empty; // ERROR
@@ -15651,7 +15774,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:12:12
 
-Cannot return `x` because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    typeof.js:12:12
    12|     return x; // error, null
@@ -15882,7 +16005,7 @@ Cannot compare the result of `typeof` to string literal `foo` because it is not 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:69:5
 
-Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:69:5
    69|     Foo as empty; // error, Foo is a class
@@ -15899,7 +16022,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:77:5
 
-Cannot cast `x` to empty because `Foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `Foo` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:77:5
    77|     x as empty; // error
@@ -15916,7 +16039,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:84:5
 
-Cannot cast `x` to string because symbol [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typeof.js:84:5
    84|     x as string; // error
@@ -15947,7 +16070,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:90:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:90:5
    90|     x as empty; // error number ~> empty
@@ -15992,7 +16115,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:97:5
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:97:5
    97|     x as empty; // error number ~> empty
@@ -16023,7 +16146,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:109:5
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:109:5
    109|     x as empty; // error string ~> empty
@@ -16054,7 +16177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:115:5
 
-Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:115:5
    115|     x as empty; // error boolean ~> empty
@@ -16117,7 +16240,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:122:5
 
-Cannot cast `x` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:122:5
    122|     x as empty; // error boolean ~> empty
@@ -16148,7 +16271,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:128:5
 
-Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `symbol` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:128:5
    128|     x as empty; // error symbol ~> empty
@@ -16179,7 +16302,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:135:5
 
-Cannot cast `C` to empty because class `C` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `C` to empty because class `C` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof.js:135:5
    135|     C as empty; // error class C ~> empty
@@ -16773,7 +16896,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ union_enum.js:9:3
 
-Cannot cast `E.A` to number because string literal `A` [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `E.A` to number because `"A"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    union_enum.js:9:3
    9|   E.A as number; // Error expected
@@ -17530,4 +17653,4 @@ References:
 
 
 
-Found 1180 errors
+Found 1186 errors

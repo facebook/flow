@@ -36,7 +36,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- empty.ts:8:16
 
-Cannot assign `0` to `bad` because number [1] is incompatible with `E` [2]. [incompatible-type]
+Cannot assign `0` to `bad` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    empty.ts:8:16
    8| const bad: E = 0; // ERROR
@@ -50,7 +50,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- exhaustive.ts:25:7
 
-Cannot cast `d` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `d` to empty because `2` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exhaustive.ts:25:7
    25|       d satisfies never; // ERROR: Down (2) not handled
@@ -97,7 +97,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.ts:14:20
 
-Cannot assign `99` to `bad` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+Cannot assign `99` to `bad` because `99` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    importer.ts:14:20
    14| const bad: Color = 99; // ERROR
@@ -129,7 +129,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- importer_type.ts:15:21
 
-Cannot assign `99` to `xbad` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+Cannot assign `99` to `xbad` because `99` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    importer_type.ts:15:21
    15| const xbad: Color = 99; // ERROR
@@ -254,7 +254,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- numeric.ts:21:18
 
-Cannot assign `99` to `c` because number [1] is incompatible with `Color` [2]. [incompatible-type]
+Cannot assign `99` to `c` because `99` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    numeric.ts:21:18
    21| const c: Color = 99; // ERROR

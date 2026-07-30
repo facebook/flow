@@ -7,7 +7,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== force-recheck --focus of a unchanged file does a recheck: =====
 Error -------------------------------------------------------------------------------------------------------- a.js:3:17
 
-Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `x` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a.js:3:17
    3| var x: string = 123;
@@ -21,7 +21,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:8:1
 
-Cannot cast `y` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `y` to undefined because `"y"` [1] is incompatible with `void` [2]. [incompatible-type]
 
    b.js:8:1
    8| y as void; // error

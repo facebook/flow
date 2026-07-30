@@ -64,7 +64,7 @@ Found 1 error
 === block 12 ===
 Error -------------------------------------------------------------------------- -:6:1
 
-Cannot cast `m.a` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `m.a` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:6:1
    6| m.a as string; // ERROR: void is still part of the value type
@@ -102,7 +102,7 @@ Found 1 error
 === block 14 ===
 Error -------------------------------------------------------------------------- -:6:1
 
-Cannot cast empty string to indexed access because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast empty string to indexed access because `""` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:6:1
    6| '' as MappedTuple[0] // error
@@ -115,7 +115,7 @@ References:
 
 Error -------------------------------------------------------------------------- -:7:1
 
-Cannot cast `false` to indexed access because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `false` to indexed access because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:7:1
    7| false as MappedTuple[1] // error

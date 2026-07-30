@@ -1,8 +1,8 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:6:1
 
 Cannot call `f` because: [incompatible-type]
- - Either null [1] is incompatible with string [2].
- - Or null [1] is incompatible with number [3].
+ - Either `T` [1] is incompatible with `string` [2].
+ - Or `T` [1] is incompatible with `number` [3].
 
    annot.js:6:1
    6| f(x); // error should point to `x` here, not at type alias
@@ -22,7 +22,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
-Cannot assign `"".match(...)[0]` to `x1` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"".match(...)[0]` to `x1` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    overload.js:7:18
       7| var x1: number = "".match(0)[0];
@@ -54,8 +54,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:7:27
 
 Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with `RegExp` [3].
+ - Either `0` [1] is incompatible with `string` [2].
+ - Or `0` [1] is incompatible with `RegExp` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -75,7 +75,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
-Cannot assign `"".match(...)[0]` to `x2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    overload.js:8:18
       8| var x2: number = "".match(/pattern/)[0];
@@ -106,7 +106,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
 
-Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    overload.js:10:18
      10| var x4: number = "".split(/pattern/)[0];
@@ -124,8 +124,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:24:3
 
 Cannot call `a.foo` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    overload.js:24:3
    24| a.foo(true); // error, function cannot be called on intersection type
@@ -146,8 +146,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:28:3
 
 Cannot call `a.bar` because: [incompatible-type]
- - Either in property `a`: boolean [1] is incompatible with number [2].
- - Or in property `a`: boolean [1] is incompatible with string [3].
+ - Either in property `a`: `true` [1] is incompatible with `number` [2].
+ - Or in property `a`: `true` [1] is incompatible with `string` [3].
 
    overload.js:28:3
    28| a.bar({ a: true }); // error, function cannot be called on intersection type
@@ -168,8 +168,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- overload.js:32:3
 
 Cannot call `a.bar` because: [incompatible-type]
- - Either in property `a`: boolean [1] is incompatible with number [2].
- - Or in property `a`: boolean [1] is incompatible with string [3].
+ - Either in property `a`: `boolean` [1] is incompatible with `number` [2].
+ - Or in property `a`: `boolean` [1] is incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -192,7 +192,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:7:1
 
-Cannot cast `foo.bar(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `foo.bar(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test2.js:7:1
    7| foo.bar('hmmm') as number; // error
@@ -210,8 +210,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or string [3] is incompatible with number [4].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
 
    test3.js:5:1
    5| f(x_f); // error: Flow does not split union args across overload branches
@@ -235,8 +235,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test3.js:12:1
 
 Cannot call `g` because: [incompatible-type]
- - Either null or undefined [1] is incompatible with null [2].
- - Or null or undefined [1] is incompatible with undefined [3].
+ - Either `void` [1] is incompatible with `null` [2].
+ - Or `null` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -260,8 +260,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test3.js:18:1
 
 Cannot call `h` because: [incompatible-type]
- - Either string [1] is incompatible with undefined [2].
- - Or undefined [1] is incompatible with string [3].
+ - Either `string` [1] is incompatible with `void` [2].
+ - Or `void` [1] is incompatible with `string` [3].
 
    test3.js:18:1
    18| h(x_h.p); // error: Flow does not split union args across overload branches

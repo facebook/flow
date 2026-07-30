@@ -135,7 +135,7 @@ Found 2 errors
 === block 11 ===
 Error ------------------------------------------------------------------------------- -:4:11
 
-Cannot call `arr3.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `arr3.push` because in array element: `"abc"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:4:11
    4| arr3.push("abc"); // Error!
@@ -153,8 +153,8 @@ Found 1 error
 Error ------------------------------------------------------------------------------ -:12:11
 
 Cannot assign `true` to `arr4[0]` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    -:12:11
    12| arr4[0] = true; // Error!
@@ -174,7 +174,7 @@ Found 1 error
 === block 13 ===
 Error ------------------------------------------------------------------------------- -:4:13
 
-Cannot call `arr5.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `arr5.push` because in array element: `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:4:13
    4|   arr5.push(42); // Error!
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:8:11
 
-Cannot call `arr5.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `arr5.push` because in array element: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:8:11
    8| arr5.push(1); // Error!
@@ -216,7 +216,7 @@ No errors!
 === block 18 ===
 Error ------------------------------------------------------------------------------- -:4:26
 
-Cannot assign array literal to `arr3` because in array element: null [1] is incompatible with number [2].
+Cannot assign array literal to `arr3` because in array element: `null` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    -:4:26
@@ -234,7 +234,7 @@ Found 1 error
 === block 19 ===
 Error ------------------------------------------------------------------------------- -:2:27
 
-Cannot assign `null` to `arr1` because null [1] is incompatible with array type [2]. [incompatible-type]
+Cannot assign `null` to `arr1` because `null` [1] is incompatible with `Array<?number>` [2]. [incompatible-type]
 
    -:2:27
    2| const arr1: (?number)[] = null;   // Error!

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:4:10
 
-Cannot create `div` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `div` element because in property `id`: `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    main.js:4:10
    4| <div id={42} />; // Error: (`id` prop) number ~> string
@@ -166,7 +166,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- strings.js:17:10
 
-Cannot create `Div` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `Div` element because in property `id`: `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    strings.js:17:10
    17| <Div id={42} />; // Error: 42 ~> string

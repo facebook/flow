@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------- barrel_consumer.js:26:12
 
 Cannot implement `IBarrel` [1] with `BadBarrel` because in property `clone` > the return value: `IBarrel` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    barrel_consumer.js:26:12
    26|   clone(): IBarrel { return this; } // ERROR — must return `this`, not `IBarrel`
@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------- barrel_two_step.js:19:12
 
 Cannot implement `IBarrel` [1] with `BadTwoStep` because in property `clone` > the return value: `IBarrel` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    barrel_two_step.js:19:12
    19|   clone(): IBarrel { return this; } // ERROR — must return `this`, not `IBarrel`
@@ -356,7 +356,7 @@ References:
 Error ------------------------------------------------------------------------------------------ default_import.js:26:12
 
 Cannot extend `CDefaultV` [1] with `BadCloneSub` because in property `clone` > the return value: `CDefault` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    default_import.js:26:12
    26|   clone(): CDefaultV { return this; } // ERROR — must return `this`, not `CDefaultV`
@@ -410,8 +410,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:10
 
-Cannot extend `A1` [1] with `B1` because in property `foo` > the return value: `B1` [2] is incompatible with `this` [3].
-[incompatible-type]
+Cannot extend `A1` [1] with `B1` because in property `foo` > the return value: `B1` [2] is incompatible with
+`empty` [3]. [incompatible-type]
 
    import.js:8:10
    8|   foo(): B1 { return new B1(); } // ERROR
@@ -428,8 +428,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
-Cannot extend `A3` [1] with `B3` because in property `foo` > the return value: `B3` [2] is incompatible with `this` [3].
-[incompatible-type]
+Cannot extend `A3` [1] with `B3` because in property `foo` > the return value: `B3<X>` [2] is incompatible with
+`empty` [3]. [incompatible-type]
 
    import.js:14:10
    14|   foo(): B3<X> { return new B3(); } // ERROR
@@ -446,7 +446,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:18:22
 
-Cannot call `(new B3<...>()).qux` with `0` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `(new B3<...>()).qux` with `0` bound to `x` because `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    import.js:18:22
@@ -461,8 +461,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:21:30
 
-Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: string [2] is incompatible with
-number [3]. [incompatible-type]
+Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    import.js:21:30
    21| new B3<string>().bar() as B3<string> as A2<number>; // ERROR
@@ -479,7 +479,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:1
 
-Cannot cast `(new B3()).qux(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `(new B3()).qux(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    import.js:22:1
    22| (new B3() as A2<number>).qux(0) as string; // ERROR
@@ -497,7 +497,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- import.js:57:12
 
 Cannot implement exports [1] with `BadCloneCM` because in property `clone` > the return value: `ICloneable` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    import.js:57:12
    57|   clone(): ICloneable { return this; }  // ERROR — must return `this`, not `ICloneable`
@@ -565,7 +565,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- interface.js:104:12
 
 Cannot implement `MyBox` [1] with `BadCloneChild` because in property `clone` > the return value: `Cloneable` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    interface.js:104:12
    104|   clone(): Cloneable { return this; } // ERROR: returning `Cloneable` doesn't satisfy `(): this`
@@ -583,7 +583,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- interface.js:109:12
 
 Cannot implement `Cloneable` [1] with `BadCloneSelf` because in property `clone` > the return value: `BadCloneSelf` [2]
-is incompatible with `this` [3]. [incompatible-type]
+is incompatible with `empty` [3]. [incompatible-type]
 
    interface.js:109:12
    109|   clone(): BadCloneSelf { return this; } // ERROR
@@ -601,7 +601,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- interface.js:115:12
 
 Cannot implement `MyBox` [1] with `BadInherited` because in property `clone` > the return value: `BadInherited` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    interface.js:115:12
    115|   clone(): BadInherited { return this; } // ERROR
@@ -619,7 +619,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- interface.js:123:12
 
 Cannot implement `Cloneable` [1] with `LeakBase` because in property `clone` > the return value: `LeakBase` [2] is
-incompatible with `this` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    interface.js:123:12
    123|   clone(): LeakBase { return this; } // ERROR
@@ -854,7 +854,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:20:10
 
 Cannot extend `Base` [1] with `Override` because in property `bar` > the return value: `Override` [2] is incompatible
-with `this` [3]. [incompatible-type]
+with `empty` [3]. [incompatible-type]
 
    test.js:20:10
    20|   bar(): Override { return new Override; } // error (cf. OK above)
@@ -871,7 +871,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:16
 
-Cannot extend `Base` [1] with `Override` because in property `grault` > the first parameter: `this` [2] is incompatible
+Cannot extend `Base` [1] with `Override` because in property `grault` > the first parameter: `empty` [2] is incompatible
 with `Base` [3]. [incompatible-type]
 
    test.js:25:16

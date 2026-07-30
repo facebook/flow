@@ -131,7 +131,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error -------------------------------------------------------------------------------------------- imports_tparam.js:8:1
 
-Cannot cast `x` to number because `X` [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `X` [1] is incompatible with `number` [2]. [incompatible-type]
 
    imports_tparam.js:8:1
    8| x as number; // nope
@@ -184,7 +184,8 @@ spread in array: [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:22
 
-In property `@@iterator`: number [1] is incompatible with function type [2]. [incompatible-type]
+In property `@@iterator`: `number` [1] is incompatible with `() => $IteratorProtocol<empty, any, any>` [2].
+[incompatible-type]
 
    misc.js:7:22
       7| export const d = [...c];

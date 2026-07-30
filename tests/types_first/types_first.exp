@@ -25,7 +25,7 @@ annotation at function return: [signature-verification-failure]
 
 Error -------------------------------------------------------------------------------------------- import-value2.js:2:10
 
-Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    import-value2.js:2:10
    2|   return x;
@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- import_dynamic_dep.js:3:3
 
-Cannot cast `y` to empty because module `./import-value1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `y` to empty because `{readonly default: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import_dynamic_dep.js:3:3
    3|   y as empty; // error: number ~> empty
@@ -58,7 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ test-multiple-export-2.js:4:1
 
-Cannot cast `a.f` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `a.f` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test-multiple-export-2.js:4:1
    4| a.f as number;
@@ -75,7 +75,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:1:19
 
-Cannot assign `require(...)` to `n` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `require(...)` to `n` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:1:19
    1| const n: string = require('./import-value1'); // error: number ~/~> string
@@ -92,7 +92,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `n` to `T` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `n` to `T` because `string` [1] is incompatible with `T` [2]. [incompatible-type]
 
    test.js:8:1
    8| n as T; // error: string ~/~> number
@@ -109,7 +109,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Cannot cast `f(...)` to `S` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `f(...)` to `S` because `string` [1] is incompatible with `T` [2]. [incompatible-type]
 
    test.js:9:1
    9| f("") as S; // error: string (argument) ~/~> number, string (return) ~/~> number
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot call `f` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `f` with empty string bound to `x` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:9:3
    9| f("") as S; // error: string (argument) ~/~> number, string (return) ~/~> number
@@ -208,7 +208,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:24
 
-Cannot call `functionWithTypeof` with `3` bound to `baz` because number [1] is incompatible with string [2].
+Cannot call `functionWithTypeof` with `3` bound to `baz` because `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:20:24
@@ -223,8 +223,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:33
 
-Cannot call `functionWithTypeof` with object literal bound to the third parameter because in property `boz`: number [1]
-is incompatible with string [2]. [incompatible-type]
+Cannot call `functionWithTypeof` with object literal bound to the third parameter because in property `boz`: `3` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    test.js:20:33
    20| functionWithTypeof('', 3, {boz: 3}); // error: number ~> string
@@ -238,8 +238,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:52
 
-Cannot call `functionWithTypeofAndDestructuring` with empty string bound to `y` because string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `functionWithTypeofAndDestructuring` with empty string bound to `y` because `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:21:52
    21| functionWithTypeofAndDestructuring({x: [], y: ''}, '', 3); // error: number ~> string, string ~> number
@@ -253,8 +253,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:56
 
-Cannot call `functionWithTypeofAndDestructuring` with `3` bound to `z` because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `functionWithTypeofAndDestructuring` with `3` bound to `z` because `3` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    test.js:21:56
    21| functionWithTypeofAndDestructuring({x: [], y: ''}, '', 3); // error: number ~> string, string ~> number
@@ -268,8 +268,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:34
 
-Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:22:34
    22| functionWithTypeofAndOptional(1, ''); // error: string, string ~> number
@@ -283,8 +283,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:23:42
 
-Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `functionWithTypeofAndOptional` with empty string bound to `y` because `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:23:42
    23| functionWithTypeofAndOptional(undefined, ''); // error: string, string ~> number

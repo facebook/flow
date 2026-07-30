@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- basic_types.js:1:1
 
-Cannot cast `null` to undefined because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `null` to undefined because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    basic_types.js:1:1
    1| null as undefined; // error
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- basic_types.js:6:7
 
-Cannot cast `''` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `''` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    basic_types.js:6:7
    6| '' as unknown as never; // error
@@ -161,7 +161,7 @@ Cannot assign `'foo'` to `covariant.prop` because property `prop` is not writabl
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:21:1
 
-Cannot cast `contravariant` to `Contravariant` because in type argument `T` [1]: string [2] is incompatible with
+Cannot cast `contravariant` to `Contravariant` because in type argument `T` [1]: `string` [2] is incompatible with
 `unknown` [3]. [incompatible-type]
 
    polarity.js:21:1
@@ -248,7 +248,7 @@ Cannot assign `'foo'` to `imported_covariant.prop` because property `prop` is no
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:42:1
 
-Cannot cast `imported_contravariant` to `exported.Contravariant` because in type argument `T` [1]: string [2] is
+Cannot cast `imported_contravariant` to `exported.Contravariant` because in type argument `T` [1]: `string` [2] is
 incompatible with `unknown` [3]. [incompatible-type]
 
    polarity.js:42:1
@@ -315,7 +315,7 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:4:1
 
-Cannot cast `foo[0]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `foo[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:4:1
    4| foo[0] as number; // error: string ~> number
@@ -340,7 +340,7 @@ Cannot assign empty string to `foo[0]` because tuple element at index `0` [1] is
 
 Error ------------------------------------------------------------------------------------- readonly_of_arr_tuple.js:6:1
 
-Cannot cast `bar[0]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `bar[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:6:1
    6| bar[0] as number; // error: string ~> number
@@ -365,7 +365,7 @@ Cannot assign empty string to `bar[0]` because read-only arrays cannot be writte
 
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:11:1
 
-Cannot cast `readonly_tuple[0]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `readonly_tuple[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:11:1
    11| readonly_tuple[0] as number; // error: string ~> number
@@ -390,7 +390,7 @@ Cannot assign empty string to `readonly_tuple[0]` because tuple element at index
 
 Error ------------------------------------------------------------------------------------ readonly_of_arr_tuple.js:13:1
 
-Cannot cast `readonly_array[0]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `readonly_array[0]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    readonly_of_arr_tuple.js:13:1
    13| readonly_array[0] as number; // error: string ~> number
@@ -447,7 +447,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- satisfies.js:4:1
 
-Cannot cast `"hello"` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `"hello"` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    satisfies.js:4:1
    4| "hello" satisfies number; // ERROR: string is not a number — the subtype check still runs
@@ -461,7 +461,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tparam_bound.js:2:3
 
-Cannot call `f` because in type argument `T`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `f` because in type argument `T`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    tparam_bound.js:2:3
    2| f(1); // error: number ~> string
@@ -475,7 +475,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tparam_bound.js:3:25
 
-Cannot call `require(...).f` because in type argument `T`: number [1] is incompatible with string [2].
+Cannot call `require(...).f` because in type argument `T`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    tparam_bound.js:3:25
@@ -532,7 +532,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:9:7
 
-Cannot assign `null` to `d` because null [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `null` to `d` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
    type_names.js:9:7
    9|   d = null; // error: nonnull

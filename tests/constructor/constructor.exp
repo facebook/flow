@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- assign.js:4:19
 
-Cannot assign `1` to `obj.constructor` because number [1] is incompatible with function [2]. [incompatible-type]
+Cannot assign `1` to `obj.constructor` because `1` [1] is incompatible with `(...empty) => any` [2]. [incompatible-type]
 
    assign.js:4:19
    4| obj.constructor = 1; // error number ~> function
@@ -14,7 +14,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- assign.js:5:19
 
-Cannot assign `null` to `obj.constructor` because null [1] is incompatible with function [2]. [incompatible-type]
+Cannot assign `null` to `obj.constructor` because `null` [1] is incompatible with `(...empty) => any` [2].
+[incompatible-type]
 
    assign.js:5:19
    5| obj.constructor = null; // error null ~> function
@@ -28,8 +29,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
-Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-type]
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
 
    6|     constructor():number { }
                         ^^^^^^ [1]
@@ -37,7 +38,7 @@ undefined. [incompatible-type]
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:6:19
 
-Cannot return number because number [1] is incompatible with constructor void return [2]. [incompatible-type]
+Cannot return number because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    constructor.js:6:19
    6|     constructor():number { }
@@ -51,7 +52,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:15:9
 
-Cannot call `Foo` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `Foo` with `123` bound to `iterable` because `123` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    constructor.js:15:9
    15| new Foo(123) as Bar<string>; // error, number !~> string
@@ -65,7 +67,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:22:9
 
-Cannot call `Baz` with `123` bound to `iterable` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `Baz` with `123` bound to `iterable` because `123` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    constructor.js:22:9
    22| new Baz(123) as Baz<string>; // error, number !~> string
@@ -79,7 +82,7 @@ References:
 
 Error ---------------------------------------------------------------------- exported_nonvoid_return_constructor.js:2:18
 
-Cannot return object type because object type [1] is incompatible with constructor void return [2]. [incompatible-type]
+Cannot return object type because `{foo: number}` [1] is incompatible with `void` [2]. [incompatible-type]
 
    exported_nonvoid_return_constructor.js:2:18
    2|   constructor(): {foo: number} { // Error: must return void

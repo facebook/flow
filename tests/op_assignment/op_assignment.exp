@@ -228,7 +228,7 @@ Cannot get `o.p` because property `p` is not readable. [cannot-read]
 
 Error ---------------------------------------------------------------------------------------------------- test.js:117:9
 
-Cannot assign `3` to `x` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    test.js:117:9
    117|   x &&= 3; // Error: number not assignable to boolean
@@ -242,7 +242,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:118:9
 
-Cannot assign `3` to `y` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `y` because `3` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    test.js:118:9
    118|   y ||= 3; // Error: number not assignable to boolean
@@ -256,7 +256,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:119:9
 
-Cannot assign `3` to `z` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `3` to `z` because `3` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    test.js:119:9
    119|   z ??= 3; // Error: number not assignable to boolean
@@ -270,8 +270,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:138:29
 
-Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-type]
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
 
    138|   function alwaysThrows1(): number { x ??= invariant(false); } // Error
                                     ^^^^^^ [1]
@@ -279,8 +279,8 @@ undefined. [incompatible-type]
 
 Error --------------------------------------------------------------------------------------------------- test.js:139:29
 
-Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-type]
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
 
    139|   function alwaysThrows2(): number { y &&= invariant(false); } // Error
                                     ^^^^^^ [1]
@@ -288,8 +288,8 @@ undefined. [incompatible-type]
 
 Error --------------------------------------------------------------------------------------------------- test.js:140:29
 
-Cannot expect number as the return type of function because number [1] is incompatible with implicitly-returned
-undefined. [incompatible-type]
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
 
    140|   function alwaysThrows3(): number { x ||= invariant(false); } // Error: void ~> number, constant-condition error
                                     ^^^^^^ [1]

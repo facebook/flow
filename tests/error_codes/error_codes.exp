@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:5:1
    5| x as string; // error correctly
@@ -25,7 +25,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:8:1
    8| x as string; // error not suppressed, missing code
@@ -51,7 +51,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ----------------------------------------------------------------------------------------------------- test.js:11:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:11:1
    11| x as string; // error not suppressed, malformed code
@@ -76,7 +76,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:14:1
    14| x as string; // error not suppressed, missing code
@@ -104,7 +104,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:19:1
    19| x as string; // error not suppressed, missing code
@@ -129,7 +129,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:22:1
    22| x as string; // error not suppressed, missing code
@@ -155,7 +155,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:31:1
    31| x as string; // error not suppressed, malformed code
@@ -172,7 +172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:34:1
    34| x as string; // error not suppressed + unused suppression
@@ -189,7 +189,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:40:1
    40| y.x as string; // both errors appear
@@ -228,7 +228,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:43:1
    43| y.x as string; // errors not suppressed, missing code
@@ -273,7 +273,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:49:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:49:1
    49| y.x as string; // only the incompatibility shows up
@@ -290,7 +290,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:70:1
    70| y.x as string; // incompatibility shows up
@@ -307,7 +307,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:75:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:75:1
    75| y.x as string; // incompatibility shows up
@@ -324,7 +324,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:80:1
 
-Cannot cast `y.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `y.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:80:1
    80| y.x as string; // both
@@ -364,8 +364,8 @@ Suppression is missing a code. Please update this suppression to use an error co
 Error ----------------------------------------------------------------------------------------------------- test.js:92:1
 
 Cannot cast `z` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `boolean` [3].
 
    test.js:92:1
    92| z as string | boolean; // errors not suppressed, missing code
@@ -386,8 +386,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:98:1
 
 Cannot cast `z` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `boolean` [3].
 
    test.js:98:1
    98| z as string | boolean; // error + unused suppression
@@ -429,7 +429,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:104:5
 
-Cannot call `foo` with `3` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `foo` with `3` bound to `x` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:104:5
    104| foo(3, 4); // error not suppressed, missing code
@@ -457,7 +457,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:114:5
 
-Cannot call `foo` with `3` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `foo` with `3` bound to `x` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:114:5
    114| foo(3, 4); // one error
@@ -473,7 +473,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
- - Or number [3] is incompatible with object type [2].
+ - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -506,7 +506,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
- - Or number [3] is incompatible with object type [2].
+ - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -531,7 +531,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `any` to object type because: [incompatible-type]
  - Either property `bar` is missing in object type [1] but exists in object type [2].
- - Or number [3] is incompatible with object type [2].
+ - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -563,7 +563,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ---------------------------------------------------------------------------------------------------- test.js:136:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:136:1
    136| x as string; // error + unused suppression
@@ -589,7 +589,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error ---------------------------------------------------------------------------------------------------- test.js:139:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:139:1
    139| x as string; // error + unused suppression
@@ -606,7 +606,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:1
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:142:1
    142| x as string; // error + unused suppression

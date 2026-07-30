@@ -266,7 +266,7 @@ Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
-Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `pickedO1.bar` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    pick.js:9:1
       9| pickedO1.bar as string; // ERROR bar is optional
@@ -283,7 +283,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ pick.js:9:1
 
-Cannot cast `pickedO1.bar` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `pickedO1.bar` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    pick.js:9:1
    9| pickedO1.bar as string; // ERROR bar is optional
@@ -400,8 +400,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:22:1
 
-Cannot cast `symIndexed` to object type because in the indexer property's key: string `foo` [1] is incompatible with
-symbol [2]. [incompatible-type]
+Cannot cast `symIndexed` to object type because in the indexer property's key: `"foo"` [1] is incompatible with
+`symbol` [2]. [incompatible-type]
 
    record.js:22:1
    22| symIndexed as {foo: boolean}; // ERROR, missing indexer

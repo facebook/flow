@@ -340,7 +340,7 @@ References:
 
 Error ------------------------------------------------------------------- deprecated/excluded_dir/readonly_type.js:10:29
 
-Cannot assign `3` to `b` because number [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
+Cannot assign `3` to `b` because `3` [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
 
    deprecated/excluded_dir/readonly_type.js:10:29
    10| let b: exportedValuesType = 3; // ERROR
@@ -354,7 +354,7 @@ References:
 
 Error ---------------------------------------------------------------------- deprecated/excluded_dir/readonlymap.js:2:14
 
-Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
 
    deprecated/excluded_dir/readonlymap.js:2:14
    2| const x: T = 3; // ERROR
@@ -439,7 +439,7 @@ References:
 
 Error -------------------------------------------------------------------------------- deprecated/readonly_type.js:10:29
 
-Cannot assign `3` to `b` because number [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
+Cannot assign `3` to `b` because `3` [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
 
    deprecated/readonly_type.js:10:29
    10| let b: exportedValuesType = 3; // ERROR
@@ -469,7 +469,7 @@ The utility type `$ReadOnlyMap` is deprecated, use `ReadonlyMap` instead. [depre
 
 Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:2:14
 
-Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
 
    deprecated/readonlymap.js:2:14
    2| const x: T = 3; // ERROR
@@ -939,7 +939,7 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
-Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
 
    readonlymap.js:2:14
    2| const x: T = 3; // ERROR

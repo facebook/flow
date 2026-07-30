@@ -144,7 +144,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ---------------------------------------------------------------------------------------------- capitalize.js:73:24
 
-Cannot instantiate `Capitalize` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `Capitalize` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    capitalize.js:73:24
    73| type Bad4 = Capitalize<42>; // ERROR
@@ -572,7 +572,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ----------------------------------------------------------------------------------------------- lowercase.js:74:23
 
-Cannot instantiate `Lowercase` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `Lowercase` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    lowercase.js:74:23
    74| type Bad4 = Lowercase<42>; // ERROR
@@ -746,7 +746,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error -------------------------------------------------------------------------------------------- uncapitalize.js:81:26
 
-Cannot instantiate `Uncapitalize` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `Uncapitalize` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    uncapitalize.js:81:26
    81| type Bad4 = Uncapitalize<42>; // ERROR
@@ -947,7 +947,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ----------------------------------------------------------------------------------------------- uppercase.js:95:23
 
-Cannot instantiate `Uppercase` because number literal `42` [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `Uppercase` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    uppercase.js:95:23
    95| type Bad4 = Uppercase<42>; // ERROR
@@ -961,7 +961,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- uppercase.js:96:23
 
-Cannot instantiate `Uppercase` because object type [1] is incompatible with string [2]. [incompatible-type]
+Cannot instantiate `Uppercase` because `{a: 1}` [1] is incompatible with `string` [2]. [incompatible-type]
 
    uppercase.js:96:23
    96| type Bad5 = Uppercase<{a: 1}>; // ERROR

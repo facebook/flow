@@ -253,8 +253,10 @@ References:
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either module `./foo` [1] is incompatible with component [2].
- - Or module `./foo` [1] is incompatible with string [3].
+ - Either `{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1]
+   is incompatible with `component(...empty)` [2].
+ - Or `{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is
+   incompatible with `string` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -306,7 +308,9 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:29:12
 
-Cannot assign `Foo` to `y` because module `./foo` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `Foo` to `y` because
+`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is
+incompatible with `empty` [2]. [incompatible-type]
 
    import_star_invalid_use.js:29:12
    29| const {y = Foo} = Foo;

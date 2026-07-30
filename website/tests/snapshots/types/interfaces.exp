@@ -39,8 +39,8 @@ Found 1 error
 === block 3 ===
 Error -------------------------------------------------------------------------- -:11:16
 
-Cannot implement `Serializable` [1] with `Bar` because in property `serialize` > the return value: number [2] is
-incompatible with string [3]. [incompatible-type]
+Cannot implement `Serializable` [1] with `Bar` because in property `serialize` > the return value: `number` [2] is
+incompatible with `string` [3]. [incompatible-type]
 
    -:11:16
    11|   serialize(): number { return 42; } // Error!
@@ -72,7 +72,7 @@ No errors!
 === block 8 ===
 Error -------------------------------------------------------------------------- -:11:22
 
-Cannot assign `a.method(...)` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `a.method(...)` to `z` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:11:22
    11|   const z: boolean = a.method('hi'); // Error!
@@ -187,8 +187,8 @@ No errors!
 === block 21 ===
 Error -------------------------------------------------------------------------- -:11:42
 
-Cannot assign object literal to `value1` because in property `property`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign object literal to `value1` because in property `property`: `"forty-two"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    -:11:42
    11| const value1: Invariant     = {property: numberOrString};  // Error!

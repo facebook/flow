@@ -384,8 +384,8 @@ No errors!
 === block 21 ===
 Error ------------------------------------------------------------------------- -:13:7
 
-Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: string [2] is incompatible with
-number [3]. [incompatible-type]
+Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    -:13:7
    13| widen(box); // ERROR
@@ -410,7 +410,7 @@ Error ------------------------------------------------------------------------ -
 
 Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
  - `StringComparator` [1] is incompatible with `Comparator` [2]
-    - in property `compare` > the first parameter: string [3] is incompatible with number [4]
+    - in property `compare` > the first parameter: `string` [3] is incompatible with `number` [4]
 
    -:19:13
    19| callCompare(stringComparator); // ERROR
@@ -434,7 +434,7 @@ Error ------------------------------------------------------------------------ -
 
 Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
  - `StringComparator` [1] is incompatible with `Comparator` [2]
-    - in property `compare` > the second parameter: string [3] is incompatible with number [4]
+    - in property `compare` > the second parameter: `string` [3] is incompatible with `number` [4]
 
    -:19:13
    19| callCompare(stringComparator); // ERROR
@@ -559,7 +559,7 @@ References:
 Error ------------------------------------------------------------------------- -:5:10
 
 Cannot return `((typeof x) === "object") && (x !== null)` because in property `id`: `unknown` [1] is incompatible with
-string [2]. [incompatible-type-guard]
+`string` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
 the guard type `User` [5]. See 1. in
@@ -586,7 +586,7 @@ References:
 Error ------------------------------------------------------------------------- -:5:10
 
 Cannot return `((typeof x) === "object") && (x !== null)` because in property `name`: `unknown` [1] is incompatible with
-string [2]. [incompatible-type-guard]
+`string` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
 the guard type `User` [5]. See 1. in
@@ -635,7 +635,23 @@ Found 1 error
 === block 29 ===
 Error ------------------------------------------------------------------------ -:17:23
 
-Cannot assign `obj.x` to `a` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `obj.x` to `a` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   -:17:23
+   17|     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
+                             ^^^^^
+
+References:
+   -:13:6
+   13|   x: ?number,
+            ^^^^^^^ [1]
+   -:17:14
+   17|     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
+                    ^^^^^^ [2]
+
+Error ------------------------------------------------------------------------ -:17:23
+
+Cannot assign `obj.x` to `a` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:17:23
    17|     const a: number = obj.x; // ERROR: callee could have mutated `obj.x`
@@ -651,7 +667,7 @@ References:
 
 Error ------------------------------------------------------------------------ -:24:23
 
-Cannot assign `x` to `a` because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `a` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:24:23
    24|     const a: number = x; // ERROR: `x` is now typed `null` after the write
@@ -666,7 +682,7 @@ References:
                     ^^^^^^ [2]
 
 
-Found 2 errors
+Found 3 errors
 
 === block 30 ===
 No errors!
@@ -808,7 +824,7 @@ No errors!
 === block 41 ===
 Error ------------------------------------------------------------------------ -:13:24
 
-Cannot assign `42` to `forged` because number [1] is incompatible with `UserId` [2]. [incompatible-type]
+Cannot assign `42` to `forged` because `42` [1] is incompatible with `UserId` [2]. [incompatible-type]
 
    -:13:24
    13| const forged: UserId = 42;    // ERROR: number is not a UserId
@@ -821,7 +837,7 @@ References:
 
 Error ------------------------------------------------------------------------ -:14:19
 
-Cannot assign `id` to `n` because `UserId` [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `id` to `n` because `UserId` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:14:19
    14| const n: number = id;         // ERROR: UserId is not a number
@@ -868,7 +884,7 @@ No errors!
 === block 46 ===
 Error ------------------------------------------------------------------------ -:10:21
 
-Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `value` to `s` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:10:21
    10|   const s: string = value; // ERROR: `value` keeps its full `string | number` type

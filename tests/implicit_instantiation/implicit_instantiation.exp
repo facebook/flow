@@ -101,7 +101,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:19
 
-Cannot assign `identity<...>(...)` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `identity<...>(...)` to `y` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:7:19
    7| const y: string = identity<_>(3); // Error, string incompatible with number.
@@ -136,7 +136,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-Cannot cast `z` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `z` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:18:1
    18| z as string; // Error, number lower bound string upper bound
@@ -245,7 +245,7 @@ References:
 
 Error ----------------------------------------------------------------------------- under_constrained_speculation.js:1:1
 
-Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `0` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    under_constrained_speculation.js:1:1
    1| 0 as string; // error: intentially left here to ensure that implicit instantiation

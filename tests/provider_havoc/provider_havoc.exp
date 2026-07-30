@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
-Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: null or undefined [2] is incompatible with
-empty [3]. [incompatible-type]
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: `null` [2] is incompatible with `empty` [3].
+[incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
 type is desired.
@@ -27,7 +27,34 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
-Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: string [2] is incompatible with empty [3].
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: `void` [2] is incompatible with `empty` [3].
+[incompatible-type]
+
+All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
+type is desired.
+
+   empty.js:14:17
+   14|     si = si.add(x);
+                       ^
+
+References:
+   empty.js:67:23
+   67| declare class Set<out T> {
+                             ^ [1]
+   empty.js:13:22
+   13|     declare const x: ?string;
+                            ^^^^^^^ [2]
+   empty.js:11:20
+   11|   let si = new Set<empty>();
+                          ^^^^^ [3]
+   empty.js:11:7
+   11|   let si = new Set<empty>();
+             ^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:14:17
+
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: `string` [2] is incompatible with `empty` [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -54,7 +81,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:10
 
-Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
+Cannot assign array literal to `arr` because in array element: `1` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    empty.js:22:10
@@ -69,7 +96,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:13
 
-Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
+Cannot assign array literal to `arr` because in array element: `2` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    empty.js:22:13
@@ -84,7 +111,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:16
 
-Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
+Cannot assign array literal to `arr` because in array element: `3` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    empty.js:22:16
@@ -119,7 +146,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:74:16
 
-Cannot assign `new Set<...>()` to `si` because in type argument `T` [1]: string [2] is incompatible with number [3].
+Cannot assign `new Set<...>()` to `si` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -143,7 +170,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- empty.js:76:3
 
-Cannot cast `si` to `Set` because in type argument `T` [1]: string [2] is incompatible with number [3].
+Cannot cast `si` to `Set` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    empty.js:76:3
@@ -164,7 +191,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:88:15
 
-Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: number [2] is incompatible with empty [3].
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: `42` [2] is incompatible with `empty` [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -235,7 +262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:17:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:17:3
    17|   x as empty; // error, just to show that x is not empty
@@ -252,7 +279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:21:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:21:3
    21|   x as empty; // error similarly
@@ -269,7 +296,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:22:3
 
-Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `y` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:22:3
    22|   y as number; // error b/c y was fully havoced
@@ -286,7 +313,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:32:1
 
-Cannot cast `z` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `z` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:32:1
    32| z as number; // should fail, initial type of z was null
@@ -303,7 +330,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:42:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:42:3
    42|   x as empty; // error, just to show that x is not empty
@@ -320,7 +347,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:46:3
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    providers_closure.js:46:3
    46|   x as empty; // error similarly
@@ -337,7 +364,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- providers_closure.js:47:3
 
-Cannot cast `y` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `y` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    providers_closure.js:47:3
    47|   y as number; // error b/c y was fully havoced
@@ -354,7 +381,24 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:23
 
-Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `var_x` to `y` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:10:23
+   10|       var y: number = var_x;
+                             ^^^^^
+
+References:
+   test.js:5:15
+    5| function g(x: ?number) {
+                     ^^^^^^^ [1]
+   test.js:10:14
+   10|       var y: number = var_x;
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:23
+
+Cannot assign `var_x` to `y` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:10:23
    10|       var y: number = var_x;
@@ -371,7 +415,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:3
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    test.js:23:3
    23|   x as void; // should error
@@ -388,7 +432,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:33:5
 
-Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:33:5
    33|     x as number; // should fail
@@ -448,8 +492,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:63:12
 
 Cannot assign `f` to `fn` because: [incompatible-type]
- - Either in the first parameter: empty [1] is incompatible with number [2].
- - Or in the first parameter: empty [3] is incompatible with number [2].
+ - Either in the first parameter: `empty` [1] is incompatible with `number` [2].
+ - Or in the first parameter: `empty` [3] is incompatible with `number` [2].
 
 All writes to `fn` must be compatible with the type of its initializer [4]. Add an annotation to `fn` [4] if a different
 type is desired.
@@ -701,4 +745,4 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 27 errors
+Found 29 errors

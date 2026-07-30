@@ -2,7 +2,7 @@
 Error ---------------------------------------------------------------------------- -:14:33
 
 Cannot call `method` with object literal bound to `value` because in property `baz`: array literal [1] is incompatible
-with string [2]. [incompatible-type]
+with `string` [2]. [incompatible-type]
 
    -:14:33
    14| method({foo: 1, bar: true, baz: ["oops"]}); // Error

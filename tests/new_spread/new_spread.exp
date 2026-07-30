@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ cross_module/app.js:4:9
 
-Cannot call `app` with object literal bound to the first parameter because in property `a`: string [1] is incompatible
-with number [2]. [incompatible-type]
+Cannot call `app` with object literal bound to the first parameter because in property `a`: `"foo"` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    cross_module/app.js:4:9
    4| app({a: 'foo', b: 2});
@@ -15,8 +15,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ cross_module/use.js:3:9
 
-Cannot call `app` with object literal bound to the first parameter because in property `a`: string [1] is incompatible
-with number [2]. [incompatible-type]
+Cannot call `app` with object literal bound to the first parameter because in property `a`: `"foo"` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    cross_module/use.js:3:9
    3| app({a: 'foo', b: 2});
@@ -474,7 +474,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:7:1
 
-Cannot cast `o1.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot cast `o1.p` to `T` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_contra.js:7:1
    7| o1.p as T; // errors: undefined ~> T, unknown ~> T
@@ -520,8 +520,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:13:1
 
-Cannot cast `o2.p` to `T` because computed property of unknown type [1] is incompatible with `T` [2].
-[incompatible-type]
+Cannot cast `o2.p` to `T` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_contra.js:13:1
    13| o2.p as T; // errors: unknown ~> T
@@ -564,7 +563,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:19:1
 
-Cannot cast `o3.p` to `T` because property `p` of unknown type [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot cast `o3.p` to `T` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_contra.js:19:1
    19| o3.p as T; // errors: unknown ~> T
@@ -603,7 +602,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:3:1
 
-Cannot cast `42` to `O` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `42` to `O` because `42` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_empty.js:3:1
    3| 42 as O; // Error: number ~> empty
@@ -617,7 +616,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_empty.js:7:3
 
-Cannot cast `x` to number because object type [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `{...}` [1] is incompatible with `number` [2]. [incompatible-type]
 
    type_empty.js:7:3
    7|   x as number; // Error: mixed ~> number,
@@ -635,7 +634,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_empty.js:12:6
 
 Cannot call `fn` with object literal bound to the first parameter because object literal [1] is incompatible with
-`{ ...T }` [2]. [incompatible-type]
+`empty` [2]. [incompatible-type]
 
    type_empty.js:12:6
    12|   fn({}); // Error: object ~> empty
@@ -649,7 +648,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:11
 
-Cannot cast `spread(...)` to object type because in property `p`: number [1] is incompatible with empty [2].
+Cannot cast `spread(...)` to object type because in property `p`: `0` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    type_generic.js:3:11
@@ -664,7 +663,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:17
 
-Cannot cast `spread(...)` to object type because in property `q`: number [1] is incompatible with empty [2].
+Cannot cast `spread(...)` to object type because in property `q`: `0` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    type_generic.js:3:17
@@ -736,8 +735,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:1
 
-Cannot cast `o2.someProp` to empty because `void` (due to access of non-existent property `someProp`) [1] is
-incompatible with empty [2]. [incompatible-type]
+Cannot cast `o2.someProp` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:7:1
    7| o2.someProp as empty; // Error someProp does not exist
@@ -765,7 +763,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:11:1
 
-Cannot cast `o3.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o3.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:11:1
    11| o3.a as empty; // Error: number ~> empty
@@ -782,7 +780,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:1
 
-Cannot cast `o3.b` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o3.b` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:12:1
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty
@@ -799,7 +797,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:12:1
 
-Cannot cast `o3.b` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o3.b` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_mixed.js:12:1
    12| o3.b as empty; // Error: mixed ~> empty, number ~> empty, and undefined ~> empty

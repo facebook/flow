@@ -1,8 +1,8 @@
 Error ----------------------------------------------------------------------------------- contravariant_refsetter.js:9:1
 
 Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompatible-type]
- - Either boolean [2] is incompatible with number [3].
- - Or boolean [2] is incompatible with string [4].
+ - Either `boolean` [2] is incompatible with `number` [3].
+ - Or `boolean` [2] is incompatible with `string` [4].
 
    contravariant_refsetter.js:9:1
      9| x as React.RefSetter<number | string | boolean>; // ERROR
@@ -26,8 +26,8 @@ References:
 Error ---------------------------------------------------------------------------------- contravariant_refsetter.js:10:1
 
 Cannot cast `y` to `React.RefSetter` because in type argument `T` [1]: [incompatible-type]
- - Either boolean [2] is incompatible with number [3].
- - Or boolean [2] is incompatible with string [4].
+ - Either `boolean` [2] is incompatible with `number` [3].
+ - Or `boolean` [2] is incompatible with `string` [4].
 
    contravariant_refsetter.js:10:1
     10| y as React.RefSetter<number | string | boolean>; // ERROR
@@ -81,8 +81,8 @@ References:
 Error ------------------------------------------------------------------------------------------- createContext.js:31:39
 
 Cannot assign `this.divRef.current` to `image` because: [incompatible-type]
- - Either `DivInstance` [1] is incompatible with `ImgInstance` [2].
- - Or `DivInstance` [1] is incompatible with null [3].
+ - Either `CommonInstance` [1] is incompatible with `ImgInstance` [2].
+ - Or `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -150,10 +150,12 @@ References:
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
-`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
+`void | React.RefSetter<DivInstance>` [2] is not exactly the same as `void | React.RefSetter<SpanInstance>` [3].
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Either make `{ref?: React.RefSetter<DivInstance>, ...}` [2] and `{ref?: React.RefSetter<SpanInstance>, ...}` [3]
+exactly the same
 - Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -199,10 +201,12 @@ References:
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
-`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
+`void | React.RefSetter<DivInstance>` [2] is not exactly the same as `void | React.RefSetter<SpanInstance>` [3].
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Either make `{ref?: React.RefSetter<DivInstance>, ...}` [2] and `{ref?: React.RefSetter<SpanInstance>, ...}` [3]
+exactly the same
 - Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -270,10 +274,12 @@ References:
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
-`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
+`void | React.RefSetter<DivInstance>` [2] is not exactly the same as `void | React.RefSetter<SpanInstance>` [3].
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Either make `{ref?: React.RefSetter<DivInstance>, ...}` [2] and `{ref?: React.RefSetter<SpanInstance>, ...}` [3]
+exactly the same
 - Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -308,7 +314,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- default_props_undefined.js:8:10
 
-Cannot create `Foo` element because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: `"42"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    default_props_undefined.js:8:10
    8| <Foo bar="42"/>; // Error
@@ -322,8 +328,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:15:48
 
-Cannot initialize property `defaultProps` with object literal because in property `p`: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot initialize property `defaultProps` with object literal because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:15:48
    15|   static defaultProps: {p: ?number, ...} = {p: 'foo'}; // Error: string ~> number
@@ -352,7 +358,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:39:28
 
-string [1] is incompatible with number [2]. [incompatible-type]
+`string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    element_config.js:39:28
    39|   static defaultProps: {p: string, ...} = {p: 'foo'}; // Error: string ~> number
@@ -366,7 +372,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:47:29
 
-string [1] is incompatible with number [2]. [incompatible-type]
+`string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    element_config.js:47:29
    47|   static defaultProps: {p?: string, ...} = {} as {p?: string, ...}; // Error: string ~> number
@@ -380,8 +386,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:52:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:52:6
    52| ({p: 'foo'}) as React.ElementConfig<typeof A>; // Error: string ~> number
@@ -395,8 +401,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:56:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:56:6
    56| ({p: 'foo'}) as React.ElementConfig<typeof B>; // Error: string ~> number
@@ -425,8 +431,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:60:6
    60| ({p: 'foo'}) as React.ElementConfig<typeof C>; // Error: string ~> number
@@ -455,8 +461,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:64:6
    64| ({p: 'foo'}) as React.ElementConfig<typeof D>; // Error: string ~> number
@@ -500,8 +506,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:76:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:76:6
    76| ({p: 'foo'}) as React.ElementConfig<typeof G>; // Error: string ~> number
@@ -515,8 +521,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:80:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:80:6
    80| ({p: 'foo'}) as React.ElementConfig<typeof H>; // Error: string ~> number
@@ -530,8 +536,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:84:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:84:6
    84| ({p: 'foo'}) as React.ElementConfig<typeof I>; // Error: string ~> number
@@ -545,8 +551,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:88:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    element_config.js:88:6
    88| ({p: 'foo'}) as React.ElementConfig<typeof J>; // Error: string ~> number
@@ -641,8 +647,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:33:13
 
-Cannot call `myHOC` with `class { ... }` bound to `Component` because in property `foo`: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `myHOC` with `class { ... }` bound to `Component` because in property `foo`: `string` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    hoc.js:33:13
    33| myHOC(class Empty extends React.Component<{foo: string, ...}, void> {}); // Error
@@ -659,8 +665,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:34:7
 
-Cannot call `myHOC` with function bound to `Component` because in property `foo`: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `myHOC` with function bound to `Component` because in property `foo`: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    hoc.js:34:7
    34| myHOC(function Empty(props: {foo: string, ...}) {}); // Error
@@ -749,7 +755,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:26:24
 
-Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent` element because in property `a`: `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    hoc2.js:26:24
@@ -787,8 +793,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    hoc2.js:30:32
    30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -820,7 +826,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc3.js:26:24
 
-Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent` element because in property `a`: `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    hoc3.js:26:24
@@ -853,8 +859,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc3.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    hoc3.js:30:32
    30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -886,7 +892,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:26:24
 
-Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent` element because in property `a`: `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    hoc4.js:26:24
@@ -919,8 +925,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    hoc4.js:30:32
    30| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
@@ -952,7 +958,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:23:19
 
-Cannot create `MyComponent1` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `MyComponent1` element because in property `bar`: `"nope"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    hoc5.js:23:19
@@ -967,7 +973,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:25:29
 
-Cannot create `MyComponent1` element because in property `foo`: number [1] is incompatible with string [2].
+Cannot create `MyComponent1` element because in property `foo`: `100` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    hoc5.js:25:29
@@ -1000,7 +1006,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:32:27
 
-Cannot create `MyEnhancedComponent1` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `MyEnhancedComponent1` element because in property `bar`: `"nope"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    hoc5.js:32:27
@@ -1015,7 +1021,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:34:37
 
-Cannot create `MyEnhancedComponent1` element because in property `foo`: number [1] is incompatible with string [2].
+Cannot create `MyEnhancedComponent1` element because in property `foo`: `100` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    hoc5.js:34:37
@@ -1058,7 +1064,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import_react.js:7:17
 
-Cannot assign `new react.Component()` to `b` because `Component` [1] is incompatible with number [2].
+Cannot assign `new react.Component()` to `b` because `Component<void, void>` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import_react.js:7:17
@@ -1102,7 +1108,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- jsx_spread.js:9:15
 
-Cannot create `Foo` element because in property `bar`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    jsx_spread.js:9:15
    9| const blah = <Foo {...props} />; // error bar, number given string expected
@@ -1120,8 +1127,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- key.js:10:11
 
 Cannot create `Foo` element because in property `key`: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
 
    key.js:10:11
    10| <Foo key={true} />; // Error
@@ -1139,8 +1146,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- key.js:19:16
 
 Cannot create `FooExact` element because in property `key`: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
 
    key.js:19:16
    19| <FooExact key={true} />; // Error
@@ -1296,7 +1303,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:38:33
 
-Cannot create `Profiler` element because in property `onRender`: null [1] is incompatible with
+Cannot create `Profiler` element because in property `onRender`: `null` [1] is incompatible with
 `ProfilerOnRenderFnType` [2]. [incompatible-type]
 
    profiler.js:38:33
@@ -1311,8 +1318,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:42:33
 
-Cannot create `Profiler` element because in property `onRender` > the first parameter: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot create `Profiler` element because in property `onRender` > the first parameter: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    profiler.js:42:33
     42|   <Profiler id="fake" onRender={badOnRender} />; // Error: invalid "onRender" prop
@@ -1329,8 +1336,7 @@ References:
 
 Error ------------------------------------------------------------------------- react_util_types_monomorphization.js:7:3
 
-Cannot cast `config.foo` to string because `unknown` (inferred from type parameter's bound) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `config.foo` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:7:3
    7|   config.foo as string; // error: mixed ~> string
@@ -1361,8 +1367,7 @@ References:
 
 Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:3
 
-Cannot cast `ref.props.foo` to string because `unknown` (inferred from type parameter's bound) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `ref.props.foo` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:12:3
    12|   ref.props.foo as string; // error: mixed ~> string
@@ -1380,8 +1385,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ ref.js:7:10
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either string [1] is incompatible with object type [2].
- - Or string [1] is incompatible with function type [3].
+ - Either `"foo"` [1] is incompatible with `{writeonly current: Foo | null, ...}` [2].
+ - Or `"foo"` [1] is incompatible with `(Foo | null) => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1402,7 +1407,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: number [1] is incompatible with `Foo` [2].
+ - Either in the first parameter: `number` [1] is incompatible with `Foo` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1427,7 +1432,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:11:18
 
-Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2]. [incompatible-type]
+Cannot cast `foo` to `Foo` because `null` [1] is incompatible with `Foo` [2]. [incompatible-type]
 
    ref.js:11:18
     11| <Foo ref={foo => foo as Foo} />; // Error: `Foo` may be null.
@@ -1446,7 +1451,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `foo` to union type because: [incompatible-type]
  - Either `Foo` [1] is incompatible with `Bar` [2].
- - Or `Foo` [1] is incompatible with null [3].
+ - Or `Foo` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1470,8 +1475,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:18:15
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either string [1] is incompatible with object type [2].
- - Or string [1] is incompatible with function type [3].
+ - Either `"foo"` [1] is incompatible with `{writeonly current: FooExact | null, ...}` [2].
+ - Or `"foo"` [1] is incompatible with `(FooExact | null) => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1492,7 +1497,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: number [1] is incompatible with `FooExact` [2].
+ - Either in the first parameter: `number` [1] is incompatible with `FooExact` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1518,7 +1523,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: `FooExact` [1] is incompatible with null [2].
+ - Either in the first parameter: `FooExact` [1] is incompatible with `null` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1545,7 +1550,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `FooExact` [1] is incompatible with `Bar` [2].
- - Or in the first parameter: `FooExact` [1] is incompatible with null [3].
+ - Or in the first parameter: `FooExact` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1568,7 +1573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:5:21
 
-Cannot create `MyComponent` element because in property `title`: undefined [1] is incompatible with string [2].
+Cannot create `MyComponent` element because in property `title`: `void` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    undefined_prop.js:5:21
@@ -1583,8 +1588,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useCallback_hook.js:4:9
 
-Cannot call `React.useCallback` because in type argument `T`: undefined [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot call `React.useCallback` because in type argument `T`: `void` [1] is incompatible with
+`(...args: ReadonlyArray<empty>) => unknown` [2]. [incompatible-type]
 
    useCallback_hook.js:4:9
       4|   React.useCallback(); // Error: function requires another argument.
@@ -1601,7 +1606,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:10:23
 
-Cannot assign `callback()` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `callback()` to `str` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useCallback_hook.js:10:23
    10|   const str: string = callback();// Error: number is incompatible with string.
@@ -1636,7 +1641,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:19:12
 
-Cannot call `callback` with `true` bound to `num` because boolean [1] is incompatible with number [2].
+Cannot call `callback` with `true` bound to `num` because `true` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    useCallback_hook.js:19:12
@@ -1651,7 +1656,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- useCallback_hook.js:20:12
 
-Cannot call `callback` with `'123'` bound to `num` because string [1] is incompatible with number [2].
+Cannot call `callback` with `'123'` bound to `num` because `"123"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    useCallback_hook.js:20:12
@@ -1681,7 +1686,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:19:18
 
-Cannot assign `React.useContext(...)` to `numericValue` because string [1] is incompatible with number [2].
+Cannot assign `React.useContext(...)` to `numericValue` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    useContext_hook.js:19:18
@@ -1699,7 +1704,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:73
 
-Cannot call `React.createContext` with `'hello'` bound to `defaultValue` because string [1] is incompatible with
+Cannot call `React.createContext` with `'hello'` bound to `defaultValue` because `"hello"` [1] is incompatible with
 `CustomType` [2]. [incompatible-type]
 
    useContext_hook.js:21:73
@@ -1714,7 +1719,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:27:17
 
-Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] is incompatible with string [2].
+Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    useContext_hook.js:27:17
@@ -1760,7 +1765,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useContext_hook.js:52:3
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useContext_hook.js:52:3
    52|   bar as string; // Error: number is incompatible with string
@@ -1809,8 +1814,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:20:19
 
-Cannot call `React.useEffect` with `1` bound to `create` because number [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot call `React.useEffect` with `1` bound to `create` because `1` [1] is incompatible with
+`() => MaybeCleanUpFn` [2]. [incompatible-type]
 
    useEffect_hook.js:20:19
      20|   React.useEffect(1); // Error: number is incompatible with function type
@@ -1824,8 +1829,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:21:29
 
-Cannot call `React.useEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
-type [2]. [incompatible-type]
+Cannot call `React.useEffect` with `1` bound to `inputs` because `1` [1] is incompatible with
+`ReadonlyArray<unknown>` [2]. [incompatible-type]
 
    useEffect_hook.js:21:29
      21|   React.useEffect(() => {}, 1); // Error: number is incompatible with function react-only array
@@ -1841,7 +1846,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useEffect` with async function bound to `create` because in the return value: [incompatible-type]
  - Either `Promise` [1] is incompatible with function type [2].
- - Or `Promise` [1] is incompatible with undefined [3].
+ - Or `Promise<void>` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1862,8 +1867,8 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:25
 
 Cannot call `React.useEffect` with function bound to `create` because in the return value: [incompatible-type]
- - Either in the return value: number [1] is incompatible with undefined [2].
- - Or function [3] is incompatible with undefined [4].
+ - Either in the return value: `123` [1] is incompatible with `void` [2].
+ - Or `() => 123` [3] is incompatible with `void` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1907,7 +1912,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [incompatible-type]
  - Either in property `current`: property `focus` is missing in object literal [1] but exists in `Interface` [2].
- - Or in property `current`: object literal [1] is incompatible with null [3].
+ - Or in property `current`: object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1932,7 +1937,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useImperativeHandle` with `refSetter` bound to `ref` because: [incompatible-type]
  - Either in the first parameter: property `focus` is missing in object literal [1] but exists in `Interface` [2].
- - Or in the first parameter: object literal [1] is incompatible with null [3].
+ - Or in the first parameter: object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1973,8 +1978,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:20:25
 
-Cannot call `React.useLayoutEffect` with `1` bound to `create` because number [1] is incompatible with function
-type [2]. [incompatible-type]
+Cannot call `React.useLayoutEffect` with `1` bound to `create` because `1` [1] is incompatible with
+`() => MaybeCleanUpFn` [2]. [incompatible-type]
 
    useLayoutEffect_hook.js:20:25
      20|   React.useLayoutEffect(1); // Error: number is incompatible with function type
@@ -1988,8 +1993,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:21:35
 
-Cannot call `React.useLayoutEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
-type [2]. [incompatible-type]
+Cannot call `React.useLayoutEffect` with `1` bound to `inputs` because `1` [1] is incompatible with
+`ReadonlyArray<unknown>` [2]. [incompatible-type]
 
    useLayoutEffect_hook.js:21:35
      21|   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
@@ -2006,7 +2011,7 @@ Error --------------------------------------------------------------------------
 Cannot call `React.useLayoutEffect` with async function bound to `create` because in the return value:
 [incompatible-type]
  - Either `Promise` [1] is incompatible with function type [2].
- - Or `Promise` [1] is incompatible with undefined [3].
+ - Or `Promise<void>` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2027,8 +2032,8 @@ References:
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:31
 
 Cannot call `React.useLayoutEffect` with function bound to `create` because in the return value: [incompatible-type]
- - Either in the return value: number [1] is incompatible with undefined [2].
- - Or function [3] is incompatible with undefined [4].
+ - Either in the return value: `123` [1] is incompatible with `void` [2].
+ - Or `() => 123` [3] is incompatible with `void` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2069,7 +2074,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- useMemo_hook.js:15:27
 
-Cannot assign `React.useMemo(...)` to `invalid` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `React.useMemo(...)` to `invalid` because `"abc"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    useMemo_hook.js:15:27
    15|   const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
@@ -2261,7 +2267,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2278,7 +2284,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2295,7 +2301,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2312,7 +2318,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2329,7 +2335,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:3
 
-Cannot cast `state.count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `state.count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useReducer_hook.js:27:3
    27|   state.count as string; // Error: number is incompatible with string
@@ -2347,8 +2353,8 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:14:67
 
 Cannot call `React.useRef` with `123` bound to `initialValue` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with null [3].
+ - Either `123` [1] is incompatible with `string` [2].
+ - Or `123` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2369,8 +2375,8 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:15:67
 
 Cannot call `React.useRef` with `"abc"` bound to `initialValue` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with null [3].
+ - Either `"abc"` [1] is incompatible with `number` [2].
+ - Or `"abc"` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2390,7 +2396,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:56
 
-Cannot call `React.useRef` with `true` bound to `initialValue` because boolean [1] is incompatible with null [2].
+Cannot call `React.useRef` with `true` bound to `initialValue` because `true` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    useRef_hook.js:16:56
@@ -2406,8 +2412,8 @@ References:
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:22:25
 
 Cannot assign `123` to `stringValue.current` because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with null [3].
+ - Either `123` [1] is incompatible with `string` [2].
+ - Or `123` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2429,7 +2435,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useRef` with `new Bar(...)` bound to `initialValue` because: [incompatible-type]
  - Either `Bar` [1] is incompatible with `Foo` [2].
- - Or `Bar` [1] is incompatible with null [3].
+ - Or `Bar` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2449,7 +2455,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- useState_hook.js:8:1
 
-Cannot cast `count` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `count` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    useState_hook.js:8:1
    8| count as string; // Error: number is incompatible with string
@@ -2467,8 +2473,8 @@ References:
 Error ------------------------------------------------------------------------------------------- useState_hook.js:11:10
 
 Cannot call `setCount` with `true` bound to the first parameter because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with function type [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `(number) => number` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2488,8 +2494,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ use_hook.js:19:21
 
-Cannot assign `use(...)` to `notAny` because `Theme` [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot assign `use(...)` to `notAny` because `Theme` [1] is incompatible with `0` [2]. [incompatible-type]
 
    use_hook.js:19:21
    19|   const notAny: 0 = use(ThemeContext);
@@ -2524,8 +2529,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ use_hook.js:21:22
 
-Cannot assign `use(...)` to `notAny3` because string [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot assign `use(...)` to `notAny3` because `string` [1] is incompatible with `0` [2]. [incompatible-type]
 
    use_hook.js:21:22
    21|   const notAny3: 0 = use(CustomThennable);
@@ -2543,8 +2547,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- use_hook.js:24:7
 
 Cannot call `use` with `null` bound to `usable` because: [incompatible-type]
- - Either null [1] is incompatible with `Thenable` [2].
- - Or null [1] is incompatible with `Context` [3].
+ - Either `null` [1] is incompatible with `Thenable<any>` [2].
+ - Or `null` [1] is incompatible with `React.Context<any>` [3].
 
    use_hook.js:24:7
     24|   use(null);
@@ -2562,8 +2566,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- use_hook.js:25:7
 
 Cannot call `use` with `undefined` bound to `usable` because: [incompatible-type]
- - Either undefined [1] is incompatible with `Thenable` [2].
- - Or undefined [1] is incompatible with `Context` [3].
+ - Either `void` [1] is incompatible with `Thenable<any>` [2].
+ - Or `void` [1] is incompatible with `React.Context<any>` [3].
 
    use_hook.js:25:7
     25|   use(undefined);
@@ -2583,7 +2587,7 @@ Error --------------------------------------------------------------------------
 Cannot call `use` with `0` bound to `usable` because: [incompatible-type]
  - Either number literal `0` [1], a primitive, cannot be used as a subtype of `Thenable` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or number [1] is incompatible with `Context` [3].
+ - Or `0` [1] is incompatible with `React.Context<any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2605,7 +2609,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `use` with object literal bound to `usable` because: [incompatible-type]
  - Either property `then` is missing in object literal [1] but exists in `Thenable` [2].
- - Or object literal [1] is incompatible with `Context` [3].
+ - Or object literal [1] is incompatible with `React.Context<any>` [3].
 
    use_hook.js:27:7
     27|   use({});

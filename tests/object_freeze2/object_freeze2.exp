@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ downstream.js:4:1
 
-Cannot cast `o.a` to number because frozen object literal [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `o.a` to number because `{readonly b: "c"}` [1] is incompatible with `number` [2]. [incompatible-type]
 
    downstream.js:4:1
    4| o.a as number;

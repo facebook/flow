@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:24:1
 
-Cannot cast `a.m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:24:1
    24| a.m satisfies empty; // ERROR: proves type is not any
@@ -32,7 +32,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:28:1
 
-Cannot cast `m` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:28:1
    28| m satisfies empty; // ERROR: proves type is not any
@@ -49,7 +49,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:35:1
 
-Cannot cast `i.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `i.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:35:1
    35| i.m satisfies empty; // ERROR: proves type is not any
@@ -66,7 +66,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:39:1
 
-Cannot cast `im` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `im` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:39:1
    39| im satisfies empty; // ERROR: proves type is not any
@@ -83,7 +83,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:48:1
 
-Cannot cast `self` to empty because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `self` to empty because `() => B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:48:1
    48| self satisfies empty; // ERROR: function type is not empty

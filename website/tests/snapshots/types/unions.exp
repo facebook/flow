@@ -2,8 +2,8 @@
 Error -------------------------------------------------------------------------------- -:8:6
 
 Cannot call `size` with `true` bound to `value` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    -:8:6
    8| size(true);    // Error!
@@ -38,7 +38,7 @@ No errors!
 === block 7 ===
 Error ------------------------------------------------------------------------------- -:6:10
 
-Cannot return `value` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `value` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:6:10
    6|   return value; // Error!
@@ -58,7 +58,7 @@ Found 1 error
 === block 8 ===
 Error ------------------------------------------------------------------------------ -:10:27
 
-Cannot assign `response.value` to `value` because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `response.value` to `value` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:10:27
    10|     const value: number = response.value; // Error!
@@ -74,7 +74,7 @@ References:
 
 Error ------------------------------------------------------------------------------ -:12:27
 
-Cannot assign `response.error` to `error` because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `response.error` to `error` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:27
    12|     const error: string = response.error; // Error!
@@ -97,7 +97,7 @@ No errors!
 === block 10 ===
 Error ------------------------------------------------------------------------------- -:12:5
 
-Cannot cast `payload` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `payload` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:5
    12|     payload as string; // Error! payload is still PayloadMap[T]

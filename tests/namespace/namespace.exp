@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- client.js:3:19
 
-Cannot assign `ns.foo` to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `ns.foo` to `bar` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    client.js:3:19
     3| var bar: string = ns.foo
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ namespace.js:3:25
 
-Cannot assign function to `f` because in the first parameter: string [1] is incompatible with number [2].
+Cannot assign function to `f` because in the first parameter: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    namespace.js:3:25
@@ -32,7 +32,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- namespace.js:11:17
 
-Cannot assign `bar(...)` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `bar(...)` to `y` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    namespace.js:11:17
    11| var y: number = bar(0, x => '');
@@ -50,8 +50,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- namespace.js:15:15
 
 Cannot assign array literal to `s2` because: [incompatible-type]
- - Either in array element > array element: string [1] is incompatible with number [2].
- - Or in array element > array element: string [1] is incompatible with array type [3].
+ - Either in array element > array element: `""` [1] is incompatible with `number` [2].
+ - Or in array element > array element: `""` [1] is incompatible with `Array<Seq>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- namespace.js:17:24
 
-Cannot cast empty string to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast empty string to number because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    namespace.js:17:24
    17| module.exports = {foo: '' as number};

@@ -15,7 +15,7 @@ References:
 
 Error --------------------------------------------------------------------------------- class_implements_object.ts:50:10
 
-Cannot implement `Box` [1] with `WrongType` because in property `value`: number [2] is incompatible with string [3].
+Cannot implement `Box` [1] with `WrongType` because in property `value`: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    class_implements_object.ts:50:10
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:21:1
 
-Cannot cast `a` to object type because in property `name`: string [1] is incompatible with number [2].
+Cannot cast `a` to object type because in property `name`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    class_to_object.ts:21:1
@@ -107,8 +107,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- extra_props_usage.js:19:10
 
-Cannot call `take` with object literal bound to `x` because in property `a`: string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `take` with object literal bound to `x` because in property `a`: `"not a number"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    extra_props_usage.js:19:10
    19| take({a: "not a number"}); // ERROR: string vs number
@@ -209,7 +209,7 @@ References:
 
 Error --------------------------------------------------------------------------------- interface_extends_object.ts:80:9
 
-Cannot extend `Omit` [1] with `BadOverride` because in property `name`: number [2] is incompatible with string [3].
+Cannot extend `Omit` [1] with `BadOverride` because in property `name`: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    interface_extends_object.ts:80:9
@@ -286,7 +286,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- object_to_class.ts:19:12
 
-Cannot cast object literal to `Point` because in property `y`: string [1] is incompatible with number [2].
+Cannot cast object literal to `Point` because in property `y`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_to_class.ts:19:12

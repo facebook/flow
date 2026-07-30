@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- annotations.js:10:3
 
-Cannot cast `o[1]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[1]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    annotations.js:10:3
    10|   o[1] as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotations.js:11:3
 
-Cannot cast `o['1']` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o['1']` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    annotations.js:11:3
    11|   o['1'] as empty; // ERROR
@@ -68,7 +68,7 @@ Unsupported key in object type. Number literals must not be larger than `Number.
 
 Error -------------------------------------------------------------------------------------------- declare_class.js:13:3
 
-Cannot cast `a[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a[0]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:13:3
    13|   a[0] as empty; // ERROR
@@ -101,7 +101,7 @@ Unsupported key in declare class. Number literals must not be larger than `Numbe
 
 Error ---------------------------------------------------------------------------------------- import_numeric_key.js:7:1
 
-Cannot cast `obj[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `obj[1]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import_numeric_key.js:7:1
    7| obj[1] as empty; // ERROR
@@ -118,7 +118,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- import_numeric_key.js:8:1
 
-Cannot cast `obj[2]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `obj[2]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import_numeric_key.js:8:1
    8| obj[2] as empty; // ERROR
@@ -135,7 +135,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:14:3
 
-Cannot cast `a[0]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a[0]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    interface.js:14:3
    14|   a[0] as empty; // ERROR
@@ -439,7 +439,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:29
 
-Cannot assign `1` to `x` because number [1] is incompatible with key set [2]. [incompatible-type]
+Cannot assign `1` to `x` because `1` [1] is incompatible with `keyof {"1": boolean, "2": boolean}` [2].
+[incompatible-type]
 
    test.js:26:29
    26|   const x: keyof typeof o = 1; // ERROR
@@ -476,8 +477,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5
 
-Cannot cast `x` to number because at least one member of `Key` [1], e.g. string `1` [2], is incompatible with
-number [3]. [incompatible-type]
+Cannot cast `x` to number because in at least one member of `Key` [1]: `"1"` [2] is incompatible with `number` [3].
+[incompatible-type]
 
    test.js:42:5
    42|     x as number; // ERROR
@@ -499,14 +500,14 @@ References:
                 ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:47:15
+Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because in type argument `Key`: at least one member of `Key` [1], e.g. string `1` [2], is incompatible
-with number [3]. [incompatible-type]
+Cannot call `f` because in type argument `Key` > at least one member of `Key` [1]: `"1"` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
-   test.js:47:15
+   test.js:47:17
    47|     const x = f(o); // ERROR
-                     ^
+                       ^
 
 References:
    test.js:46:23
@@ -526,7 +527,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5
 
-Cannot cast `x` to number because at least one member of `K` [1], e.g. string `1` [1], is incompatible with number [2].
+Cannot cast `x` to number because in at least one member of `K` [1]: `"1"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:62:5
@@ -544,7 +545,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
-Cannot cast `o` to object type because in the indexer property: boolean [1] is incompatible with string [2].
+Cannot cast `o` to object type because in the indexer property: `boolean` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:82:3
@@ -562,7 +563,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
-Cannot cast `o` to object type because in the indexer property's key: number [1] is incompatible with string [2].
+Cannot cast `o` to object type because in the indexer property's key: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:82:3
@@ -629,7 +630,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:128:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[1]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:128:3
    128|   o[1] as empty; // ERROR
@@ -646,7 +647,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:129:3
 
-Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o['1']` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:129:3
    129|   o['1'] as empty; // ERROR
@@ -663,7 +664,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:141:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[1]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:141:3
    141|   o[1] as empty; // ERROR
@@ -680,7 +681,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:3
 
-Cannot cast `o['1']` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o['1']` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:142:3
    142|   o['1'] as empty; // ERROR
@@ -697,7 +698,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:3
 
-Cannot cast `o[1000]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[1000]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:154:3
    154|   o[1000] as empty; // ERROR
@@ -714,7 +715,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:157:3
 
-Cannot cast `o[10]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[10]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:157:3
    157|   o[10] as empty; // ERROR
@@ -731,7 +732,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:3
 
-Cannot cast `o[8]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[8]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:160:3
    160|   o[8] as empty; // ERROR
@@ -835,7 +836,7 @@ Unsupported key in object literal. Number literals must not be larger than `Numb
 
 Error ---------------------------------------------------------------------------------------------------- test.js:206:3
 
-Cannot cast `o[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[1]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:206:3
    206|   o[1] as empty; // ERROR
@@ -852,7 +853,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:207:3
 
-Cannot cast `o[9007199254740991]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o[9007199254740991]` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:207:3
    207|   o[9007199254740991] as empty; // ERROR

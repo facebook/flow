@@ -33,7 +33,7 @@ No errors!
 === block 7 ===
 Error ------------------------------------------------------------------------------- -:8:12
 
-Cannot assign `"bar"` to `tuple[0]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"bar"` to `tuple[0]` because `"bar"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:8:12
    8| tuple[0] = "bar"; // Error!
@@ -46,7 +46,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:9:12
 
-Cannot assign `42` to `tuple[1]` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `42` to `tuple[1]` because `42` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:9:12
    9| tuple[1] = 42;    // Error!
@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------ -:10:12
 
-Cannot assign `false` to `tuple[2]` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `false` to `tuple[2]` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:10:12
    10| tuple[2] = false; // Error!
@@ -139,7 +139,8 @@ Found 1 error
 === block 11 ===
 Error ------------------------------------------------------------------------------- -:4:30
 
-Cannot assign `tuple` to `array` because tuple type [1] is incompatible with array type [2]. [incompatible-type]
+Cannot assign `tuple` to `array` because `[number, number]` [1] is incompatible with `Array<number>` [2].
+[incompatible-type]
 
    -:4:30
    4| const array: Array<number> = tuple; // Error!
@@ -196,7 +197,7 @@ Cannot assign `1` to `readOnlyTuple[1]` because tuple element at index `1` [1] l
 
 Error ------------------------------------------------------------------------------- -:4:22
 
-Cannot assign `1` to `readOnlyTuple[1]` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `1` to `readOnlyTuple[1]` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:4:22
    4|   readOnlyTuple[1] = 1; // ERROR! Cannot write
@@ -219,8 +220,7 @@ No errors!
 === block 20 ===
 Error -------------------------------------------------------------------------------- -:4:8
 
-Cannot assign `undefined` to `x[0]` because you cannot assign undefined [1] to optional tuple element [2] (to do so, add
-`| void` to the tuple element type). [incompatible-type]
+Cannot assign `undefined` to `x[0]` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:4:8
    4| x[0] = undefined; // ERROR
@@ -233,8 +233,7 @@ References:
 
 Error -------------------------------------------------------------------------------- -:5:2
 
-Cannot cast array literal to `T` because in index `0`: you cannot assign undefined [1] to optional tuple element [2] (to
-do so, add `| void` to the tuple element type). [incompatible-type]
+Cannot cast array literal to `T` because in index `0`: `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:5:2
    5| [undefined] as T; // ERROR

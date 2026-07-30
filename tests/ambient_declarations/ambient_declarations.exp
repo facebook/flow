@@ -24,7 +24,8 @@ Declare methods in classes are not supported. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------- declare_methods.js.flow:10:3
 
-Cannot shadow proto property `foo` [1] because string [2] is incompatible with function type [3]. [incompatible-type]
+Cannot shadow proto property `foo` [1] because `string` [2] is incompatible with `(x: number) => void` [3].
+[incompatible-type]
 
    declare_methods.js.flow:10:3
    10|   foo: string;
@@ -68,8 +69,8 @@ Const must be initialized [ParseError]
 
 Error --------------------------------------------------------------------------------- use_component_namespace.js:13:49
 
-Cannot create `ComponentNamespace.Card` element because in property `title`: number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot create `ComponentNamespace.Card` element because in property `title`: `123` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    use_component_namespace.js:13:49
    13| const badCard = <ComponentNamespace.Card title={123} content="World" />; // Error: number is not compatible with string
@@ -83,8 +84,8 @@ References:
 
 Error --------------------------------------------------------------------------------- use_component_namespace.js:15:51
 
-Cannot create `ComponentNamespace.Modal` element because in property `isOpen`: string [1] is incompatible with
-boolean [2]. [incompatible-type]
+Cannot create `ComponentNamespace.Modal` element because in property `isOpen`: `"true"` [1] is incompatible with
+`boolean` [2]. [incompatible-type]
 
    use_component_namespace.js:15:51
    15| const badModal = <ComponentNamespace.Modal isOpen="true" onClose={() => {}} />; // Error: string is not compatible with boolean
@@ -98,7 +99,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ use_components.js:13:43
 
-Cannot create `Button` element because in property `props.label`: number [1] is incompatible with string [2].
+Cannot create `Button` element because in property `props.label`: `123` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_components.js:13:43
@@ -113,8 +114,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ use_components.js:15:52
 
-Cannot create `Input` element because in property `onChange` > the first parameter: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot create `Input` element because in property `onChange` > the first parameter: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    use_components.js:15:52
    15| const badInput = <Input value="test" onChange={(v: number) => console.log(v)} />; // Error: string is not compatible with number
@@ -128,8 +129,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:13:17
 
-Cannot call `instance.method` with `"not a number"` bound to `x` because string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `instance.method` with `"not a number"` bound to `x` because `"not a number"` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    use_declare_methods.js:13:17
    13| instance.method("not a number"); // ERROR: string ~> number
@@ -143,7 +144,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:14:27
 
-Cannot assign `MyClass.staticMethod()` to `badStatic` because string [1] is incompatible with number [2].
+Cannot assign `MyClass.staticMethod()` to `badStatic` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_declare_methods.js:14:27
@@ -161,7 +162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:22:28
 
-Cannot assign `instance.generic<...>(...)` to `badGeneric` because number [1] is incompatible with string [2].
+Cannot assign `instance.generic<...>(...)` to `badGeneric` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_declare_methods.js:22:28
@@ -215,7 +216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_declare_methods.js:36:21
 
-Cannot call `restInstance.method` because in array element: string [1] is incompatible with number [2].
+Cannot call `restInstance.method` because in array element: `"not a number"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_declare_methods.js:36:21
@@ -230,7 +231,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- use_export_namespace.js:4:1
 
-Cannot cast `ExportedNS.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `ExportedNS.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_export_namespace.js:4:1
    4| ExportedNS.x as empty; // error: number ~> empty
@@ -247,7 +248,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- use_export_namespace.js:8:1
 
-Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `T` because `1` [1] is incompatible with `T` [2]. [incompatible-type]
 
    use_export_namespace.js:8:1
    8| 1 as ExportedNS.T; // error: number ~> string
@@ -261,7 +262,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ use_flow_typed.js:11:22
 
-Cannot assign `testModule.getFoo()` to `badX` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `testModule.getFoo()` to `badX` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    use_flow_typed.js:11:22
    11| const badX: number = testModule.getFoo(); // Error: string is not compatible with number
@@ -278,7 +280,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ use_flow_typed.js:12:22
 
-Cannot assign `testModule.getBar()` to `badY` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `testModule.getBar()` to `badY` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    use_flow_typed.js:12:22
    12| const badY: string = testModule.getBar(); // Error: number is not compatible with string
@@ -295,7 +298,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ use_flow_typed.js:13:22
 
-Cannot assign `testModule.getBaz()` to `badZ` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `testModule.getBaz()` to `badZ` because `boolean` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    use_flow_typed.js:13:22
    13| const badZ: number = testModule.getBaz(); // Error: boolean is not compatible with number
@@ -312,7 +316,7 @@ References:
 
 Error -------------------------------------------------------------------------------- use_flow_typed_components.js:9:34
 
-Cannot create `Button` element because in property `label`: number [1] is incompatible with string [2].
+Cannot create `Button` element because in property `label`: `42` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_flow_typed_components.js:9:34
@@ -353,7 +357,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_functions_no_semi.js:9:1
 
-Cannot cast `noSemi(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `noSemi(...)` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_functions_no_semi.js:9:1
    9| noSemi(1) as empty; // ERROR
@@ -370,7 +374,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ use_generic_functions.js:13:1
 
-Cannot cast `identity<...>(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `identity<...>(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use_generic_functions.js:13:1
    13| identity<string>("hello") as number; // ERROR - string not assignable to number
@@ -413,7 +417,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:15:25
 
-Cannot assign `p.name` to `badName` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `p.name` to `badName` because `"Alice"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use_getters_setters.js:15:25
    15| const badName: number = p.name; // ERROR: string ~> number
@@ -430,7 +434,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:16:24
 
-Cannot assign `p.age` to `badAge` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `p.age` to `badAge` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_getters_setters.js:16:24
    16| const badAge: string = p.age; // ERROR: number ~> string
@@ -447,7 +451,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:17:10
 
-Cannot assign `123` to `p.name` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `p.name` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_getters_setters.js:17:10
    17| p.name = 123; // ERROR: number ~> string
@@ -461,7 +465,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:22:26
 
-Cannot assign `Person.count` to `badCount` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `Person.count` to `badCount` because `10` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_getters_setters.js:22:26
    22| const badCount: string = Person.count; // ERROR: number ~> string
@@ -478,7 +482,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:23:16
 
-Cannot assign `"not a number"` to `Person.count` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"not a number"` to `Person.count` because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    use_getters_setters.js:23:16
    23| Person.count = "not a number"; // ERROR: string ~> number
@@ -492,7 +497,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:36:23
 
-Cannot assign `item.id` to `badId` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `item.id` to `badId` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_getters_setters.js:36:23
    36| const badId: string = item.id; // ERROR: number ~> string
@@ -509,7 +514,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:37:26
 
-Cannot assign `item.label` to `badLabel` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `item.label` to `badLabel` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use_getters_setters.js:37:26
    37| const badLabel: number = item.label; // ERROR: string ~> number
@@ -526,7 +531,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:38:11
 
-Cannot assign `"not a number"` to `item.id` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"not a number"` to `item.id` because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    use_getters_setters.js:38:11
    38| item.id = "not a number"; // ERROR: string ~> number
@@ -540,8 +546,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_getters_setters.js:42:33
 
-Cannot assign `AccessorNS.Item.defaultLabel` to `badDefaultLabel` because string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign `AccessorNS.Item.defaultLabel` to `badDefaultLabel` because `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    use_getters_setters.js:42:33
    42| const badDefaultLabel: number = AccessorNS.Item.defaultLabel; // ERROR: string ~> number
@@ -558,7 +564,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:12:29
 
-Cannot assign `ImplicitFunctions.greet(...)` to `badGreeting` because string [1] is incompatible with number [2].
+Cannot assign `ImplicitFunctions.greet(...)` to `badGreeting` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_implicit_functions.js:12:29
@@ -576,7 +582,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:13:24
 
-Cannot assign `ImplicitFunctions.add(...)` to `badAdd` because number [1] is incompatible with string [2].
+Cannot assign `ImplicitFunctions.add(...)` to `badAdd` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_implicit_functions.js:13:24
@@ -594,7 +600,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:14:25
 
-Cannot call `ImplicitFunctions.greet` with `123` bound to `name` because number [1] is incompatible with string [2].
+Cannot call `ImplicitFunctions.greet` with `123` bound to `name` because `123` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_implicit_functions.js:14:25
@@ -609,7 +615,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:15:23
 
-Cannot call `ImplicitFunctions.add` with `"a"` bound to `a` because string [1] is incompatible with number [2].
+Cannot call `ImplicitFunctions.add` with `"a"` bound to `a` because `"a"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_implicit_functions.js:15:23
@@ -624,7 +630,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:15:28
 
-Cannot call `ImplicitFunctions.add` with `"b"` bound to `b` because string [1] is incompatible with number [2].
+Cannot call `ImplicitFunctions.add` with `"b"` bound to `b` because `"b"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_implicit_functions.js:15:28
@@ -639,7 +645,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_implicit_functions.js:19:1
 
-Cannot cast `named(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `named(...)` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_implicit_functions.js:19:1
    19| named('s') as empty; // ERROR
@@ -656,7 +662,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_implicit_functions.js:23:1
 
-Cannot cast `def(...)` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `def(...)` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_implicit_functions.js:23:1
    23| def(0) as empty; // ERROR
@@ -673,7 +679,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- use_implicit_namespace.js:9:24
 
-Cannot assign `ImplicitNS.x` to `badVal` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `ImplicitNS.x` to `badVal` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_implicit_namespace.js:9:24
    9| const badVal: string = ImplicitNS.x; // ERROR: number not assignable to string
@@ -690,7 +696,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_namespace.js:21:22
 
-Cannot assign `MyNamespace.value` to `badX` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `MyNamespace.value` to `badX` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_namespace.js:21:22
    21| const badX: string = MyNamespace.value; // Error: number is not compatible with string
@@ -707,7 +713,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_namespace.js:22:22
 
-Cannot assign `MyNamespace.mutableValue` to `badY` because string [1] is incompatible with number [2].
+Cannot assign `MyNamespace.mutableValue` to `badY` because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    use_namespace.js:22:22
@@ -725,7 +731,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_namespace.js:23:27
 
-Cannot assign `MyNamespace.helper(...)` to `badResult` because number [1] is incompatible with string [2].
+Cannot assign `MyNamespace.helper(...)` to `badResult` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    use_namespace.js:23:27
@@ -743,8 +749,8 @@ References:
 
 Error ------------------------------------------------------------------------------- use_optional_destructuring.js:8:20
 
-Cannot call `obj_optional` with object literal bound to the first parameter because in property `foo`: number [1] is
-incompatible with string [2]. [incompatible-type]
+Cannot call `obj_optional` with object literal bound to the first parameter because in property `foo`: `123` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    use_optional_destructuring.js:8:20
    8| obj_optional({foo: 123}); // ERROR: number ~> string
@@ -758,8 +764,8 @@ References:
 
 Error ------------------------------------------------------------------------------- use_optional_destructuring.js:9:15
 
-Cannot call `arr_optional` with array literal bound to the first parameter because in index `0`: number [1] is
-incompatible with string [2]. [incompatible-type]
+Cannot call `arr_optional` with array literal bound to the first parameter because in index `0`: `123` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    use_optional_destructuring.js:9:15
    9| arr_optional([123]); // ERROR: number ~> string
@@ -773,8 +779,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- use_optional_methods.js:7:1
 
-Cannot cast `instance.optionalMethod` to function type because undefined [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot cast `instance.optionalMethod` to function type because `void` [1] is incompatible with
+`(x: number) => void` [2]. [incompatible-type]
 
    use_optional_methods.js:7:1
    7| instance.optionalMethod as (x: number) => void; // ERROR: could be void
@@ -791,8 +797,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_optional_methods.js:11:1
 
-Cannot cast `OptionalMethods.optionalStaticMethod` to function type because undefined [1] is incompatible with function
-type [2]. [incompatible-type]
+Cannot cast `OptionalMethods.optionalStaticMethod` to function type because `void` [1] is incompatible with
+`() => string` [2]. [incompatible-type]
 
    use_optional_methods.js:11:1
    11| OptionalMethods.optionalStaticMethod as () => string; // ERROR: could be void
@@ -809,7 +815,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- use_optional_methods.js:15:1
 
-Cannot cast `instance.optionalGeneric` to function type because undefined [1] is incompatible with function type [2].
+Cannot cast `instance.optionalGeneric` to function type because `void` [1] is incompatible with `(x: T) => T` [2].
 [incompatible-type]
 
    use_optional_methods.js:15:1
@@ -827,7 +833,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_variables.js:17:22
 
-Cannot assign `foo` to `badX` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `foo` to `badX` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    use_variables.js:17:22
    17| const badX: number = foo; // Error: string is not compatible with number
@@ -844,7 +850,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_variables.js:18:22
 
-Cannot assign `bar` to `badY` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `bar` to `badY` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_variables.js:18:22
    18| const badY: string = bar; // Error: number is not compatible with string
@@ -861,7 +867,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- use_variables.js:19:22
 
-Cannot assign `baz` to `badZ` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `baz` to `badZ` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    use_variables.js:19:22
    19| const badZ: string = baz; // Error: boolean is not compatible with string
@@ -907,7 +913,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- use_variables.js:23:1
 
-Cannot cast `named` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `named` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    use_variables.js:23:1
    23| named as empty; // ERROR

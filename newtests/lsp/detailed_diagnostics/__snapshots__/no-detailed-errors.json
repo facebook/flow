@@ -4,7 +4,7 @@
     "items": [
       {
         "code": "incompatible-type",
-        "message": "Cannot assign `3` to `a` because  number [1] is incompatible with  string [2].",
+        "message": "Cannot assign `3` to `a` because  `3` [1] is incompatible with  `string` [2].",
         "range": {
           "end": {
             "character": 19,
@@ -30,7 +30,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[1] number"
+            "message": "[1] `3`"
           },
           {
             "location": {
@@ -46,7 +46,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[2] string"
+            "message": "[2] `string`"
           }
         ],
         "severity": 1,
@@ -54,7 +54,7 @@
       },
       {
         "code": "incompatible-type",
-        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
+        "message": "Cannot assign `4` to `b` because:\n • Either  `4` [1] is incompatible with  `string` [2].\n • Or  `4` [1] is incompatible with  `boolean` [3].",
         "range": {
           "end": {
             "character": 29,
@@ -80,7 +80,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[1] number"
+            "message": "[1] `4`"
           },
           {
             "location": {
@@ -96,7 +96,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[2] string"
+            "message": "[2] `string`"
           },
           {
             "location": {
@@ -112,7 +112,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[1] number"
+            "message": "[1] `4`"
           },
           {
             "location": {
@@ -128,7 +128,7 @@
               },
               "uri": "<PLACEHOLDER_PROJECT_URL>/file_with_simple_error.js"
             },
-            "message": "[3] boolean"
+            "message": "[3] `boolean`"
           }
         ],
         "severity": 1,

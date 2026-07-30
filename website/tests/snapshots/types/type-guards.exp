@@ -274,8 +274,8 @@ Found 1 error
 === block 15 ===
 Error -------------------------------------------------------------------------- -:2:36
 
-The type predicate number [1] needs to be compatible with parameter `x`'s type: number [1] is incompatible with
-string [2]. [incompatible-type-guard]
+The type predicate number [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
+`string` [2]. [incompatible-type-guard]
 
    -:2:36
    2| function isNumber(x: string): x is number { // Error
@@ -292,7 +292,7 @@ Found 1 error
 === block 16 ===
 Error -------------------------------------------------------------------------- -:2:39
 
-Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
+Cannot declare a type guard [1] for function [2] because `boolean` [1] is incompatible with `void` [1].
 [incompatible-type]
 
    -:2:39
@@ -310,7 +310,7 @@ Found 1 error
 === block 17 ===
 Error -------------------------------------------------------------------------- -:3:10
 
-Cannot return `x` because null or undefined [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot return `x` because `null` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:3:10
    3|   return x; // Error
@@ -326,7 +326,23 @@ References:
 
 Error -------------------------------------------------------------------------- -:3:10
 
-Cannot return `x` because object type [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot return `x` because `void` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   -:3:10
+   3|   return x; // Error
+               ^
+
+References:
+   -:2:39
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                            ^^ [1]
+   -:2:44
+   2| function nonMaybe<V extends {...}>(x: ?V): x is V {
+                                                 ^^^^^^ [2]
+
+Error -------------------------------------------------------------------------- -:3:10
+
+Cannot return `x` because `{...}` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:3:10
    3|   return x; // Error
@@ -341,7 +357,7 @@ References:
                                                  ^^^^^^ [2]
 
 
-Found 2 errors
+Found 3 errors
 
 === block 18 ===
 No errors!
@@ -353,8 +369,8 @@ No errors!
 Error -------------------------------------------------------------------------- -:3:36
 
 Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because: [incompatible-type-guard]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `boolean` [1] is incompatible with `number` [2].
+ - Or `boolean` [1] is incompatible with `string` [3].
 
 The type of `x` [4] at the return expression `((typeof x) === "number") || ((typeof x) === "boolean")` [5] needs to be
 compatible with the guard type union type [6]. See 1. in

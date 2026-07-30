@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- new_on_interface.js:16:7
 
-Cannot call `B` with `"hello"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `B` with `"hello"` bound to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    new_on_interface.js:16:7
    16| new B("hello"); // ERROR
@@ -22,7 +22,7 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
 
 Error ----------------------------------------------------------------------------------------- new_on_interface.js:25:7
 
-Cannot call `Z` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `Z` with `42` bound to `x` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    new_on_interface.js:25:7
    25| new Z(42); // ERROR

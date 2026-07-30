@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- Arrays.js:5:8
 
-Cannot assign `"..."` to `a[1]` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"..."` to `a[1]` because `"..."` [1] is incompatible with `number` [2]. [incompatible-type]
 
    Arrays.js:5:8
    5| a[1] = "..."; // no error under old inference, error under LTI
@@ -32,7 +32,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- isarray.js:3:31
 
-Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+Cannot assign `array` to `problem` because `ReadonlyArray<unknown>` [1] is incompatible with `Array<Z>` [2].
 [incompatible-type]
 
    isarray.js:3:31
@@ -50,7 +50,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- isarray.js:10:31
 
-Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+Cannot assign `array` to `problem` because `ReadonlyArray<unknown>` [1] is incompatible with `Array<Z>` [2].
 [incompatible-type]
 
    isarray.js:10:31
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- isarray.js:23:37
 
-Cannot assign `array` to `problem` because read-only array type [1] is incompatible with array type [2].
+Cannot assign `array` to `problem` because `ReadonlyArray<unknown>` [1] is incompatible with `Array<unknown>` [2].
 [incompatible-type]
 
    isarray.js:23:37
@@ -137,7 +137,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:67:1
 
-Cannot cast array literal to array type because in array element: number [1] is incompatible with string [2].
+Cannot cast array literal to array type because in array element: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    spread.js:67:1

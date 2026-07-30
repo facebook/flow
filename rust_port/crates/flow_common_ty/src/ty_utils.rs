@@ -9,6 +9,8 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::reason::Name;
+use flow_parser::loc_sig::LocSig;
 
 use crate::ty::ALocTy;
 use crate::ty::BotKind;
@@ -18,9 +20,11 @@ use crate::ty::Decl;
 use crate::ty::DeclEnumDeclData;
 use crate::ty::DeclNominalComponentDeclData;
 use crate::ty::Elt;
+use crate::ty::GenKind;
 use crate::ty::Ty;
 use crate::ty::TyEndoTy;
 use crate::ty::UpperBoundKind;
+use crate::ty::Utility;
 use crate::ty_ancestors::StructuralMismatch;
 use crate::ty_ancestors::TyEndoBase;
 use crate::ty_ancestors::TyIter2Base;
@@ -28,6 +32,98 @@ use crate::ty_symbol::Provenance;
 use crate::ty_symbol::Symbol;
 
 pub const MAX_SIZE: usize = 10000;
+
+pub fn patch_up_react_symbol(symbol: &Symbol<ALoc>) -> Option<Symbol<ALoc>> {
+    if let Some(name) = symbol.sym_name.as_str().strip_prefix("React$") {
+        return Some(Symbol {
+            sym_name: Name::new(format!("React.{name}")),
+            ..symbol.clone()
+        });
+    }
+
+    let is_unimported_react_symbol = !symbol.sym_anonymous
+        && matches!(
+            &symbol.sym_provenance,
+            Provenance::Library(ri) if ri.imported_as.is_none()
+        )
+        && symbol.sym_def_loc.source().is_some_and(|file_key| {
+            use flow_parser::file_key::FileKeyInner;
+            match file_key.inner() {
+                FileKeyInner::LibFile(path) => std::path::Path::new(path.as_str())
+                    .file_name()
+                    .is_some_and(|name| name == "react.js"),
+                _ => false,
+            }
+        });
+    if !is_unimported_react_symbol {
+        return None;
+    }
+
+    let name = symbol.sym_name.as_str();
+    if !matches!(
+        name,
+        "ChildrenArray"
+            | "ComponentType"
+            | "Context"
+            | "MixedElement"
+            | "ElementConfig"
+            | "ElementProps"
+            | "ElementRef"
+            | "ElementType"
+            | "Key"
+            | "Node"
+            | "Portal"
+            | "RefObject"
+            | "RefSetter"
+            | "PropsOf"
+            | "PropOf"
+            | "RefOf"
+    ) {
+        return None;
+    }
+
+    Some(Symbol {
+        sym_name: Name::new(format!("React.{name}")),
+        ..symbol.clone()
+    })
+}
+
+struct PatchUpReactTypes;
+
+impl TyEndoBase<(), ALoc> for PatchUpReactTypes {}
+
+impl TyEndoTy<ALoc, ()> for PatchUpReactTypes {
+    fn on_t(&mut self, env: &(), t: ALocTy) -> ALocTy {
+        match t.as_ref() {
+            Ty::Generic(box (symbol, kind, args)) => match patch_up_react_symbol(symbol) {
+                Some(symbol) => Arc::new(Ty::Generic(Box::new((
+                    symbol,
+                    *kind,
+                    args.as_ref()
+                        .map(|args| args.iter().map(|arg| self.on_t(env, arg.dupe())).collect()),
+                )))),
+                None => self.default_on_t(env, t),
+            },
+            Ty::Utility(Utility::ReactElementConfigType(type_)) => {
+                Arc::new(Ty::Generic(Box::new((
+                    Symbol {
+                        sym_provenance: Provenance::Builtin,
+                        sym_def_loc: ALoc::none(),
+                        sym_name: Name::new("React.ElementConfig"),
+                        sym_anonymous: false,
+                    },
+                    GenKind::TypeAliasKind,
+                    Some(vec![self.on_t(env, type_.dupe())].into()),
+                ))))
+            }
+            _ => self.default_on_t(env, t),
+        }
+    }
+}
+
+pub fn patch_up_react_types(t: ALocTy) -> ALocTy {
+    PatchUpReactTypes.on_t(&(), t)
+}
 
 pub mod size {
     use dupe::Dupe;

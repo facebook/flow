@@ -18,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:13:39
 
-Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InlineOnly` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:13:39
@@ -33,7 +33,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:13:47
 
-Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InlineOnly` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    annotation.js:13:47
@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:21:37
 
-Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InexactRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:21:37
@@ -63,7 +63,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:21:45
 
-Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InexactRest` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    annotation.js:21:45
@@ -78,7 +78,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:29:37
 
-Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:29:37
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:29:44
 
-Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `bar`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:29:44
@@ -108,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:36:39
 
-Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `DefaultProps` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:36:39
@@ -123,7 +123,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:43:34
 
-Cannot create `OptionalRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `OptionalRest` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:43:34
@@ -182,7 +182,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:60:19
 
-Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
+Cannot create `DefaultExport` element because in property `x`: `"a"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annotation.js:60:19
@@ -583,8 +583,8 @@ References:
 
 Error ------------------------------------------------------------------------------- component_in_type_position.js:6:22
 
-Cannot assign `<Foo />` to `fooElem` because `ExactReactElement_DEPRECATED` [1] is incompatible with
-`React.RendersExactly` [2]. [incompatible-type]
+Cannot assign `<Foo />` to `fooElem` because `{...}` [1] is incompatible with `React.RendersExactly<typeof Foo>` [2].
+[incompatible-type]
 
    component_in_type_position.js:6:22
    6| const fooElem: Foo = <Foo />; // ERROR
@@ -598,8 +598,8 @@ References:
 
 Error ----------------------------------------------------------------------------- component_in_type_position.js:12:115
 
-Cannot assign `<Poly />` to `polyElemBad` because in type argument `P` [1] > property `prop`: string [2] is incompatible
-with number [3]. [incompatible-type]
+Cannot assign `<Poly />` to `polyElemBad` because in type argument `P` [1] > property `prop`: `"STRING"` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
    component_in_type_position.js:12:115
    12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
@@ -633,7 +633,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:10:3
 
-Cannot cast `foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:10:3
    10|   foo as string; // ERROR
@@ -650,7 +650,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:12:3
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:12:3
    12|   bar as string; // ERROR
@@ -675,7 +675,7 @@ Cannot resolve name `baz`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:16:3
 
-Cannot cast `a` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:16:3
    16|   a as string; // ERROR
@@ -724,7 +724,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_type_checking.js:26:3
 
-Cannot cast `rest` to empty because object type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `rest` to empty because `{foo: number}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    component_type_checking.js:26:3
    26|   rest as empty; // ERROR
@@ -741,7 +741,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:32:17
 
-Cannot assign number literal `3` to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign number literal `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    component_type_checking.js:32:17
    32|   bar: string = 3, // ERROR
@@ -771,7 +771,7 @@ Cannot resolve name `foo`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:34:24
 
-Cannot assign string literal `str` to `a` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign string literal `str` to `a` because `"str"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    component_type_checking.js:34:24
    34|   destructured as {a = 'str'}: {a?: number}, // ERROR
@@ -785,7 +785,7 @@ References:
 
 Error --------------------------------------------------------------------------------- component_type_checking.js:49:18
 
-Cannot assign `3` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `c` because `3` [1] is incompatible with `Bar` [2]. [incompatible-type]
 
    component_type_checking.js:49:18
    49|   const c: Bar = 3; // error
@@ -904,7 +904,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:13:39
 
-Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InlineOnly` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:13:39
@@ -919,7 +919,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:13:47
 
-Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InlineOnly` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    declared.js:13:47
@@ -934,7 +934,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:21:37
 
-Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InexactRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:21:37
@@ -949,7 +949,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:21:45
 
-Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InexactRest` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    declared.js:21:45
@@ -964,7 +964,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:29:37
 
-Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:29:37
@@ -979,7 +979,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:29:44
 
-Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `bar`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:29:44
@@ -994,7 +994,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:36:39
 
-Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `DefaultProps` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:36:39
@@ -1009,7 +1009,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:43:34
 
-Cannot create `OptionalRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `OptionalRest` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:43:34
@@ -1051,8 +1051,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ declared.js:50:29
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with function type [3].
+ - Either `number` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
+ - Or `number` [1] is incompatible with `(any | null) => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1101,7 +1101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:61:19
 
-Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
+Cannot create `DefaultExport` element because in property `x`: `"a"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    declared.js:61:19
@@ -1116,8 +1116,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:69:41
 
-Cannot create `OptionalStringKeyAsBinding` element because in property `aria-label`: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot create `OptionalStringKeyAsBinding` element because in property `aria-label`: `3` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    declared.js:69:41
    69| <OptionalStringKeyAsBinding aria-label={3} />; // ERROR
@@ -1172,7 +1172,7 @@ statement must be included for all possible branches. [component-missing-return]
 
 Error -------------------------------------------------------------------------------------------------- errors.js:20:35
 
-Cannot assign `this.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `this.x` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    errors.js:20:35
    20|         component Foo(x: string = this.x) { } // error from num ~> string, no error from this
@@ -1347,7 +1347,7 @@ statement must be included for all possible branches. [component-missing-return]
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:7:7
 
-Cannot create `C` element because in property `x`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `C` element because in property `x`: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    export_syntax.js:7:7
    7| <C x={"a"} />; // error
@@ -1379,7 +1379,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:8:7
 
-Cannot create `D` element because in property `y`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `D` element because in property `y`: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    export_syntax.js:8:7
    8| <D y={"a"} /> // 2 errors
@@ -1393,7 +1393,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:5:39
 
-Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InlineOnly` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:5:39
@@ -1408,7 +1408,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:5:47
 
-Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InlineOnly` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    import.js:5:47
@@ -1423,7 +1423,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:37
 
-Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InexactRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:8:37
@@ -1438,7 +1438,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:45
 
-Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InexactRest` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    import.js:8:45
@@ -1453,7 +1453,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:37
 
-Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:11:37
@@ -1468,7 +1468,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:44
 
-Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `bar`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:11:44
@@ -1483,7 +1483,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:39
 
-Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `DefaultProps` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:14:39
@@ -1544,7 +1544,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:47
 
-Cannot create `RenamedParams` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `RenamedParams` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    import.js:17:47
@@ -1559,7 +1559,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:54
 
-Cannot create `RenamedParams` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `RenamedParams` element because in property `foo`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:17:54
@@ -1574,7 +1574,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because null or undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1591,7 +1591,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1608,7 +1608,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:21:1
 
-Cannot cast `Foo.displayName` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Foo.displayName` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import.js:21:1
    21| Foo.displayName as empty; // error, displayName is a string
@@ -1648,7 +1648,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:27:7
 
-Cannot create `C` element because in property `x`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `C` element because in property `x`: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import.js:27:7
    27| <C x={"a"} />; // error
@@ -1680,7 +1680,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:28:7
 
-Cannot create `D` element because in property `y`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `D` element because in property `y`: `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import.js:28:7
    28| <D y={"a"} /> // 2 errors
@@ -1712,7 +1712,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:34:19
 
-Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
+Cannot create `DefaultExport` element because in property `x`: `"a"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:34:19
@@ -1763,7 +1763,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:43:23
 
-Cannot create `DefaultExportType` element because in property `x`: string [1] is incompatible with number [2].
+Cannot create `DefaultExportType` element because in property `x`: `"a"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import.js:43:23
@@ -1778,8 +1778,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:49:34
 
-Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import.js:49:34
    49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
@@ -1793,8 +1793,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:49:34
 
-Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    import.js:49:34
    49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
@@ -1808,8 +1808,8 @@ References:
 
 Error ---------------------------------------------------------------------- import_component_in_type_position.js:13:121
 
-Cannot assign `<Poly />` to `polyElemError` because in type argument `P` [1] > property `prop`: string [2] is
-incompatible with number [3]. [incompatible-type]
+Cannot assign `<Poly />` to `polyElemError` because in type argument `P` [1] > property `prop`: `"STRING"` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
    import_component_in_type_position.js:13:121
    13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
@@ -1829,8 +1829,8 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:18:2
 
-Cannot cast `<Bar />` to `Foo` because `ExactReactElement_DEPRECATED` [1] is incompatible with
-`React.RendersExactly` [2]. [incompatible-type]
+Cannot cast `<Bar />` to `Foo` because `{...}` [1] is incompatible with `React.RendersExactly<typeof FooType>` [2].
+[incompatible-type]
 
    import_component_in_type_position.js:18:2
    18| (<Bar />) as Foo; // ERROR
@@ -1844,8 +1844,7 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:21:1
 
-Cannot cast `aliasedFoo` to number because `ExactReactElement_DEPRECATED` [1] is incompatible with number [2].
-[incompatible-type]
+Cannot cast `aliasedFoo` to number because `{...}` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_component_in_type_position.js:21:1
    21| aliasedFoo as number; // ERROR
@@ -1908,7 +1907,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- names.js:5:9
 
-Cannot create `Foo` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Foo` element because in property `a`: `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    names.js:5:9
    5| <Foo a={false} /> // Error: first param wins, so a must be number
@@ -1940,7 +1939,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- names.js:9:2
 
-Cannot create `Bar` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Bar` element because in property `a`: `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    names.js:9:2
    9| <Bar a={false} /> // Error: first param wins, so a must be number
@@ -1957,7 +1956,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:12:9
 
-Cannot create `Baz` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Baz` element because in property `a`: `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    names.js:12:9
    12| <Baz a={false} />; // Error
@@ -1989,7 +1988,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:16:9
 
-Cannot create `Qux` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create `Qux` element because in property `a`: `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    names.js:16:9
    16| <Qux a={false} /> // Error: first param wins, so a must be number
@@ -2021,8 +2020,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- names.js:20:40
 
-Cannot create `RunningOutOfMetasyntaxticVariables` element because in property `a`: boolean [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `RunningOutOfMetasyntaxticVariables` element because in property `a`: `false` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    names.js:20:40
    20| <RunningOutOfMetasyntaxticVariables a={false} /> // Error: first param wins, so a must be number
@@ -2037,8 +2036,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- names.js:22:24
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either string [1] is incompatible with object type [2].
- - Or string [1] is incompatible with function type [3].
+ - Either `string` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
+ - Or `string` [1] is incompatible with `(any | null) => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2256,8 +2255,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:34
 
-Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    poly.js:10:34
    10| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
@@ -2271,8 +2270,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:34
 
-Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    poly.js:10:34
    10| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
@@ -2286,7 +2285,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:13:1
 
-Cannot cast `x` to `Poly` because in type argument `T` [1]: number [2] is incompatible with string [3].
+Cannot cast `x` to `Poly` because in type argument `T` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    poly.js:13:1
@@ -2361,7 +2360,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:8:3
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:8:3
    8|   foo as empty; // foo is string
@@ -2378,7 +2377,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- propsof.js:9:3
 
-Cannot cast `bar` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `bar` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:9:3
    9|   bar as empty; // bar is number
@@ -2395,7 +2394,25 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `$Iterable` [1] is incompatible with empty [2].
+Cannot cast `intrinsicProp.children` to empty because `$Iterable<?React.Node, void, void>` [1] is incompatible with
+`empty` [2]. [incompatible-type]
+
+   propsof.js:14:1
+   14| intrinsicProp.children as empty; // children is ?React.Node
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/jsx.js:16:24
+   16|     props: {children?: React.Node, ...},
+                              ^^^^^^^^^^ [1]
+   propsof.js:14:27
+   14| intrinsicProp.children as empty; // children is ?React.Node
+                                 ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
+
+Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    propsof.js:14:1
@@ -2413,7 +2430,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
+Cannot cast `intrinsicProp.children` to empty because `boolean` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    propsof.js:14:1
@@ -2431,8 +2448,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because `React.Portal` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `intrinsicProp.children` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2449,7 +2465,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2466,7 +2482,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2483,7 +2499,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2500,24 +2516,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
 
-Cannot cast `intrinsicProp.children` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
-
-   propsof.js:14:1
-   14| intrinsicProp.children as empty; // children is ?React.Node
-       ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   flow-typed/jsx.js:16:24
-   16|     props: {children?: React.Node, ...},
-                              ^^^^^^^^^^ [1]
-   propsof.js:14:27
-   14| intrinsicProp.children as empty; // children is ?React.Node
-                                 ^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- propsof.js:14:1
-
-Cannot cast `intrinsicProp.children` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `intrinsicProp.children` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    propsof.js:14:1
    14| intrinsicProp.children as empty; // children is ?React.Node
@@ -2534,7 +2533,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- propsof.js:17:16
 
-Cannot assign `42` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `s` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    propsof.js:17:16
    17| const s: Str = 42; // Str is string
@@ -2549,8 +2548,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: `MetaInstance` [1] is incompatible with `AInstance` [2].
- - Or in the first parameter: `MetaInstance` [1] is incompatible with null [3].
+ - Either in the first parameter: `CommonInstance` [1] is incompatible with `AInstance` [2].
+ - Or in the first parameter: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2574,8 +2573,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either in property `current`: `MetaInstance` [1] is incompatible with `AInstance` [2].
- - Or in property `current`: `MetaInstance` [1] is incompatible with null [3].
+ - Either in property `current`: `CommonInstance` [1] is incompatible with `AInstance` [2].
+ - Or in property `current`: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2598,7 +2597,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
 
-Cannot assign `42` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `x` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initial assignment [3]. Add an annotation to `x` [4] if a
 different type is desired.
@@ -2621,7 +2620,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- provider.js:11:5
 
-Cannot cast `x` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    provider.js:11:5
    11|     x as empty;
@@ -2639,7 +2638,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:3:15
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either in property `current`: null [1] is incompatible with component Reffed [2].
+ - Either in property `current`: `null` [1] is incompatible with component Reffed [2].
  - Or object type [3] is incompatible with function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2667,7 +2666,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either in the first parameter: component Reffed [1] is incompatible with null [2].
+ - Either in the first parameter: component Reffed [1] is incompatible with `null` [2].
  - Or function type [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -2695,8 +2694,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: null [1] is incompatible with object type [2].
-[incompatible-type]
+Cannot cast `Foo` to component because in property `ref`: `null` [1] is incompatible with
+`{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2713,8 +2712,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: undefined [1] is incompatible with object type [2].
-[incompatible-type]
+Cannot cast `Foo` to component because in property `ref`: `void` [1] is incompatible with
+`{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2786,8 +2785,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
 Cannot cast `Foo` to component because in property `ref.current`: [incompatible-type]
- - Either component Reffed [1] is incompatible with string [2].
- - Or component Reffed [1] is incompatible with null [3].
+ - Either component Reffed [1] is incompatible with `string` [2].
+ - Or component Reffed [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2810,8 +2809,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: null [1] is incompatible with object type [2].
-[incompatible-type]
+Cannot cast `Foo` to component because in property `ref`: `null` [1] is incompatible with
+`{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2828,8 +2827,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: undefined [1] is incompatible with object type [2].
-[incompatible-type]
+Cannot cast `Foo` to component because in property `ref`: `void` [1] is incompatible with
+`{current: typeof Reffed}` [2]. [incompatible-type]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2900,8 +2899,26 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
 
-Cannot cast `Bar` to component because in property `ref`: null [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot cast `Bar` to component because in property `ref`: `null` [1] is incompatible with
+`(typeof Reffed) => unknown` [2]. [incompatible-type]
+
+   refs.js:15:1
+   15| Bar as component(ref: React.RefSetter<string>); // err
+       ^^^
+
+References:
+   refs.js:15:23
+   15| Bar as component(ref: React.RefSetter<string>); // err
+                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   refs.js:5:21
+    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
+
+Cannot cast `Bar` to component because in property `ref`: `void` [1] is incompatible with
+`(typeof Reffed) => unknown` [2]. [incompatible-type]
 
    refs.js:15:1
    15| Bar as component(ref: React.RefSetter<string>); // err
@@ -2936,27 +2953,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
 
-Cannot cast `Bar` to component because in property `ref`: undefined [1] is incompatible with function type [2].
-[incompatible-type]
-
-   refs.js:15:1
-   15| Bar as component(ref: React.RefSetter<string>); // err
-       ^^^
-
-References:
-   refs.js:15:23
-   15| Bar as component(ref: React.RefSetter<string>); // err
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
-
 Cannot cast `Bar` to component because in the first parameter of property `ref`: [incompatible-type]
- - Either component Reffed [1] is incompatible with string [2].
- - Or component Reffed [1] is incompatible with null [3].
+ - Either component Reffed [1] is incompatible with `string` [2].
+ - Or component Reffed [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2979,7 +2978,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:1
 
-Cannot cast `Baz` to component because in property `ref` > type argument `T` [1]: string [2] is incompatible with
+Cannot cast `Baz` to component because in property `ref` > type argument `T` [1]: `string` [2] is incompatible with
 component Reffed [3]. [incompatible-type]
 
    refs.js:17:1
@@ -3001,8 +3000,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
- - Or in the first parameter: `CommonInstance` [1] is incompatible with `InputInstance` [3].
+ - Either in the first parameter: `CommonInstance` [1] is incompatible with `InputInstance` [2].
+ - Or in the first parameter: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3015,19 +3014,19 @@ References:
    refs.js:56:66
    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
                                                                         ^^^^^^^^^^^^^^ [1]
-   refs.js:60:59
-   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                 ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^ [3]
+                                                                  ^^^^^^^^^^^^^ [2]
+   refs.js:60:59
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                 ^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either in property `current`: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
- - Or in property `current`: `CommonInstance` [1] is incompatible with `InputInstance` [3].
+ - Either in property `current`: `CommonInstance` [1] is incompatible with `InputInstance` [2].
+ - Or in property `current`: `CommonInstance` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3040,19 +3039,19 @@ References:
    refs.js:56:66
    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
                                                                         ^^^^^^^^^^^^^^ [1]
-   refs.js:60:59
-   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                 ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^ [3]
+                                                                  ^^^^^^^^^^^^^ [2]
+   refs.js:60:59
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                 ^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either in the first parameter > property `bar`: number [1] is incompatible with boolean [2].
- - Or in the first parameter: object type [3] is incompatible with null [4].
+ - Either in the first parameter > property `bar`: `number` [1] is incompatible with `boolean` [2].
+ - Or in the first parameter: `{bar: number, foo: string}` [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3079,8 +3078,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either in property `current` > property `bar`: number [1] is incompatible with boolean [2].
- - Or in property `current`: object type [3] is incompatible with null [4].
+ - Either in property `current` > property `bar`: `number` [1] is incompatible with `boolean` [2].
+ - Or in property `current`: `{bar: number, foo: string}` [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3107,8 +3106,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:105:23
 
 Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with object type [2].
- - Or number [1] is incompatible with function type [3].
+ - Either `1` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
+ - Or `1` [1] is incompatible with `(any | null) => unknown` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3129,8 +3128,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
 
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: array type [1] is incompatible with string [2].
- - Or in the first parameter: array type [1] is incompatible with null [3].
+ - Either in the first parameter: `Array<Array<Array<any>>>` [1] is incompatible with `string` [2].
+ - Or in the first parameter: `Array<Array<Array<any>>>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3213,7 +3212,8 @@ be optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:6:23
 
-Cannot assign boolean literal `false` to `baz` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign boolean literal `false` to `baz` because `false` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    rest_constraints.js:6:23
    6|   ...{foo, bar, baz = false}: {foo: number, bar: number, baz?: number} // ERROR bad default for baz
@@ -3227,7 +3227,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rest_constraints.js:9:3
 
-Cannot cast `bar` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `bar` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    rest_constraints.js:9:3
    9|   bar as string; // ERROR
@@ -3323,7 +3323,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:9:39
 
-Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InlineOnly` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:9:39
@@ -3338,7 +3338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:9:47
 
-Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InlineOnly` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    signature.js:9:47
@@ -3353,7 +3353,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:16:37
 
-Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `InexactRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:16:37
@@ -3368,7 +3368,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:16:45
 
-Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `InexactRest` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    signature.js:16:45
@@ -3383,7 +3383,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:23:37
 
-Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `foo`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:23:37
@@ -3398,7 +3398,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:23:44
 
-Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
+Cannot create `IndexedRest` element because in property `bar`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:23:44
@@ -3413,7 +3413,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:30:39
 
-Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `DefaultProps` element because in property `foo`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:30:39
@@ -3474,7 +3474,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:47
 
-Cannot create `RenamedParams` element because in property `bar`: number [1] is incompatible with string [2].
+Cannot create `RenamedParams` element because in property `bar`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    signature.js:41:47
@@ -3489,7 +3489,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:54
 
-Cannot create `RenamedParams` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `RenamedParams` element because in property `foo`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:41:54
@@ -3513,7 +3513,7 @@ be optional. [incompatible-type]
 
 Error ------------------------------------------------------------------------------------------------ signature.js:48:3
 
-Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    signature.js:48:3
    48|   x as number; // ERROR
@@ -3530,7 +3530,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:50:3
 
-Cannot cast `rest` to object type because undefined [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `rest` to object type because `void` [1] is incompatible with `{foo: number}` [2]. [incompatible-type]
 
    signature.js:50:3
    50|   rest as {foo: number}; // ERROR, rest is optional in the body, as typed
@@ -3547,7 +3547,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:67:3
 
-Cannot cast `bar` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `bar` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    signature.js:67:3
    67|   bar as number; // ERROR, bar is optional
@@ -3564,7 +3564,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:73:24
 
-Cannot create `OptionalAsBinding` element because in property `foo`: string [1] is incompatible with number [2].
+Cannot create `OptionalAsBinding` element because in property `foo`: `"str"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    signature.js:73:24
@@ -3579,7 +3579,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:78:3
 
-Cannot cast `ariaLabel` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `ariaLabel` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    signature.js:78:3
    78|   ariaLabel as string; // ERROR, ariaLabel is optional
@@ -3596,8 +3596,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:84:41
 
-Cannot create `OptionalStringKeyAsBinding` element because in property `aria-label`: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot create `OptionalStringKeyAsBinding` element because in property `aria-label`: `3` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    signature.js:84:41
    84| <OptionalStringKeyAsBinding aria-label={3} />; // ERROR
@@ -3611,7 +3611,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:4:19
 
-Cannot assign `3` to `Foo.displayName` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `Foo.displayName` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    statics.js:4:19
     4| Foo.displayName = 3; // ERROR

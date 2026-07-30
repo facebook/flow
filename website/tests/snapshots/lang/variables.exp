@@ -21,7 +21,7 @@ No errors!
 === block 3 ===
 Error ------------------------------------------------------------------------------ -:4:7
 
-Cannot assign `'3'` to `foo` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'3'` to `foo` because `"3"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:4:7
    4| foo = '3'; // Error!
@@ -38,7 +38,8 @@ Found 1 error
 === block 4 ===
 Error ---------------------------------------------------------------------------- -:31:11
 
-Cannot assign `'Our new pr...'` to `product` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'Our new pr...'` to `product` because `"Our new product is..."` [1] is incompatible with `number` [2].
+[incompatible-type]
 
 All writes to `product` must be compatible with the type of its initializer [3]. Add an annotation to `product` [3] if a
 different type is desired.
@@ -90,7 +91,7 @@ No errors!
 === block 6 ===
 Error ----------------------------------------------------------------------------- -:4:22
 
-Cannot assign `42` to `topLevelAssigned` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `topLevelAssigned` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `topLevelAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
 `topLevelAssigned` [4] if a different type is desired.
@@ -112,7 +113,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:7:20
 
-Cannot assign `true` to `topLevelAssigned` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `true` to `topLevelAssigned` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `topLevelAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
 `topLevelAssigned` [4] if a different type is desired.
@@ -139,8 +140,8 @@ Found 2 errors
 Error ---------------------------------------------------------------------------- -:11:20
 
 Cannot assign `false` to `myNumberOrString` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `string` [3].
 
 All writes to `myNumberOrString` must be compatible with the type of one of its initial assignments [4], [5]. Add an
 annotation to `myNumberOrString` [6] if a different type is desired.
@@ -186,7 +187,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:8:21
 
-Cannot assign `42` to `oneBranchAssigned` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `oneBranchAssigned` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
 All writes to `oneBranchAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
 `oneBranchAssigned` [4] if a different type is desired.

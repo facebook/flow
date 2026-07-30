@@ -1280,8 +1280,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- basic.js:498:29
 
-Cannot assign `c` to `d` because template literal type [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot assign `c` to `d` because `string` [1] is incompatible with ``data-${string}`` [2]. [incompatible-type]
 
    basic.js:498:29
    498| const d: `data-${string}` = c; // ERROR
@@ -1388,7 +1387,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:44:1
 
-Cannot cast `'whatever'` to `P2` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'whatever'` to `P2` because `"whatever"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:44:1
    44| 'whatever' as P2; // ERROR (string </: never)
@@ -1474,7 +1473,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:75:1
 
-Cannot cast `t22` to string because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `t22` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inference.js:75:1
    75| t22 as string; // ERROR (unknown </: string)
@@ -1491,7 +1490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:80:1
 
-Cannot cast `t23` to string because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `t23` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inference.js:80:1
    80| t23 as string; // ERROR
@@ -1580,7 +1579,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:107:1
 
-Cannot cast `'anything'` to indexed access because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'anything'` to indexed access because `"anything"` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    inference.js:107:1
    107| 'anything' as SF2['tail']; // ERROR (tail is never)
@@ -1624,7 +1624,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:128:1
 
-Cannot cast `'anything'` to `ED3` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'anything'` to `ED3` because `"anything"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:128:1
    128| 'anything' as ED3; // ERROR (string </: never)
@@ -1824,7 +1824,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:205:1
 
-Cannot cast `t27` to string because tuple type [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `t27` to string because `[`${"a"}${""}`, ""]` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inference.js:205:1
    205| t27 as string; // ERROR (unknown </: string)
@@ -1877,7 +1877,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:258:1
 
-Cannot cast `'#XYZ123'` to `HC3` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'#XYZ123'` to `HC3` because `"#XYZ123"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:258:1
    258| '#XYZ123' as HC3; // ERROR (HC3 is never — XYZ are not HexDigit)
@@ -1906,7 +1906,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:273:1
 
-Cannot cast `'anything'` to `S1_nomatch` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'anything'` to `S1_nomatch` because `"anything"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:273:1
    273| 'anything' as S1_nomatch; // ERROR
@@ -1920,7 +1920,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:282:1
 
-Cannot cast `tf1` to string because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `tf1` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    inference.js:282:1
    282| tf1 as string; // ERROR (limitation: should be OK since `any` should short-circuit)
@@ -1937,7 +1937,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:283:1
 
-Cannot cast `tf1` to number because `unknown` [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `tf1` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
    inference.js:283:1
    283| tf1 as number; // ERROR (limitation: same)
@@ -1954,7 +1954,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:288:1
 
-Cannot cast `'foo'` to `TF2` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'foo'` to `TF2` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:288:1
    288| 'foo' as TF2; // ERROR
@@ -1968,7 +1968,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:293:1
 
-Cannot cast `'foo'` to `TF3` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'foo'` to `TF3` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    inference.js:293:1
    293| 'foo' as TF3; // ERROR
@@ -2227,8 +2227,10 @@ Cannot call `get` because in type argument `P`: [incompatible-type]
  - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `lastName` [2].
  - Or string [1] is incompatible with string literal `address` [2].
- - Or string [1] is incompatible with template literal type [3].
- - Or an index signature declaring the expected key / value type is missing in `Obj` [4].
+ - Or an index signature declaring the expected key / value type is missing in `Obj` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    path_test.js:44:13
    44| get(object, "invalid"); // ERROR
@@ -2238,12 +2240,9 @@ References:
    path_test.js:8:28
     8| type Path<T> = PathImpl<T, keyof T> | keyof T;
                                   ^^^^^^^ [2]
-   path_test.js:4:11
-    4|     ? K | `${K}.${PathImpl<T[K], keyof T[K]>}`
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    path_test.js:36:23
    36| declare const object: Obj;
-                             ^^^ [4]
+                             ^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- path_test.js:45:13
@@ -2253,8 +2252,10 @@ Cannot call `get` because in type argument `P`: [incompatible-type]
  - Or string [1] is incompatible with string literal `firstName` [2].
  - Or string [1] is incompatible with string literal `lastName` [2].
  - Or string [1] is incompatible with string literal `address` [2].
- - Or string [1] is incompatible with template literal type [3].
- - Or an index signature declaring the expected key / value type is missing in `Obj` [4].
+ - Or an index signature declaring the expected key / value type is missing in `Obj` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    path_test.js:45:13
    45| get(object, "address.invalid"); // ERROR
@@ -2264,12 +2265,9 @@ References:
    path_test.js:8:28
     8| type Path<T> = PathImpl<T, keyof T> | keyof T;
                                   ^^^^^^^ [2]
-   path_test.js:4:11
-    4|     ? K | `${K}.${PathImpl<T[K], keyof T[K]>}`
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    path_test.js:36:23
    36| declare const object: Obj;
-                             ^^^ [4]
+                             ^^^ [3]
 
 
 

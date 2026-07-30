@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:53:9
 
-Cannot cast `this.#p` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `this.#p` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:53:9
    53|         this.#p as number; // Error, #p is a string not a number
@@ -45,7 +45,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:55:19
 
-Cannot assign `3` to `this.#p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `3` to `this.#p` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:55:19
    55|         this.#p = 3; // Error, #p is a string not a number
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:9
 
-Cannot cast `x.#p` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x.#p` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:57:9
    57|         x.#p as string; // Error, here #p is a number not a string
@@ -76,7 +76,24 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:7
 
-Cannot cast `this.#p` to number because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `this.#p` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:69:7
+   69|       this.#p as number; // Error #p is null or undefined
+             ^^^^^^^
+
+References:
+   test.js:64:7
+   64|   #p: ?number;
+             ^^^^^^^ [1]
+   test.js:69:18
+   69|       this.#p as number; // Error #p is null or undefined
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:69:7
+
+Cannot cast `this.#p` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:69:7
    69|       this.#p as number; // Error #p is null or undefined
@@ -191,7 +208,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:112:16
 
-Cannot initialize property `#s` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot initialize property `#s` with `0` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:112:16
    112|   #s: string = 0; // Error, number ~> string
@@ -205,7 +222,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:117:24
 
-Cannot initialize property `#ss` with `0` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot initialize property `#ss` with `0` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:117:24
    117|   static #ss: string = 0; // Error, number ~> string
@@ -219,7 +236,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:123:12
 
-Cannot return `this.#t` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `this.#t` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:123:12
    123|     return this.#t; // Error, string ~> number
@@ -236,7 +253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:129:12
 
-Cannot return `Annotations.#st` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `Annotations.#st` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:129:12
    129|     return Annotations.#st; // Error, string ~> number
@@ -253,7 +270,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:135:12
 
-Cannot return `this.#r` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `this.#r` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:135:12
    135|     return this.#r; // Error, number ~> string
@@ -270,7 +287,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:144:12
 
-Cannot return `Annotations.#sr` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `Annotations.#sr` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:144:12
    144|     return Annotations.#sr; // Error, number ~> string
@@ -449,7 +466,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:206:32
 
-Cannot assign `this.#foo()` to `fooInvalid` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `this.#foo()` to `fooInvalid` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:206:32
    206|     const fooInvalid: string = this.#foo();
@@ -466,7 +483,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:208:32
 
-Cannot assign `Calls.#bar()` to `barInvalid` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `Calls.#bar()` to `barInvalid` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:208:32
    208|     const barInvalid: number = Calls.#bar();
@@ -483,8 +500,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:211:41
 
-Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid1` because null or undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid1` because `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:211:41
    211|     const optionalFooInvalid1: number = this.#optionalFoo?.('');
@@ -501,8 +518,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:212:42
 
-Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid2` because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid2` because `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    test.js:212:42
    212|     const optionalFooInvalid2: ?string = this.#optionalFoo?.('');
@@ -519,8 +536,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:213:62
 
-Cannot call `this.#optionalFoo` with `42` bound to the first parameter because number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot call `this.#optionalFoo` with `42` bound to the first parameter because `42` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    test.js:213:62
    213|     const optionalFooInvalid3: ?number = this.#optionalFoo?.(42);
@@ -534,8 +551,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:216:41
 
-Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid1` because null or undefined [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid1` because `void` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    test.js:216:41
    216|     const optionalBarInvalid1: string = Calls.#optionalBar?.(0);
@@ -552,8 +569,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:42
 
-Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid2` because string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid2` because `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:217:42
    217|     const optionalBarInvalid2: ?number = Calls.#optionalBar?.(0);
@@ -570,8 +587,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:218:63
 
-Cannot call `Calls.#optionalBar` with empty string bound to the first parameter because string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `Calls.#optionalBar` with empty string bound to the first parameter because `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    test.js:218:63
    218|     const optionalBarInvalid3: ?string = Calls.#optionalBar?.('');
@@ -600,4 +617,4 @@ Cannot assign `42` to `this.#p` because property `p` is not writable. [cannot-wr
 
 
 
-Found 38 errors
+Found 39 errors

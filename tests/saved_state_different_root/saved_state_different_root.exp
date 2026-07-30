@@ -2,7 +2,7 @@ Generate saved-state
 Use saved state in a different root
 Error ----------------------------------------------------------------------------------------------------- test.js:1:19
 
-Cannot assign `new Object()` to `a` because `Object` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `new Object()` to `a` because `Object` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:1:19
    1| const a: string = new Object()

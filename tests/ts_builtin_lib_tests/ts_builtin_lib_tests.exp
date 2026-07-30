@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
 
-Cannot instantiate `Record` because in type argument `K`: number [1] is incompatible with key set [2].
+Cannot instantiate `Record` because in type argument `K`: `number` [1] is incompatible with `keyof any` [2].
 [incompatible-type]
 
    <BUILTINS>/lib.decorators.d.ts:37:39
@@ -15,7 +15,7 @@ References:
 
 Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
 
-Cannot instantiate `Record` because in type argument `K`: symbol [1] is incompatible with key set [2].
+Cannot instantiate `Record` because in type argument `K`: `symbol` [1] is incompatible with `keyof any` [2].
 [incompatible-type]
 
    <BUILTINS>/lib.decorators.d.ts:37:39
@@ -36,35 +36,32 @@ Multiple indexers are not supported. [unsupported-syntax]
               ^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.generator.d.ts:24:5
+Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:24:22
 
-Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `TNext` [2] is incompatible with tuple
-type [3]. [incompatible-type]
+Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `empty` [2] is incompatible with
+`Readonly<[]>` [3]. [incompatible-type]
 
-   <BUILTINS>/lib.es2015.generator.d.ts:24:5
-   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/lib.es2015.generator.d.ts:22:70
-   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
-   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
-                                 ^^^^^ [2]
    <BUILTINS>/lib.es2015.generator.d.ts:24:22
    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
                             ^^ [3]
 
+References:
+   <BUILTINS>/lib.es2015.generator.d.ts:22:70
+   22| interface Generator<T = unknown, TReturn = any, TNext = any> extends IteratorObject<T, TReturn, TNext> {
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.esnext.iterator.d.ts:30:27
+   30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
+                                 ^^^^^ [2]
 
-Error ------------------------------------------------------------------------ <BUILTINS>/lib.es2015.generator.d.ts:24:5
 
-Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `TNext` [2] is incompatible with tuple
-type [3]. [incompatible-type]
+Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:24:27
 
-   <BUILTINS>/lib.es2015.generator.d.ts:24:5
+Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `empty` [2] is incompatible with
+`[TNext]` [3]. [incompatible-type]
+
+   <BUILTINS>/lib.es2015.generator.d.ts:24:27
    24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                 ^^^^^^^ [3]
 
 References:
    <BUILTINS>/lib.es2015.generator.d.ts:22:70
@@ -73,15 +70,12 @@ References:
    <BUILTINS>/lib.esnext.iterator.d.ts:30:27
    30|     abstract next(value?: TNext): IteratorResult<T, TResult>;
                                  ^^^^^ [2]
-   <BUILTINS>/lib.es2015.generator.d.ts:24:27
-   24|     next(...[value]: [] | [TNext]): IteratorResult<T, TReturn>;
-                                 ^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:25:19
 
-Cannot extend `IteratorObject` [1] with `Generator` because in property `return` > the first parameter: `TReturn` [2] is
-incompatible with undefined [3]. [incompatible-type]
+Cannot extend `IteratorObject` [1] with `Generator` because in property `return` > the first parameter: `empty` [2] is
+incompatible with `void` [3]. [incompatible-type]
 
    <BUILTINS>/lib.es2015.generator.d.ts:25:19
    25|     return(value: TReturn): IteratorResult<T, TReturn>;
@@ -510,8 +504,8 @@ Error ------------------------------------------------------------------- <BUILT
 
 Cannot extend `AsyncIteratorObject` [1] with `AsyncGenerator` because in the first parameter of property `return`:
 [incompatible-type]
- - Either undefined [2] is incompatible with `TReturn` [3].
- - Or undefined [2] is incompatible with `PromiseLike` [4].
+ - Either `void` [2] is incompatible with `empty` [3].
+ - Or `void` [2] is incompatible with `PromiseLike<TReturn>` [4].
 
    <BUILTINS>/lib.es2018.asyncgenerator.d.ts:25:5
    25|     return(value: TReturn | PromiseLike<TReturn>): Promise<IteratorResult<T, TReturn>>;

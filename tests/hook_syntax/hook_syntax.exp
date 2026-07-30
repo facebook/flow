@@ -296,7 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- exp.js:5:1
 
-Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `useFoo()` to empty because `[number]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    exp.js:5:1
    5| useFoo() as empty; // error
@@ -1102,7 +1102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ hook_type_tests.js:76:1
 
-Cannot cast `R` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `R` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    hook_type_tests.js:76:1
    76| R as empty; // error;
@@ -1211,7 +1211,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- imp.js:3:1
 
-Cannot cast `useFoo()` to empty because tuple type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `useFoo()` to empty because `[number]` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imp.js:3:1
    3| useFoo() as empty; // error
@@ -1974,7 +1974,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ rules_of_hooks.js:831:7
 
-Cannot assign function to `j` because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign function to `j` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    rules_of_hooks.js:831:7
               v------------------------------

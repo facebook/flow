@@ -35,7 +35,7 @@ No errors!
 Error --------------------------------------------------------------------- -:9:20
 
 Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `ElementType` [1]:
-component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+`component(...empty)` [2] is incompatible with `"div"` [3]. [incompatible-type]
 
    -:9:20
     9| onlyAllowsExactDiv(divGeneral); // Error
@@ -75,7 +75,9 @@ References:
 Error --------------------------------------------------------------------- -:9:20
 
 Cannot call `onlyAllowsExactDiv` with `divGeneral` bound to `div` because in type argument `P` [1]: `unknown` [2] is
-incompatible with props of string literal `div` [3]. [incompatible-type]
+incompatible with
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [3].
+[incompatible-type]
 
    -:9:20
     9| onlyAllowsExactDiv(divGeneral); // Error
@@ -95,7 +97,7 @@ References:
 Error -------------------------------------------------------------------- -:10:22
 
 Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `ElementType` [1]:
-component [2] is incompatible with string literal `div` [3]. [incompatible-type]
+`component(...empty)` [2] is incompatible with `"div"` [3]. [incompatible-type]
 
    -:10:22
    10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error
@@ -135,7 +137,9 @@ References:
 Error -------------------------------------------------------------------- -:10:22
 
 Cannot create `OnlyAllowsExactDiv` element because in property `children` > type argument `P` [1]: `unknown` [2] is
-incompatible with props of string literal `div` [3]. [incompatible-type]
+incompatible with
+`{[StringPrefix<"data-">]: ReactDOM$DataPropValues, accessKey?: ?string, "aria-activedescendant"?: ?s...` [3].
+[incompatible-type]
 
    -:10:22
    10| <OnlyAllowsExactDiv>{divGeneral}</OnlyAllowsExactDiv>; // Error

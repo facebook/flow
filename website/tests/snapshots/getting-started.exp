@@ -1,7 +1,7 @@
 === block 1 ===
 Error ----------------------------------------------------------------------------- -:6:8
 
-Cannot call `square` with `"2"` bound to `n` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `square` with `"2"` bound to `n` because `"2"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:6:8
    6| square("2"); // Error!
@@ -18,7 +18,7 @@ Found 1 error
 === block 2 ===
 Error ---------------------------------------------------------------------------- -:4:12
 
-Cannot return `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:4:12
    4|     return x; // Error

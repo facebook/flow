@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:6
 
-Cannot cast object literal to required of `A` because in property `x`: undefined [1] is incompatible with number [2].
+Cannot cast object literal to required of `A` because in property `x`: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:12:6
@@ -89,7 +89,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:20
 
-Cannot cast object literal to required of `A` because in property `y`: undefined [1] is incompatible with number [2].
+Cannot cast object literal to required of `A` because in property `y`: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:12:20
@@ -119,7 +119,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot cast `null` to required of undefined because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `null` to required of undefined because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    test.js:19:1
    19| null as Required<void>; // ERROR
@@ -133,7 +133,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:23:1
 
-Cannot cast `undefined` to required of null because undefined [1] is incompatible with null [2]. [incompatible-type]
+Cannot cast `undefined` to required of null because `void` [1] is incompatible with `null` [2]. [incompatible-type]
 
    test.js:23:1
    23| undefined as Required<null>; // ERROR
@@ -149,7 +149,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either properties `x` and `y` are missing in object literal [1] but exist in `A` [2].
- - Or object literal [1] is incompatible with null or undefined [3].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -171,7 +171,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `y` is missing in object literal [1] but exists in `A` [2].
- - Or object literal [1] is incompatible with null or undefined [3].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -193,7 +193,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
  - Either property `x` is missing in object literal [1] but exists in `A` [2].
- - Or object literal [1] is incompatible with null or undefined [3].
+ - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -214,8 +214,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
- - Either in property `x`: undefined [1] is incompatible with number [2].
- - Or object literal [3] is incompatible with null or undefined [4].
+ - Either in property `x`: `void` [1] is incompatible with `number` [2].
+ - Or object literal [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -291,8 +291,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:6
 
-Cannot cast object literal to required of `IFace` because in property `x`: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast object literal to required of `IFace` because in property `x`: `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:54:6
    54| ({x: undefined, y: undefined}) as Required<IFace>; // ERROR
@@ -306,8 +306,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:20
 
-Cannot cast object literal to required of `IFace` because in property `y`: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast object literal to required of `IFace` because in property `y`: `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:54:20
    54| ({x: undefined, y: undefined}) as Required<IFace>; // ERROR
@@ -366,8 +366,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:6
 
-Cannot cast object literal to required of `JFace` because in property `x`: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `x`: `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:71:6
    71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
@@ -381,8 +381,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:71:20
 
-Cannot cast object literal to required of `JFace` because in property `y`: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `y`: `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:71:20
    71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR
@@ -396,8 +396,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:71:34
 
-Cannot cast object literal to required of `JFace` because in property `z`: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `z`: `void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:71:34
    71| ({x: undefined, y: undefined, z: undefined}) as Required<JFace>; // ERROR

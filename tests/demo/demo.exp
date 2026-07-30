@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ 2/A.js:8:21
 
-Cannot call `callback` with `this.getX()` bound to `x` because number [1] is incompatible with string [2].
+Cannot call `callback` with `this.getX()` bound to `x` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    2/A.js:8:21

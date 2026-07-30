@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- annot.js:2:5
 
-Cannot assign `42` to `p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `p` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    annot.js:2:5
    2| p = 42; // error: number ~> string
@@ -93,7 +93,7 @@ the invalid `const [a: number, b: string] = ...` do `const [a, b]: [number, stri
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:7:1
 
-Cannot cast `a` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `a` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:7:1
    7| a as void; // error: number ~> void
@@ -110,7 +110,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:8:1
 
-Cannot cast `b` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `b` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:8:1
    8| b as void; // error: string ~> void
@@ -127,7 +127,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_rest.js:9:1
 
-Cannot cast `c` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `c` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:9:1
    9| c as void; // error: boolean ~> void
@@ -144,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `d` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -161,7 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `d` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -178,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:10:1
 
-Cannot cast `d` to undefined because boolean [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `d` to undefined because `boolean` [1] is incompatible with `void` [2]. [incompatible-type]
 
    array_rest.js:10:1
    10| d as void; // error: number|string|boolean ~> void
@@ -210,8 +210,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- array_rest.js:16:12
 
 Cannot assign array literal to `arr` because in index `0`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    array_rest.js:16:12
    16| [...arr] = [true]; // error boolean ~> number|string
@@ -231,7 +231,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:2:1
 
-Cannot cast `val1` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `val1` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    computed.js:2:1
    2| val1 as void; // error: string ~> void
@@ -265,7 +265,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:9:1
 
-Cannot cast `spread.key` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `spread.key` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    computed.js:9:1
    9| spread.key as void; // error (gasp!) in general we don't know if a computed prop should be excluded from spread
@@ -300,7 +300,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- computed.js:16:1
 
-Cannot cast `foo` to string because number literal `17` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `foo` to string because `17` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed.js:16:1
    16| foo as string; // error 17 ~> string
@@ -318,8 +318,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- defaults.js:4:8
 
 Cannot assign `q` to `q` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    defaults.js:4:8
    4|   {p: {q = 0} = {q: true}}: {p?: {q?: number | string, ...}, ...} = {p: {q: ''}},
@@ -339,7 +339,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:3
 
-Cannot cast `q` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `q` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:9:3
    9|   q as void;
@@ -356,7 +356,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- defaults.js:9:3
 
-Cannot cast `q` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `q` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:9:3
    9|   q as void;
@@ -374,8 +374,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ defaults.js:16:12
 
 Cannot assign `o.p.q` to `q` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    defaults.js:16:12
    16|   var {p: {q = 0} = {q: true}} = o;
@@ -395,7 +395,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:20:3
 
-Cannot cast `q` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `q` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:20:3
    20|   q as void;
@@ -412,7 +412,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:20:3
 
-Cannot cast `q` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `q` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:20:3
    20|   q as void;
@@ -443,7 +443,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:27:14
 
-Cannot assign `o` to `o` because in property `r`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `o` to `o` because in property `r`: `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:27:14
    27|   {p: {q, ...o} = {q: 0, r: 0}}: {p?: {r?: string, ...}, ...} = {p: {q: 0, r: ''}},
@@ -460,7 +460,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:32:3
 
-Cannot cast `o.r` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `o.r` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:32:3
    32|   o.r as void;
@@ -477,7 +477,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:40:9
 
-Cannot assign boolean literal `true` to `p` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign boolean literal `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:40:9
    40|     p = true, // error: boolean ~> string
@@ -491,7 +491,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:44:8
 
-Cannot assign object literal to object type because in property `p`: number [1] is incompatible with string [2].
+Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:44:8
@@ -506,7 +506,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:47:3
 
-Cannot cast `p` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `p` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:47:3
    47|   p as void; // error: string ~> void
@@ -523,7 +523,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:51:7
 
-Cannot assign boolean literal `true` to `p` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign boolean literal `true` to `p` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    defaults.js:51:7
    51|   p = true, // error: boolean ~> string
@@ -537,7 +537,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:55:6
 
-Cannot assign object literal to destructuring because in property `p`: number [1] is incompatible with string [2].
+Cannot assign object literal to destructuring because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:55:6
@@ -552,7 +552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:57:1
 
-Cannot cast `p` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `p` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    defaults.js:57:1
    57| p as void; // error: string ~> void
@@ -625,7 +625,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:73:52
 
-Cannot assign object literal to object type because in property `p`: number [1] is incompatible with string [2].
+Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:73:52
@@ -640,7 +640,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:74:54
 
-Cannot assign object literal to object type because in property `p`: number [1] is incompatible with string [2].
+Cannot assign object literal to object type because in property `p`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    defaults.js:74:54
@@ -656,8 +656,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ defaults.js:75:62
 
 Cannot assign object literal to object type because in property `p`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    defaults.js:75:62
    75| function obj_prop_union({p}: {p: number | string, ...} = {p: true}) {}
@@ -675,8 +675,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ defaults.js:78:69
 
 Cannot assign object literal to union type because: [incompatible-type]
- - Either in property `p`: boolean [1] is incompatible with number [2].
- - Or in property `p`: boolean [1] is incompatible with string [3].
+ - Either in property `p`: `true` [1] is incompatible with `number` [2].
+ - Or in property `p`: `true` [1] is incompatible with `string` [3].
 
    defaults.js:78:69
    78| function obj_prop_union2({p}: {p: number, ...} | {p: string, ...} = {p: true}) {}
@@ -696,7 +696,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:83:10
 
-Cannot assign number literal `123456` to `name` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign number literal `123456` to `name` because `123456` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    defaults.js:83:10
    83|   name = 123456, // Not string type, error!
@@ -710,7 +711,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- destructuring.js:4:3
 
-Cannot assign `[...][0].a1` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `[...][0].a1` to `a` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:4:3
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
@@ -727,7 +728,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- destructuring.js:4:9
 
-Cannot assign `[...][0].b` to `b` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `[...][0].b` to `b` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:4:9
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
@@ -744,7 +745,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:4:12
 
-Cannot assign `[...][1]` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `[...][1]` to `c` because `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:4:12
    4| [{a1:a, b},c] = [{a1:0, b:1},2];
@@ -785,7 +786,7 @@ Unsupported expression pattern in destructuring. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:14:9
 
-Cannot assign `p` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `p` to `a` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:14:9
    14|     a = p;
@@ -810,7 +811,7 @@ Cannot resolve name `z`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:16:9
 
-Cannot assign `r` to `c` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `r` to `c` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:16:9
    16|     c = r;
@@ -827,7 +828,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:20:2
 
-Cannot assign `[...][0]` to `a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `[...][0]` to `a` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:20:2
    20| [a,,b,...c] = [0,1,true,3];
@@ -844,7 +845,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:20:5
 
-Cannot assign `[...][2]` to `b` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `[...][2]` to `b` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:20:5
    20| [a,,b,...c] = [0,1,true,3];
@@ -861,7 +862,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:20:15
 
-Cannot assign array literal to `c` because rest of array pattern [1] is incompatible with string [2].
+Cannot assign array literal to `c` because `Array<number | boolean>` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    destructuring.js:20:15
@@ -912,7 +913,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:31:8
 
-Cannot call `qux` with object literal bound to `_` because in property `a`: string [1] is incompatible with number [2].
+Cannot call `qux` with object literal bound to `_` because in property `a`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    destructuring.js:31:8
@@ -927,8 +928,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:33:10
 
-Cannot call `corge` with object literal bound to the first parameter because in property `b`: number [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot call `corge` with object literal bound to the first parameter because in property `b`: `0` [1] is incompatible
+with `string` [2]. [incompatible-type]
 
    destructuring.js:33:10
    33| corge({b:0});
@@ -942,7 +943,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:35:32
 
-Cannot assign object literal to destructuring because in property `n`: string [1] is incompatible with number [2].
+Cannot assign object literal to destructuring because in property `n`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    destructuring.js:35:32
@@ -985,8 +986,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:45:3
 
-Cannot cast `x.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `x.baz` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:45:3
    45|   x.baz as string; // error, baz doesn't exist
@@ -1014,8 +1014,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:3
 
-Cannot cast `rest.baz` to string because `void` (due to access of non-existent property `baz`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `rest.baz` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:46:3
    46|   rest.baz as string; // error, rest is sealed
@@ -1044,7 +1043,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:64:23
 
-Cannot assign `baseprop1` to `bp1_err` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `baseprop1` to `bp1_err` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:64:23
    64| var bp1_err: string = baseprop1; // Error: number ~> string
@@ -1061,7 +1060,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:66:23
 
-Cannot assign `others.baseprop2` to `bp2_err` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `others.baseprop2` to `bp2_err` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    destructuring.js:66:23
    66| var bp2_err: string = others.baseprop2; // Error: number ~> string
@@ -1078,7 +1078,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:69:23
 
-Cannot assign `childprop1` to `cp1_err` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `childprop1` to `cp1_err` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring.js:69:23
    69| var cp1_err: string = childprop1; // Error: number ~> string
@@ -1095,8 +1095,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:70:19
 
-Cannot assign `others.childprop1` to `cp2` because `void` (due to access of non-existent property `childprop1`) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `others.childprop1` to `cp2` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring.js:70:19
    70| var cp2: number = others.childprop1; // Error: `childprop1` is not in `others` as it was separately destructured
@@ -1125,7 +1124,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:71:23
 
-Cannot assign `others.childprop2` to `cp2_err` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `others.childprop2` to `cp2_err` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    destructuring.js:71:23
    71| var cp2_err: string = others.childprop2; // Error: number ~> string
@@ -1164,7 +1164,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:30
 
-Cannot assign string literal `hi` to `defaults` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign string literal `hi` to `defaults` because `"hi"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    destructuring_missing_props.js:3:30
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1178,7 +1178,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:3:42
 
-Cannot assign number literal `3` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign number literal `3` to `foo` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_missing_props.js:3:42
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1192,7 +1192,7 @@ References:
 
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:5:1
 
-Cannot cast `foo` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `foo` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_missing_props.js:5:1
    5| foo as number; // Error, number | string
@@ -1223,7 +1223,8 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:32
 
-Cannot assign string literal `hi` to `defaults2` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign string literal `hi` to `defaults2` because `"hi"` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    destructuring_missing_props.js:9:32
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1237,7 +1238,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:9:44
 
-Cannot assign number literal `3` to `bar` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign number literal `3` to `bar` because `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_missing_props.js:9:44
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1293,7 +1294,8 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:21:12
 
-Cannot assign string literal `string` to `qux` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign string literal `string` to `qux` because `"string"` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    destructuring_missing_props.js:21:12
    21| var {qux = 'string'} = obj; // Error, qux missing
@@ -1307,7 +1309,7 @@ References:
 
 Error ----------------------------------------------------------------------------- destructuring_missing_props.js:27:18
 
-Cannot assign string literal `default` to `defaultProps` because string [1] is incompatible with empty [2].
+Cannot assign string literal `default` to `defaultProps` because `"default"` [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    destructuring_missing_props.js:27:18
@@ -1322,7 +1324,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:34:3
 
-Cannot cast `regularProp` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `regularProp` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_missing_props.js:34:3
    34|   regularProp as number;
@@ -1477,7 +1479,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ number_lit.js:8:3
 
-Cannot cast `x` to empty because string literal `a` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `"a"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    number_lit.js:8:3
    8|   x as empty; // ERROR
@@ -1494,7 +1496,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- number_lit.js:21:3
 
-Cannot cast `rest` to empty because rest of object pattern [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `rest` to empty because `{"1": "b"}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    number_lit.js:21:3
    21|   rest as empty; // ERROR
@@ -1574,7 +1576,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ string_lit.js:2:1
 
-Cannot cast `val` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `val` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    string_lit.js:2:1
    2| val as void; // error: string ~> void
@@ -1591,7 +1593,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:5:3
 
-Cannot cast `a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tuple.js:5:3
    5|   a as empty; // ERROR

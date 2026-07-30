@@ -23,7 +23,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 After recheck:
 Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
-Cannot cast `myGlobal` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `myGlobal` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:2:1
    2| myGlobal as string;

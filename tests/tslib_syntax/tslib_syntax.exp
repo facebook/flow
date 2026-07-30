@@ -17,7 +17,7 @@ without warning. [undocumented-feature]
 
 Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:6:1
 
-Cannot cast `f(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `f(...)` to number because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    anonymous_default_export_usage.js:6:1
    6| f("hello") as number; // ERROR - string is not number
@@ -34,7 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:7:1
 
-Cannot cast `f(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `f(...)` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    anonymous_default_export_usage.js:7:1
    7| f(42) as string; // ERROR - number is not string
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------- class_index_signature_usage.js:5:1
 
-Cannot cast `obj["foo"]` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `obj["foo"]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    class_index_signature_usage.js:5:1
    5| obj["foo"] as string; // ERROR: number is not string
@@ -76,7 +76,7 @@ Unsupported key in object type. Only identifier, string literal, and number lite
 
 Error ------------------------------------------------------------------------ computed_property_key_remote_usage.js:6:1
 
-Cannot cast `strObj.remoteProp` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `strObj.remoteProp` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_remote_usage.js:6:1
    6| strObj.remoteProp as string; // ERROR
@@ -93,7 +93,7 @@ References:
 
 Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:11:1
 
-Cannot cast `numObj[99]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `numObj[99]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    computed_property_key_remote_usage.js:11:1
    11| numObj[99] as number; // ERROR
@@ -110,7 +110,7 @@ References:
 
 Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:16:1
 
-Cannot cast `ifaceObj.remoteProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `ifaceObj.remoteProp` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_remote_usage.js:16:1
    16| ifaceObj.remoteProp as string; // ERROR
@@ -127,7 +127,7 @@ References:
 
 Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:21:1
 
-Cannot cast `classObj[99]` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `classObj[99]` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_remote_usage.js:21:1
    21| classObj[99] as string; // ERROR
@@ -144,7 +144,7 @@ References:
 
 Error ------------------------------------------------------------------------------- computed_property_key_usage.js:9:1
 
-Cannot cast `strObj.myProp` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `strObj.myProp` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_usage.js:9:1
    9| strObj.myProp as string; // ERROR
@@ -161,7 +161,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:14:1
 
-Cannot cast `numObj[42]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `numObj[42]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    computed_property_key_usage.js:14:1
    14| numObj[42] as number; // ERROR
@@ -178,7 +178,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:23:1
 
-Cannot cast `ifaceObj.ifaceProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `ifaceObj.ifaceProp` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_usage.js:23:1
    23| ifaceObj.ifaceProp as string; // ERROR
@@ -195,7 +195,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:32:1
 
-Cannot cast `optMethodObj.myMethod` to string because function type [1] is incompatible with string [2].
+Cannot cast `optMethodObj.myMethod` to string because `(x: number) => void` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    computed_property_key_usage.js:32:1
@@ -213,7 +213,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:32:1
 
-Cannot cast `optMethodObj.myMethod` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `optMethodObj.myMethod` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_usage.js:32:1
    32| optMethodObj.myMethod as string; // ERROR
@@ -230,7 +230,8 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:42:1
 
-Cannot cast `protoObj.protoMethod()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `protoObj.protoMethod()` to number because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    computed_property_key_usage.js:42:1
    42| protoObj.protoMethod() as number; // ERROR
@@ -247,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:53:1
 
-Cannot cast `strLitObj.directStr` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `strLitObj.directStr` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_usage.js:53:1
    53| strLitObj.directStr as string; // ERROR
@@ -264,7 +265,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:59:1
 
-Cannot cast `numLitObj[100]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `numLitObj[100]` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    computed_property_key_usage.js:59:1
    59| numLitObj[100] as number; // ERROR
@@ -281,7 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:65:1
 
-Cannot cast `memberObj.nsProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `memberObj.nsProp` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    computed_property_key_usage.js:65:1
    65| memberObj.nsProp as string; // ERROR
@@ -298,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:71:1
 
-Cannot cast `memberMethodObj.nsMethod()` to number because string [1] is incompatible with number [2].
+Cannot cast `memberMethodObj.nsMethod()` to number because `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    computed_property_key_usage.js:71:1
@@ -316,7 +317,7 @@ References:
 
 Error ------------------------------------------------------------------------------ computed_property_key_usage.js:77:1
 
-Cannot cast `memberClassObj.nsClassProp` to string because number [1] is incompatible with string [2].
+Cannot cast `memberClassObj.nsClassProp` to string because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    computed_property_key_usage.js:77:1
@@ -370,7 +371,7 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
 
 Error ---------------------------------------------------------------------- declare_class_method_no_return_usage.js:8:9
 
-Cannot assign `'hello'` to `s.foo` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'hello'` to `s.foo` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    declare_class_method_no_return_usage.js:8:9
    8| s.foo = 'hello'; // ERROR — string ~> number setter parameter
@@ -384,7 +385,7 @@ References:
 
 Error ---------------------------------------------------------------------------- declare_type_only_export_usage.js:3:1
 
-Cannot cast `'oops'` to `X` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'oops'` to `X` because `"oops"` [1] is incompatible with `SomeOtherType` [2]. [incompatible-type]
 
    declare_type_only_export_usage.js:3:1
    3| 'oops' as X; // ERROR - string is not number
@@ -499,7 +500,7 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
 
 Error ------------------------------------------------------------------------- destructuring_function_type_usage.js:6:1
 
-Cannot cast `f(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `f(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:6:1
    6| f({a: 1, b: "hello"}) as string; // ERROR
@@ -516,7 +517,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:10:1
 
-Cannot cast `g(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `g(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:10:1
    10| g({a: 1}) as string; // ERROR
@@ -533,7 +534,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:14:1
 
-Cannot cast `h(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `h(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:14:1
    14| h([1, "hello"]) as string; // ERROR
@@ -550,7 +551,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:18:1
 
-Cannot cast `nested(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `nested(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:18:1
    18| nested({a: {b: 1}}) as string; // ERROR
@@ -567,7 +568,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:22:1
 
-Cannot cast `rest(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `rest(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:22:1
    22| rest({a: 1, c: "hello", d: true}) as string; // ERROR
@@ -584,7 +585,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:27:1
 
-Cannot cast `optObj(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `optObj(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:27:1
    27| optObj({a: 1}) as string; // ERROR
@@ -601,7 +602,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:32:1
 
-Cannot cast `optArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `optArr(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:32:1
    32| optArr([1]) as string; // ERROR
@@ -618,7 +619,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:37:1
 
-Cannot cast `c.m(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `c.m(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:37:1
    37| c.m({a: 1, b: "hello"}) as string; // ERROR
@@ -635,7 +636,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:39:1
 
-Cannot cast `c.n(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `c.n(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:39:1
    39| c.n([1]) as number; // ERROR
@@ -652,7 +653,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:42:1
 
-Cannot cast `c.o(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `c.o(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:42:1
    42| c.o({a: 1}) as string; // ERROR
@@ -669,7 +670,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:47:1
 
-Cannot cast `i.m(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `i.m(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:47:1
    47| i.m({a: 1, b: "hello"}) as string; // ERROR
@@ -686,7 +687,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:49:1
 
-Cannot cast `i.n(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `i.n(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:49:1
    49| i.n([1]) as number; // ERROR
@@ -703,7 +704,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:53:1
 
-Cannot cast `restArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `restArr(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:53:1
    53| restArr(1, "hello") as string; // ERROR
@@ -720,7 +721,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:58:1
 
-Cannot cast `arrowObj(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `arrowObj(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:58:1
    58| arrowObj({a: 1, b: "hello"}) as string; // ERROR
@@ -737,7 +738,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:62:1
 
-Cannot cast `arrowArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `arrowArr(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:62:1
    62| arrowArr([1, "hello"]) as string; // ERROR
@@ -754,7 +755,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:66:1
 
-Cannot cast `arrowRename(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `arrowRename(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:66:1
    66| arrowRename({x: 1}) as string; // ERROR
@@ -771,7 +772,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:71:1
 
-Cannot cast `arrowNamedObj(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `arrowNamedObj(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:71:1
    71| arrowNamedObj({a: 1, b: "hello"}) as string; // ERROR
@@ -788,7 +789,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:75:1
 
-Cannot cast `arrowNamedArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `arrowNamedArr(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    destructuring_function_type_usage.js:75:1
    75| arrowNamedArr([1, "hello"]) as string; // ERROR
@@ -805,7 +806,7 @@ References:
 
 Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:78:1
 
-Cannot cast `arrowDestructNamedConst(...)` to string because number [1] is incompatible with string [2].
+Cannot cast `arrowDestructNamedConst(...)` to string because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    destructuring_function_type_usage.js:78:1
@@ -831,7 +832,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
 
-Cannot cast template string to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast template string to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic_tagged_template.js:4:1
    4| tag<number>`hello` as empty; // ERROR
@@ -848,7 +849,7 @@ References:
 
 Error ------------------------------------------------------------------------- interface_method_no_return_usage.js:16:1
 
-Cannot cast `i4.m()` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `i4.m()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    interface_method_no_return_usage.js:16:1
    16| i4.m() as string; // ERROR — number ~> string (explicit return still respected)
@@ -893,7 +894,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:26:1
 
-Cannot cast `sa.X` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `sa.X` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    mapped_type_as.js:26:1
    26| sa.X as number; // ERROR
@@ -1093,7 +1094,7 @@ Call expression in class `extends` clause is not enabled. [unsupported-syntax]
 
 Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
 
-Cannot cast `foo.a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo.a` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    optional_class_property.js:10:1
    10| foo.a as empty; // ERROR
@@ -1110,7 +1111,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
 
-Cannot cast `foo.a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo.a` to empty because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    optional_class_property.js:10:1
    10| foo.a as empty; // ERROR
@@ -1127,7 +1128,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_indexer.js:3:1
 
-Cannot cast `t["foo"]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `t["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:3:1
    3| t["foo"] as number; // ERROR - undefined is not number
@@ -1144,7 +1145,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_indexer.js:7:1
 
-Cannot cast `s["foo"]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `s["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:7:1
    7| s["foo"] as number; // ERROR - undefined is not number
@@ -1161,7 +1162,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_indexer.js:13:1
 
-Cannot cast `c["foo"]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `c["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:13:1
    13| c["foo"] as number; // ERROR - undefined is not number
@@ -1178,7 +1179,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_indexer.js:19:1
 
-Cannot cast `i["foo"]` to number because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `i["foo"]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_indexer.js:19:1
    19| i["foo"] as number; // ERROR - undefined is not number
@@ -1195,7 +1196,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- optional_unlabeled_tuple.js:7:6
 
-Cannot cast array literal to `T` because in index `1`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast array literal to `T` because in index `1`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional_unlabeled_tuple.js:7:6
    7| ['', 1] as T; // ERROR - number incompatible with string
@@ -1209,7 +1210,7 @@ References:
 
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:15:5
 
-Cannot cast array literal to `S` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast array literal to `S` because in index `1`: `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_unlabeled_tuple.js:15:5
    15| [1, ''] as S; // ERROR
@@ -1224,8 +1225,8 @@ References:
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:23:2
 
 Cannot cast array literal to `U` because in index `0`: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
 
    optional_unlabeled_tuple.js:23:2
    23| [true] as U; // ERROR
@@ -1242,7 +1243,7 @@ References:
 
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:38:8
 
-Cannot cast array literal to `Sp` because in index `2`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast array literal to `Sp` because in index `2`: `3` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional_unlabeled_tuple.js:38:8
    38| [1, 2, 3] as Sp; // ERROR
@@ -1256,7 +1257,7 @@ References:
 
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:45:2
 
-Cannot cast array literal to `C` because in index `0`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast array literal to `C` because in index `0`: `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_unlabeled_tuple.js:45:2
    45| [''] as C<string>; // ERROR
@@ -1270,7 +1271,7 @@ References:
 
 Error --------------------------------------------------------------------------------- optional_unlabeled_tuple.js:52:2
 
-Cannot cast array literal to `W` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast array literal to `W` because in index `0`: `1` [1] is incompatible with `Alias` [2]. [incompatible-type]
 
    optional_unlabeled_tuple.js:52:2
    52| [1] as W; // ERROR
@@ -1534,7 +1535,7 @@ References:
 
 Error -------------------------------------------------------------------------------- type_keyword_dotted_access.js:7:1
 
-Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `infer` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    type_keyword_dotted_access.js:7:1
    7| x as empty; // ERROR
@@ -1551,7 +1552,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typeof_this.js:15:1
 
-Cannot cast `obj.method()` to empty because `MyClass` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `obj.method()` to empty because `MyClass` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof_this.js:15:1
    15| obj.method() as empty; // ERROR
@@ -1568,7 +1569,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- typeof_this.js:16:1
 
-Cannot cast `obj.getX()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `obj.getX()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    typeof_this.js:16:1
    16| obj.getX() as empty; // ERROR
@@ -1585,7 +1586,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- unique_symbol.js:8:1
 
-Cannot cast `x` to empty because unique symbol [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `symbol` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    unique_symbol.js:8:1
    8| x as empty;            // ERROR
@@ -1671,7 +1672,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- unique_symbol.js:48:1
 
-Cannot cast `x` to string because unique symbol [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
 
    unique_symbol.js:48:1
    48| x as string; // ERROR
@@ -1688,7 +1689,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- unique_symbol.js:49:1
 
-Cannot cast `x` to number because unique symbol [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `symbol` [1] is incompatible with `number` [2]. [incompatible-type]
 
    unique_symbol.js:49:1
    49| x as number; // ERROR
@@ -1705,7 +1706,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- unique_symbol.js:50:1
 
-Cannot cast `x` to boolean because unique symbol [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `symbol` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    unique_symbol.js:50:1
    50| x as boolean; // ERROR
@@ -1722,7 +1723,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- unique_symbol.js:55:1
 
-Cannot cast `m` to `typeof x` because `unknown` [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `m` to `typeof x` because `unknown` [1] is incompatible with `symbol` [2]. [incompatible-type]
 
    unique_symbol.js:55:1
    55| m as typeof x; // ERROR - mixed doesn't flow to unique symbol

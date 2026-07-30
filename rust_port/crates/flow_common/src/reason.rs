@@ -711,6 +711,26 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         c == ReasonClassification::Scalar || c == ReasonClassification::Nullish
     }
 
+    /// Whether this description explains provenance that the normalized type cannot express.
+    /// Add things here judiciously. Only primitive-like types belong here.
+    pub fn is_explanatory(&self) -> bool {
+        use VirtualReasonDesc::*;
+
+        match self.unwrap() {
+            RUninitialized
+            | RPossiblyUninitialized
+            | RTupleOutOfBoundsAccess(_)
+            | RTupleUnknownElementFromInexact
+            | RUnknownUnspecifiedProperty(_)
+            | RReactElement {
+                from_component_syntax: true,
+                ..
+            } => true,
+            RTypeApp(inner) | RTypeAppImplicit(inner) => inner.is_explanatory(),
+            _ => false,
+        }
+    }
+
     /// Invalidate RTypeAlias by removing the reliable def_loc
     pub fn invalidate_rtype_alias(self) -> VirtualReasonDesc<L> {
         match &self {

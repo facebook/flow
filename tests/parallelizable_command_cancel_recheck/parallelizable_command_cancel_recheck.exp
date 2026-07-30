@@ -18,7 +18,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Now we see the errors, since we've focused the dependency:
 Error ----------------------------------------------------------------------------------------------- dependency.js:3:21
 
-Cannot assign `123` to `mybug` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `mybug` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    dependency.js:3:21
    3| let mybug: string = 123;

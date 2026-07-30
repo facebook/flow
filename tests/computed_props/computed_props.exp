@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:12:4
 
-Cannot add computed property because number literal `3` [1] is incompatible with union type [2]. [incompatible-type]
+Cannot add computed property because `3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    hints.js:12:4
    12|   [z]: v3, // error 3 ~> 1|2
@@ -59,8 +59,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:16:8
 
-Cannot assign object literal to `obj2` because in the indexer property: number literal `1` [1] is incompatible with
-empty [2]. [incompatible-type]
+Cannot assign object literal to `obj2` because in the indexer property: `1` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    hints.js:16:8
    16|   [x]: v1, // error 1 ~> empty
@@ -113,7 +113,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- hints.js:21:21
 
-Cannot assign object literal to `obj3` because object literal [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign object literal to `obj3` because object literal [1] is incompatible with `empty` [2]. [incompatible-type]
 
    hints.js:21:21
                            v----------------------
@@ -242,8 +242,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hints.js:70:7
 
 Cannot call `foo` with object literal bound to `o` because: [incompatible-type]
- - Either in the indexer property: number [1] is incompatible with boolean [2].
- - Or in the indexer property: boolean [2] is incompatible with number [1].
+ - Either in the indexer property: `number` [1] is incompatible with `boolean` [2].
+ - Or in the indexer property: `boolean` [2] is incompatible with `number` [1].
 
    hints.js:70:7
              v-------------------------------------------------------------------------
@@ -428,7 +428,7 @@ simple key in object: [signature-verification-failure]
 
 Error ---------------------------------------------------------------------------------------------------- test7.js:2:19
 
-Cannot assign `obj['m']()` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `obj['m']()` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test7.js:2:19
    2| const x: string = obj['m'](); // error, number ~> string
@@ -445,7 +445,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test7.js:5:19
 
-Cannot assign `arr[0]()` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `arr[0]()` to `y` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test7.js:5:19
       5| const y: string = arr[0](); // error: number ~> string

@@ -8,7 +8,7 @@ Invalid trivially recursive definition of `Values`.  [recursive-definition]
 
 Error ---------------------------------------------------------------------------------------------- eval_values.js:12:1
 
-Cannot cast `options.foo` to empty because `Value` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `options.foo` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    eval_values.js:12:1
    12| options.foo as empty; // error
@@ -66,7 +66,7 @@ Invalid trivially recursive definition of `T`.  [recursive-definition]
 
 Error ------------------------------------------------------------------------------------------------ issue-598.js:8:10
 
-Cannot return `y` because in type argument `A` [1]: number [2] is incompatible with string [3]. [incompatible-type]
+Cannot return `y` because in type argument `A` [1]: `number` [2] is incompatible with `string` [3]. [incompatible-type]
 
    issue-598.js:8:10
    8|   return y;
@@ -232,7 +232,7 @@ Cannot resolve name `DoesntMatter`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Cannot cast `p.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `p.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:6:1
    6| p.x as string; // error
@@ -249,7 +249,41 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Cannot cast `pstar` to number because `P` [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `pstar` to number because `P<P<P<number>>>` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:9:1
+   9| pstar as number; // error, but limit potentially unbounded number of errors!
+      ^^^^^
+
+References:
+   test.js:8:12
+   8| var pstar: Pstar<number> = 0; // OK
+                 ^^^^^^^^^^^^^ [1]
+   test.js:9:10
+   9| pstar as number; // error, but limit potentially unbounded number of errors!
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot cast `pstar` to number because `P<P<number>>` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:9:1
+   9| pstar as number; // error, but limit potentially unbounded number of errors!
+      ^^^^^
+
+References:
+   test.js:8:12
+   8| var pstar: Pstar<number> = 0; // OK
+                 ^^^^^^^^^^^^^ [1]
+   test.js:9:10
+   9| pstar as number; // error, but limit potentially unbounded number of errors!
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot cast `pstar` to number because `P<number>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:9:1
    9| pstar as number; // error, but limit potentially unbounded number of errors!
@@ -266,7 +300,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Cannot cast `pstar.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `pstar.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:13:1
    13| pstar.x as string; // error
@@ -283,7 +317,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Cannot cast `pstar.x` to string because `P` [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `pstar.x` to string because `P<number>` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:16:1
    16| pstar.x as string; // error
@@ -300,7 +334,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test2.js:4:12
 
-Cannot cast `new C` to `D` because in type argument `X` [1]: number [2] is incompatible with string [3].
+Cannot cast `new C` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
 [incompatible-type]
 
    test2.js:4:12
@@ -425,4 +459,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 29 errors
+Found 31 errors

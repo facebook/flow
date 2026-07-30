@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:5:21
 
-Cannot assign `dict[k]` to `val` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `dict[k]` to `val` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    any.js:5:21
    5| const val: string = dict[k] // error: number incompatible with string
@@ -77,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:79:3
 
-Cannot cast `o.toString()` to boolean because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `o.toString()` to boolean because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    dictionary.js:79:3
     79|   o.toString() as boolean; // error: string ~> boolean
@@ -109,7 +109,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:87:10
 
-Cannot assign `'not-x'` to `o[0]` because string [1] is incompatible with `X` [2]. [incompatible-type]
+Cannot assign `'not-x'` to `o[0]` because `"not-x"` [1] is incompatible with `X` [2]. [incompatible-type]
 
    dictionary.js:87:10
    87|   o[0] = 'not-x'; // error
@@ -1522,7 +1522,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:60:3
 
-Cannot cast `x.foo` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    incompatible.js:60:3
    60|   x.foo as string; // error
@@ -1539,8 +1539,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
-Cannot assign object literal to `o` because in property `foo` > the return value: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign object literal to `o` because in property `foo` > the return value: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    test.js:6:12
    6|     return params.count; // error, number ~/~ string
@@ -1557,7 +1557,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- test_client.js:3:9
 
-Cannot assign function to `o.foo` because in the return value: number [1] is incompatible with string [2].
+Cannot assign function to `o.foo` because in the return value: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test_client.js:3:9

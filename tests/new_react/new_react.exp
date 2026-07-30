@@ -63,8 +63,26 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: object type [2] is
-incompatible with nullable `Readonly` [3]. [incompatible-type]
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+`{y_: string, ...}` [2] is incompatible with `null` [3]. [incompatible-type]
+
+   classes.js:23:15
+    23|   setState(o: { y_: string, ... }): void { }
+                      ^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   classes.js:7:19
+     7| class Foo extends React.Component<Props, State> {
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:977:23
+   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:23:15
+
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+`{y_: string, ...}` [2] is incompatible with `void` [3]. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string, ... }): void { }
@@ -101,7 +119,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
 
-Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `this.props.x` to `_` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    classes.js:15:21
    15|     var _: string = this.props.x;
@@ -118,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:20:23
 
-Cannot assign object literal to `this.state` because in property `y`: string [1] is incompatible with number [2].
+Cannot assign object literal to `this.state` because in property `y`: `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    classes.js:20:23
@@ -133,7 +151,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:38:20
 
-Cannot assign `0` to `Foo.defaultProps` because number [1] is incompatible with `DefaultProps` [2]. [incompatible-type]
+Cannot assign `0` to `Foo.defaultProps` because `0` [1] is incompatible with `DefaultProps` [2]. [incompatible-type]
 
    classes.js:38:20
    38| Foo.defaultProps = 0;
@@ -162,8 +180,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
 Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with component [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `component(...empty)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -187,7 +205,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
 Cannot assign `<Foo />` to `foo` because in type argument `ElementType` [1]: class `Foo` [2] is incompatible with
-number [3]. [incompatible-type]
+`number` [3]. [incompatible-type]
 
    classes.js:39:26
    39| var foo: $jsx<number> = <Foo/>;
@@ -225,7 +243,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-react.js:13:21
 
-Cannot create `HelloMessage` element because in property `name`: number [1] is incompatible with string [2].
+Cannot create `HelloMessage` element because in property `name`: `007` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    import-react.js:13:21
@@ -276,7 +294,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:19:47
 
-Cannot assign `null` to `_y` because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign `null` to `_y` because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    object_component.js:19:47
    19| const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
@@ -305,7 +323,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props4.js:6:11
 
-Cannot create `JDiv` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create `JDiv` element because in property `id`: `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    props4.js:6:11
    6| <JDiv id={42} />;
@@ -352,29 +370,29 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19
 
 Cannot call `this.setState` with function bound to `partialState` because: [incompatible-type]
- - Either in the return value > property `bar`: string [1] is incompatible with number [2].
- - Or function [3] is incompatible with nullable `Readonly` [4].
+ - Either in the return value > property `bar`: `"42"` [1] is incompatible with `number` [2].
+ - Or inexact function [3] is incompatible with exact `State` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    state6.js:27:19
-                          v-------------------------------------------
-    27|     this.setState(() => ({ // Error: `bar` should be a number.
-    28|       bar: '42',
-    29|     }));
-            -^ [3]
+                         v-------------------------------------------
+   27|     this.setState(() => ({ // Error: `bar` should be a number.
+   28|       bar: '42',
+   29|     }));
+           -^ [3]
 
 References:
    state6.js:28:12
-    28|       bar: '42',
-                   ^^^^ [1]
+   28|       bar: '42',
+                  ^^^^ [1]
    state6.js:5:33
-     5| type State = {foo: number, bar: number};
-                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:977:23
-   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    5| type State = {foo: number, bar: number};
+                                       ^^^^^^ [2]
+   state6.js:11:64
+   11| class MyComponent extends React.Component<{prop: number, ...}, State> {
+                                                                      ^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- state6.js:31:29
@@ -408,26 +426,23 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:39:26
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
- - Either in the first parameter: number [1] is incompatible with `State` [2].
- - Or `StateUpdater3` [3] is incompatible with nullable `Readonly` [4].
+ - Either in the first parameter: `number` [1] is incompatible with `State` [2].
+ - Or inexact `StateUpdater3` [3] is incompatible with exact `State` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    state6.js:39:26
-    39|     this.setState(any as StateUpdater3); // Error: It has the wrong signature
-                                 ^^^^^^^^^^^^^ [3]
+   39|     this.setState(any as StateUpdater3); // Error: It has the wrong signature
+                                ^^^^^^^^^^^^^ [3]
 
 References:
    state6.js:9:24
-     9| type StateUpdater3 = {(number): number, foo: number, bar: number, ...};
-                               ^^^^^^ [1]
+    9| type StateUpdater3 = {(number): number, foo: number, bar: number, ...};
+                              ^^^^^^ [1]
    state6.js:11:64
-    11| class MyComponent extends React.Component<{prop: number, ...}, State> {
-                                                                       ^^^^^ [2]
-   <BUILTINS>/react.js:977:23
-   977|         partialState: ?Readonly<Partial<State>> | ((State, Props) => ?Readonly<Partial<State>>),
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   11| class MyComponent extends React.Component<{prop: number, ...}, State> {
+                                                                      ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:2
@@ -446,4 +461,4 @@ References:
 
 
 
-Found 26 errors
+Found 27 errors

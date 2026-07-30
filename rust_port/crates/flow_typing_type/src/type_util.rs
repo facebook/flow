@@ -157,71 +157,6 @@ pub fn singleton_reason_of_t(t: &Type) -> Reason {
     }
 }
 
-pub fn generalized_reason_of_t(compared_with_t: &Type, l: &Type) -> Reason {
-    use crate::type_::DefTInner as D;
-
-    fn not_a_string(t: &Type) -> bool {
-        use crate::type_::DefTInner as D;
-        match t.deref() {
-            TypeInner::DefT(_, def_t) => {
-                !matches!(&**def_t, D::SingletonStrT { .. } | D::StrGeneralT(_))
-            }
-            _ => true,
-        }
-    }
-
-    fn not_a_number(t: &Type) -> bool {
-        use crate::type_::DefTInner as D;
-        match t.deref() {
-            TypeInner::DefT(_, def_t) => {
-                !matches!(&**def_t, D::SingletonNumT { .. } | D::NumGeneralT(_))
-            }
-            _ => true,
-        }
-    }
-
-    fn not_a_boolean(t: &Type) -> bool {
-        use crate::type_::DefTInner as D;
-        match t.deref() {
-            TypeInner::DefT(_, def_t) => {
-                !matches!(&**def_t, D::SingletonBoolT { .. } | D::BoolGeneralT)
-            }
-            _ => true,
-        }
-    }
-
-    fn not_a_bigint(t: &Type) -> bool {
-        use crate::type_::DefTInner as D;
-        match t.deref() {
-            TypeInner::DefT(_, def_t) => {
-                !matches!(&**def_t, D::SingletonBigIntT { .. } | D::BigIntGeneralT(_))
-            }
-            _ => true,
-        }
-    }
-
-    match l.deref() {
-        TypeInner::DefT(r, def_t) => match &**def_t {
-            D::SingletonStrT {
-                from_annot: false, ..
-            } if not_a_string(compared_with_t) => r.dupe().replace_desc(VirtualReasonDesc::RString),
-            D::SingletonNumT {
-                from_annot: false, ..
-            } if not_a_number(compared_with_t) => r.dupe().replace_desc(VirtualReasonDesc::RNumber),
-            D::SingletonBoolT {
-                from_annot: false, ..
-            } if not_a_boolean(compared_with_t) => {
-                r.dupe().replace_desc(VirtualReasonDesc::RBoolean)
-            }
-            D::SingletonBigIntT {
-                from_annot: false, ..
-            } if not_a_bigint(compared_with_t) => r.dupe().replace_desc(VirtualReasonDesc::RBigInt),
-            _ => reason_of_t(l).dupe(),
-        },
-        _ => reason_of_t(l).dupe(),
-    }
-}
-
 pub fn desc_of_t(t: &Type) -> &ReasonDesc {
     reason_of_t(t).desc(true)
 }
@@ -232,6 +167,14 @@ pub fn loc_of_t(t: &Type) -> &ALoc {
 
 pub fn def_loc_of_t(t: &Type) -> &ALoc {
     reason_of_t(t).def_loc()
+}
+
+// Where to anchor an error-message reference to `t`. Matches how reasons are rendered
+// (`friendly::ref_map`): prefer the annotation location so the reference points at where
+// the type was written, falling back to the definition location.
+pub fn ref_loc_of_t(t: &Type) -> &ALoc {
+    let reason = reason_of_t(t);
+    reason.annot_loc().unwrap_or(reason.def_loc())
 }
 
 // TODO make a type visitor

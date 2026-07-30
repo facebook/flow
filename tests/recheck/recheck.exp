@@ -2,7 +2,7 @@
 Test a:
 Error ------------------------------------------------------------------------------------------------------- a1.js:3:42
 
-Cannot return `5` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `5` because `5` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a1.js:3:42
    3| function foo(x: number): string { return 5; }
@@ -16,7 +16,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `foo` with empty string bound to `x` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    a2.js:5:22
    5| module.exports = foo("") as string;
@@ -32,7 +32,7 @@ References:
 Found 2 errors
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:18
 
-Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `foo(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a2.js:5:18
    5| module.exports = foo("") as string;
@@ -49,7 +49,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `foo` with empty string bound to `x` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    a2.js:5:22
    5| module.exports = foo("") as string;
@@ -65,7 +65,7 @@ References:
 Found 2 errors
 Error -------------------------------------------------------------------------------------------------------- a1.js:5:5
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `foo` with empty string bound to `x` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    a1.js:5:5
    5| foo("");
@@ -79,7 +79,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:18
 
-Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `foo(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    a2.js:5:18
    5| module.exports = foo("") as string;
@@ -96,7 +96,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- a2.js:5:22
 
-Cannot call `foo` with empty string bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `foo` with empty string bound to `x` because `""` [1] is incompatible with `number` [2]. [incompatible-type]
 
    a2.js:5:22
    5| module.exports = foo("") as string;
@@ -336,7 +336,8 @@ No errors!
 Test m:
 Error -------------------------------------------------------------------------------------------------------- m3.js:6:1
 
-Cannot cast `x` to `T` because in type argument `X` [1]: string [2] is incompatible with number [3]. [incompatible-type]
+Cannot cast `x` to `T` because in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
+[incompatible-type]
 
    m3.js:6:1
    6| x as T<number>;

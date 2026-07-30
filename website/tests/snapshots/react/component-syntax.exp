@@ -35,7 +35,7 @@ No errors!
 Error --------------------------------------------------------------------- -:5:10
 
 Cannot return `new Object()` because: [incompatible-type]
- - Either `Object` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either `Object` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or `Object` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `Object` [1] but exists in `$Iterable` [4].
 

@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:30
 
-Cannot assign object literal to `b7` because in property `x`: null [1] is incompatible with string [2].
+Cannot assign object literal to `b7` because in property `x`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:9:30
@@ -60,7 +60,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:30
 
-Cannot assign object literal to `b8` because in property `x`: number [1] is incompatible with string [2].
+Cannot assign object literal to `b8` because in property `x`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:10:30
@@ -90,7 +90,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:17
 
-Cannot assign `null` to `v2` because null [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot assign `null` to `v2` because `null` [1] is incompatible with `void` [2]. [incompatible-type]
 
    test.js:16:17
    16| let v2 : Void = null; // error
@@ -104,7 +104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:16
 
-Cannot assign `undefined` to `n` because undefined [1] is incompatible with null [2]. [incompatible-type]
+Cannot assign `undefined` to `n` because `void` [1] is incompatible with `null` [2]. [incompatible-type]
 
    test.js:19:16
    19| let n : Null = undefined; // error
@@ -119,10 +119,10 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:25:17
 
 Cannot assign `a` to `p3` because: [incompatible-type]
- - Either in property `x`: undefined [1] is incompatible with string [1].
+ - Either in property `x`: `void` [1] is incompatible with `string` [1].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
- - Or `Foo` [2] is incompatible with null or undefined [3].
+ - Or `Foo` [2] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -146,8 +146,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:28:17
 
 Cannot assign `3` to `p6` because: [incompatible-type]
- - Either number [1] is incompatible with `Foo` [2].
- - Or number [1] is incompatible with null or undefined [3].
+ - Either `3` [1] is incompatible with `{x?: string, y?: string}` [2].
+ - Or `3` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -175,7 +175,7 @@ Cannot instantiate partial number because number [1] is not an object. [not-an-o
 
 Error ---------------------------------------------------------------------------------------------------- test.js:45:32
 
-Cannot assign object literal to `d7` because in property `x`: null [1] is incompatible with string [2].
+Cannot assign object literal to `d7` because in property `x`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:45:32
@@ -190,7 +190,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:32
 
-Cannot assign object literal to `d8` because in property `x`: number [1] is incompatible with string [2].
+Cannot assign object literal to `d8` because in property `x`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:46:32
@@ -205,7 +205,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:62:32
 
-Cannot assign object literal to `f9` because in property `x`: null [1] is incompatible with string [2].
+Cannot assign object literal to `f9` because in property `x`: `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:62:32
@@ -220,7 +220,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:63:33
 
-Cannot assign object literal to `f10` because in property `z`: number [1] is incompatible with string [2].
+Cannot assign object literal to `f10` because in property `z`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:63:33
@@ -235,7 +235,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:64:33
 
-Cannot assign object literal to `f11` because in property `x`: number [1] is incompatible with string [2].
+Cannot assign object literal to `f11` because in property `x`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:64:33

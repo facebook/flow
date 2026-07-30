@@ -115,7 +115,7 @@ No errors!
 === block 18 ===
 Error --------------------------------------------------------------------------- -:9:21
 
-Cannot assign `value` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `value` to `s` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:9:21
    9|   const s: string = value; // Error: `value` keeps its full `string | number` type
@@ -141,8 +141,8 @@ No errors!
 === block 21 ===
 Error -------------------------------------------------------------------------- -:12:15
 
-Cannot call `setLayout` with object literal bound to `value` because object literal [1] is incompatible with `T` [2].
-[incompatible-type]
+Cannot call `setLayout` with object literal bound to `value` because object literal [1] is incompatible with
+`empty` [2]. [incompatible-type]
 
    -:12:15
    12|     setLayout({kind: 'row', cols: 3}); // ERROR

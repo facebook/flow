@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- arrow.js:2:3
 
-Cannot cast `this` to number because global object [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `this` to number because global object [1] is incompatible with `number` [2]. [incompatible-type]
 
    arrow.js:2:3
    2|   this as number; // ERROR
@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- arrow.js:7:1
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    arrow.js:7:1
    7| f.a as empty; // ERROR
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arrow.js:27:7
 
-Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    arrow.js:27:7
    27|     d(n, s); // ERROR
@@ -48,7 +48,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrow.js:27:10
 
-Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    arrow.js:27:10
    27|     d(n, s); // ERROR
@@ -81,7 +81,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arrow.js:35:9
 
-Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `1` to `f.a` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    arrow.js:35:9
    35|   f.a = 1; // ERROR
@@ -109,7 +109,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:11:1
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_declaration.js:11:1
    11| f.a as empty; // ERROR
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:12:1
 
-Cannot cast `f.b()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f.b()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_declaration.js:12:1
    12| f.b() as empty; // ERROR
@@ -143,7 +143,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:22:7
 
-Cannot assign `1` to `f.c` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `1` to `f.c` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_declaration.js:22:7
    22| f.c = 1; // ERROR
@@ -171,7 +171,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_expression.js:7:1
 
-Cannot cast `f.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    function_expression.js:7:1
    7| f.a as empty; // ERROR
@@ -188,7 +188,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:28:9
 
-Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_expression.js:28:9
    28|       d(n, s); // ERROR
@@ -205,7 +205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:28:12
 
-Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_expression.js:28:12
    28|       d(n, s); // ERROR
@@ -222,7 +222,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:34:9
 
-Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_expression.js:34:9
    34|       d(n, s); // ERROR
@@ -239,7 +239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:34:12
 
-Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    function_expression.js:34:12
    34|       d(n, s); // ERROR
@@ -272,7 +272,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:43:9
 
-Cannot assign `1` to `f.a` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `1` to `f.a` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    function_expression.js:43:9
    43|   f.a = 1; // ERROR
@@ -338,7 +338,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:35:1
 
-Cannot cast `add` to `C` because function [1] is incompatible with `C` [2]. [incompatible-type]
+Cannot cast `add` to `C` because `(x: number, y: number) => number` [1] is incompatible with `C` [2].
+[incompatible-type]
 
    used_as_callable_object.js:35:1
    35| add as C; // error object incompatible with class instance
@@ -392,7 +393,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:40:1
 
-Cannot cast `addWithBar` to `C` because function [1] is incompatible with `C` [2]. [incompatible-type]
+Cannot cast `addWithBar` to `C` because `(x: number, y: number) => number` [1] is incompatible with `C` [2].
+[incompatible-type]
 
    used_as_callable_object.js:40:1
    40| addWithBar as C; // error object incompatible with class instance

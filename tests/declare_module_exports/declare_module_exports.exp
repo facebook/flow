@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:3:1
 
-Cannot cast `declare_module_exports` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `declare_module_exports` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    main.js:3:1
    3| declare_module_exports as string; // Error: number ~> string
@@ -26,7 +27,7 @@ Cannot import `str` because there is no `str` export in `declare_m_e_with_other_
 
 Error ----------------------------------------------------------------------------------------------------- main.js:10:1
 
-Cannot cast `42` to `str2` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `42` to `str2` because `42` [1] is incompatible with `str2` [2]. [incompatible-type]
 
    main.js:10:1
    10| 42 as str2; // Error: number ~> string
@@ -40,7 +41,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:19:1
 
-Cannot cast `declare_var_exports.exports` to string because number [1] is incompatible with string [2].
+Cannot cast `declare_var_exports.exports` to string because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    main.js:19:1
@@ -58,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:23:1
 
-Cannot cast `declare_m_e_with_declare_var_e` to string because number [1] is incompatible with string [2].
+Cannot cast `declare_m_e_with_declare_var_e` to string because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    main.js:23:1
@@ -76,7 +77,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:27:1
 
-Cannot cast `foo(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `foo(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    main.js:27:1
    27| foo(0) as string; // Error: number ~> string
@@ -93,7 +94,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:29:1
 
-Cannot cast `foo(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `foo(...)` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    main.js:29:1
    29| foo("") as number; // Error: string ~> number
@@ -110,7 +111,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:33:1
 
-Cannot cast `"str"` to `BT` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `"str"` to `BT` because `"str"` [1] is incompatible with `AT` [2]. [incompatible-type]
 
    main.js:33:1
    33| "str" as BT; // Error: string ~> number
@@ -124,7 +125,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:38:1
 
-Cannot cast `42` to `BDefault` because number [1] is incompatible with `Def` [2]. [incompatible-type]
+Cannot cast `42` to `BDefault` because `42` [1] is incompatible with `Def` [2]. [incompatible-type]
 
    main.js:38:1
    38| 42 as BDefault; // Error: number ~> Def
@@ -138,7 +139,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:54:1
 
-Cannot cast `new E()` to empty because `Def` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `new E()` to empty because `Def` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:54:1
    54| new E() as empty; // error

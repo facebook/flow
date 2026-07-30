@@ -144,7 +144,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:13
 
-Cannot create `Com` element because in the second argument > property `foo`: number [1] is incompatible with string [2].
+Cannot create `Com` element because in the second argument > property `foo`: `3` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    test.js:21:13

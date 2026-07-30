@@ -181,7 +181,7 @@ References:
 Error --------------------------------------------------------------------------- no_any_with_renders_react_node.js:5:10
 
 Cannot return `Bar` because: [incompatible-type]
- - Either class `Bar` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either class `Bar` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or class `Bar` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `Bar` [1] but exists in `$Iterable` [4].
 
@@ -209,8 +209,8 @@ References:
 
 Error --------------------------------------------------------------------------------- no_spoofing_element_types.js:3:1
 
-Cannot cast `x` to `ExactReactElement_DEPRECATED` because object type [1] is incompatible with
-`ExactReactElement_DEPRECATED` [2]. [incompatible-type]
+Cannot cast `x` to `ExactReactElement_DEPRECATED` because `{readonly type: () => null}` [1] is incompatible with
+`ExactReactElement_DEPRECATED<() => null, React.ElementConfig<() => null>>` [2]. [incompatible-type]
 
    no_spoofing_element_types.js:3:1
    3| x as ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
@@ -1201,8 +1201,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:118:3
 
-Cannot cast `rendersFooOrBar` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `rendersFooOrBar` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    renders_to_renders.js:118:3
    118|   rendersFooOrBar as empty; // ERROR
@@ -1365,8 +1364,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:132:3
 
-Cannot cast `rendersBaz` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `rendersBaz` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    renders_to_renders.js:132:3
    132|   rendersBaz as empty; // ERROR
@@ -1815,7 +1813,7 @@ References:
 Error ----------------------------------------------------------------------------------- validation/validation.js:31:72
 
 Render types must be a subtype of `React.Node` or a reference to a component-syntax component: [incompatible-type]
- - Either `Error` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Either `Error` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or `Error` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in `Error` [1] but exists in `$Iterable` [4].
 

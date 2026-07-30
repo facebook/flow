@@ -1,7 +1,7 @@
 === block 1 ===
 Error ----------------------------------------------------------------------------- -:7:8
 
-Cannot call `concat` with `true` bound to `a` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `concat` with `true` bound to `a` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:7:8
    7| concat(true, false);  // Error!
@@ -14,7 +14,8 @@ References:
 
 Error ---------------------------------------------------------------------------- -:7:14
 
-Cannot call `concat` with `false` bound to `b` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `concat` with `false` bound to `b` because `false` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    -:7:14
    7| concat(true, false);  // Error!
@@ -58,7 +59,7 @@ No errors!
 === block 11 ===
 Error ---------------------------------------------------------------------------- -:10:6
 
-Cannot call `func` with `null` bound to `optionalValue` because null [1] is incompatible with string [2].
+Cannot call `func` with `null` bound to `optionalValue` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    -:10:6
@@ -82,7 +83,7 @@ No errors!
 === block 14 ===
 Error ---------------------------------------------------------------------------- -:7:21
 
-Cannot assign `func.call(...)` to `str` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `func.call(...)` to `str` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:7:21
    7| const str: string = func.call({x : 42}); // Error!
@@ -105,8 +106,8 @@ No errors!
 === block 16 ===
 Error ---------------------------------------------------------------------------- -:2:18
 
-Cannot expect boolean as the return type of function because boolean [1] is incompatible with implicitly-returned
-undefined. [incompatible-type]
+Cannot expect boolean as the return type of function because `boolean` [1] is incompatible with `void` [1].
+[incompatible-type]
 
    2| function func(): boolean { // Error
                        ^^^^^^^ [1]
@@ -126,7 +127,7 @@ No errors!
 === block 20 ===
 Error --------------------------------------------------------------------------- -:10:38
 
-Cannot assign function to `badFormat` because in the first parameter: number [1] is incompatible with string [2].
+Cannot assign function to `badFormat` because in the first parameter: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    -:10:38

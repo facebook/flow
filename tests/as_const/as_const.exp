@@ -185,7 +185,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:53:3
 
-Cannot cast `arr5` to tuple type because const array literal [1] is incompatible with tuple type [2].
+Cannot cast `arr5` to tuple type because `ReadonlyArray<number>` [1] is incompatible with `[1, 2, 3]` [2].
 [incompatible-type]
 
    array.js:53:3
@@ -203,7 +203,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:54:3
 
-Cannot cast `arr5` to array type because const array literal [1] is incompatible with array type [2].
+Cannot cast `arr5` to array type because `ReadonlyArray<number>` [1] is incompatible with `Array<number>` [2].
 [incompatible-type]
 
    array.js:54:3
@@ -275,8 +275,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:81:3
 
-Cannot cast `arr8` to tuple type because in index `0`: null or undefined [1] is incompatible with undefined (out of
-bounds tuple access at index 0) [2]. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index `0`: `null` [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2]. [incompatible-type]
 
    array.js:81:3
    81|   arr8 as [a?: ?number]; // error arity
@@ -290,7 +290,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:81:3
 
-Cannot cast `arr8` to tuple type because in index `0`: number [1] is incompatible with undefined (out of bounds tuple
+Cannot cast `arr8` to tuple type because in index `0`: `number` [1] is incompatible with undefined (out of bounds tuple
 access at index 0) [2]. [incompatible-type]
 
    array.js:81:3
@@ -452,8 +452,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:37:3
 
-Cannot cast `arr8` to tuple type because in index `0`: null or undefined [1] is incompatible with undefined (out of
-bounds tuple access at index 0) [2]. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index `0`: `null` [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2]. [incompatible-type]
 
    import-array.js:37:3
    37|   arr8 as [a?: ?number]; // error arity
@@ -467,7 +467,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:37:3
 
-Cannot cast `arr8` to tuple type because in index `0`: number [1] is incompatible with undefined (out of bounds tuple
+Cannot cast `arr8` to tuple type because in index `0`: `number` [1] is incompatible with undefined (out of bounds tuple
 access at index 0) [2]. [incompatible-type]
 
    import-array.js:37:3
@@ -1136,8 +1136,8 @@ initialized with primitive literals. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
 
-Cannot cast `b` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: component [2] is
-incompatible with string literal `div` [3]. [incompatible-type]
+Cannot cast `b` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: `component(...empty)` [2]
+is incompatible with `"div"` [3]. [incompatible-type]
 
    jsx.js:5:1
     5| b as ExactReactElement_DEPRECATED<'div'>; // error
@@ -1178,7 +1178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:6:1
 
-Cannot cast `a` to empty because React element [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    jsx.js:6:1
    6| a as empty; // error
@@ -1192,7 +1192,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:7:1
 
-Cannot cast `b` to empty because `ExactReactElement_DEPRECATED` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `b` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    jsx.js:7:1
    7| b as empty; // error

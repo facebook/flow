@@ -180,7 +180,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:30:3
 
-Cannot create `AcceptsWhatever` element because in the return value: string [1] is incompatible with number [2].
+Cannot create `AcceptsWhatever` element because in the return value: `string` [1] is incompatible with `number` [2].
 [incompatible-use]
 
    jsx.js:30:3
@@ -199,8 +199,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:31:3
 
 Cannot create `AcceptsWhatever` element because: [incompatible-use]
- - Either in the return value: string [1] is incompatible with number [2].
- - Or props [3] is incompatible with null [4].
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
+ - Or `{name: "hi"}` [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -228,7 +228,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
  - Either in the first parameter: property `name` is missing in object type [1] but exists in object type [2].
- - Or null [3] is incompatible with object type [2].
+ - Or `null` [3] is incompatible with `{name: string, ...}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -252,8 +252,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:35:3
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
- - Either in the return value: string [1] is incompatible with number [2].
- - Or props [3] is incompatible with null [4].
+ - Either in the return value: `string` [1] is incompatible with `number` [2].
+ - Or `{name: "hi"}` [3] is incompatible with `null` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -297,7 +297,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:40:2
 
-Cannot create `ExpectsChildrenTuple` element because in index `0`: number [1] is incompatible with string [2].
+Cannot create `ExpectsChildrenTuple` element because in index `0`: `123` [1] is incompatible with `string` [2].
 [incompatible-use]
 
    jsx.js:40:2
@@ -333,7 +333,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:49:2
 
-Cannot create `ExpectsChildrenArray` element because in array element: number [1] is incompatible with string [2].
+Cannot create `ExpectsChildrenArray` element because in array element: `123` [1] is incompatible with `string` [2].
 [incompatible-use]
 
    jsx.js:49:2
@@ -379,8 +379,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:29
 
-Cannot call `fun` with boolean literal `true` bound to `y` because boolean literal `true` [1] is incompatible with
-number literal `123` [2]. [incompatible-type]
+Cannot call `fun` with boolean literal `true` bound to `y` because `true` [1] is incompatible with `123` [2].
+[incompatible-type]
 
    spread.js:6:29
    6| fun(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123 and 123 is unused
@@ -394,8 +394,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:17:42
 
-Cannot call `funWithRestArray` with boolean literal `true` bound to `y` because boolean literal `true` [1] is
-incompatible with number literal `123` [2]. [incompatible-type]
+Cannot call `funWithRestArray` with boolean literal `true` bound to `y` because `true` [1] is incompatible with
+`123` [2]. [incompatible-type]
 
    spread.js:17:42
    17| funWithRestArray(...['hi' as const], ...[true as const], ...[123 as const]); // Error: true ~> 123
@@ -409,7 +409,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:26:37
 
-Cannot call `funWithRestArray` because string [1] is incompatible with number literal `123` [2]. [incompatible-type]
+Cannot call `funWithRestArray` because `"bye"` [1] is incompatible with `123` [2]. [incompatible-type]
 
    spread.js:26:37
    26| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);
@@ -423,7 +423,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:26:37
 
-Cannot call `funWithRestArray` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `funWithRestArray` because in array element: `"bye"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    spread.js:26:37
    26| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);

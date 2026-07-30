@@ -242,8 +242,8 @@ No errors!
 === block 37 ===
 Error --------------------------------------------------------------------------- -:6:1
 
-Cannot cast `Status.Active` to `EnumValue` because in the enum's representation type: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot cast `Status.Active` to `EnumValue` because in the enum's representation type: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    -:6:1
    6| Status.Active as EnumValue<number>; // ERROR - not a number enum
@@ -275,7 +275,8 @@ No errors!
 === block 42 ===
 Error ------------------------------------------------------------------------- -:13:20
 
-Cannot assign `o[LegacyStatus.Active]` to `z` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot assign `o[LegacyStatus.Active]` to `z` because `string` [1] is incompatible with `boolean` [2].
+[incompatible-type]
 
    -:13:20
    13| const z: boolean = o[LegacyStatus.Active]; // Error - as expected

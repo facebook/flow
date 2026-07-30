@@ -160,7 +160,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 
 Error ---------------------------------------------------------------------------------------------------- import.js:4:1
 
-Cannot cast `3` to `T1` because number [1] is incompatible with `T1` [2]. [incompatible-type]
+Cannot cast `3` to `T1` because `3` [1] is incompatible with `T1` [2]. [incompatible-type]
 
    import.js:4:1
    4| 3 as T1; // error 3 ~> 1 | 2

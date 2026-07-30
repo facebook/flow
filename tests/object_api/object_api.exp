@@ -285,7 +285,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:3:1
 
-Cannot cast `Object.keys(...)` to undefined because array type [1] is incompatible with undefined [2].
+Cannot cast `Object.keys(...)` to undefined because `Array<"one" | "two">` [1] is incompatible with `void` [2].
 [incompatible-type]
 
    object_keys.js:3:1
@@ -300,7 +300,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_keys.js:7:3
 
-Cannot cast `k` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `k` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    object_keys.js:7:3
    7|   k as number // error: string ~> number
@@ -514,7 +514,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:67:3
 
-Cannot cast `Object.keys(...)[0]` to `OpaqueKey` because string [1] is incompatible with `OpaqueKey` [2].
+Cannot cast `Object.keys(...)[0]` to `OpaqueKey` because `string` [1] is incompatible with `OpaqueKey` [2].
 [incompatible-type]
 
    object_keys.js:67:3
@@ -532,8 +532,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:74:3
 
-Cannot cast `Object.keys(...)[0]` to empty because `OpaqueKeyWithSupertype1` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `Object.keys(...)[0]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_keys.js:74:3
    74|   Object.keys(opaqueDict)[0] as empty; // ERROR
@@ -550,7 +549,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:87:3
 
-Cannot cast `Object.keys(...)[0]` to `OpaqueKeyWithSupertype3` because string [1] is incompatible with
+Cannot cast `Object.keys(...)[0]` to `OpaqueKeyWithSupertype3` because `string` [1] is incompatible with
 `OpaqueKeyWithSupertype3` [2]. [incompatible-type]
 
    object_keys.js:87:3
@@ -611,7 +610,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:38:26
 
-Cannot assign `x.toString` to `xToString` because function type [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x.toString` to `xToString` because `() => string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    object_prototype.js:38:26
     38| var xToString : number = x.toString; // error
@@ -643,7 +643,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
 
-Cannot assign `x.toString` to `xToString2` because in the return value: string [1] is incompatible with number [2].
+Cannot assign `x.toString` to `xToString2` because in the return value: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_prototype.js:39:33
@@ -676,7 +676,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
 
-Cannot assign `y.toString` to `yToString` because function type [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y.toString` to `yToString` because `() => string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    object_prototype.js:43:26
     43| var yToString : number = y.toString; // error
@@ -737,7 +738,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:51:16
 
-Cannot call `123.toString` with `'foo'` bound to `radix` because string [1] is incompatible with number [2].
+Cannot call `123.toString` with `'foo'` bound to `radix` because `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_prototype.js:51:16
@@ -752,7 +753,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:52:16
 
-Cannot call `123.toString` with `null` bound to `radix` because null [1] is incompatible with number [2].
+Cannot call `123.toString` with `null` bound to `radix` because `null` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_prototype.js:52:16
@@ -797,8 +798,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:71:32
 
-Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because function type [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty` because `(prop: unknown) => boolean` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    object_prototype.js:71:32
     71| var xHasOwnProperty : number = x.hasOwnProperty; // error
@@ -830,8 +831,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
 
-Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return value: boolean [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return value: `boolean` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    object_prototype.js:72:51
     72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -863,8 +864,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:76:32
 
-Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because function type [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because `(prop: unknown) => boolean` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    object_prototype.js:76:32
     76| var yHasOwnProperty : number = y.hasOwnProperty; // error
@@ -926,8 +927,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:96:38
 
-Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because function type [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable` because `(prop: unknown) => boolean` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    object_prototype.js:96:38
     96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
@@ -959,8 +960,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
 
-Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in the return value: boolean [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in the return value: `boolean` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    object_prototype.js:98:3
     98|   x.propertyIsEnumerable; // error
@@ -992,8 +993,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:102:38
 
-Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because function type [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because `(prop: unknown) => boolean` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    object_prototype.js:102:38
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
@@ -1039,7 +1040,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:122:25
 
-Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x.valueOf` to `xValueOf` because `() => number` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    object_prototype.js:122:25
     122| var xValueOf : number = x.valueOf; // error
@@ -1071,7 +1073,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:126:25
 
-Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y.valueOf` to `yValueOf` because `() => unknown` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    object_prototype.js:126:25
    126| var yValueOf : number = y.valueOf; // error
@@ -1133,8 +1136,9 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:150:32
 
-Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] is incompatible with number [2].
-[incompatible-type]
+Cannot assign `x.toLocaleString` to `xToLocaleString` because
+`(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions) => string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    object_prototype.js:150:32
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -1166,8 +1170,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
-Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return value: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return value: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    object_prototype.js:151:39
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -1199,7 +1203,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:155:32
 
-Cannot assign `y.toLocaleString` to `yToLocaleString` because function type [1] is incompatible with number [2].
+Cannot assign `y.toLocaleString` to `yToLocaleString` because `() => string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    object_prototype.js:155:32
@@ -1466,7 +1470,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:3:1
 
-Cannot cast `o1_proto.toString` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o1_proto.toString` to empty because `() => string` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    proto.js:3:1
      3| o1_proto.toString as empty; // error: function ~> empty
@@ -1498,7 +1503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- proto.js:7:1
 
-Cannot cast `o2.__proto__.p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o2.__proto__.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    proto.js:7:1
    7| o2.__proto__.p as empty; // error: number ~> empty
@@ -1515,7 +1520,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:13:1
 
-Cannot cast `C1_proto.bind` to empty because function prototype [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `C1_proto.bind` to empty because function prototype [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    proto.js:13:1
    13| C1_proto.bind as empty; // error: function ~> empty

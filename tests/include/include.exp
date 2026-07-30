@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------------------- ../foo/batman/baz.js:3:17
 
-Cannot assign `"not a number"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"not a number"` to `x` because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    ../foo/batman/baz.js:3:17
    3| var x: number = "not a number" // Error string ~> number
@@ -14,7 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- ../globbed/keep/ignored.js:1:22
 
-Cannot assign `"not a number"` to `kept` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"not a number"` to `kept` because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    ../globbed/keep/ignored.js:1:22
    1| const kept: number = "not a number";
@@ -28,7 +30,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ ../globbed/nested/bad.js:1:25
 
-Cannot assign `"not a number"` to `globbed` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"not a number"` to `globbed` because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    ../globbed/nested/bad.js:1:25
    1| const globbed: number = "not a number";
@@ -42,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ ../included/test.js:1:1
 
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `123` to string because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    ../included/test.js:1:1
    1| 123 as string;

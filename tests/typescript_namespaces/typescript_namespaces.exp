@@ -15,7 +15,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_then_namespace_local.js:8:1
 
-Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `T` because `1` [1] is incompatible with `T` [2]. [incompatible-type]
 
    class_then_namespace_local.js:8:1
    8| 1 as L.T; // err: number ~> string
@@ -113,7 +113,7 @@ References:
 
 Error ------------------------------------------------------------------------------ declare_class_then_interface.js:9:1
 
-Cannot cast `d.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `d.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:9:1
    9| d.x as string; // ERROR
@@ -130,7 +130,7 @@ References:
 
 Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
 
-Cannot cast `d.y` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `d.y` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:10:1
    10| d.y as string; // ERROR
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------- declare_class_then_interface.js:10:1
 
-Cannot cast `d.y` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `d.y` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    declare_class_then_interface.js:10:1
    10| d.y as string; // ERROR
@@ -164,7 +164,7 @@ References:
 
 Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:2:1
 
-Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `Alias` because `1` [1] is incompatible with `Shared` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:2:1
    2| 1 as LibMulti.Alias; // err: number ~> string
@@ -178,7 +178,7 @@ References:
 
 Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:5:1
 
-Cannot cast empty string to `Alias` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast empty string to `Alias` because `""` [1] is incompatible with `Shared` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:5:1
    5| '' as LibOther.Alias; // err: string ~> number
@@ -192,7 +192,7 @@ References:
 
 Error ------------------------------------------------------------------------------- libdef_namespace_type_reads.js:8:1
 
-Cannot cast `1` to `Alias` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `1` to `Alias` because `1` [1] is incompatible with `Shared` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:8:1
    8| 1 as LibSameBody.Alias; // err: number ~> boolean
@@ -206,7 +206,7 @@ References:
 
 Error ------------------------------------------------------------------------------ libdef_namespace_type_reads.js:11:1
 
-Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `Alias` because `1` [1] is incompatible with `Later` [2]. [incompatible-type]
 
    libdef_namespace_type_reads.js:11:1
    11| 1 as LibForward.Alias; // err: number ~> string
@@ -292,7 +292,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:10:1
 
-Cannot cast `LocalMulti.value` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `LocalMulti.value` to number because `Shared` [1] is incompatible with `number` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:10:1
    10| LocalMulti.value as number; // err: string ~> number
@@ -309,7 +309,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:21:1
 
-Cannot cast `LocalOther.value` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `LocalOther.value` to string because `Shared` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:21:1
    21| LocalOther.value as string; // err: number ~> string
@@ -326,7 +326,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:29:1
 
-Cannot cast `1` to `Alias` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `1` to `Alias` because `1` [1] is incompatible with `Shared` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:29:1
    29| 1 as LocalSameBody.Alias; // err: number ~> boolean
@@ -340,7 +340,7 @@ References:
 
 Error -------------------------------------------------------------------------------- local_multiple_namespaces.js:40:1
 
-Cannot cast `1` to `Alias` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `Alias` because `1` [1] is incompatible with `Later` [2]. [incompatible-type]
 
    local_multiple_namespaces.js:40:1
    40| 1 as LocalForward.Alias; // err: number ~> string
@@ -438,7 +438,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- namespace_then_class.js:8:1
 
-Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `T` because `1` [1] is incompatible with `T` [2]. [incompatible-type]
 
    namespace_then_class.js:8:1
    8| 1 as M.T; // err: number ~> string
@@ -452,7 +452,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- namespace_then_function.js:8:1
 
-Cannot cast `1` to `T` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `T` because `1` [1] is incompatible with `T` [2]. [incompatible-type]
 
    namespace_then_function.js:8:1
    8| 1 as fn.T; // err: number ~> string

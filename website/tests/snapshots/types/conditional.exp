@@ -22,8 +22,8 @@ No errors!
 === block 8 ===
 Error -------------------------------------------------------------------------- -:6:17
 
-Cannot instantiate `ReturnType` because in type argument `T`: string [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot instantiate `ReturnType` because in type argument `T`: `string` [1] is incompatible with
+`(...args: ReadonlyArray<empty>) => unknown` [2]. [incompatible-type]
 
    -:6:17
    6| 1 as ReturnType<string>; // Error
@@ -40,7 +40,7 @@ Found 1 error
 === block 9 ===
 Error --------------------------------------------------------------------------- -:7:1
 
-Cannot cast `1` to `B` because number [1] is incompatible with boolean literal `false` [2]. [incompatible-type]
+Cannot cast `1` to `B` because `1` [1] is incompatible with `false` [2]. [incompatible-type]
 
    -:7:1
    7| 1 as B; // ERROR: number is not false
@@ -57,7 +57,7 @@ Found 1 error
 === block 10 ===
 Error -------------------------------------------------------------------------- -:11:1
 
-Cannot cast `1` to `R2` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to `R2` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:11:1
    11| 1 as R2; // ERROR: number is not string

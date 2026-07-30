@@ -54,7 +54,7 @@ References:
 Error ---------------------------------------------------------------------------------------- record_operations.js:19:8
 
 Cannot call `record.set` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
+ - Either `"bad"` [1] is incompatible with `number` [2].
  - Or string literal `count` [3] is incompatible with string literal `label` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -81,7 +81,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- record_operations.js:25:19
 
-Cannot assign `42` to `mutable.label` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `mutable.label` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    record_operations.js:25:19
    25|   mutable.label = 42; // ERROR
@@ -97,7 +97,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `overridden.set` because: [incompatible-type]
  - Either string literal `label` [1] is incompatible with string literal `note` [2].
- - Or null [3] is incompatible with string [4].
+ - Or `null` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -123,7 +123,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `foo` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:7:1
    7| foo as empty; // error: should be string

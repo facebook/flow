@@ -54,8 +54,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:73:40
 
-Cannot conform to common interface module because in property `generic1` > type argument `T1` [1]: string [2] is
-incompatible with number [3]. [incompatible-type]
+Cannot conform to common interface module because in property `generic1` > type argument `T1` [1]: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -192,8 +192,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- classes.ios.js:8:22
 
-Cannot implement `ImplHasDifferentSig` [1] with `ImplHasDifferentSig` because in property `foo`: string [2] is
-incompatible with number [3]. [incompatible-type]
+Cannot implement `ImplHasDifferentSig` [1] with `ImplHasDifferentSig` because in property `foo`: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
    classes.ios.js:8:22
     8| declare export class ImplHasDifferentSig { // error
@@ -213,8 +213,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:30:41
 
-Cannot implement `BadDeepHierarchy1` [1] with `BadDeepHierarchy1` because in property `foo`: number [2] is incompatible
-with boolean [3]. [incompatible-type]
+Cannot implement `BadDeepHierarchy1` [1] with `BadDeepHierarchy1` because in property `foo`: `number` [2] is
+incompatible with `boolean` [3]. [incompatible-type]
 
    classes.ios.js:30:41
    30| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 { // error
@@ -235,7 +235,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:30:41
 
 Cannot implement `BadDeepHierarchy1` [1] with `BadDeepHierarchy1` because in property `s1` > the return value:
-number [2] is incompatible with boolean [3]. [incompatible-type]
+`number` [2] is incompatible with `boolean` [3]. [incompatible-type]
 
    classes.ios.js:30:41
    30| declare class BadDeepHierarchy2 extends BadDeepHierarchy1 { // error
@@ -255,8 +255,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:34:22
 
-Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because in property `baz`: boolean [2] is incompatible
-with string [3]. [incompatible-type]
+Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because in property `baz`: `boolean` [2] is incompatible
+with `string` [3]. [incompatible-type]
 
    classes.ios.js:34:22
    34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
@@ -276,8 +276,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:34:22
 
-Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because in property `s3` > the return value: boolean [2]
-is incompatible with string [3]. [incompatible-type]
+Cannot implement `BadDeepHierarchy` [1] with `BadDeepHierarchy` because in property `s3` > the return value:
+`boolean` [2] is incompatible with `string` [3]. [incompatible-type]
 
    classes.ios.js:34:22
    34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
@@ -297,8 +297,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:34:47
 
-Cannot implement `BadDeepHierarchy2` [1] with `BadDeepHierarchy2` because in property `bar`: string [2] is incompatible
-with number [3]. [incompatible-type]
+Cannot implement `BadDeepHierarchy2` [1] with `BadDeepHierarchy2` because in property `bar`: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
 
    classes.ios.js:34:47
    34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
@@ -319,7 +319,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:34:47
 
 Cannot implement `BadDeepHierarchy2` [1] with `BadDeepHierarchy2` because in property `s2` > the return value:
-string [2] is incompatible with number [3]. [incompatible-type]
+`string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    classes.ios.js:34:47
    34| declare export class BadDeepHierarchy extends BadDeepHierarchy2 { // error
@@ -340,7 +340,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
 
 Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because in property `foo`: `unknown` [2] is
-incompatible with number [3]. [incompatible-type]
+incompatible with `number` [3]. [incompatible-type]
 
    classes.ios.js:56:22
    56| declare export class GenericVsNonGeneric<T1> { // error
@@ -360,8 +360,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
 
-Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because in property `foo`: number [2] is
-incompatible with `T1` [3]. [incompatible-type]
+Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because in property `foo`: `number` [2] is
+incompatible with `empty` [3]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -385,7 +385,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: `unknown` [2] is
-incompatible with `T1` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    classes.ios.js:60:22
    60| declare export class GenericSwitchedTparams<T1, T2> { // error
@@ -406,7 +406,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: `unknown` [2] is
-incompatible with `T2` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -430,7 +430,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: `unknown` [2] is
-incompatible with `T2` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
    classes.ios.js:60:22
    60| declare export class GenericSwitchedTparams<T1, T2> { // error
@@ -451,7 +451,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
 Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: `unknown` [2] is
-incompatible with `T1` [3]. [incompatible-type]
+incompatible with `empty` [3]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -474,7 +474,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:73:40
 
-Cannot implement `Generic` [1] with `Generic` because in property `foo`: string [2] is incompatible with number [3].
+Cannot implement `Generic` [1] with `Generic` because in property `foo`: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    classes.ios.js:73:40
@@ -492,8 +492,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- component.ios.js:1:26
 
-Cannot conform to common interface module because in property `Foo.baz`: boolean [1] is incompatible with number [2].
-[incompatible-type]
+Cannot conform to common interface module because in property `Foo.baz`: `boolean` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -546,8 +546,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- enums.ios.js:16:13
 
-Cannot conform to common interface module because in property `BarBad1` > the enum's representation type: number [1] is
-incompatible with string [2]. [incompatible-type]
+Cannot conform to common interface module because in property `BarBad1` > the enum's representation type: `number` [1]
+is incompatible with `string` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -631,7 +631,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ opaque_type.ios.js:9:26
 
-Cannot conform to common interface module because in property `o3` > : string [1] is incompatible with number [2].
+Cannot conform to common interface module because in property `o3` > : `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -648,8 +648,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:10:26
 
-Cannot conform to common interface module because in property `o4` > : `OpaqueType4` [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot conform to common interface module because in property `o4` > : `unknown` [1] is incompatible with `string` [2].
+[incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -665,8 +665,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:11:26
 
-Cannot conform to common interface module because in property `o5` > : `OpaqueType5` [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot conform to common interface module because in property `o5` > : `unknown` [1] is incompatible with `number` [2].
+[incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -682,8 +682,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:22:27
 
-Cannot conform to common interface module because in property `go3`: `GenericOpaqueType3` [1] is incompatible with
-`GenericOpaqueType3` [2]. [incompatible-type]
+Cannot conform to common interface module because in property `go3`: `GenericOpaqueType3<string, string>` [1] is
+incompatible with `GenericOpaqueType3<string>` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -699,8 +699,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:23:27
 
-Cannot conform to common interface module because in property `go4`: `GenericOpaqueType4` [1] is incompatible with
-`GenericOpaqueType4` [2]. [incompatible-type]
+Cannot conform to common interface module because in property `go4`: `GenericOpaqueType4<string>` [1] is incompatible
+with `GenericOpaqueType4<string, string>` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -716,7 +716,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:46
 
-Cannot conform to common interface module because in property `go6` > : number [1] is incompatible with string [2].
+Cannot conform to common interface module because in property `go6` > : `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -733,7 +733,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_type.ios.js:25:54
 
-Cannot conform to common interface module because in property `go6` > : string [1] is incompatible with number [2].
+Cannot conform to common interface module because in property `go6` > : `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

@@ -65,7 +65,7 @@ Invoking status with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -153,7 +153,7 @@ Invoking status with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -241,7 +241,7 @@ Invoking status with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -329,7 +329,7 @@ Invoking check with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -417,7 +417,7 @@ Invoking check with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -505,7 +505,7 @@ Invoking check with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -593,7 +593,7 @@ Invoking check-contents with no offset-style argument:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -681,7 +681,7 @@ Invoking check-contents with utf8-bytes offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,
@@ -769,7 +769,7 @@ Invoking check-contents with js-indices offset-style:
       "message":[
         {
           "context":"const foo: string = 5;",
-          "descr":"Cannot assign `5` to `foo` because number [1] is incompatible with string [2]. [incompatible-type]",
+          "descr":"Cannot assign `5` to `foo` because `5` [1] is incompatible with `string` [2]. [incompatible-type]",
           "end":21,
           "endline":5,
           "line":5,

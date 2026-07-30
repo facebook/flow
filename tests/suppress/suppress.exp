@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- A.js:13:21
 
-Cannot assign `123` to `test3` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `123` to `test3` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    A.js:13:21
    13| var test3: string = 123; // This error is NOT suppressed

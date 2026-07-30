@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- Closure.js:20:14
 
-Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `global_x` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:20:14
@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:23:14
 
-Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `global_x` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:23:14
@@ -36,7 +36,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:39:16
 
-Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `local_x` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:39:16
@@ -54,7 +54,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:42:16
 
-Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `local_x` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:42:16
@@ -72,7 +72,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:60:14
 
-Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `global_y` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:60:14
@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:63:14
 
-Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `global_y` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:63:14
@@ -108,7 +108,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:81:16
 
-Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `local_y` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:81:16
@@ -126,7 +126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:84:16
 
-Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+Cannot call `takes_string` with `local_y` bound to `_` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    Closure.js:84:16
@@ -144,7 +144,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Closure.js:95:3
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    Closure.js:95:3
    95|   x as string; // blame
@@ -161,7 +161,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:105:5
 
-Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    Closure.js:105:5
    105|     x as string; // blame
@@ -178,7 +178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:132:3
 
-Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2]. [incompatible-type]
 
    Closure.js:132:3
    132|   x as void; // should error
@@ -219,8 +219,8 @@ Cannot resolve name `x`. [cannot-resolve-name]
 
 Error ----------------------------------------------------------------------------------------- callback_writes.js:20:15
 
-Cannot assign object literal to `initialState` because in property `field.data`: undefined [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign object literal to `initialState` because in property `field.data`: `void` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
 All writes to `initialState` must be compatible with the type of its initial assignment [3]. Add an annotation to
 `initialState` [4] if a different type is desired.
@@ -257,7 +257,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:10:10
 
-Cannot return `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    cond_havoc.js:10:10
    10|   return x; // error, string ~/~> number (return type anno) TODO
@@ -274,7 +274,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- const.js:20:38
 
-Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `var_x` to `y` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   const.js:20:38
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                            ^^^^^
+
+References:
+   const.js:17:14
+   17|   var var_x: ?number = x;
+                    ^^^^^^^ [1]
+   const.js:20:29
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- const.js:20:38
+
+Cannot assign `var_x` to `y` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    const.js:20:38
    20|     call_me = () => { var y:number = var_x; };  // error
@@ -290,4 +307,4 @@ References:
 
 
 
-Found 18 errors
+Found 19 errors

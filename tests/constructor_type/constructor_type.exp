@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- constructor_type.js:11:8
 
-Cannot call `c2` with `"bad"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `c2` with `"bad"` bound to `x` because `"bad"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    constructor_type.js:11:8
    11| new c2("bad"); // ERROR: string incompatible with number
@@ -43,8 +43,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- constructor_type.js:47:13
 
-Cannot call `instantiate` with `CtorArgs` bound to `C` because in the first argument: string [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `instantiate` with `CtorArgs` bound to `C` because in the first argument: `string` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    constructor_type.js:47:13
    47| instantiate(CtorArgs, "bad", "s"); // ERROR — number expected
@@ -78,7 +78,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- constructor_type.js:67:32
 
-Cannot assign `ctorVal` to `ctorAsClass` because interface type [1] is incompatible with statics of `A1` [2].
+Cannot assign `ctorVal` to `ctorAsClass` because `interface {new(): A1}` [1] is incompatible with `Class<A1>` [2].
 [incompatible-type]
 
    constructor_type.js:67:32
@@ -132,7 +132,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:10:28
 
-Cannot assign array literal to `fp2` because in index `1`: number [1] is incompatible with string [2].
+Cannot assign array literal to `fp2` because in index `1`: `2` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    utilities.js:10:28
@@ -147,7 +147,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:21:27
 
-Cannot assign array literal to `cp2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `cp2` because in index `0`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:21:27
@@ -194,8 +194,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ utilities.js:48:5
 
 Cannot call `Overloaded` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    utilities.js:48:5
    48| new Overloaded(true); // ERROR: neither overload accepts boolean
@@ -215,7 +215,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:51:32
 
-Cannot assign array literal to `op2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `op2` because in index `0`: `"s"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:51:32
@@ -275,7 +275,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:98:32
 
-Cannot assign array literal to `dp_bad` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `dp_bad` because in index `0`: `"s"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:98:32
@@ -290,7 +290,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:112:29
 
-Cannot assign array literal to `mcp2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `mcp2` because in index `0`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:112:29
@@ -305,7 +305,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:127:32
 
-Cannot assign array literal to `ccp2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `ccp2` because in index `0`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:127:32
@@ -321,8 +321,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- utilities.js:145:5
 
 Cannot call `cb2` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
 
    utilities.js:145:5
    145| new cb2(true); // ERROR: neither overload accepts boolean
@@ -342,7 +342,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:151:32
 
-Cannot assign array literal to `cbb2` because in index `0`: number [1] is incompatible with string [2].
+Cannot assign array literal to `cbb2` because in index `0`: `1` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    utilities.js:151:32
@@ -358,9 +358,9 @@ References:
 Error ----------------------------------------------------------------------------------------------- utilities.js:170:5
 
 Cannot call `cto` because: [incompatible-type]
- - Either object literal [1] is incompatible with string [2].
- - Or object literal [1] is incompatible with boolean [3].
- - Or object literal [1] is incompatible with number [4].
+ - Either object literal [1] is incompatible with `string` [2].
+ - Or object literal [1] is incompatible with `boolean` [3].
+ - Or object literal [1] is incompatible with `number` [4].
 
    utilities.js:170:5
    170| new cto({}); // ERROR: no overload matches object
@@ -383,7 +383,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:186:31
 
-Cannot assign array literal to `cbp2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `cbp2` because in index `0`: `"s"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:186:31
@@ -398,7 +398,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:209:30
 
-Cannot assign array literal to `gip2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `gip2` because in index `0`: `"s"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:209:30
@@ -413,7 +413,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:213:1
 
-Cannot cast `gii.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `gii.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    utilities.js:213:1
    213| gii.x as string; // ERROR: number incompatible with string
@@ -430,7 +430,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:223:29
 
-Cannot assign array literal to `bp2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `bp2` because in index `0`: `"s"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:223:29
@@ -445,7 +445,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:227:3
 
-Cannot cast `bi.x` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `bi.x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    utilities.js:227:3
    227|   bi.x as string; // ERROR: number incompatible with string
@@ -477,7 +477,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:247:5
 
-Cannot call `cfn` with `"bad"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `cfn` with `"bad"` bound to `x` because `"bad"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    utilities.js:247:5
    247| cfn("bad"); // ERROR: call sig wants number
@@ -491,7 +491,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:248:9
 
-Cannot call `cfn` with `1` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `cfn` with `1` bound to `x` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    utilities.js:248:9
    248| new cfn(1); // ERROR: construct sig wants string
@@ -519,8 +519,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:273:68
 
-Cannot assign `SubjAA` to `SubjAA_via_iface_bad` because in the first parameter: number [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot assign `SubjAA` to `SubjAA_via_iface_bad` because in the first parameter: `number` [1] is incompatible with
+`string` [2]. [incompatible-type]
 
    utilities.js:273:68
    273| const SubjAA_via_iface_bad: interface { new(x: string): SubjAA } = SubjAA; // ERROR: ctor wants number, not string
@@ -537,7 +537,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:285:34
 
-Cannot assign array literal to `fcp2` because in index `1`: number [1] is incompatible with string [2].
+Cannot assign array literal to `fcp2` because in index `1`: `2` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    utilities.js:285:34
@@ -552,7 +552,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- utilities.js:295:31
 
-Cannot assign array literal to `fap2` because in index `0`: string [1] is incompatible with number [2].
+Cannot assign array literal to `fap2` because in index `0`: `"bad"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    utilities.js:295:31

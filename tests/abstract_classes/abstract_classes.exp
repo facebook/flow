@@ -135,8 +135,8 @@ The `abstract` modifier cannot be used with a private identifier. [ParseError]
 
 Error -------------------------------------------------------------------------------------- inheritance_override.js:6:8
 
-Cannot extend `A` [1] with `B` because in property `m` > the first parameter: string [2] is incompatible with
-number [3]. [incompatible-type]
+Cannot extend `A` [1] with `B` because in property `m` > the first parameter: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    inheritance_override.js:6:8
    6|   m(x: string): void {} // ERROR: narrowing parameter type

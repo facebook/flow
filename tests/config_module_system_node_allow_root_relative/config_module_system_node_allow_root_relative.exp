@@ -1,7 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- subdir/test.js:6:1
 
-Cannot cast `ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `ambiguous` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:6:1
    6| ambiguous as empty
@@ -18,8 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subdir/test.js:9:1
 
-Cannot cast `sub_ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_ambiguous` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:9:1
    9| sub_ambiguous as empty
@@ -36,8 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:13:1
 
-Cannot cast `user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `user_code` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:13:1
    13| user_code as empty
@@ -54,8 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:16:1
 
-Cannot cast `sub_user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_user_code` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:16:1
    16| sub_user_code as empty
@@ -72,8 +68,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:20:1
 
-Cannot cast `node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `node_code` to empty because `"node_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:20:1
    20| node_code as empty
@@ -90,8 +85,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- subdir/test.js:23:1
 
-Cannot cast `sub_node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_node_code` to empty because `"node_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subdir/test.js:23:1
    23| sub_node_code as empty
@@ -124,8 +118,7 @@ Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot cast `ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `ambiguous` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:3:1
    3| ambiguous as empty
@@ -142,8 +135,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Cannot cast `sub_ambiguous` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_ambiguous` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:6:1
    6| sub_ambiguous as empty
@@ -160,8 +152,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
-Cannot cast `user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `user_code` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:10:1
    10| user_code as empty
@@ -178,8 +169,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Cannot cast `sub_user_code` to empty because string literal `user_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_user_code` to empty because `"user_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:13:1
    13| sub_user_code as empty
@@ -196,8 +186,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:1
 
-Cannot cast `node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `node_code` to empty because `"node_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:17:1
    17| node_code as empty
@@ -214,8 +203,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Cannot cast `sub_node_code` to empty because string literal `node_code` [1] is incompatible with empty [2].
-[incompatible-type]
+Cannot cast `sub_node_code` to empty because `"node_code"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:20:1
    20| sub_node_code as empty

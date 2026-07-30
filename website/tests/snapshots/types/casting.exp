@@ -26,7 +26,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:2:7
 
-Cannot cast `1` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `1` to boolean because `1` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    -:2:7
    2| 1 === 1 as boolean; // Error!
@@ -46,7 +46,7 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------------------- -:6:1
 
-Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `value` to string because `42` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:6:1
    6| value as string; // Error!
@@ -108,7 +108,7 @@ Found 1 error
 === block 8 ===
 Error ------------------------------------------------------------------------------- -:5:1
 
-Cannot cast `value` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:5:1
    5| value as string; // Error!
@@ -124,7 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:9:1
 
-Cannot cast `newValue` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `newValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:9:1
    9| newValue as number; // Error!

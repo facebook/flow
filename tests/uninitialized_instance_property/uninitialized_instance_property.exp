@@ -254,7 +254,7 @@ It is unsafe to read from a class property before it is definitely initialized. 
 
 Error --------------------------------------------------------------------------------------------------- test.js:202:21
 
-Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `y` because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:202:21
    202|     let y: number = x; // ExpectError uninitialized variable is incompatible with number
@@ -271,7 +271,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:210:14
 
-Cannot assign `x` to `this.p` because uninitialized variable [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `this.p` because uninitialized variable [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:210:14
    210|     this.p = x; // ExpectError uninitialized variable is incompatible with number

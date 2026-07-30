@@ -16,8 +16,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either undefined [1] is incompatible with string [2].
- - Or undefined [1] is incompatible with component [3].
+ - Either `void` [1] is incompatible with `string` [2].
+ - Or `void` [1] is incompatible with `component(...empty)` [3].
  - Or function type [4] requires another argument from call of method `createElement` [1].
 
    test.js:5:7
@@ -51,8 +51,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:7
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either in the first argument: number [1] is incompatible with string [2].
- - Or in the first argument: number [1] is incompatible with component [3].
+ - Either in the first argument: `42` [1] is incompatible with `string` [2].
+ - Or in the first argument: `42` [1] is incompatible with `component(...empty)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -77,7 +77,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
- - Or in the first argument: number [3] is incompatible with string [4].
+ - Or in the first argument: `42` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -105,7 +105,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
- - Or in the first argument: object literal [3] is incompatible with component [4].
+ - Or in the first argument: object literal [3] is incompatible with `component(...empty)` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -131,8 +131,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:22:7
    22| React.createElement(A, {
@@ -149,8 +149,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:26:7
    26| React.createElement(B, {
@@ -330,8 +330,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.createElement` because: [incompatible-type]
  - Either in the second argument: object literal [1] is incompatible with union type [2].
- - Or cannot instantiate `ExactReactElement_DEPRECATED` because in property `foo`: number [3] is incompatible with
-   boolean [4].
+ - Or cannot instantiate `ExactReactElement_DEPRECATED` because in property `foo`: `number` [3] is incompatible with
+   `boolean` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -431,8 +431,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:65:7
    65| React.createElement(C, {
@@ -449,8 +449,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:69:7
    69| React.createElement(D, {
@@ -533,8 +533,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:90:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:90:7
    90| React.createElement(E, {}, 1, 2); // Error
@@ -551,8 +551,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:91:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:91:7
    91| React.createElement(E, undefined, 1, 2); // Error
@@ -569,8 +569,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:92:7
    92| React.createElement(E, null, 1, 2); // Error
@@ -587,8 +587,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:93:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:93:7
    93| React.createElement(E, {}, 1, 2, 3); // Error
@@ -606,7 +606,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:94:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: array literal [1] is
-incompatible with number [2]. [incompatible-type]
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:94:7
    94| React.createElement(E, {}, [1, 2]); // Error
@@ -623,8 +623,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:95:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[Array<number>, Array<number>]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:95:7
    95| React.createElement(E, {}, [1, 2], [3, 4]); // Error
@@ -663,8 +663,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:98:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:98:7
    98| React.createElement(E, {}, ...[1, 2]); // Error
@@ -681,8 +681,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `Array<number>` [1]
+is incompatible with `number` [2]. [incompatible-type]
 
    test.js:99:7
    99| React.createElement(E, {}, ...any as Array<number>); // Error
@@ -699,8 +699,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:101:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:101:7
    101| React.createElement(E, {}, 1, ...[2]); // Error
@@ -717,8 +717,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:102:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`Array<number | 1>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:102:7
    102| React.createElement(E, {}, 1, ...any as Array<number>); // Error
@@ -801,8 +801,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:108:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `number` [1] is
+incompatible with `Array<number>` [2]. [incompatible-type]
 
    test.js:108:7
    108| React.createElement(F, {}, 1); // Error
@@ -819,8 +819,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:109:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `number` [1] is
+incompatible with `Array<number>` [2]. [incompatible-type]
 
    test.js:109:7
    109| React.createElement(F, undefined, 1); // Error
@@ -837,8 +837,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:110:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `number` [1] is
+incompatible with `Array<number>` [2]. [incompatible-type]
 
    test.js:110:7
    110| React.createElement(F, null, 1); // Error
@@ -856,7 +856,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:116:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
-array literal [1] is incompatible with number [2]. [incompatible-type]
+array literal [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:116:7
    116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
@@ -874,7 +874,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:116:7
 
 Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > array element:
-array literal [1] is incompatible with number [2]. [incompatible-type]
+array literal [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:116:7
    116| React.createElement(F, {}, [1, 2], [3, 4]); // Error
@@ -913,8 +913,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:118:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `number` [1] is
+incompatible with `Array<number>` [2]. [incompatible-type]
 
    test.js:118:7
    118| React.createElement(F, {}, ...[1]); // Error
@@ -931,8 +931,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:121:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: number [1] is
-incompatible with array type [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `number` [1] is
+incompatible with `Array<number>` [2]. [incompatible-type]
 
    test.js:121:7
    121| React.createElement(F, {}, 1, ...[]); // Error
@@ -972,8 +972,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:131:7
 
 Cannot call `React.createElement` because in property `children` of type argument `_ValidatedProps`: [incompatible-type]
- - Either in array element: array literal [1] is incompatible with number [2].
- - Or rest array [3] is incompatible with number [4].
+ - Either in array element: array literal [1] is incompatible with `number` [2].
+ - Or `[Array<number>, Array<number>]` [3] is incompatible with `number` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1022,8 +1022,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:146:7
 
 Cannot call `React.createElement` because in property `children` of type argument `_ValidatedProps`: [incompatible-type]
- - Either in array element: array literal [1] is incompatible with number [2].
- - Or rest array [3] is incompatible with number [4].
+ - Either in array element: array literal [1] is incompatible with `number` [2].
+ - Or `[Array<number>, Array<number>]` [3] is incompatible with `number` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1093,8 +1093,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: null [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `null` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:174:7
    174| React.createElement(I, {}, null); // Error
@@ -1111,8 +1111,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:176:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:176:7
    176| React.createElement(I, {}, 1, 2); // Error
@@ -1129,8 +1129,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:179:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:179:7
    179| React.createElement(I, {}, ...[1, 2]); // Error
@@ -1147,8 +1147,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:180:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `Array<number>` [1]
+is incompatible with `number` [2]. [incompatible-type]
 
    test.js:180:7
    180| React.createElement(I, {}, ...any as Array<number>); // Error
@@ -1165,8 +1165,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:182:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:182:7
    182| React.createElement(I, {}, 1, ...[2]); // Error
@@ -1183,8 +1183,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:183:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`Array<number | 1>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:183:7
    183| React.createElement(I, {}, 1, ...any as Array<number>); // Error
@@ -1223,8 +1223,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:190:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:190:7
    190| React.createElement(J, {}, 1, 2); // Error
@@ -1263,8 +1263,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:193:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:193:7
    193| React.createElement(J, {}, ...[1, 2]); // Error
@@ -1281,8 +1281,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:194:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `Array<number>` [1]
+is incompatible with `number` [2]. [incompatible-type]
 
    test.js:194:7
    194| React.createElement(J, {}, ...any as Array<number>); // Error
@@ -1299,8 +1299,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:196:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`[number, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:196:7
    196| React.createElement(J, {}, 1, ...[2]); // Error
@@ -1317,8 +1317,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:197:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: rest array [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`:
+`Array<number | 1>` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:197:7
    197| React.createElement(J, {}, 1, ...any as Array<number>); // Error
@@ -1335,8 +1335,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:203:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:203:7
    203| React.createElement(K, {}, '42'); // Error
@@ -1353,8 +1353,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:204:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:204:7
    204| React.createElement(K, {children: '42'}); // Error
@@ -1371,8 +1371,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:206:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:206:7
    206| React.createElement(K, {children: 42}, '42'); // Error
@@ -1389,8 +1389,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:207:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:207:7
    207| React.createElement(K, {children: '42'}, '42'); // Error
@@ -1495,8 +1495,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:224:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:224:7
    224| React.createElement(L, {foo: '1', bar: 2}, 3); // Error
@@ -1513,8 +1513,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:225:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `foo`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:225:7
    225| React.createElement(L, {foo: '1', bar: 2, children: 3}); // Error
@@ -1531,8 +1531,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:226:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:226:7
    226| React.createElement(L, {foo: 1, bar: '2'}, 3); // Error
@@ -1549,8 +1549,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:227:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `bar`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:227:7
    227| React.createElement(L, {foo: 1, bar: '2', children: 3}); // Error
@@ -1567,8 +1567,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:228:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:228:7
    228| React.createElement(L, {foo: 1, bar: 2}, '3'); // Error
@@ -1585,8 +1585,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:229:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: string [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children`: `string` [1] is
+incompatible with `number` [2]. [incompatible-type]
 
    test.js:229:7
    229| React.createElement(L, {foo: 1, bar: 2, children: '3'}); // Error

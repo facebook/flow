@@ -171,7 +171,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:70:30
 
-Cannot assign array literal to `arr` because in array element: string [1] is incompatible with number [2].
+Cannot assign array literal to `arr` because in array element: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:70:30
@@ -189,7 +189,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:76:12
 
-Cannot return array literal because in array element: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return array literal because in array element: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:76:12
    76|     return [...iter]; // error: Spec says you can spread iterables

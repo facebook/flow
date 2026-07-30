@@ -9,7 +9,7 @@ or enum definition. To get the type of a non-class value, use `typeof`. [value-a
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Cannot cast `0` to `ImportedClass` because number [1] is incompatible with `MyClass` [2]. [incompatible-type]
+Cannot cast `0` to `ImportedClass` because `0` [1] is incompatible with `MyClass` [2]. [incompatible-type]
 
    test.js:9:1
    9| 0 as ImportedClass; // ERROR: number ~> MyClass
@@ -38,7 +38,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot cast `0` to `Inner` because number [1] is incompatible with `MyClass` [2]. [incompatible-type]
+Cannot cast `0` to `Inner` because `0` [1] is incompatible with `MyClass` [2]. [incompatible-type]
 
    test.js:19:1
    19| 0 as Inner; // ERROR: number ~> Inner
@@ -52,7 +52,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:24:1
 
-Cannot cast `0` to `T` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `0` to `T` because `0` [1] is incompatible with `T` [2]. [incompatible-type]
 
    test.js:24:1
    24| 0 as T; // ERROR: number ~> boolean

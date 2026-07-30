@@ -48,7 +48,7 @@ Cannot resolve name `object`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------------------------- object.ts:24:20
 
-Cannot assign `null` to `p1` because null [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot assign `null` to `p1` because `null` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    object.ts:24:20
    24| const p1: object = null; // ERROR -- null is not an object
@@ -62,7 +62,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.ts:25:20
 
-Cannot assign `undefined` to `p2` because undefined [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot assign `undefined` to `p2` because `void` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    object.ts:25:20
    25| const p2: object = undefined; // ERROR -- void is not an object
@@ -124,7 +124,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.ts:29:20
 
-Cannot assign `1n` to `p6` because bigint literal `1n` [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot assign `1n` to `p6` because `1n` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    object.ts:29:20
    29| const p6: object = 1n; // ERROR -- bigint is not an object
@@ -138,7 +138,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.ts:30:20
 
-Cannot assign `Symbol()` to `p7` because symbol [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot assign `Symbol()` to `p7` because `symbol` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    object.ts:30:20
     30| const p7: object = Symbol(); // ERROR -- symbol is not an object

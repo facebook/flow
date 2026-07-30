@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:5:21
 
-Cannot assign `A.name` to `test3` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `A.name` to `test3` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    class.js:5:21
    5| var test3: number = A.name; // Error string ~> number
@@ -45,7 +45,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:10:21
 
-Cannot assign `a.constructor.name` to `test6` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `a.constructor.name` to `test6` because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    class.js:10:21
    10| var test6: number = a.constructor.name; // Error string ~> number

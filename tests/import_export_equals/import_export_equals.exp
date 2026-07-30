@@ -9,7 +9,7 @@ Cannot use an import statement at the toplevel of a library file. Import stateme
 
 Error --------------------------------------------------------------------------------- import_equals_declaration.js:5:1
 
-Cannot cast `Foo.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `Foo.x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    import_equals_declaration.js:5:1
    5| Foo.x as empty; // ERROR

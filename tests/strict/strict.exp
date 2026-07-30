@@ -8,7 +8,7 @@ Cannot resolve module `./unknown_class`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:11:16
 
-Cannot assign `f(...)` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `f(...)` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    fun.js:11:16
    11| var x:string = f(0);
@@ -25,7 +25,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:10:16
 
-Cannot assign `o.x` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `o.x` to `x` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    obj.js:10:16
    10| var x:string = o.x;

@@ -24,6 +24,7 @@ use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::ErrorKind;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_ty::ty::ALocTy;
+use flow_common_ty::ty::Ty;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
@@ -32,6 +33,7 @@ use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
 use flow_typing_type::type_::ConformToCommonInterfaceData;
 use flow_typing_type::type_::ConstrainedAssignmentData;
+use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::FunCallData;
 use flow_typing_type::type_::FunCallMethodData;
@@ -48,6 +50,7 @@ use flow_typing_type::type_::SetPropertyData;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
+use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
@@ -137,6 +140,7 @@ use crate::error_message::EExpectedBooleanLitData;
 use crate::error_message::EExpectedNumberLitData;
 use crate::error_message::EExpectedStringLitData;
 use crate::error_message::EIncompatiblePropData;
+use crate::error_message::EIncompatibleTypesWithUseOpData;
 use crate::error_message::EIncompatibleWithUseOpData;
 use crate::error_message::EPropNotFoundInLookupData;
 use crate::error_message::EnumIncompatibleData;
@@ -253,6 +257,65 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
 /// the branch the user was targeting.
 #[allow(dead_code)]
 pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowErrorMessage<L>) -> i32 {
+    #[derive(Clone, Copy)]
+    enum TypeCategory {
+        Nullish,
+        Scalar,
+        Array,
+        Other,
+    }
+
+    fn type_category<L: Dupe>(type_or_desc: &TypeOrTypeDescT<L>) -> TypeCategory {
+        match type_or_desc {
+            TypeOrTypeDescT::Type(t) => match &**t {
+                TypeInner::DefT(_, def_t) => match &**def_t {
+                    DefTInner::NullT | DefTInner::VoidT => TypeCategory::Nullish,
+                    DefTInner::NumGeneralT(_)
+                    | DefTInner::StrGeneralT(_)
+                    | DefTInner::BoolGeneralT
+                    | DefTInner::BigIntGeneralT(_)
+                    | DefTInner::SymbolT
+                    | DefTInner::UniqueSymbolT(_)
+                    | DefTInner::SingletonStrT { .. }
+                    | DefTInner::NumericStrKeyT(_)
+                    | DefTInner::SingletonNumT { .. }
+                    | DefTInner::SingletonBoolT { .. }
+                    | DefTInner::SingletonBigIntT { .. } => TypeCategory::Scalar,
+                    DefTInner::ArrT(_) => TypeCategory::Array,
+                    _ => TypeCategory::Other,
+                },
+                _ => TypeCategory::Other,
+            },
+            TypeOrTypeDescT::TypeDesc(Ok(t)) => match t.as_ref() {
+                Ty::Null | Ty::Void => TypeCategory::Nullish,
+                Ty::Symbol
+                | Ty::Num
+                | Ty::Str
+                | Ty::Bool
+                | Ty::BigInt
+                | Ty::NumLit(_)
+                | Ty::StrLit(_)
+                | Ty::BoolLit(_)
+                | Ty::BigIntLit(_) => TypeCategory::Scalar,
+                Ty::Arr(_) | Ty::Tup { .. } => TypeCategory::Array,
+                _ => TypeCategory::Other,
+            },
+            TypeOrTypeDescT::TypeDesc(Err(_)) => TypeCategory::Other,
+        }
+    }
+
+    fn score_categories(lower: TypeCategory, upper: TypeCategory) -> i32 {
+        match (lower, upper) {
+            (TypeCategory::Nullish, TypeCategory::Nullish)
+            | (TypeCategory::Scalar, TypeCategory::Scalar)
+            | (TypeCategory::Array, TypeCategory::Array)
+            | (TypeCategory::Other, TypeCategory::Other) => REASON_SCORE,
+            (TypeCategory::Nullish, _) | (_, TypeCategory::Nullish) => 0,
+            (TypeCategory::Scalar, _) | (_, TypeCategory::Scalar) => 1,
+            (TypeCategory::Array, _) | (_, TypeCategory::Array) => 1,
+        }
+    }
+
     // Start by getting the score based off the use_op of our error message. If
     // the message does not have a use_op then we return 0. This score
     // contribution declares that greater complexity in the use is more likely to
@@ -295,44 +358,54 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
     // that the solutions with the lowest possible complexity are closest to each
     // other. e.g. number ~> string. If one type is a scalar or array and the
     // other type is not then we decrement our score.
-    score + {
-        let reasons: Option<(&VirtualReason<L>, &VirtualReason<L>)> = match msg {
-            FlowErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
-                reason_lower: rl,
-                reason_upper: ru,
-                branches,
+    score
+        + if let FlowErrorMessage::EIncompatibleTypesWithUseOp(
+            box EIncompatibleTypesWithUseOpData {
+                lower_desc,
+                upper_desc,
                 ..
-            }) if branches.is_empty() => Some((rl, ru)),
-            FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                reason_lower: rl,
-                reason_upper: ru,
-                ..
-            }) => Some((rl, ru)),
-            FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
-            _ => None,
-        };
-        match reasons {
-            Some((rl, ru)) => {
-                if is_nullish_reason(rl) && is_nullish_reason(ru) {
-                    REASON_SCORE
-                } else if is_nullish_reason(rl) || is_nullish_reason(ru) {
-                    // T ~> null should have a lower score then T ~> scalar
-                    0
-                } else if is_scalar_reason(rl) && is_scalar_reason(ru) {
-                    REASON_SCORE
-                } else if is_scalar_reason(rl) || is_scalar_reason(ru) {
-                    1
-                } else if is_array_reason(rl) && is_array_reason(ru) {
-                    REASON_SCORE
-                } else if is_array_reason(rl) || is_array_reason(ru) {
-                    1
-                } else {
-                    REASON_SCORE
+            },
+        ) = msg
+        {
+            score_categories(type_category(lower_desc), type_category(upper_desc))
+        } else {
+            let reasons: Option<(&VirtualReason<L>, &VirtualReason<L>)> = match msg {
+                FlowErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
+                    reason_lower: rl,
+                    reason_upper: ru,
+                    branches,
+                    ..
+                }) if branches.is_empty() => Some((rl, ru)),
+                FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
+                    reason_lower: rl,
+                    reason_upper: ru,
+                    ..
+                }) => Some((rl, ru)),
+                FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
+                _ => None,
+            };
+            match reasons {
+                Some((rl, ru)) => {
+                    if is_nullish_reason(rl) && is_nullish_reason(ru) {
+                        REASON_SCORE
+                    } else if is_nullish_reason(rl) || is_nullish_reason(ru) {
+                        // T ~> null should have a lower score then T ~> scalar
+                        0
+                    } else if is_scalar_reason(rl) && is_scalar_reason(ru) {
+                        REASON_SCORE
+                    } else if is_scalar_reason(rl) || is_scalar_reason(ru) {
+                        1
+                    } else if is_array_reason(rl) && is_array_reason(ru) {
+                        REASON_SCORE
+                    } else if is_array_reason(rl) || is_array_reason(ru) {
+                        1
+                    } else {
+                        REASON_SCORE
+                    }
                 }
+                None => REASON_SCORE,
             }
-            None => REASON_SCORE,
         }
-    }
 }
 
 /// Flips the lower and upper bounds of a frame use operation.
@@ -482,14 +555,11 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
         }
     }
 
-    fn dedupe_by_flip(
-        lower: VirtualReason<ALoc>,
-        upper: VirtualReason<ALoc>,
+    fn dedupe_by_flip<T>(
+        lower: T,
+        upper: T,
         use_op: VirtualUseOp<ALoc>,
-    ) -> (
-        (VirtualReason<ALoc>, VirtualReason<ALoc>),
-        VirtualUseOp<ALoc>,
-    ) {
+    ) -> ((T, T), VirtualUseOp<ALoc>) {
         let (flip, use_op) = dedupe_by_flip_loop(use_op);
         if flip {
             ((upper, lower), use_op)
@@ -617,6 +687,43 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                             use_op: use_op_new,
                             reason_lower: reason_lower_new,
                             reason_upper: reason_upper_new,
+                            explanation: explanation.clone(),
+                        },
+                    )))
+            }
+            FlowErrorMessage::EIncompatibleTypesWithUseOp(
+                box EIncompatibleTypesWithUseOpData {
+                    use_op,
+                    lower_loc,
+                    lower_def_loc,
+                    upper_loc,
+                    upper_def_loc,
+                    lower_desc,
+                    upper_desc,
+                    explanation,
+                },
+            ) => {
+                let (
+                    (
+                        (lower_loc_new, lower_def_loc_new, lower_desc_new),
+                        (upper_loc_new, upper_def_loc_new, upper_desc_new),
+                    ),
+                    use_op_new,
+                ) = dedupe_by_flip(
+                    (lower_loc.dupe(), lower_def_loc.dupe(), lower_desc.clone()),
+                    (upper_loc.dupe(), upper_def_loc.dupe(), upper_desc.clone()),
+                    use_op.clone(),
+                );
+                (lower_loc == &lower_loc_new && lower_def_loc == &lower_def_loc_new)
+                    || is_not_duplicate(FlowErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
+                        EIncompatibleTypesWithUseOpData {
+                            use_op: use_op_new,
+                            lower_loc: lower_loc_new,
+                            lower_def_loc: lower_def_loc_new,
+                            upper_loc: upper_loc_new,
+                            upper_def_loc: upper_def_loc_new,
+                            lower_desc: lower_desc_new,
+                            upper_desc: upper_desc_new,
                             explanation: explanation.clone(),
                         },
                     )))
@@ -874,11 +981,14 @@ where
 {
     // In friendly error messages, we always want to point to a value as the primary location.
     // Normally, values are in the lower bound, but in contravariant positions this flips.
-    fn flip_contravariant<L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug>(
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+    fn flip_contravariant<
+        L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug,
+        T,
+    >(
+        lower: T,
+        upper: T,
         use_op: VirtualUseOp<L>,
-    ) -> ((VirtualReason<L>, VirtualReason<L>), VirtualUseOp<L>) {
+    ) -> ((T, T), VirtualUseOp<L>) {
         fn is_contravariant<
             L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug,
         >(
@@ -3489,6 +3599,77 @@ where
             None,
             None,
         ),
+
+        (
+            None,
+            FriendlyMessageRecipe::UseOp(box UseOpData {
+                loc: primary_loc,
+                message:
+                    Message::MessageIncompatibleGeneralWithPrintedTypes(
+                        box MessageIncompatibleGeneralWithPrintedTypesData {
+                            lower_loc,
+                            upper_loc,
+                            lower_desc,
+                            upper_desc,
+                        },
+                    ),
+                use_op,
+                explanation,
+            }),
+        ) => {
+            if let VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } =
+                root_of_use_op(&use_op)
+            {
+                mk_no_frame_or_explanation_error(
+                    rest_param,
+                    Message::MessageIncompatibleComponentRestParam(rest_param.dupe()),
+                )
+            } else if let VirtualUseOp::Frame(frame, inner_use_op) = &use_op
+                && let VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) =
+                    frame.as_ref()
+            {
+                let message = match inner_use_op.as_ref() {
+                    VirtualUseOp::Op(inner_root)
+                        if matches!(
+                            inner_root.as_ref(),
+                            VirtualRootUseOp::FunCall(..) | VirtualRootUseOp::FunCallMethod(..)
+                        ) =>
+                    {
+                        let new_def = def.dupe().update_desc(|desc| match desc {
+                            VirtualReasonDesc::RFunctionType => {
+                                VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal)
+                            }
+                            _ => desc,
+                        });
+                        Message::MessageFunctionRequiresAnotherArgument {
+                            def: new_def,
+                            from: None,
+                        }
+                    }
+                    _ => Message::MessageFunctionRequiresAnotherArgument {
+                        def: def.dupe(),
+                        from: Some(op.dupe()),
+                    },
+                };
+                mk_use_op_error_reason(op, use_op.clone(), explanation, message)
+            } else {
+                let (((lower_loc, lower_desc), (upper_loc, upper_desc)), use_op) =
+                    flip_contravariant((lower_loc, lower_desc), (upper_loc, upper_desc), use_op);
+                mk_use_op_error(
+                    loc_of_aloc(&primary_loc),
+                    use_op,
+                    explanation,
+                    Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
+                        MessageIncompatibleGeneralWithPrintedTypesData {
+                            lower_loc,
+                            upper_loc,
+                            lower_desc,
+                            upper_desc,
+                        },
+                    )),
+                )
+            }
+        }
 
         (
             None,

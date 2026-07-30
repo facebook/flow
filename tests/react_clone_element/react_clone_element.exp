@@ -52,10 +52,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either string [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
+ - Either `"nope"` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, React.ElementConfig<empty>>` [2].
+ - Or `"nope"` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [3].
+ - Or `"nope"` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [4].
+ - Or `"nope"` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [5].
 
    test.js:20:7
     20| React.cloneElement('nope'); // Error: Not a valid element type.
@@ -82,10 +82,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
- - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
- - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<empty, React.ElementConfig<empty>>` [2].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [3].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [4].
+ - Or object literal [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [5].
 
    test.js:21:7
     21| React.cloneElement({ type: any }); // Error: Not a valid element type.
@@ -133,7 +133,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `A` [2] is incompatible with string [3].
+ - Either in type argument `ElementType` [1]: `Class<A>` [2] is incompatible with `string` [3].
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
 
@@ -165,8 +165,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `A` [2] is incompatible with string [3].
- - Or in property `foo`: string [4] is incompatible with number [5].
+ - Either in type argument `ElementType` [1]: `Class<A>` [2] is incompatible with `string` [3].
+ - Or in property `foo`: `"1"` [4] is incompatible with `number` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -196,8 +196,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:38:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `B` [2] is incompatible with string [3].
- - Or in property `foo`: string [4] is incompatible with number [5].
+ - Either in type argument `ElementType` [1]: `Class<B>` [2] is incompatible with `string` [3].
+ - Or in property `foo`: `"1"` [4] is incompatible with `number` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -227,8 +227,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:44:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with string [3].
- - Or in property `children`: string [4] is incompatible with number [5].
+ - Either in type argument `ElementType` [1]: `Class<C>` [2] is incompatible with `string` [3].
+ - Or in property `children`: `"42"` [4] is incompatible with `number` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -258,7 +258,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:48:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with string [3].
+ - Either in type argument `ElementType` [1]: `Class<C>` [2] is incompatible with `string` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -290,7 +290,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:49:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with key set [3].
+ - Either in type argument `ElementType` [1]: `Class<C>` [2] is incompatible with `keyof $JSXIntrinsics` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -322,7 +322,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:50:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `C` [2] is incompatible with key set [3].
+ - Either in type argument `ElementType` [1]: `Class<C>` [2] is incompatible with `keyof $JSXIntrinsics` [3].
  - Or no more than 2 arguments are expected by function type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -354,8 +354,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:54:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with string [3].
- - Or in property `children`: number [4] is incompatible with array type [5].
+ - Either in type argument `ElementType` [1]: `Class<D>` [2] is incompatible with `string` [3].
+ - Or in property `children`: `42` [4] is incompatible with `Array<number>` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -385,8 +385,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:56:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with string [3].
- - Or number [4] is incompatible with array type [5].
+ - Either in type argument `ElementType` [1]: `Class<D>` [2] is incompatible with `string` [3].
+ - Or `42` [4] is incompatible with `Array<number>` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -416,8 +416,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:57:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with key set [3].
- - Or number [4] is incompatible with array type [5].
+ - Either in type argument `ElementType` [1]: `Class<D>` [2] is incompatible with `keyof $JSXIntrinsics` [3].
+ - Or `42` [4] is incompatible with `Array<number>` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -447,8 +447,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:58:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: statics of `D` [2] is incompatible with key set [3].
- - Or number [4] is incompatible with array type [5].
+ - Either in type argument `ElementType` [1]: `Class<D>` [2] is incompatible with `keyof $JSXIntrinsics` [3].
+ - Or `42` [4] is incompatible with `Array<number>` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -478,8 +478,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:70:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: function [2] is incompatible with string [3].
- - Or in property `p`: string [4] is incompatible with number [5].
+ - Either in type argument `ElementType` [1]: `(props: {p: number, ...}) => null` [2] is incompatible with `string` [3].
+ - Or in property `p`: `"bad"` [4] is incompatible with `number` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -509,7 +509,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:76:7
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: function type [2] is incompatible with string [3].
+ - Either in type argument `ElementType` [1]: `(x: {foo: number}) => void` [2] is incompatible with `string` [3].
  - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
    props.
 
@@ -541,10 +541,11 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: component [2] is incompatible with key set [3].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [4].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [5].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [6].
+ - Either in type argument `ElementType` [1]: `component(...empty)` [2] is incompatible with `keyof $JSXIntrinsics` [3].
+ - Or in type argument `ElementType` [1]: `string` [2] is incompatible with `component(...empty)` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    test.js:92:9
     92|   React.cloneElement(el); // ERROR
@@ -563,21 +564,15 @@ References:
    <BUILTINS>/react.js:326:24
    326|   & (<Props, C extends component(...empty), E extends ExactReactElement_DEPRECATED<C, Props>>(
                                ^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:330:24
-   330|   & (<Props, C extends component(...empty), E extends ExactReactElement_DEPRECATED<C, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/react.js:335:24
-   335|   & (<Props, C extends component(...empty), E extends ExactReactElement_DEPRECATED<C, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:93:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either in type argument `ElementType` [1]: component [2] is incompatible with string [3].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [4].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [5].
- - Or in type argument `ElementType` [1]: string [2] is incompatible with component [6].
+ - Either in type argument `ElementType` [1]: `component(...empty)` [2] is incompatible with `string` [3].
+ - Or in type argument `ElementType` [1]: `string` [2] is incompatible with `component(...empty)` [4].
+ - Or in type argument `ElementType` [1]: `string` [2] is incompatible with `component(...empty)` [5].
+ - Or in type argument `ElementType` [1]: `string` [2] is incompatible with `component(...empty)` [6].
 
    test.js:93:9
      93|   React.cloneElement(el, {}); // ERROR
@@ -607,10 +602,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:99:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
+ - Either `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, React.ElementConfig<empty>>` [2].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [3].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [4].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [5].
 
    test.js:99:9
     99|   React.cloneElement(el); // ERROR
@@ -637,10 +632,10 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:100:9
 
 Cannot call `React.cloneElement` because: [incompatible-type]
- - Either undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [4].
- - Or undefined [1] is incompatible with `ExactReactElement_DEPRECATED` [5].
+ - Either `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, React.ElementConfig<empty>>` [2].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [3].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [4].
+ - Or `void` [1] is incompatible with `ExactReactElement_DEPRECATED<empty, empty>` [5].
 
    test.js:100:9
    100|   React.cloneElement(el, {}); // ERROR

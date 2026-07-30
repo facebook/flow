@@ -7,7 +7,7 @@ No errors!
 === block 3 ===
 Error ------------------------------------------------------------------------ -:11:21
 
-Cannot assign `"abc"` to `c` because string [1] is incompatible with `OpaqueID` [2]. [incompatible-type]
+Cannot assign `"abc"` to `c` because `"abc"` [1] is incompatible with `OpaqueID` [2]. [incompatible-type]
 
    -:11:21
    11| const c: OpaqueID = "abc"; // Error — outside the defining file, string is not an OpaqueID
@@ -20,7 +20,7 @@ References:
 
 Error ------------------------------------------------------------------------ -:12:19
 
-Cannot assign `oid` to `d` because `OpaqueID` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `oid` to `d` because `OpaqueID` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:12:19
    12| const d: string = oid; // Error — outside the defining file, OpaqueID is not a string
@@ -49,7 +49,7 @@ No errors!
 === block 7 ===
 Error -------------------------------------------------------------------------- -:5:1
 
-Cannot cast `0` to `NumberAlias` because number [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
+Cannot cast `0` to `NumberAlias` because `0` [1] is incompatible with `NumberAlias` [2]. [incompatible-type]
 
    -:5:1
    5| 0 as NumberAlias; // Error: 0 is not a NumberAlias!
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------- -:8:10
 
-Cannot return `x` because `NumberAlias` [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x` because `NumberAlias` [1] is incompatible with `number` [2]. [incompatible-type]
 
    -:8:10
    8|   return x; // Error: x is not a number!
@@ -85,7 +85,7 @@ No errors!
 === block 9 ===
 Error ------------------------------------------------------------------------ -:10:12
 
-Cannot return `x` because string [1] is incompatible with `ID` [2]. [incompatible-type]
+Cannot return `x` because `string` [1] is incompatible with `ID` [2]. [incompatible-type]
 
    -:10:12
    10|     return x; // Error: strings are not IDs.
@@ -105,7 +105,7 @@ Found 1 error
 === block 10 ===
 Error ------------------------------------------------------------------------- -:2:27
 
-number [1] is incompatible with string [2]. [incompatible-type]
+`number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    -:2:27
    2| opaque type Bad: string = number; // Error: number is not a subtype of string

@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot call `ouchWithNamed` with object literal bound to `foo` because: [incompatible-type]
  - object literal [1] is incompatible with `Foo` [2]
     - in property `bar`: array literal [3] is incompatible with `Bar` [4]
-       - in index `0` > property `baz` > array element: number [5] is incompatible with string [6]
+       - in index `0` > property `baz` > array element: `3` [5] is incompatible with `string` [6]
 
    test.js:5:29
    5| ouchWithNamed({bar: [{baz: [3]}]});
@@ -32,7 +32,7 @@ Error --------------------------------------------------------------------------
 Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
  - object literal [1] is incompatible with `Foo2` [2]
     - in property `bar`: array literal [3] is incompatible with `Bar` [4]
-       - in index `0` > property `baz` > array element: number [5] is incompatible with string [6]
+       - in index `0` > property `baz` > array element: `3` [5] is incompatible with `string` [6]
 
    test.js:9:30
    9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
@@ -61,7 +61,7 @@ Error --------------------------------------------------------------------------
 Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
  - object literal [1] is incompatible with `Foo2` [2]
     - in property `bus`: array literal [3] is incompatible with `Bar` [4]
-       - in index `0` > property `baz` > array element: number [5] is incompatible with string [6]
+       - in index `0` > property `baz` > array element: `3` [5] is incompatible with `string` [6]
 
    test.js:9:49
    9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
@@ -90,7 +90,7 @@ Error --------------------------------------------------------------------------
 Cannot call `ouchWithNamed3` with object literal bound to `foo` because: [incompatible-type]
  - object literal [1] is incompatible with `Foo3` [2]
     - in property `bar`: object literal [3] is incompatible with `Bar2` [4]
-       - in property `baz` > property `ouch`: number [5] is incompatible with string [6]
+       - in property `baz` > property `ouch`: `3` [5] is incompatible with `string` [6]
 
    test.js:15:35
    15| ouchWithNamed3({bar: {baz: {ouch: 3}}});
@@ -116,8 +116,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:18:27
 
-Cannot call `ouchUnnamed` with object literal bound to `foo` because in property `bar[0].baz` > array element:
-number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `ouchUnnamed` with object literal bound to `foo` because in property `bar[0].baz` > array element: `3` [1]
+is incompatible with `string` [2]. [incompatible-type]
 
    test.js:18:27
    18| ouchUnnamed({bar: [{baz: [3]}]});

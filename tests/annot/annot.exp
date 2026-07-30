@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
-Cannot assign `foo` to `bar` because in the first parameter: string [1] is incompatible with number [2].
+Cannot assign `foo` to `bar` because in the first parameter: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annot.js:4:44
@@ -18,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:6:58
 
-Cannot return `foo(...)` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `foo(...)` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    annot.js:6:58
    6| var qux = function(str:string, i:number):number { return foo(str,i); }
@@ -50,7 +50,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:67
 
-Cannot assign object literal to `obj` because in property `i`: string [1] is incompatible with number [2].
+Cannot assign object literal to `obj` because in property `i`: `"..."` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annot.js:8:67
@@ -65,7 +65,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:31
 
-Cannot assign array literal to `arr` because in array element: string [1] is incompatible with number [2].
+Cannot assign array literal to `arr` because in array element: `"..."` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annot.js:10:31
@@ -80,7 +80,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:13:28
 
-Cannot assign array literal to `array` because in array element: string [1] is incompatible with number [2].
+Cannot assign array literal to `array` because in array element: `"..."` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    annot.js:13:28
@@ -110,7 +110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:31:7
 
-Cannot assign `"hey"` to `n` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"hey"` to `n` because `"hey"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    annot.js:31:7
    31|   n = "hey"; // error
@@ -144,7 +144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:55:18
 
-Cannot assign `3` to `toz` because number [1] is incompatible with null [2]. [incompatible-type]
+Cannot assign `3` to `toz` because `3` [1] is incompatible with `null` [2]. [incompatible-type]
 
    annot.js:55:18
    55| var toz : null = 3;
@@ -158,7 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- forward_ref.js:1:32
 
-Cannot assign `null` to `myClassInstance` because null [1] is incompatible with `MyClass` [2]. [incompatible-type]
+Cannot assign `null` to `myClassInstance` because `null` [1] is incompatible with `MyClass` [2]. [incompatible-type]
 
    forward_ref.js:1:32
    1| let myClassInstance: MyClass = null; // forward ref ok, null ~> class error
@@ -172,7 +172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- forward_ref.js:4:10
 
-Cannot return `null` because null [1] is incompatible with `MyClass` [2]. [incompatible-type]
+Cannot return `null` because `null` [1] is incompatible with `MyClass` [2]. [incompatible-type]
 
    forward_ref.js:4:10
    4|   return null; // forward ref ok, null ~> class error

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- arrays.js:6:3
 
-Cannot cast `x` to empty because `Values` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    arrays.js:6:3
    6|   x as empty; // ERROR
@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:14:3
 
-Cannot cast `x` to empty because `Values` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    arrays.js:14:3
    14|   x as empty; // ERROR
@@ -34,8 +34,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
 
-Cannot cast `x` to empty because at least one member of `Values` [1], e.g. string literal `a` [1], is incompatible with
-empty [2]. [incompatible-type]
+Cannot cast `x` to empty because in at least one member of `Values` [1]: `"a"` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    arrays.js:23:3
    23|   x as empty; // ERROR
@@ -52,7 +52,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:24:1
 
-Cannot cast `'yo'` to `Values` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'yo'` to `Values` because `"yo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:24:1
    24| 'yo' as Values<NoProps>; // Error: There are no properties.
@@ -66,7 +66,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:25:1
 
-Cannot cast `123` to `Values` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `123` to `Values` because `123` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:25:1
    25| 123 as Values<NoProps>; // Error: There are no properties.
@@ -80,7 +80,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:26:2
 
-Cannot cast function to `Values` because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast function to `Values` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:26:2
    26| (() => {}) as Values<NoProps>; // Error: There are no properties.
@@ -94,7 +94,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:27:1
 
-Cannot cast `true` to `Values` because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `true` to `Values` because `true` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:27:1
    27| true as Values<NoProps>; // Error: There are no properties.
@@ -108,7 +108,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:29:1
 
-Cannot cast `'yo'` to `Values` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'yo'` to `Values` because `"yo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:29:1
    29| 'yo' as Values<NoReadProps>; // Error: There are no readable properties.
@@ -122,7 +122,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:30:1
 
-Cannot cast `123` to `Values` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `123` to `Values` because `123` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:30:1
    30| 123 as Values<NoReadProps>; // Error: There are no readable properties.
@@ -136,7 +136,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:31:2
 
-Cannot cast function to `Values` because function [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast function to `Values` because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:31:2
    31| (() => {}) as Values<NoReadProps>; // Error: There are no readable properties.
@@ -150,7 +150,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:32:1
 
-Cannot cast `true` to `Values` because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `true` to `Values` because `true` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    classes.js:32:1
    32| true as Values<NoReadProps>; // Error: There are no readable properties.
@@ -164,7 +164,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:34:1
 
-Cannot cast `'yo'` to `Values` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'yo'` to `Values` because `"yo"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:34:1
    34| 'yo' as Values<OneProp>; // Error: There is no property with the type of
@@ -178,7 +178,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:37:2
 
-Cannot cast function to `Values` because function [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast function to `Values` because `() => void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:37:2
    37| (() => {}) as Values<OneProp>; // Error: Even though there is a method, methods
@@ -192,7 +192,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:39:1
 
-Cannot cast `true` to `Values` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `true` to `Values` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:39:1
    39| true as Values<OneProp>; // Error: There is no property with the type of
@@ -207,9 +207,9 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:44:2
 
 Cannot cast function to `Values` because: [incompatible-type]
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with string [3].
- - Or function [1] is incompatible with string [4].
+ - Either `() => void` [1] is incompatible with `number` [2].
+ - Or `() => void` [1] is incompatible with `string` [3].
+ - Or `() => void` [1] is incompatible with `string` [4].
 
    classes.js:44:2
    44| (() => {}) as Values<SomeProps>; // Error: Even though there is a method,
@@ -230,9 +230,9 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:46:1
 
 Cannot cast `true` to `Values` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
- - Or boolean [1] is incompatible with string [4].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
+ - Or `true` [1] is incompatible with `string` [4].
 
    classes.js:46:1
    46| true as Values<SomeProps>; // Error: There is no property with the type of
@@ -252,7 +252,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:49:1
 
-Cannot cast `'yo'` to `Values` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'yo'` to `Values` because `"yo"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:49:1
    49| 'yo' as Values<Child>; // TODO: This should be ok since there is a property
@@ -266,7 +266,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:52:2
 
-Cannot cast function to `Values` because function [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast function to `Values` because `() => void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:52:2
    52| (() => {}) as Values<Child>; // Error: There is no property with the type of
@@ -280,7 +280,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:54:1
 
-Cannot cast `true` to `Values` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `true` to `Values` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    classes.js:54:1
    54| true as Values<Child>; // Error: There is no property with the type of boolean.
@@ -336,7 +336,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:4:1
 
-Cannot cast `123` to `NoProps` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `123` to `NoProps` because `123` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_types.js:4:1
    4| 123 as NoProps; // Error: There are no props.
@@ -350,7 +350,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:5:1
 
-Cannot cast `345` to `NoReadProps` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `345` to `NoReadProps` because `345` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_types.js:5:1
    5| 345 as NoReadProps; // Error: There are no props which can be read.
@@ -364,7 +364,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_types.js:9:1
 
-Cannot cast `123` to `OneProp` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `123` to `OneProp` because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
    object_types.js:9:1
    9| 123 as OneProp; // Error: There is no property with the type of number.
@@ -378,7 +378,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- object_types.js:10:1
 
-Cannot cast `true` to `OneProp` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `true` to `OneProp` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    object_types.js:10:1
    10| true as OneProp; // Error: There is no property with the type of boolean.
@@ -392,7 +392,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:12:16
 
-Cannot cast `null` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `null` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    object_types.js:12:16
    12| null as any as OneProp as number; // Error: There is no string in the final
@@ -407,9 +407,9 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:18:1
 
 Cannot cast `true` to `ManyProps` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with string [3].
- - Or boolean [1] is incompatible with number [4].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `string` [3].
+ - Or `true` [1] is incompatible with `number` [4].
 
    object_types.js:18:1
    18| true as ManyProps; // Error: There is no property with the type of boolean.
@@ -430,8 +430,8 @@ References:
 Error -------------------------------------------------------------------------------------------- object_types.js:21:16
 
 Cannot cast `null` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `boolean` [3].
 
    object_types.js:21:16
    21| null as any as ManyProps as string | boolean; // Error: There is no number in
@@ -449,8 +449,8 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:25:1
 
 Cannot cast `'yo'` to `DictProps` because: [incompatible-type]
- - Either string [1] is incompatible with boolean [2].
- - Or string [1] is incompatible with number [3].
+ - Either `"yo"` [1] is incompatible with `boolean` [2].
+ - Or `"yo"` [1] is incompatible with `number` [3].
 
    object_types.js:25:1
    25| 'yo' as DictProps; // Error: There is no property with the type of string.
@@ -468,8 +468,8 @@ References:
 Error -------------------------------------------------------------------------------------------- object_types.js:30:16
 
 Cannot cast `null` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with boolean [3].
+ - Either `number` [1] is incompatible with `string` [2].
+ - Or `number` [1] is incompatible with `boolean` [3].
 
    object_types.js:30:16
    30| null as any as DictProps as string | boolean; // Error: There is no number in
@@ -487,8 +487,8 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:38:1
 
 Cannot cast `true` to `Values` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
 
    object_types.js:38:1
    38| true as Values<CallableProp>; // Error: There is no property with the type of
@@ -506,8 +506,8 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:41:2
 
 Cannot cast function to `Values` because: [incompatible-type]
- - Either function [1] is incompatible with string [2].
- - Or function [1] is incompatible with number [3].
+ - Either `() => true` [1] is incompatible with `string` [2].
+ - Or `() => true` [1] is incompatible with `number` [3].
 
    object_types.js:41:2
    41| (() => true) as Values<CallableProp>; // Error: There is no property with a
@@ -657,7 +657,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:105:1
 
-Cannot cast `1` to `NumbersEnum` because number [1] is incompatible with `Values` [2]. [incompatible-type]
+Cannot cast `1` to `NumbersEnum` because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_types.js:105:1
    105| 1 as NumbersEnum; // error, NumbersEnum = -1 | 2
@@ -671,7 +671,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:120:1
 
-Cannot cast `'s'` to `Values` because string [1] is incompatible with number literal `1` [2]. [incompatible-type]
+Cannot cast `'s'` to `Values` because `"s"` [1] is incompatible with `1` [2]. [incompatible-type]
 
    object_types.js:120:1
    120| 's' as Values<IfaceWithDict>; // ERROR
@@ -685,7 +685,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:121:1
 
-Cannot cast `1` to `Values` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `1` to `Values` because `1` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    object_types.js:121:1
    121| 1 as Values<IfaceWithWriteOnlyDict>; // ERROR

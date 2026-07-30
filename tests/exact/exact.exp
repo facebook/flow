@@ -201,8 +201,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:18:3
 
-Cannot cast `x.some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `x.some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:18:3
    18|   x.some as string; // ERROR
@@ -216,8 +215,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:19:3
 
-Cannot cast `x['some']` to string because `void` (due to access of non-existent property `some`) [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot cast `x['some']` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:19:3
    19|   x['some'] as string; // ERROR
@@ -259,8 +257,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:28:3
 
-Cannot cast `some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:28:3
    28|   some as string; // ERROR
@@ -291,8 +288,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:47:3
 
-Cannot cast `obj.some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `obj.some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:47:3
    47|   obj.some as string; // ERROR
@@ -306,8 +302,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:54:3
 
-Cannot cast `some` to string because `void` (due to access of non-existent property `some`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot cast `some` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    nonstrict-access.js:54:3
    54|   some as string; // ERROR
@@ -343,7 +338,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:3:13
 
-Cannot assign `3` to `x` because number [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1] is incompatible with `{}` [2]. [incompatible-type]
 
    not_object.js:3:13
    3| let x: {} = 3;
@@ -357,7 +352,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:4:13
 
-Cannot assign empty string to `y` because string [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign empty string to `y` because `""` [1] is incompatible with `{}` [2]. [incompatible-type]
 
    not_object.js:4:13
    4| let y: {} = '';
@@ -371,7 +366,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:5:13
 
-Cannot assign `true` to `z` because boolean [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign `true` to `z` because `true` [1] is incompatible with `{}` [2]. [incompatible-type]
 
    not_object.js:5:13
    5| let z: {} = true;
@@ -433,7 +428,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:14:1
 
-Cannot cast `v` to object type because number [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `v` to object type because `number` [1] is incompatible with `{}` [2]. [incompatible-type]
 
    not_object.js:14:1
    14| v as {};
@@ -576,7 +571,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:3:87
 
-Cannot return `x` because in property `p`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x` because in property `p`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:3:87
    3| function foo3(x: {__proto__: { p: string, ...}}): {readonly p?: number, ...} { return x; } // error, type incompatibility
@@ -645,8 +640,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- prop_test.js:28:10
 
-Cannot return `pc.state` because `void` (due to access of non-existent property `state`) [1] is incompatible with
-string [2]. [incompatible-type]
+Cannot return `pc.state` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    prop_test.js:28:10
    28|   return pc.state;      // error, since (pc: $Exact<Person>).first may be ""
@@ -675,7 +669,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:4:2
 
-Cannot cast object literal to union type because object literal [1] is incompatible with union type [2].
+Cannot cast object literal to union type because object literal [1] is incompatible with `empty` [2].
 [incompatible-type]
 
    union.js:4:2

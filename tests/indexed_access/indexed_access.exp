@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- import.js:4:1
 
-Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `1` to `ObjFoo` because `1` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    import.js:4:1
    4| 1 as ObjFoo; // Error
@@ -15,8 +15,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:10:1
 
 Cannot cast `1` to `B` because: [incompatible-type]
- - Either number [1] is incompatible with boolean [2].
- - Or number [1] is incompatible with undefined [3].
+ - Either `1` [1] is incompatible with `boolean` [2].
+ - Or `1` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -37,8 +37,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:14:1
 
 Cannot cast `true` to `N` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -59,8 +59,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:18:1
 
 Cannot cast `true` to `S` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -114,8 +114,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:15:1
 
 Cannot cast `true` to `T` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -196,8 +196,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:24:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -218,8 +218,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:28:1
 
 Cannot cast `true` to indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -240,8 +240,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:32:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -262,8 +262,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:36:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -284,8 +284,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:39:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -306,8 +306,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:46:1
 
 Cannot cast `true` to indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -328,8 +328,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:50:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -350,8 +350,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:54:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -372,8 +372,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:59:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -394,8 +394,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:64:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -415,7 +415,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:68:1
 
-Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `1` to optional indexed access because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    optional.js:68:1
    68| 1 as void?.['c']; // Error
@@ -429,7 +429,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:71:1
 
-Cannot cast `1` to optional indexed access because number [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `1` to optional indexed access because `1` [1] is incompatible with `void` [2]. [incompatible-type]
 
    optional.js:71:1
    71| 1 as empty?.['x']; // Error
@@ -443,8 +443,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
-Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `f(...)` to boolean literal `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:79:1
    79| f(z, 'c') as true; // Error - wrong type
@@ -461,8 +460,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:79:1
 
-Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `f(...)` to boolean literal `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:79:1
    79| f(z, 'c') as true; // Error - wrong type
@@ -493,8 +491,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
-Cannot cast `f(...)` to boolean literal `true` because number [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `f(...)` to boolean literal `true` because `number` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:84:1
    84| f(mz, 'c') as true; // Error - wrong type
@@ -511,8 +508,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:84:1
 
-Cannot cast `f(...)` to boolean literal `true` because undefined [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `f(...)` to boolean literal `true` because `void` [1] is incompatible with `true` [2]. [incompatible-type]
 
    optional.js:84:1
    84| f(mz, 'c') as true; // Error - wrong type
@@ -544,8 +540,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- optional.js:88:1
 
 Cannot cast `'s'` to `Before` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with undefined [3].
+ - Either `"s"` [1] is incompatible with `number` [2].
+ - Or `"s"` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -566,8 +562,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ optional.js:103:1
 
 Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with undefined [3].
+ - Either `"xx"` [1] is incompatible with `number` [2].
+ - Or `"xx"` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -588,8 +584,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ optional.js:117:1
 
 Cannot cast `'xx'` to optional indexed access because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with undefined [3].
+ - Either `"xx"` [1] is incompatible with `number` [2].
+ - Or `"xx"` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -609,7 +605,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:122:1
 
-Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `true` to `NonMaybeNumber` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:122:1
    122| true as NonMaybeNumber; // Error
@@ -623,7 +619,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:123:1
 
-Cannot cast `undefined` to `NonMaybeNumber` because undefined [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `undefined` to `NonMaybeNumber` because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:123:1
    123| undefined as NonMaybeNumber; // Error
@@ -638,8 +634,8 @@ References:
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:1
 
 Cannot cast `true` to optional indexed access because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with undefined [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -659,7 +655,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:1
 
-Cannot cast `'hello world'` to `ArrElem` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'hello world'` to `ArrElem` because `"hello world"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:5:1
    5| 'hello world' as ArrElem; // Error
@@ -673,7 +670,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Cannot cast `'hello world'` to `DictElem` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'hello world'` to `DictElem` because `"hello world"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    test.js:16:1
    16| 'hello world' as DictElem; // Error
@@ -687,7 +685,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
-Cannot cast `1` to `ObjFoo` because number [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `1` to `ObjFoo` because `1` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    test.js:31:1
    31| 1 as ObjFoo; // Error
@@ -701,7 +699,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:1
 
-Cannot cast `1` to indexed access because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `1` to indexed access because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:34:1
    34| 1 as Obj['baz']; // Error
@@ -715,7 +713,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
-Cannot cast `f(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `f(...)` to string because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:42:1
    42| f(o) as string; // Error
@@ -796,7 +794,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:65:1
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:65:1
    65| 'xx' as O['bar']; // Error
@@ -810,7 +808,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:74:1
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:74:1
    74| 'xx' as C['bar']; // Error
@@ -824,7 +822,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:1
 
-Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `'xx'` to indexed access because `"xx"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:83:1
    83| 'xx' as I['bar']; // ERROR
@@ -838,7 +836,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:89:8
 
-Cannot cast function to indexed access because in the return value: boolean [1] is incompatible with number [2].
+Cannot cast function to indexed access because in the return value: `true` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    test.js:89:8
@@ -853,7 +851,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:94:5
 
-Cannot cast `f()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:94:5
    94|     f() as empty; // ERROR
@@ -870,7 +868,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:7:1
 
-Cannot cast `v` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    unions.js:7:1
    7| v as string; // error
@@ -887,7 +885,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- unions.js:8:1
 
-Cannot cast `v` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `v` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    unions.js:8:1
    8| v as number; // error
@@ -905,8 +903,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- unions.js:13:5
 
 Cannot assign `true` to `v` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `true` [1] is incompatible with `number` [2].
+ - Or `true` [1] is incompatible with `string` [3].
 
    unions.js:13:5
    13| v = true; // error
@@ -923,7 +921,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:21:1
 
-Cannot cast `w` to indexed access because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `w` to indexed access because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    unions.js:21:1
    21| w as M['a']; // error

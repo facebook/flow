@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- any.js:14:17
 
-Cannot assign `bar(...)` to `y` because `unknown` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `bar(...)` to `y` because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
    any.js:14:17
    14| var y: string = bar(0);
@@ -17,7 +17,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- ex_special_cases.js:30:21
 
-Cannot assign `array[receiver.name]` to `test1` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `array[receiver.name]` to `test1` because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
 
    ex_special_cases.js:30:21
    30| var test1: string = array[receiver.name]; // if result of receiver.getprop is any, this will fail, but no error if it's empty.
@@ -34,7 +35,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- ex_special_cases.js:31:21
 
-Cannot assign `array[receiver.name()]` to `test2` because number [1] is incompatible with string [2].
+Cannot assign `array[receiver.name()]` to `test2` because `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    ex_special_cases.js:31:21
@@ -52,7 +53,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- propagate.js:10:10
 
-Cannot return `c.bar(...)` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `c.bar(...)` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    propagate.js:10:10
    10|   return c.bar(0, y); // should be able to select first case and error
@@ -69,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:16:5
 
-Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    propagate.js:16:5
    16|     x as boolean;
@@ -86,7 +87,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:23:5
 
-Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    propagate.js:23:5
    23|     x as boolean;

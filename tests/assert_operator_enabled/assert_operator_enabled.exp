@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:3
 
-Cannot cast `a!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:4:3
    4|   a! as empty; // LHS is number
@@ -32,7 +32,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot cast `a!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:9:3
    9|   a! as empty; // LHS is number
@@ -64,7 +64,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Cannot cast `f()!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `f()!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:14:3
    14|   f()! as empty; // LHS is number
@@ -96,7 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
-Cannot cast `(f!)()` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `(f!)()` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:15:3
    15|   f!() as number // LHS is ?number
@@ -113,7 +113,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `(g!)()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(g!)()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:20:3
    20|   g!() as empty; // LHS is number
@@ -144,7 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:3
 
-Cannot cast `((a!).b()!).c!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `((a!).b()!).c!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:26:3
    26|   a!.b()!.c! as empty; // LHS is number
@@ -161,8 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:30:3
 
-Cannot cast `a?.b!.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.b!.c` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:30:3
    30|   a?.b!.c as number; // LHS is ?number
@@ -179,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:3
 
-Cannot cast `a?.b!.c!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a?.b!.c!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:32:3
    32|   a?.b!.c! as empty; // LHS is number
@@ -196,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:34:3
 
-Cannot cast `(a?.b!).c` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(a?.b!).c` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:34:3
    34|   (a?.b)!.c as empty; //LHS is number
@@ -213,7 +212,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:39:3
 
-Cannot cast `((a!).b()!).c!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `((a!).b()!).c!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:39:3
    39|   a!.b()!.c! as empty; // LHS is number
@@ -230,7 +229,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:3
 
-Cannot cast `((a!).b()!)['c']` to empty because null [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `((a!).b()!)['c']` to empty because `null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:41:3
    41|   a!.b()!['c'] as empty; // LHS is ?number
@@ -247,7 +246,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:3
 
-Cannot cast `((a!).b()!)['c']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `((a!).b()!)['c']` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:41:3
    41|   a!.b()!['c'] as empty; // LHS is ?number
@@ -264,8 +263,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot cast `a?.b()!['c']` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.b()!['c']` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:42:3
    42|   a?.b()!['c'] as number; // LHS is ?number
@@ -282,7 +280,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot cast `a?.b()!['c']` to number because null [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.b()!['c']` to number because `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:42:3
    42|   a?.b()!['c'] as number; // LHS is ?number
@@ -299,7 +297,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:3
 
-Cannot cast `a?.b()!['c']!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a?.b()!['c']!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:44:3
    44|   a?.b()!['c']! as empty; // LHS is number
@@ -316,7 +314,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:3
 
-Cannot cast `(((a!).b!)()!).c!` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(((a!).b!)()!).c!` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:50:3
    50|   a!.b!()!.c! as empty; // LHS is number
@@ -333,8 +331,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:3
 
-Cannot cast `a?.b()!['c']` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.b()!['c']` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:54:3
    54|   a?.b()!['c'] as number; // LHS is ?number
@@ -351,7 +348,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:3
 
-Cannot cast `(a?.b()!)['c']` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(a?.b()!)['c']` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:56:3
    56|   (a?.b())!['c'] as empty; // LHS is number
@@ -368,8 +365,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:3
 
-Cannot cast `a?.().b?.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.().b?.c` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:60:3
    60|   a?.().b?.c as number // LHS is ?number from both nulls
@@ -386,8 +382,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:3
 
-Cannot cast `a?.().b?.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.().b?.c` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:60:3
    60|   a?.().b?.c as number // LHS is ?number from both nulls
@@ -404,8 +399,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:3
 
-Cannot cast `a?.().b!.c` to number because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with number [2]. [incompatible-type]
+Cannot cast `a?.().b!.c` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:61:3
    61|   a?.().b!.c as number // LHS is ?number from only a's null
@@ -422,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:63:3
 
-Cannot cast `(a?.().b!).c` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(a?.().b!).c` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:63:3
    63|   (a?.().b)!.c as empty // LHS is number
@@ -439,7 +433,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:5
 
-Cannot cast `(c!).#p` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `(c!).#p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:71:5
    71|     c!.#p as empty; // LHS is number
@@ -456,7 +450,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:76:10
 
-Cannot assign `1` to `x.a!` because number [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign `1` to `x.a!` because `1` [1] is incompatible with `{b?: number}` [2]. [incompatible-type]
 
    test.js:76:10
    76|   x.a! = 1; // error
@@ -500,7 +494,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:79:12
 
-Cannot assign `"43"` to `(x.a!).b` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"43"` to `(x.a!).b` because `"43"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    test.js:79:12
    79|   x.a!.b = "43"; // error
@@ -573,7 +567,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:4
 
-Cannot cast `x.c.d! += 42` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.c.d! += 42` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.js:82:4
    82|   (x.c.d! += 42) as empty; // LHS is number

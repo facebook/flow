@@ -8,7 +8,7 @@ Unreachable code. [unreachable-code]
 
 Error ------------------------------------------------------------------------------------------------ typecheck.js:4:10
 
-Cannot return `bar()` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `bar()` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typecheck.js:4:10
    4|   return bar();
@@ -25,7 +25,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- typecheck.js:21:21
 
-Cannot assign `n` to `y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `n` to `y` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    typecheck.js:21:21
    21|     var y: string = n;    // error, n is number (EmptyT would work)
@@ -42,7 +42,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- typecheck.js:32:15
 
-Cannot call `expectNum` with empty string bound to `a` because string [1] is incompatible with number [2].
+Cannot call `expectNum` with empty string bound to `a` because `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    typecheck.js:32:15

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- import_typeof.js:13:22
 
-Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with class `ClassFoo1` [2].
+Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1T` [1] is incompatible with class `ClassFoo1` [2].
 [incompatible-type]
 
    import_typeof.js:13:22
@@ -31,7 +31,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:24:22
 
-Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible with class `ClassFoo2` [2].
+Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2T` [1] is incompatible with class `ClassFoo2` [2].
 [incompatible-type]
 
    import_typeof.js:24:22
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:35:22
 
-Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible with class `ClassFoo3` [2].
+Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3T` [1] is incompatible with class `ClassFoo3` [2].
 [incompatible-type]
 
    import_typeof.js:35:22
@@ -77,7 +77,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:45:22
 
-Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with class `ClassFoo4` [2].
+Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4T` [1] is incompatible with class `ClassFoo4` [2].
 [incompatible-type]
 
    import_typeof.js:45:22
@@ -92,7 +92,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:54:7
 
-Cannot cast function to `functionFoo1T` because in the return value: undefined [1] is incompatible with number [2].
+Cannot cast function to `functionFoo1T` because in the return value: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import_typeof.js:54:7
@@ -107,7 +107,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:63:7
 
-Cannot cast function to `functionFoo2T` because in the return value: undefined [1] is incompatible with number [2].
+Cannot cast function to `functionFoo2T` because in the return value: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import_typeof.js:63:7
@@ -122,7 +122,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:72:7
 
-Cannot cast function to `functionFoo3T` because in the return value: undefined [1] is incompatible with number [2].
+Cannot cast function to `functionFoo3T` because in the return value: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import_typeof.js:72:7
@@ -137,7 +137,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:81:7
 
-Cannot cast function to `functionFoo4T` because in the return value: undefined [1] is incompatible with number [2].
+Cannot cast function to `functionFoo4T` because in the return value: `void` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    import_typeof.js:81:7
@@ -161,7 +161,7 @@ classes. If you intended to import a type use `import type` instead. [invalid-im
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:104:23
 
-Cannot assign `'asdf'` to `f2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `f2` because `"asdf"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_typeof.js:104:23
    104| var f2: num_default = 'asdf'; // Error: string ~> number
@@ -175,7 +175,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:113:21
 
-Cannot assign `'asdf'` to `g2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `g2` because `"asdf"` [1] is incompatible with `42` [2]. [incompatible-type]
 
    import_typeof.js:113:21
    113| var g2: num_named = 'asdf'; // Error: string ~> number
@@ -189,7 +189,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:122:27
 
-Cannot assign `'asdf'` to `h2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `h2` because `"asdf"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_typeof.js:122:27
    122| var h2: num_cjs_default = 'asdf'; // Error: string ~> number
@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:131:25
 
-Cannot assign `'asdf'` to `i2` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `'asdf'` to `i2` because `"asdf"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    import_typeof.js:131:25
    131| var i2: num_cjs_named = 'asdf'; // Error: string ~> number
@@ -217,7 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:139:39
 
-Cannot assign object literal to `j2` because in property `str`: number [1] is incompatible with string [2].
+Cannot assign object literal to `j2` because in property `str`: `42` [1] is incompatible with `"asdf"` [2].
 [incompatible-type]
 
    import_typeof.js:139:39
@@ -247,7 +247,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:155:1
 
-Cannot cast `'str'` to `C` because string [1] is incompatible with class `C` [2]. [incompatible-type]
+Cannot cast `'str'` to `C` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
 
    import_typeof.js:155:1
    155| 'str' as C; // Error
@@ -261,7 +261,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:164:1
 
-Cannot cast `'str'` to `CPrime` because string [1] is incompatible with class `C` [2]. [incompatible-type]
+Cannot cast `'str'` to `CPrime` because `"str"` [1] is incompatible with class `C` [2]. [incompatible-type]
 
    import_typeof.js:164:1
    164| 'str' as CPrime; // Error

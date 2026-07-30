@@ -51,7 +51,7 @@ Cannot resolve module `shadowing.android`. [cannot-resolve-module]
 
 Error ------------------------------------------------------------------------------------- test_interface_import.js:8:1
 
-Cannot cast `o1` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `o1` to empty because `MyType` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test_interface_import.js:8:1
    8| o1 as empty; // error
@@ -68,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------- with_platform_specific_js_flow.ios.js:2:19
 
-Cannot conform to common interface module because in property `foo`: string [1] is incompatible with number [2].
+Cannot conform to common interface module because in property `foo`: `string` [1] is incompatible with `number` [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

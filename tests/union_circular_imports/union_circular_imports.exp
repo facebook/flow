@@ -1,8 +1,11 @@
 Error ------------------------------------------------------------------------------------------------------ two.js:4:16
 
 Cannot assign `false` to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
- - Or boolean [1] is incompatible with number [3].
+ - Either `false` [1] is incompatible with `string` [2].
+ - Or `false` [1] is incompatible with `One` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    two.js:4:16
    4| const x: Two = false;

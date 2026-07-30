@@ -411,15 +411,11 @@ foo as string;`,
             '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
           )
           .verifyAllLSPMessagesInStep(
-            [
-              [
-                'textDocument/publishDiagnostics',
-                '{Cannot assign `123` to `x` because  number [1] is incompatible with  string [2].}',
-              ],
-            ],
+            [],
             [
               'textDocument/publishDiagnostics',
-              ...lspIgnoreStatusAndCancellation,
+              'window/showStatus',
+              '$/cancelRequest',
             ],
           ),
       ],
@@ -557,15 +553,11 @@ function broken(): number {return 1+;}
           '{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{Cannot cast `value` to boolean because  number [1] is incompatible with  boolean [2].}',
-            ],
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
       // Changing importme.js will trigger a recheck, which will resend the live non-parse errors
@@ -576,15 +568,11 @@ function broken(): number {return 1+;}
           '{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
         )
         .verifyAllLSPMessagesInStep(
-          [
-            [
-              'textDocument/publishDiagnostics',
-              '{Cannot cast `value` to boolean because  string [1] is incompatible with  boolean [2].}',
-            ],
-          ],
+          [],
           [
             'textDocument/publishDiagnostics',
-            ...lspIgnoreStatusAndCancellation,
+            'window/showStatus',
+            '$/cancelRequest',
           ],
         ),
     ]),

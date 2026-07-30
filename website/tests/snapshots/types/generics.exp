@@ -37,7 +37,7 @@ No errors!
 === block 13 ===
 Error ----------------------------------------------------------------------------- -:3:10
 
-Cannot return `"foo"` because string [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `"foo"` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    -:3:10
    3|   return "foo"; // Error!
@@ -54,7 +54,7 @@ Found 1 error
 === block 14 ===
 Error ----------------------------------------------------------------------------- -:3:11
 
-Cannot assign `"foo"` to `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign `"foo"` to `value` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    -:3:11
    3|   value = "foo"; // Error!
@@ -67,7 +67,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:4:10
 
-Cannot return `value` because string [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `value` because `"foo"` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    -:4:10
    4|   return value;  // Error!
@@ -146,7 +146,8 @@ Found 1 error
 === block 19 ===
 Error ----------------------------------------------------------------------------- -:8:31
 
-Cannot call `identity` because in type argument `T`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `identity` because in type argument `T`: `"three"` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    -:8:31
    8| let three: "three" = identity("three"); // Error!
@@ -270,7 +271,7 @@ No errors!
 === block 30 ===
 Error ------------------------------------------------------------------------------ -:5:1
 
-Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: string [2] is incompatible with number [3].
+Cannot cast `x` to `GenericBoxError` because in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
 [incompatible-type]
 
    -:5:1

@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- logical.js:9:10
 
-Cannot return `x && '123'` because boolean literal `false` [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `x && '123'` because `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:9:10
    9|   return x && '123'; // constant-condition error
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:25:10
 
-Cannot return `false && '123'` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `false && '123'` because `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:25:10
    25|   return false && '123';
@@ -131,7 +131,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:126:10
 
-Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `(x != null) && (x > 10)` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:126:10
    126|   return x != null && x > 10;
@@ -145,7 +145,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:126:23
 
-Cannot return `(x != null) && (x > 10)` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `(x != null) && (x > 10)` because `boolean` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:126:23
    126|   return x != null && x > 10;
@@ -159,7 +159,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:135:10
 
-Cannot return `(x != null) && x` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `(x != null) && x` because `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:135:10
    135|   return x != null && x;
@@ -173,7 +173,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:144:10
 
-Cannot return `(x != undefined) && x` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `(x != undefined) && x` because `false` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:144:10
    144|   return x != undefined && x;
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:160:10
 
-Cannot return `x && '123'` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x && '123'` because `false` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:160:10
    160|   return x && '123';
@@ -238,7 +238,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:185:10
 
-Cannot return `x || 0` because boolean literal `true` [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x || 0` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:185:10
    185|   return x || 0; // constant-condition error
@@ -263,7 +263,7 @@ This condition is falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ logical.js:214:10
 
-Cannot return `true || '123'` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `true || '123'` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:214:10
    214|   return true || '123';
@@ -361,7 +361,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:342:10
 
-Cannot return `x || (1 && 'foo')` because boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `x || (1 && 'foo')` because `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:342:10
    342|   return x || (1 && 'foo');
@@ -379,8 +379,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ logical.js:350:20
 
 Cannot return `x || y || false` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `string` [3].
 
    logical.js:350:20
    350|   return x || y || false;
@@ -406,8 +406,8 @@ This condition is truthy. [constant-condition]
 Error ------------------------------------------------------------------------------------------------ logical.js:372:20
 
 Cannot return `x && y && false` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `false` [1] is incompatible with `number` [2].
+ - Or `false` [1] is incompatible with `string` [3].
 
    logical.js:372:20
    372|   return x && y && false;
@@ -424,7 +424,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:380:10
 
-Cannot return `false && x && y` because boolean [1] is incompatible with array type [2]. [incompatible-type]
+Cannot return `false && x && y` because `false` [1] is incompatible with `Array<any>` [2]. [incompatible-type]
 
    logical.js:380:10
    380|   return false && x && y;
@@ -438,7 +438,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:388:10
 
-Cannot return `x && false && y` because number [1] is incompatible with array type [2]. [incompatible-type]
+Cannot return `x && false && y` because `0` [1] is incompatible with `Array<any>` [2]. [incompatible-type]
 
    logical.js:388:10
    388|   return x && false && y;
@@ -455,7 +455,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:388:15
 
-Cannot return `x && false && y` because boolean [1] is incompatible with array type [2]. [incompatible-type]
+Cannot return `x && false && y` because `false` [1] is incompatible with `Array<any>` [2]. [incompatible-type]
 
    logical.js:388:15
    388|   return x && false && y;
@@ -469,7 +469,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:397:14
 
-Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y || true` to `y` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
 All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
 type is desired.
@@ -489,7 +489,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:407:14
 
-Cannot assign `y || true` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y || true` to `y` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:407:14
    407|     y = y || true; // expected a number
@@ -503,7 +503,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:422:10
 
-Cannot return `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `y` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:422:10
    422|   return y;
@@ -520,7 +520,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:430:14
 
-Cannot assign `y && true` to `y` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `y && true` to `y` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:430:14
    430|     y = y && true; // expected a number
@@ -534,7 +534,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:440:9
 
-Cannot return array literal because in array element > property `x`: number [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `0` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:440:9
@@ -552,7 +552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:442:17
 
-Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `false` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:442:17
@@ -567,7 +567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:443:9
 
-Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `false` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:443:9
@@ -606,7 +606,7 @@ This condition is truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:456:9
 
-Cannot return array literal because in array element > property `x`: number [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `number` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:456:9
@@ -624,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:458:18
 
-Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `true` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:458:18
@@ -639,7 +639,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:459:9
 
-Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
+Cannot return array literal because in array element > property `x`: `true` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    logical.js:459:9
@@ -678,7 +678,7 @@ This condition is truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------ logical.js:569:10
 
-Cannot return `x.y && x.z` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot return `x.y && x.z` because `""` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    logical.js:569:10
    569|   return x.y && x.z; // error: x.y is a string
@@ -695,7 +695,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:572:10
 
-Cannot return `x.y || x.z` because string [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot return `x.y || x.z` because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    logical.js:572:10
    572|   return x.y || x.z; // error: x.y is a string
@@ -712,7 +712,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:582:9
 
-Cannot cast `x && x.y` to number because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x && x.y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    logical.js:582:9
    582|   (x && x.y) as number; // error, x.y is a string (no error about x)
@@ -729,7 +729,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:4
 
-Cannot cast `a ?? false` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a ?? false` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:4
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -746,7 +746,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:4
 
-Cannot cast `a ?? false` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a ?? false` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:4
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -763,7 +763,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:590:9
 
-Cannot cast `a ?? false` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a ?? false` to empty because `false` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:590:9
    590|   (a ?? false) as empty; // should error on `a` and `false`
@@ -788,7 +788,7 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
-Cannot cast `b && false` to empty because number literal `0` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `b && false` to empty because `indirection3` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:596:4
    596|   (b && false) as empty; // should only error on `b`
@@ -805,7 +805,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:596:4
 
-Cannot cast `b && false` to empty because empty string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `b && false` to empty because `indirection4` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    logical.js:596:4
    596|   (b && false) as empty; // should only error on `b`
@@ -822,7 +822,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:615:3
 
-Cannot cast `nullableStringOrNumber` to string because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `nullableStringOrNumber` to string because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    logical.js:615:3
    615|   nullableStringOrNumber as string; // error: number ~> string
@@ -841,7 +841,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `1` to `n_` because: [incompatible-type]
  - Either number literal `1` [1] is incompatible with number [2].
- - Or number [1] is incompatible with object literal [3].
+ - Or `1` [1] is incompatible with object literal [3].
 
 All writes to `n_` must be compatible with the type of its initializer [4]. Add an annotation to `n_` [4] if a different
 type is desired.
@@ -869,7 +869,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `"1"` to `s_` because: [incompatible-type]
  - Either string literal `1` [1] is incompatible with string [2].
- - Or string [1] is incompatible with object literal [3].
+ - Or `"1"` [1] is incompatible with object literal [3].
 
 All writes to `s_` must be compatible with the type of its initializer [4]. Add an annotation to `s_` [4] if a different
 type is desired.
@@ -897,7 +897,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `true` to `b_` because: [incompatible-type]
  - Either boolean literal `true` [1] is incompatible with boolean [2].
- - Or boolean [1] is incompatible with object literal [3].
+ - Or `true` [1] is incompatible with object literal [3].
 
 All writes to `b_` must be compatible with the type of its initializer [4]. Add an annotation to `b_` [4] if a different
 type is desired.

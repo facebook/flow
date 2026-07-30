@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:1:22
 
-Cannot assign number literal `0` to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number literal `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic.js:1:22
    1| function x<T>(x: T = 0) {}
@@ -31,7 +31,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:15
 
-Cannot assign number literal `0` to `x` because number [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot assign number literal `0` to `x` because `0` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    generic.js:4:15
    4|   x<T>(x: T = 0) {}
@@ -188,7 +188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:7:26
 
-Cannot assign string literal `hello` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign string literal `hello` to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional.js:7:26
    7| function qux(x: number = "hello", ...y: [string, unknown]):string { foo(x); return y[0]; } // error: string ~> number
@@ -202,7 +202,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:9:7
 
-Cannot call `qux` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `qux` because in index `0`: `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional.js:9:7
    9| qux(0,0,0); // Error, number ~> string
@@ -216,7 +216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:10:11
 
-Cannot call `qux` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `qux` because in index `0`: `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional.js:10:11
    10| qux(0,...[42, ""]); // Error, number ~> string
@@ -230,8 +230,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param2.js:7:31
 
-Cannot call `i.map` with function bound to `mapper` because in the return value: undefined [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `i.map` with function bound to `mapper` because in the return value: `void` [1] is incompatible with
+`number` [2]. [incompatible-type]
 
    optional_param2.js:7:31
    7| var j:I<number> = i.map(id => id);
@@ -248,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ optional_param4.js:12:5
 
-Cannot call `foo` with `true` bound to `x` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `foo` with `true` bound to `x` because `true` [1] is incompatible with `number` [2]. [incompatible-type]
 
    optional_param4.js:12:5
    12| foo(true); // ERROR boolean ~> number
@@ -262,7 +262,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- optional_param4.js:13:10
 
-Cannot call `foo` because in array element: boolean [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `foo` because in array element: `true` [1] is incompatible with `string` [2]. [incompatible-type]
 
    optional_param4.js:13:10
    13| foo(123, true); // ERROR boolean ~> string
@@ -276,7 +276,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:3:38
 
-Cannot assign undefined to `bar` because undefined [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign undefined to `bar` because `void` [1] is incompatible with `{duck: unknown}` [2]. [incompatible-type]
 
    undefined.js:3:38
    3| function foo(bar?: {duck: unknown} = undefined) {

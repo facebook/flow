@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- This.js:7:10
 
-Cannot return `this.x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `this.x` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    This.js:7:10
    7|   return this.x // error: x not in Object, string not compatible with number
@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- This.js:11:21
 
-Cannot assign `f1.bind(...)()` to `f1_2` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `f1.bind(...)()` to `f1_2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    This.js:11:21
    11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
@@ -76,7 +76,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- This.js:26:12
 
-Cannot return `a2()` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `a2()` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    This.js:26:12
    26|     return a2() // error: string not compatible with number
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- This.js:30:21
 
-Cannot assign `f2.bind(...)()` to `f2_2` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `f2.bind(...)()` to `f2_2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    This.js:30:21
    30| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
@@ -110,7 +110,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- This.js:35:1
 
-Cannot cast `this` to undefined because global object [1] is incompatible with undefined [2]. [incompatible-type]
+Cannot cast `this` to undefined because global object [1] is incompatible with `void` [2]. [incompatible-type]
 
    This.js:35:1
    35| this as void;
@@ -141,7 +141,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- arrows.js:24:17
 
-Cannot call `super.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+Cannot call `super.foo` with empty string bound to `x` because `""` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    arrows.js:24:17

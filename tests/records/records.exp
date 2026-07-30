@@ -30,7 +30,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- declaration.js:20:3
 
-Cannot cast `x.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.a` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declaration.js:20:3
    20|   x.a as empty; // ERROR: `number`
@@ -77,7 +77,7 @@ Cannot assign function to `R.random` because property `random` is not writable. 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:143:3
 
-Cannot cast `R.zero` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `R.zero` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declaration.js:143:3
    143|   R.zero as empty; // ERROR: `number`
@@ -193,8 +193,8 @@ References:
 Error -------------------------------------------------------------------------------------------- declaration.js:366:22
 
 Cannot instantiate `R` because in type argument `T`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either `boolean` [1] is incompatible with `number` [2].
+ - Or `boolean` [1] is incompatible with `string` [3].
 
    declaration.js:366:22
    366|   declare const z: R<boolean>; // ERROR
@@ -440,7 +440,7 @@ Error --------------------------------------------------------------------------
 
 Error -------------------------------------------------------------------------------------------- declaration.js:502:17
 
-Cannot initialize property `a` with `true` because boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot initialize property `a` with `true` because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
    declaration.js:502:17
    502|     a: number = true, // ERROR
@@ -484,7 +484,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:33:15
 
-Cannot create record `R` because in property `b`: null [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot create record `R` because in property `b`: `null` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    expression.js:33:15
    33|   R {a: 1, b: null}; // ERROR
@@ -558,7 +558,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:64:9
 
-Cannot create record `R` because in property `a`: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot create record `R` because in property `a`: `"s"` [1] is incompatible with `number` [2]. [incompatible-type]
 
    expression.js:64:9
    64|   R {a: 's', b: 1}; // ERROR: wrong type for `a` and `b`
@@ -572,7 +572,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- expression.js:64:17
 
-Cannot create record `R` because in property `b`: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot create record `R` because in property `b`: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
    expression.js:64:17
    64|   R {a: 's', b: 1}; // ERROR: wrong type for `a` and `b`
@@ -586,7 +586,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:65:9
 
-Cannot create record `R` because in property `a`: null [1] is incompatible with number [2]. [incompatible-type]
+Cannot create record `R` because in property `a`: `null` [1] is incompatible with `number` [2]. [incompatible-type]
 
    expression.js:65:9
    65|   R {a: null, b: 's'}; // ERROR: wrong type for `a`
@@ -600,7 +600,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:13:3
 
-Cannot cast `x` to empty because `RNamed` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `RNamed` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:13:3
    13|   x as empty; // ERROR
@@ -647,7 +647,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:18:14
 
-Cannot create record `RNamed` because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+Cannot create record `RNamed` because in property `a`: `false` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    imported.js:18:14
    18|   RNamed {a: false}; // ERROR
@@ -661,7 +662,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:25:3
 
-Cannot cast `x` to empty because `RDefault` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because `RDefault` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    imported.js:25:3
    25|   x as empty; // ERROR
@@ -708,7 +709,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:30:16
 
-Cannot create record `RDefault` because in property `a`: boolean [1] is incompatible with number [2].
+Cannot create record `RDefault` because in property `a`: `false` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    imported.js:30:16
@@ -723,7 +724,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:36:21
 
-Cannot create record `RKeyNames` because in property `foo`: boolean [1] is incompatible with string [2].
+Cannot create record `RKeyNames` because in property `foo`: `false` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    imported.js:36:21
@@ -738,7 +739,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:36:32
 
-Cannot create record `RKeyNames` because in property `42`: boolean [1] is incompatible with number [2].
+Cannot create record `RKeyNames` because in property `42`: `false` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    imported.js:36:32
@@ -966,7 +967,7 @@ Use a record expression directly instead of `new` with an object literal. For ex
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:10:3
 
-Cannot cast `x.static` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.static` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:10:3
    10|   x.static as empty; // ERROR: `string`
@@ -983,7 +984,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:13:3
 
-Cannot cast `x.async` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.async` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:13:3
    13|   x.async as empty; // ERROR: `number`
@@ -1000,7 +1001,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:29:3
 
-Cannot cast `x.static()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.static()` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:29:3
    29|   x.static() as empty; // ERROR: `number`
@@ -1017,7 +1018,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:32:3
 
-Cannot cast `x.async()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x.async()` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:32:3
    32|   x.async() as empty; // ERROR: `string`
@@ -1034,7 +1035,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:42:3
 
-Cannot cast `R.async` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `R.async` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:42:3
    42|   R.async as empty; // ERROR: `number`
@@ -1051,7 +1052,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:54:3
 
-Cannot cast `R.async()` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `R.async()` to empty because `boolean` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    static-async-names.js:54:3
    54|   R.async() as empty; // ERROR: `boolean`

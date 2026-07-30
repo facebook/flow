@@ -34,7 +34,7 @@ No errors!
 === block 7 ===
 Error --------------------------------------------------------------------------- -:7:16
 
-Cannot call `acceptsBoolean` with `"foo"` bound to `value` because string [1] is incompatible with boolean [2].
+Cannot call `acceptsBoolean` with `"foo"` bound to `value` because `"foo"` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    -:7:16
@@ -52,7 +52,7 @@ Found 1 error
 === block 8 ===
 Error --------------------------------------------------------------------------- -:4:16
 
-Cannot call `acceptsBoolean` with `0` bound to `value` because number [1] is incompatible with boolean [2].
+Cannot call `acceptsBoolean` with `0` bound to `value` because `0` [1] is incompatible with `boolean` [2].
 [incompatible-type]
 
    -:4:16
@@ -73,7 +73,7 @@ No errors!
 === block 10 ===
 Error --------------------------------------------------------------------------- -:9:15
 
-Cannot call `acceptsNumber` with `"foo"` bound to `value` because string [1] is incompatible with number [2].
+Cannot call `acceptsNumber` with `"foo"` bound to `value` because `"foo"` [1] is incompatible with `number` [2].
 [incompatible-type]
 
    -:9:15
@@ -87,8 +87,8 @@ References:
 
 Error -------------------------------------------------------------------------- -:10:15
 
-Cannot call `acceptsNumber` with `123n` bound to `value` because bigint literal `123n` [1] is incompatible with
-number [2]. [incompatible-type]
+Cannot call `acceptsNumber` with `123n` bound to `value` because `123n` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    -:10:15
    10| acceptsNumber(123n);     // Error!
@@ -108,7 +108,7 @@ No errors!
 === block 12 ===
 Error --------------------------------------------------------------------------- -:7:15
 
-Cannot call `acceptsString` with `false` bound to `value` because boolean [1] is incompatible with string [2].
+Cannot call `acceptsString` with `false` bound to `value` because `false` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    -:7:15
@@ -158,10 +158,16 @@ References:
 
 Error ---------------------------------------------------------------------------- -:8:8
 
-Cannot coerce array literal to string because empty array literal [1] should not be coerced. [incompatible-type]
+Cannot coerce array literal to string because `Array<empty>` [1] is incompatible with `string` [2]. [incompatible-type]
 
+   -:8:8
    8| `foo ${[]}`;   // Error!
              ^^ [1]
+
+References:
+   -:8:1
+   8| `foo ${[]}`;   // Error!
+      ^^^^^^^^^^^ [2]
 
 
 Found 3 errors
@@ -175,7 +181,7 @@ No errors!
 === block 16 ===
 Error --------------------------------------------------------------------------- -:5:13
 
-Cannot call `acceptsNull` with `undefined` bound to `value` because undefined [1] is incompatible with null [2].
+Cannot call `acceptsNull` with `undefined` bound to `value` because `void` [1] is incompatible with `null` [2].
 [incompatible-type]
 
    -:5:13
@@ -189,7 +195,7 @@ References:
 
 Error -------------------------------------------------------------------------- -:10:18
 
-Cannot call `acceptsUndefined` with `null` bound to `value` because null [1] is incompatible with undefined [2].
+Cannot call `acceptsUndefined` with `null` bound to `value` because `null` [1] is incompatible with `void` [2].
 [incompatible-type]
 
    -:10:18
@@ -216,8 +222,8 @@ No errors!
 === block 20 ===
 Error --------------------------------------------------------------------------- -:8:21
 
-Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: null [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot call `acceptsObject` with object literal bound to `value` because in property `foo`: `null` [1] is incompatible
+with `string` [2]. [incompatible-type]
 
    -:8:21
    8| acceptsObject({foo: null});      // Error!
@@ -237,7 +243,7 @@ No errors!
 === block 22 ===
 Error --------------------------------------------------------------------------- -:8:23
 
-Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
+Cannot call `acceptsOptionalString` with `null` bound to `value` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    -:8:23
@@ -258,7 +264,7 @@ No errors!
 === block 24 ===
 Error --------------------------------------------------------------------------- -:8:23
 
-Cannot call `acceptsOptionalString` with `null` bound to `value` because null [1] is incompatible with string [2].
+Cannot call `acceptsOptionalString` with `null` bound to `value` because `null` [1] is incompatible with `string` [2].
 [incompatible-type]
 
    -:8:23
@@ -276,7 +282,7 @@ Found 1 error
 === block 25 ===
 Error --------------------------------------------------------------------------- -:7:15
 
-Cannot call `acceptsSymbol` with `false` bound to `value` because boolean [1] is incompatible with symbol [2].
+Cannot call `acceptsSymbol` with `false` bound to `value` because `false` [1] is incompatible with `symbol` [2].
 [incompatible-type]
 
    -:7:15
@@ -297,7 +303,7 @@ No errors!
 === block 27 ===
 Error --------------------------------------------------------------------------- -:5:15
 
-Cannot call `acceptsBigInt` with `42` bound to `value` because number [1] is incompatible with bigint [2].
+Cannot call `acceptsBigInt` with `42` bound to `value` because `42` [1] is incompatible with `bigint` [2].
 [incompatible-type]
 
    -:5:15

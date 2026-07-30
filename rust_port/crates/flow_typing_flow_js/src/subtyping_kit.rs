@@ -29,6 +29,7 @@ use flow_typing_errors::error_message::EExpectedStringLitData;
 use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
 use flow_typing_errors::error_message::EIncompatibleData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
@@ -6318,16 +6319,28 @@ pub fn rec_sub_t<'cx>(
         }
 
         _ => {
-            let reason_lower = type_util::generalized_reason_of_t(u, l);
-            let reason_upper = type_util::generalized_reason_of_t(l, u);
+            let type_or_explanatory_desc = |t: &Type| {
+                let desc = type_util::reason_of_t(t).desc(true);
+                if desc.is_explanatory() {
+                    type_or_type_desc::TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+                } else {
+                    type_or_type_desc::TypeOrTypeDescT::Type(t.dupe())
+                }
+            };
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower,
-                    reason_upper,
-                    use_op,
-                    explanation: None,
-                })),
+                ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
+                    EIncompatibleTypesWithUseOpData {
+                        lower_loc: type_util::loc_of_t(l).dupe(),
+                        lower_def_loc: type_util::ref_loc_of_t(l).dupe(),
+                        upper_loc: type_util::loc_of_t(u).dupe(),
+                        upper_def_loc: type_util::ref_loc_of_t(u).dupe(),
+                        lower_desc: type_or_explanatory_desc(l),
+                        upper_desc: type_or_explanatory_desc(u),
+                        use_op,
+                        explanation: None,
+                    },
+                )),
             )
         }
     }
