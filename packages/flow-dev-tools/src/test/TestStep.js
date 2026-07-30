@@ -34,6 +34,7 @@ const {
   default: simpleDiffAssertion,
 } = require('./assertions/simpleDiffAssertion');
 const {default: lspMessagesMatch} = require('./assertions/lspMessagesMatch');
+const {normalizeOutput} = require('./assertions/normalize');
 
 const {sleep} = require('../utils/async');
 
@@ -41,6 +42,7 @@ import type {
   AssertionLocation,
   ErrorAssertion,
   ErrorAssertionResult,
+  NormalizeOptions,
   Suggestion,
 } from './assertions/assertionTypes';
 import type {TestBuilder} from './builder';
@@ -111,6 +113,8 @@ class TestStep {
     builder: TestBuilder,
     env: StepEnvWriteable,
   ): Promise<void> {
+    // Expose the sandbox project directory to assertions for the `{normalize: ['paths']}` option.
+    env.setProjectDir(builder.dir);
     for (const action of this._actions) {
       await action(builder, env);
     }
@@ -171,9 +175,11 @@ class TestStepFirstOrSecondStage extends TestStep {
     return this._cloneWithAssertion(stderr(expected, assertLoc));
   }
 
-  stdout(expected: string): TestStepSecondStage {
+  stdout(expected: string, options?: NormalizeOptions): TestStepSecondStage {
     const assertLoc = searchStackForTestAssertion();
-    return this._cloneWithAssertion(stdout(expected, assertLoc));
+    return this._cloneWithAssertion(
+      stdout(expected, assertLoc, options?.normalize),
+    );
   }
 
   sortedStdout(expected: string): TestStepSecondStage {
@@ -785,8 +791,10 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
   verifyFileContents: (
     relPath: string,
     expected: string,
-  ) => TestStepSecondStage = (relPath, expected) => {
+    options?: NormalizeOptions,
+  ) => TestStepSecondStage = (relPath, expected, options) => {
     const assertLoc = searchStackForTestAssertion();
+    const normalize = options?.normalize;
     let actual = '';
     return this._cloneWithAction(async (builder, env) => {
       // Surface a missing/unreadable file as a normal assertion diff (expected vs "<file missing>")
@@ -797,13 +805,20 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
         actual = '<file missing>';
       }
     })._cloneWithAssertion((reason, env) => {
+      const normalized =
+        normalize == null
+          ? actual
+          : normalizeOutput(normalize, actual, env.getProjectDir());
       const suggestion: Suggestion = {
         method: 'verifyFileContents',
-        args: [relPath, actual],
+        args:
+          normalize == null
+            ? [relPath, normalized]
+            : [relPath, normalized, {normalize}],
       };
       return simpleDiffAssertion(
         expected,
-        actual,
+        normalized,
         assertLoc,
         reason,
         relPath,

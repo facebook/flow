@@ -25,7 +25,13 @@ import type {Args} from './recordCommand';
 import type {CallSuggestion} from '../test/assertions/assertionTypes';
 
 function escapeString(str: string): string {
-  return str.replace(/`/g, '\\`').replace(/\${/g, '\\${');
+  // Escape backslashes first so literal backslashes in the content survive the round-trip; then
+  // escape the template-literal metacharacters. Order matters: metacharacter escaping adds
+  // backslashes that must not themselves be doubled.
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\${/g, '\\${');
 }
 
 function indent(str: string, size: number) {

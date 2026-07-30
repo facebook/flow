@@ -9,10 +9,12 @@
  */
 
 const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
+const {normalizeOutput} = require('./normalize');
 
 import type {
   AssertionLocation,
   ErrorAssertion,
+  NormalizeTag,
   Suggestion,
 } from './assertionTypes';
 
@@ -27,14 +29,19 @@ function formatIfJSON(actual: string) {
 function stdout(
   expected: string,
   assertLoc: ?AssertionLocation,
+  normalize?: $ReadOnlyArray<NormalizeTag>,
 ): ErrorAssertion {
   return (reason: ?string, env) => {
-    const actual = formatIfJSON(env.getStdout());
+    let actual = formatIfJSON(env.getStdout());
+    // The recorded golden `expected` is already normalized, so only the actual output needs it here.
+    if (normalize != null) {
+      actual = normalizeOutput(normalize, actual, env.getProjectDir());
+    }
     expected = formatIfJSON(expected);
-    const suggestion: Suggestion = {
-      method: 'stdout',
-      args: [formatIfJSON(actual)],
-    };
+    const suggestion: Suggestion =
+      normalize == null
+        ? {method: 'stdout', args: [actual]}
+        : {method: 'stdout', args: [actual, {normalize}]};
     return simpleDiffAssertion(
       expected,
       actual,

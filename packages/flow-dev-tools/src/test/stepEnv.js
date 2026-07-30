@@ -22,6 +22,7 @@ export interface StepEnvWriteable {
   setNewErrors(errors: FlowResult): void;
   setServerRunning(running: 'stopped' | 'running'): void;
   setLSPRunning(running: 'stopped' | 'running'): void;
+  setProjectDir(dir: string): void;
   triggerFlowCheck(): void;
 }
 
@@ -36,6 +37,7 @@ export interface StepEnvReadable {
   getNewErrors(): FlowResult;
   getServerRunning(): 'stopped' | 'running';
   getLSPRunning(): 'stopped' | 'running';
+  getProjectDir(): string;
   shouldRunFlow(): boolean;
 }
 
@@ -54,6 +56,7 @@ function newEnv(oldErrors: FlowResult): {
   let lspMessagesSinceStartOfStep: Array<LSPMessage> = [];
   let lspStderrSinceStartOfStep = '';
   let mockInvocationsSinceStartOfStep: AllInvocations = {};
+  let projectDir = '';
 
   const envWrite: StepEnvWriteable = {
     reportStdout(output: string) {
@@ -90,6 +93,10 @@ function newEnv(oldErrors: FlowResult): {
 
     setLSPRunning(running: 'stopped' | 'running') {
       lspRunning = running;
+    },
+
+    setProjectDir(dir: string) {
+      projectDir = dir;
     },
 
     triggerFlowCheck() {
@@ -136,6 +143,10 @@ function newEnv(oldErrors: FlowResult): {
 
     getLSPRunning() {
       return lspRunning;
+    },
+
+    getProjectDir() {
+      return projectDir;
     },
 
     shouldRunFlow() {
