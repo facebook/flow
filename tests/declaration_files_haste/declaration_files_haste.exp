@@ -25,7 +25,7 @@ Error --------------------------------------------------------------------------
 
 Error ------------------------------------------------------------------------------------------- GenericRecord.js:13:32
 
-`GenericRecordBase` [1] is not a polymorphic type. [incompatible-use]
+`Class<any>` [1] is not a polymorphic type. [incompatible-use]
 
    GenericRecord.js:13:32
    13| class GenericRecord<T> extends GenericRecordBase<T> {} // ERROR

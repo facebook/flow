@@ -18,8 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:29
 
-Cannot instantiate `$KeyMirror` because number literal `1` [1] is not a valid argument of `$KeyMirror` [2].
-[incompatible-use]
+Cannot instantiate `$KeyMirror` because `1` [1] is not a valid argument of `$KeyMirror` [2]. [incompatible-use]
 
    test.js:28:29
    28| declare const badKeyMirror: $KeyMirror<1>;

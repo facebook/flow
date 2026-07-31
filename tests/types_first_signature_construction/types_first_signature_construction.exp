@@ -171,7 +171,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Cannot call `f5` because number [1] is not a function. [not-a-function]
+Cannot call `f5` because `number` [1] is not a function. [not-a-function]
 
    test.js:20:1
    20| f5() as number;

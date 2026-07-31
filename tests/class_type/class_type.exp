@@ -56,7 +56,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test3.js:5:1
 
-null [1] is not an instance type. [incompatible-use]
+`null` [1] is not an instance type. [incompatible-use]
 
    test3.js:5:1
    5| o.p.foo;

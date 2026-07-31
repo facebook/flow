@@ -1756,7 +1756,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:5
 
-Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
+Cannot call `x.y` because `void` [1] is not a function. [not-a-function]
 
    hasOwnProperty.js:4:5
    4|   x.y(); // error: could be undefined
@@ -1770,7 +1770,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:6:7
 
-Cannot call `x.y` because undefined [1] is not a function. [not-a-function]
+Cannot call `x.y` because `void` [1] is not a function. [not-a-function]
 
    hasOwnProperty.js:6:7
    6|     x.y(); // error: still could be undefined
@@ -2744,7 +2744,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:12
 
-Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+Cannot call `v.f` because `void` [1] is not a function. [not-a-function]
 
    invalidation.js:13:12
    13|   return v.f(); // error: trying to still use the refinement.
@@ -2786,7 +2786,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:19:12
 
-Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+Cannot call `v.f` because `void` [1] is not a function. [not-a-function]
 
    invalidation.js:19:12
    19|   return v.f(); // error: trying to still use the refinement.
@@ -2828,7 +2828,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:25:12
 
-Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+Cannot call `v.f` because `void` [1] is not a function. [not-a-function]
 
    invalidation.js:25:12
    25|   return v.f(); // error: trying to still use the refinement.
@@ -2870,7 +2870,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:31:12
 
-Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
+Cannot call `v.f` because `void` [1] is not a function. [not-a-function]
 
    invalidation.js:31:12
    31|   return v.f(); // error: trying to still use the refinement.
@@ -15833,7 +15833,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:22:7
 
-Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
+Cannot call `BAZ.stuff` because `void` [1] is not a function. [not-a-function]
 
    typeof.js:22:7
    22|   BAZ.stuff(123); // error, refinement is gone
@@ -15917,7 +15917,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:28:9
 
-Cannot call `BAZ.stuff` because undefined [1] is not a function. [not-a-function]
+Cannot call `BAZ.stuff` because `void` [1] is not a function. [not-a-function]
 
    typeof.js:28:9
    28|     BAZ.stuff(123); // error, refinement is gone

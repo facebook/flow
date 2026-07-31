@@ -195,7 +195,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_rest.js:12:9
 
-number [1] is not an array. [not-an-array]
+`number` [1] is not an array. [not-an-array]
 
    array_rest.js:12:9
    12| let [...e] = 0;
@@ -583,7 +583,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:60:27
 
-number [1] is not an object. [not-an-object]
+`number` [1] is not an object. [not-an-object]
 
    defaults.js:60:27
    60| function obj_rest_err({...o}: number = 0) {} // error: expected object instead of number
@@ -611,7 +611,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:62:27
 
-null [1] is not an array. [not-an-array]
+`null` [1] is not an array. [not-an-array]
 
    defaults.js:62:27
    62| function arr_rest_err([...a]: null = null) {} // error: expected array instead of null

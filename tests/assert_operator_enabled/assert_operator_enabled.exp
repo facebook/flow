@@ -130,7 +130,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot call `g` because null [1] is not a function. [not-a-function]
+Cannot call `g` because `null` [1] is not a function. [not-a-function]
 
    test.js:21:3
    21|   g()! // Calling null

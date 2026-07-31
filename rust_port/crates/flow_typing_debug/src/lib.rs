@@ -59,6 +59,7 @@ use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
+use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
@@ -1901,6 +1902,29 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EIncompatible(Box::new(EIncompatibleData {{ lower = ({}, _); upper = ({}, {}); use_op = {}; branches = _ }}))",
                 dump_reason(cx, reason_lower),
+                format_args!("loc {:?}", upper.loc),
+                dump_upper_kind(&upper.kind),
+                match use_op {
+                    None => "None".to_string(),
+                    Some(use_op) => format!("Some({})", string_of_use_op(use_op)),
+                }
+            )
+        }
+        ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
+            lower_reason,
+            lower_desc,
+            upper,
+            use_op,
+            ..
+        }) => {
+            let lower_desc = match lower_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EIncompatibleType {{ lower_reason = {}; lower = {}; upper = ({}, {}); use_op = {} }}",
+                dump_reason(cx, lower_reason),
+                lower_desc,
                 format_args!("loc {:?}", upper.loc),
                 dump_upper_kind(&upper.kind),
                 match use_op {

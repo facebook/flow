@@ -215,7 +215,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:37:8
 
-Cannot call method `entries` because undefined [1] is not an object. [not-an-object]
+Cannot call method `entries` because `void` [1] is not an object. [not-an-object]
 
    object_entries.js:37:8
    37| Object.entries(undefined); // ERROR
@@ -229,7 +229,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:38:8
 
-Cannot call method `entries` because null [1] is not an object. [not-an-object]
+Cannot call method `entries` because `null` [1] is not an object. [not-an-object]
 
    object_entries.js:38:8
    38| Object.entries(null); // ERROR
@@ -243,7 +243,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:39:8
 
-Cannot call method `entries` because number [1] is not an object. [not-an-object]
+Cannot call method `entries` because `number` [1] is not an object. [not-an-object]
 
    object_entries.js:39:8
    39| Object.entries(1); // ERROR
@@ -257,7 +257,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:40:8
 
-Cannot call method `entries` because boolean [1] is not an object. [not-an-object]
+Cannot call method `entries` because `boolean` [1] is not an object. [not-an-object]
 
    object_entries.js:40:8
    40| Object.entries(true); // ERROR
@@ -458,7 +458,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:58:8
 
-Cannot call method `keys` because undefined [1] is not an object. [not-an-object]
+Cannot call method `keys` because `void` [1] is not an object. [not-an-object]
 
    object_keys.js:58:8
    58| Object.keys(undefined); // ERROR
@@ -472,7 +472,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:59:8
 
-Cannot call method `keys` because null [1] is not an object. [not-an-object]
+Cannot call method `keys` because `null` [1] is not an object. [not-an-object]
 
    object_keys.js:59:8
    59| Object.keys(null); // ERROR
@@ -486,7 +486,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:60:8
 
-Cannot call method `keys` because number [1] is not an object. [not-an-object]
+Cannot call method `keys` because `number` [1] is not an object. [not-an-object]
 
    object_keys.js:60:8
    60| Object.keys(1); // ERROR
@@ -500,7 +500,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:61:8
 
-Cannot call method `keys` because boolean [1] is not an object. [not-an-object]
+Cannot call method `keys` because `boolean` [1] is not an object. [not-an-object]
 
    object_keys.js:61:8
    61| Object.keys(true); // ERROR
@@ -1400,7 +1400,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:36:8
 
-Cannot call method `values` because undefined [1] is not an object. [not-an-object]
+Cannot call method `values` because `void` [1] is not an object. [not-an-object]
 
    object_values.js:36:8
    36| Object.values(undefined); // ERROR
@@ -1414,7 +1414,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:37:8
 
-Cannot call method `values` because null [1] is not an object. [not-an-object]
+Cannot call method `values` because `null` [1] is not an object. [not-an-object]
 
    object_values.js:37:8
    37| Object.values(null); // ERROR
@@ -1428,7 +1428,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:38:8
 
-Cannot call method `values` because number [1] is not an object. [not-an-object]
+Cannot call method `values` because `number` [1] is not an object. [not-an-object]
 
    object_values.js:38:8
    38| Object.values(1); // ERROR
@@ -1442,7 +1442,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:39:8
 
-Cannot call method `values` because boolean [1] is not an object. [not-an-object]
+Cannot call method `values` because `boolean` [1] is not an object. [not-an-object]
 
    object_values.js:39:8
    39| Object.values(true); // ERROR

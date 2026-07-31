@@ -285,7 +285,7 @@ Unreachable code. [unreachable-code]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:5
 
-Cannot call `x` because string [1] is not a function. [not-a-function]
+Cannot call `x` because `string` [1] is not a function. [not-a-function]
 
    test.js:18:5
    18|     x(); // string ~/> function call (no num or boolean error)

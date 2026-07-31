@@ -1036,7 +1036,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- hoc_omit_regressions.js:78:2
 
-Cannot create `Resize` element because `Omit` [1] is not a polymorphic type. [incompatible-use]
+Cannot create `Resize` element because `unknown` [1] is not a polymorphic type. [incompatible-use]
 
    hoc_omit_regressions.js:78:2
      78| <Resize component={ComponentWithSize} foo="ok" />; // ERROR
@@ -1050,7 +1050,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ hoc_omit_regressions.js:104:1
 
-Cannot call `takesConfig` because `Omit` [1] is not a polymorphic type. [incompatible-use]
+Cannot call `takesConfig` because `unknown` [1] is not a polymorphic type. [incompatible-use]
 
    hoc_omit_regressions.js:104:1
     104| takesConfig({component: SizedComponent, foo: 'ok'}); // ERROR

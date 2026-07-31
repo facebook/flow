@@ -750,7 +750,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:14:17
 
-Cannot instantiate `typeof barF` because function type [1] is not a polymorphic type. [incompatible-use]
+Cannot instantiate `typeof barF` because `() => string` [1] is not a polymorphic type. [incompatible-use]
 
    with-targs.js:14:17
    14| type Invalid1 = typeof barF<string>; // error
@@ -778,7 +778,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:16:17
 
-Cannot instantiate `typeof barFExported` because function type [1] is not a polymorphic type. [incompatible-use]
+Cannot instantiate `typeof barFExported` because `() => string` [1] is not a polymorphic type. [incompatible-use]
 
    with-targs.js:16:17
    16| type Invalid3 = typeof barFExported<string>; // error
@@ -899,7 +899,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:43:15
 
-Cannot instantiate `typeof EscapedGeneric.x` because empty [1] is not a polymorphic type. [incompatible-use]
+Cannot instantiate `typeof EscapedGeneric.x` because `empty` [1] is not a polymorphic type. [incompatible-use]
 
    43| emptyValue as typeof EscapedGeneric.x<number, boolean>; // error: empty not polymorphic
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
@@ -907,7 +907,7 @@ Cannot instantiate `typeof EscapedGeneric.x` because empty [1] is not a polymorp
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:44:15
 
-Cannot instantiate `typeof EscapedGenericExported.x` because empty [1] is not a polymorphic type. [incompatible-use]
+Cannot instantiate `typeof EscapedGenericExported.x` because `empty` [1] is not a polymorphic type. [incompatible-use]
 
    44| emptyValue as typeof EscapedGenericExported.x<number, boolean>; // error: empty not polymorphic
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]

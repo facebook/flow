@@ -397,8 +397,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53
 
-Cannot extend `InstrumentedContainer` [1] with `container` because `container` [2] is not inheritable.
-[incompatible-use]
+Cannot extend `InstrumentedContainer` [1] with `container` because `void` [2] is not inheritable. [incompatible-use]
 
    this_subst.js:1:53
    1| var container = class InstrumentedContainer extends container {

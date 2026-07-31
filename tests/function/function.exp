@@ -912,7 +912,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:15:3
 
-Cannot call `f` because number [1] is not an array. [not-an-array]
+Cannot call `f` because `number` [1] is not an array. [not-an-array]
 
    rest_type.js:15:3
    15|   f(123); // Error - number ~> array - luckily this errors
@@ -926,7 +926,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rest_type.js:20:3
 
-Cannot call `f` because string [1] is not an array. [not-an-array]
+Cannot call `f` because `string` [1] is not an array. [not-an-array]
 
    rest_type.js:20:3
    20|   f('hello'); // Error - string ~> array - luckily this errors

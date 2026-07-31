@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- arr_rest.js:9:11
 
-`Set` [1] is not an array. [not-an-array]
+`Set<any>` [1] is not an array. [not-an-array]
 
    arr_rest.js:9:11
    9| const [...y] = new Set() // still error
@@ -908,7 +908,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:10:7
 
-Cannot call `x.m` because undefined [1] is not a function. [not-a-function]
+Cannot call `x.m` because `void` [1] is not a function. [not-a-function]
 
    refinements.js:10:7
    10|     x.m(u => { u as string; });  // error: undefined not a function & mising local annotation
@@ -964,7 +964,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:29:8
 
-Cannot call `x?.m` because undefined [1] is not a function. [not-a-function]
+Cannot call `x?.m` because `void` [1] is not a function. [not-a-function]
 
    refinements.js:29:8
    29|     x?.m(u => { u as string; });  // error: undefined not a function & mising local annotation

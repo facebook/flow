@@ -1427,6 +1427,32 @@ pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageTypeReferenceData<L: Dupe> {
+    pub loc: L,
+    pub desc: Result<ALocTy, VirtualReasonDesc<L>>,
+}
+
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum LowerRequirement {
+    Array,
+    ArrayIndex,
+    Class,
+    ClassWithPrivateProperties,
+    Function,
+    FunctionType,
+    Inheritable,
+    InstanceType,
+    Object,
+    PolymorphicType,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageInvalidArgumentWithPrintedTypeData<L: Dupe> {
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: VirtualReason<L>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
@@ -2109,6 +2135,8 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
+    MessageInvalidArgumentWithPrintedType(Box<MessageInvalidArgumentWithPrintedTypeData<L>>),
+
     MessageInvalidCatchParameterAnnotation {
         ts_utility_syntax: bool,
     },
@@ -2189,8 +2217,18 @@ pub enum Message<L: Dupe> {
     MessageLowerIsNotPolymorphicType(VirtualReason<L>),
     MessageLowerIsNotReactComponent(VirtualReason<L>),
 
+    MessageLowerIsNotWithPrintedType {
+        lower: Box<MessageTypeReferenceData<L>>,
+        requirement: LowerRequirement,
+    },
+
     MessageLowerIsNotSupportedByUnclassifiedUse {
         lower: VirtualReason<L>,
+        ctor: FlowSmolStr,
+    },
+
+    MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType {
+        lower: Box<MessageTypeReferenceData<L>>,
         ctor: FlowSmolStr,
     },
 
@@ -2335,6 +2373,7 @@ pub enum Message<L: Dupe> {
     MessageUninitializedInstanceProperty(PropertyAssignmentKind),
 
     MessageUnknownParameterTypes(VirtualReason<L>),
+    MessageUnknownParameterTypesWithPrintedType(Box<MessageTypeReferenceData<L>>),
     MessageUnnecessaryDeclareTypeOnlyExport,
     MessageUnnecessaryInvariant(VirtualReason<L>),
     MessageUnnecessaryOptionalChain(VirtualReason<L>),

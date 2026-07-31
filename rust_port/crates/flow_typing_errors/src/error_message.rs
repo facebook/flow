@@ -974,6 +974,54 @@ pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: Option<VirtualUseOp<L>>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct EIncompatibleTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub lower_reason: VirtualReason<L>,
+    pub lower_kind: Option<LowerKind>,
+    pub lower_loc: L,
+    pub lower_def_loc: L,
+    pub lower_desc: TypeOrTypeDesc<L>,
+    pub upper: IncompatibleUpperData<L>,
+    pub use_op: Option<VirtualUseOp<L>>,
+}
+
+// The normalized type is presentation-only so error deduplication matches EIncompatible.
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTypeData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.lower_reason == other.lower_reason
+            && self.lower_kind == other.lower_kind
+            && self.upper == other.upper
+            && self.use_op == other.use_op
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EIncompatibleTypeData<L> {}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EIncompatibleTypeData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.lower_reason.hash(state);
+        self.lower_kind.hash(state);
+        self.upper.hash(state);
+        self.use_op.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for EIncompatibleTypeData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypeData<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.lower_reason
+            .cmp(&other.lower_reason)
+            .then_with(|| self.lower_kind.cmp(&other.lower_kind))
+            .then_with(|| self.upper.cmp(&other.upper))
+            .then_with(|| self.use_op.cmp(&other.use_op))
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -2521,6 +2569,8 @@ pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + Pa
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EIncompatible(Box<EIncompatibleData<L>>),
 
+    EIncompatibleType(Box<EIncompatibleTypeData<L>>),
+
     EIncompatibleSpeculation(Box<EIncompatibleSpeculationData<L>>),
 
     EIncompatibleDefs(Box<EIncompatibleDefsData<L>>),
@@ -3669,6 +3719,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     loc: f(uloc),
                     kind: map_upper_kind(ukind),
                 },
+            })),
+
+            EIncompatibleType(box EIncompatibleTypeData {
+                lower_reason,
+                lower_kind,
+                lower_loc,
+                lower_def_loc,
+                lower_desc,
+                upper:
+                    IncompatibleUpperData {
+                        loc: upper_loc,
+                        kind: upper_kind,
+                    },
+                use_op,
+            }) => EIncompatibleType(Box::new(EIncompatibleTypeData {
+                lower_reason: map_reason(lower_reason),
+                lower_kind,
+                lower_loc: f(lower_loc),
+                lower_def_loc: f(lower_def_loc),
+                lower_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_desc),
+                upper: IncompatibleUpperData {
+                    loc: f(upper_loc),
+                    kind: map_upper_kind(upper_kind),
+                },
+                use_op: use_op.map(map_use_op),
             })),
 
             EIncompatibleSpeculation(box EIncompatibleSpeculationData {
@@ -5639,6 +5714,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             };
 
         match msg {
+            EIncompatibleType(box EIncompatibleTypeData {
+                lower_reason,
+                lower_kind,
+                lower_loc,
+                lower_def_loc,
+                lower_desc,
+                upper,
+                use_op,
+            }) => EIncompatibleType(Box::new(EIncompatibleTypeData {
+                lower_reason,
+                lower_kind,
+                lower_loc,
+                lower_def_loc,
+                lower_desc: f(lower_desc),
+                upper,
+                use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
+            })),
+
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
                 lower_loc,
@@ -5783,6 +5876,9 @@ where
 {
     match msg {
         ErrorMessage::EIncompatible(box EIncompatibleData { use_op, .. }) => {
+            use_op.as_ref().map_or_else(|| nope, util)
+        }
+        ErrorMessage::EIncompatibleType(box EIncompatibleTypeData { use_op, .. }) => {
             use_op.as_ref().map_or_else(|| nope, util)
         }
         ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
@@ -6382,6 +6478,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EExpectedBigIntLit(box EExpectedBigIntLitData { .. })
             | Self::EIncompatibleProp(box EIncompatiblePropData { .. })
             | Self::EIncompatible(box EIncompatibleData { .. })
+            | Self::EIncompatibleType(box EIncompatibleTypeData { .. })
             | Self::EIncompatibleSpeculation(..)
             | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
             | Self::EHookIncompatible(box EHookIncompatibleData { .. })
@@ -6658,6 +6755,15 @@ pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct IncompatibleTypeUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub upper_kind: UpperKind<L>,
+    pub reason_lower: VirtualReason<L>,
+    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub use_op: VirtualUseOp<L>,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -6877,6 +6983,7 @@ pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     IncompatibleUse(Box<IncompatibleUseData<L>>),
+    IncompatibleTypeUse(Box<IncompatibleTypeUseData<L>>),
     Speculation(Box<SpeculationData<L>>),
     IncompatibleSubtyping(Box<IncompatibleSubtypingData<L>>),
     IncompatibleInvariantSubtyping(Box<IncompatibleInvariantSubtypingData<L>>),
@@ -6924,6 +7031,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc,
                 upper_kind,
                 reason_lower,
+                use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
+            })),
+
+            ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
+                lower_reason,
+                lower_desc,
+                upper:
+                    IncompatibleUpperData {
+                        loc,
+                        kind: upper_kind,
+                    },
+                use_op,
+                ..
+            }) => IncompatibleTypeUse(Box::new(IncompatibleTypeUseData {
+                loc,
+                upper_kind,
+                reason_lower: lower_reason,
+                lower_desc: expect_type_desc(lower_desc),
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
             })),
 
@@ -9678,6 +9803,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EImportTypeAsValue(box (_, _)) => Some(ImportTypeAsValue),
             ErrorMessage::EImportValueAsType(box (_, _)) => Some(ImportValueAsType),
             ErrorMessage::EIncompatible(box EIncompatibleData {
+                upper:
+                    IncompatibleUpperData {
+                        kind: upper_kind, ..
+                    },
+                ..
+            })
+            | ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
                 upper:
                     IncompatibleUpperData {
                         kind: upper_kind, ..

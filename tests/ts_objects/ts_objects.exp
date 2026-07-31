@@ -195,7 +195,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- interface_extends_jslib.js:8:11
 
-Cannot extend `Omit` [1] with `JsExt` because `Omit` [1] is not inheritable. [incompatible-use]
+Cannot extend `Omit` [1] with `JsExt` because `{a: number}` [1] is not inheritable. [incompatible-use]
 
    interface_extends_jslib.js:8:11
    8| interface JsExt extends Omit<Base, "b"> { // ERROR: not inheritable in .js

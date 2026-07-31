@@ -174,8 +174,7 @@ References:
 
 Error -------------------------------------------------------------------------------- union_enum_representative.js:63:1
 
-Cannot call `codes` because in at least one member of union type [1]: number literal `10` [2] is not a function.
-[not-a-function]
+Cannot call `codes` because in at least one member of union type [1]: `10` [2] is not a function. [not-a-function]
 
    union_enum_representative.js:63:1
    63| codes(); // error: number is not callable, via catch-all

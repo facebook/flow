@@ -17,6 +17,7 @@ use flow_analysis::scope_api::ScopeInfo;
 use flow_common::options::Options;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common_errors::error_codes::ErrorCode;
+use flow_common_ty::ty::Ty;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_ty::ty_utils;
@@ -66,6 +67,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
+use flow_typing_errors::error_message::IncompatibleTypeUseData;
 use flow_typing_errors::error_message::IncompatibleUseData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
@@ -1116,6 +1118,34 @@ pub fn ast_transforms_of_error(
     loc: Option<Loc>,
     error_message: &ErrorMessage<Loc>,
 ) -> Vec<AstTransformOfError> {
+    let optional_chaining_actions = |error_loc: Loc, reason_desc: &VirtualReasonDesc<Loc>| match (
+        loc_opt_intersects(loc.dupe(), error_loc.dupe()),
+        reason_desc,
+    ) {
+        (
+            true,
+            r @ (VirtualReasonDesc::RVoid
+            | VirtualReasonDesc::RNull
+            | VirtualReasonDesc::RVoidedNull
+            | VirtualReasonDesc::RNullOrVoid),
+        ) => {
+            let desc_str = flow_common::reason::string_of_desc::<Loc>(r);
+            let title = format!(
+                "Add optional chaining for object that might be `{}`",
+                desc_str
+            );
+            vec![AstTransformOfError {
+                title,
+                diagnostic_title: "add_optional_chaining".to_string(),
+                transform: untyped_ast_transform(Box::new(|ast, loc| {
+                    autofix_optional_chaining::add_optional_chaining(ast, loc)
+                })),
+                target_loc: error_loc,
+                confidence: QuickfixConfidence::BestEffort,
+            }]
+        }
+        _ => vec![],
+    };
     let invariant_subtyping_actions = |lower_loc: Loc,
                                        upper_loc: Loc,
                                        upper_ty: &flow_common_ty::ty::ALocTy,
@@ -2307,36 +2337,23 @@ pub fn ast_transforms_of_error(
                 upper_kind: UpperKind::IncompatibleGetPropT(..),
                 reason_lower,
                 ..
-            }) => {
-                match (
-                    loc_opt_intersects(loc, error_loc.dupe()),
-                    reason_lower.desc.unwrap(),
-                ) {
-                    (
-                        true,
-                        r @ (VirtualReasonDesc::RVoid
-                        | VirtualReasonDesc::RNull
-                        | VirtualReasonDesc::RVoidedNull
-                        | VirtualReasonDesc::RNullOrVoid),
-                    ) => {
-                        let desc_str = flow_common::reason::string_of_desc::<Loc>(r);
-                        let title = format!(
-                            "Add optional chaining for object that might be `{}`",
-                            desc_str
-                        );
-                        vec![AstTransformOfError {
-                            title,
-                            diagnostic_title: "add_optional_chaining".to_string(),
-                            transform: untyped_ast_transform(Box::new(|ast, loc| {
-                                autofix_optional_chaining::add_optional_chaining(ast, loc)
-                            })),
-                            target_loc: error_loc,
-                            confidence: QuickfixConfidence::BestEffort,
-                        }]
-                    }
-                    _ => vec![],
-                }
-            }
+            }) => optional_chaining_actions(error_loc, reason_lower.desc.unwrap()),
+            FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
+                loc: error_loc,
+                upper_kind: UpperKind::IncompatibleGetPropT(..),
+                lower_desc: Err(reason_desc),
+                ..
+            }) => optional_chaining_actions(error_loc, &reason_desc),
+            FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
+                loc: error_loc,
+                upper_kind: UpperKind::IncompatibleGetPropT(..),
+                lower_desc: Ok(lower_ty),
+                ..
+            }) => match lower_ty.as_ref() {
+                Ty::Void => optional_chaining_actions(error_loc, &VirtualReasonDesc::RVoid),
+                Ty::Null => optional_chaining_actions(error_loc, &VirtualReasonDesc::RNull),
+                _ => vec![],
+            },
             _ => vec![],
         },
     }

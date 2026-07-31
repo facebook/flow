@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ iter.js:8:9
 
-Cannot get `a[k]` because string [1] is not an array index. [incompatible-use]
+Cannot get `a[k]` because `string` [1] is not an array index. [incompatible-use]
 
    iter.js:8:9
    8|     foo(a[k]); // k is a string, which shouldn't be used for array access
@@ -44,7 +44,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- iter.js:23:9
 
-Cannot get `d[n]` because string [1] is not an array index. [incompatible-use]
+Cannot get `d[n]` because `string` [1] is not an array index. [incompatible-use]
 
    iter.js:23:9
    23|     foo(d[n]); // d is a string, which shouldn't be used for array access

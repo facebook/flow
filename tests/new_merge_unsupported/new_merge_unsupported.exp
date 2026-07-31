@@ -546,7 +546,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:38
 
-Cannot extend `x1` [1] with `T` because object type [2] is not inheritable. [incompatible-use]
+Cannot extend `x1` [1] with `T` because `{f?: number, g: number}` [2] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:10:38
    10| export class x1 extends (0 as any as T) {}
@@ -649,7 +649,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:27:19
 
-object type [1] is not an instance type. [incompatible-use]
+`{f?: number, g: number}` [1] is not an instance type. [incompatible-use]
 
    ops_on_react_config.js:27:19
    27| export const x6 = y6.f;
@@ -663,7 +663,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:30:14
 
-Cannot extend statics of `T` [1] with `c7` because object type [1] is not inheritable. [incompatible-use]
+Cannot extend statics of `T` [1] with `c7` because `{f?: number, g: number}` [1] is not inheritable. [incompatible-use]
 
    ops_on_react_config.js:30:14
    30| export class c7 extends (0 as any as Class<T>) {}
@@ -722,7 +722,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
-object type [1] is not a class. [not-a-class]
+`{f?: number, g: number}` [1] is not a class. [not-a-class]
 
    ops_on_react_config.js:38:32
    38| declare export class x9 mixins t {}

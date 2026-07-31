@@ -83,7 +83,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:39:22
 
-Cannot call `f` because undefined [1] is not a function. [not-a-function]
+Cannot call `f` because `void` [1] is not a function. [not-a-function]
 
    A.js:39:22
    39|   var bad_: number = f(); // error: string ~> number
@@ -114,7 +114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:41:29
 
-Cannot call `A.Bad.foo` because undefined [1] is not a function. [not-a-function]
+Cannot call `A.Bad.foo` because `void` [1] is not a function. [not-a-function]
 
    A.js:41:29
    41|   var bad__: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)

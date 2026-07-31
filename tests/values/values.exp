@@ -294,7 +294,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:1:9
 
-boolean [1] is not an object. [not-an-object]
+`boolean` [1] is not an object. [not-an-object]
 
    non_object.js:1:9
    1| 'yo' as Values<boolean>; // Error: `boolean` is not an object and so has no
@@ -308,7 +308,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:3:8
 
-boolean [1] is not an object. [not-an-object]
+`boolean` [1] is not an object. [not-an-object]
 
    non_object.js:3:8
    3| 123 as Values<boolean>; // Error: `boolean` is not an object and so has no
@@ -322,7 +322,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ non_object.js:5:9
 
-boolean [1] is not an object. [not-an-object]
+`boolean` [1] is not an object. [not-an-object]
 
    non_object.js:5:9
    5| true as Values<boolean>; // Error: `boolean` is not an object and so has no

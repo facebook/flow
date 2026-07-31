@@ -1006,7 +1006,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_calls.js:13:2
 
-Cannot call `x3?.()` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `x3?.()` because `void` [1] is not a function. [not-a-function]
 
    function_calls.js:13:2
    13| (x3?.())();
@@ -1187,7 +1187,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:11:6
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `foo?.bar` because `null` [1] is not a function. [not-a-function]
+
+   method_calls.js:11:6
+   11| foo?.bar() as empty;
+            ^^^
+
+References:
+   method_calls.js:4:8
+    4|   bar: ?() => number,
+              ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:11:6
+
+Cannot call `foo?.bar` because `void` [1] is not a function. [not-a-function]
 
    method_calls.js:11:6
    11| foo?.bar() as empty;
@@ -1235,7 +1249,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `foo?.bar` because `null` [1] is not a function. [not-a-function]
 
    method_calls.js:12:2
    12| (foo?.bar)() as empty;
@@ -1249,7 +1263,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
 
-Cannot call `foo?.bar` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `foo?.bar` because `void` [1] is not a function. [not-a-function]
+
+   method_calls.js:12:2
+   12| (foo?.bar)() as empty;
+        ^^^^^^^^
+
+References:
+   method_calls.js:4:8
+    4|   bar: ?() => number,
+              ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:12:2
+
+Cannot call `foo?.bar` because `void` [1] is not a function. [not-a-function]
 
    method_calls.js:12:2
    12| (foo?.bar)() as empty;
@@ -1788,7 +1816,21 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:24:8
 
-Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `a.b?.f` because `null` [1] is not a function. [not-a-function]
+
+   refinements.js:24:8
+   24|   a.b?.f() as ?number; // unneeded chain and bad
+              ^
+
+References:
+   refinements.js:10:44
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                                                  ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:24:8
+
+Cannot call `a.b?.f` because `void` [1] is not a function. [not-a-function]
 
    refinements.js:24:8
    24|   a.b?.f() as ?number; // unneeded chain and bad
@@ -2043,7 +2085,21 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:75:8
 
-Cannot call `a.b?.f` because null or undefined [1] is not a function. [not-a-function]
+Cannot call `a.b?.f` because `null` [1] is not a function. [not-a-function]
+
+   refinements.js:75:8
+   75|   a.b?.f() as ?number; // unneeded chain and bad
+              ^
+
+References:
+   refinements.js:10:44
+   10|   b?: {c?: {d: number, ...}, e: number, f: ?() => number, g: ?() => number, ...},
+                                                  ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:75:8
+
+Cannot call `a.b?.f` because `void` [1] is not a function. [not-a-function]
 
    refinements.js:75:8
    75|   a.b?.f() as ?number; // unneeded chain and bad
@@ -2361,7 +2417,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:147:5
 
-Cannot call `d.a` because undefined [1] is not a function. [not-a-function]
+Cannot call `d.a` because `void` [1] is not a function. [not-a-function]
 
    refinements.js:147:5
    147|   d.a().b.c as number; // nope, never was a refinement in the first place
@@ -3867,4 +3923,4 @@ References:
 
 
 
-Found 241 errors
+Found 245 errors

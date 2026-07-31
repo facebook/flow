@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------- imported_omit_inference.js:3:1
 
-Cannot call `action` because `Omit` [1] is not a polymorphic type. [incompatible-use]
+Cannot call `action` because `unknown` [1] is not a polymorphic type. [incompatible-use]
 
    imported_omit_inference.js:3:1
       3| action(
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------- namespace_omit_inference.js:3:23
 
-Cannot call `actionNamespace.tools.action` because `Omit` [1] is not a polymorphic type. [incompatible-use]
+Cannot call `actionNamespace.tools.action` because `unknown` [1] is not a polymorphic type. [incompatible-use]
 
    namespace_omit_inference.js:3:23
       3| actionNamespace.tools.action(
@@ -244,7 +244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- omit_inference.js:18:1
 
-Cannot call `actionWithDefaults` because `Omit` [1] is not a polymorphic type. [incompatible-use]
+Cannot call `actionWithDefaults` because `unknown` [1] is not a polymorphic type. [incompatible-use]
 
    omit_inference.js:18:1
      18| actionWithDefaults(

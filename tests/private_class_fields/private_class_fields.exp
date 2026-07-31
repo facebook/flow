@@ -110,7 +110,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:79:5
 
-Cannot assign `3` to `a.#p` because number [1] is not a class with private properties. [incompatible-use]
+Cannot assign `3` to `a.#p` because `number` [1] is not a class with private properties. [incompatible-use]
 
    test.js:79:5
    79|     a.#p = 3; // Error, #p not on number
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:81:5
 
-Cannot get `b.#p` because object type [1] is not a class with private properties. [incompatible-use]
+Cannot get `b.#p` because `{p: number}` [1] is not a class with private properties. [incompatible-use]
 
    test.js:81:5
    81|     b.#p; // Error, #p not on b.

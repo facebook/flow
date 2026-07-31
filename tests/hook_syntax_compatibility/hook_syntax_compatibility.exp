@@ -1044,7 +1044,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:5
 
-Cannot call `useX` because number [1] is not a function. [not-a-function]
+Cannot call `useX` because `number` [1] is not a function. [not-a-function]
 
    test.js:20:5
    20|     useX(); // error for calling number but no hook error

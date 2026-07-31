@@ -758,7 +758,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:50:27
 
-Cannot access boolean on `Arr` because boolean [1] is not an array index. [incompatible-use]
+Cannot access boolean on `Arr` because `boolean` [1] is not an array index. [incompatible-use]
 
    50| type ArrNonexistant = Arr[boolean]; // Error
                                  ^^^^^^^ [1]

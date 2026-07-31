@@ -23,8 +23,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot call `x` because: [incompatible-type]
- - Either null [1] is not a function.
- - Or number literal `3` [2] is not a function.
+ - Either `null` [1] is not a function.
+ - Or `3` [2] is not a function.
 
    test.js:7:1
    7| x(); // not-a-function
@@ -43,7 +43,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
- - Or null [3] is not a function.
+ - Or `null` [3] is not a function.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

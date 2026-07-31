@@ -12,6 +12,7 @@ use flow_typing_debug::verbose::print_types_if_verbose;
 use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
+use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
@@ -67,6 +68,7 @@ use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 
 use super::any_helpers::*;
 use super::constraint_helpers::*;
@@ -10121,11 +10123,23 @@ fn __flow_impl<'cx>(
         }
         _ => {
             let lower_reason = reason_of_t(l).dupe();
+            let lower_desc = {
+                let desc = lower_reason.desc(true);
+                if desc.is_explanatory() {
+                    TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+                } else {
+                    TypeOrTypeDescT::Type(l.dupe())
+                }
+            };
             let use_op = use_op_of_use_t(u);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                    lower: (lower_reason, flow_js_utils::error_message_kind_of_lower(l)),
+                ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
+                    lower_reason,
+                    lower_kind: flow_js_utils::error_message_kind_of_lower(l),
+                    lower_loc: type_util::loc_of_t(l).dupe(),
+                    lower_def_loc: type_util::def_loc_of_t(l).dupe(),
+                    lower_desc,
                     upper: IncompatibleUpperData {
                         loc: flow_js_utils::error_message_loc_of_upper(u),
                         kind: flow_js_utils::error_message_kind_of_upper(u),

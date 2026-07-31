@@ -1116,7 +1116,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:2:24
 
-number literal `42` [1] is not a class. [not-a-class]
+`42` [1] is not a class. [not-a-class]
 
    misc-incompatibles.js:2:24
    2| declare class X mixins Y {}
@@ -1130,7 +1130,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- misc-incompatibles.js:5:11
 
-Cannot extend `A` [1] with `B` because number [1] is not inheritable. [incompatible-use]
+Cannot extend `A` [1] with `B` because `A` [1] is not inheritable. [incompatible-use]
 
    misc-incompatibles.js:5:11
    5| interface B extends A {}
