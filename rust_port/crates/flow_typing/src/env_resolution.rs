@@ -523,13 +523,9 @@ fn resolve_hint<'cx>(
                 resolve_annotation(cx, &tparams_map, None, &anno)?
             }
             HintNode::ValueHint(encl_ctx, exp) => {
-                flow_typing_utils::abnormal::try_with_abnormal_exn(
-                    || expression(cx, Some(encl_ctx), None, None, &exp),
-                    |flow_typing_utils::abnormal::AbnormalControlFlow(_, expr)| {
-                        let (_, t) = expr.loc().dupe();
-                        t
-                    },
-                )?
+                check_expr_error_to_job_error(cx.run_in_empty_speculation_state(|| {
+                    expression(cx, Some(encl_ctx), None, None, &exp)
+                }))?
             }
             HintNode::ProvidersHint(locs) => {
                 if locs.len() == 1 {

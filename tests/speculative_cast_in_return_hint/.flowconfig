@@ -1,0 +1,10 @@
+[libs]
+lib.d.ts
+lib.iterable.d.ts
+
+[options]
+all=true
+no_flowlib=false
+experimental.tslib_syntax=true
+module.file_ext=.js
+module.file_ext=.d.ts

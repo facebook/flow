@@ -2476,6 +2476,28 @@ impl<'cx> Context<'cx> {
         result
     }
 
+    /// Run `f` with the speculation state emptied, restoring it afterwards.
+    ///
+    /// Like `run_in_hint_eval_mode`, but without switching the typing mode:
+    /// resolving a hint's base expression must not be attributed to an ongoing
+    /// speculation, but it still has to run as a normal check so that nested
+    /// hints stay available. `run_in_hint_eval_mode` covers the decomposition
+    /// ops; base hints are resolved eagerly, before that, and need this on their
+    /// own.
+    pub fn run_in_empty_speculation_state<F, R>(&self, f: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        let saved_speculation_state =
+            std::mem::take(&mut self.0.ccx.speculation_state.borrow_mut().0);
+
+        let result = f();
+
+        *self.0.ccx.speculation_state.borrow_mut() = SpeculationState(saved_speculation_state);
+
+        result
+    }
+
     pub fn test_prop_hit(&self, id: i32) {
         self.0
             .ccx
