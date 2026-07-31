@@ -1222,7 +1222,7 @@ pub fn merge_exports<'cx>(
         let f: FromNs<'cx> = match resolved_require {
             ResolvedRequire::TypedModule(f) => Some(f),
             ResolvedRequire::UncheckedModule(_) => None,
-            ResolvedRequire::MissingModule => None,
+            ResolvedRequire::MissingModule | ResolvedRequire::GlobalLibdefModule(_) => None,
         };
         (loc.dupe(), f)
     }

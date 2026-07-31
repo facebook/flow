@@ -710,7 +710,7 @@ pub fn initialize_env<'cx>(
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    let lib = cx.file().is_lib_file();
+    let lib = cx.is_lib_file();
     let toplevel_scope_kind = if lib {
         ScopeKind::Global
     } else {
@@ -1136,7 +1136,7 @@ pub fn infer_file<'a>(
     all_comments: &[Comment<Loc>],
     aloc_ast: &ast::Program<ALoc, ALoc>,
 ) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
-    if file_key.is_lib_file() {
+    if cx.is_lib_file() {
         infer_lib_file(
             lint_severities,
             cx,

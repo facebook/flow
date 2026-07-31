@@ -370,11 +370,8 @@ fn mk_eval_id<'a>(cx: &Context<'a>, loc: ALoc) -> type_::eval::Id {
 }
 
 fn add_unclear_type_error_if_not_lib_file<'a>(cx: &Context<'a>, loc: ALoc) {
-    match loc.source() {
-        Some(file) if !file.is_lib_file() => {
-            flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EUnclearType(loc));
-        }
-        _ => {}
+    if !cx.is_lib_file() {
+        flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EUnclearType(loc));
     }
 }
 
@@ -8454,12 +8451,8 @@ pub fn mk_declare_class_sig<'a>(
         ))
     }
 
-    fn is_object_builtin_libdef(loc: &ALoc, name: &str) -> bool {
-        name == "Object"
-            && match loc.source() {
-                None => false,
-                Some(source) => source.is_lib_file(),
-            }
+    fn is_object_builtin_libdef(is_lib_file: bool, name: &str) -> bool {
+        is_lib_file && name == "Object"
     }
 
     let reason_c = reason.dupe();
@@ -8644,7 +8637,7 @@ pub fn mk_declare_class_sig<'a>(
         let super_kind = {
             let extends_kind = match extends {
                 None => func_class_sig_types::class::Extends::Implicit {
-                    null: is_object_builtin_libdef(id_loc, &id_name.name),
+                    null: is_object_builtin_libdef(cx.is_lib_file(), &id_name.name),
                 },
                 Some(e) => func_class_sig_types::class::Extends::Explicit(e),
             };

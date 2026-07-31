@@ -8,6 +8,7 @@
 use std::cell::LazyCell;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::rc::Weak;
@@ -19,6 +20,7 @@ use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
 use flow_aloc::aloc_representation_do_not_use;
 use flow_common::docblock::Docblock;
+use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
@@ -158,6 +160,7 @@ fn get_lint_severities(
 pub fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
     cache: Rc<RefCell<CheckCache<'static>>>,
 ) -> CheckFileAndCompEnv {
@@ -173,6 +176,7 @@ pub fn mk_check_file(
         mref: &FlowImportSpecifier,
         resolved_module: Result<Dependency, Option<FlowImportSpecifier>>,
         shared_mem: &Arc<SharedMem>,
+        all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
         cache: &Rc<RefCell<CheckCache<'static>>>,
@@ -189,6 +193,20 @@ pub fn mk_check_file(
                         cx,
                         &FlowImportSpecifier::userland(FlowSmolStr::from(modulename.as_str())),
                     )
+                }
+                // A global libdef (a `[libs]` file) resolves like any other file,
+                // but it is not a module: report a dedicated "not a module" error
+                // at the import site instead of merging it. Only reachable when
+                // `experimental.importable_global_libdefs` gated resolution to it.
+                Some(dep_file_key)
+                    if cx.file_options().importable_global_libdefs
+                        && files::is_lib_file(
+                            cx.file_options().as_ref(),
+                            all_unordered_libs,
+                            &dep_file_key,
+                        ) =>
+                {
+                    ResolvedRequire::GlobalLibdefModule(dep_file_key)
                 }
                 Some(dep_file_key) => match dep_file_key.inner() {
                     FileKeyInner::ResourceFile(_) => {
@@ -211,6 +229,7 @@ pub fn mk_check_file(
                             &dep_file_key,
                             parse,
                             shared_mem,
+                            all_unordered_libs,
                             base_metadata,
                             mk_builtins_fn,
                             cache,
@@ -226,6 +245,7 @@ pub fn mk_check_file(
         file_key: &FileKey,
         parse: TypedParse,
         shared_mem: &Arc<SharedMem>,
+        all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
         cache: &Rc<RefCell<CheckCache<'static>>>,
@@ -234,6 +254,7 @@ pub fn mk_check_file(
         let file_key_for_create = file_key.dupe();
         let parse_for_create = parse.dupe();
         let shared_mem_for_create = shared_mem.dupe();
+        let all_unordered_libs_for_create = all_unordered_libs.dupe();
         let base_metadata_for_create = base_metadata.clone();
         let mk_builtins_for_create = mk_builtins_fn.dupe();
         let cache_for_create = cache.dupe();
@@ -250,6 +271,7 @@ pub fn mk_check_file(
                     parse_for_create.dupe(),
                     ccx,
                     &shared_mem_for_create,
+                    &all_unordered_libs_for_create,
                     &base_metadata_for_create,
                     &mk_builtins_for_create,
                     &cache_for_create,
@@ -275,6 +297,7 @@ pub fn mk_check_file(
         parse: TypedParse,
         ccx: Rc<ComponentT<'static>>,
         shared_mem: &Arc<SharedMem>,
+        all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
         cache: &Rc<RefCell<CheckCache<'static>>>,
@@ -339,6 +362,7 @@ pub fn mk_check_file(
                 ccx,
                 metadata,
                 file_key.dupe(),
+                all_unordered_libs.dupe(),
                 aloc_table,
                 resolve_require,
                 mk_builtins_fn.dupe(),
@@ -358,6 +382,7 @@ pub fn mk_check_file(
                 let base_metadata = base_metadata.clone();
                 let mk_builtins_fn = mk_builtins_fn.dupe();
                 let cache = cache.dupe();
+                let all_unordered_libs = all_unordered_libs.dupe();
                 rr.insert(
                     key,
                     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context| {
@@ -366,6 +391,7 @@ pub fn mk_check_file(
                             &mref,
                             m,
                             &shared_mem,
+                            &all_unordered_libs,
                             &base_metadata,
                             &mk_builtins_fn,
                             &cache,
@@ -883,6 +909,7 @@ pub fn mk_check_file(
                     ccx,
                     metadata.clone(),
                     file_key.dupe(),
+                    all_unordered_libs.dupe(),
                     aloc_table,
                     resolve_require,
                     mk_builtins_fn.dupe(),
@@ -896,6 +923,7 @@ pub fn mk_check_file(
                             mref,
                             m.to_result(),
                             &shared_mem,
+                            &all_unordered_libs,
                             &base_metadata,
                             &mk_builtins_fn,
                             &cache,

@@ -3063,7 +3063,12 @@ fn with_type_checked_file<T>(
     ) -> Result<T, String>,
 ) -> Result<T, String> {
     let file_artifacts = {
-        let intermediate_result = type_contents::parse_contents(options, file_content, file_key);
+        let intermediate_result = type_contents::parse_contents(
+            options,
+            env.all_unordered_libs.dupe(),
+            file_content,
+            file_key,
+        );
         let (ref _parse_artifacts_opt, ref parse_errs) = intermediate_result;
         if !parse_errs.is_empty() {
             Err(flow_services_inference_types::TypeContentsError::Errors(
@@ -3072,6 +3077,7 @@ fn with_type_checked_file<T>(
         } else {
             type_contents::type_parse_artifacts(
                 options,
+                env.all_unordered_libs.dupe(),
                 shared_mem,
                 env.master_cx.dupe(),
                 file_key.clone(),

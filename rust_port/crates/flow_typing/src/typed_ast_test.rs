@@ -125,6 +125,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
         ccx,
         md.clone(),
         file_key.dupe(),
+        Arc::default(),
         aloc_table,
         resolve_require,
         mk_builtins,

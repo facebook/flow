@@ -14,8 +14,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 
+use dupe::Dupe;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -526,6 +528,7 @@ fn check_all_files<A, Wrap>(
     files: Vec<FileKey>,
     reader: &Arc<flow_heap::parsing_heaps::SharedMem>,
     master_cx: &flow_typing_context::MasterContext,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     wrap: Wrap,
 ) -> Result<ResultList<A>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
 where
@@ -556,6 +559,7 @@ where
         let (check, cache) = flow_services_inference::merge_service::mk_check(
             reader.clone(),
             Arc::new(options.clone()),
+            all_unordered_libs.dupe(),
             master_cx,
             flow_services_references::find_refs_types::empty_request(),
         );
@@ -717,6 +721,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
+                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -769,7 +774,15 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 inner(file.clone()),
             )
         };
-        let result = check_all_files(_workers, &options, files, &reader, &_env.master_cx, wrap)?;
+        let result = check_all_files(
+            _workers,
+            &options,
+            files,
+            &reader,
+            &_env.master_cx,
+            _env.all_unordered_libs.dupe(),
+            wrap,
+        )?;
         flow_hh_logger::info!("Done");
         Ok(result)
     }
@@ -846,6 +859,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
+                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -892,8 +906,15 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 inner(file.clone()),
             )
         };
-        let initial_run_result =
-            check_all_files(_workers, &options, files, &reader, &_env.master_cx, wrap)?;
+        let initial_run_result = check_all_files(
+            _workers,
+            &options,
+            files,
+            &reader,
+            &_env.master_cx,
+            _env.all_unordered_libs.dupe(),
+            wrap,
+        )?;
         flow_hh_logger::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
             BTreeSet::<FileKey>::new(),
@@ -923,6 +944,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
+                _env.all_unordered_libs.dupe(),
                 files_to_merge2.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -959,8 +981,15 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 inner(file.clone()),
             )
         };
-        let job_results2 =
-            check_all_files(_workers, &options, files2, &reader, &_env.master_cx, wrap2)?;
+        let job_results2 = check_all_files(
+            _workers,
+            &options,
+            files2,
+            &reader,
+            &_env.master_cx,
+            _env.all_unordered_libs.dupe(),
+            wrap2,
+        )?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
         result.extend(job_results2);
         flow_hh_logger::info!("Pruned-deps run done");
@@ -1022,6 +1051,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
+                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -1055,6 +1085,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             let (mut check, _cache) = flow_services_inference::merge_service::mk_check(
                 reader.clone(),
                 Arc::new(options.clone()),
+                _env.all_unordered_libs.dupe(),
                 master_cx,
                 flow_services_references::find_refs_types::empty_request(),
             );
@@ -1108,6 +1139,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         let (mut inner, cache) = flow_services_inference::merge_service::mk_check(
             reader.clone(),
             Arc::new(options.clone()),
+            _env.all_unordered_libs.dupe(),
             &_env.master_cx,
             flow_services_references::find_refs_types::empty_request(),
         );
@@ -1319,6 +1351,7 @@ where
             workers.as_ref().unwrap(),
             &reader,
             &Arc::new(options.clone()),
+            Arc::new(all_unordered_libs.iter().map(FlowSmolStr::new).collect()),
             &[],
             next,
         );

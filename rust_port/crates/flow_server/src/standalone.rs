@@ -18,6 +18,7 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 
 use dupe::Dupe;
+use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
@@ -740,6 +741,7 @@ fn do_rechecks(
                     &env.connections,
                 );
                 persistent_connection::update_clients(
+                    options.file_options.importable_global_libdefs,
                     &env.connections,
                     flow_server_env::lsp_prot::ErrorsReason::EndOfRecheck,
                     || error_collator::get_with_separate_warnings(&env),
@@ -1523,7 +1525,7 @@ fn handle_status(
             .focused()
             .iter()
             .fold((0i32, 0i32), |(total, libs), f| {
-                if f.is_lib_file() {
+                if files::is_lib_file(&options.file_options, &env.all_unordered_libs, f) {
                     (total + 1, libs + 1)
                 } else {
                     (total + 1, libs)
@@ -1532,7 +1534,7 @@ fn handle_status(
     let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
     let (total_files, total_libdef_files) =
         env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
-            if f.is_lib_file() {
+            if files::is_lib_file(&options.file_options, &env.all_unordered_libs, f) {
                 (total + 1, libs + 1)
             } else {
                 (total + 1, libs)
@@ -1625,8 +1627,12 @@ fn handle_check_contents(
         }
         server_socket_rpc::FileInput::FileContent(None, _) => FileKey::source_file_of_absolute("-"),
     };
-    let intermediate_result =
-        flow_services_inference::type_contents::parse_contents(&options, &content, &file_key);
+    let intermediate_result = flow_services_inference::type_contents::parse_contents(
+        &options,
+        env.all_unordered_libs.dupe(),
+        &content,
+        &file_key,
+    );
     if intermediate_result.0.is_none() && intermediate_result.1.is_empty() {
         let error_output = if json {
             let mut buf = Vec::new();
@@ -1667,6 +1673,7 @@ fn handle_check_contents(
     } else {
         flow_services_inference::type_contents::type_parse_artifacts(
             &options,
+            env.all_unordered_libs.dupe(),
             shared_mem.dupe(),
             env.master_cx.dupe(),
             file_key.dupe(),

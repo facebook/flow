@@ -1323,6 +1323,12 @@ pub struct MessageCannotResolveBuiltinModuleData {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageCannotImportGlobalLibdefData {
+    pub module_name: FlowSmolStr,
+    pub libdef_name: FlowSmolStr,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotSpreadGeneralData<L: Dupe> {
     pub spread_reason: VirtualReason<L>,
     pub object1_reason: VirtualReason<L>,
@@ -1856,6 +1862,8 @@ pub enum Message<L: Dupe> {
         name: FlowSmolStr,
         expected_module_purpose: ExpectedModulePurpose,
     },
+
+    MessageCannotImportGlobalLibdef(Box<MessageCannotImportGlobalLibdefData>),
 
     MessageCannotSpreadDueToPotentialOverwrite {
         spread_reason: VirtualReason<L>,

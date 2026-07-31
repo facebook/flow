@@ -1,0 +1,39 @@
+Error --------------------------------------------------------------------------------------------- import-global.js:3:8
+
+Cannot import `./globals` because `globals.js` is a global library definition file, so it is not a module. Its
+declarations are already available in global scope; remove this import and reference them directly.
+[cannot-resolve-module]
+
+   3| import "./globals"; // import error
+             ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- import-global.js:4:36
+
+Cannot import `./globals` because `globals.js` is a global library definition file, so it is not a module. Its
+declarations are already available in global scope; remove this import and reference them directly.
+[cannot-resolve-module]
+
+   4| import {MyGlobal as Imported} from "./globals"; // import error
+                                         ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- use-global.js:5:21
+
+Cannot assign `MyGlobal` to `bad` because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use-global.js:5:21
+   5| const bad: number = MyGlobal; // error: string ~> number
+                          ^^^^^^^^
+
+References:
+   globals.js:1:23
+   1| declare var MyGlobal: string;
+                            ^^^^^^ [1]
+   use-global.js:5:12
+   5| const bad: number = MyGlobal; // error: string ~> number
+                 ^^^^^^ [2]
+
+
+
+Found 3 errors

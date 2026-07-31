@@ -143,32 +143,15 @@ pub fn get_lazy_stats(
     // Report only focused + dependents as "checked" files. Dependencies are only
     // merged (signatures computed) but not type-checked, so they shouldn't count
     // toward the user-visible "checking N files" number.
-    let (focused_count, checked_libdef_files) =
-        env.checked_files
-            .focused()
-            .iter()
-            .fold((0i32, 0i32), |(total, libs), f| {
-                if f.is_lib_file() {
-                    (total + 1, libs + 1)
-                } else {
-                    (total + 1, libs)
-                }
-            });
-    let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
-    let (total_files, total_libdef_files) =
-        env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
-            if f.is_lib_file() {
-                (total + 1, libs + 1)
-            } else {
-                (total + 1, libs)
-            }
-        });
+    let checked_files =
+        (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
+    let total_files = env.files.len() as i32;
     server_prot::response::LazyStats {
         lazy_mode: options.lazy_mode,
         checked_files,
-        checked_libdef_files,
+        checked_libdef_files: 0,
         total_files,
-        total_libdef_files,
+        total_libdef_files: 0,
     }
 }
 
@@ -210,6 +193,7 @@ fn send_end_recheck(options: &Options, env: &server_env::Env) {
     persistent_connection::send_end_recheck(lazy_stats, &env.connections);
 
     persistent_connection::update_clients(
+        options.file_options.importable_global_libdefs,
         &env.connections,
         lsp_prot::ErrorsReason::EndOfRecheck,
         || error_collator::get_with_separate_warnings(env),

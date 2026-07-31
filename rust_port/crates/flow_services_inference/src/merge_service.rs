@@ -9,6 +9,7 @@ use std::cell::Cell;
 use std::cell::LazyCell;
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -775,6 +776,7 @@ pub fn finish_check_file<R>(
 fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
     find_ref_request: flow_services_references::find_refs_types::Request,
 ) -> (
@@ -792,7 +794,13 @@ fn mk_check_file(
         mut make_cx,
         mut check_file,
         compute_env: _,
-    } = check_service::mk_check_file(shared_mem.dupe(), options.dupe(), master_cx, cache);
+    } = check_service::mk_check_file(
+        shared_mem.dupe(),
+        options.dupe(),
+        all_unordered_libs,
+        master_cx,
+        cache,
+    );
 
     let check_file_fn = Box::new(move |file: FileKey| {
         let start_time = Instant::now();
@@ -944,6 +952,7 @@ pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache<'static>>> {
 pub fn check_contents_context(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     file: FileKey,
     ast: Arc<ast::Program<Loc, Loc>>,
@@ -993,6 +1002,7 @@ pub fn check_contents_context(
         check_service::mk_check_file(
             shared_mem.dupe(),
             options.dupe(),
+            all_unordered_libs,
             master_cx.as_ref(),
             cache.dupe(),
         )
@@ -1018,6 +1028,7 @@ pub fn check_contents_context(
 pub fn compute_env_of_contents(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     file: FileKey,
     ast: Arc<ast::Program<Loc, Loc>>,
@@ -1069,6 +1080,7 @@ pub fn compute_env_of_contents(
         check_service::mk_check_file(
             shared_mem.dupe(),
             options.dupe(),
+            all_unordered_libs,
             master_cx.as_ref(),
             cache.dupe(),
         )
@@ -1247,6 +1259,7 @@ pub enum CheckJobOutcome {
 pub fn mk_check(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
     find_ref_request: flow_services_references::find_refs_types::Request,
 ) -> (
@@ -1256,6 +1269,7 @@ pub fn mk_check(
     let (mut check_file, cache) = mk_check_file(
         shared_mem.dupe(),
         options.dupe(),
+        all_unordered_libs,
         master_cx,
         find_ref_request,
     );

@@ -248,6 +248,7 @@ pub struct Options {
     pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,
+    pub importable_global_libdefs: bool,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
     pub type_expansion_recursion_limit: i32,

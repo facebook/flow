@@ -31,6 +31,7 @@ use flow_typing_errors::error_message::EAssignConstLikeBindingData;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::ECallTypeArityData;
+use flow_typing_errors::error_message::ECannotImportGlobalLibdefData;
 use flow_typing_errors::error_message::ECannotSpreadIndexerOnRightData;
 use flow_typing_errors::error_message::ECannotSpreadInterfaceData;
 use flow_typing_errors::error_message::EClassToObjectData;
@@ -2336,6 +2337,18 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 "EExpectedModuleLookupFailed(Box::new(EExpectedModuleLookupFailedData {{ loc = {}; name = {:?} }}))",
                 string_of_aloc(None, loc),
                 name
+            )
+        }
+        ErrorMessage::ECannotImportGlobalLibdef(box ECannotImportGlobalLibdefData {
+            loc,
+            module_name,
+            libdef_name,
+        }) => {
+            format!(
+                "ECannotImportGlobalLibdef(Box::new(ECannotImportGlobalLibdefData {{ loc = {}; module_name = {:?}; libdef_name = {:?} }}))",
+                string_of_aloc(None, loc),
+                module_name,
+                libdef_name
             )
         }
         ErrorMessage::EPrivateLookupFailed(box ((reason1, reason2), x, use_op)) => {

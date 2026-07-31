@@ -11925,20 +11925,9 @@ fn declare_class_def<'arena, 'ast>(
     let tparams = tparams(opts, scope, scopes, tbls, &mut xs, tps.as_ref());
     xs.insert(FlowSmolStr::new_inline("this"));
 
-    fn is_object_builtin_libdef(id: &ast::Identifier<Loc, Loc>) -> bool {
-        if id.name.as_str() == "Object" {
-            match Loc::source(&id.loc) {
-                None => false,
-                Some(source) => source.is_lib_file(),
-            }
-        } else {
-            false
-        }
-    }
-
     let extends = match extends {
         None => {
-            if is_object_builtin_libdef(id) {
+            if opts.is_lib_file && id.name.as_str() == "Object" {
                 ClassExtends::ObjectPrototypeExtendsNull
             } else {
                 ClassExtends::ClassImplicitExtends

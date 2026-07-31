@@ -21,7 +21,6 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::is_literal_array_reason;
 use flow_common::reason::is_literal_function_reason;
 use flow_common::reason::is_literal_object_reason;
-use flow_common::reason::is_promise_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::VariableKind;
 use flow_typing_context::Context;
@@ -121,7 +120,16 @@ fn is_builtin_promise<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
                     TypeInner::DefT(r, inner_def_t)
                         if let DefTInner::ClassT(_) = inner_def_t.deref() =>
                     {
-                        is_promise_reason(r)
+                        cx.is_lib_reason(r)
+                            && matches!(
+                                r.desc(true),
+                                VirtualReasonDesc::RClass(inner)
+                                    if matches!(
+                                        &**inner,
+                                        VirtualReasonDesc::RType(name)
+                                            if name.as_str() == "Promise"
+                                    )
+                            )
                     }
                     _ => false,
                 }

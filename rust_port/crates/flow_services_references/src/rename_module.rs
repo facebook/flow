@@ -145,6 +145,7 @@ pub fn get_rename_edits(
         haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
         project_options: options.projects_options.dupe(),
         relay_integration_module_prefix: options.relay_integration_module_prefix.dupe(),
+        is_lib_file: false,
     };
     let workspace_edit = {
         get_dependents(shared_mem, old_file_key).map(|dependents| {

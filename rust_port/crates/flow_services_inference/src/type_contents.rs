@@ -54,7 +54,12 @@ pub enum ParseContentsReturn {
 // rethought, at which point `parse_contents` could call it directly without confusion. This would
 // also benefit the other callers of `do_parse`. In the meantime, this function provides the
 // interface we would like here.
-fn do_parse_wrapper(options: &Options, filename: &FileKey, contents: &str) -> ParseContentsReturn {
+fn do_parse_wrapper(
+    options: &Options,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
+    filename: &FileKey,
+    contents: &str,
+) -> ParseContentsReturn {
     let max_tokens = options.max_header_tokens;
     let (docblock_errors, docblock) = docblock_parser::parse_docblock(
         max_tokens as usize,
@@ -62,7 +67,14 @@ fn do_parse_wrapper(options: &Options, filename: &FileKey, contents: &str) -> Pa
         filename,
         contents,
     );
-    let parse_result = parsing_service::do_parse(options, &docblock, &[], Ok(contents), filename);
+    let parse_result = parsing_service::do_parse(
+        options,
+        &docblock,
+        &[],
+        Ok(contents),
+        filename,
+        files::is_lib_file(&options.file_options, &all_unordered_libs, filename),
+    );
     match parse_result {
         ParseResult::ParseOk {
             ast,
@@ -119,11 +131,12 @@ fn with_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
 #[allow(dead_code)]
 pub fn parse_contents(
     options: &Options,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     contents: &str,
     filename: &FileKey,
 ) -> (Option<ParseArtifacts>, ErrorSet) {
     with_timer(options, "Parsing", || {
-        match do_parse_wrapper(options, filename, contents) {
+        match do_parse_wrapper(options, all_unordered_libs, filename, contents) {
             ParseContentsReturn::Parsed(parse_artifacts) => {
                 let errors = match parse_artifacts.parse_errors.as_slice() {
                     [first_parse_error, ..] => {
@@ -339,6 +352,7 @@ fn ensure_checked_dependencies(
 pub fn check_contents(
     options: &Options,
     shared_mem: Arc<SharedMem>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
     docblock: Arc<flow_common::docblock::Docblock>,
@@ -356,6 +370,7 @@ pub fn check_contents(
         Ok(Ok(merge_service::check_contents_context(
             shared_mem,
             Arc::new(options.clone()),
+            all_unordered_libs,
             master_cx,
             filename,
             ast,
@@ -369,6 +384,7 @@ pub fn check_contents(
 pub fn compute_env_of_contents(
     options: &Options,
     shared_mem: Arc<SharedMem>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
     docblock: Arc<flow_common::docblock::Docblock>,
@@ -387,6 +403,7 @@ pub fn compute_env_of_contents(
             Ok(Ok(merge_service::compute_env_of_contents(
                 shared_mem,
                 Arc::new(options.clone()),
+                all_unordered_libs,
                 master_cx,
                 filename,
                 ast,
@@ -400,6 +417,7 @@ pub fn compute_env_of_contents(
 // We assume that callers have already inspected the parse errors, so we discard them here.
 pub fn type_parse_artifacts(
     options: &Options,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     shared_mem: Arc<SharedMem>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
@@ -423,6 +441,7 @@ pub fn type_parse_artifacts(
                         check_contents(
                             options,
                             shared_mem.dupe(),
+                            all_unordered_libs,
                             master_cx,
                             filename,
                             docblock.dupe(),

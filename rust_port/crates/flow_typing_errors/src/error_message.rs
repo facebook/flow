@@ -95,6 +95,7 @@ use crate::intermediate_error_types::MessageCannotCompareData;
 use crate::intermediate_error_types::MessageCannotExhaustivelyCheckAbstractEnumsData;
 use crate::intermediate_error_types::MessageCannotExhaustivelyCheckEnumWithUnknownsData;
 use crate::intermediate_error_types::MessageCannotExportRenamedDefaultData;
+use crate::intermediate_error_types::MessageCannotImportGlobalLibdefData;
 use crate::intermediate_error_types::MessageCannotInstantiateObjectUtilTypeWithEnumData;
 use crate::intermediate_error_types::MessageCannotResolveBuiltinModuleData;
 use crate::intermediate_error_types::MessageCannotSpreadGeneralData;
@@ -1390,6 +1391,25 @@ pub struct EExpectedModuleLookupFailedData<L: Dupe + PartialOrd + Ord + PartialE
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ECannotImportGlobalLibdefData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    /// The import specifier as written, e.g. `./globals`.
+    pub module_name: FlowSmolStr,
+    /// The resolved global libdef file, e.g. `.../globals.js`.
+    pub libdef_name: FlowSmolStr,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct EPlatformSpecificImplementationModuleLookupFailedData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
@@ -2636,6 +2656,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EBuiltinModuleLookupFailed(Box<EBuiltinModuleLookupFailedData<L>>),
 
     EExpectedModuleLookupFailed(Box<EExpectedModuleLookupFailedData<L>>),
+
+    ECannotImportGlobalLibdef(Box<ECannotImportGlobalLibdefData<L>>),
 
     EPrivateLookupFailed(Box<((L, VirtualReason<L>), Name, VirtualUseOp<L>)>),
 
@@ -3981,6 +4003,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 loc: f(loc),
                 name,
                 expected_module_purpose,
+            })),
+
+            ECannotImportGlobalLibdef(box ECannotImportGlobalLibdefData {
+                loc,
+                module_name,
+                libdef_name,
+            }) => ECannotImportGlobalLibdef(Box::new(ECannotImportGlobalLibdefData {
+                loc: f(loc),
+                module_name,
+                libdef_name,
             })),
 
             EPrivateLookupFailed(box ((r1, r2), x, op)) => {
@@ -6362,6 +6394,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
                 loc, ..
             })
+            | Self::ECannotImportGlobalLibdef(box ECannotImportGlobalLibdefData { loc, .. })
             | Self::EPlatformSpecificImplementationModuleLookupFailed(
                 box EPlatformSpecificImplementationModuleLookupFailedData { loc, .. },
             )
@@ -8235,6 +8268,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 expected_module_purpose,
             }),
 
+            ErrorMessage::ECannotImportGlobalLibdef(box ECannotImportGlobalLibdefData {
+                module_name,
+                libdef_name,
+                ..
+            }) => Normal(Message::MessageCannotImportGlobalLibdef(Box::new(
+                MessageCannotImportGlobalLibdefData {
+                    module_name,
+                    libdef_name,
+                },
+            ))),
+
             ErrorMessage::EPrivateLookupFailed(box (reasons, x, use_op)) => {
                 PropMissingInLookup(Box::new(PropMissingInLookupData {
                     loc: reasons.0,
@@ -9618,6 +9662,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => Some(CannotResolveModule),
             ErrorMessage::EExpectedModuleLookupFailed(box EExpectedModuleLookupFailedData {
+                ..
+            }) => Some(CannotResolveModule),
+            ErrorMessage::ECannotImportGlobalLibdef(box ECannotImportGlobalLibdefData {
                 ..
             }) => Some(CannotResolveModule),
             ErrorMessage::EPlatformSpecificImplementationModuleLookupFailed(

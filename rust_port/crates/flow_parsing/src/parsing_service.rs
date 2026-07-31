@@ -111,8 +111,9 @@ fn parse_source_file(
     options: &Options,
     content: Result<&str, ()>,
     file: &FileKey,
+    is_lib_file: bool,
 ) -> (Program<Loc, Loc>, Vec<(Loc, ParseError)>) {
-    let use_strict = if file.is_lib_file() {
+    let use_strict = if is_lib_file {
         // lib files are always "use strict"
         true
     } else {
@@ -159,8 +160,13 @@ pub fn parse_package_json_file(
 // Allow types based on `types_mode`, using the @flow annotation in the
 // file header if possible. Note, this should be consistent with
 // Infer_service.apply_docblock_overrides w.r.t. the metadata.checked flag.
-fn types_checked(options: &Options, file: &FileKey, docblock: &Docblock) -> bool {
-    if file.is_lib_file() {
+fn types_checked(
+    options: &Options,
+    file: &FileKey,
+    docblock: &Docblock,
+    is_lib_file: bool,
+) -> bool {
+    if is_lib_file {
         // types are always allowed in lib files
         true
     } else if flow_common::files::has_ts_ext(file) {
@@ -181,6 +187,7 @@ pub fn parse_file_sig(
     file: &FileKey,
     docblock: &Docblock,
     ast: &Program<Loc, Loc>,
+    is_lib_file: bool,
 ) -> FileSig {
     let enable_relay_integration = options.enable_relay_integration
         && flow_common::relay_options::enabled_for_file(&options.relay_integration_excludes, file);
@@ -202,6 +209,7 @@ pub fn parse_file_sig(
         haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
         project_options: options.projects_options.dupe(),
         relay_integration_module_prefix,
+        is_lib_file,
     };
 
     FileSig::from_program(file, ast, &file_sig_opts)
@@ -214,13 +222,19 @@ pub fn parse_type_sig<'arena, 'ast>(
     file: &FileKey,
     ast: &'ast Program<Loc, Loc>,
     arena: &'arena bumpalo::Bump,
+    is_lib_file: bool,
 ) -> (
     Vec<flow_type_sig::type_sig::Errno<flow_type_sig::compact_table::Index<Loc>>>,
     flow_type_sig::compact_table::Table<Loc>,
     flow_type_sig::packed_type_sig::Module<Loc>,
 ) {
-    let sig_opts =
-        TypeSigOptions::of_options(options, docblock.prevent_munge, locs_to_dirtify, file);
+    let sig_opts = TypeSigOptions::of_options(
+        options,
+        docblock.prevent_munge,
+        locs_to_dirtify,
+        file,
+        is_lib_file,
+    );
     let strict = docblock.is_strict();
     let platform_availability_set = platform_set::available_platforms(
         &options.file_options,
@@ -246,6 +260,7 @@ pub fn do_parse(
     locs_to_dirtify: &[Loc],
     content: Result<&str, ()>,
     file: &FileKey,
+    is_lib_file: bool,
 ) -> ParseResult {
     use flow_parser::file_key::FileKeyInner;
 
@@ -261,11 +276,11 @@ pub fn do_parse(
         FileKeyInner::ResourceFile(_) => ParseResult::ParseSkip(ParseSkipReason::SkipResourceFile),
         FileKeyInner::LibFile(_) | FileKeyInner::SourceFile(_) => {
             // either all=true or @flow pragma exists
-            if !types_checked(options, file, docblock) {
+            if !types_checked(options, file, docblock, is_lib_file) {
                 ParseResult::ParseSkip(ParseSkipReason::SkipNonFlowFile)
             } else {
-                let (ast, parse_errors) = parse_source_file(options, content, file);
-                let file_sig = Arc::new(parse_file_sig(options, file, docblock, &ast));
+                let (ast, parse_errors) = parse_source_file(options, content, file, is_lib_file);
+                let file_sig = Arc::new(parse_file_sig(options, file, docblock, &ast, is_lib_file));
                 let requires: Vec<FlowImportSpecifier> =
                     file_sig.require_loc_map().into_keys().collect();
 
@@ -280,8 +295,15 @@ pub fn do_parse(
                 } else {
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
-                    let (sig_errors, locs, type_sig) =
-                        parse_type_sig(options, docblock, locs_to_dirtify_vec, file, &ast, &arena);
+                    let (sig_errors, locs, type_sig) = parse_type_sig(
+                        options,
+                        docblock,
+                        locs_to_dirtify_vec,
+                        file,
+                        &ast,
+                        &arena,
+                        is_lib_file,
+                    );
 
                     let exports_result = exports::of_module(&type_sig);
                     let imports_result = imports::of_file_sig(&file_sig);
@@ -375,6 +397,7 @@ fn fold_failed(
 fn reducer(
     shared_mem: &SharedMem,
     options: &Options,
+    all_unordered_libs: &BTreeSet<FlowSmolStr>,
     skip_changed: bool,
     skip_unchanged: bool,
     is_init: bool,
@@ -452,7 +475,15 @@ fn reducer(
         docblock.flow = Some(flow_common::docblock::FlowMode::OptOut);
     }
 
-    match do_parse(options, &docblock, locs_to_dirtify, content_str, &file_key) {
+    let is_lib_file = files::is_lib_file(&options.file_options, all_unordered_libs, &file_key);
+    match do_parse(
+        options,
+        &docblock,
+        locs_to_dirtify,
+        content_str,
+        &file_key,
+        is_lib_file,
+    ) {
         ParseResult::ParseOk {
             ast,
             requires: _,
@@ -611,6 +642,7 @@ fn parse(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     skip_changed: bool,
     skip_unchanged: bool,
     is_init: bool,
@@ -620,6 +652,7 @@ fn parse(
     let shared_mem_for_job = shared_mem.clone();
     let options_for_job = options.clone();
     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
+    let all_unordered_libs_for_job = all_unordered_libs.dupe();
 
     let t = std::time::Instant::now();
 
@@ -654,11 +687,13 @@ fn parse(
             let shared_mem = shared_mem_for_job.clone();
             let options = options_for_job.clone();
             let locs = locs_to_dirtify_vec.clone();
+            let all_unordered_libs = all_unordered_libs_for_job.dupe();
             move |acc: &mut ParseResults, batch: Vec<FileKey>| {
                 for file_key in batch {
                     reducer(
                         &shared_mem,
                         &options,
+                        &all_unordered_libs,
                         skip_changed,
                         skip_unchanged,
                         is_init,
@@ -702,6 +737,7 @@ pub fn parse_with_defaults(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
     next: Next,
 ) -> ParseResults {
@@ -709,6 +745,7 @@ pub fn parse_with_defaults(
         pool,
         shared_mem,
         options,
+        all_unordered_libs,
         false, // skip_changed
         false, // skip_unchanged
         true,  // is_init
@@ -721,6 +758,7 @@ pub fn reparse_with_defaults(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
     next: Next,
 ) -> ParseResults {
@@ -729,6 +767,7 @@ pub fn reparse_with_defaults(
         pool,
         shared_mem,
         options,
+        all_unordered_libs,
         false, // skip_changed
         skip_unchanged,
         false, // is_init (reparse = not init)
@@ -744,6 +783,7 @@ pub fn ensure_parsed(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
     progress_fn: impl Fn(/*total:*/ i32, /*start:*/ i32, /*length:*/ i32) + Send + Sync + 'static,
 ) -> FlowOrdSet<FileKey> {
@@ -792,7 +832,17 @@ pub fn ensure_parsed(
         })
     };
 
-    let results = parse(pool, shared_mem, options, true, false, false, &[], next);
+    let results = parse(
+        pool,
+        shared_mem,
+        options,
+        all_unordered_libs,
+        true,
+        false,
+        false,
+        &[],
+        next,
+    );
     // On Windows, OCaml's C runtime can't access paths >= 260 chars (MAX_PATH).
     // These files will never be readable, so retrying them is pointless and
     // causes an infinite cancel/retry loop. Filter them out — they were already

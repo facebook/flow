@@ -175,8 +175,8 @@ fn check_for_package_json_changes(
     }
 }
 
-fn did_content_change(shared_mem: &SharedMem, filename: &str) -> bool {
-    let file = FileKey::lib_file_of_absolute(filename);
+fn did_content_change(options: &Options, shared_mem: &SharedMem, filename: &str) -> bool {
+    let file = files::lib_file_key(&options.file_options, filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
@@ -186,6 +186,7 @@ fn did_content_change(shared_mem: &SharedMem, filename: &str) -> bool {
 }
 
 fn check_for_lib_changes(
+    options: &Options,
     shared_mem: &SharedMem,
     all_libs: &BTreeSet<String>,
     root: &Path,
@@ -198,7 +199,7 @@ fn check_for_lib_changes(
         .to_string();
     let is_changed_lib = |filename: &String| -> bool {
         let is_lib = all_libs.contains(filename) || *filename == flow_typed_path;
-        is_lib && did_content_change(shared_mem, filename)
+        is_lib && did_content_change(options, shared_mem, filename)
     };
     let libs: BTreeSet<String> = updates
         .iter()
@@ -280,6 +281,7 @@ pub fn process_updates(
     check_for_flowconfig_change(options, skip_incompatible, &config_path, updates)?;
     check_for_package_json_changes(&is_incompatible_pj, skip_incompatible, updates)?;
     check_for_lib_changes(
+        options,
         shared_mem,
         &all_libs,
         root,

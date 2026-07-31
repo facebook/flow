@@ -754,6 +754,10 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
             .multi_platform_extension_group_mapping
             .clone(),
         node_resolver_dirnames: flowconfig.options.node_resolver_dirnames.clone(),
+        importable_global_libdefs: flowconfig
+            .options
+            .importable_global_libdefs
+            .unwrap_or(false),
     }
 }
 
@@ -1862,15 +1866,9 @@ fn show_connected_status(cenv: &mut ConnectedEnv) {
             _ => {
                 let message = match &cenv.c_lazy_stats {
                     Some(stats) if stats.checked_files < stats.total_files && stats.lazy_mode => {
-                        let checked_source = stats.checked_files - stats.checked_libdef_files;
-                        let total_source = stats.total_files - stats.total_libdef_files;
-                        let libdef_msg = format!(
-                            " + {}/{} libdefs",
-                            stats.checked_libdef_files, stats.total_libdef_files
-                        );
                         format!(
-                            "Flow is ready. Checking {}/{} source files{} (lazy mode)",
-                            checked_source, total_source, libdef_msg,
+                            "Flow is ready. Checking {}/{} files (lazy mode)",
+                            stats.checked_files, stats.total_files,
                         )
                     }
                     _ => "Flow is ready.".to_string(),

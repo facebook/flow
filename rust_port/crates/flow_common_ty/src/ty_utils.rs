@@ -47,13 +47,9 @@ pub fn patch_up_react_symbol(symbol: &Symbol<ALoc>) -> Option<Symbol<ALoc>> {
             Provenance::Library(ri) if ri.imported_as.is_none()
         )
         && symbol.sym_def_loc.source().is_some_and(|file_key| {
-            use flow_parser::file_key::FileKeyInner;
-            match file_key.inner() {
-                FileKeyInner::LibFile(path) => std::path::Path::new(path.as_str())
-                    .file_name()
-                    .is_some_and(|name| name == "react.js"),
-                _ => false,
-            }
+            std::path::Path::new(file_key.as_str())
+                .file_name()
+                .is_some_and(|name| name == "react.js")
         });
     if !is_unimported_react_symbol {
         return None;

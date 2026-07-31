@@ -4920,7 +4920,7 @@ fn declare_module<'a>(
         statement::declare_module::Id::Identifier(id) => id.loc.dupe(),
         statement::declare_module::Id::Literal((loc, _)) => loc.dupe(),
     };
-    if !(cx.file().is_lib_file() && type_env::in_global_scope(cx)) {
+    if !(cx.is_lib_file() && type_env::in_global_scope(cx)) {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EUnsupportedSyntax(Box::new((

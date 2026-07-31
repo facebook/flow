@@ -33,6 +33,7 @@ pub struct TypeSigOptions {
     // treated as computed rather than auto-numbered literals.
     pub is_dts_file: bool,
     pub tslib_syntax: bool,
+    pub is_lib_file: bool,
 }
 
 impl TypeSigOptions {
@@ -41,9 +42,10 @@ impl TypeSigOptions {
         prevent_munge: bool,
         locs_to_dirtify: Vec<Loc>,
         file: &FileKey,
+        is_lib_file: bool,
     ) -> Self {
         let munge = options.munge_underscores && !prevent_munge;
-        let enable_component_syntax = options.component_syntax || file.is_lib_file();
+        let enable_component_syntax = options.component_syntax || is_lib_file;
         // NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
         // recognize and process a custom `keyMirror` function that makes an enum out of the keys
         // of an object.
@@ -82,6 +84,7 @@ impl TypeSigOptions {
             is_ts_file: flow_common::files::has_ts_ext(file),
             is_dts_file: flow_common::files::has_dts_ext(file),
             tslib_syntax: options.tslib_syntax,
+            is_lib_file,
         }
     }
 
@@ -109,6 +112,7 @@ impl TypeSigOptions {
             is_ts_file: false,
             is_dts_file: false,
             tslib_syntax: true,
+            is_lib_file: true,
         }
     }
 }

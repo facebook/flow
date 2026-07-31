@@ -62,6 +62,7 @@ pub struct FileSigOptions {
     pub haste_module_ref_prefix: Option<FlowSmolStr>,
     pub project_options: Arc<ProjectsOptions>,
     pub relay_integration_module_prefix: Option<FlowSmolStr>,
+    pub is_lib_file: bool,
 }
 
 // We track information about dependencies for each unique module reference in a
@@ -317,7 +318,7 @@ impl FileSig {
         opts: &FileSigOptions,
     ) -> Self {
         let mut calc = RequiresCalculator::new(file_key, ast, opts);
-        if !file_key.is_lib_file() {
+        if !opts.is_lib_file {
             calc.add_multiplatform_synthetic_imports();
             let Ok(()) = calc.program(ast);
         }

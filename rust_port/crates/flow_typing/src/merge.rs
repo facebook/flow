@@ -7,6 +7,7 @@
 
 use std::cell::LazyCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -1340,7 +1341,9 @@ fn check_multiplatform_conformance<'cx>(
             match cx.find_require(&specifier) {
                 // It's ok if a platform speicific implementation file doesn't have an interface.
                 // It just makes the module non-importable without platform extension.
-                ResolvedRequire::MissingModule | ResolvedRequire::UncheckedModule(_) => {}
+                ResolvedRequire::MissingModule
+                | ResolvedRequire::GlobalLibdefModule(_)
+                | ResolvedRequire::UncheckedModule(_) => {}
                 ResolvedRequire::TypedModule(interface_module_f) => {
                     let get_exports_t = |is_common_interface_module: bool,
                                          reason: Reason,
@@ -1429,7 +1432,8 @@ fn check_multiplatform_conformance<'cx>(
                         {
                             ResolvedRequire::TypedModule(_)
                             | ResolvedRequire::UncheckedModule(_) => true,
-                            ResolvedRequire::MissingModule => false,
+                            ResolvedRequire::MissingModule
+                            | ResolvedRequire::GlobalLibdefModule(_) => false,
                         }
                     };
                     if !cx.has_explicit_supports_platform()
@@ -2117,6 +2121,7 @@ fn merge_libs_from_ordered_asts(
 pub fn merge_lib_files(
     project_opts: &flow_common::flow_projects::ProjectsOptions,
     sig_opts: &TypeSigOptions,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     ordered_asts_with_scoped_projects: &[(
         Option<String>,
         flow_common::type_strictness::TypeStrictnessKind,
@@ -2195,6 +2200,7 @@ pub fn merge_lib_files(
                 all_errors,
                 MasterContext::NonEmptyMasterContext {
                     builtin_leader_file_key,
+                    all_unordered_libs,
                     unscoped_builtins,
                     scoped_builtins: scoped_list,
                 },
@@ -2211,18 +2217,22 @@ pub fn mk_builtins<'cx>(
         MasterContext::EmptyMasterContext => Rc::new(|_| Builtins::empty()),
         MasterContext::NonEmptyMasterContext {
             builtin_leader_file_key,
+            all_unordered_libs,
             unscoped_builtins,
             scoped_builtins,
         } => {
             let builtin_leader_file_key = builtin_leader_file_key.dupe();
+            let all_unordered_libs = all_unordered_libs.dupe();
             let create_mapped_builtins = {
                 let builtin_leader_file_key = builtin_leader_file_key.dupe();
+                let all_unordered_libs = all_unordered_libs.dupe();
                 let metadata = metadata.clone();
                 move |bg: &BuiltinsGroup|
                      -> Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx> {
                     use std::cell::RefCell;
 
                     let builtin_leader_file_key = builtin_leader_file_key.dupe();
+                    let all_unordered_libs = all_unordered_libs.dupe();
                     let metadata = metadata.clone();
                     let bg = bg.clone();
                     let builtins_ref: Rc<RefCell<Builtins<'cx, Context<'cx>>>> =
@@ -2236,6 +2246,7 @@ pub fn mk_builtins<'cx>(
                             m
                         },
                         builtin_leader_file_key.dupe(),
+                        all_unordered_libs,
                         {
                             let builtin_leader_file_key = builtin_leader_file_key.dupe();
                             Rc::new(LazyCell::new(Box::new(move || {

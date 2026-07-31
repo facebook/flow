@@ -206,6 +206,7 @@ pub mod opts {
         pub ts_utility_syntax: bool,
         pub tslib_syntax: Option<bool>,
         pub typescript_library_definition_support: bool,
+        pub importable_global_libdefs: Option<bool>,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
         pub deprecated_utilities_excludes: Vec<String>,
         pub deprecated_colon_extends_excludes: Vec<String>,
@@ -390,6 +391,7 @@ pub mod opts {
             ts_utility_syntax: true,
             tslib_syntax: None,
             typescript_library_definition_support: false,
+            importable_global_libdefs: None,
             deprecated_utilities: default_deprecated_utilities(),
             deprecated_utilities_excludes: Vec::new(),
             deprecated_colon_extends_excludes: Vec::new(),
@@ -2344,6 +2346,19 @@ pub mod opts {
             ("experimental.facebook_module_interop", |values, config| {
                 facebook_module_interop_parser(values, config)
             }),
+            (
+                "experimental.importable_global_libdefs",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.importable_global_libdefs = Some(v);
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             ("experimental.long_lived_workers", |values, config| {
                 long_lived_workers_parser(values, config, true)
             }),

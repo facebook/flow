@@ -164,6 +164,7 @@ fn dummy_context() -> Context<'static> {
         ccx,
         metadata,
         file,
+        Arc::default(),
         aloc_table,
         resolve_require,
         Rc::new(move |_cx: &Context| {

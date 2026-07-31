@@ -1,0 +1,7 @@
+[libs]
+globals.js
+
+[options]
+all=true
+experimental.importable_global_libdefs=true
+experimental.module.automatic_require_default=true

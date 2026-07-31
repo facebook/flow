@@ -88,6 +88,7 @@ use super::intermediate_error_types::MessageCannotCompareData;
 use super::intermediate_error_types::MessageCannotExhaustivelyCheckAbstractEnumsData;
 use super::intermediate_error_types::MessageCannotExhaustivelyCheckEnumWithUnknownsData;
 use super::intermediate_error_types::MessageCannotExportRenamedDefaultData;
+use super::intermediate_error_types::MessageCannotImportGlobalLibdefData;
 use super::intermediate_error_types::MessageCannotInstantiateObjectUtilTypeWithEnumData;
 use super::intermediate_error_types::MessageCannotResolveBuiltinModuleData;
 use super::intermediate_error_types::MessageCannotSpreadGeneralData;
@@ -6079,6 +6080,20 @@ where
                 }
                 friendly::Message(features)
             }
+            MessageCannotImportGlobalLibdef(box MessageCannotImportGlobalLibdefData {
+                module_name,
+                libdef_name,
+            }) => friendly::Message(vec![
+                text("Cannot import "),
+                code(module_name),
+                text(" because "),
+                code(libdef_name),
+                text(
+                    " is a global library definition file, so it is not a module. Its \
+                     declarations are already available in global scope; remove this import and \
+                     reference them directly.",
+                ),
+            ]),
             MessageCannotResolveExpectedModule {
                 name,
                 expected_module_purpose,

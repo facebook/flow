@@ -488,27 +488,18 @@ fn symbol_from_loc<'cx>(
     let symbol_source = sym_def_loc.source();
     let current_source = env.genv.cx.file();
     let sym_provenance = match symbol_source {
-        Some(def_file) => match def_file.inner() {
-            FileKeyInner::LibFile(_) => {
-                if current_source == def_file {
-                    Provenance::Local
-                } else {
-                    Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
-                        imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
-                    })
-                }
-            }
-            FileKeyInner::SourceFile(_) => {
-                if current_source == def_file {
-                    Provenance::Local
-                } else {
-                    Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
-                        imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
-                    })
-                }
-            }
-            FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => Provenance::Local,
-        },
+        Some(def_file) if current_source == def_file => Provenance::Local,
+        Some(def_file) if env.genv.cx.is_lib_file_key(def_file) => {
+            Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
+                imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
+            })
+        }
+        Some(def_file) if matches!(def_file.inner(), FileKeyInner::SourceFile(_)) => {
+            Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
+                imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
+            })
+        }
+        Some(_) => Provenance::Local,
         None => Provenance::Local,
     };
     let sym_anonymous = sym_name == Name::new("<<anonymous class>>");

@@ -25,39 +25,33 @@ pub type SymbolMap<V> = BTreeMap<Symbol<ALoc>, V>;
 
 pub type SymbolSet = BTreeSet<Symbol<ALoc>>;
 
-pub fn is_react_file_key(file_key: &flow_parser::file_key::FileKey) -> bool {
-    use flow_parser::file_key::FileKeyInner;
-    match file_key.inner() {
-        FileKeyInner::LibFile(x) => std::path::Path::new(x.as_str())
+pub fn is_react_file_key(file_key: &flow_parser::file_key::FileKey, is_lib_file: bool) -> bool {
+    is_lib_file
+        && std::path::Path::new(file_key.as_str())
             .file_name()
-            .is_some_and(|f| f == "react.js"),
-        _ => false,
-    }
+            .is_some_and(|f| f == "react.js")
 }
 
-pub fn is_react_redux_file_key(file_key: &flow_parser::file_key::FileKey) -> bool {
-    use flow_parser::file_key::FileKeyInner;
-    match file_key.inner() {
-        FileKeyInner::LibFile(x) => {
-            let basename = std::path::Path::new(x.as_str())
-                .file_name()
-                .map_or("", |f| f.to_str().unwrap_or(""));
-            basename.contains("react-redux")
-        }
-        _ => false,
-    }
+pub fn is_react_redux_file_key(
+    file_key: &flow_parser::file_key::FileKey,
+    is_lib_file: bool,
+) -> bool {
+    let basename = std::path::Path::new(file_key.as_str())
+        .file_name()
+        .map_or("", |f| f.to_str().unwrap_or(""));
+    is_lib_file && basename.contains("react-redux")
 }
 
-pub fn is_react_loc(loc: &ALoc) -> bool {
+pub fn is_react_loc(loc: &ALoc, is_lib_file: bool) -> bool {
     match loc.source() {
-        Some(f) => is_react_file_key(f),
+        Some(f) => is_react_file_key(f, is_lib_file),
         _ => false,
     }
 }
 
-pub fn is_react_redux_loc(loc: &ALoc) -> bool {
+pub fn is_react_redux_loc(loc: &ALoc, is_lib_file: bool) -> bool {
     match loc.source() {
-        Some(f) => is_react_redux_file_key(f),
+        Some(f) => is_react_redux_file_key(f, is_lib_file),
         _ => false,
     }
 }
@@ -1531,7 +1525,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                             ) && matches!(
                                 &symbol.sym_provenance,
                                 flow_common_ty::ty_symbol::Provenance::Library(_)
-                            ) && is_react_loc(&symbol.sym_def_loc) =>
+                            ) && is_react_loc(&symbol.sym_def_loc, true) =>
                         {
                             Some(symbol.sym_def_loc.dupe())
                         }
@@ -1555,7 +1549,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                             flow_common_ty::ty_symbol::Provenance::Library(_)
                                         ) =>
                                     {
-                                        !is_react_loc(&symbol.sym_def_loc)
+                                        !is_react_loc(&symbol.sym_def_loc, true)
                                     }
                                     ty::Ty::Generic(box (symbol, _, None))
                                         if symbol.sym_name.as_str() == "Fbt"
@@ -1601,7 +1595,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                         if matches!(symbol.sym_name.as_str(), "Node" | "React.Node")
                            && matches!(&symbol.sym_provenance,
                                        flow_common_ty::ty_symbol::Provenance::Library(_))
-                           && is_react_loc(&symbol.sym_def_loc)
+                           && is_react_loc(&symbol.sym_def_loc, true)
                     )
                 });
                 let ts = if has_react_node && from_bounds {
@@ -1618,7 +1612,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                     flow_common_ty::ty_symbol::Provenance::Library(_)
                                 ) =>
                             {
-                                !is_react_loc(&symbol.sym_def_loc)
+                                !is_react_loc(&symbol.sym_def_loc, true)
                             }
                             ty::Ty::Generic(box (symbol, _, None))
                                 if symbol.sym_name.as_str() == "Fbt"
@@ -1678,7 +1672,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                         &symbol.sym_provenance,
                         flow_common_ty::ty_symbol::Provenance::Library(_)
                     )
-                    && is_react_loc(&symbol.sym_def_loc)
+                    && is_react_loc(&symbol.sym_def_loc, true)
                     && args.len() == 1
                     && matches!(args[0].as_ref(), ty::Ty::Str | ty::Ty::StrLit(_)) =>
             {
@@ -1698,7 +1692,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                         &symbol.sym_provenance,
                         flow_common_ty::ty_symbol::Provenance::Library(_)
                     )
-                    && is_react_loc(&symbol.sym_def_loc) =>
+                    && is_react_loc(&symbol.sym_def_loc, true) =>
             {
                 let name = if self.generalize_react_mixed_element {
                     "React.MixedElement"

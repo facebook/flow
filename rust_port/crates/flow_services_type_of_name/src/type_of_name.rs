@@ -640,9 +640,11 @@ fn resolve_name_from_index(
         (export_index::Source::Builtin(_), _) => Err("builtin lookup not supported".to_string()),
     }?;
     let contents = format!("/* @flow */ {}", contents_body);
-    let parse_result = type_contents::parse_contents(options, &contents, &file_key);
+    let parse_result =
+        type_contents::parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
     match type_contents::type_parse_artifacts(
         options,
+        env.all_unordered_libs.dupe(),
         reader.dupe(),
         env.master_cx.dupe(),
         file_key.dupe(),

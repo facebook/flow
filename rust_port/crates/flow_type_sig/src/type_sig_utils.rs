@@ -326,29 +326,28 @@ pub fn parse_and_pack_module<'arena: 'ast, 'ast>(
     source: Option<FileKey>,
     ast: &'ast Program<Loc, Loc>,
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Module<Loc>) {
-    let parsed = match &source {
-        Some(file_key) if file_key.is_lib_file() => {
-            // We will generate an empty file_sig for libdef files in parsing_service.
-            // Therefore, we should also generate an empty type sig for libdef files, so that
-            // both will consistently report that there are no imports and exports in libdef files.
-            // If they are inconsistent, we can potentially crash like what's reported in
-            // https://github.com/facebook/flow/issues/9262
-            parse_libdef_file_as_empty_module(
-                arenas,
-                TypeStrictnessKind::from_is_typescript(opts.is_ts_file || opts.is_dts_file),
-                strict,
-                platform_availability_set,
-                source.dupe(),
-            )
-        }
-        _ => parse_module(
+    let parsed = if opts.is_lib_file {
+        // We will generate an empty file_sig for libdef files in parsing_service.
+        // Therefore, we should also generate an empty type sig for libdef files, so that
+        // both will consistently report that there are no imports and exports in libdef files.
+        // If they are inconsistent, we can potentially crash like what's reported in
+        // https://github.com/facebook/flow/issues/9262
+        parse_libdef_file_as_empty_module(
+            arenas,
+            TypeStrictnessKind::from_is_typescript(opts.is_ts_file || opts.is_dts_file),
+            strict,
+            platform_availability_set,
+            source.dupe(),
+        )
+    } else {
+        parse_module(
             opts,
             arenas,
             strict,
             platform_availability_set,
             source.dupe(),
             ast,
-        ),
+        )
     };
     pack(opts, &opts.locs_to_dirtify, source, parsed)
 }

@@ -15,6 +15,7 @@
 
 use std::cell::LazyCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -23,6 +24,7 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
@@ -55,6 +57,7 @@ fn load_lib_files(
     ccx: &Rc<flow_typing_context::ComponentT<'static>>,
     options: &Options,
     reader: &SharedMem,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: &[(Option<String>, String)],
 ) -> (
     bool,
@@ -69,7 +72,7 @@ fn load_lib_files(
         Arc<ast::Program<Loc, Loc>>,
     )> = Vec::new();
     for (scoped_dir_opt, file) in files {
-        let lib_file = FileKey::lib_file_of_absolute(file);
+        let lib_file = flow_common::files::lib_file_key(&options.file_options, file);
         match reader.get_ast(&lib_file) {
             Some(ast) => {
                 ordered_asts.push((
@@ -90,8 +93,12 @@ fn load_lib_files(
 
     let (builtin_exports, master_cx, cx_opt) = if ok {
         let sig_opts = TypeSigOptions::builtin_options(options);
-        let (builtin_errors, master_cx) =
-            merge::merge_lib_files(&options.projects_options, &sig_opts, &ordered_asts);
+        let (builtin_errors, master_cx) = merge::merge_lib_files(
+            &options.projects_options,
+            &sig_opts,
+            all_unordered_libs,
+            &ordered_asts,
+        );
         match master_cx {
             MasterContext::EmptyMasterContext => (
                 (Exports::empty(), Vec::new()),
@@ -100,6 +107,7 @@ fn load_lib_files(
             ),
             MasterContext::NonEmptyMasterContext {
                 ref builtin_leader_file_key,
+                ref all_unordered_libs,
                 ref unscoped_builtins,
                 ref scoped_builtins,
             } => {
@@ -109,6 +117,7 @@ fn load_lib_files(
                     ccx.dupe(),
                     metadata,
                     builtin_leader_file_key.dupe(),
+                    all_unordered_libs.dupe(),
                     {
                         let builtin_leader_file_key = builtin_leader_file_key.dupe();
                         Rc::new(LazyCell::new(Box::new(move || {
@@ -205,10 +214,12 @@ fn error_set_to_filemap(map: &mut BTreeMap<FileKey, ErrorSet>, err_set: ErrorSet
 pub fn init(
     options: &Options,
     reader: &SharedMem,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     lib_files: Vec<(Option<String>, String)>,
 ) -> InitResult {
     let ccx = Rc::new(flow_typing_context::make_ccx());
-    let (ok, master_cx, cx_opt, exports) = load_lib_files(&ccx, options, reader, &lib_files);
+    let (ok, master_cx, cx_opt, exports) =
+        load_lib_files(&ccx, options, reader, all_unordered_libs, &lib_files);
     let (errors, warnings, suppressions) = match cx_opt {
         None => (BTreeMap::new(), BTreeMap::new(), ErrorSuppressions::empty()),
         Some(cx) => {

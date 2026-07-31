@@ -288,11 +288,18 @@ fn parse(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     parse_next: parsing_service::Next,
 ) -> CollatedParseResults {
     with_memory_timer(options, "Parsing", || {
-        let results =
-            parsing_service::parse_with_defaults(pool, shared_mem, options, &[], parse_next);
+        let results = parsing_service::parse_with_defaults(
+            pool,
+            shared_mem,
+            options,
+            all_unordered_libs,
+            &[],
+            parse_next,
+        );
         collate_parse_results(results)
     })
 }
@@ -301,6 +308,7 @@ fn reparse(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     def_info: &DefInfo,
     modified: parsing_service::Next,
 ) -> CollatedParseResults {
@@ -310,6 +318,7 @@ fn reparse(
             pool,
             shared_mem,
             options,
+            all_unordered_libs,
             &locs_to_dirtify,
             modified,
         );
@@ -862,6 +871,7 @@ mod check_files {
         options: Arc<Options>,
         pool: &ThreadPool,
         shared_mem: &Arc<SharedMem>,
+        all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         errors: OverlayErrors,
         updated_suppressions: ErrorSuppressions,
@@ -947,11 +957,13 @@ mod check_files {
             let mk_check: Arc<dyn Fn() -> WorkerState + Send + Sync> = {
                 let shared_mem = shared_mem.dupe();
                 let options = options.dupe();
+                let all_unordered_libs = all_unordered_libs.dupe();
                 let find_ref_request = find_ref_request.clone();
                 Arc::new(move || {
                     merge_service::mk_check(
                         shared_mem.dupe(),
                         options.dupe(),
+                        all_unordered_libs.dupe(),
                         master_cx.as_ref(),
                         find_ref_request.clone(),
                     )
@@ -1171,6 +1183,7 @@ fn ensure_parsed(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), UnexpectedFileChanges> {
     with_memory_timer(options, "EnsureParsed", || {
@@ -1178,6 +1191,7 @@ fn ensure_parsed(
             pool,
             shared_mem,
             options,
+            all_unordered_libs,
             files,
             |total, start, _length| {
                 let finished = start;
@@ -1202,9 +1216,10 @@ pub fn ensure_parsed_or_trigger_recheck(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
     options: &Arc<Options>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), RecheckError> {
-    match ensure_parsed(pool, shared_mem, options, files) {
+    match ensure_parsed(pool, shared_mem, options, all_unordered_libs, files) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
             Err(handle_unexpected_file_changes(changed_files))
@@ -1215,6 +1230,7 @@ pub fn ensure_parsed_or_trigger_recheck(
 fn init_libs(
     options: &Arc<Options>,
     shared_mem: &Arc<SharedMem>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     ordered_libs: Vec<(Option<String>, String)>,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     warnings: BTreeMap<FileKey, ErrorSet>,
@@ -1241,7 +1257,7 @@ fn init_libs(
             suppressions: lib_suppressions,
             exports: lib_exports,
             master_cx,
-        } = init::init(options, shared_mem, ordered_libs);
+        } = init::init(options, shared_mem, all_unordered_libs, ordered_libs);
         let local_errors = {
             let mut acc = lib_errors;
             for (file, errset) in local_errors {
@@ -1407,6 +1423,7 @@ pub(crate) mod recheck {
         env: &mut EnvTransaction,
     ) -> Result<IntermediateValues, RecheckError> {
         check_recheck_canceled()?;
+        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
         let shared_mem_for_ast = shared_mem.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
@@ -1448,7 +1465,14 @@ pub(crate) mod recheck {
             dirty_modules,
             local_errors: new_local_errors,
             package_json: _,
-        } = reparse(pool, shared_mem, options, def_info, modified_next);
+        } = reparse(
+            pool,
+            shared_mem,
+            options,
+            all_unordered_libs.dupe(),
+            def_info,
+            modified_next,
+        );
         check_recheck_canceled()?;
 
         let changed_files: Vec<FileKey> = modified_set
@@ -1605,9 +1629,16 @@ pub(crate) mod recheck {
 
         flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
-        ensure_parsed(pool, shared_mem, options, dirty_direct_dependents_set).map_err(
-            |UnexpectedFileChanges(changed_files)| handle_unexpected_file_changes(changed_files),
-        )?;
+        ensure_parsed(
+            pool,
+            shared_mem,
+            options,
+            all_unordered_libs,
+            dirty_direct_dependents_set,
+        )
+        .map_err(|UnexpectedFileChanges(changed_files)| {
+            handle_unexpected_file_changes(changed_files)
+        })?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
         resolve_requires_for_recheck(pool, shared_mem, options, &parsed_set_for_resolve)?;
         check_recheck_canceled()?;
@@ -1748,6 +1779,7 @@ pub(crate) mod recheck {
             unchanged_files_to_upgrade,
         } = intermediate_values;
         let coverage_for_check = env.take_coverage();
+        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
         let dependency_info = env.take_dependency_info();
         let result = (|| {
             let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
@@ -1781,7 +1813,13 @@ pub(crate) mod recheck {
                 _ => {}
             }
             check_recheck_canceled()?;
-            ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
+            ensure_parsed_or_trigger_recheck(
+                pool,
+                shared_mem,
+                options,
+                all_unordered_libs.dupe(),
+                to_merge.dupe().all(),
+            )?;
             check_recheck_canceled()?;
             if dependent_file_count > 0 {
                 flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
@@ -1841,6 +1879,7 @@ pub(crate) mod recheck {
                 options.dupe(),
                 pool,
                 shared_mem,
+                all_unordered_libs,
                 find_ref_request,
                 errors,
                 updated_suppressions,
@@ -2318,7 +2357,7 @@ fn mk_env(
     package_json_files: FlowOrdSet<FileKey>,
     dependency_info: DependencyInfo,
     ordered_libs: Vec<(Option<FlowSmolStr>, FlowSmolStr)>,
-    all_unordered_libs: BTreeSet<FlowSmolStr>,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     errors: Errors,
     collated_errors: CollatedErrors,
     exports: Option<ExportSearch>,
@@ -2331,7 +2370,7 @@ fn mk_env(
         checked_files: CheckedSet::empty(),
         package_json_files,
         ordered_libs: Arc::new(ordered_libs),
-        all_unordered_libs: Arc::new(all_unordered_libs),
+        all_unordered_libs,
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
         collated_errors: env_cell(collated_errors),
@@ -2455,8 +2494,8 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     }
 }
 
-fn did_content_change(shared_mem: &SharedMem, filename: &str) -> bool {
-    let file = FileKey::lib_file_of_absolute(filename);
+fn did_content_change(options: &Options, shared_mem: &SharedMem, filename: &str) -> bool {
+    let file = files::lib_file_key(&options.file_options, filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
@@ -2532,7 +2571,7 @@ fn process_saved_state_updates(
         .iter()
         .filter(|filename| {
             let is_lib = all_libs.contains(*filename) || **filename == flow_typed_path;
-            is_lib && did_content_change(shared_mem, filename)
+            is_lib && did_content_change(options, shared_mem, filename)
         })
         .cloned()
         .collect();
@@ -2716,14 +2755,16 @@ fn init_with_initial_state(
     monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
     let (ordered_libs, all_unordered_libs) =
         files::ordered_and_unordered_lib_paths(&options.file_options);
-    let all_unordered_libs_set: BTreeSet<FlowSmolStr> = all_unordered_libs
-        .iter()
-        .map(|name| FlowSmolStr::from(name.as_str()))
-        .collect();
+    let all_unordered_libs_set: Arc<BTreeSet<FlowSmolStr>> = Arc::new(
+        all_unordered_libs
+            .iter()
+            .map(|name| FlowSmolStr::from(name.as_str()))
+            .collect(),
+    );
 
     let additional_lib_files: Vec<FileKey> = all_unordered_libs
         .iter()
-        .map(|name| FileKey::lib_file_of_absolute(name))
+        .map(|name| files::lib_file_key(&options.file_options, name))
         .collect();
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
@@ -2738,11 +2779,18 @@ fn init_with_initial_state(
         dirty_modules: additional_dirty_modules,
         local_errors: additional_local_errors,
         package_json: _package_json,
-    } = parse(pool, shared_mem, options, next);
+    } = parse(
+        pool,
+        shared_mem,
+        options,
+        all_unordered_libs_set.dupe(),
+        next,
+    );
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
         shared_mem,
+        all_unordered_libs_set.dupe(),
         ordered_libs.clone(),
         local_errors,
         BTreeMap::new(),
@@ -2853,7 +2901,7 @@ fn init_with_initial_state(
                 })
                 .collect(),
         ),
-        all_unordered_libs: Arc::new(all_unordered_libs_set),
+        all_unordered_libs: all_unordered_libs_set,
         unparsed,
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
@@ -3207,11 +3255,12 @@ pub fn init_from_scratch(
             files::ordered_and_unordered_lib_paths(&options.file_options);
 
         let all_unordered_libs = Arc::new(all_unordered_libs);
-        let all_unordered_libs_set: BTreeSet<FlowSmolStr> = all_unordered_libs
-            .iter()
-            .map(|name| FlowSmolStr::from(name.as_str()))
-            .collect();
-
+        let all_unordered_libs_set: Arc<BTreeSet<FlowSmolStr>> = Arc::new(
+            all_unordered_libs
+                .iter()
+                .map(|name| FlowSmolStr::from(name.as_str()))
+                .collect(),
+        );
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
 
@@ -3248,7 +3297,13 @@ pub fn init_from_scratch(
             dirty_modules,
             local_errors,
             package_json: (package_json_files_list, package_json_errors),
-        } = parse(pool, shared_mem, options, next);
+        } = parse(
+            pool,
+            shared_mem,
+            options,
+            all_unordered_libs_set.dupe(),
+            next,
+        );
         handle.join().unwrap();
 
         assert!(unchanged.is_empty());
@@ -3290,6 +3345,7 @@ pub fn init_from_scratch(
         let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
             options,
             shared_mem,
+            all_unordered_libs_set.dupe(),
             ordered_libs.clone(),
             local_errors,
             warnings,
@@ -3873,7 +3929,13 @@ pub fn check_files_for_init(
             implementation_dependency_graph,
             sig_dependency_graph,
         );
-        ensure_parsed_or_trigger_recheck(pool, shared_mem, options, to_merge.dupe().all())?;
+        ensure_parsed_or_trigger_recheck(
+            pool,
+            shared_mem,
+            options,
+            all_unordered_libs.dupe(),
+            to_merge.dupe().all(),
+        )?;
         let merge_result = merge(
             pool,
             shared_mem,
@@ -3898,6 +3960,7 @@ pub fn check_files_for_init(
             options.dupe(),
             pool,
             shared_mem,
+            all_unordered_libs.dupe(),
             &flow_services_references::find_refs_types::empty_request(),
             env_errors,
             merge_result.suppressions.clone(),
@@ -4029,7 +4092,7 @@ pub fn libdef_check_for_lazy_init(
     let parsed: FlowOrdSet<FileKey> = env
         .all_unordered_libs
         .iter()
-        .map(|n| FileKey::lib_file_of_absolute(n))
+        .map(|n| files::lib_file_key(&options.file_options, n))
         .collect();
     check_files_for_init(options, pool, shared_mem, parsed, "lazy init check", env)
 }
@@ -4116,36 +4179,10 @@ pub fn check_once(
     }
 
     let lazy_msg = if options.lazy_mode {
-        let (focused_count, checked_libdef_files) =
-            env.checked_files
-                .focused()
-                .iter()
-                .fold((0i32, 0i32), |(total, libs), f| {
-                    if f.is_lib_file() {
-                        (total + 1, libs + 1)
-                    } else {
-                        (total + 1, libs)
-                    }
-                });
-        let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
-        let (total_files, total_libdef_files) =
-            env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
-                if f.is_lib_file() {
-                    (total + 1, libs + 1)
-                } else {
-                    (total + 1, libs)
-                }
-            });
-        let checked_source = checked_files - checked_libdef_files;
-        let total_source = total_files - total_libdef_files;
-        let libdef_msg = format!(
-            " (+ {}/{} libdefs)",
-            checked_libdef_files, total_libdef_files
-        );
-        Some(format!(
-            "Checked {}/{} source files{}.",
-            checked_source, total_source, libdef_msg
-        ))
+        let checked_files =
+            (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
+        let total_files = env.files.len() as i32;
+        Some(format!("Checked {}/{} files.", checked_files, total_files))
     } else {
         None
     };

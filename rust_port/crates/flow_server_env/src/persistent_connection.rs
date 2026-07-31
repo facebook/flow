@@ -373,6 +373,7 @@ fn send_notification(response: Prot::NotificationFromServer, client: &SingleClie
 }
 
 fn send_errors(
+    importable_global_libdefs: bool,
     errors_reason: Prot::ErrorsReason,
     errors: &flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
     warnings: &BTreeMap<
@@ -412,15 +413,31 @@ fn send_errors(
     let get_warnings_for_file = |filename: &str,
                                  warn_map: &BTreeMap<FileKey, ConcreteLocPrintableErrorSet>|
      -> ConcreteLocPrintableErrorSet {
-        get_first_contained(
-            warn_map,
-            &[
+        if importable_global_libdefs {
+            [
                 FileKey::source_file_of_absolute(filename),
-                FileKey::lib_file_of_absolute(filename),
                 FileKey::json_file_of_absolute(filename),
                 FileKey::resource_file_of_absolute(filename),
-            ],
-        )
+            ]
+            .iter()
+            .find_map(|file| warn_map.get(file).cloned())
+            .or_else(|| {
+                warn_map.iter().find_map(|(file, errors)| {
+                    (file.to_absolute() == filename).then(|| errors.clone())
+                })
+            })
+            .unwrap_or_default()
+        } else {
+            get_first_contained(
+                warn_map,
+                &[
+                    FileKey::source_file_of_absolute(filename),
+                    FileKey::lib_file_of_absolute(filename),
+                    FileKey::json_file_of_absolute(filename),
+                    FileKey::resource_file_of_absolute(filename),
+                ],
+            )
+        }
     };
 
     let warnings = opened_files.iter().fold(
@@ -460,6 +477,7 @@ fn send_errors(
 }
 
 pub fn send_errors_if_subscribed(
+    importable_global_libdefs: bool,
     client: &SingleClientRef,
     errors_reason: Prot::ErrorsReason,
     errors: &flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
@@ -470,7 +488,13 @@ pub fn send_errors_if_subscribed(
 ) {
     let subscribed = with_registry(get_id(client), |entry| entry.subscribed).unwrap_or(false);
     if subscribed {
-        send_errors(errors_reason, errors, warnings, client)
+        send_errors(
+            importable_global_libdefs,
+            errors_reason,
+            errors,
+            warnings,
+            client,
+        )
     }
 }
 
@@ -588,6 +612,7 @@ fn get_subscribed_clients(clients: &PersistentConnection) -> Vec<SingleClientRef
 }
 
 pub fn update_clients(
+    importable_global_libdefs: bool,
     clients: &PersistentConnection,
     errors_reason: Prot::ErrorsReason,
     calc_errors_and_warnings: impl FnOnce() -> (
@@ -613,7 +638,13 @@ pub fn update_clients(
             all_client_count
         );
         for client in &subscribed_clients {
-            send_errors(errors_reason.clone(), &errors, &warnings, client);
+            send_errors(
+                importable_global_libdefs,
+                errors_reason.clone(),
+                &errors,
+                &warnings,
+                client,
+            );
         }
     }
 }
@@ -665,6 +696,7 @@ pub fn send_telemetry(telemetry: Prot::TelemetryFromServer, clients: &Persistent
 }
 
 pub fn subscribe_client(
+    importable_global_libdefs: bool,
     client: &SingleClientRef,
     current_errors: &flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
     current_warnings: &BTreeMap<
@@ -677,7 +709,13 @@ pub fn subscribe_client(
     if subscribed {
     } else {
         let errors_reason = Prot::ErrorsReason::NewSubscription;
-        send_errors(errors_reason, current_errors, current_warnings, client);
+        send_errors(
+            importable_global_libdefs,
+            errors_reason,
+            current_errors,
+            current_warnings,
+            client,
+        );
         let _ = with_registry_mut(get_id(client), |entry| {
             entry.subscribed = true;
         });

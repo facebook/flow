@@ -294,10 +294,12 @@ mod tests {
                 is_ts_file: false,
                 is_dts_file: false,
                 tslib_syntax: true,
+                is_lib_file: true,
             };
             let (_, master_cx) = merge::merge_lib_files(
                 &flow_common::flow_projects::ProjectsOptions::default(),
                 &sig_opts,
+                Arc::default(),
                 &asts,
             );
             Arc::new(master_cx)
@@ -421,6 +423,7 @@ mod tests {
             ccx,
             md.clone(),
             dummy_filename(),
+            Arc::default(),
             aloc_table,
             resolve_require,
             Rc::new(move |_cx: &Context<'static>| {

@@ -7,6 +7,7 @@
 
 #![allow(dead_code)]
 
+use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::str::FromStr as _;
 use std::sync::Arc;
@@ -21,6 +22,7 @@ use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_common_utils::list_utils;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_clock;
 use flow_server_env::flow_lsp_conversions;
@@ -196,6 +198,7 @@ pub enum PersistentCommandHandler {
 
 fn type_parse_artifacts_with_cache(
     options: &Options,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     master_cx: Arc<flow_typing_context::MasterContext>,
@@ -208,7 +211,14 @@ fn type_parse_artifacts_with_cache(
 ) -> (FileArtifactsResult<'static>, Option<bool>) {
     match type_parse_artifacts_cache {
         None => {
-            let result = type_parse_artifacts(options, shared_mem, master_cx, file, artifacts());
+            let result = type_parse_artifacts(
+                options,
+                all_unordered_libs,
+                shared_mem,
+                master_cx,
+                file,
+                artifacts(),
+            );
             (result, None)
         }
         Some(cache) => {
@@ -224,6 +234,7 @@ fn type_parse_artifacts_with_cache(
                     content: content_for_result,
                     result: type_parse_artifacts(
                         options,
+                        all_unordered_libs,
                         shared_mem,
                         master_cx,
                         file_for_result,
@@ -552,10 +563,11 @@ fn check_that_we_care_about_this_file(
 
     fn check_flow_pragma(
         options: &Options,
+        all_unordered_libs: &BTreeSet<FlowSmolStr>,
         _content: &str,
         file_key: &flow_parser::file_key::FileKey,
     ) -> Result<(), &'static str> {
-        if options.all || file_key.is_lib_file() {
+        if options.all || files::is_lib_file(&options.file_options, all_unordered_libs, file_key) {
             Ok(())
         } else {
             let (_errs, docblock) = parse_docblock(
@@ -586,7 +598,7 @@ fn check_that_we_care_about_this_file(
         check_file_not_ignored(file_options, &all_unordered_libs, &file_path)
             .and_then(|()| check_file_included(options, file_options, &file_path))
             .and_then(|()| check_is_flow_file(file_options, &file_path))
-            .and_then(|()| check_flow_pragma(options, content, file_key))
+            .and_then(|()| check_flow_pragma(options, &env.all_unordered_libs, content, file_key))
     }
 }
 
@@ -946,6 +958,7 @@ fn json_of_autocomplete_result(
 
 fn type_parse_artifacts_for_ac_with_cache(
     options: &Options,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&AutocompleteArtifactsCache>,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     master_cx: Arc<flow_typing_context::MasterContext>,
@@ -972,6 +985,7 @@ fn type_parse_artifacts_for_ac_with_cache(
             let cx = match flow_services_inference::type_contents::compute_env_of_contents(
                 options,
                 shared_mem.clone(),
+                all_unordered_libs.dupe(),
                 master_cx.clone(),
                 file_for_result.dupe(),
                 docblock.dupe(),
@@ -1048,9 +1062,11 @@ fn autocomplete_on_parsed(
     let type_parse_artifacts_cache = client_id
         .and_then(persistent_connection::get_client)
         .map(|client| persistent_connection::autocomplete_artifacts_cache(&client));
-    let parse_result = || parse_contents(options, &contents, filename);
+    let parse_result =
+        || parse_contents(options, env.all_unordered_libs.dupe(), &contents, filename);
     let (file_artifacts_result, did_hit) = type_parse_artifacts_for_ac_with_cache(
         options,
+        env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache.as_ref(),
         shared_mem.clone(),
         env.master_cx.clone(),
@@ -1368,12 +1384,14 @@ fn errors_of_file(
             Err(ErrorsOfFileError::NotCovered)
         }
         Ok((file_key, content)) => {
-            let intermediate_result = parse_contents(&options, &content, &file_key);
+            let intermediate_result =
+                parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let result = if !intermediate_result.1.is_empty() {
                 Err(TypeContentsError::Errors(intermediate_result.1))
             } else {
                 type_parse_artifacts(
                     &options,
+                    env.all_unordered_libs.dupe(),
                     shared_mem.clone(),
                     env.master_cx.clone(),
                     file_key.clone(),
@@ -1685,9 +1703,11 @@ fn infer_type(
             Ok((Ok(response), extra_data))
         }
         Ok((file_key, content)) => {
-            let parse_result = || parse_contents(&options, &content, &file_key);
+            let parse_result =
+                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 &options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -1804,9 +1824,11 @@ fn type_of_name(
         Ok((file_key, content)) => {
             let mut options = options.clone();
             options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
-            let parse_result = || parse_contents(&options, &content, &file_key);
+            let parse_result =
+                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 &options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -1885,9 +1907,11 @@ fn inlay_hint(
             Ok((Ok(vec![]), extra_data))
         }
         Ok((file_key, content)) => {
-            let parse_result = || parse_contents(&options, &content, &file_key);
+            let parse_result =
+                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 &options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -2013,9 +2037,15 @@ fn insert_type(
                 .0
         })
     };
-    let intermediate_result = parse_contents(options, &file_content, &file_key);
+    let intermediate_result = parse_contents(
+        options,
+        env.all_unordered_libs.dupe(),
+        &file_content,
+        &file_key,
+    );
     let file_artifacts_result = type_parse_artifacts(
         options,
+        env.all_unordered_libs.dupe(),
         shared_mem,
         env.master_cx.clone(),
         file_key,
@@ -2092,9 +2122,15 @@ fn autofix_exports(
                 .0
         })
     });
-    let intermediate_result = parse_contents(options, &file_content, &file_key);
+    let intermediate_result = parse_contents(
+        options,
+        env.all_unordered_libs.dupe(),
+        &file_content,
+        &file_key,
+    );
     let file_artifacts_result = type_parse_artifacts(
         options,
+        env.all_unordered_libs.dupe(),
         shared_mem,
         env.master_cx.clone(),
         file_key.clone(),
@@ -2168,9 +2204,15 @@ fn autofix_missing_local_annot(
                 .0
         })
     };
-    let intermediate_result = parse_contents(options, &file_content, &file_key);
+    let intermediate_result = parse_contents(
+        options,
+        env.all_unordered_libs.dupe(),
+        &file_content,
+        &file_key,
+    );
     let file_artifacts_result = type_parse_artifacts(
         options,
+        env.all_unordered_libs.dupe(),
         shared_mem,
         env.master_cx.clone(),
         file_key,
@@ -2296,9 +2338,11 @@ fn dump_types(
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
-    let intermediate_result = parse_contents(options, &content, &file_key);
+    let intermediate_result =
+        parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         options,
+        env.all_unordered_libs.dupe(),
         shared_mem,
         env.master_cx.clone(),
         file_key,
@@ -2339,9 +2383,11 @@ fn coverage(
 > {
     let mut options = options.clone();
     options.all = options.all || force;
-    let intermediate_result = || parse_contents(&options, content, file_key);
+    let intermediate_result =
+        || parse_contents(&options, env.all_unordered_libs.dupe(), content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
         &options,
+        env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache,
         shared_mem,
         env.master_cx.clone(),
@@ -2402,7 +2448,10 @@ fn batch_coverage(
         let coverage = env.coverage();
         let mut response: Vec<_> = coverage
             .iter()
-            .filter(|(key, _)| !key.is_lib_file() && filter(&key.to_absolute()))
+            .filter(|(key, _)| {
+                !files::is_lib_file(&options.file_options, &env.all_unordered_libs, key)
+                    && filter(&key.to_absolute())
+            })
             .map(|(key, coverage)| (key.dupe(), coverage.clone()))
             .collect();
         response.reverse();
@@ -2577,9 +2626,11 @@ fn get_def(
             ))
         }
         Ok((file_key, content)) => {
-            let intermediate_result = || parse_contents(options, &content, &file_key);
+            let intermediate_result =
+                || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (check_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -2944,6 +2995,7 @@ fn build_file_entry(
 // NOTE: `query` reads the committed heap, which can lag the filesystem -- a daemon behind the
 // filesystem returns a self-consistent but stale mirror. Adding a freshness barrier here is a follow-up.
 fn query(
+    options: &Options,
     env: &server_env::Env,
     shared_mem: &flow_heap::parsing_heaps::SharedMem,
     request: &Query,
@@ -2966,7 +3018,9 @@ fn query(
     } else {
         env.files
             .iter()
-            .filter(|file_key| !file_key.is_lib_file())
+            .filter(|file_key| {
+                !files::is_lib_file(&options.file_options, &env.all_unordered_libs, file_key)
+            })
             .map(|file_key| {
                 let content_hash = if want_content {
                     shared_mem.get_file_hash_committed(file_key)
@@ -2989,11 +3043,12 @@ fn query(
 }
 
 fn handle_query(
+    options: &Options,
     env: &server_env::Env,
     shared_mem: &flow_heap::parsing_heaps::SharedMem,
     request: &Query,
 ) -> EphemeralNonparallelizableResult {
-    let response = query(env, shared_mem, request);
+    let response = query(options, env, shared_mem, request);
     Ok((server_prot::response::Response::QUERY(response), None))
 }
 
@@ -3151,9 +3206,11 @@ fn handle_llm_context(
                 Err(_) => return None,
                 Ok(v) => v,
             };
-            let intermediate_result = parse_contents(options, &content, &file_key);
+            let intermediate_result =
+                parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let file_artifacts_result = type_parse_artifacts(
                 options,
+                env.all_unordered_libs.dupe(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
@@ -3338,7 +3395,9 @@ pub fn handle_ephemeral_command_for_standalone(
             let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&filename);
             handle_cycle(env, &file_key, types_only)
         }
-        server_prot::request::Command::QUERY { query } => handle_query(env, &shared_mem, &query),
+        server_prot::request::Command::QUERY { query } => {
+            handle_query(options, env, &shared_mem, &query)
+        }
         server_prot::request::Command::DUMP_TYPES {
             input,
             evaluate_type_destructors,
@@ -3499,9 +3558,17 @@ fn find_code_actions(
             (Ok(vec![]), extra_data)
         }
         Ok((file_key, file_contents)) => {
-            let intermediate_result = || parse_contents(options, &file_contents, &file_key);
+            let intermediate_result = || {
+                parse_contents(
+                    options,
+                    env.all_unordered_libs.dupe(),
+                    &file_contents,
+                    &file_key,
+                )
+            };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -3618,9 +3685,17 @@ fn add_missing_imports(
         Err(msg) => Err(msg),
         Ok(file_contents) => {
             let uri = &text_document.uri;
-            let intermediate_result = || parse_contents(options, &file_contents, &file_key);
+            let intermediate_result = || {
+                parse_contents(
+                    options,
+                    env.all_unordered_libs.dupe(),
+                    &file_contents,
+                    &file_key,
+                )
+            };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -3652,6 +3727,7 @@ fn add_missing_imports(
 
 fn organize_imports(
     options: &Options,
+    env: &server_env::Env,
     client_id: lsp_prot::ClientId,
     text_document: &lsp_types::TextDocumentIdentifier,
 ) -> Result<Vec<lsp_types::TextEdit>, String> {
@@ -3664,8 +3740,12 @@ fn organize_imports(
     match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
-            let (parse_artifacts, _parse_errors) =
-                parse_contents(options, &file_contents, &file_key);
+            let (parse_artifacts, _parse_errors) = parse_contents(
+                options,
+                env.all_unordered_libs.dupe(),
+                &file_contents,
+                &file_key,
+            );
             match parse_artifacts {
                 None => Ok(vec![]),
                 Some(ParseArtifacts { ref ast, .. }) => Ok(
@@ -4372,10 +4452,11 @@ fn handle_nonparallelizable_persistent(
     }
 }
 
-fn did_open(env: &server_env::Env, client_id: lsp_prot::ClientId) {
+fn did_open(importable_global_libdefs: bool, env: &server_env::Env, client_id: lsp_prot::ClientId) {
     let (errors, warnings) = flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_errors_if_subscribed(
+            importable_global_libdefs,
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
@@ -4384,10 +4465,15 @@ fn did_open(env: &server_env::Env, client_id: lsp_prot::ClientId) {
     }
 }
 
-fn did_close(env: &server_env::Env, client_id: lsp_prot::ClientId) {
+fn did_close(
+    importable_global_libdefs: bool,
+    env: &server_env::Env,
+    client_id: lsp_prot::ClientId,
+) {
     let (errors, warnings) = flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_errors_if_subscribed(
+            importable_global_libdefs,
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
@@ -4449,6 +4535,7 @@ fn mk_lsp_error_response(
 }
 
 fn handle_persistent_subscribe(
+    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
@@ -4456,7 +4543,12 @@ fn handle_persistent_subscribe(
     let (current_errors, current_warnings) =
         flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
-        persistent_connection::subscribe_client(&client, &current_errors, &current_warnings);
+        persistent_connection::subscribe_client(
+            importable_global_libdefs,
+            &client,
+            &current_errors,
+            &current_warnings,
+        );
     }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
@@ -4479,12 +4571,13 @@ fn get_and_clear_did_open_files() -> Vec<(String, String)> {
 }
 
 fn handle_persistent_did_open_notification(
+    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     if !get_and_clear_did_open_files().is_empty() {
-        did_open(env, client_id);
+        did_open(importable_global_libdefs, env, client_id);
     }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
@@ -4527,11 +4620,12 @@ fn handle_persistent_did_save_notification(
 }
 
 fn handle_persistent_did_close_notification(
+    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    did_close(env, client_id);
+    did_close(importable_global_libdefs, env, client_id);
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
 
@@ -4644,6 +4738,8 @@ fn handle_persistent_get_def(
 }
 
 fn loc_to_vscode_linked_location_in_markdown(
+    options: &Options,
+    env: &server_env::Env,
     default_uri: &lsp_types::Uri,
     loc: &flow_parser::loc::Loc,
 ) -> Option<String> {
@@ -4655,7 +4751,11 @@ fn loc_to_vscode_linked_location_in_markdown(
         Some(file) => {
             // We'll use default_uri here as we don't expect this to fail
             let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
-            let lib = if file.is_lib_file() { "(lib) " } else { "" };
+            let lib = if files::is_lib_file(&options.file_options, &env.all_unordered_libs, file) {
+                "(lib) "
+            } else {
+                ""
+            };
             let abs = file.to_absolute();
             let basename = std::path::Path::new(&abs)
                 .file_name()
@@ -4734,12 +4834,13 @@ fn handle_persistent_infer_type(
                     .refinement_invalidated
                     .iter()
                     .filter_map(|(loc, reason)| {
-                        loc_to_vscode_linked_location_in_markdown(default_uri, loc).map(|loc| {
-                            (
-                                loc,
-                                flow_common::refinement_invalidation::string_of_reason(*reason),
-                            )
-                        })
+                        loc_to_vscode_linked_location_in_markdown(options, env, default_uri, loc)
+                            .map(|loc| {
+                                (
+                                    loc,
+                                    flow_common::refinement_invalidation::string_of_reason(*reason),
+                                )
+                            })
                     })
                     .collect();
                 if invalidation_info.is_empty() {
@@ -4759,7 +4860,9 @@ fn handle_persistent_infer_type(
                 let refining_locs: Vec<_> = infer_result
                     .refining_locs
                     .iter()
-                    .filter_map(|loc| loc_to_vscode_linked_location_in_markdown(default_uri, loc))
+                    .filter_map(|loc| {
+                        loc_to_vscode_linked_location_in_markdown(options, env, default_uri, loc)
+                    })
                     .collect();
                 if refining_locs.is_empty() {
                     vec![]
@@ -4784,13 +4887,17 @@ fn handle_persistent_infer_type(
                         .map(|refs| {
                             refs.iter()
                                 .filter_map(|(name, loc)| {
-                                    loc_to_vscode_linked_location_in_markdown(default_uri, loc).map(
-                                        |loc_str| {
-                                            lsp_types::MarkedString::String(format!(
-                                                "`{name}` defined at {loc_str}"
-                                            ))
-                                        },
+                                    loc_to_vscode_linked_location_in_markdown(
+                                        options,
+                                        env,
+                                        default_uri,
+                                        loc,
                                     )
+                                    .map(|loc_str| {
+                                        lsp_types::MarkedString::String(format!(
+                                            "`{name}` defined at {loc_str}"
+                                        ))
+                                    })
                                 })
                                 .collect::<Vec<_>>()
                         })
@@ -5027,9 +5134,11 @@ fn handle_persistent_signaturehelp_lsp(
             };
             let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-            let intermediate_result = || parse_contents(options, &contents, &path);
+            let intermediate_result =
+                || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &path);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -5228,9 +5337,11 @@ fn get_file_artifacts(
             Err(IdeFileError::Failed(reason)) => (Err(reason), None),
             Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
             Ok((file_key, content)) => {
-                let intermediate_result = || parse_contents(options, &content, &file_key);
+                let intermediate_result =
+                    || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
                 let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                     options,
+                    env.all_unordered_libs.dupe(),
                     type_parse_artifacts_cache.as_ref(),
                     shared_mem.dupe(),
                     env.master_cx.clone(),
@@ -5950,9 +6061,11 @@ fn handle_persistent_llm_context(
                 Err(_) => return None,
                 Ok(v) => v,
             };
-            let intermediate_result = || parse_contents(options, &content, &file_key);
+            let intermediate_result =
+                || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -6110,12 +6223,13 @@ fn handle_persistent_add_missing_imports_command(
 
 fn handle_persistent_organize_imports_command(
     options: &Options,
+    env: &server_env::Env,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     text_document: &lsp_types::TextDocumentIdentifier,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    match organize_imports(options, client_id, text_document) {
+    match organize_imports(options, env, client_id, text_document) {
         Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
         Ok(ref e) if e.is_empty() => {
             let response = LspMessage::ResponseMessage(id, LspResult::ExecuteCommandResult(()));
@@ -6190,7 +6304,8 @@ fn auto_close_jsx_handler(
             (Ok(None), extra_data)
         }
         Ok((filename, contents)) => {
-            let (parse_result, _) = parse_contents(options, &contents, &filename);
+            let (parse_result, _) =
+                parse_contents(options, env.all_unordered_libs.dupe(), &contents, &filename);
             match parse_result {
                 None => (Ok(None), None),
                 Some(ParseArtifacts { ast, .. }) => {
@@ -6229,9 +6344,11 @@ fn prepare_document_paste(
             (vec![], extra_data)
         }
         Ok((file_key, contents)) => {
-            let intermediate_result = || parse_contents(options, &contents, &file_key);
+            let intermediate_result =
+                || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 options,
+                env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
                 shared_mem.clone(),
                 env.master_cx.clone(),
@@ -6268,6 +6385,7 @@ fn prepare_document_paste(
 
 fn provide_document_paste(
     options: &Options,
+    env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     params: &lsp::document_paste::ProvideParams,
 ) -> (lsp_types::WorkspaceEdit, Option<lsp_prot::Json>) {
@@ -6310,7 +6428,8 @@ fn provide_document_paste(
             uri: uri.clone(),
         }),
     );
-    let (parse_result, _errors) = parse_contents(options, text, &file_key);
+    let (parse_result, _errors) =
+        parse_contents(options, env.all_unordered_libs.dupe(), text, &file_key);
     let (edits, extra_data) = match parse_result {
         None => (
             vec![],
@@ -6401,12 +6520,13 @@ fn handle_persistent_prepare_document_paste(
 
 fn handle_persistent_provide_document_paste_edits(
     options: &Options,
+    env: &server_env::Env,
     shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
     id: lsp_prot::LspId,
     params: &lsp::document_paste::ProvideParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (workspace_edit, extra_data) = provide_document_paste(options, shared_mem, params);
+    let (workspace_edit, extra_data) = provide_document_paste(options, env, shared_mem, params);
     let metadata = with_data(extra_data, metadata);
     let response =
         LspMessage::ResponseMessage(id, LspResult::ProvideDocumentPasteResult(workspace_edit));
@@ -6451,7 +6571,8 @@ fn linked_editing_range_handler(
             (Ok(None), extra_data)
         }
         Ok((filename, contents)) => {
-            let (parse_result, parse_errors) = parse_contents(options, &contents, &filename);
+            let (parse_result, parse_errors) =
+                parse_contents(options, env.all_unordered_libs.dupe(), &contents, &filename);
             let has_parse_errors = !parse_errors.is_empty();
             if has_parse_errors {
                 return (Ok(None), None);
@@ -6650,7 +6771,12 @@ fn live_diagnostics_of_uri(
                             &file_path,
                         );
                         let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) = {
-                            let intermediate_result = parse_contents(options, content, &file_key);
+                            let intermediate_result = parse_contents(
+                                options,
+                                env.all_unordered_libs.dupe(),
+                                content,
+                                &file_key,
+                            );
                             let (_, parse_errs) = &intermediate_result;
                             if !parse_errs.is_empty() {
                                 (Err(TypeContentsError::Errors(parse_errs.clone())), None)
@@ -6661,6 +6787,7 @@ fn live_diagnostics_of_uri(
                                     });
                                 type_parse_artifacts_with_cache(
                                     options,
+                                    env.all_unordered_libs.dupe(),
                                     type_parse_artifacts_cache.as_ref(),
                                     shared_mem.clone(),
                                     env.master_cx.clone(),
@@ -6868,6 +6995,7 @@ fn get_persistent_handler(
     request: &lsp_prot::RequestWithMetadata,
 ) -> PersistentCommandHandler {
     let options = &*genv.options;
+    let importable_global_libdefs = options.file_options.importable_global_libdefs;
     let (ref request_inner, ref metadata) = *request;
     if let lsp_prot::Request::LspToServer(LspMessage::RequestMessage(id, _)) = request_inner {
         let is_cancelled = server_monitor_listener_state::cancellation_requests()
@@ -6888,7 +7016,12 @@ fn get_persistent_handler(
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                Ok(handle_persistent_subscribe(client_id, metadata, env))
+                Ok(handle_persistent_subscribe(
+                    importable_global_libdefs,
+                    client_id,
+                    metadata,
+                    env,
+                ))
             }))
         }
 
@@ -6908,7 +7041,10 @@ fn get_persistent_handler(
                 // This mutates env, so it can't run in parallel
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                     Ok(handle_persistent_did_open_notification(
-                        client_id, metadata, env,
+                        importable_global_libdefs,
+                        client_id,
+                        metadata,
+                        env,
                     ))
                 }))
             } else {
@@ -6952,7 +7088,10 @@ fn get_persistent_handler(
             if did_anything_change {
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                     Ok(handle_persistent_did_close_notification(
-                        client_id, metadata, env,
+                        importable_global_libdefs,
+                        client_id,
+                        metadata,
+                        env,
                     ))
                 }))
             } else {
@@ -7399,15 +7538,16 @@ fn get_persistent_handler(
                     match text_document {
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
-                            PersistentCommandHandler::HandlePersistentImmediately(Box::new(
-                                move || {
-                                    handle_persistent_organize_imports_command(
+                            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                                move |env| {
+                                    Ok(handle_persistent_organize_imports_command(
                                         &options_arc,
+                                        env,
                                         client_id,
                                         id,
                                         &text_document,
                                         metadata,
-                                    )
+                                    ))
                                 },
                             ))
                         }
@@ -7479,14 +7619,15 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let shared_mem = genv.shared_mem.clone();
-            PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
-                handle_persistent_provide_document_paste_edits(
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+                Ok(handle_persistent_provide_document_paste_edits(
                     &options_arc,
+                    env,
                     shared_mem,
                     id,
                     &params,
                     metadata,
-                )
+                ))
             }))
         }
 

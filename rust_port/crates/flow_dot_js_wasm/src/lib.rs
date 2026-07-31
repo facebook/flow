@@ -227,6 +227,7 @@ fn builtin_sig_options() -> TypeSigOptions {
         is_ts_file: false,
         is_dts_file: false,
         tslib_syntax: true,
+        is_lib_file: true,
     }
 }
 
@@ -240,6 +241,7 @@ fn file_sig_options(options: &Options) -> FileSigOptions {
         haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
         project_options: options.projects_options.dupe(),
         relay_integration_module_prefix: options.relay_integration_module_prefix.dupe(),
+        is_lib_file: false,
     }
 }
 
@@ -315,6 +317,7 @@ fn prepare_file(
                 Rc::new(flow_typing_context::make_ccx()),
                 flow_typing_context::metadata_of_options(&options),
                 file_key.dupe(),
+                Arc::default(),
                 Rc::new(LazyCell::new(Box::new({
                     let file_key = file_key.dupe();
                     move || Rc::new(ALocTable::empty(file_key))
@@ -355,6 +358,7 @@ fn prepare_file(
         Rc::new(flow_typing_context::make_ccx()),
         metadata.clone(),
         file_key,
+        Arc::default(),
         aloc_table,
         resolve_require,
         merge::mk_builtins(&metadata, &master_cx),
@@ -580,8 +584,12 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
             })
             .collect::<Result<Vec<_>, _>>()
     })?;
-    let (_errors, master_cx) =
-        merge::merge_lib_files(&options.projects_options, &builtin_sig_options(), &asts);
+    let (_errors, master_cx) = merge::merge_lib_files(
+        &options.projects_options,
+        &builtin_sig_options(),
+        Arc::default(),
+        &asts,
+    );
     STATE.with(|state| {
         state.borrow_mut().master_cx = Arc::new(master_cx);
     });

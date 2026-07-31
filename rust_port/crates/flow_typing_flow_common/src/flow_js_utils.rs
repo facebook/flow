@@ -837,9 +837,7 @@ pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::SingletonStrT {
-                from_annot: false,
-                value: _,
-                ..
+                from_annot: false, ..
             } if cx.in_implicit_instantiation() => {
                 cx.record_primitive_literal_check(r.loc().dupe());
             }
@@ -2142,6 +2140,35 @@ pub fn lookup_builtin_module_error<'cx>(
             loc: loc.dupe(),
             potential_generator,
             name: module_name_str,
+        })),
+    )?;
+
+    let reason = Reason::new(VirtualReasonDesc::RAnyImplicit, loc);
+    Ok(Type::new(TypeInner::AnyT(
+        reason,
+        AnySource::AnyError(Some(flow_typing_type::type_::AnyErrorKind::UnresolvedName)),
+    )))
+}
+
+/// The specifier resolved to a global libdef (a `[libs]` file), which is not a
+/// module. Report a dedicated, actionable error at the import site instead of
+/// the misleading cannot-resolve-module.
+pub fn cannot_import_global_libdef_error<'cx>(
+    cx: &Context<'cx>,
+    module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
+    libdef_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
+    loc: ALoc,
+) -> Result<Type, FlowJsException> {
+    use flow_typing_errors::error_message::ECannotImportGlobalLibdefData;
+    use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_type::type_::AnySource;
+
+    add_output(
+        cx,
+        ErrorMessage::ECannotImportGlobalLibdef(Box::new(ECannotImportGlobalLibdefData {
+            loc: loc.dupe(),
+            module_name: module_name.dupe(),
+            libdef_name: libdef_name.dupe(),
         })),
     )?;
 
@@ -3787,7 +3814,6 @@ pub mod cjs_require_t_kit {
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
-    use flow_common::reason::is_lib_reason_def;
     use flow_typing_context::Context;
     use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::ModuleType;
@@ -3890,7 +3916,7 @@ pub mod cjs_require_t_kit {
                 } else {
                     // Use default export if option is enabled and module is not lib
                     let automatic_require_default =
-                        cx.automatic_require_default() && !is_lib_reason_def(module_reason);
+                        cx.automatic_require_default() && !cx.is_lib_reason_def(module_reason);
                     if automatic_require_default {
                         match value_exports_tmap.get(&Name::new("default")) {
                             Some(ns) => ns.type_.dupe(),
@@ -5092,6 +5118,7 @@ pub mod import_export_utils {
     use super::ExportClassification;
     use super::FlowJsException;
     use super::add_output;
+    use super::cannot_import_global_libdef_error;
     use super::import_default_t_kit;
     use super::import_module_ns_t_kit;
     use super::import_named_t_kit;
@@ -5181,6 +5208,14 @@ pub mod import_export_utils {
                         &FlowSmolStr::new(mref.as_str()),
                         loc.dupe(),
                     )?),
+                    ResolvedRequire::GlobalLibdefModule(libdef) => {
+                        Err(cannot_import_global_libdef_error(
+                            cx,
+                            &FlowSmolStr::new(mref.as_str()),
+                            &FlowSmolStr::new(libdef.as_str()),
+                            loc.dupe(),
+                        )?)
+                    }
                 };
             let need_platform_validation =
                 perform_platform_validation && cx.file_options().multi_platform;

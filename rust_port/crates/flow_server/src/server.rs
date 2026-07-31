@@ -680,15 +680,9 @@ where
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
         let lazy_stats = flow_server_rechecker::rechecker::get_lazy_stats(&options, &env);
         let lazy_msg = if lazy_stats.lazy_mode {
-            let checked_source = lazy_stats.checked_files - lazy_stats.checked_libdef_files;
-            let total_source = lazy_stats.total_files - lazy_stats.total_libdef_files;
-            let libdef_msg = format!(
-                " (+ {}/{} libdefs)",
-                lazy_stats.checked_libdef_files, lazy_stats.total_libdef_files
-            );
             Some(format!(
-                "Checked {}/{} source files{}.",
-                checked_source, total_source, libdef_msg
+                "Checked {}/{} files.",
+                lazy_stats.checked_files, lazy_stats.total_files
             ))
         } else {
             None

@@ -108,6 +108,11 @@ pub struct FileOptions {
     pub multi_platform_extensions: Vec<FlowSmolStr>,
     pub multi_platform_extension_group_mapping: Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
     pub node_resolver_dirnames: Vec<String>,
+    /// When set, module resolution may resolve a specifier to a configured
+    /// global libdef (`[libs]`) file so the import site can report a dedicated
+    /// "cannot import a global libdef" error instead of a generic
+    /// cannot-resolve-module. Gated by `experimental.importable_global_libdefs`.
+    pub importable_global_libdefs: bool,
 }
 
 impl Default for FileOptions {
@@ -129,6 +134,7 @@ impl Default for FileOptions {
             multi_platform_extensions: Vec::new(),
             multi_platform_extension_group_mapping: Vec::new(),
             node_resolver_dirnames: vec!["node_modules".to_string()],
+            importable_global_libdefs: false,
         }
     }
 }
@@ -1320,12 +1326,46 @@ pub fn filename_from_string(
         }
         _ => {
             if consider_libdefs && all_unordered_libs.contains(path) {
-                FileKey::lib_file_of_absolute(path)
+                lib_file_key(options, path)
             } else {
                 FileKey::source_file_of_absolute(path)
             }
         }
     }
+}
+
+/// Returns the key used to store a configured library file.
+pub fn lib_file_key(options: &FileOptions, path: &str) -> flow_parser::file_key::FileKey {
+    use flow_parser::file_key::FileKey;
+
+    if options.importable_global_libdefs {
+        FileKey::source_file_of_absolute(path)
+    } else {
+        FileKey::lib_file_of_absolute(path)
+    }
+}
+
+/// Returns whether a file is one of the configured global library files.
+pub fn is_lib_file(
+    options: &FileOptions,
+    all_unordered_libs: &std::collections::BTreeSet<FlowSmolStr>,
+    file: &flow_parser::file_key::FileKey,
+) -> bool {
+    if file.is_lib_file() {
+        return true;
+    }
+    if !options.importable_global_libdefs {
+        return false;
+    }
+
+    let absolute = file.to_absolute();
+    all_unordered_libs.contains(absolute.as_str())
+        || (std::path::MAIN_SEPARATOR != '/'
+            && all_unordered_libs.contains(
+                absolute
+                    .replace('/', std::path::MAIN_SEPARATOR_STR)
+                    .as_str(),
+            ))
 }
 
 pub fn mkdirp(path_str: &str, _perm: u32) {

@@ -299,7 +299,7 @@ pub mod exports_helper {
 
     // NOTE Here we assume 'react' is available as a library
     fn from_react(loc: &ALoc) -> Option<ImportInfo> {
-        if insert_type_utils::is_react_loc(loc) {
+        if insert_type_utils::is_react_loc(loc, true) {
             Some(ImportInfo {
                 import_kind: statement::ImportKind::ImportType,
                 default: false,
@@ -310,7 +310,7 @@ pub mod exports_helper {
     }
 
     fn from_react_redux(loc: &ALoc) -> Option<ImportInfo> {
-        if insert_type_utils::is_react_redux_loc(loc) {
+        if insert_type_utils::is_react_redux_loc(loc, true) {
             Some(ImportInfo {
                 import_kind: statement::ImportKind::ImportType,
                 default: false,
@@ -326,6 +326,7 @@ pub mod exports_helper {
         use_mode: UseMode,
         loc: ALoc,
         name: &str,
+        is_lib_file: bool,
     ) -> Result<ImportInfo, error::ImportError> {
         match loc.source() {
             None => Err(error::ImportError::LocSourceNone),
@@ -338,8 +339,8 @@ pub mod exports_helper {
                     let import_kind = ast_helper::mk_import_declaration_kind(use_mode);
                     let import_info_opt = None
                         .or_else(|| from_type_sig(import_kind, &type_sig, name))
-                        .or_else(|| from_react(&loc))
-                        .or_else(|| from_react_redux(&loc));
+                        .or_else(|| is_lib_file.then(|| from_react(&loc)).flatten())
+                        .or_else(|| is_lib_file.then(|| from_react_redux(&loc)).flatten());
                     match import_info_opt {
                         None => Err(error::ImportError::NoMatchingExport(
                             name.to_string(),
@@ -446,7 +447,7 @@ pub mod imports_helper {
                     sym_anonymous: false,
                     sym_def_loc,
                     sym_name,
-                } if insert_type_utils::is_react_redux_loc(sym_def_loc) => {
+                } if insert_type_utils::is_react_redux_loc(sym_def_loc, true) => {
                     let local_name = to_local_name(
                         iteration,
                         reserved_names,
@@ -574,11 +575,16 @@ pub mod imports_helper {
             use flow_common_modulename::Modulename;
             let remote_name = &remote_symbol.sym_name;
             let sym_def_loc = &remote_symbol.sym_def_loc;
+            let is_lib_file = matches!(
+                &remote_symbol.sym_provenance,
+                flow_common_ty::ty_symbol::Provenance::Library(_)
+            );
             let module_name = match sym_def_loc.source() {
                 Some(remote_source) => {
-                    if insert_type_utils::is_react_file_key(remote_source) {
+                    if insert_type_utils::is_react_file_key(remote_source, is_lib_file) {
                         Ok("react".to_string())
-                    } else if insert_type_utils::is_react_redux_file_key(remote_source) {
+                    } else if insert_type_utils::is_react_redux_file_key(remote_source, is_lib_file)
+                    {
                         Ok("react-redux".to_string())
                     } else {
                         let module_name = match (self.get_haste_module_info)(remote_source) {
@@ -599,6 +605,7 @@ pub mod imports_helper {
                 use_mode,
                 sym_def_loc.dupe(),
                 remote_name_str,
+                is_lib_file,
             )?;
             let exports_helper::ImportInfo {
                 import_kind,
@@ -722,7 +729,7 @@ pub mod imports_helper {
                             sym_anonymous: false,
                             sym_def_loc,
                             ..
-                        } if insert_type_utils::is_react_redux_loc(sym_def_loc) => {
+                        } if insert_type_utils::is_react_redux_loc(sym_def_loc, true) => {
                             match converter.convert_symbol(UseMode::TypeUseMode, &s) {
                                 Ok(sym) => sym,
                                 Err(err) => {
@@ -739,7 +746,7 @@ pub mod imports_helper {
                             sym_anonymous: false,
                             sym_def_loc,
                             ..
-                        } if insert_type_utils::is_react_redux_loc(sym_def_loc) => Symbol {
+                        } if insert_type_utils::is_react_redux_loc(sym_def_loc, true) => Symbol {
                             sym_provenance: Provenance::Local,
                             sym_anonymous: false,
                             sym_name: flow_common::reason::Name::new(local_name.as_str()),

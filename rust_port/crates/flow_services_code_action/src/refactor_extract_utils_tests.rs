@@ -603,6 +603,7 @@ mod collect_function_method_inserting_points_tests {
             ccx,
             metadata,
             file,
+            Arc::default(),
             aloc_table,
             resolve_require,
             Rc::new(move |_cx: &Context| {
@@ -858,6 +859,7 @@ mod find_closest_enclosing_class_tests {
             ccx,
             metadata,
             file,
+            Arc::default(),
             aloc_table,
             resolve_require,
             Rc::new(move |_cx: &Context| {
@@ -1478,6 +1480,7 @@ mod type_synthesizer_tests {
             ccx,
             metadata,
             file,
+            Arc::default(),
             aloc_table,
             resolve_require,
             Rc::new(move |_cx: &Context| {

@@ -356,6 +356,7 @@ pub enum MasterContext {
     EmptyMasterContext,
     NonEmptyMasterContext {
         builtin_leader_file_key: FileKey,
+        all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
         unscoped_builtins: BuiltinsGroup,
         scoped_builtins: Vec<(FlowProjects, BuiltinsGroup)>,
     },
@@ -539,11 +540,18 @@ pub enum ResolvedRequire<'cx> {
     TypedModule(Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx>),
     UncheckedModule(ALoc),
     MissingModule,
+    /// The specifier resolved to a global libdef (a `[libs]` file), which is not
+    /// a module. Carries the resolved libdef file so the import site can report a
+    /// dedicated "cannot import a global libdef" error instead of the misleading
+    /// cannot-resolve-module. Only produced when `experimental.importable_global_libdefs`
+    /// is enabled.
+    GlobalLibdefModule(FileKey),
 }
 
 struct ContextInner<'cx> {
     ccx: Rc<ComponentT<'cx>>,
     file: FileKey,
+    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     aloc_table: LazyALocTable,
     metadata: Metadata,
     budget: CheckBudget,
@@ -823,6 +831,7 @@ impl<'cx> Context<'cx> {
         ccx: Rc<ComponentT<'cx>>,
         metadata: Metadata,
         file: FileKey,
+        all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
         aloc_table: LazyALocTable,
         resolve_require: ResolveRequire<'cx>,
         mk_builtins: Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
@@ -834,6 +843,7 @@ impl<'cx> Context<'cx> {
         let inner = Rc::new(ContextInner {
             ccx,
             file,
+            all_unordered_libs,
             aloc_table,
             metadata,
             budget,
@@ -998,11 +1008,33 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_lib_file(&self) -> bool {
-        self.0.file.is_lib_file()
+        self.is_lib_file_key(&self.0.file)
+    }
+
+    pub fn is_lib_file_key(&self, file: &FileKey) -> bool {
+        files::is_lib_file(
+            &self.0.metadata.frozen.file_options,
+            &self.0.all_unordered_libs,
+            file,
+        )
+    }
+
+    pub fn is_lib_reason(&self, reason: &Reason) -> bool {
+        reason
+            .loc()
+            .source()
+            .is_some_and(|file| self.is_lib_file_key(file))
+    }
+
+    pub fn is_lib_reason_def(&self, reason: &Reason) -> bool {
+        reason
+            .def_loc()
+            .source()
+            .is_some_and(|file| self.is_lib_file_key(file))
     }
 
     pub fn under_declaration_context(&self) -> bool {
-        self.0.file.is_lib_file()
+        self.is_lib_file()
             || self.0.file.check_suffix(".flow")
             || files::has_dts_ext(&self.0.file)
             || self.in_declare_module()
@@ -1051,7 +1083,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn component_syntax(&self) -> bool {
-        self.0.metadata.frozen.component_syntax || self.0.file.is_lib_file()
+        self.0.metadata.frozen.component_syntax || self.is_lib_file()
     }
 
     pub fn async_component_syntax(&self) -> bool {
@@ -1271,7 +1303,7 @@ impl<'cx> Context<'cx> {
             Some(v) if v.focused_files.is_none() => v.enabled_during_flowlib || !self.is_lib_file(),
             Some(v) => {
                 let file = &self.0.file;
-                if file.is_lib_file() {
+                if self.is_lib_file() {
                     v.enabled_during_flowlib
                 } else {
                     v.focused_files.as_ref().is_some_and(|files| {
@@ -1408,7 +1440,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn tslib_syntax(&self) -> bool {
-        self.0.metadata.frozen.tslib_syntax || self.0.file.is_lib_file()
+        self.0.metadata.frozen.tslib_syntax || self.is_lib_file()
     }
 
     pub fn typescript_library_definition_support(&self) -> bool {

@@ -162,7 +162,7 @@ impl<'a> ImportInformationExtractor<'a, '_> {
                     let def_loc = m.module_reason.def_loc();
                     match def_loc.source() {
                         Some(f) => {
-                            if self.cx.file() == f || f.is_lib_file() {
+                            if self.cx.file() == f || self.cx.is_lib_file_key(f) {
                                 (source_value.dupe(), false)
                             } else {
                                 (FlowSmolStr::from(f.to_absolute()), true)

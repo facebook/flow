@@ -212,7 +212,7 @@ fn get_lazy_module_type_or_any_src<'cx>(
                 Err(AnySource::Untyped)
             })))
         }
-        ResolvedRequire::MissingModule => {
+        ResolvedRequire::MissingModule | ResolvedRequire::GlobalLibdefModule(_) => {
             Rc::new(flow_lazy::Lazy::new(Box::new(|_cx: &Context| {
                 Err(AnySource::AnyError(Some(AnyErrorKind::UnresolvedName)))
             })))

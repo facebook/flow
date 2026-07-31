@@ -69,6 +69,7 @@ fn sig_opts() -> TypeSigOptions {
         is_ts_file: false,
         is_dts_file: false,
         tslib_syntax: false,
+        is_lib_file: false,
     }
 }
 
