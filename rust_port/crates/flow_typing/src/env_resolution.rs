@@ -524,7 +524,7 @@ fn resolve_hint<'cx>(
             }
             HintNode::ValueHint(encl_ctx, exp) => {
                 check_expr_error_to_job_error(cx.run_in_empty_speculation_state(|| {
-                    expression(cx, Some(encl_ctx), None, None, &exp)
+                    resolve_write_expression(cx, encl_ctx, &exp)
                 }))?
             }
             HintNode::ProvidersHint(locs) => {
