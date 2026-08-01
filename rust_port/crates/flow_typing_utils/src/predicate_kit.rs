@@ -13,12 +13,14 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
+use flow_aloc::ALocId;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::mk_reason;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EPropNotReadableData;
@@ -39,6 +41,7 @@ use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::InstanceKind;
+use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::NumberLiteral;
@@ -81,7 +84,32 @@ use crate::type_filter::FilterResult;
 #[derive(Clone)]
 enum InstanceofRhs {
     TypeOperand(Type),
-    InternalExtendsOperand(Reason, Type, Type),
+    /// We are walking `c`'s prototype chain looking for `a`.
+    InternalExtendsOperand {
+        reason: Reason,
+        c: Type,
+        a: Type,
+        /// The classes visited so far on this walk. Persistent, so extending it as the walk
+        /// descends shares the existing entries instead of copying them.
+        seen: SeenClasses,
+    },
+}
+
+type SeenClasses = FlowOrdSet<ALocId>;
+
+/// Adds `instance` to `seen`, or returns `None` if it was already there, which means the
+/// prototype chain loops back on itself and the walk can never reach the root.
+fn visit_class(seen: &SeenClasses, instance: &InstanceT) -> Option<SeenClasses> {
+    let class_id = &instance.inst.class_id;
+    // Instances without a class id (see `is_same_instance_type`) are indistinguishable from
+    // each other, so recording them would report cycles that aren't there.
+    if *class_id == ALocId::none() {
+        return Some(seen.dupe());
+    }
+    if seen.contains(class_id) {
+        return None;
+    }
+    Some(seen.update(class_id.dupe()).into())
 }
 
 #[derive(Clone, Copy)]
@@ -1956,12 +1984,14 @@ fn instanceof_test<'cx>(
         {
             let arr = left.dupe();
             let elemt = elemt_of_arrtype(arrtype);
-            let right = InstanceofRhs::InternalExtendsOperand(
-                r.dupe()
+            let right = InstanceofRhs::InternalExtendsOperand {
+                reason: r
+                    .dupe()
                     .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
-                arr.dupe(),
-                a.dupe(),
-            );
+                c: arr.dupe(),
+                a: a.dupe(),
+                seen: SeenClasses::new(),
+            };
             let arrt = FlowJs::get_builtin_typeapp(cx, reason, None, "Array", vec![elemt]);
             concretize_and_run_predicate(
                 cx,
@@ -1979,12 +2009,14 @@ fn instanceof_test<'cx>(
         {
             let arr = left.dupe();
             let elemt = elemt_of_arrtype(arrtype);
-            let right = InstanceofRhs::InternalExtendsOperand(
-                r.dupe()
+            let right = InstanceofRhs::InternalExtendsOperand {
+                reason: r
+                    .dupe()
                     .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
-                arr.dupe(),
-                a.dupe(),
-            );
+                c: arr.dupe(),
+                a: a.dupe(),
+                seen: SeenClasses::new(),
+            };
             let arrt = FlowJs::get_builtin_typeapp(cx, reason, None, "Array", vec![elemt]);
             concretize_and_run_predicate(
                 cx,
@@ -2010,12 +2042,14 @@ fn instanceof_test<'cx>(
                 && let DefTInner::ClassT(a) = right_def.deref() =>
         {
             let c = left;
-            let right = InstanceofRhs::InternalExtendsOperand(
-                r.dupe()
+            let right = InstanceofRhs::InternalExtendsOperand {
+                reason: r
+                    .dupe()
                     .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
-                c.dupe(),
-                a.dupe(),
-            );
+                c: c.dupe(),
+                a: a.dupe(),
+                seen: SeenClasses::new(),
+            };
             instanceof_test(cx, trace, result_collector, true, c, &right)?;
         }
         // If C is a subclass of A, then don't refine the type of x. Otherwise,
@@ -2024,7 +2058,12 @@ fn instanceof_test<'cx>(
         (
             true,
             TypeInner::DefT(reason, def_t),
-            InstanceofRhs::InternalExtendsOperand(_, c, a_t),
+            InstanceofRhs::InternalExtendsOperand {
+                reason: extends_reason,
+                c,
+                a: a_t,
+                seen,
+            },
         ) if let DefTInner::InstanceT(instance_t) = def_t.deref()
             && let TypeInner::DefT(_, a_def) = a_t.deref()
             && let DefTInner::InstanceT(a_instance_t) = a_def.deref() =>
@@ -2035,11 +2074,16 @@ fn instanceof_test<'cx>(
             // TODO: intersection
             if flow_js_utils::is_same_instance_type(a_instance_t, instance_t) {
                 report_unchanged_filtering_result_to_predicate_result(c.dupe(), result_collector);
-            } else {
+            } else if let Some(seen) = visit_class(seen, instance_t) {
                 // Recursively check whether super(C) extends A, with enough context.
                 let repositioned =
                     FlowJs::reposition_reason(cx, Some(trace), reason, None, super_c)?;
-                let right_clone = right.clone();
+                let right_clone = InstanceofRhs::InternalExtendsOperand {
+                    reason: extends_reason.dupe(),
+                    c: c.dupe(),
+                    a: a_t.dupe(),
+                    seen,
+                };
                 concretize_and_run_predicate(
                     cx,
                     trace,
@@ -2048,11 +2092,20 @@ fn instanceof_test<'cx>(
                     result_collector,
                     &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right_clone),
                 )?;
+            } else {
+                // C's chain loops back on itself, so following it will never reach the root.
+                // End the walk where a real prototype chain would have ended.
+                let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
+                instanceof_test(cx, trace, result_collector, true, &obj_proto, right)?;
             }
         }
         // If we are checking `instanceof Object` or `instanceof Function`, objects
         // with `ObjProtoT` or `FunProtoT` should pass.
-        (true, TypeInner::ObjProtoT(reason), right @ InstanceofRhs::InternalExtendsOperand(..)) => {
+        (
+            true,
+            TypeInner::ObjProtoT(reason),
+            right @ InstanceofRhs::InternalExtendsOperand { .. },
+        ) => {
             let obj_proto =
                 FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
             let right_clone = right.clone();
@@ -2065,7 +2118,11 @@ fn instanceof_test<'cx>(
                 &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right_clone),
             )?;
         }
-        (true, TypeInner::FunProtoT(reason), right @ InstanceofRhs::InternalExtendsOperand(..)) => {
+        (
+            true,
+            TypeInner::FunProtoT(reason),
+            right @ InstanceofRhs::InternalExtendsOperand { .. },
+        ) => {
             //   let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
             let fun_proto =
                 FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
@@ -2080,9 +2137,13 @@ fn instanceof_test<'cx>(
             )?;
         }
         // We hit the root class, so C is not a subclass of A
-        (true, TypeInner::DefT(_, def_t), InstanceofRhs::InternalExtendsOperand(r, c, a))
-            if let DefTInner::NullT = def_t.deref() =>
-        {
+        (
+            true,
+            TypeInner::DefT(_, def_t),
+            InstanceofRhs::InternalExtendsOperand {
+                reason: r, c, a, ..
+            },
+        ) if let DefTInner::NullT = def_t.deref() => {
             // C is not a subclass of A. If A is a subclass of C it is a legitimate
             // downcast (keep A); otherwise A and C are unrelated, so from a union we
             // prune the member (else keep the guard to avoid a bare `empty`).
@@ -2136,12 +2197,14 @@ fn instanceof_test<'cx>(
                 && let DefTInner::InstanceT(..) = a_inner_def.deref() =>
         {
             let c = left;
-            let right = InstanceofRhs::InternalExtendsOperand(
-                r.dupe()
+            let right = InstanceofRhs::InternalExtendsOperand {
+                reason: r
+                    .dupe()
                     .update_desc(|d| VirtualReasonDesc::RExtends(Arc::new(d))),
-                c.dupe(),
-                a.dupe(),
-            );
+                c: c.dupe(),
+                a: a.dupe(),
+                seen: SeenClasses::new(),
+            };
             instanceof_test(cx, trace, result_collector, false, c, &right)?;
         }
         // If C is a subclass of A, then do nothing, since this check cannot
@@ -2149,7 +2212,12 @@ fn instanceof_test<'cx>(
         (
             false,
             TypeInner::DefT(reason, def_t),
-            InstanceofRhs::InternalExtendsOperand(_, _, a_t),
+            InstanceofRhs::InternalExtendsOperand {
+                reason: extends_reason,
+                c,
+                a: a_t,
+                seen,
+            },
         ) if let DefTInner::InstanceT(instance_t) = def_t.deref()
             && let TypeInner::DefT(_, a_def) = a_t.deref()
             && let DefTInner::InstanceT(a_instance_t) = a_def.deref() =>
@@ -2159,10 +2227,15 @@ fn instanceof_test<'cx>(
             let _instance_a = &a_instance_t.inst;
             if flow_js_utils::is_same_instance_type(a_instance_t, instance_t) {
                 report_changes_to_input(result_collector);
-            } else {
+            } else if let Some(seen) = visit_class(seen, instance_t) {
                 let repositioned =
                     FlowJs::reposition_reason(cx, Some(trace), reason, None, super_c)?;
-                let right_clone = right.clone();
+                let right_clone = InstanceofRhs::InternalExtendsOperand {
+                    reason: extends_reason.dupe(),
+                    c: c.dupe(),
+                    a: a_t.dupe(),
+                    seen,
+                };
                 concretize_and_run_predicate(
                     cx,
                     trace,
@@ -2171,9 +2244,18 @@ fn instanceof_test<'cx>(
                     result_collector,
                     &|cx, trace, rc, l| instanceof_test(cx, trace, rc, false, l, &right_clone),
                 )?;
+            } else {
+                // C's chain loops back on itself, so following it will never reach the root.
+                // End the walk where a real prototype chain would have ended.
+                let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
+                instanceof_test(cx, trace, result_collector, false, &obj_proto, right)?;
             }
         }
-        (false, TypeInner::ObjProtoT(_), InstanceofRhs::InternalExtendsOperand(r, c, _)) => {
+        (
+            false,
+            TypeInner::ObjProtoT(_),
+            InstanceofRhs::InternalExtendsOperand { reason: r, c, .. },
+        ) => {
             // We hit the root class, so C is not a subclass of A.
             // In this case, we will refine the input to C
             let repositioned = flow_js::reposition(cx, r.loc().dupe(), c.dupe())?;
