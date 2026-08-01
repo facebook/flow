@@ -3779,8 +3779,7 @@ fn recursively_resolvable(def: &Def) -> bool {
             ..
         })
         | Def::Component(_) => true,
-        Def::MatchCasePattern(_)
-        | Def::ExpressionDef(_)
+        Def::MatchCasePattern(_) | Def::ExpressionDef(_)
         | Def::Update { .. }
         | Def::MemberAssign(_)
         | Def::OpAssign(_)

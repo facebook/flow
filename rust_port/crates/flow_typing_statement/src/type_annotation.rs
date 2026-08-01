@@ -1602,7 +1602,13 @@ fn convert_inner<'a>(
                         }
                     }
                     // in-scope type vars
-                    _ if env.tparams_map.contains_key(&SubstName::name(name.dupe())) => {
+                    _ if env.tparams_map.contains_key(&SubstName::name(name.dupe()))
+                        && !cx
+                            .environment()
+                            .var_info
+                            .invalid_type_param_default_locs
+                            .contains(&name_loc) =>
+                    {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
                             let mut tp = env
                                 .tparams_map

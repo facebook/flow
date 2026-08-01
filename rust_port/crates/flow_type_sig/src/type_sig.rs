@@ -112,9 +112,29 @@ impl<Loc, T> TParam<Loc, T> {
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
+pub struct PolyTParams<Loc, T> {
+    pub loc: Loc,
+    pub tparams: Vec1<TParam<Loc, T>>,
+    /// Dependency-first order for materializing type parameter bounds.
+    pub bound_order: Vec<usize>,
+}
+
+#[derive(Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TParams<Loc, T> {
     Mono,
-    Poly(Box<(Loc, Vec1<TParam<Loc, T>>)>),
+    Poly(Box<PolyTParams<Loc, T>>),
+}
+
+impl<Loc: std::fmt::Debug, T: std::fmt::Debug> std::fmt::Debug for TParams<Loc, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Mono => f.write_str("Mono"),
+            Self::Poly(inner) => f
+                .debug_tuple("Poly")
+                .field(&(&inner.loc, &inner.tparams))
+                .finish(),
+        }
+    }
 }
 
 impl<Loc, T> TParams<Loc, T> {
@@ -126,9 +146,9 @@ impl<Loc, T> TParams<Loc, T> {
     ) {
         match self {
             TParams::Mono => {}
-            TParams::Poly(box (loc, tparams)) => {
-                f_loc(cx, loc);
-                for tp in tparams.iter() {
+            TParams::Poly(poly) => {
+                f_loc(cx, &poly.loc);
+                for tp in poly.tparams.iter() {
                     f_loc(cx, &tp.name_loc);
                     if let Some(b) = &tp.bound {
                         f_t(cx, b);
@@ -149,10 +169,11 @@ impl<Loc, T> TParams<Loc, T> {
     ) -> TParams<Loc2, T2> {
         match self {
             TParams::Mono => TParams::Mono,
-            TParams::Poly(box (loc, tparams)) => TParams::Poly(Box::new((
-                f_loc(cx, loc),
-                tparams.mapped_ref(|tp| tp.map(cx, &f_loc, &f_t)),
-            ))),
+            TParams::Poly(poly) => TParams::Poly(Box::new(PolyTParams {
+                loc: f_loc(cx, &poly.loc),
+                tparams: poly.tparams.mapped_ref(|tp| tp.map(cx, &f_loc, &f_t)),
+                bound_order: poly.bound_order.clone(),
+            })),
         }
     }
 }

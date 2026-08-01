@@ -34,12 +34,12 @@ declare class F<T> extends E<T> {
 class G<T> {
   x:T;
   constructor(x:T) { this.x = x }
-  m<T extends T>(x:T):G<T> { return new G(x) } // T-as-bound is G's T
+  m<T extends T>(x:T):G<T> { return new G(x) } // error: method T shadows G's T, so the bound is circular
 }
 
 declare const g: G<number|string>;
 g.m(0); // ok
-g.m(true); // err, boolean ~> number|string
+g.m(true); // no error since T extends T is circular
 g.m("") as G<number>; // err, string ~> number
 
 

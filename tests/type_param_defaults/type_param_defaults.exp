@@ -240,10 +240,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:48:13
 
-Cannot resolve name `T`. [cannot-resolve-name]
+Cannot use variable `T` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
 
+   classes.js:48:13
    48| class H<S = T, T = string> {} // Error - can't refer to T before it's defined
                    ^
+
+References:
+   classes.js:48:16
+   48| class H<S = T, T = string> {} // Error - can't refer to T before it's defined
+                      ^ [1]
 
 
 

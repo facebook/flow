@@ -20,6 +20,7 @@ use std::cell::OnceCell;
 use std::cell::RefCell;
 use std::cell::UnsafeCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -42,6 +43,8 @@ use flow_parser_utils::enum_validate;
 use flow_parser_utils::graphql;
 use flow_parser_utils::record_utils;
 use flow_parser_utils::signature_utils;
+use flow_parser_utils::type_param_analysis::analyze_type_params;
+use flow_parser_utils::type_param_analysis::type_param_order;
 use vec1::Vec1;
 
 use crate::compact_table::Builder;
@@ -53,25 +56,35 @@ use crate::type_sig::*;
 use crate::type_sig_options::TypeSigOptions;
 
 mod tparam_stack {
-    use std::collections::HashSet;
+    use std::collections::HashMap;
 
     use dupe::Dupe;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use vec1::Vec1;
 
+    struct ReferenceContext {
+        frame_index: usize,
+        allow_forward: bool,
+    }
+
     pub(super) struct TParamStack {
-        frames: Vec1<HashSet<FlowSmolStr>>,
+        // The Boolean records whether a parameter is available to defaults.
+        // Bounds may still reference an uninitialized sibling when the active
+        // reference context allows forward references.
+        frames: Vec1<HashMap<FlowSmolStr, bool>>,
+        reference_contexts: Vec<ReferenceContext>,
     }
 
     impl TParamStack {
         pub(super) fn new() -> Self {
             TParamStack {
-                frames: Vec1::new(HashSet::new()),
+                frames: Vec1::new(HashMap::new()),
+                reference_contexts: Vec::new(),
             }
         }
 
         pub(super) fn push_new_frame(&mut self) {
-            self.frames.push(HashSet::new());
+            self.frames.push(HashMap::new());
         }
 
         pub(super) fn pop_frame(&mut self) {
@@ -79,32 +92,76 @@ mod tparam_stack {
         }
 
         pub(super) fn insert(&mut self, name: FlowSmolStr) {
-            let frame = self.frames.last_mut();
-            frame.insert(name);
+            self.frames.last_mut().insert(name, true);
+        }
+
+        pub(super) fn insert_uninitialized(&mut self, name: FlowSmolStr) {
+            self.frames.last_mut().insert(name, false);
+        }
+
+        pub(super) fn initialize(&mut self, name: &FlowSmolStr) {
+            *self
+                .frames
+                .last_mut()
+                .get_mut(name)
+                .expect("type parameter should belong to the current frame") = true;
         }
 
         pub(super) fn contains(&self, name: &FlowSmolStr) -> bool {
-            self.frames.iter().rev().any(|frame| frame.contains(name))
+            self.frames
+                .iter()
+                .rev()
+                .any(|frame| frame.contains_key(name))
+        }
+
+        pub(super) fn begin_references(&mut self, allow_forward: bool) {
+            self.reference_contexts.push(ReferenceContext {
+                frame_index: self.frames.len() - 1,
+                allow_forward,
+            });
+        }
+
+        pub(super) fn finish_references(&mut self) {
+            self.reference_contexts
+                .pop()
+                .expect("a type parameter reference context should be active");
+        }
+
+        pub(super) fn reference(&mut self, name: &FlowSmolStr) -> Option<bool> {
+            for (frame_index, frame) in self.frames.iter().enumerate().rev() {
+                if let Some(initialized) = frame.get(name) {
+                    if let Some(context) = self
+                        .reference_contexts
+                        .iter()
+                        .rev()
+                        .find(|context| context.frame_index == frame_index)
+                    {
+                        return Some(context.allow_forward || *initialized);
+                    }
+                    return Some(*initialized);
+                }
+            }
+            None
         }
 
         /// Temporarily remove [name] from all frames; returns the frames it was
         /// present in so the caller can restore it after descending into a
         /// nested scope. Mirrors OCaml's [SSet.remove "this" xs] which produces
         /// a new immutable set scoped to the recursive call only.
-        pub(super) fn remove_all(&mut self, name: &FlowSmolStr) -> Vec<usize> {
+        pub(super) fn remove_all(&mut self, name: &FlowSmolStr) -> Vec<(usize, bool)> {
             let mut removed = Vec::new();
             for (i, frame) in self.frames.iter_mut().enumerate() {
-                if frame.remove(name) {
-                    removed.push(i);
+                if let Some(entry) = frame.remove(name) {
+                    removed.push((i, entry));
                 }
             }
             removed
         }
 
         /// Restore [name] in the frames previously recorded by [remove_all].
-        pub(super) fn restore_all(&mut self, name: &FlowSmolStr, frames: Vec<usize>) {
-            for i in frames {
-                self.frames[i].insert(name.dupe());
+        pub(super) fn restore_all(&mut self, name: &FlowSmolStr, entries: Vec<(usize, bool)>) {
+            for (i, entry) in entries {
+                self.frames[i].insert(name.dupe(), entry);
             }
         }
     }
@@ -1778,7 +1835,7 @@ pub(super) mod scope {
         ) -> Vec<FlowSmolStr> {
             match tparams {
                 TParams::Mono => Vec::new(),
-                TParams::Poly(box (_, params)) => params.iter().map(|tp| tp.name.dupe()).collect(),
+                TParams::Poly(poly) => poly.tparams.iter().map(|tp| tp.name.dupe()).collect(),
             }
         }
 
@@ -1787,7 +1844,8 @@ pub(super) mod scope {
         ) -> Vec<(LocNode<'arena>, FlowSmolStr)> {
             match tparams {
                 TParams::Mono => Vec::new(),
-                TParams::Poly(box (_, params)) => params
+                TParams::Poly(poly) => poly
+                    .tparams
                     .iter()
                     .map(|tp| (tp.name_loc.dupe(), tp.name.dupe()))
                     .collect(),
@@ -2237,9 +2295,10 @@ pub(super) mod scope {
         ) -> TParams<LocNode<'arena>, Parsed<'arena, 'ast>> {
             match tparams {
                 TParams::Mono => TParams::Mono,
-                TParams::Poly(box (loc, tparams)) => {
+                TParams::Poly(poly) => {
                     let mut scoped_rename_map = rename_map.clone();
-                    let tparams = tparams
+                    let tparams = poly
+                        .tparams
                         .iter()
                         .map(|tparam| {
                             let renamed =
@@ -2253,7 +2312,11 @@ pub(super) mod scope {
                         .collect();
                     let tparams = Vec1::try_from_vec(tparams)
                         .expect("poly type parameters should be non-empty");
-                    TParams::Poly(Box::new((loc.dupe(), tparams)))
+                    TParams::Poly(Box::new(PolyTParams {
+                        loc: poly.loc.dupe(),
+                        tparams,
+                        bound_order: poly.bound_order.clone(),
+                    }))
                 }
             }
         }
@@ -2280,12 +2343,17 @@ pub(super) mod scope {
             TParam<LocNode<'arena>, Parsed<'arena, 'ast>>,
             TParamRenameMap,
         ) {
-            let tparams = TParams::Poly(Box::new((loc.dupe(), Vec1::new((*tparam).clone()))));
+            let tparams = TParams::Poly(Box::new(PolyTParams {
+                loc: loc.dupe(),
+                tparams: Vec1::new((*tparam).clone()),
+                bound_order: vec![0],
+            }));
             let (tparams, body_rename_map) = rename_tparams_for_nested_scope(rename_map, &tparams);
-            let TParams::Poly(box (_, tparams)) = tparams else {
+            let TParams::Poly(poly) = tparams else {
                 return ((*tparam).clone(), body_rename_map);
             };
-            let tparam = tparams
+            let tparam = poly
+                .tparams
                 .into_iter()
                 .next()
                 .expect("poly type parameters should be non-empty");
@@ -2747,17 +2815,17 @@ pub(super) mod scope {
         ) -> bool {
             match (existing_tparams, current_tparams) {
                 (TParams::Mono, TParams::Mono) => true,
-                (
-                    TParams::Poly(box (_, existing_params)),
-                    TParams::Poly(box (_, current_params)),
-                ) if existing_params.len() == current_params.len() => {
-                    let rename_map = current_params
+                (TParams::Poly(existing), TParams::Poly(current))
+                    if existing.tparams.len() == current.tparams.len() =>
+                {
+                    let rename_map = current
+                        .tparams
                         .iter()
-                        .zip(existing_params.iter())
+                        .zip(existing.tparams.iter())
                         .map(|(current, existing)| (current.name.dupe(), existing.name.dupe()))
                         .collect();
                     for (existing_tparam, current_tparam) in
-                        existing_params.iter_mut().zip(current_params)
+                        existing.tparams.iter_mut().zip(&current.tparams)
                     {
                         if existing_tparam.default.is_none() {
                             existing_tparam.default = current_tparam
@@ -8596,14 +8664,18 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
     ref_loc: LocNode<'arena>,
     name: &FlowSmolStr,
 ) -> Parsed<'arena, 'ast> {
-    match name.as_str() {
-        _ if xs.contains(name) => {
-            // TODO: error if targs is not None
+    if let Some(initialized) = xs.reference(name) {
+        return if initialized {
             Parsed::Annot(Box::new(ParsedAnnot::Bound(Box::new(AnnotBound {
                 ref_loc,
                 name: name.clone(),
             }))))
-        }
+        } else {
+            Parsed::Err(ref_loc, Errno::CheckError)
+        };
+    }
+
+    match name.as_str() {
         _ if !opts.for_builtins && scope::lookup_type(scopes, scope, name).is_some() => {
             let name = TyName::Unqualified(Box::new(Ref {
                 ref_loc,
@@ -8887,6 +8959,7 @@ fn tparam<'arena, 'ast>(
     tbls: &mut Tables<'arena, 'ast>,
     xs: &mut tparam_stack::TParamStack,
     param: &ast::types::TypeParam<Loc, Loc>,
+    include_default: bool,
 ) -> TParam<LocNode<'arena>, Parsed<'arena, 'ast>> {
     fn bound<'arena, 'ast>(
         opts: &TypeSigOptions,
@@ -8918,7 +8991,9 @@ fn tparam<'arena, 'ast>(
     let name_loc = tbls.push_loc(param.name.loc.dupe());
     let name = param.name.name.dupe();
     let bound_val = bound(opts, scope, scopes, tbls, xs, &param.bound);
-    let default_val = default(opts, scope, scopes, tbls, xs, &param.default);
+    let default_val = include_default
+        .then(|| default(opts, scope, scopes, tbls, xs, &param.default))
+        .flatten();
     let is_const = param.const_.is_some();
     TParam {
         name_loc,
@@ -8941,15 +9016,41 @@ fn tparams<'arena, 'ast>(
     match tparams {
         None => TParams::Mono,
         Some(tparams) => {
+            let analysis = analyze_type_params(tparams);
+            let cyclic: BTreeSet<usize> = analysis
+                .components()
+                .into_iter()
+                .filter(|component| component.cyclic)
+                .flat_map(|component| component.members)
+                .collect();
+            let order = type_param_order(tparams, &cyclic);
             let tparams_loc = tbls.push_loc(tparams.loc.dupe());
-            let mut acc = Vec::new();
             for tp in tparams.params.iter() {
-                let tp_val = tparam(opts, scope, scopes, tbls, xs, tp);
-                xs.insert(tp_val.name.dupe());
+                xs.insert_uninitialized(tp.name.name.dupe());
+            }
+            let mut acc = Vec::with_capacity(tparams.params.len());
+            for (index, tp) in tparams.params.iter().enumerate() {
+                xs.begin_references(true);
+                let mut tp_val = tparam(opts, scope, scopes, tbls, xs, tp, false);
+                xs.finish_references();
+                if cyclic.contains(&index) {
+                    tp_val.bound = Some(Parsed::Err(tp_val.name_loc.dupe(), Errno::CheckError));
+                }
+                xs.begin_references(false);
+                tp_val.default = tp
+                    .default
+                    .as_ref()
+                    .map(|default| annot(opts, scope, scopes, tbls, xs, default));
+                xs.finish_references();
+                xs.initialize(&tp.name.name);
                 acc.push(tp_val);
             }
             if let Ok(tps) = Vec1::try_from_vec(acc) {
-                TParams::Poly(Box::new((tparams_loc, tps)))
+                TParams::Poly(Box::new(PolyTParams {
+                    loc: tparams_loc,
+                    tparams: tps,
+                    bound_order: order,
+                }))
             } else {
                 TParams::Mono
             }
@@ -9009,7 +9110,7 @@ fn conditional_type<'arena, 'ast>(
             _ => unreachable!(),
         };
         if !already_registered {
-            let tp = tparam(opts, scope, scopes, tbls, xs, &infer.tparam);
+            let tp = tparam(opts, scope, scopes, tbls, xs, &infer.tparam, true);
             if let scope::Scope::ConditionalTypeExtends(cond_scope) = scopes.get_mut(extends_scope)
             {
                 cond_scope.infer_tparams.push(tp);
@@ -9019,7 +9120,12 @@ fn conditional_type<'arena, 'ast>(
     let infer_tparams = match scopes.get(extends_scope) {
         scope::Scope::ConditionalTypeExtends(cond_scope) => {
             if let Ok(tparams) = Vec1::try_from_vec(cond_scope.infer_tparams.to_vec()) {
-                TParams::Poly(Box::new((extends_type_loc, tparams)))
+                let order = (0..tparams.len()).collect();
+                TParams::Poly(Box::new(PolyTParams {
+                    loc: extends_type_loc,
+                    tparams,
+                    bound_order: order,
+                }))
             } else {
                 TParams::Mono
             }
@@ -9068,7 +9174,7 @@ fn infer_type<'arena, 'ast>(
             {
                 name_loc
             } else {
-                let tp = tparam(opts, scope, scopes, tbls, xs, &t.tparam);
+                let tp = tparam(opts, scope, scopes, tbls, xs, &t.tparam, true);
                 let name_loc = tp.name_loc.dupe();
                 if let scope::Scope::ConditionalTypeExtends(cond_scope) = scopes.get_mut(scope) {
                     cond_scope.infer_tparams.push(tp);

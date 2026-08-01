@@ -1222,8 +1222,8 @@ References:
    422|   declare export type ComponentType<-P extends {...}> = component(...P);
                                              ^ [1]
    react.js:11:40
-    11|   declare const a: React.ComponentType<Props>;
-                                               ^^^^^ [2]
+    11|   declare const a: React.ComponentType<P>;
+                                               ^ [2]
    react.js:13:28
     13|   a as React.ComponentType<{a: number, ...}>; // nope, contravariance
                                    ^^^^^^^^^^^^^^^^ [3]
@@ -1235,7 +1235,7 @@ Cannot cast `b` to `React.Component` because in type argument `Props` [1]: `{rea
 incompatible with `empty` [3]. [incompatible-type]
 
    react.js:14:3
-    14|   b as React.Component<Props>; // nope
+    14|   b as React.Component<P>; // nope
           ^
 
 References:
@@ -1246,8 +1246,8 @@ References:
     12|   declare const b: React.Component<{readonly a: number, ...}>;
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    react.js:14:24
-    14|   b as React.Component<Props>; // nope
-                               ^^^^^ [3]
+    14|   b as React.Component<P>; // nope
+                               ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:46:26

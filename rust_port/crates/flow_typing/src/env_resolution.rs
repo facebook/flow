@@ -3373,6 +3373,29 @@ fn resolve_component_type_params<'cx>(
             }
         };
 
+    let cyclic_type_param_locs = cx.environment().var_info.cyclic_type_param_locs.dupe();
+    let seed_cyclic_type_param = |elt: &name_def_ordering::Element| {
+        let key = match elt {
+            name_def_ordering::Element::Normal(key)
+            | name_def_ordering::Element::Resolvable(key) => key,
+            name_def_ordering::Element::Illegal(_) => return,
+        };
+        if cyclic_type_param_locs.contains(&key.loc)
+            && let Some(def_data) = graph.get(key)
+        {
+            resolve_illegal(key.loc.dupe(), def_data);
+        }
+    };
+    match component {
+        name_def_ordering::OrderingResult::Singleton(elt) => seed_cyclic_type_param(elt),
+        name_def_ordering::OrderingResult::ResolvableSCC(elts) => {
+            for elt in elts.iter() {
+                seed_cyclic_type_param(elt);
+            }
+        }
+        name_def_ordering::OrderingResult::IllegalSCC(_) => {}
+    }
+
     let resolve_element = |elt: &name_def_ordering::Element| -> Result<(), JobError> {
         match elt {
             name_def_ordering::Element::Illegal(blame) => {

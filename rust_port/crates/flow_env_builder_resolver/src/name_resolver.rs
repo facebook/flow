@@ -31,7 +31,9 @@ use flow_analysis::bindings::Kind as BindingsKind;
 use flow_analysis::hoister::LexicalHoister;
 use flow_analysis::scope_builder;
 use flow_analysis::scope_builder::WithBindings;
+use flow_common::error_ref::ErrorReference;
 use flow_common::options::JsxMode;
+use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -55,6 +57,7 @@ use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
+use flow_parser_utils::type_param_analysis::analyze_type_params;
 use flow_typing_errors::error_message::BindingError;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
 use flow_typing_errors::error_message::EInvalidDeclarationData;
@@ -1086,6 +1089,8 @@ struct NameResolverState {
     /// Track when we're visiting a parameter default expression, so we can
     /// produce the appropriate error message for self-references.
     in_param_default: bool,
+    invalid_type_param_default_locs: FlowOrdSet<ALoc>,
+    cyclic_type_param_locs: FlowOrdSet<ALoc>,
 }
 
 impl NameResolverState {
@@ -1120,6 +1125,8 @@ impl NameResolverState {
             pred_func_map: CACHED_PRED.with(|c| c.clone()),
             current_bindings: CACHED_BINDINGS.with(|c| c.clone()),
             in_param_default: false,
+            invalid_type_param_default_locs: FlowOrdSet::new(),
+            cyclic_type_param_locs: FlowOrdSet::new(),
         }
     }
 }
@@ -1644,6 +1651,46 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> WithBindings<ALoc, AbruptCompletion>
         visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
     ) -> Result<T, AbruptCompletion> {
         self.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, visit)
+    }
+
+    fn with_type_param_default<T>(
+        &mut self,
+        visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
+    ) -> Result<T, AbruptCompletion> {
+        self.with_in_param_default(visit)
+    }
+
+    fn with_type_params<T>(
+        &mut self,
+        tparams: &flow_parser::ast::types::TypeParams<ALoc, ALoc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
+    ) -> Result<T, AbruptCompletion> {
+        let analysis = analyze_type_params(tparams);
+        for component in analysis.components() {
+            if !component.cyclic {
+                continue;
+            }
+            let target = *component.members.first();
+            let reference_loc = component
+                .members
+                .iter()
+                .find_map(|source| analysis.dependencies[*source].get(&target))
+                .expect("cyclic component should have an edge to its first member")
+                .dupe();
+            for member in component.members {
+                self.env_state
+                    .cyclic_type_param_locs
+                    .insert(tparams.params[member].name.loc.dupe());
+            }
+            Fl::add_output(
+                self.cx,
+                ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
+                    reference_loc,
+                    VirtualReasonDesc::RType(tparams.params[target].name.name.dupe()),
+                )),
+            );
+        }
+        visit(self)
     }
 }
 
@@ -2828,7 +2875,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             let type_canonical_priority = |kind: BindingsKind| match kind {
                 BindingsKind::Class | BindingsKind::DeclaredClass | BindingsKind::Enum => 0,
                 BindingsKind::DeclaredNamespace => 1,
-                BindingsKind::Type { .. } | BindingsKind::Interface { .. } => 2,
+                BindingsKind::Type { .. }
+                | BindingsKind::TypeParam
+                | BindingsKind::Interface { .. } => 2,
                 _ => 3,
             };
             let type_entries = match full.get(name) {
@@ -2933,10 +2982,15 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     EnvEntry::AssigningWrite(decl_reason),
                 );
             }
-            let val = ssa_val::one(&mut *self.cache.borrow_mut(), reason.dupe());
+            let havoc = ssa_val::one(&mut *self.cache.borrow_mut(), reason.dupe());
+            let val = if canonical_kind == BindingsKind::TypeParam {
+                ssa_val::uninitialized(&mut *self.cache.borrow_mut(), canonical_loc.dupe())
+            } else {
+                havoc.dupe()
+            };
             let env_val = EnvVal::new(EnvValInner {
-                val_ref: Rc::new(RefCell::new(val.dupe())),
-                havoc: val,
+                val_ref: Rc::new(RefCell::new(val)),
+                havoc,
                 writes_by_closure_provider_val: None,
                 def_loc: Some(canonical_loc),
                 heap_refinements: empty_heap_refinements(),
@@ -2945,7 +2999,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             });
             result.insert(name.dupe(), env_val);
         }
-        result.retain(|name, _| !self.is_excluded_ordinary_name(name));
+        result.retain(|name, env_val| {
+            env_val.kind == BindingsKind::TypeParam || !self.is_excluded_ordinary_name(name)
+        });
         result
     }
 
@@ -3515,11 +3571,21 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             .declare_namespace_read_recorder
             .record_identifier_read(loc.dupe());
         let env_val = self.env_read(name);
-        let v = if self.env_state.visiting_hoisted_type {
+        let v = if self.env_state.visiting_hoisted_type
+            && !(self.env_state.in_param_default && env_val.kind == BindingsKind::TypeParam)
+        {
             env_val.havoc.dupe()
         } else {
             env_val.val_ref.borrow().dupe()
         };
+        if self.env_state.in_param_default
+            && env_val.kind == BindingsKind::TypeParam
+            && !ssa_val::writes_of_uninitialized(|_| true, &v).is_empty()
+        {
+            self.env_state
+                .invalid_type_param_default_locs
+                .insert(loc.dupe());
+        }
         let entry = ReadEntry {
             def_loc: env_val.def_loc.dupe(),
             value: v,
@@ -3541,11 +3607,21 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             None => return,
             Some(v) => v,
         };
-        let v = if self.env_state.visiting_hoisted_type {
+        let v = if self.env_state.visiting_hoisted_type
+            && !(self.env_state.in_param_default && env_val.kind == BindingsKind::TypeParam)
+        {
             env_val.havoc.dupe()
         } else {
             env_val.val_ref.borrow().dupe()
         };
+        if self.env_state.in_param_default
+            && env_val.kind == BindingsKind::TypeParam
+            && !ssa_val::writes_of_uninitialized(|_| true, &v).is_empty()
+        {
+            self.env_state
+                .invalid_type_param_default_locs
+                .insert(loc.dupe());
+        }
         let entry = ReadEntry {
             def_loc: env_val.def_loc.dupe(),
             value: v,
@@ -8240,7 +8316,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         let reserved_keyword_error = if let Ok(keyword) = name.as_str().parse::<IncorrectType>() {
             if keyword.is_type_reserved() {
                 match kind {
-                    BindingsKind::Type { .. } | BindingsKind::Interface { .. } => {
+                    BindingsKind::Type { .. }
+                    | BindingsKind::TypeParam
+                    | BindingsKind::Interface { .. } => {
                         Some(ErrorMessage::EBindingError(Box::new((
                             BindingError::EReservedKeyword { keyword },
                             loc.dupe(),
@@ -8371,6 +8449,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                         None
                     }
                     BindingsKind::Type { .. }
+                    | BindingsKind::TypeParam
                     | BindingsKind::Interface { .. }
                     | BindingsKind::DeclaredClass
                     | BindingsKind::DeclaredVar
@@ -8387,7 +8466,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                             def_loc_val.dupe(),
                         ))))
                     }
-                    BindingsKind::Type { .. } | BindingsKind::Interface { .. } => None,
+                    BindingsKind::Type { .. }
+                    | BindingsKind::TypeParam
+                    | BindingsKind::Interface { .. } => None,
                     BindingsKind::Var
                     | BindingsKind::Const
                     | BindingsKind::Let
@@ -8421,6 +8502,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     env_api::EnvEntry::NonAssigningWrite,
                 );
             }
+        }
+        if kind == BindingsKind::TypeParam {
+            *env_val.val_ref.borrow_mut() = env_val.havoc.dupe();
         }
         ast_visitor::identifier_default(self, ident)
     }
@@ -8473,7 +8557,11 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         &mut self,
         id: &flow_parser::ast::Identifier<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
-        self.error_on_reference_to_currently_declared_id(id);
+        if self.env_state.in_param_default {
+            self.error_on_reference_to_currently_declared_id_in_default(id);
+        } else {
+            self.error_on_reference_to_currently_declared_id(id);
+        }
         ast_visitor::type_identifier_reference_default(self, id)
     }
 
@@ -11895,6 +11983,8 @@ pub struct NameResolverResult {
     pub pred_func_map: FlowRedBlackTreeMap<ALoc, env_api::PredFuncInfo<ALoc>>,
     pub interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<ALoc, Vec<ALoc>>,
+    pub invalid_type_param_default_locs: FlowOrdSet<ALoc>,
+    pub cyclic_type_param_locs: FlowOrdSet<ALoc>,
     pub declare_namespace_read_paths:
         FlowOrdMap<ALoc, FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>>,
 }
@@ -11913,6 +12003,8 @@ impl NameResolverResult {
             pred_func_map: self.pred_func_map,
             interface_merge_conflicts: self.interface_merge_conflicts,
             declare_class_interface_merge_conflicts: self.declare_class_interface_merge_conflicts,
+            invalid_type_param_default_locs: Rc::new(self.invalid_type_param_default_locs),
+            cyclic_type_param_locs: Rc::new(self.cyclic_type_param_locs),
             declare_namespace_read_paths: self.declare_namespace_read_paths,
         }
     }
@@ -11961,6 +12053,8 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     let interface_merge_conflicts = env_walk.interface_merge_conflicts();
     let declare_class_interface_merge_conflicts =
         env_walk.declare_class_interface_merge_conflicts();
+    let invalid_type_param_default_locs = env_walk.env_state.invalid_type_param_default_locs.dupe();
+    let cyclic_type_param_locs = env_walk.env_state.cyclic_type_param_locs.dupe();
     let declare_namespace_read_paths = env_walk
         .env_state
         .declare_namespace_read_recorder
@@ -11978,6 +12072,8 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
             pred_func_map,
             interface_merge_conflicts,
             declare_class_interface_merge_conflicts,
+            invalid_type_param_default_locs,
+            cyclic_type_param_locs,
             declare_namespace_read_paths,
         },
     )

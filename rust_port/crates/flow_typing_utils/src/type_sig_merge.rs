@@ -2249,7 +2249,7 @@ fn merge_annot<'cx>(
                 let (tps_for_true_type, infer_tps_for_extends_types, infer_tparams) = {
                     let tparam_list: Vec<&TParam<ALoc, Pack::Packed<ALoc>>> = match infer_tparams {
                         TParams::Mono => vec![],
-                        TParams::Poly(box (_, tps)) => tps.iter().collect(),
+                        TParams::Poly(poly) => poly.tparams.iter().collect(),
                     };
                     let (new_tps, new_infer_tps, rev_tparams) = tparam_list.iter().fold(
                         (
@@ -3473,22 +3473,39 @@ fn merge_tparams_targs<'cx>(
     use flow_common::reason::VirtualReasonDesc::*;
     match tparams {
         TParams::Mono => t(cx, env, Vec::new()),
-        TParams::Poly(box (tparams_loc, tps)) => {
+        TParams::Poly(poly) => {
             let poly_reason = reason.update_desc(|d| RPolyType(Arc::new(d)));
             let mut current_env = env.dupe();
-            let mut tparams_vec: Vec<type_::TypeParam> = Vec::new();
-            let mut tparam_tuples: Vec<(SubstName, Reason, Type, Polarity)> = Vec::new();
-            for tp in tps.iter() {
-                let (tp, tuple) = merge_tparam(&mut current_env, cx, file, tp, false);
-                tparams_vec.push(tp);
+            for tp in poly.tparams.iter() {
+                current_env.tps.remove(&tp.name);
+            }
+            let mut partials = vec![None; poly.tparams.len()];
+            for index in &poly.bound_order {
+                partials[*index] = Some(merge_tparam_bound(
+                    &mut current_env,
+                    cx,
+                    file,
+                    &poly.tparams[*index],
+                    false,
+                ));
+            }
+
+            let mut tparams_vec = Vec::with_capacity(poly.tparams.len());
+            let mut tparam_tuples = Vec::with_capacity(poly.tparams.len());
+            for (index, tp) in poly.tparams.iter().enumerate() {
+                let partial = partials[index]
+                    .take()
+                    .expect("every packed type parameter should be initialized");
+                let (type_param, tuple) = finish_merged_tparam(&current_env, cx, file, tp, partial);
+                tparams_vec.push(type_param);
                 tparam_tuples.push(tuple);
             }
             let t_out = t(cx, &current_env, tparam_tuples);
-            let id = cx.make_source_poly_id(true, tparams_loc);
+            let id = cx.make_source_poly_id(true, &poly.loc);
             Type::new(type_::TypeInner::DefT(
                 poly_reason,
                 type_::DefT::new(type_::DefTInner::PolyT(Box::new(type_::PolyTData {
-                    tparams_loc: tparams_loc.dupe(),
+                    tparams_loc: poly.loc.dupe(),
                     tparams: tparams_vec.into(),
                     t_out,
                     id,
@@ -3499,7 +3516,7 @@ fn merge_tparams_targs<'cx>(
     }
 }
 
-fn merge_tparam<'cx>(
+fn merge_tparam_bound<'cx>(
     env: &mut MergeEnv,
     cx: &Context<'cx>,
     file: &File<'cx>,
@@ -3514,7 +3531,7 @@ fn merge_tparam<'cx>(
         name,
         polarity,
         bound,
-        default,
+        default: _,
         is_const,
     } = tp;
     let reason = reason::mk_reason(RType(name.dupe()), name_loc.dupe());
@@ -3530,9 +3547,6 @@ fn merge_tparam<'cx>(
         }
         Some(t) => merge_impl(env, cx, file, t, false, false),
     };
-    let default = default
-        .as_ref()
-        .map(|t| merge_impl(env, cx, file, t, false, false));
     let subst_name = if from_infer && env.tps.contains_key(name) {
         let fvs: flow_data_structure_wrapper::ord_set::FlowOrdSet<SubstName> =
             env.tps.keys().map(|n| SubstName::name(n.dupe())).collect();
@@ -3545,13 +3559,48 @@ fn merge_tparam<'cx>(
         name: subst_name,
         bound,
         polarity: *polarity,
-        default,
+        default: None,
         is_this: false,
         is_const: *is_const,
     });
     let t = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &tp);
     env.tps.insert(name.dupe(), t.dupe());
     (tp, (SubstName::name(name.dupe()), reason, t, *polarity))
+}
+
+fn finish_merged_tparam<'cx>(
+    env: &MergeEnv,
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    packed: &TParam<ALoc, Pack::Packed<ALoc>>,
+    partial: (type_::TypeParam, (SubstName, Reason, Type, Polarity)),
+) -> (type_::TypeParam, (SubstName, Reason, Type, Polarity)) {
+    let (type_param, tuple) = partial;
+    let default = packed
+        .default
+        .as_ref()
+        .map(|t| merge_impl(env, cx, file, t, false, false));
+    let type_param = type_::TypeParam::new(type_::TypeParamInner {
+        reason: type_param.reason.dupe(),
+        name: type_param.name.dupe(),
+        bound: type_param.bound.dupe(),
+        polarity: type_param.polarity,
+        default,
+        is_this: type_param.is_this,
+        is_const: type_param.is_const,
+    });
+    (type_param, tuple)
+}
+
+fn merge_tparam<'cx>(
+    env: &mut MergeEnv,
+    cx: &Context<'cx>,
+    file: &File<'cx>,
+    tp: &TParam<ALoc, Pack::Packed<ALoc>>,
+    from_infer: bool,
+) -> (type_::TypeParam, (SubstName, Reason, Type, Polarity)) {
+    let partial = merge_tparam_bound(env, cx, file, tp, from_infer);
+    finish_merged_tparam(env, cx, file, tp, partial)
 }
 
 fn merge_op<'cx>(

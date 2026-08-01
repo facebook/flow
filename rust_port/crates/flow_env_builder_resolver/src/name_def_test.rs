@@ -188,8 +188,8 @@ fn print_order(lst: &[OrderingResult]) -> String {
                     .collect();
                 format!("illegal scc: (({}))", strs.join("); ("))
             }
-            OrderingResult::ResolvableSCC(keys) => {
-                let mut sorted: Vec<_> = keys.iter().collect();
+            OrderingResult::ResolvableSCC(elts) => {
+                let mut sorted: Vec<_> = elts.iter().collect();
                 sorted.sort_by(|a, b| compare_elt(a, b));
                 let strs: Vec<String> = sorted.iter().map(|elt| msg_of_elt(elt)).collect();
                 format!("legal scc: (({}))", strs.join("); ("))
@@ -2339,6 +2339,40 @@ declare var f: any;
 (4, 23) to (4, 27) =>
 (7, 12) to (7, 13) =>
 (4, 45) to (4, 49) (Env_api.Make.ExpressionLoc)"#
+    );
+}
+
+#[test]
+fn test_type_param_forward_bound_order() {
+    let result = print_order_test(
+        None,
+        false,
+        r#"
+type F = <A extends B, B extends C, C extends string>() => void;
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"(2, 36) to (2, 37) =>
+(2, 23) to (2, 24) =>
+(2, 10) to (2, 11) =>
+(2, 5) to (2, 6)"#
+    );
+}
+
+#[test]
+fn test_type_param_bound_cycle_order() {
+    let result = print_order_test(
+        None,
+        false,
+        r#"
+type F = <A extends B, B extends A>() => void;
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"legal scc: (((2, 10) to (2, 11)); ((2, 23) to (2, 24))) =>
+(2, 5) to (2, 6)"#
     );
 }
 

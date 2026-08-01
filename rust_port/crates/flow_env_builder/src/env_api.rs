@@ -429,6 +429,7 @@ pub enum ValKind {
         imported: bool,
         type_only_namespace: bool,
     },
+    TypeParam,
     TsImport,
     Value,
     Internal,
@@ -559,6 +560,8 @@ where
     pub pred_func_map: FlowRedBlackTreeMap<L, PredFuncInfo<L>>,
     pub interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
     pub declare_class_interface_merge_conflicts: FlowOrdMap<L, Vec<L>>,
+    pub invalid_type_param_default_locs: Rc<FlowOrdSet<L>>,
+    pub cyclic_type_param_locs: Rc<FlowOrdSet<L>>,
     /// For each identifier read inside a `declare namespace`, the namespace
     /// path that was active while the resolver visited that read.
     ///
@@ -617,6 +620,8 @@ where
             pred_func_map: FlowRedBlackTreeMap::new(),
             interface_merge_conflicts: FlowOrdMap::new(),
             declare_class_interface_merge_conflicts: FlowOrdMap::new(),
+            invalid_type_param_default_locs: Rc::new(FlowOrdSet::new()),
+            cyclic_type_param_locs: Rc::new(FlowOrdSet::new()),
             declare_namespace_read_paths: FlowOrdMap::new(),
         }
     }

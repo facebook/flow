@@ -1694,6 +1694,52 @@ fn make_pin_type<'cx, Obs: Observer>(
     }
 }
 
+fn type_param_pin_order<'cx>(cx: &Context<'cx>, tparams: &[TypeParam]) -> Vec<usize> {
+    fn visit(
+        index: usize,
+        dependencies: &[BTreeSet<usize>],
+        visited: &mut [bool],
+        order: &mut Vec<usize>,
+    ) {
+        if visited[index] {
+            return;
+        }
+        visited[index] = true;
+        for dependency in &dependencies[index] {
+            visit(*dependency, dependencies, visited, order);
+        }
+        order.push(index);
+    }
+
+    let indices = tparams
+        .iter()
+        .enumerate()
+        .map(|(index, tparam)| (tparam.name.dupe(), index))
+        .collect::<BTreeMap<_, _>>();
+    let dependencies = tparams
+        .iter()
+        .map(|tparam| {
+            let mut dependencies = type_subst::free_var_finder(cx, None, &tparam.bound);
+            if let Some(default) = &tparam.default {
+                dependencies.extend(type_subst::free_var_finder(cx, None, default));
+            }
+            dependencies
+                .iter()
+                .filter_map(|name| indices.get(name).copied())
+                .collect::<BTreeSet<_>>()
+        })
+        .collect::<Vec<_>>();
+    let mut visited = vec![false; tparams.len()];
+    let mut order = Vec::with_capacity(tparams.len());
+    for index in 0..tparams.len() {
+        visit(index, &dependencies, &mut visited, &mut order);
+    }
+    // Postorder is dependency-first. Pin dependents first, while retaining the
+    // old reverse-source order for unrelated parameters.
+    order.reverse();
+    order
+}
+
 fn pin_types<'cx, Obs: Observer>(
     cx: &Context<'cx>,
     use_op: &UseOp,
@@ -1716,9 +1762,21 @@ fn pin_types<'cx, Obs: Observer>(
             });
 
     let mut result_map = BTreeMap::new();
-    let mut result_list = Vec::new();
+    let mut result_list = vec![None; inferred_targ_list.len()];
 
-    for (name, t, bound, is_inferred) in inferred_targ_list.iter().rev() {
+    // Implicit instantiation can bail out early (e.g. a non-`DefT` lower bound or
+    // a static call through a `this` instance) and return an empty
+    // `inferred_targ_list` even though the poly type still declares tparams. The
+    // dependency order is indexed into `inferred_targ_list`, so only use it when
+    // the two line up; otherwise iterate whatever inferred entries exist.
+    let pin_order = if inferred_targ_list.len() == check.poly_t.1.len() {
+        type_param_pin_order(cx, &check.poly_t.1)
+    } else {
+        (0..inferred_targ_list.len()).rev().collect::<Vec<usize>>()
+    };
+
+    for index in pin_order {
+        let (name, t, bound, is_inferred) = &inferred_targ_list[index];
         let tparam = match tparams_map.get(name) {
             Some(tp) => tp,
             None => continue,
@@ -1791,10 +1849,10 @@ fn pin_types<'cx, Obs: Observer>(
             generalized: generalized.dupe(),
         };
         result_map.insert(name.dupe(), result);
-        result_list.push((generalized, name.dupe()));
+        result_list[index] = Some((generalized, name.dupe()));
     }
 
-    result_list.reverse();
+    let result_list = result_list.into_iter().flatten().collect();
     Ok((result_map, result_list))
 }
 

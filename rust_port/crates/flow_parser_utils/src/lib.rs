@@ -21,6 +21,7 @@ pub mod package_json;
 pub mod record_utils;
 pub mod signature_utils;
 pub mod this_finder;
+pub mod type_param_analysis;
 
 #[cfg(test)]
 mod file_sig_tests;

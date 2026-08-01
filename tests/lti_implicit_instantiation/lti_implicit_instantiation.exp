@@ -1,3 +1,18 @@
+Error ------------------------------------------------------------------------------------------ call_poly_class.js:10:1
+
+Cannot call `C` because a call signature declaring the expected parameter / return type is missing in statics of
+`C` [1]. [prop-missing]
+
+   call_poly_class.js:10:1
+   10| C(3); // ERROR: `C` has no call signature; pinning must not panic on the empty type-arg list
+       ^
+
+References:
+   call_poly_class.js:8:7
+    8| class C<T> {}
+             ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ contextual_ctor.js:5:13
 
 Cannot call `C` because `T` [1] is underconstrained by new `C` [2]. Either add explicit type arguments or cast the
@@ -940,4 +955,4 @@ References:
 
 
 
-Found 60 errors
+Found 61 errors

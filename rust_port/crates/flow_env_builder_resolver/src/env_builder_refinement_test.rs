@@ -7275,14 +7275,34 @@ fn test_fun_tparam_global_bound() {
         None,
         None,
         r#"
-function f<Z: Z>() { }
+function f<Z extends G>() { }
 "#,
     );
     assert_eq!(
         result,
         r#"[
-  (2, 14) to (2, 15) => {
-    Global Z
+  (2, 21) to (2, 22) => {
+    Global G
+  }]"#
+    );
+}
+
+#[test]
+fn test_fun_tparam_self_bound() {
+    let result = print_ssa_test(
+        None,
+        false,
+        None,
+        None,
+        r#"
+function f<Z extends Z>() { }
+"#,
+    );
+    assert_eq!(
+        result,
+        r#"[
+  (2, 21) to (2, 22) => {
+    (2, 11) to (2, 12): (`Z`)
   }]"#
     );
 }

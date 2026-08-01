@@ -25,6 +25,7 @@ pub enum Kind {
         imported: bool,
         type_only_namespace: bool,
     },
+    TypeParam,
     Interface {
         imported: bool,
         type_only_namespace: bool,
@@ -149,7 +150,7 @@ impl Kind {
     /// The namespaces a binding kind populates.
     pub fn namespaces(&self) -> &'static [Namespace] {
         match self {
-            Self::Type { .. } | Self::Interface { .. } => &[Namespace::Type],
+            Self::Type { .. } | Self::TypeParam | Self::Interface { .. } => &[Namespace::Type],
             Self::Class | Self::DeclaredClass | Self::Enum | Self::DeclaredNamespace => {
                 &[Namespace::Value, Namespace::Type]
             }

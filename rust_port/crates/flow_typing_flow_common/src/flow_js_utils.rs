@@ -2945,14 +2945,21 @@ pub mod instantiation_kit {
                 all_ts.push(entry);
             }
 
-            let frame = UseOp::Frame(
-                Arc::new(VirtualFrameUseOp::TypeParamBound {
-                    name: typeparam.name.dupe(),
-                }),
-                Arc::new(use_op.dupe()),
-            );
+            map.insert(typeparam.name.dupe(), t_val);
+        }
 
-            if !cx.in_implicit_instantiation() {
+        if !cx.in_implicit_instantiation() {
+            for typeparam in xs.iter() {
+                let t_val = map
+                    .get(&typeparam.name)
+                    .expect("every type parameter should have a type argument")
+                    .dupe();
+                let frame = UseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::TypeParamBound {
+                        name: typeparam.name.dupe(),
+                    }),
+                    Arc::new(use_op.dupe()),
+                );
                 let bound_subst = subst(
                     cx,
                     Some(use_op.dupe()),
@@ -2964,13 +2971,11 @@ pub mod instantiation_kit {
                 );
 
                 if unify_bounds {
-                    H::unify(cx, trace, frame, t_val.dupe(), bound_subst)?;
+                    H::unify(cx, trace, frame, t_val, bound_subst)?;
                 } else {
-                    H::is_subtype(cx, trace, frame, t_val.dupe(), bound_subst)?;
+                    H::is_subtype(cx, trace, frame, t_val, bound_subst)?;
                 }
             }
-
-            map.insert(typeparam.name.dupe(), t_val);
         }
 
         let substituted_t = subst(

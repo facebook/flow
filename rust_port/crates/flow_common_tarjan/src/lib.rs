@@ -12,12 +12,43 @@
 //!
 //! The code below is mostly a transcription of the above.
 
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
+use flow_common_utils::graph::Graph;
 use flow_common_utils::graph::GraphLike;
 use vec1::Vec1;
+
+/// A strongly connected component in a source-indexed dependency graph.
+pub struct DependencyComponent {
+    /// Source indices in deterministic order.
+    pub members: Vec1<usize>,
+    /// Whether the component has multiple members or a self-edge.
+    pub cyclic: bool,
+}
+
+/// Computes strongly connected components for direct, source-indexed dependencies.
+pub fn dependency_components(dependencies: &[BTreeSet<usize>]) -> Vec<DependencyComponent> {
+    let graph = Graph::of_map(
+        dependencies
+            .iter()
+            .enumerate()
+            .map(|(index, dependencies)| (index, dependencies.clone()))
+            .collect(),
+    );
+    topsort(0..dependencies.len(), &graph)
+        .into_iter()
+        .map(|component| {
+            let mut members = component;
+            members.sort();
+            let first = members[0];
+            let cyclic = members.len() > 1 || dependencies[first].contains(&first);
+            DependencyComponent { members, cyclic }
+        })
+        .collect()
+}
 
 struct Node {
     // visit order, -1 if unvisited

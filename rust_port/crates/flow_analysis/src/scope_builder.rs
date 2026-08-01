@@ -416,80 +416,41 @@ where
         return in_tparam_scope(visitor);
     };
 
-    fn loop_visit<Loc: Dupe + Eq + Hash + Default, E, V>(
-        visitor: &mut V,
-        tparams: &[ast::types::TypeParam<Loc, Loc>],
-        index: usize,
-        hoist_annotation: bool,
-        hoist_annotations: &dyn Fn(
-            &mut V,
-            &mut dyn FnMut(&mut V) -> Result<(), E>,
-        ) -> Result<(), E>,
-        in_tparam_scope: &dyn Fn(&mut V) -> Result<(), E>,
-    ) -> Result<(), E>
-    where
-        V: for<'a> AstVisitor<'a, Loc, Loc, &'a Loc, E> + WithBindings<Loc, E>,
-    {
-        if index >= tparams.len() {
-            return in_tparam_scope(visitor);
-        }
-        let ast::types::TypeParam {
-            loc,
-            name,
-            bound,
-            bound_kind: _,
-            variance: _,
-            default,
-            const_: _,
-        } = &tparams[index];
-        // Always visit bound and default (matching OCaml behavior).
-        // When hoist_annotation=true, wrap in hoist_annotations.
-        // When hoist_annotation=false, visit directly.
-        if hoist_annotation {
-            hoist_annotations(visitor, &mut |v| v.type_annotation_hint(bound))?;
-        } else {
-            visitor.type_annotation_hint(bound)?;
-        }
-        if hoist_annotation {
-            hoist_annotations(visitor, &mut |v| {
-                if let Some(t) = default {
-                    AstVisitor::type_(v, t)
-                } else {
-                    Ok(())
-                }
-            })?;
-        } else if let Some(t) = default {
-            visitor.type_(t)?;
-        }
-        let bindings = Bindings::singleton(Entry {
-            loc: name.loc.dupe(),
-            name: name.name.dupe(),
-            kind: Kind::Type {
-                imported: false,
-                type_only_namespace: false,
-            },
+    let mut bindings = Bindings::empty();
+    for tparam in tparams.params.iter() {
+        bindings.add(Entry {
+            loc: tparam.name.loc.dupe(),
+            name: tparam.name.name.dupe(),
+            kind: Kind::TypeParam,
         });
-        visitor.with_bindings(false, loc.dupe(), bindings, |s| {
-            s.binding_type_identifier(name)?;
-            loop_visit(
-                s,
-                tparams,
-                index + 1,
-                hoist_annotation,
-                hoist_annotations,
-                in_tparam_scope,
-            )
-        })
     }
 
-    loop_visit(
-        visitor,
-        &tparams.params,
-        0,
-        hoist_annotation,
-        hoist_annotations,
-        in_tparam_scope,
-    )
+    visitor.with_type_params(tparams, |visitor| {
+        visitor.with_bindings(false, tparams.loc.dupe(), bindings, |visitor| {
+            for tparam in tparams.params.iter() {
+                if let Some(default) = &tparam.default {
+                    visitor.with_type_param_default(|visitor| {
+                        if hoist_annotation {
+                            hoist_annotations(visitor, &mut |v| AstVisitor::type_(v, default))
+                        } else {
+                            AstVisitor::type_(visitor, default)
+                        }
+                    })?;
+                }
+                visitor.binding_type_identifier(&tparam.name)?;
+            }
+
+            for tparam in tparams.params.iter() {
+                if hoist_annotation {
+                    hoist_annotations(visitor, &mut |v| v.type_annotation_hint(&tparam.bound))?;
+                } else {
+                    visitor.type_annotation_hint(&tparam.bound)?;
+                }
+            }
+
+            in_tparam_scope(visitor)
+        })
+    })
 }
 
 pub fn match_case<
@@ -1701,7 +1662,7 @@ impl<Loc: Dupe + Eq + Ord + Hash + Default> ScopeBuilder<Loc> {
     }
 }
 
-pub trait WithBindings<Loc, E> {
+pub trait WithBindings<Loc: Dupe, E> {
     fn with_bindings<T>(
         &mut self,
         lexical: bool,
@@ -1709,6 +1670,21 @@ pub trait WithBindings<Loc, E> {
         bindings: Bindings<Loc>,
         visit: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E>;
+
+    fn with_type_param_default<T>(
+        &mut self,
+        visit: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        visit(self)
+    }
+
+    fn with_type_params<T>(
+        &mut self,
+        _tparams: &ast::types::TypeParams<Loc, Loc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        visit(self)
+    }
 }
 
 impl<Loc: Dupe + Eq + Ord + Hash + Default, E> WithBindings<Loc, E> for ScopeBuilder<Loc> {

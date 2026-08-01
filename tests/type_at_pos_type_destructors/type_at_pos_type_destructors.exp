@@ -742,7 +742,7 @@ type-destructor.js:113:18,113:28
 
 type-destructor.js:115:18
 Flags:
-<K extends any, T extends {...}>() => T[K]
+<K extends T, T extends {...}>() => T[K]
 type-destructor.js:115:18,115:28
 
 type-destructor.js:119:6

@@ -574,14 +574,6 @@ Illegal name. [unsupported-syntax]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------- <BUILTINS>/lib.es5.d.ts:229:39
-
-Cannot resolve name `U`. [cannot-resolve-name]
-
-   229|     freeze<T extends { [idx: string]: U | null | undefined | object; }, U extends string | bigint | number | boolean | symbol>(o: T): Readonly<T>;
-                                              ^
-
-
 Error ----------------------------------------------------------------------- <BUILTINS>/lib.esnext.decorators.d.ts:28:5
 
 Illegal name. [unsupported-syntax]
@@ -662,4 +654,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 69 errors
+Found 68 errors

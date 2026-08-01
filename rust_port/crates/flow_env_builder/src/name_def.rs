@@ -36,6 +36,7 @@ use flow_parser::ast::types::AnnotationOrHint;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
+use flow_parser_utils::type_param_analysis::analyze_type_params;
 
 use crate::env_api::AutocompleteHooks;
 use crate::env_api::DefLocType;
@@ -1595,6 +1596,23 @@ impl<'a> DefFinder<'a> {
 
     fn add_tparam(&mut self, loc: ALoc, name: FlowSmolStr) {
         self.tparams.insert(loc, name);
+    }
+
+    // Compute the sibling environments needed by each parameter.
+    fn type_param_info(&self, tparams: &ast::types::TypeParams<ALoc, ALoc>) -> Vec<TparamsMap> {
+        let analysis = analyze_type_params(tparams);
+        analysis
+            .dependencies
+            .iter()
+            .map(|dependencies| {
+                let mut map = self.tparams.clone();
+                for dependency in dependencies.keys() {
+                    let tparam = &tparams.params[*dependency];
+                    map.insert(tparam.name.loc.dupe(), tparam.name.name.dupe());
+                }
+                map
+            })
+            .collect()
     }
 
     fn record_hint(&mut self, loc: ALoc, hint: AstHints) {
@@ -6186,6 +6204,36 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         self.add_tparam(name_loc, name.dupe());
 
         ast_visitor::type_param_default(self, kind, tparam)
+    }
+
+    fn type_params(
+        &mut self,
+        kind: &ast_visitor::TypeParamsContext,
+        tparams: &ast::types::TypeParams<ALoc, ALoc>,
+    ) -> Result<(), EnvInvariant<ALoc>> {
+        let tparams_maps = self.type_param_info(tparams);
+
+        for (tparam, tparams_map) in tparams.params.iter().zip(tparams_maps) {
+            let name_loc = tparam.name.loc.dupe();
+            self.force_add_binding(
+                EnvKey::ordinary(name_loc.dupe()),
+                mk_reason(VirtualReasonDesc::RType(tparam.name.name.dupe()), name_loc),
+                Def::TypeParam(Box::new(TypeParamData {
+                    tparams_map,
+                    kind: *kind,
+                    tparam: (tparam.loc.dupe(), tparam.clone()),
+                })),
+            );
+        }
+
+        for tparam in tparams.params.iter() {
+            self.add_tparam(tparam.name.loc.dupe(), tparam.name.name.dupe());
+        }
+
+        for tparam in tparams.params.iter() {
+            ast_visitor::type_param_default(self, kind, tparam)?;
+        }
+        Ok(())
     }
 
     fn interface(

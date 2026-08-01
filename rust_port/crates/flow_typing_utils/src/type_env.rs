@@ -551,7 +551,7 @@ pub fn local_classlike_binding_kind_at_loc<'cx>(
             val_kind,
             ..
         }) => match val_kind {
-            ValKind::Type { imported: true, .. } | ValKind::TsImport => None,
+            ValKind::Type { imported: true, .. } | ValKind::TypeParam | ValKind::TsImport => None,
             ValKind::Type {
                 imported: false, ..
             }
@@ -1566,6 +1566,43 @@ fn read_entry<'cx>(
             name,
             id,
         }) => match (&val_kind, &name, &def_loc, lookup_mode) {
+            (ValKind::TypeParam, Some(name), Some(def_loc), LookupMode::ForType)
+                if write_locs
+                    .iter()
+                    .any(|write| matches!(write, WriteLoc::Uninitialized(_))) =>
+            {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EBindingError(Box::new((
+                        BindingError::EReferencedBeforeDeclaration,
+                        loc.dupe(),
+                        Name::new(name.dupe()),
+                        def_loc.dupe(),
+                    ))),
+                );
+                Ok(any_t::at(AnySource::AnyError(None), loc))
+            }
+            (
+                ValKind::TypeParam,
+                Some(name),
+                Some(def_loc),
+                LookupMode::ForValue | LookupMode::ForTypeof,
+            ) => {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EBindingError(Box::new((
+                        BindingError::ETypeInValuePosition {
+                            imported: false,
+                            type_only_namespace: false,
+                            name: name.dupe(),
+                        },
+                        loc.dupe(),
+                        Name::new(name.dupe()),
+                        def_loc.dupe(),
+                    ))),
+                );
+                Ok(any_t::at(AnySource::AnyError(None), loc))
+            }
             (
                 ValKind::Type {
                     imported,

@@ -932,9 +932,24 @@ fn try_method_bivariant<'cx>(
                     && matches!(inner2.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::FunT(_, _)))
                     && ps1.len() == ps2.len() =>
             {
-                let mut map1 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
-                let mut map2 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+                let (map1, generics) = flow_js_utils::mk_tparams(cx, ps1);
+                let map2 = ps2.iter().zip(generics).fold(
+                    flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
+                    |mut map, (param, generic)| {
+                        map.insert(param.name.dupe(), generic);
+                        map
+                    },
+                );
                 for (p1, p2) in ps1.iter().zip(ps2.iter()) {
+                    let bound1 = flow_typing_flow_common::type_subst::subst(
+                        cx,
+                        Some(use_op.dupe()),
+                        true,
+                        false,
+                        flow_typing_flow_common::type_subst::Purpose::Normal,
+                        &map1,
+                        p1.bound.dupe(),
+                    );
                     let bound2 = flow_typing_flow_common::type_subst::subst(
                         cx,
                         Some(use_op.dupe()),
@@ -948,7 +963,7 @@ fn try_method_bivariant<'cx>(
                         cx,
                         trace,
                         &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), p1.bound.dupe())),
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
                     )?;
                     if p1.is_const != p2.is_const {
                         flow_js_utils::add_output(
@@ -962,9 +977,6 @@ fn try_method_bivariant<'cx>(
                             )),
                         )?;
                     }
-                    let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, p1);
-                    map1 = new_map1;
-                    map2.insert(p2.name.dupe(), gen_t);
                 }
                 // Substitution preserves the outer DefT/FunT constructor (the pattern
                 // guard above requires t_out is FunT, and Type_subst only rewrites
@@ -4348,9 +4360,24 @@ pub fn rec_sub_t<'cx>(
                 // bi[ai, ..., a_(i-1)] <: bi'[ai'/ai, ..., a_(i-1)'/a_(i-1)]
                 //
                 // where ai is a GenericT
-                let mut map1 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
-                let mut map2 = flow_data_structure_wrapper::ord_map::FlowOrdMap::new();
+                let (map1, generics) = flow_js_utils::mk_tparams(cx, params1);
+                let map2 = params2.iter().zip(generics).fold(
+                    flow_data_structure_wrapper::ord_map::FlowOrdMap::new(),
+                    |mut map, (param, generic)| {
+                        map.insert(param.name.dupe(), generic);
+                        map
+                    },
+                );
                 for (param1, param2) in params1.iter().zip(params2.iter()) {
+                    let bound1 = flow_typing_flow_common::type_subst::subst(
+                        cx,
+                        Some(use_op.dupe()),
+                        true,
+                        false,
+                        flow_typing_flow_common::type_subst::Purpose::Normal,
+                        &map1,
+                        param1.bound.dupe(),
+                    );
                     let bound2 = flow_typing_flow_common::type_subst::subst(
                         cx,
                         Some(use_op.dupe()),
@@ -4364,7 +4391,7 @@ pub fn rec_sub_t<'cx>(
                         cx,
                         trace,
                         &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), param1.bound.dupe())),
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
                     )?;
                     if param1.is_const != param2.is_const {
                         flow_js_utils::add_output(
@@ -4378,9 +4405,6 @@ pub fn rec_sub_t<'cx>(
                             )),
                         )?;
                     }
-                    let (gen_t, new_map1) = flow_js_utils::generic_bound(cx, map1, param1);
-                    map1 = new_map1;
-                    map2.insert(param2.name.dupe(), gen_t);
                 }
                 // 2nd Premise
                 // -----------

@@ -970,6 +970,7 @@ dependencies = [
  "flow_data_structure_wrapper",
  "flow_env_builder",
  "flow_parser",
+ "flow_parser_utils",
  "flow_typing_errors",
  "vec1",
 ]
@@ -1201,6 +1202,7 @@ dependencies = [
  "flow_aloc",
  "flow_analysis",
  "flow_common",
+ "flow_common_tarjan",
  "flow_data_structure_wrapper",
  "flow_parser",
  "flow_parser_utils_output",

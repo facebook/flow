@@ -46,23 +46,12 @@ References:
                               ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- method_shadow.js:42:5
+Error ------------------------------------------------------------------------------------------- method_shadow.js:37:15
 
-Cannot call `g.m` because in type argument `T`: [incompatible-type]
- - Either `boolean` [1] is incompatible with `number` [2].
- - Or `boolean` [1] is incompatible with `string` [3].
+Invalid trivially recursive definition of `T`.  [recursive-definition]
 
-   method_shadow.js:42:5
-   42| g.m(true); // err, boolean ~> number|string
-           ^^^^ [1]
-
-References:
-   method_shadow.js:40:20
-   40| declare const g: G<number|string>;
-                          ^^^^^^ [2]
-   method_shadow.js:40:27
-   40| declare const g: G<number|string>;
-                                 ^^^^^^ [3]
+   37|   m<T extends T>(x:T):G<T> { return new G(x) } // error: method T shadows G's T, so the bound is circular
+                     ^
 
 
 Error -------------------------------------------------------------------------------------------- method_shadow.js:43:5

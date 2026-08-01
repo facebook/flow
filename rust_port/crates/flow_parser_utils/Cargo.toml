@@ -14,6 +14,7 @@ dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
 flow_analysis = { path = "../flow_analysis" }
 flow_common = { path = "../flow_common" }
+flow_common_tarjan = { path = "../flow_common_tarjan" }
 flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
 regex = "1.13.1"

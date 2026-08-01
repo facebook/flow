@@ -1,0 +1,450 @@
+Error ------------------------------------------------------------------------------------------------ consumer.js:15:17
+
+Cannot call `exportedForward` because in type argument `A`: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   consumer.js:15:17
+   15| exportedForward<string, number>("bad", 0); // ERROR: string does not satisfy number
+                       ^^^^^^ [1]
+
+References:
+   consumer.js:15:25
+   15| exportedForward<string, number>("bad", 0); // ERROR: string does not satisfy number
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:18:31
+
+Cannot instantiate `ExportedChain` because in type argument `A`: `"bad"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   consumer.js:18:31
+   18| const badChain: ExportedChain<"bad", number, number> = ["bad", 2, 3]; // ERROR: "bad" does not satisfy number
+                                     ^^^^^ [1]
+
+References:
+   consumer.js:18:46
+   18| const badChain: ExportedChain<"bad", number, number> = ["bad", 2, 3]; // ERROR: "bad" does not satisfy number
+                                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:22:33
+
+Cannot instantiate `ExportedShadow` because in type argument `A`: `number` [1] is incompatible with `() => A` [2].
+[incompatible-type]
+
+   consumer.js:22:33
+   22| const badShadow: ExportedShadow<number> = 1; // ERROR: number does not satisfy the function bound
+                                       ^^^^^^ [1]
+
+References:
+   exporter.js:9:38
+    9| export type ExportedShadow<A extends <A>() => A> = A; // OK: A inside the bound is a fresh binder, not a ref of the outer A
+                                            ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:24:34
+
+Cannot instantiate `ExportedNestedBadCheckedDefault` because in type argument `A`: `() => any` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   consumer.js:24:34
+   24| const recoveredNestedBadDefault: ExportedNestedBadCheckedDefault<> = [true, "ok"]; // ERROR: default remains a function
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exporter.js:11:64
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                      ^^^^^^^^^^ [1]
+   exporter.js:11:55
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:24:71
+
+Cannot assign array literal to `recoveredNestedBadDefault` because in index `0`: `true` [1] is incompatible with
+`() => any` [2]. [incompatible-type]
+
+   consumer.js:24:71
+   24| const recoveredNestedBadDefault: ExportedNestedBadCheckedDefault<> = [true, "ok"]; // ERROR: default remains a function
+                                                                             ^^^^ [1]
+
+References:
+   exporter.js:11:64
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                      ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exporter.js:7:51
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   exporter.js:7:51
+   7| export type ExportedBadDefault<A extends number = B, B = string> = [A, B]; // ERROR: default forward reference
+                                                        ^
+
+References:
+   exporter.js:7:54
+   7| export type ExportedBadDefault<A extends number = B, B = string> = [A, B]; // ERROR: default forward reference
+                                                           ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ exporter.js:11:64
+
+`() => any` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   exporter.js:11:64
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                      ^^^^^^^^^^ [1]
+
+References:
+   exporter.js:11:55
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ exporter.js:11:73
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   exporter.js:11:73
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                               ^
+
+References:
+   exporter.js:11:76
+   11| export type ExportedNestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                                  ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ exporter.js:13:50
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   13| export type ExportedCycle<A extends B, B extends A> = [A, B]; // ERROR: circular bounds
+                                                        ^
+
+
+Error ------------------------------------------------------------------------------------------------ exporter.js:15:69
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   15| export type ExportedNestedCycle<A extends Array<B>, B extends Array<A>> = [A, B]; // ERROR: nested circular bounds
+                                                                           ^
+
+
+Error ------------------------------------------------------------------------------------------------ exporter.js:17:49
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   17| export type ExportedMixedCycle<A extends B, B = A> = [A, B]; // ERROR: bound/default cycle
+                                                       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- local.js:6:9
+
+Cannot call `forward` because in type argument `A`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:6:9
+   6| forward<string, number>("bad", 0); // ERROR: string does not satisfy number
+              ^^^^^^ [1]
+
+References:
+   local.js:6:17
+   6| forward<string, number>("bad", 0); // ERROR: string does not satisfy number
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:11:7
+
+Cannot call `chain` because in type argument `A`: `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:11:7
+   11| chain<string, number, number>("bad", 2, 3); // ERROR: string does not satisfy number
+             ^^^^^^ [1]
+
+References:
+   local.js:11:23
+   11| chain<string, number, number>("bad", 2, 3); // ERROR: string does not satisfy number
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:13:29
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   13| type Mixed<A extends B, B = A> = [A, B]; // ERROR: bound/default cycle
+                                   ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:16:21
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   local.js:16:21
+   16| type BadDefault<A = B, B = string> = [A, B]; // ERROR: default forward reference
+                           ^
+
+References:
+   local.js:16:24
+   16| type BadDefault<A = B, B = string> = [A, B]; // ERROR: default forward reference
+                              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:17:22
+
+Cannot use variable `A` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   local.js:17:22
+   17| type SelfDefault<A = A> = A; // ERROR: default self reference
+                            ^
+
+References:
+   local.js:17:18
+   17| type SelfDefault<A = A> = A; // ERROR: default self reference
+                        ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:18:43
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   local.js:18:43
+   18| type BadCheckedDefault<A extends number = B, B = string> = [A, B]; // ERROR: ignore invalid default instead of checking it against number
+                                                 ^
+
+References:
+   local.js:18:46
+   18| type BadCheckedDefault<A extends number = B, B = string> = [A, B]; // ERROR: ignore invalid default instead of checking it against number
+                                                    ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:19:49
+
+`() => any` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:19:49
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                       ^^^^^^^^^^ [1]
+
+References:
+   local.js:19:40
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:19:58
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   local.js:19:58
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                ^
+
+References:
+   local.js:19:61
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                                   ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:20:34
+
+Cannot instantiate `NestedBadCheckedDefault` because in type argument `A`: `() => any` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   local.js:20:34
+   20| const recoveredNestedBadDefault: NestedBadCheckedDefault<> = [true, "ok"]; // ERROR: default remains a function
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   local.js:19:49
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                       ^^^^^^^^^^ [1]
+   local.js:19:40
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:20:63
+
+Cannot assign array literal to `recoveredNestedBadDefault` because in index `0`: `true` [1] is incompatible with
+`() => any` [2]. [incompatible-type]
+
+   local.js:20:63
+   20| const recoveredNestedBadDefault: NestedBadCheckedDefault<> = [true, "ok"]; // ERROR: default remains a function
+                                                                     ^^^^ [1]
+
+References:
+   local.js:19:49
+   19| type NestedBadCheckedDefault<A extends number = <X>() => B, B = string> = [A, B]; // ERRORS: invalid default and forward reference
+                                                       ^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:21:22
+
+Cannot use variable `B` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   local.js:21:22
+   21| type Outer<B> = <A = B, B = string>() => [A, B]; // ERROR: future B shadows outer B
+                            ^
+
+References:
+   local.js:21:25
+   21| type Outer<B> = <A = B, B = string>() => [A, B]; // ERROR: future B shadows outer B
+                               ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:24:25
+
+Cannot instantiate `Shadow` because in type argument `A`: `number` [1] is incompatible with `() => A` [2].
+[incompatible-type]
+
+   local.js:24:25
+   24| const badShadow: Shadow<number> = 1; // ERROR: number does not satisfy the function bound
+                               ^^^^^^ [1]
+
+References:
+   local.js:23:23
+   23| type Shadow<A extends <A>() => A> = A; // OK: A inside the bound is a fresh binder, not a self reference
+                             ^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:28:35
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   28| type Cycle<A extends B, B extends A> = [A, B]; // ERROR: circular bounds
+                                         ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:29:31
+
+Cannot instantiate `Cycle` because in type argument `B`: `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   local.js:29:31
+   29| const badCycle: Cycle<number, string> = [1, "bad"]; // ERROR: number does not satisfy string
+                                     ^^^^^^ [1]
+
+References:
+   local.js:29:23
+   29| const badCycle: Cycle<number, string> = [1, "bad"]; // ERROR: number does not satisfy string
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:31:26
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   31| type SelfBound<A extends A> = A; // ERROR: circular bound
+                                ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:33:54
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   33| type NestedCycle<A extends Array<B>, B extends Array<A>> = [A, B]; // ERROR: nested circular bounds
+                                                            ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:35:38
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   35| type NestedSelfBound<A extends Array<A>> = A; // ERROR: nested circular bound
+                                            ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:39:13
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   39|   B extends A & C, // ERROR: every member is recovered, one cycle diagnostic
+                   ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:47:13
+
+Invalid trivially recursive definition of `A`.  [recursive-definition]
+
+   47|   B extends A, // ERROR: first circular bound
+                   ^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:49:13
+
+Invalid trivially recursive definition of `C`.  [recursive-definition]
+
+   49|   D extends C, // ERROR: second, independent circular bound
+                   ^
+
+
+Error ------------------------------------------------------------------------------------------------- merging.js:18:31
+
+Cannot instantiate `Merged` because in type argument `A`: `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   merging.js:18:31
+   18| declare var badMerged: Merged<number, string>; // ERROR: `number` does not satisfy the merged forward bound `A extends B`
+                                     ^^^^^^ [1]
+
+References:
+   merging.js:18:39
+   18| declare var badMerged: Merged<number, string>; // ERROR: `number` does not satisfy the merged forward bound `A extends B`
+                                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- name_capture.js:12:1
+
+Cannot cast `capture(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   name_capture.js:12:1
+   12| capture('') as string; // ERROR: B is number, not string
+       ^^^^^^^^^^^
+
+References:
+   name_capture.js:10:30
+   10| declare var capture: Capture<number>; // OK
+                                    ^^^^^^ [1]
+   name_capture.js:12:16
+   12| capture('') as string; // ERROR: B is number, not string
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- subtyping.js:22:57
+
+Cannot assign `polyBounded` to `looserTarget` because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   subtyping.js:22:57
+   22| const looserTarget: <A extends B, B>(a: A, b: B) => A = polyBounded; // ERROR: source only accepts `B extends string`, target promises any B
+                                                               ^^^^^^^^^^^
+
+References:
+   subtyping.js:22:35
+   22| const looserTarget: <A extends B, B>(a: A, b: B) => A = polyBounded; // ERROR: source only accepts `B extends string`, target promises any B
+                                         ^ [1]
+   subtyping.js:17:50
+   17| declare var polyBounded: <A extends B, B extends string>(a: A, b: B) => A;
+                                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- variance.js:9:39
+
+Cannot use `A` [1] in an input position because `A` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   variance.js:9:39
+   9| type CovBad<out A extends B, B> = (a: A) => B; // ERROR: `A` is covariant but used in an input position
+                                            ^
+
+References:
+   variance.js:9:17
+   9| type CovBad<out A extends B, B> = (a: A) => B; // ERROR: `A` is covariant but used in an input position
+                      ^ [1]
+
+
+
+Found 35 errors
