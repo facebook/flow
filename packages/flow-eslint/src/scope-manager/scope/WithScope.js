@@ -18,7 +18,7 @@ import {ScopeBase} from './ScopeBase';
 import {ScopeType} from './ScopeType';
 
 class WithScope extends ScopeBase<typeof ScopeType.With, WithStatement, Scope> {
-  declare +type: typeof ScopeType.With;
+  declare readonly type: typeof ScopeType.With;
 
   constructor(
     scopeManager: ScopeManager,

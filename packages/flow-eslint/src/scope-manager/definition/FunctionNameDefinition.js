@@ -26,14 +26,14 @@ class FunctionNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.FunctionName;
+  declare readonly type: typeof DefinitionType.FunctionName;
 
   constructor(name: Identifier, node: FunctionNameDefinition['node']) {
     super(DefinitionType.FunctionName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {FunctionNameDefinition};

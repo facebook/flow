@@ -19,7 +19,7 @@ import {ScopeType} from './ScopeType';
 import {DefinitionType} from '../definition/DefinitionType';
 
 class ModuleScope extends ScopeBase<typeof ScopeType.Module, Program, Scope> {
-  declare +type: typeof ScopeType.Module;
+  declare readonly type: typeof ScopeType.Module;
 
   constructor(
     scopeManager: ScopeManager,

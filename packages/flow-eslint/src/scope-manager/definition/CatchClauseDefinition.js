@@ -21,14 +21,14 @@ class CatchClauseDefinition extends DefinitionBase<
   null,
   BindingName,
 > {
-  declare +type: typeof DefinitionType.CatchClause;
+  declare readonly type: typeof DefinitionType.CatchClause;
 
   constructor(name: BindingName, node: CatchClauseDefinition['node']) {
     super(DefinitionType.CatchClause, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {CatchClauseDefinition};

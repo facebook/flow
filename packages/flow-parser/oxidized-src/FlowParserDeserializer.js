@@ -46,20 +46,20 @@ export type FlowParserProgram = {
 export default class FlowParserDeserializer {
   programBufferIdx: number;
   positionBufferIdx: number;
-  +positionBufferSize: number;
-  +stringBufferBase: number;
-  +locMap: {[number]: HermesSourceLocation};
-  +HEAPU8: FlowParserWASM['HEAPU8'];
-  +HEAPU32: FlowParserWASM['HEAPU32'];
-  +HEAPF64: FlowParserWASM['HEAPF64'];
-  +options: ParserOptions;
+  readonly positionBufferSize: number;
+  readonly stringBufferBase: number;
+  readonly locMap: {[number]: HermesSourceLocation};
+  readonly HEAPU8: FlowParserWASM['HEAPU8'];
+  readonly HEAPU32: FlowParserWASM['HEAPU32'];
+  readonly HEAPF64: FlowParserWASM['HEAPF64'];
+  readonly options: ParserOptions;
 
   // Comment types: Flow uses ESTree-standard names
   // Matches CommentKind enum in ast.rs: Block = 0, Line = 1
-  +commentTypes: ReadonlyArray<FlowComment['type']> = ['Block', 'Line'];
+  readonly commentTypes: ReadonlyArray<FlowComment['type']> = ['Block', 'Line'];
 
   // Matches TokenType enum (same as Hermes for compatibility)
-  +tokenTypes: ReadonlyArray<HermesToken['type']> = [
+  readonly tokenTypes: ReadonlyArray<HermesToken['type']> = [
     'Boolean',
     'Identifier',
     'Keyword',

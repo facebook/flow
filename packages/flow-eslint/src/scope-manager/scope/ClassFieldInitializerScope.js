@@ -23,7 +23,7 @@ class ClassFieldInitializerScope extends ScopeBase<
   Expression,
   ClassScope,
 > {
-  declare +type: typeof ScopeType.ClassFieldInitializer;
+  declare readonly type: typeof ScopeType.ClassFieldInitializer;
 
   constructor(
     scopeManager: ScopeManager,

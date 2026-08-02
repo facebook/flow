@@ -26,14 +26,14 @@ class ClassNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.ClassName;
+  declare readonly type: typeof DefinitionType.ClassName;
 
   constructor(name: Identifier, node: ClassNameDefinition['node']) {
     super(DefinitionType.ClassName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {ClassNameDefinition};

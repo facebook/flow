@@ -60,12 +60,12 @@ type PatternVisitorOptions = VisitorOptions;
 class PatternVisitor extends VisitorBase {
   static isPattern: typeof isPattern = isPattern;
 
-  +_rootPattern: ESNode;
-  +_identifierCallback: PatternVisitorIdentifierCallback;
-  +_typeAnnotationCallback: PatternVisitorTypeAnnotationCallback;
-  +_assignments: Array<AssignmentPattern | AssignmentExpression> = [];
-  +rightHandNodes: Array<ESNode> = [];
-  +_restElements: Array<RestElement> = [];
+  readonly _rootPattern: ESNode;
+  readonly _identifierCallback: PatternVisitorIdentifierCallback;
+  readonly _typeAnnotationCallback: PatternVisitorTypeAnnotationCallback;
+  readonly _assignments: Array<AssignmentPattern | AssignmentExpression> = [];
+  readonly rightHandNodes: Array<ESNode> = [];
+  readonly _restElements: Array<RestElement> = [];
 
   constructor(
     options: PatternVisitorOptions,

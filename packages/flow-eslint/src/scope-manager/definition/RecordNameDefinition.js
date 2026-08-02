@@ -21,14 +21,14 @@ class RecordNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.RecordName;
+  declare readonly type: typeof DefinitionType.RecordName;
 
   constructor(name: Identifier, node: RecordNameDefinition['node']) {
     super(DefinitionType.RecordName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {RecordNameDefinition};

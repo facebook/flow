@@ -110,11 +110,22 @@ node "$THIS_DIR/genFlowWasmParser.js" "$WASM_PARSER"
 # parser override still disabled (SKIP_HERMES_PARSER_OVERRIDE is set above).
 # After this loop their dist/index.js files are valid plain JS, so the
 # override can be re-enabled for the remaining packages.
+#
+# `flow-remove-types` runs ahead of Babel here because stock `@babel/parser`
+# does not understand every Flow syntax form these sources use (`readonly`
+# variance, `as` casts). Stripping first keeps the bootstrap free of any
+# dependency on the not-yet-built parser plugin.
 for package in "${BOOTSTRAP_PACKAGES[@]}"; do
   PACKAGE_DIST_DIR="$(package_dist_dir "$package")"
   if [[ ! -d "$PACKAGE_DIST_DIR" ]]; then
     continue
   fi
+  find "$PACKAGE_DIST_DIR" -type f -name "*.js" | while read -r file; do
+    yarn flow-remove-types --quiet --pretty --remove-empty-imports \
+      --out-file "$file.stripped" \
+      "$file"
+    mv "$file.stripped" "$file"
+  done
   BABEL_IGNORE_ARGS=()
   if [[ "$package" == "flow-parser" ]]; then
     BABEL_IGNORE_ARGS=(

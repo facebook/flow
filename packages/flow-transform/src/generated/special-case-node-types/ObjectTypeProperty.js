@@ -23,16 +23,16 @@ import {
 } from '../../detachedNode';
 
 export type ObjectTypeMethodSignatureProps = {
-  +key: MaybeDetachedNode<ObjectTypeMethodSignatureType['key']>,
-  +value: MaybeDetachedNode<ObjectTypeMethodSignatureType['value']>,
+  readonly key: MaybeDetachedNode<ObjectTypeMethodSignatureType['key']>,
+  readonly value: MaybeDetachedNode<ObjectTypeMethodSignatureType['value']>,
 
   // optional because they only apply to the class decl case
-  +static?: ObjectTypeMethodSignatureType['static'],
-  +proto?: ObjectTypeMethodSignatureType['proto'],
+  readonly static?: ObjectTypeMethodSignatureType['static'],
+  readonly proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypeMethodSignature(props: {
   ...Readonly<ObjectTypeMethodSignatureProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeMethodSignatureType> {
   const node = detachedProps<ObjectTypeMethodSignatureType>(props.parent, {
     type: 'ObjectTypeProperty',
@@ -50,18 +50,20 @@ export function ObjectTypeMethodSignature(props: {
 }
 
 export type ObjectTypePropertySignatureProps = {
-  +key: MaybeDetachedNode<ObjectTypePropertySignatureType['key']>,
-  +value: MaybeDetachedNode<ObjectTypePropertySignatureType['value']>,
-  +optional: ObjectTypePropertySignatureType['optional'],
-  +variance?: ?MaybeDetachedNode<ObjectTypePropertySignatureType['variance']>,
+  readonly key: MaybeDetachedNode<ObjectTypePropertySignatureType['key']>,
+  readonly value: MaybeDetachedNode<ObjectTypePropertySignatureType['value']>,
+  readonly optional: ObjectTypePropertySignatureType['optional'],
+  readonly variance?: ?MaybeDetachedNode<
+    ObjectTypePropertySignatureType['variance'],
+  >,
 
   // optional because they only apply to the class decl case
-  +static?: ObjectTypeMethodSignatureType['static'],
-  +proto?: ObjectTypeMethodSignatureType['proto'],
+  readonly static?: ObjectTypeMethodSignatureType['static'],
+  readonly proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypePropertySignature(props: {
   ...Readonly<ObjectTypePropertySignatureProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypePropertySignatureType> {
   const node = detachedProps<ObjectTypePropertySignatureType>(props.parent, {
     type: 'ObjectTypeProperty',
@@ -80,17 +82,17 @@ export function ObjectTypePropertySignature(props: {
 }
 
 export type ObjectTypeAccessorSignatureProps = {
-  +key: MaybeDetachedNode<ObjectTypeAccessorSignatureType['key']>,
-  +value: MaybeDetachedNode<ObjectTypeAccessorSignatureType['value']>,
-  +kind: ObjectTypeAccessorSignatureType['kind'],
+  readonly key: MaybeDetachedNode<ObjectTypeAccessorSignatureType['key']>,
+  readonly value: MaybeDetachedNode<ObjectTypeAccessorSignatureType['value']>,
+  readonly kind: ObjectTypeAccessorSignatureType['kind'],
 
   // optional because they only apply to the class decl case
-  +static?: ObjectTypeMethodSignatureType['static'],
-  +proto?: ObjectTypeMethodSignatureType['proto'],
+  readonly static?: ObjectTypeMethodSignatureType['static'],
+  readonly proto?: ObjectTypeMethodSignatureType['proto'],
 };
 export function ObjectTypeAccessorSignature(props: {
   ...Readonly<ObjectTypeAccessorSignatureProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeAccessorSignatureType> {
   const node = detachedProps<ObjectTypeAccessorSignatureType>(props.parent, {
     type: 'ObjectTypeProperty',

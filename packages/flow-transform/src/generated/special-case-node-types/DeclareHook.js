@@ -25,12 +25,12 @@ import {
 // which is super awkward to work with and type - so we flatten the input
 // and put it in the right spot after
 export type DeclareHookProps = {
-  +name: string,
-  +functionType: MaybeDetachedNode<HookTypeAnnotationType>,
+  readonly name: string,
+  readonly functionType: MaybeDetachedNode<HookTypeAnnotationType>,
 };
 export function DeclareHook(props: {
   ...Readonly<DeclareHookProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareHookType> {
   const node = detachedProps<DeclareHookType>(props.parent, {
     type: 'DeclareHook',

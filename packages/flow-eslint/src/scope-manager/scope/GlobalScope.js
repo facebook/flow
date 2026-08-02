@@ -28,11 +28,11 @@ class GlobalScope extends ScopeBase<
    */
   null,
 > {
-  declare +type: typeof ScopeType.Global;
+  declare readonly type: typeof ScopeType.Global;
 
   // note this is accessed in used in the legacy eslint-scope tests, so it can't be true private
-  +__implicit: {
-    +set: Map<string, Variable>,
+  readonly __implicit: {
+    readonly set: Map<string, Variable>,
     variables: Array<Variable>,
     /**
      * List of {@link Reference}s that are left to be resolved (i.e. which

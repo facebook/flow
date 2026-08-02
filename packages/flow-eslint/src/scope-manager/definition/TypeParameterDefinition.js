@@ -21,7 +21,7 @@ class TypeParameterDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.TypeParameter;
+  declare readonly type: typeof DefinitionType.TypeParameter;
 
   constructor(node: TypeParameterDefinition['node']) {
     // The ScopeManager API expects an Identifier node that can be referenced
@@ -40,8 +40,8 @@ class TypeParameterDefinition extends DefinitionBase<
     super(DefinitionType.TypeParameter, id, node, null);
   }
 
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean = false;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean = false;
 }
 
 export {TypeParameterDefinition};

@@ -20,7 +20,7 @@ export type ESQueryNodeSelectors = {
   // 'FunctionDeclaration[id="foo"]'(node: FunctionDeclaration) {...}
   // But this sucks as it means someone would then have to manually do an \`if\`
   // check inside the selector body.
-  +[selector: string]: (node: $FlowFixMe) => void,
+  readonly [selector: string]: (node: $FlowFixMe) => void,
 };
 
 export type {ESQueryNodeSelectorsWithoutFallback} from './generated/HermesESTreeSelectorTypes';

@@ -22,7 +22,7 @@ class ClassScope extends ScopeBase<
   ClassDeclaration | ClassExpression,
   Scope,
 > {
-  declare +type: typeof ScopeType.Class;
+  declare readonly type: typeof ScopeType.Class;
 
   constructor(
     scopeManager: ScopeManager,

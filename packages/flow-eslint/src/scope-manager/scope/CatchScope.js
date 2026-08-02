@@ -18,7 +18,7 @@ import {ScopeBase} from './ScopeBase';
 import {ScopeType} from './ScopeType';
 
 class CatchScope extends ScopeBase<typeof ScopeType.Catch, CatchClause, Scope> {
-  declare +type: typeof ScopeType.Catch;
+  declare readonly type: typeof ScopeType.Catch;
 
   constructor(
     scopeManager: ScopeManager,

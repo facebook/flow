@@ -15,10 +15,10 @@ import {NodeIsDeletedError, NodeIsMutatedError} from './Errors';
 import {appendCommentToSource} from './comments/comments';
 
 export class MutationContext {
-  +_deletedNodes: Set<ESNode> = new Set();
-  +_mutatedKeys: Map<ESNode, Set<string>> = new Map();
+  readonly _deletedNodes: Set<ESNode> = new Set();
+  readonly _mutatedKeys: Map<ESNode, Set<string>> = new Map();
   // TODO - do we care about this? Arrays are pretty safe to concurrently mutate
-  +_mutatedArrays: Map<ESNode, Set<string>> = new Map();
+  readonly _mutatedArrays: Map<ESNode, Set<string>> = new Map();
 
   code: string;
 

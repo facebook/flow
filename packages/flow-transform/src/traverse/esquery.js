@@ -151,23 +151,23 @@ export type ESQueryOptions = Readonly<{
 }>;
 
 /** Parse a selector and return its AST. */
-export const parse: (selector: string) => Selector = esquery.parse;
+export const parse = esquery.parse as (selector: string) => Selector;
 /** From a JS AST and a selector AST, collect all JS AST nodes that match the selector. */
-export const match: (
+export const match = esquery.match as (
   ast: ESNode,
   selector: ?Selector,
   options?: ESQueryOptions,
-) => Array<ESNode> = esquery.match;
+) => Array<ESNode>;
 /** Given a `node` and its ancestors, determine if `node` is matched by `selector`. */
-export const matches: (
+export const matches = esquery.matches as (
   node: ?ESNode,
   selector: ?Selector,
   ancestry?: Array<ESNode>,
   options?: ESQueryOptions,
-) => boolean = esquery.matches;
+) => boolean;
 /** Query the code AST using the selector string. */
-export const query: (
+export const query = esquery.query as (
   ast: ESNode,
   selector: string,
   options?: ESQueryOptions,
-) => Array<ESNode> = esquery.query;
+) => Array<ESNode>;

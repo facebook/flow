@@ -21,14 +21,14 @@ class NamespaceNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.NamespaceName;
+  declare readonly type: typeof DefinitionType.NamespaceName;
 
   constructor(name: Identifier, node: NamespaceNameDefinition['node']) {
     super(DefinitionType.NamespaceName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {NamespaceNameDefinition};

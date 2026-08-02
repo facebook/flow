@@ -21,7 +21,7 @@ class ImplicitGlobalVariableDefinition extends DefinitionBase<
   null,
   BindingName,
 > {
-  declare +type: typeof DefinitionType.ImplicitGlobalVariable;
+  declare readonly type: typeof DefinitionType.ImplicitGlobalVariable;
 
   constructor(
     name: BindingName,
@@ -30,8 +30,8 @@ class ImplicitGlobalVariableDefinition extends DefinitionBase<
     super(DefinitionType.ImplicitGlobalVariable, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {ImplicitGlobalVariableDefinition};

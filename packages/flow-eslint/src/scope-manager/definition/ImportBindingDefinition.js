@@ -27,7 +27,7 @@ class ImportBindingDefinition extends DefinitionBase<
   ImportDeclaration,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.ImportBinding;
+  declare readonly type: typeof DefinitionType.ImportBinding;
 
   constructor(
     name: Identifier,
@@ -67,8 +67,8 @@ class ImportBindingDefinition extends DefinitionBase<
   // not they have a "type" kind. You can import classes and enums as values
   // and use them in type locations. Additionally namespace imports can be
   // used in a type location (eg React.MixedElement).
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean;
 }
 
 export {ImportBindingDefinition};

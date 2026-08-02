@@ -22,7 +22,7 @@ class BlockScope extends ScopeBase<
   BlockStatement,
   Scope,
 > {
-  declare +type: typeof ScopeType.Block;
+  declare readonly type: typeof ScopeType.Block;
 
   constructor(
     scopeManager: ScopeManager,

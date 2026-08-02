@@ -22,7 +22,7 @@ class RecordScope extends ScopeBase<
   RecordDeclaration,
   Scope,
 > {
-  declare +type: typeof ScopeType.Record;
+  declare readonly type: typeof ScopeType.Record;
 
   constructor(
     scopeManager: ScopeManager,

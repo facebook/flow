@@ -24,7 +24,7 @@ class HookScope extends ScopeBase<
   HookDeclaration,
   Scope,
 > {
-  declare +type: typeof ScopeType.Hook;
+  declare readonly type: typeof ScopeType.Hook;
 
   constructor(
     scopeManager: ScopeManager,

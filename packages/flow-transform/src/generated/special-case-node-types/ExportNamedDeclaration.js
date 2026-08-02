@@ -22,14 +22,14 @@ import {
 } from '../../detachedNode';
 
 export type ExportNamedDeclarationWithDeclarationProps = {
-  +declaration?: ?MaybeDetachedNode<
+  readonly declaration?: ?MaybeDetachedNode<
     ExportNamedDeclarationWithDeclarationType['declaration'],
   >,
-  +exportKind: ExportNamedDeclarationWithDeclarationType['exportKind'],
+  readonly exportKind: ExportNamedDeclarationWithDeclarationType['exportKind'],
 };
 export function ExportNamedDeclarationWithDeclaration(props: {
   ...Readonly<ExportNamedDeclarationWithDeclarationProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExportNamedDeclarationWithDeclarationType> {
   const node = detachedProps<ExportNamedDeclarationWithDeclarationType>(
     props.parent,
@@ -47,19 +47,19 @@ export function ExportNamedDeclarationWithDeclaration(props: {
 }
 
 export type ExportNamedDeclarationWithSpecifiersProps = {
-  +specifiers: ReadonlyArray<
+  readonly specifiers: ReadonlyArray<
     MaybeDetachedNode<
       ExportNamedDeclarationWithSpecifiersType['specifiers'][number],
     >,
   >,
-  +source?: ?MaybeDetachedNode<
+  readonly source?: ?MaybeDetachedNode<
     ExportNamedDeclarationWithSpecifiersType['source'],
   >,
-  +exportKind: ExportNamedDeclarationWithSpecifiersType['exportKind'],
+  readonly exportKind: ExportNamedDeclarationWithSpecifiersType['exportKind'],
 };
 export function ExportNamedDeclarationWithSpecifiers(props: {
   ...Readonly<ExportNamedDeclarationWithSpecifiersProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExportNamedDeclarationWithSpecifiersType> {
   const node = detachedProps<ExportNamedDeclarationWithSpecifiersType>(
     props.parent,

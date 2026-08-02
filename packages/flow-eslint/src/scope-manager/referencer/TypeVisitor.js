@@ -59,7 +59,7 @@ import {
 } from '../definition';
 
 class TypeVisitor extends Visitor {
-  +_referencer: Referencer;
+  readonly _referencer: Referencer;
 
   constructor(referencer: Referencer) {
     super(referencer);

@@ -14,8 +14,8 @@ const genPrefix = '$$gen$';
 
 export default class GenID {
   genN: number = 0;
-  +used: Set<string> = new Set();
-  +prefix: string;
+  readonly used: Set<string> = new Set();
+  readonly prefix: string;
 
   constructor(uniqueTransformPrefix: string) {
     this.prefix = `${genPrefix}${uniqueTransformPrefix}`;

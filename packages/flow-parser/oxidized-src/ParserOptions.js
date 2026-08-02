@@ -31,9 +31,9 @@ export type ParserOptions = {
   throwOnParseErrors?: boolean,
   tokens?: boolean,
   transformOptions?: {
-    +TransformEnumSyntax?: {
-      +enable: boolean,
-      +getRuntime?: () => Expression,
+    readonly TransformEnumSyntax?: {
+      readonly enable: boolean,
+      readonly getRuntime?: () => Expression,
     },
   },
 };

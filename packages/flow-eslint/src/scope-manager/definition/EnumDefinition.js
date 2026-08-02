@@ -21,14 +21,14 @@ class EnumDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.Enum;
+  declare readonly type: typeof DefinitionType.Enum;
 
   constructor(name: Identifier, node: EnumDefinition['node']) {
     super(DefinitionType.Enum, name, node, null);
   }
 
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {EnumDefinition};

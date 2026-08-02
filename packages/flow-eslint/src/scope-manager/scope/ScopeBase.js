@@ -141,30 +141,30 @@ type VariableScope =
   | DeclareNamespaceScope;
 
 /* abstract */ class ScopeBase<
-  +TType: ScopeTypeType,
-  +TBlock: ESNode,
-  +TUpper: Scope | null,
+  out TType extends ScopeTypeType,
+  out TBlock extends ESNode,
+  out TUpper extends Scope | null,
 > {
   /**
    * A unique ID for this instance - primarily used to help debugging and testing
    */
-  +$id: number = generator();
+  readonly $id: number = generator();
 
   /**
    * The AST node which created this scope.
    * @public
    */
-  +block: TBlock;
+  readonly block: TBlock;
   /**
    * The array of child scopes. This does not include grandchild scopes.
    * @public
    */
-  +childScopes: Array<Scope> = [];
+  readonly childScopes: Array<Scope> = [];
   /**
    * A map of the variables for each node in this scope.
    * This is map is a pointer to the one in the parent ScopeManager instance
    */
-  +__declaredVariables: WeakMap<ESNode, Array<Variable>>;
+  readonly __declaredVariables: WeakMap<ESNode, Array<Variable>>;
   /**
    * Generally, through the lexical scoping of JS you can always know which variable an identifier in the source code
    * refers to. There are a few exceptions to this rule. With `global` and `with` scopes you can only decide at runtime
@@ -176,7 +176,7 @@ type VariableScope =
    * Whether this scope is created by a FunctionExpression.
    * @public
    */
-  +functionExpressionScope: boolean = false;
+  readonly functionExpressionScope: boolean = false;
   /**
    * Whether 'use strict' is in effect in this scope.
    * @public
@@ -194,12 +194,12 @@ type VariableScope =
    * In a 'function' scope this does not include the occurrences of the formal parameter in the parameter list.
    * @public
    */
-  +references: Array<Reference> = [];
+  readonly references: Array<Reference> = [];
   /**
    * The map from variable names to variable objects.
    * @public
    */
-  +set: Map<string, Variable> = new Map<string, Variable>();
+  readonly set: Map<string, Variable> = new Map<string, Variable>();
   /**
    * The {@link Reference}s that are not resolved with this scope.
    * @public
@@ -209,12 +209,12 @@ type VariableScope =
    * The type of scope
    * @public
    */
-  +type: TType;
+  readonly type: TType;
   /**
    * Reference to the parent {@link Scope}.
    * @public
    */
-  +upper: TUpper;
+  readonly upper: TUpper;
   /**
    * The scoped {@link Variable}s of this scope.
    * In the case of a 'function' scope this includes the automatic argument `arguments` as its first element, as well
@@ -222,18 +222,18 @@ type VariableScope =
    * This does not include variables which are defined in child scopes.
    * @public
    */
-  +variables: Array<Variable> = [];
+  readonly variables: Array<Variable> = [];
   /**
    * For scopes that can contain variable declarations, this is a self-reference.
    * For other scope types this is the *variableScope* value of the parent scope.
    * @public
    */
-  +variableScope: VariableScope;
+  readonly variableScope: VariableScope;
   /**
    * The names that are indirectly referenced within this scope.
    * @private
    */
-  +__indirectReferences: Set<string> = new Set();
+  readonly __indirectReferences: Set<string> = new Set();
 
   constructor(
     scopeManager: ScopeManager,

@@ -29,7 +29,7 @@ class FunctionScope extends ScopeBase<
   ArrowFunctionExpression | FunctionDeclaration | FunctionExpression | Program,
   Scope,
 > {
-  declare +type: typeof ScopeType.Function;
+  declare readonly type: typeof ScopeType.Function;
 
   constructor(
     scopeManager: ScopeManager,

@@ -726,16 +726,16 @@ function calculateSimpleArgument(node: Expression | Super): boolean {
  * Analyze the match cases and return information we will use to build the result.
  */
 type CaseAnalysis<T> = {
-  +conditions: Array<Condition>,
-  +bindings: Array<Binding>,
-  +guard: Expression | null,
-  +body: T,
+  readonly conditions: Array<Condition>,
+  readonly bindings: Array<Binding>,
+  readonly guard: Expression | null,
+  readonly body: T,
 };
 
 interface MatchCase<T> {
-  +pattern: MatchPattern;
-  +guard: Expression | null;
-  +body: T;
+  readonly pattern: MatchPattern;
+  readonly guard: Expression | null;
+  readonly body: T;
 }
 
 function analyzeCases<T>(cases: ReadonlyArray<MatchCase<T>>): {

@@ -25,14 +25,14 @@ class ComponentNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.ComponentName;
+  declare readonly type: typeof DefinitionType.ComponentName;
 
   constructor(name: Identifier, node: ComponentNameDefinition['node']) {
     super(DefinitionType.ComponentName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {ComponentNameDefinition};

@@ -22,7 +22,7 @@ class SwitchScope extends ScopeBase<
   SwitchStatement,
   Scope,
 > {
-  declare +type: typeof ScopeType.Switch;
+  declare readonly type: typeof ScopeType.Switch;
 
   constructor(
     scopeManager: ScopeManager,

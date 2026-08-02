@@ -27,7 +27,7 @@ type VisitPatternOptions = Readonly<{
 }>;
 
 class Visitor extends VisitorBase {
-  +_options: VisitorOptions;
+  readonly _options: VisitorOptions;
   constructor(optionsOrVisitor: VisitorOptions | Visitor) {
     super(
       optionsOrVisitor instanceof Visitor

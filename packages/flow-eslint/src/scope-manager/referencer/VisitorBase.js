@@ -19,7 +19,7 @@ type VisitorOptions = Readonly<{
   childVisitorKeys?: VisitorKeysType | null,
 }>;
 
-function isNode(node: unknown) /*: implies node is {+[string]: unknown} */ {
+function isNode(node: unknown) /*: implies node is {readonly [string]: unknown} */ {
   return (
     typeof node === 'object' && node != null && typeof node.type === 'string'
   );
@@ -28,7 +28,7 @@ type NodeChildValue = string | boolean | number | ESNode;
 type NodeChildValueOrArray = NodeChildValue | ReadonlyArray<NodeChildValue>;
 
 /* abstract */ class VisitorBase {
-  +_childVisitorKeys: VisitorKeysType;
+  readonly _childVisitorKeys: VisitorKeysType;
   constructor(options: VisitorOptions) {
     this._childVisitorKeys = options.childVisitorKeys ?? FlowVisitorKeys;
   }

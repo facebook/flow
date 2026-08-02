@@ -22,7 +22,7 @@ class MatchCaseScope extends ScopeBase<
   MatchExpressionCase | MatchStatementCase,
   Scope,
 > {
-  declare +type: typeof ScopeType.MatchCase;
+  declare readonly type: typeof ScopeType.MatchCase;
 
   constructor(
     scopeManager: ScopeManager,

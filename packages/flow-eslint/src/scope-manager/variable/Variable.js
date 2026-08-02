@@ -17,8 +17,8 @@ import type {IVariableBase} from './VariableBase';
 import {VariableBase} from './VariableBase';
 
 interface IVariable extends IVariableBase {
-  +isTypeVariable: boolean;
-  +isValueVariable: boolean;
+  readonly isTypeVariable: boolean;
+  readonly isValueVariable: boolean;
 }
 
 /**

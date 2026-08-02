@@ -27,8 +27,8 @@ import {TypeVisitor} from './TypeVisitor';
 import {Visitor} from './Visitor';
 
 class ClassVisitor extends Visitor {
-  +_classNode: ClassDeclaration | ClassExpression;
-  +_referencer: Referencer;
+  readonly _classNode: ClassDeclaration | ClassExpression;
+  readonly _referencer: Referencer;
 
   constructor(
     referencer: Referencer,

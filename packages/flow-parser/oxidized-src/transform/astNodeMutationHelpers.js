@@ -179,7 +179,7 @@ export function updateAllParentPointers(
  *
  * This will only create a new object if the overrides actually result in a change.
  */
-export function nodeWith<T: ESNode>(
+export function nodeWith<T extends ESNode>(
   node: T,
   overrideProps: Partial<T>,
   visitorKeys?: ?VisitorKeysType,
@@ -216,7 +216,7 @@ export function nodeWith<T: ESNode>(
 /**
  * Shallow clones node, providing a new reference for an existing node.
  */
-export function shallowCloneNode<T: ESNode>(
+export function shallowCloneNode<T extends ESNode>(
   node: T,
   visitorKeys?: ?VisitorKeysType,
 ): T {
@@ -232,7 +232,7 @@ export function shallowCloneNode<T: ESNode>(
 /**
  * Deeply clones node and its entire tree.
  */
-export function deepCloneNode<T: ESNode>(
+export function deepCloneNode<T extends ESNode>(
   node: T,
   visitorKeys?: ?VisitorKeysType,
 ): T {

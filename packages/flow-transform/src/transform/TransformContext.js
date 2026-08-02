@@ -66,7 +66,7 @@ type Mutation = Readonly<
   | ModifyNodeInPlaceMutation,
 >;
 
-type SingleOrArray<+T> = T | ReadonlyArray<T>;
+type SingleOrArray<out T> = T | ReadonlyArray<T>;
 
 type ReplaceNodeOptions = Readonly<{
   /**

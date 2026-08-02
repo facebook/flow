@@ -15,7 +15,7 @@ import type {
 
 import {detachedProps} from '../../detachedNode';
 
-export type LineCommentProps = {+value: string};
+export type LineCommentProps = {readonly value: string};
 export function LineComment(props: LineCommentProps): LineCommentType {
   // $FlowExpectedError[prop-missing]
   // $FlowExpectedError[incompatible-type]
@@ -25,7 +25,7 @@ export function LineComment(props: LineCommentProps): LineCommentType {
   });
 }
 
-export type BlockCommentProps = {+value: string};
+export type BlockCommentProps = {readonly value: string};
 export function BlockComment(props: BlockCommentProps): BlockCommentType {
   // $FlowExpectedError[prop-missing]
   // $FlowExpectedError[incompatible-type]

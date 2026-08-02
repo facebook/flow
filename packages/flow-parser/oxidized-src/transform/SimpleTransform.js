@@ -158,7 +158,7 @@ export class SimpleTransform {
    * @return Either the orginal node if the properties matched the existing node or a new node with
    *         the new properties.
    */
-  static nodeWith<T: ESNode>(
+  static nodeWith<T extends ESNode>(
     node: T,
     overrideProps: Partial<T>,
     visitorKeys?: VisitorKeysType,

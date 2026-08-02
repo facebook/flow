@@ -54,7 +54,7 @@ class TypeScope extends ScopeBase<
   | InterfaceDeclaration,
   Scope,
 > {
-  declare +type: typeof ScopeType.Type;
+  declare readonly type: typeof ScopeType.Type;
 
   constructor(
     scopeManager: ScopeManager,

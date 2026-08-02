@@ -18,39 +18,39 @@ import {createIdGenerator} from '../ID';
 const generator = createIdGenerator();
 
 /* abstract */ class DefinitionBase<
-  TType: DefinitionTypeType,
-  TNode: ESNode,
-  TParent: ESNode | null,
-  TName: ESNode = BindingName,
+  TType extends DefinitionTypeType,
+  TNode extends ESNode,
+  TParent extends ESNode | null,
+  TName extends ESNode = BindingName,
 > {
   /**
    * A unique ID for this instance - primarily used to help debugging and testing
    */
-  +$id: number = generator();
+  readonly $id: number = generator();
 
   /**
    * The type of the definition
    * @public
    */
-  +type: TType;
+  readonly type: TType;
 
   /**
    * The `Identifier` node of this definition
    * @public
    */
-  +name: TName;
+  readonly name: TName;
 
   /**
    * The enclosing node of the name.
    * @public
    */
-  +node: TNode;
+  readonly node: TNode;
 
   /**
    * the enclosing statement node of the identifier.
    * @public
    */
-  +parent: TParent;
+  readonly parent: TParent;
 
   constructor(type: TType, name: TName, node: TNode, parent: TParent) {
     this.type = type;
@@ -63,13 +63,13 @@ const generator = createIdGenerator();
    * `true` if the variable is valid in a type context, false otherwise
    * @public
    */
-  +isTypeDefinition: boolean;
+  readonly isTypeDefinition: boolean;
 
   /**
    * `true` if the variable is valid in a value context, false otherwise
    * @public
    */
-  +isVariableDefinition: boolean;
+  readonly isVariableDefinition: boolean;
 }
 
 export {DefinitionBase};

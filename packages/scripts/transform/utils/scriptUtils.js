@@ -47,7 +47,7 @@ export const GetTransformESTreeJSON: () => ESTreeJSON = GetFlowESTreeJSON;
 
 export const TransformESTreePackage: 'flow-estree' = 'flow-estree';
 export const TransformPackage: 'flow-transform' = 'flow-transform';
-export const TransformReadonly: '+' = '+';
+export const TransformReadonly: 'readonly ' = 'readonly ';
 
 type FlowStyle = false | 'loose' | 'strict' | 'strict-local';
 function header(flow: FlowStyle, skipFormat: boolean): string {

@@ -22,7 +22,7 @@ class DeclareNamespaceScope extends ScopeBase<
   DeclareNamespace,
   Scope,
 > {
-  declare +type: typeof ScopeType.DeclareNamespace;
+  declare readonly type: typeof ScopeType.DeclareNamespace;
 
   constructor(
     scopeManager: ScopeManager,

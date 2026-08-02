@@ -23,9 +23,9 @@ class FunctionExpressionNameScope extends ScopeBase<
   FunctionExpression,
   Scope,
 > {
-  declare +type: typeof ScopeType.FunctionExpressionName;
+  declare readonly type: typeof ScopeType.FunctionExpressionName;
 
-  +functionExpressionScope: true = true;
+  readonly functionExpressionScope: true = true;
 
   constructor(
     scopeManager: ScopeManager,

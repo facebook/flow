@@ -23,13 +23,13 @@ import {
 } from '../../detachedNode';
 
 export type DeclareExportDefaultDeclarationProps = {
-  +declaration?: ?MaybeDetachedNode<
+  readonly declaration?: ?MaybeDetachedNode<
     DeclareExportDefaultDeclarationType['declaration'],
   >,
 };
 export function DeclareExportDefaultDeclaration(props: {
   ...Readonly<DeclareExportDefaultDeclarationProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareExportDefaultDeclarationType> {
   const node = detachedProps<DeclareExportDefaultDeclarationType>(
     props.parent,
@@ -47,13 +47,13 @@ export function DeclareExportDefaultDeclaration(props: {
 }
 
 export type DeclareExportDeclarationNamedWithDeclarationProps = {
-  +declaration?: ?MaybeDetachedNode<
+  readonly declaration?: ?MaybeDetachedNode<
     DeclareExportDeclarationNamedWithDeclarationType['declaration'],
   >,
 };
 export function DeclareExportDeclarationNamedWithDeclaration(props: {
   ...Readonly<DeclareExportDeclarationNamedWithDeclarationProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareExportDeclarationNamedWithDeclarationType> {
   const node = detachedProps<DeclareExportDeclarationNamedWithDeclarationType>(
     props.parent,
@@ -71,18 +71,18 @@ export function DeclareExportDeclarationNamedWithDeclaration(props: {
 }
 
 export type DeclareExportDeclarationNamedWithSpecifiersProps = {
-  +specifiers: ReadonlyArray<
+  readonly specifiers: ReadonlyArray<
     MaybeDetachedNode<
       DeclareExportDeclarationNamedWithSpecifiersType['specifiers'][number],
     >,
   >,
-  +source?: ?MaybeDetachedNode<
+  readonly source?: ?MaybeDetachedNode<
     DeclareExportDeclarationNamedWithSpecifiersType['source'],
   >,
 };
 export function DeclareExportDeclarationNamedWithSpecifiers(props: {
   ...Readonly<DeclareExportDeclarationNamedWithSpecifiersProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareExportDeclarationNamedWithSpecifiersType> {
   const node = detachedProps<DeclareExportDeclarationNamedWithSpecifiersType>(
     props.parent,

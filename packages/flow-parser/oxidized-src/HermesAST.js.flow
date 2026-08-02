@@ -12,9 +12,9 @@
 
 export type HermesPosition = {
   /** >= 1 */
-  +line: number,
+  readonly line: number,
   /** >= 0 */
-  +column: number,
+  readonly column: number,
 };
 export type HermesSourceLocation = {
   start?: HermesPosition,

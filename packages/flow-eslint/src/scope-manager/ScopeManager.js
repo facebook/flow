@@ -45,19 +45,19 @@ type ScopeManagerOptions = Readonly<{
 
 class ScopeManager {
   currentScope: Scope | null = null;
-  +declaredVariables: WeakMap<ESNode, Array<Variable>> = new WeakMap();
+  readonly declaredVariables: WeakMap<ESNode, Array<Variable>> = new WeakMap();
   /**
    * The root scope
    * @public
    */
   globalScope: GlobalScope;
-  +nodeToScope: WeakMap<ESNode, Array<Scope>> = new WeakMap();
-  +_options: ScopeManagerOptions;
+  readonly nodeToScope: WeakMap<ESNode, Array<Scope>> = new WeakMap();
+  readonly _options: ScopeManagerOptions;
   /**
    * All scopes
    * @public
    */
-  +scopes: Array<Scope> = [];
+  readonly scopes: Array<Scope> = [];
 
   // $FlowExpectedError[unsafe-getters-setters]
   get variables(): Array<Variable> {

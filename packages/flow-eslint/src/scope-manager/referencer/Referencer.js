@@ -134,10 +134,10 @@ type ReferencerOptions = Readonly<{
 
 // Referencing variables and creating bindings.
 class Referencer extends Visitor {
-  +_jsxPragma: string | null;
-  +_jsxFragmentName: string | null;
-  +_fbtSupport: boolean | null;
-  +scopeManager: ScopeManager;
+  readonly _jsxPragma: string | null;
+  readonly _jsxFragmentName: string | null;
+  readonly _fbtSupport: boolean | null;
+  readonly scopeManager: ScopeManager;
 
   constructor(
     {

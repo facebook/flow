@@ -96,7 +96,7 @@ const FlowESTreeAndBabelVisitorKeys: VisitorKeys = {
   CommentLine: [],
 };
 
-function nodeWith<T: ESNode>(node: T, overrideProps: Partial<T>): T {
+function nodeWith<T extends ESNode>(node: T, overrideProps: Partial<T>): T {
   return SimpleTransform.nodeWith(
     node,
     overrideProps,
@@ -110,33 +110,33 @@ function nodeWith<T: ESNode>(node: T, overrideProps: Partial<T>): T {
  * Copied from: https://github.com/babel/babel/blob/main/packages/babel-types/src/ast-types/generated/index.ts
  */
 export interface BabelFile extends BaseNode {
-  +type: 'File';
-  +program: Program;
-  +comments: ReadonlyArray<BabelComment>;
+  readonly type: 'File';
+  readonly program: Program;
+  readonly comments: ReadonlyArray<BabelComment>;
 }
 
 interface BabelCommentBlock extends BaseToken {
-  +type: 'CommentBlock';
-  +value: string;
+  readonly type: 'CommentBlock';
+  readonly value: string;
 }
 interface BabelCommentLine extends BaseToken {
-  +type: 'CommentLine';
-  +value: string;
+  readonly type: 'CommentLine';
+  readonly value: string;
 }
 type BabelComment = BabelCommentBlock | BabelCommentLine;
 
 interface BabelObjectMethod extends BaseNode {
-  +type: 'ObjectMethod';
-  +kind: 'method' | 'get' | 'set';
-  +key: Expression;
-  +params: ReadonlyArray<FunctionParameter>;
-  +body: BlockStatement;
-  +computed: boolean;
-  +generator: boolean;
-  +async: boolean;
-  +returnType?: TypeAnnotation | null;
-  +typeParameters?: TypeParameterDeclaration | null;
-  +variance?: boolean | null;
+  readonly type: 'ObjectMethod';
+  readonly kind: 'method' | 'get' | 'set';
+  readonly key: Expression;
+  readonly params: ReadonlyArray<FunctionParameter>;
+  readonly body: BlockStatement;
+  readonly computed: boolean;
+  readonly generator: boolean;
+  readonly async: boolean;
+  readonly returnType?: TypeAnnotation | null;
+  readonly typeParameters?: TypeParameterDeclaration | null;
+  readonly variance?: boolean | null;
 
   // TODO: Should these exist?
   // +id: ...,
@@ -146,146 +146,146 @@ interface BabelObjectMethod extends BaseNode {
 }
 
 interface BabelObjectProperty extends BaseNode {
-  +type: 'ObjectProperty';
-  +computed: boolean;
-  +key: Expression;
-  +value: Expression;
-  +method: boolean;
-  +shorthand: boolean;
+  readonly type: 'ObjectProperty';
+  readonly computed: boolean;
+  readonly key: Expression;
+  readonly value: Expression;
+  readonly method: boolean;
+  readonly shorthand: boolean;
 }
 
 interface BabelClassMethodBase extends BaseNode {
-  +kind: 'get' | 'set' | 'method' | 'constructor';
-  +computed: boolean;
-  +static: boolean;
-  +key:
+  readonly kind: 'get' | 'set' | 'method' | 'constructor';
+  readonly computed: boolean;
+  readonly static: boolean;
+  readonly key:
     | Identifier
     | StringLiteral
     | ClassPropertyNameComputed
     | ClassPropertyNameNonComputed;
-  +id: null;
-  +params: ReadonlyArray<FunctionParameter>;
-  +body: BlockStatement;
-  +async: boolean;
-  +generator: boolean;
-  +returnType?: TypeAnnotation | null;
-  +typeParameters?: TypeParameterDeclaration | null;
-  +predicate: null;
+  readonly id: null;
+  readonly params: ReadonlyArray<FunctionParameter>;
+  readonly body: BlockStatement;
+  readonly async: boolean;
+  readonly generator: boolean;
+  readonly returnType?: TypeAnnotation | null;
+  readonly typeParameters?: TypeParameterDeclaration | null;
+  readonly predicate: null;
 }
 
 interface BabelClassPrivateMethod extends BabelClassMethodBase {
-  +type: 'ClassPrivateMethod';
+  readonly type: 'ClassPrivateMethod';
 }
 interface BabelClassMethod extends BabelClassMethodBase {
-  +type: 'ClassMethod';
+  readonly type: 'ClassMethod';
 }
 
 interface BabelClassProperty extends BaseNode {
-  +type: 'ClassProperty';
-  +key: Expression;
-  +value: null | Expression;
-  +typeAnnotation: null | TypeAnnotation;
-  +static: boolean;
-  +variance: null | Variance;
-  +declare: boolean;
-  +optional: null | boolean;
-  +computed: boolean;
+  readonly type: 'ClassProperty';
+  readonly key: Expression;
+  readonly value: null | Expression;
+  readonly typeAnnotation: null | TypeAnnotation;
+  readonly static: boolean;
+  readonly variance: null | Variance;
+  readonly declare: boolean;
+  readonly optional: null | boolean;
+  readonly computed: boolean;
 }
 
 interface BabelClassPrivateProperty extends BaseNode {
-  +type: 'ClassPrivateProperty';
-  +key: BabelPrivateName;
-  +value: null | Expression;
-  +typeAnnotation: null | TypeAnnotation;
-  +static: boolean;
-  +variance: null | Variance;
+  readonly type: 'ClassPrivateProperty';
+  readonly key: BabelPrivateName;
+  readonly value: null | Expression;
+  readonly typeAnnotation: null | TypeAnnotation;
+  readonly static: boolean;
+  readonly variance: null | Variance;
 }
 
 interface BabelExportNamespaceSpecifier extends BaseNode {
-  +type: 'ExportNamespaceSpecifier';
-  +exported: Identifier;
+  readonly type: 'ExportNamespaceSpecifier';
+  readonly exported: Identifier;
 }
 
 interface BabelExportNamedDeclaration extends BaseNode {
-  +type: 'ExportNamedDeclaration';
-  +declaration?: null;
-  +specifiers: ReadonlyArray<BabelExportNamespaceSpecifier>;
-  +source?: StringLiteral | null;
-  +exportKind: 'value' | 'type';
+  readonly type: 'ExportNamedDeclaration';
+  readonly declaration?: null;
+  readonly specifiers: ReadonlyArray<BabelExportNamespaceSpecifier>;
+  readonly source?: StringLiteral | null;
+  readonly exportKind: 'value' | 'type';
 }
 
 interface BabelPrivateName extends BaseNode {
-  +type: 'PrivateName';
-  +id: Identifier;
+  readonly type: 'PrivateName';
+  readonly id: Identifier;
 }
 
 interface BabelOptionalMemberExpression extends BaseNode {
-  +type: 'OptionalMemberExpression';
-  +object:
+  readonly type: 'OptionalMemberExpression';
+  readonly object:
     | Expression
     | Super
     | BabelOptionalMemberExpression
     | BabelOptionalCallExpression;
-  +property: Expression | Identifier | PrivateIdentifier;
-  +computed: boolean;
-  +optional: boolean;
+  readonly property: Expression | Identifier | PrivateIdentifier;
+  readonly computed: boolean;
+  readonly optional: boolean;
 }
 
 interface BabelOptionalCallExpression extends BaseNode {
-  +type: 'OptionalCallExpression';
-  +callee:
+  readonly type: 'OptionalCallExpression';
+  readonly callee:
     | Expression
     | Super
     | BabelOptionalMemberExpression
     | BabelOptionalCallExpression;
-  +arguments: ReadonlyArray<Expression | SpreadElement>;
-  +optional: boolean;
-  +typeArguments?: TypeParameterInstantiation | null;
+  readonly arguments: ReadonlyArray<Expression | SpreadElement>;
+  readonly optional: boolean;
+  readonly typeArguments?: TypeParameterInstantiation | null;
 }
 
 interface BabelStringLiteral extends BaseNode {
-  +type: 'StringLiteral';
-  +value: string;
-  +extra: Readonly<{
-    +rawValue: string,
-    +raw: string,
+  readonly type: 'StringLiteral';
+  readonly value: string;
+  readonly extra: Readonly<{
+    readonly rawValue: string,
+    readonly raw: string,
   }>;
 }
 
 interface BabelNumericLiteral extends BaseNode {
-  +type: 'NumericLiteral';
-  +value: number;
-  +extra: Readonly<{
-    +rawValue: number,
-    +raw: string,
+  readonly type: 'NumericLiteral';
+  readonly value: number;
+  readonly extra: Readonly<{
+    readonly rawValue: number,
+    readonly raw: string,
   }>;
 }
 
 interface BabelBigIntLiteral extends BaseNode {
-  +type: 'BigIntLiteral';
-  +value: string;
-  +extra: Readonly<{
-    +rawValue: string,
-    +raw: string,
+  readonly type: 'BigIntLiteral';
+  readonly value: string;
+  readonly extra: Readonly<{
+    readonly rawValue: string,
+    readonly raw: string,
   }>;
 }
 
 interface BabelBooleanLiteral extends BaseNode {
-  +type: 'BooleanLiteral';
-  +value: boolean;
+  readonly type: 'BooleanLiteral';
+  readonly value: boolean;
 }
 
 interface BabelNullLiteral extends BaseNode {
-  +type: 'NullLiteral';
+  readonly type: 'NullLiteral';
 }
 
 interface BabelRegExpLiteral extends BaseNode {
-  +type: 'RegExpLiteral';
-  +extra: Readonly<{
-    +raw: string,
+  readonly type: 'RegExpLiteral';
+  readonly extra: Readonly<{
+    readonly raw: string,
   }>;
-  +pattern: string;
-  +flags: string;
+  readonly pattern: string;
+  readonly flags: string;
 }
 
 type BabelLiteral =
@@ -346,7 +346,7 @@ function fixSourceLocation(
   delete node.parent;
 }
 
-function mapNodeWithDirectives<T: Program | BlockStatement>(node: T): T {
+function mapNodeWithDirectives<T extends Program | BlockStatement>(node: T): T {
   // $FlowExpectedError[prop-missing]
   if (node.directives != null) {
     return node;

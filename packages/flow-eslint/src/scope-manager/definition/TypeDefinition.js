@@ -34,14 +34,14 @@ class TypeDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.Type;
+  declare readonly type: typeof DefinitionType.Type;
 
   constructor(name: Identifier, node: TypeDefinition['node']) {
     super(DefinitionType.Type, name, node, null);
   }
 
-  +isTypeDefinition: boolean = true;
-  +isVariableDefinition: boolean = false;
+  readonly isTypeDefinition: boolean = true;
+  readonly isVariableDefinition: boolean = false;
 }
 
 export {TypeDefinition};

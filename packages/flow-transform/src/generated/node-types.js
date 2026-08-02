@@ -228,260 +228,302 @@ import {
 export type AnyTypeAnnotationProps = {};
 
 export type ArrayExpressionProps = {
-  +elements: ReadonlyArray<
+  readonly elements: ReadonlyArray<
     MaybeDetachedNode<ArrayExpressionType['elements'][number]>,
   >,
-  +trailingComma: ArrayExpressionType['trailingComma'],
+  readonly trailingComma: ArrayExpressionType['trailingComma'],
 };
 
 export type ArrayPatternProps = {
-  +elements: ReadonlyArray<
+  readonly elements: ReadonlyArray<
     MaybeDetachedNode<ArrayPatternType['elements'][number]>,
   >,
-  +typeAnnotation?: ?MaybeDetachedNode<ArrayPatternType['typeAnnotation']>,
+  readonly typeAnnotation?: ?MaybeDetachedNode<
+    ArrayPatternType['typeAnnotation'],
+  >,
 };
 
 export type ArrayTypeAnnotationProps = {
-  +elementType: MaybeDetachedNode<ArrayTypeAnnotationType['elementType']>,
+  readonly elementType: MaybeDetachedNode<
+    ArrayTypeAnnotationType['elementType'],
+  >,
 };
 
 export type AsConstExpressionProps = {
-  +expression: MaybeDetachedNode<AsConstExpressionType['expression']>,
+  readonly expression: MaybeDetachedNode<AsConstExpressionType['expression']>,
 };
 
 export type AsExpressionProps = {
-  +expression: MaybeDetachedNode<AsExpressionType['expression']>,
-  +typeAnnotation: MaybeDetachedNode<AsExpressionType['typeAnnotation']>,
+  readonly expression: MaybeDetachedNode<AsExpressionType['expression']>,
+  readonly typeAnnotation: MaybeDetachedNode<
+    AsExpressionType['typeAnnotation'],
+  >,
 };
 
 export type AssignmentExpressionProps = {
-  +operator: AssignmentExpressionType['operator'],
-  +left: MaybeDetachedNode<AssignmentExpressionType['left']>,
-  +right: MaybeDetachedNode<AssignmentExpressionType['right']>,
+  readonly operator: AssignmentExpressionType['operator'],
+  readonly left: MaybeDetachedNode<AssignmentExpressionType['left']>,
+  readonly right: MaybeDetachedNode<AssignmentExpressionType['right']>,
 };
 
 export type AssignmentPatternProps = {
-  +left: MaybeDetachedNode<AssignmentPatternType['left']>,
-  +right: MaybeDetachedNode<AssignmentPatternType['right']>,
+  readonly left: MaybeDetachedNode<AssignmentPatternType['left']>,
+  readonly right: MaybeDetachedNode<AssignmentPatternType['right']>,
 };
 
 export type AwaitExpressionProps = {
-  +argument: MaybeDetachedNode<AwaitExpressionType['argument']>,
+  readonly argument: MaybeDetachedNode<AwaitExpressionType['argument']>,
 };
 
 export type BigIntLiteralTypeAnnotationProps = {
-  +raw: BigIntLiteralTypeAnnotationType['raw'],
+  readonly raw: BigIntLiteralTypeAnnotationType['raw'],
 };
 
 export type BigIntTypeAnnotationProps = {};
 
 export type BinaryExpressionProps = {
-  +left: MaybeDetachedNode<BinaryExpressionType['left']>,
-  +right: MaybeDetachedNode<BinaryExpressionType['right']>,
-  +operator: BinaryExpressionType['operator'],
+  readonly left: MaybeDetachedNode<BinaryExpressionType['left']>,
+  readonly right: MaybeDetachedNode<BinaryExpressionType['right']>,
+  readonly operator: BinaryExpressionType['operator'],
 };
 
 export type BooleanLiteralTypeAnnotationProps = {
-  +value: BooleanLiteralTypeAnnotationType['value'],
-  +raw: BooleanLiteralTypeAnnotationType['raw'],
+  readonly value: BooleanLiteralTypeAnnotationType['value'],
+  readonly raw: BooleanLiteralTypeAnnotationType['raw'],
 };
 
 export type BooleanTypeAnnotationProps = {};
 
 export type BreakStatementProps = {
-  +label?: ?MaybeDetachedNode<BreakStatementType['label']>,
+  readonly label?: ?MaybeDetachedNode<BreakStatementType['label']>,
 };
 
 export type CallExpressionProps = {
-  +callee: MaybeDetachedNode<CallExpressionType['callee']>,
-  +typeArguments?: ?MaybeDetachedNode<CallExpressionType['typeArguments']>,
-  +arguments: ReadonlyArray<
+  readonly callee: MaybeDetachedNode<CallExpressionType['callee']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
+    CallExpressionType['typeArguments'],
+  >,
+  readonly arguments: ReadonlyArray<
     MaybeDetachedNode<CallExpressionType['arguments'][number]>,
   >,
 };
 
 export type CatchClauseProps = {
-  +param?: ?MaybeDetachedNode<CatchClauseType['param']>,
-  +body: MaybeDetachedNode<CatchClauseType['body']>,
+  readonly param?: ?MaybeDetachedNode<CatchClauseType['param']>,
+  readonly body: MaybeDetachedNode<CatchClauseType['body']>,
 };
 
 export type ChainExpressionProps = {
-  +expression: MaybeDetachedNode<ChainExpressionType['expression']>,
+  readonly expression: MaybeDetachedNode<ChainExpressionType['expression']>,
 };
 
 export type ClassBodyProps = {
-  +body: ReadonlyArray<MaybeDetachedNode<ClassBodyType['body'][number]>>,
+  readonly body: ReadonlyArray<
+    MaybeDetachedNode<ClassBodyType['body'][number]>,
+  >,
 };
 
 export type ClassExpressionProps = {
-  +id?: ?MaybeDetachedNode<ClassExpressionType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<ClassExpressionType['typeParameters']>,
-  +superClass?: ?MaybeDetachedNode<ClassExpressionType['superClass']>,
-  +superTypeArguments?: ?MaybeDetachedNode<
+  readonly id?: ?MaybeDetachedNode<ClassExpressionType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    ClassExpressionType['typeParameters'],
+  >,
+  readonly superClass?: ?MaybeDetachedNode<ClassExpressionType['superClass']>,
+  readonly superTypeArguments?: ?MaybeDetachedNode<
     ClassExpressionType['superTypeArguments'],
   >,
-  +implements: ReadonlyArray<
+  readonly implements: ReadonlyArray<
     MaybeDetachedNode<ClassExpressionType['implements'][number]>,
   >,
-  +decorators: ReadonlyArray<
+  readonly decorators: ReadonlyArray<
     MaybeDetachedNode<ClassExpressionType['decorators'][number]>,
   >,
-  +body: MaybeDetachedNode<ClassExpressionType['body']>,
+  readonly body: MaybeDetachedNode<ClassExpressionType['body']>,
 };
 
 export type ClassImplementsProps = {
-  +id: MaybeDetachedNode<ClassImplementsType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<ClassImplementsType['typeParameters']>,
+  readonly id: MaybeDetachedNode<ClassImplementsType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    ClassImplementsType['typeParameters'],
+  >,
 };
 
 export type ComponentDeclarationProps = {
-  +id: MaybeDetachedNode<ComponentDeclarationType['id']>,
-  +params: ReadonlyArray<
+  readonly id: MaybeDetachedNode<ComponentDeclarationType['id']>,
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<ComponentDeclarationType['params'][number]>,
   >,
-  +body: MaybeDetachedNode<ComponentDeclarationType['body']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly body: MaybeDetachedNode<ComponentDeclarationType['body']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     ComponentDeclarationType['typeParameters'],
   >,
-  +rendersType?: ?MaybeDetachedNode<ComponentDeclarationType['rendersType']>,
-  +async: ComponentDeclarationType['async'],
+  readonly rendersType?: ?MaybeDetachedNode<
+    ComponentDeclarationType['rendersType'],
+  >,
+  readonly async: ComponentDeclarationType['async'],
 };
 
 export type ComponentParameterProps = {
-  +name: MaybeDetachedNode<ComponentParameterType['name']>,
-  +local: MaybeDetachedNode<ComponentParameterType['local']>,
-  +shorthand: ComponentParameterType['shorthand'],
+  readonly name: MaybeDetachedNode<ComponentParameterType['name']>,
+  readonly local: MaybeDetachedNode<ComponentParameterType['local']>,
+  readonly shorthand: ComponentParameterType['shorthand'],
 };
 
 export type ComponentTypeAnnotationProps = {
-  +params: ReadonlyArray<
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<ComponentTypeAnnotationType['params'][number]>,
   >,
-  +rest?: ?MaybeDetachedNode<ComponentTypeAnnotationType['rest']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly rest?: ?MaybeDetachedNode<ComponentTypeAnnotationType['rest']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     ComponentTypeAnnotationType['typeParameters'],
   >,
-  +rendersType?: ?MaybeDetachedNode<ComponentTypeAnnotationType['rendersType']>,
+  readonly rendersType?: ?MaybeDetachedNode<
+    ComponentTypeAnnotationType['rendersType'],
+  >,
 };
 
 export type ComponentTypeParameterProps = {
-  +name?: ?MaybeDetachedNode<ComponentTypeParameterType['name']>,
-  +typeAnnotation: MaybeDetachedNode<
+  readonly name?: ?MaybeDetachedNode<ComponentTypeParameterType['name']>,
+  readonly typeAnnotation: MaybeDetachedNode<
     ComponentTypeParameterType['typeAnnotation'],
   >,
-  +optional: ComponentTypeParameterType['optional'],
+  readonly optional: ComponentTypeParameterType['optional'],
 };
 
 export type ConditionalExpressionProps = {
-  +test: MaybeDetachedNode<ConditionalExpressionType['test']>,
-  +alternate: MaybeDetachedNode<ConditionalExpressionType['alternate']>,
-  +consequent: MaybeDetachedNode<ConditionalExpressionType['consequent']>,
+  readonly test: MaybeDetachedNode<ConditionalExpressionType['test']>,
+  readonly alternate: MaybeDetachedNode<ConditionalExpressionType['alternate']>,
+  readonly consequent: MaybeDetachedNode<
+    ConditionalExpressionType['consequent'],
+  >,
 };
 
 export type ConditionalTypeAnnotationProps = {
-  +checkType: MaybeDetachedNode<ConditionalTypeAnnotationType['checkType']>,
-  +extendsType: MaybeDetachedNode<ConditionalTypeAnnotationType['extendsType']>,
-  +trueType: MaybeDetachedNode<ConditionalTypeAnnotationType['trueType']>,
-  +falseType: MaybeDetachedNode<ConditionalTypeAnnotationType['falseType']>,
+  readonly checkType: MaybeDetachedNode<
+    ConditionalTypeAnnotationType['checkType'],
+  >,
+  readonly extendsType: MaybeDetachedNode<
+    ConditionalTypeAnnotationType['extendsType'],
+  >,
+  readonly trueType: MaybeDetachedNode<
+    ConditionalTypeAnnotationType['trueType'],
+  >,
+  readonly falseType: MaybeDetachedNode<
+    ConditionalTypeAnnotationType['falseType'],
+  >,
 };
 
 export type ContinueStatementProps = {
-  +label?: ?MaybeDetachedNode<ContinueStatementType['label']>,
+  readonly label?: ?MaybeDetachedNode<ContinueStatementType['label']>,
 };
 
 export type DebuggerStatementProps = {};
 
 export type DeclareClassProps = {
-  +id: MaybeDetachedNode<DeclareClassType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<DeclareClassType['typeParameters']>,
-  +extends: ReadonlyArray<
+  readonly id: MaybeDetachedNode<DeclareClassType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    DeclareClassType['typeParameters'],
+  >,
+  readonly extends: ReadonlyArray<
     MaybeDetachedNode<DeclareClassType['extends'][number]>,
   >,
-  +implements: ReadonlyArray<
+  readonly implements: ReadonlyArray<
     MaybeDetachedNode<DeclareClassType['implements'][number]>,
   >,
-  +mixins: ReadonlyArray<MaybeDetachedNode<DeclareClassType['mixins'][number]>>,
-  +body: MaybeDetachedNode<DeclareClassType['body']>,
+  readonly mixins: ReadonlyArray<
+    MaybeDetachedNode<DeclareClassType['mixins'][number]>,
+  >,
+  readonly body: MaybeDetachedNode<DeclareClassType['body']>,
 };
 
 export type DeclareComponentProps = {
-  +id: MaybeDetachedNode<DeclareComponentType['id']>,
-  +params: ReadonlyArray<
+  readonly id: MaybeDetachedNode<DeclareComponentType['id']>,
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<DeclareComponentType['params'][number]>,
   >,
-  +rest?: ?MaybeDetachedNode<DeclareComponentType['rest']>,
-  +typeParameters?: ?MaybeDetachedNode<DeclareComponentType['typeParameters']>,
-  +rendersType?: ?MaybeDetachedNode<DeclareComponentType['rendersType']>,
+  readonly rest?: ?MaybeDetachedNode<DeclareComponentType['rest']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    DeclareComponentType['typeParameters'],
+  >,
+  readonly rendersType?: ?MaybeDetachedNode<
+    DeclareComponentType['rendersType'],
+  >,
 };
 
 export type DeclaredPredicateProps = {
-  +value: MaybeDetachedNode<DeclaredPredicateType['value']>,
+  readonly value: MaybeDetachedNode<DeclaredPredicateType['value']>,
 };
 
 export type DeclareEnumProps = {
-  +id: MaybeDetachedNode<DeclareEnumType['id']>,
-  +body: MaybeDetachedNode<DeclareEnumType['body']>,
+  readonly id: MaybeDetachedNode<DeclareEnumType['id']>,
+  readonly body: MaybeDetachedNode<DeclareEnumType['body']>,
 };
 
 export type DeclareExportAllDeclarationProps = {
-  +source: MaybeDetachedNode<DeclareExportAllDeclarationType['source']>,
+  readonly source: MaybeDetachedNode<DeclareExportAllDeclarationType['source']>,
 };
 
 export type DeclareInterfaceProps = {
-  +id: MaybeDetachedNode<DeclareInterfaceType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<DeclareInterfaceType['typeParameters']>,
-  +extends: ReadonlyArray<
+  readonly id: MaybeDetachedNode<DeclareInterfaceType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    DeclareInterfaceType['typeParameters'],
+  >,
+  readonly extends: ReadonlyArray<
     MaybeDetachedNode<DeclareInterfaceType['extends'][number]>,
   >,
-  +body: MaybeDetachedNode<DeclareInterfaceType['body']>,
+  readonly body: MaybeDetachedNode<DeclareInterfaceType['body']>,
 };
 
 export type DeclareModuleProps = {
-  +id: MaybeDetachedNode<DeclareModuleType['id']>,
-  +body: MaybeDetachedNode<DeclareModuleType['body']>,
+  readonly id: MaybeDetachedNode<DeclareModuleType['id']>,
+  readonly body: MaybeDetachedNode<DeclareModuleType['body']>,
 };
 
 export type DeclareModuleExportsProps = {
-  +typeAnnotation: MaybeDetachedNode<
+  readonly typeAnnotation: MaybeDetachedNode<
     DeclareModuleExportsType['typeAnnotation'],
   >,
 };
 
 export type DeclareNamespaceProps = {
-  +id: MaybeDetachedNode<DeclareNamespaceType['id']>,
-  +body: MaybeDetachedNode<DeclareNamespaceType['body']>,
+  readonly id: MaybeDetachedNode<DeclareNamespaceType['id']>,
+  readonly body: MaybeDetachedNode<DeclareNamespaceType['body']>,
 };
 
 export type DeclareOpaqueTypeProps = {
-  +id: MaybeDetachedNode<DeclareOpaqueTypeType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<DeclareOpaqueTypeType['typeParameters']>,
-  +impltype?: ?MaybeDetachedNode<DeclareOpaqueTypeType['impltype']>,
-  +lowerBound?: ?MaybeDetachedNode<DeclareOpaqueTypeType['lowerBound']>,
-  +upperBound?: ?MaybeDetachedNode<DeclareOpaqueTypeType['upperBound']>,
-  +supertype?: ?MaybeDetachedNode<DeclareOpaqueTypeType['supertype']>,
+  readonly id: MaybeDetachedNode<DeclareOpaqueTypeType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    DeclareOpaqueTypeType['typeParameters'],
+  >,
+  readonly impltype?: ?MaybeDetachedNode<DeclareOpaqueTypeType['impltype']>,
+  readonly lowerBound?: ?MaybeDetachedNode<DeclareOpaqueTypeType['lowerBound']>,
+  readonly upperBound?: ?MaybeDetachedNode<DeclareOpaqueTypeType['upperBound']>,
+  readonly supertype?: ?MaybeDetachedNode<DeclareOpaqueTypeType['supertype']>,
 };
 
 export type DeclareTypeAliasProps = {
-  +id: MaybeDetachedNode<DeclareTypeAliasType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<DeclareTypeAliasType['typeParameters']>,
-  +right: MaybeDetachedNode<DeclareTypeAliasType['right']>,
+  readonly id: MaybeDetachedNode<DeclareTypeAliasType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    DeclareTypeAliasType['typeParameters'],
+  >,
+  readonly right: MaybeDetachedNode<DeclareTypeAliasType['right']>,
 };
 
 export type DeclareVariableProps = {
-  +declarations: ReadonlyArray<
+  readonly declarations: ReadonlyArray<
     MaybeDetachedNode<DeclareVariableType['declarations'][number]>,
   >,
-  +kind: DeclareVariableType['kind'],
-  +implicitDeclare: DeclareVariableType['implicitDeclare'],
+  readonly kind: DeclareVariableType['kind'],
+  readonly implicitDeclare: DeclareVariableType['implicitDeclare'],
 };
 
 export type DecoratorProps = {
-  +expression: MaybeDetachedNode<DecoratorType['expression']>,
+  readonly expression: MaybeDetachedNode<DecoratorType['expression']>,
 };
 
 export type DoWhileStatementProps = {
-  +body: MaybeDetachedNode<DoWhileStatementType['body']>,
-  +test: MaybeDetachedNode<DoWhileStatementType['test']>,
+  readonly body: MaybeDetachedNode<DoWhileStatementType['body']>,
+  readonly test: MaybeDetachedNode<DoWhileStatementType['test']>,
 };
 
 export type EmptyStatementProps = {};
@@ -489,469 +531,501 @@ export type EmptyStatementProps = {};
 export type EmptyTypeAnnotationProps = {};
 
 export type EnumBigIntBodyProps = {
-  +members: ReadonlyArray<
+  readonly members: ReadonlyArray<
     MaybeDetachedNode<EnumBigIntBodyType['members'][number]>,
   >,
-  +explicitType: EnumBigIntBodyType['explicitType'],
-  +hasUnknownMembers: EnumBigIntBodyType['hasUnknownMembers'],
+  readonly explicitType: EnumBigIntBodyType['explicitType'],
+  readonly hasUnknownMembers: EnumBigIntBodyType['hasUnknownMembers'],
 };
 
 export type EnumBigIntMemberProps = {
-  +id: MaybeDetachedNode<EnumBigIntMemberType['id']>,
-  +init: MaybeDetachedNode<EnumBigIntMemberType['init']>,
+  readonly id: MaybeDetachedNode<EnumBigIntMemberType['id']>,
+  readonly init: MaybeDetachedNode<EnumBigIntMemberType['init']>,
 };
 
 export type EnumBooleanBodyProps = {
-  +members: ReadonlyArray<
+  readonly members: ReadonlyArray<
     MaybeDetachedNode<EnumBooleanBodyType['members'][number]>,
   >,
-  +explicitType: EnumBooleanBodyType['explicitType'],
-  +hasUnknownMembers: EnumBooleanBodyType['hasUnknownMembers'],
+  readonly explicitType: EnumBooleanBodyType['explicitType'],
+  readonly hasUnknownMembers: EnumBooleanBodyType['hasUnknownMembers'],
 };
 
 export type EnumBooleanMemberProps = {
-  +id: MaybeDetachedNode<EnumBooleanMemberType['id']>,
-  +init: MaybeDetachedNode<EnumBooleanMemberType['init']>,
+  readonly id: MaybeDetachedNode<EnumBooleanMemberType['id']>,
+  readonly init: MaybeDetachedNode<EnumBooleanMemberType['init']>,
 };
 
 export type EnumDeclarationProps = {
-  +id: MaybeDetachedNode<EnumDeclarationType['id']>,
-  +body: MaybeDetachedNode<EnumDeclarationType['body']>,
+  readonly id: MaybeDetachedNode<EnumDeclarationType['id']>,
+  readonly body: MaybeDetachedNode<EnumDeclarationType['body']>,
 };
 
 export type EnumDefaultedMemberProps = {
-  +id: MaybeDetachedNode<EnumDefaultedMemberType['id']>,
+  readonly id: MaybeDetachedNode<EnumDefaultedMemberType['id']>,
 };
 
 export type EnumNumberBodyProps = {
-  +members: ReadonlyArray<
+  readonly members: ReadonlyArray<
     MaybeDetachedNode<EnumNumberBodyType['members'][number]>,
   >,
-  +explicitType: EnumNumberBodyType['explicitType'],
-  +hasUnknownMembers: EnumNumberBodyType['hasUnknownMembers'],
+  readonly explicitType: EnumNumberBodyType['explicitType'],
+  readonly hasUnknownMembers: EnumNumberBodyType['hasUnknownMembers'],
 };
 
 export type EnumNumberMemberProps = {
-  +id: MaybeDetachedNode<EnumNumberMemberType['id']>,
-  +init: MaybeDetachedNode<EnumNumberMemberType['init']>,
+  readonly id: MaybeDetachedNode<EnumNumberMemberType['id']>,
+  readonly init: MaybeDetachedNode<EnumNumberMemberType['init']>,
 };
 
 export type EnumStringBodyProps = {
-  +members: ReadonlyArray<
+  readonly members: ReadonlyArray<
     MaybeDetachedNode<EnumStringBodyType['members'][number]>,
   >,
-  +explicitType: EnumStringBodyType['explicitType'],
-  +hasUnknownMembers: EnumStringBodyType['hasUnknownMembers'],
+  readonly explicitType: EnumStringBodyType['explicitType'],
+  readonly hasUnknownMembers: EnumStringBodyType['hasUnknownMembers'],
 };
 
 export type EnumStringMemberProps = {
-  +id: MaybeDetachedNode<EnumStringMemberType['id']>,
-  +init: MaybeDetachedNode<EnumStringMemberType['init']>,
+  readonly id: MaybeDetachedNode<EnumStringMemberType['id']>,
+  readonly init: MaybeDetachedNode<EnumStringMemberType['init']>,
 };
 
 export type EnumSymbolBodyProps = {
-  +members: ReadonlyArray<
+  readonly members: ReadonlyArray<
     MaybeDetachedNode<EnumSymbolBodyType['members'][number]>,
   >,
-  +hasUnknownMembers: EnumSymbolBodyType['hasUnknownMembers'],
+  readonly hasUnknownMembers: EnumSymbolBodyType['hasUnknownMembers'],
 };
 
 export type ExistsTypeAnnotationProps = {};
 
 export type ExportAllDeclarationProps = {
-  +exported?: ?MaybeDetachedNode<ExportAllDeclarationType['exported']>,
-  +source: MaybeDetachedNode<ExportAllDeclarationType['source']>,
-  +exportKind: ExportAllDeclarationType['exportKind'],
+  readonly exported?: ?MaybeDetachedNode<ExportAllDeclarationType['exported']>,
+  readonly source: MaybeDetachedNode<ExportAllDeclarationType['source']>,
+  readonly exportKind: ExportAllDeclarationType['exportKind'],
 };
 
 export type ExportDefaultDeclarationProps = {
-  +declaration: MaybeDetachedNode<ExportDefaultDeclarationType['declaration']>,
+  readonly declaration: MaybeDetachedNode<
+    ExportDefaultDeclarationType['declaration'],
+  >,
 };
 
 export type ExportSpecifierProps = {
-  +exported: MaybeDetachedNode<ExportSpecifierType['exported']>,
-  +local: MaybeDetachedNode<ExportSpecifierType['local']>,
+  readonly exported: MaybeDetachedNode<ExportSpecifierType['exported']>,
+  readonly local: MaybeDetachedNode<ExportSpecifierType['local']>,
 };
 
 export type ExpressionStatementProps = {
-  +expression: MaybeDetachedNode<ExpressionStatementType['expression']>,
-  +directive?: ?ExpressionStatementType['directive'],
+  readonly expression: MaybeDetachedNode<ExpressionStatementType['expression']>,
+  readonly directive?: ?ExpressionStatementType['directive'],
 };
 
 export type ForInStatementProps = {
-  +left: MaybeDetachedNode<ForInStatementType['left']>,
-  +right: MaybeDetachedNode<ForInStatementType['right']>,
-  +body: MaybeDetachedNode<ForInStatementType['body']>,
+  readonly left: MaybeDetachedNode<ForInStatementType['left']>,
+  readonly right: MaybeDetachedNode<ForInStatementType['right']>,
+  readonly body: MaybeDetachedNode<ForInStatementType['body']>,
 };
 
 export type ForOfStatementProps = {
-  +left: MaybeDetachedNode<ForOfStatementType['left']>,
-  +right: MaybeDetachedNode<ForOfStatementType['right']>,
-  +body: MaybeDetachedNode<ForOfStatementType['body']>,
-  +await: ForOfStatementType['await'],
+  readonly left: MaybeDetachedNode<ForOfStatementType['left']>,
+  readonly right: MaybeDetachedNode<ForOfStatementType['right']>,
+  readonly body: MaybeDetachedNode<ForOfStatementType['body']>,
+  readonly await: ForOfStatementType['await'],
 };
 
 export type ForStatementProps = {
-  +init?: ?MaybeDetachedNode<ForStatementType['init']>,
-  +test?: ?MaybeDetachedNode<ForStatementType['test']>,
-  +update?: ?MaybeDetachedNode<ForStatementType['update']>,
-  +body: MaybeDetachedNode<ForStatementType['body']>,
+  readonly init?: ?MaybeDetachedNode<ForStatementType['init']>,
+  readonly test?: ?MaybeDetachedNode<ForStatementType['test']>,
+  readonly update?: ?MaybeDetachedNode<ForStatementType['update']>,
+  readonly body: MaybeDetachedNode<ForStatementType['body']>,
 };
 
 export type FunctionDeclarationProps = {
-  +id?: ?MaybeDetachedNode<FunctionDeclarationType['id']>,
-  +params: ReadonlyArray<
+  readonly id?: ?MaybeDetachedNode<FunctionDeclarationType['id']>,
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<FunctionDeclarationType['params'][number]>,
   >,
-  +body: MaybeDetachedNode<FunctionDeclarationType['body']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly body: MaybeDetachedNode<FunctionDeclarationType['body']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     FunctionDeclarationType['typeParameters'],
   >,
-  +returnType?: ?MaybeDetachedNode<FunctionDeclarationType['returnType']>,
-  +predicate?: ?MaybeDetachedNode<FunctionDeclarationType['predicate']>,
-  +generator: FunctionDeclarationType['generator'],
-  +async: FunctionDeclarationType['async'],
+  readonly returnType?: ?MaybeDetachedNode<
+    FunctionDeclarationType['returnType'],
+  >,
+  readonly predicate?: ?MaybeDetachedNode<FunctionDeclarationType['predicate']>,
+  readonly generator: FunctionDeclarationType['generator'],
+  readonly async: FunctionDeclarationType['async'],
 };
 
 export type FunctionExpressionProps = {
-  +id?: ?MaybeDetachedNode<FunctionExpressionType['id']>,
-  +params: ReadonlyArray<
+  readonly id?: ?MaybeDetachedNode<FunctionExpressionType['id']>,
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<FunctionExpressionType['params'][number]>,
   >,
-  +body: MaybeDetachedNode<FunctionExpressionType['body']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly body: MaybeDetachedNode<FunctionExpressionType['body']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     FunctionExpressionType['typeParameters'],
   >,
-  +returnType?: ?MaybeDetachedNode<FunctionExpressionType['returnType']>,
-  +predicate?: ?MaybeDetachedNode<FunctionExpressionType['predicate']>,
-  +generator: FunctionExpressionType['generator'],
-  +async: FunctionExpressionType['async'],
+  readonly returnType?: ?MaybeDetachedNode<
+    FunctionExpressionType['returnType'],
+  >,
+  readonly predicate?: ?MaybeDetachedNode<FunctionExpressionType['predicate']>,
+  readonly generator: FunctionExpressionType['generator'],
+  readonly async: FunctionExpressionType['async'],
 };
 
 export type FunctionTypeAnnotationProps = {
-  +params: ReadonlyArray<
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<FunctionTypeAnnotationType['params'][number]>,
   >,
-  +this?: ?MaybeDetachedNode<FunctionTypeAnnotationType['this']>,
-  +returnType: MaybeDetachedNode<FunctionTypeAnnotationType['returnType']>,
-  +rest?: ?MaybeDetachedNode<FunctionTypeAnnotationType['rest']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly this?: ?MaybeDetachedNode<FunctionTypeAnnotationType['this']>,
+  readonly returnType: MaybeDetachedNode<
+    FunctionTypeAnnotationType['returnType'],
+  >,
+  readonly rest?: ?MaybeDetachedNode<FunctionTypeAnnotationType['rest']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     FunctionTypeAnnotationType['typeParameters'],
   >,
 };
 
 export type FunctionTypeParamProps = {
-  +name?: ?MaybeDetachedNode<FunctionTypeParamType['name']>,
-  +typeAnnotation: MaybeDetachedNode<FunctionTypeParamType['typeAnnotation']>,
-  +optional: FunctionTypeParamType['optional'],
+  readonly name?: ?MaybeDetachedNode<FunctionTypeParamType['name']>,
+  readonly typeAnnotation: MaybeDetachedNode<
+    FunctionTypeParamType['typeAnnotation'],
+  >,
+  readonly optional: FunctionTypeParamType['optional'],
 };
 
 export type GenericTypeAnnotationProps = {
-  +id: MaybeDetachedNode<GenericTypeAnnotationType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly id: MaybeDetachedNode<GenericTypeAnnotationType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     GenericTypeAnnotationType['typeParameters'],
   >,
 };
 
 export type HookDeclarationProps = {
-  +id: MaybeDetachedNode<HookDeclarationType['id']>,
-  +params: ReadonlyArray<
+  readonly id: MaybeDetachedNode<HookDeclarationType['id']>,
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<HookDeclarationType['params'][number]>,
   >,
-  +body: MaybeDetachedNode<HookDeclarationType['body']>,
-  +typeParameters?: ?MaybeDetachedNode<HookDeclarationType['typeParameters']>,
-  +returnType?: ?MaybeDetachedNode<HookDeclarationType['returnType']>,
-  +async: HookDeclarationType['async'],
+  readonly body: MaybeDetachedNode<HookDeclarationType['body']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    HookDeclarationType['typeParameters'],
+  >,
+  readonly returnType?: ?MaybeDetachedNode<HookDeclarationType['returnType']>,
+  readonly async: HookDeclarationType['async'],
 };
 
 export type HookTypeAnnotationProps = {
-  +params: ReadonlyArray<
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<HookTypeAnnotationType['params'][number]>,
   >,
-  +returnType: MaybeDetachedNode<HookTypeAnnotationType['returnType']>,
-  +rest?: ?MaybeDetachedNode<HookTypeAnnotationType['rest']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly returnType: MaybeDetachedNode<HookTypeAnnotationType['returnType']>,
+  readonly rest?: ?MaybeDetachedNode<HookTypeAnnotationType['rest']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     HookTypeAnnotationType['typeParameters'],
   >,
 };
 
 export type IfStatementProps = {
-  +test: MaybeDetachedNode<IfStatementType['test']>,
-  +consequent: MaybeDetachedNode<IfStatementType['consequent']>,
-  +alternate?: ?MaybeDetachedNode<IfStatementType['alternate']>,
+  readonly test: MaybeDetachedNode<IfStatementType['test']>,
+  readonly consequent: MaybeDetachedNode<IfStatementType['consequent']>,
+  readonly alternate?: ?MaybeDetachedNode<IfStatementType['alternate']>,
 };
 
 export type ImportAttributeProps = {
-  +key: MaybeDetachedNode<ImportAttributeType['key']>,
-  +value: MaybeDetachedNode<ImportAttributeType['value']>,
+  readonly key: MaybeDetachedNode<ImportAttributeType['key']>,
+  readonly value: MaybeDetachedNode<ImportAttributeType['value']>,
 };
 
 export type ImportDeclarationProps = {
-  +specifiers: ReadonlyArray<
+  readonly specifiers: ReadonlyArray<
     MaybeDetachedNode<ImportDeclarationType['specifiers'][number]>,
   >,
-  +source: MaybeDetachedNode<ImportDeclarationType['source']>,
-  +attributes?: ?ReadonlyArray<
+  readonly source: MaybeDetachedNode<ImportDeclarationType['source']>,
+  readonly attributes?: ?ReadonlyArray<
     MaybeDetachedNode<ImportDeclarationType['attributes'][number]>,
   >,
-  +importKind: ImportDeclarationType['importKind'],
+  readonly importKind: ImportDeclarationType['importKind'],
 };
 
 export type ImportDefaultSpecifierProps = {
-  +local: MaybeDetachedNode<ImportDefaultSpecifierType['local']>,
+  readonly local: MaybeDetachedNode<ImportDefaultSpecifierType['local']>,
 };
 
 export type ImportExpressionProps = {
-  +source: MaybeDetachedNode<ImportExpressionType['source']>,
-  +options?: ?MaybeDetachedNode<ImportExpressionType['options']>,
+  readonly source: MaybeDetachedNode<ImportExpressionType['source']>,
+  readonly options?: ?MaybeDetachedNode<ImportExpressionType['options']>,
 };
 
 export type ImportNamespaceSpecifierProps = {
-  +local: MaybeDetachedNode<ImportNamespaceSpecifierType['local']>,
+  readonly local: MaybeDetachedNode<ImportNamespaceSpecifierType['local']>,
 };
 
 export type ImportSpecifierProps = {
-  +imported: MaybeDetachedNode<ImportSpecifierType['imported']>,
-  +local: MaybeDetachedNode<ImportSpecifierType['local']>,
-  +importKind: ImportSpecifierType['importKind'],
+  readonly imported: MaybeDetachedNode<ImportSpecifierType['imported']>,
+  readonly local: MaybeDetachedNode<ImportSpecifierType['local']>,
+  readonly importKind: ImportSpecifierType['importKind'],
 };
 
 export type IndexedAccessTypeProps = {
-  +objectType: MaybeDetachedNode<IndexedAccessTypeType['objectType']>,
-  +indexType: MaybeDetachedNode<IndexedAccessTypeType['indexType']>,
+  readonly objectType: MaybeDetachedNode<IndexedAccessTypeType['objectType']>,
+  readonly indexType: MaybeDetachedNode<IndexedAccessTypeType['indexType']>,
 };
 
 export type InferredPredicateProps = {};
 
 export type InferTypeAnnotationProps = {
-  +typeParameter: MaybeDetachedNode<InferTypeAnnotationType['typeParameter']>,
+  readonly typeParameter: MaybeDetachedNode<
+    InferTypeAnnotationType['typeParameter'],
+  >,
 };
 
 export type InterfaceDeclarationProps = {
-  +id: MaybeDetachedNode<InterfaceDeclarationType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<
+  readonly id: MaybeDetachedNode<InterfaceDeclarationType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
     InterfaceDeclarationType['typeParameters'],
   >,
-  +extends: ReadonlyArray<
+  readonly extends: ReadonlyArray<
     MaybeDetachedNode<InterfaceDeclarationType['extends'][number]>,
   >,
-  +body: MaybeDetachedNode<InterfaceDeclarationType['body']>,
+  readonly body: MaybeDetachedNode<InterfaceDeclarationType['body']>,
 };
 
 export type InterfaceExtendsProps = {
-  +id: MaybeDetachedNode<InterfaceExtendsType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<InterfaceExtendsType['typeParameters']>,
+  readonly id: MaybeDetachedNode<InterfaceExtendsType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    InterfaceExtendsType['typeParameters'],
+  >,
 };
 
 export type InterfaceTypeAnnotationProps = {
-  +extends: ReadonlyArray<
+  readonly extends: ReadonlyArray<
     MaybeDetachedNode<InterfaceTypeAnnotationType['extends'][number]>,
   >,
-  +body?: ?MaybeDetachedNode<InterfaceTypeAnnotationType['body']>,
+  readonly body?: ?MaybeDetachedNode<InterfaceTypeAnnotationType['body']>,
 };
 
 export type IntersectionTypeAnnotationProps = {
-  +types: ReadonlyArray<
+  readonly types: ReadonlyArray<
     MaybeDetachedNode<IntersectionTypeAnnotationType['types'][number]>,
   >,
 };
 
 export type JSXAttributeProps = {
-  +name: MaybeDetachedNode<JSXAttributeType['name']>,
-  +value?: ?MaybeDetachedNode<JSXAttributeType['value']>,
+  readonly name: MaybeDetachedNode<JSXAttributeType['name']>,
+  readonly value?: ?MaybeDetachedNode<JSXAttributeType['value']>,
 };
 
 export type JSXClosingElementProps = {
-  +name: MaybeDetachedNode<JSXClosingElementType['name']>,
+  readonly name: MaybeDetachedNode<JSXClosingElementType['name']>,
 };
 
 export type JSXClosingFragmentProps = {};
 
 export type JSXElementProps = {
-  +openingElement: MaybeDetachedNode<JSXElementType['openingElement']>,
-  +children: ReadonlyArray<
+  readonly openingElement: MaybeDetachedNode<JSXElementType['openingElement']>,
+  readonly children: ReadonlyArray<
     MaybeDetachedNode<JSXElementType['children'][number]>,
   >,
-  +closingElement?: ?MaybeDetachedNode<JSXElementType['closingElement']>,
+  readonly closingElement?: ?MaybeDetachedNode<
+    JSXElementType['closingElement'],
+  >,
 };
 
 export type JSXEmptyExpressionProps = {};
 
 export type JSXExpressionContainerProps = {
-  +expression: MaybeDetachedNode<JSXExpressionContainerType['expression']>,
+  readonly expression: MaybeDetachedNode<
+    JSXExpressionContainerType['expression'],
+  >,
 };
 
 export type JSXFragmentProps = {
-  +openingFragment: MaybeDetachedNode<JSXFragmentType['openingFragment']>,
-  +children: ReadonlyArray<
+  readonly openingFragment: MaybeDetachedNode<
+    JSXFragmentType['openingFragment'],
+  >,
+  readonly children: ReadonlyArray<
     MaybeDetachedNode<JSXFragmentType['children'][number]>,
   >,
-  +closingFragment: MaybeDetachedNode<JSXFragmentType['closingFragment']>,
+  readonly closingFragment: MaybeDetachedNode<
+    JSXFragmentType['closingFragment'],
+  >,
 };
 
 export type JSXIdentifierProps = {
-  +name: JSXIdentifierType['name'],
+  readonly name: JSXIdentifierType['name'],
 };
 
 export type JSXMemberExpressionProps = {
-  +object: MaybeDetachedNode<JSXMemberExpressionType['object']>,
-  +property: MaybeDetachedNode<JSXMemberExpressionType['property']>,
+  readonly object: MaybeDetachedNode<JSXMemberExpressionType['object']>,
+  readonly property: MaybeDetachedNode<JSXMemberExpressionType['property']>,
 };
 
 export type JSXNamespacedNameProps = {
-  +namespace: MaybeDetachedNode<JSXNamespacedNameType['namespace']>,
-  +name: MaybeDetachedNode<JSXNamespacedNameType['name']>,
+  readonly namespace: MaybeDetachedNode<JSXNamespacedNameType['namespace']>,
+  readonly name: MaybeDetachedNode<JSXNamespacedNameType['name']>,
 };
 
 export type JSXOpeningElementProps = {
-  +name: MaybeDetachedNode<JSXOpeningElementType['name']>,
-  +attributes: ReadonlyArray<
+  readonly name: MaybeDetachedNode<JSXOpeningElementType['name']>,
+  readonly attributes: ReadonlyArray<
     MaybeDetachedNode<JSXOpeningElementType['attributes'][number]>,
   >,
-  +selfClosing: JSXOpeningElementType['selfClosing'],
-  +typeArguments?: ?MaybeDetachedNode<JSXOpeningElementType['typeArguments']>,
+  readonly selfClosing: JSXOpeningElementType['selfClosing'],
+  readonly typeArguments?: ?MaybeDetachedNode<
+    JSXOpeningElementType['typeArguments'],
+  >,
 };
 
 export type JSXOpeningFragmentProps = {};
 
 export type JSXSpreadAttributeProps = {
-  +argument: MaybeDetachedNode<JSXSpreadAttributeType['argument']>,
+  readonly argument: MaybeDetachedNode<JSXSpreadAttributeType['argument']>,
 };
 
 export type JSXSpreadChildProps = {
-  +expression: MaybeDetachedNode<JSXSpreadChildType['expression']>,
+  readonly expression: MaybeDetachedNode<JSXSpreadChildType['expression']>,
 };
 
 export type JSXTextProps = {
-  +value: JSXTextType['value'],
-  +raw: JSXTextType['raw'],
+  readonly value: JSXTextType['value'],
+  readonly raw: JSXTextType['raw'],
 };
 
 export type KeyofTypeAnnotationProps = {
-  +argument: MaybeDetachedNode<KeyofTypeAnnotationType['argument']>,
+  readonly argument: MaybeDetachedNode<KeyofTypeAnnotationType['argument']>,
 };
 
 export type LabeledStatementProps = {
-  +label: MaybeDetachedNode<LabeledStatementType['label']>,
-  +body: MaybeDetachedNode<LabeledStatementType['body']>,
+  readonly label: MaybeDetachedNode<LabeledStatementType['label']>,
+  readonly body: MaybeDetachedNode<LabeledStatementType['body']>,
 };
 
 export type LogicalExpressionProps = {
-  +left: MaybeDetachedNode<LogicalExpressionType['left']>,
-  +right: MaybeDetachedNode<LogicalExpressionType['right']>,
-  +operator: LogicalExpressionType['operator'],
+  readonly left: MaybeDetachedNode<LogicalExpressionType['left']>,
+  readonly right: MaybeDetachedNode<LogicalExpressionType['right']>,
+  readonly operator: LogicalExpressionType['operator'],
 };
 
 export type MatchArrayPatternProps = {
-  +elements: ReadonlyArray<
+  readonly elements: ReadonlyArray<
     MaybeDetachedNode<MatchArrayPatternType['elements'][number]>,
   >,
-  +rest?: ?MaybeDetachedNode<MatchArrayPatternType['rest']>,
+  readonly rest?: ?MaybeDetachedNode<MatchArrayPatternType['rest']>,
 };
 
 export type MatchAsPatternProps = {
-  +pattern: MaybeDetachedNode<MatchAsPatternType['pattern']>,
-  +target: MaybeDetachedNode<MatchAsPatternType['target']>,
+  readonly pattern: MaybeDetachedNode<MatchAsPatternType['pattern']>,
+  readonly target: MaybeDetachedNode<MatchAsPatternType['target']>,
 };
 
 export type MatchBindingPatternProps = {
-  +id: MaybeDetachedNode<MatchBindingPatternType['id']>,
-  +kind: MatchBindingPatternType['kind'],
+  readonly id: MaybeDetachedNode<MatchBindingPatternType['id']>,
+  readonly kind: MatchBindingPatternType['kind'],
 };
 
 export type MatchExpressionProps = {
-  +argument: MaybeDetachedNode<MatchExpressionType['argument']>,
-  +cases: ReadonlyArray<
+  readonly argument: MaybeDetachedNode<MatchExpressionType['argument']>,
+  readonly cases: ReadonlyArray<
     MaybeDetachedNode<MatchExpressionType['cases'][number]>,
   >,
 };
 
 export type MatchExpressionCaseProps = {
-  +pattern: MaybeDetachedNode<MatchExpressionCaseType['pattern']>,
-  +body: MaybeDetachedNode<MatchExpressionCaseType['body']>,
-  +guard?: ?MaybeDetachedNode<MatchExpressionCaseType['guard']>,
+  readonly pattern: MaybeDetachedNode<MatchExpressionCaseType['pattern']>,
+  readonly body: MaybeDetachedNode<MatchExpressionCaseType['body']>,
+  readonly guard?: ?MaybeDetachedNode<MatchExpressionCaseType['guard']>,
 };
 
 export type MatchIdentifierPatternProps = {
-  +id: MaybeDetachedNode<MatchIdentifierPatternType['id']>,
+  readonly id: MaybeDetachedNode<MatchIdentifierPatternType['id']>,
 };
 
 export type MatchInstanceObjectPatternProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<MatchInstanceObjectPatternType['properties'][number]>,
   >,
-  +rest?: ?MaybeDetachedNode<MatchInstanceObjectPatternType['rest']>,
+  readonly rest?: ?MaybeDetachedNode<MatchInstanceObjectPatternType['rest']>,
 };
 
 export type MatchInstancePatternProps = {
-  +targetConstructor: MaybeDetachedNode<
+  readonly targetConstructor: MaybeDetachedNode<
     MatchInstancePatternType['targetConstructor'],
   >,
-  +properties: MaybeDetachedNode<MatchInstancePatternType['properties']>,
+  readonly properties: MaybeDetachedNode<
+    MatchInstancePatternType['properties'],
+  >,
 };
 
 export type MatchLiteralPatternProps = {
-  +literal: MaybeDetachedNode<MatchLiteralPatternType['literal']>,
+  readonly literal: MaybeDetachedNode<MatchLiteralPatternType['literal']>,
 };
 
 export type MatchMemberPatternProps = {
-  +base: MaybeDetachedNode<MatchMemberPatternType['base']>,
-  +property: MaybeDetachedNode<MatchMemberPatternType['property']>,
+  readonly base: MaybeDetachedNode<MatchMemberPatternType['base']>,
+  readonly property: MaybeDetachedNode<MatchMemberPatternType['property']>,
 };
 
 export type MatchObjectPatternProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<MatchObjectPatternType['properties'][number]>,
   >,
-  +rest?: ?MaybeDetachedNode<MatchObjectPatternType['rest']>,
+  readonly rest?: ?MaybeDetachedNode<MatchObjectPatternType['rest']>,
 };
 
 export type MatchObjectPatternPropertyProps = {
-  +key: MaybeDetachedNode<MatchObjectPatternPropertyType['key']>,
-  +pattern: MaybeDetachedNode<MatchObjectPatternPropertyType['pattern']>,
-  +shorthand: MatchObjectPatternPropertyType['shorthand'],
+  readonly key: MaybeDetachedNode<MatchObjectPatternPropertyType['key']>,
+  readonly pattern: MaybeDetachedNode<
+    MatchObjectPatternPropertyType['pattern'],
+  >,
+  readonly shorthand: MatchObjectPatternPropertyType['shorthand'],
 };
 
 export type MatchOrPatternProps = {
-  +patterns: ReadonlyArray<
+  readonly patterns: ReadonlyArray<
     MaybeDetachedNode<MatchOrPatternType['patterns'][number]>,
   >,
 };
 
 export type MatchRestPatternProps = {
-  +argument?: ?MaybeDetachedNode<MatchRestPatternType['argument']>,
+  readonly argument?: ?MaybeDetachedNode<MatchRestPatternType['argument']>,
 };
 
 export type MatchStatementProps = {
-  +argument: MaybeDetachedNode<MatchStatementType['argument']>,
-  +cases: ReadonlyArray<MaybeDetachedNode<MatchStatementType['cases'][number]>>,
+  readonly argument: MaybeDetachedNode<MatchStatementType['argument']>,
+  readonly cases: ReadonlyArray<
+    MaybeDetachedNode<MatchStatementType['cases'][number]>,
+  >,
 };
 
 export type MatchStatementCaseProps = {
-  +pattern: MaybeDetachedNode<MatchStatementCaseType['pattern']>,
-  +body: MaybeDetachedNode<MatchStatementCaseType['body']>,
-  +guard?: ?MaybeDetachedNode<MatchStatementCaseType['guard']>,
+  readonly pattern: MaybeDetachedNode<MatchStatementCaseType['pattern']>,
+  readonly body: MaybeDetachedNode<MatchStatementCaseType['body']>,
+  readonly guard?: ?MaybeDetachedNode<MatchStatementCaseType['guard']>,
 };
 
 export type MatchUnaryPatternProps = {
-  +argument: MaybeDetachedNode<MatchUnaryPatternType['argument']>,
-  +operator: MatchUnaryPatternType['operator'],
+  readonly argument: MaybeDetachedNode<MatchUnaryPatternType['argument']>,
+  readonly operator: MatchUnaryPatternType['operator'],
 };
 
 export type MatchWildcardPatternProps = {};
 
 export type MetaPropertyProps = {
-  +meta: MaybeDetachedNode<MetaPropertyType['meta']>,
-  +property: MaybeDetachedNode<MetaPropertyType['property']>,
+  readonly meta: MaybeDetachedNode<MetaPropertyType['meta']>,
+  readonly property: MaybeDetachedNode<MetaPropertyType['property']>,
 };
 
 export type MethodDefinitionProps = {
-  +key: MaybeDetachedNode<MethodDefinitionType['key']>,
-  +value: MaybeDetachedNode<MethodDefinitionType['value']>,
-  +kind: MethodDefinitionType['kind'],
-  +computed: MethodDefinitionType['computed'],
-  +static: MethodDefinitionType['static'],
-  +decorators: ReadonlyArray<
+  readonly key: MaybeDetachedNode<MethodDefinitionType['key']>,
+  readonly value: MaybeDetachedNode<MethodDefinitionType['value']>,
+  readonly kind: MethodDefinitionType['kind'],
+  readonly computed: MethodDefinitionType['computed'],
+  readonly static: MethodDefinitionType['static'],
+  readonly decorators: ReadonlyArray<
     MaybeDetachedNode<MethodDefinitionType['decorators'][number]>,
   >,
 };
@@ -961,15 +1035,17 @@ export type MixedTypeAnnotationProps = {};
 export type NeverTypeAnnotationProps = {};
 
 export type NewExpressionProps = {
-  +callee: MaybeDetachedNode<NewExpressionType['callee']>,
-  +typeArguments?: ?MaybeDetachedNode<NewExpressionType['typeArguments']>,
-  +arguments: ReadonlyArray<
+  readonly callee: MaybeDetachedNode<NewExpressionType['callee']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
+    NewExpressionType['typeArguments'],
+  >,
+  readonly arguments: ReadonlyArray<
     MaybeDetachedNode<NewExpressionType['arguments'][number]>,
   >,
 };
 
 export type NullableTypeAnnotationProps = {
-  +typeAnnotation: MaybeDetachedNode<
+  readonly typeAnnotation: MaybeDetachedNode<
     NullableTypeAnnotationType['typeAnnotation'],
   >,
 };
@@ -977,214 +1053,238 @@ export type NullableTypeAnnotationProps = {
 export type NullLiteralTypeAnnotationProps = {};
 
 export type NumberLiteralTypeAnnotationProps = {
-  +value: NumberLiteralTypeAnnotationType['value'],
-  +raw: NumberLiteralTypeAnnotationType['raw'],
+  readonly value: NumberLiteralTypeAnnotationType['value'],
+  readonly raw: NumberLiteralTypeAnnotationType['raw'],
 };
 
 export type NumberTypeAnnotationProps = {};
 
 export type ObjectExpressionProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<ObjectExpressionType['properties'][number]>,
   >,
 };
 
 export type ObjectPatternProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<ObjectPatternType['properties'][number]>,
   >,
-  +typeAnnotation?: ?MaybeDetachedNode<ObjectPatternType['typeAnnotation']>,
+  readonly typeAnnotation?: ?MaybeDetachedNode<
+    ObjectPatternType['typeAnnotation'],
+  >,
 };
 
 export type ObjectTypeAnnotationProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<ObjectTypeAnnotationType['properties'][number]>,
   >,
-  +indexers: ReadonlyArray<
+  readonly indexers: ReadonlyArray<
     MaybeDetachedNode<ObjectTypeAnnotationType['indexers'][number]>,
   >,
-  +callProperties: ReadonlyArray<
+  readonly callProperties: ReadonlyArray<
     MaybeDetachedNode<ObjectTypeAnnotationType['callProperties'][number]>,
   >,
-  +internalSlots: ReadonlyArray<
+  readonly internalSlots: ReadonlyArray<
     MaybeDetachedNode<ObjectTypeAnnotationType['internalSlots'][number]>,
   >,
-  +inexact: ObjectTypeAnnotationType['inexact'],
-  +exact: ObjectTypeAnnotationType['exact'],
+  readonly inexact: ObjectTypeAnnotationType['inexact'],
+  readonly exact: ObjectTypeAnnotationType['exact'],
 };
 
 export type ObjectTypeCallPropertyProps = {
-  +value: MaybeDetachedNode<ObjectTypeCallPropertyType['value']>,
-  +static: ObjectTypeCallPropertyType['static'],
+  readonly value: MaybeDetachedNode<ObjectTypeCallPropertyType['value']>,
+  readonly static: ObjectTypeCallPropertyType['static'],
 };
 
 export type ObjectTypeIndexerProps = {
-  +id?: ?MaybeDetachedNode<ObjectTypeIndexerType['id']>,
-  +key: MaybeDetachedNode<ObjectTypeIndexerType['key']>,
-  +value: MaybeDetachedNode<ObjectTypeIndexerType['value']>,
-  +static: ObjectTypeIndexerType['static'],
-  +variance?: ?MaybeDetachedNode<ObjectTypeIndexerType['variance']>,
+  readonly id?: ?MaybeDetachedNode<ObjectTypeIndexerType['id']>,
+  readonly key: MaybeDetachedNode<ObjectTypeIndexerType['key']>,
+  readonly value: MaybeDetachedNode<ObjectTypeIndexerType['value']>,
+  readonly static: ObjectTypeIndexerType['static'],
+  readonly variance?: ?MaybeDetachedNode<ObjectTypeIndexerType['variance']>,
 };
 
 export type ObjectTypeInternalSlotProps = {
-  +id: MaybeDetachedNode<ObjectTypeInternalSlotType['id']>,
-  +value: MaybeDetachedNode<ObjectTypeInternalSlotType['value']>,
-  +optional: ObjectTypeInternalSlotType['optional'],
-  +static: ObjectTypeInternalSlotType['static'],
-  +method: ObjectTypeInternalSlotType['method'],
+  readonly id: MaybeDetachedNode<ObjectTypeInternalSlotType['id']>,
+  readonly value: MaybeDetachedNode<ObjectTypeInternalSlotType['value']>,
+  readonly optional: ObjectTypeInternalSlotType['optional'],
+  readonly static: ObjectTypeInternalSlotType['static'],
+  readonly method: ObjectTypeInternalSlotType['method'],
 };
 
 export type ObjectTypeMappedTypePropertyProps = {
-  +keyTparam: MaybeDetachedNode<ObjectTypeMappedTypePropertyType['keyTparam']>,
-  +propType: MaybeDetachedNode<ObjectTypeMappedTypePropertyType['propType']>,
-  +sourceType: MaybeDetachedNode<
+  readonly keyTparam: MaybeDetachedNode<
+    ObjectTypeMappedTypePropertyType['keyTparam'],
+  >,
+  readonly propType: MaybeDetachedNode<
+    ObjectTypeMappedTypePropertyType['propType'],
+  >,
+  readonly sourceType: MaybeDetachedNode<
     ObjectTypeMappedTypePropertyType['sourceType'],
   >,
-  +variance?: ?MaybeDetachedNode<ObjectTypeMappedTypePropertyType['variance']>,
-  +optional?: ?ObjectTypeMappedTypePropertyType['optional'],
+  readonly variance?: ?MaybeDetachedNode<
+    ObjectTypeMappedTypePropertyType['variance'],
+  >,
+  readonly optional?: ?ObjectTypeMappedTypePropertyType['optional'],
 };
 
 export type ObjectTypeSpreadPropertyProps = {
-  +argument: MaybeDetachedNode<ObjectTypeSpreadPropertyType['argument']>,
+  readonly argument: MaybeDetachedNode<
+    ObjectTypeSpreadPropertyType['argument'],
+  >,
 };
 
 export type OpaqueTypeProps = {
-  +id: MaybeDetachedNode<OpaqueTypeType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<OpaqueTypeType['typeParameters']>,
-  +impltype: MaybeDetachedNode<OpaqueTypeType['impltype']>,
-  +lowerBound?: ?MaybeDetachedNode<OpaqueTypeType['lowerBound']>,
-  +upperBound?: ?MaybeDetachedNode<OpaqueTypeType['upperBound']>,
-  +supertype?: ?MaybeDetachedNode<OpaqueTypeType['supertype']>,
+  readonly id: MaybeDetachedNode<OpaqueTypeType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    OpaqueTypeType['typeParameters'],
+  >,
+  readonly impltype: MaybeDetachedNode<OpaqueTypeType['impltype']>,
+  readonly lowerBound?: ?MaybeDetachedNode<OpaqueTypeType['lowerBound']>,
+  readonly upperBound?: ?MaybeDetachedNode<OpaqueTypeType['upperBound']>,
+  readonly supertype?: ?MaybeDetachedNode<OpaqueTypeType['supertype']>,
 };
 
 export type OptionalIndexedAccessTypeProps = {
-  +objectType: MaybeDetachedNode<OptionalIndexedAccessTypeType['objectType']>,
-  +indexType: MaybeDetachedNode<OptionalIndexedAccessTypeType['indexType']>,
-  +optional: OptionalIndexedAccessTypeType['optional'],
+  readonly objectType: MaybeDetachedNode<
+    OptionalIndexedAccessTypeType['objectType'],
+  >,
+  readonly indexType: MaybeDetachedNode<
+    OptionalIndexedAccessTypeType['indexType'],
+  >,
+  readonly optional: OptionalIndexedAccessTypeType['optional'],
 };
 
 export type PrivateIdentifierProps = {
-  +name: PrivateIdentifierType['name'],
+  readonly name: PrivateIdentifierType['name'],
 };
 
 export type PropertyProps = {
-  +key: MaybeDetachedNode<PropertyType['key']>,
-  +value: MaybeDetachedNode<PropertyType['value']>,
-  +kind: PropertyType['kind'],
-  +computed: PropertyType['computed'],
-  +method: PropertyType['method'],
-  +shorthand: PropertyType['shorthand'],
+  readonly key: MaybeDetachedNode<PropertyType['key']>,
+  readonly value: MaybeDetachedNode<PropertyType['value']>,
+  readonly kind: PropertyType['kind'],
+  readonly computed: PropertyType['computed'],
+  readonly method: PropertyType['method'],
+  readonly shorthand: PropertyType['shorthand'],
 };
 
 export type PropertyDefinitionProps = {
-  +key: MaybeDetachedNode<PropertyDefinitionType['key']>,
-  +value?: ?MaybeDetachedNode<PropertyDefinitionType['value']>,
-  +computed: PropertyDefinitionType['computed'],
-  +static: PropertyDefinitionType['static'],
-  +decorators: ReadonlyArray<
+  readonly key: MaybeDetachedNode<PropertyDefinitionType['key']>,
+  readonly value?: ?MaybeDetachedNode<PropertyDefinitionType['value']>,
+  readonly computed: PropertyDefinitionType['computed'],
+  readonly static: PropertyDefinitionType['static'],
+  readonly decorators: ReadonlyArray<
     MaybeDetachedNode<PropertyDefinitionType['decorators'][number]>,
   >,
-  +declare: PropertyDefinitionType['declare'],
-  +optional: PropertyDefinitionType['optional'],
-  +variance?: ?MaybeDetachedNode<PropertyDefinitionType['variance']>,
-  +typeAnnotation?: ?MaybeDetachedNode<
+  readonly declare: PropertyDefinitionType['declare'],
+  readonly optional: PropertyDefinitionType['optional'],
+  readonly variance?: ?MaybeDetachedNode<PropertyDefinitionType['variance']>,
+  readonly typeAnnotation?: ?MaybeDetachedNode<
     PropertyDefinitionType['typeAnnotation'],
   >,
 };
 
 export type QualifiedTypeIdentifierProps = {
-  +qualification: MaybeDetachedNode<
+  readonly qualification: MaybeDetachedNode<
     QualifiedTypeIdentifierType['qualification'],
   >,
-  +id: MaybeDetachedNode<QualifiedTypeIdentifierType['id']>,
+  readonly id: MaybeDetachedNode<QualifiedTypeIdentifierType['id']>,
 };
 
 export type QualifiedTypeofIdentifierProps = {
-  +qualification: MaybeDetachedNode<
+  readonly qualification: MaybeDetachedNode<
     QualifiedTypeofIdentifierType['qualification'],
   >,
-  +id: MaybeDetachedNode<QualifiedTypeofIdentifierType['id']>,
+  readonly id: MaybeDetachedNode<QualifiedTypeofIdentifierType['id']>,
 };
 
 export type RecordDeclarationProps = {
-  +id: MaybeDetachedNode<RecordDeclarationType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<RecordDeclarationType['typeParameters']>,
-  +implements: ReadonlyArray<
+  readonly id: MaybeDetachedNode<RecordDeclarationType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    RecordDeclarationType['typeParameters'],
+  >,
+  readonly implements: ReadonlyArray<
     MaybeDetachedNode<RecordDeclarationType['implements'][number]>,
   >,
-  +body: MaybeDetachedNode<RecordDeclarationType['body']>,
+  readonly body: MaybeDetachedNode<RecordDeclarationType['body']>,
 };
 
 export type RecordDeclarationBodyProps = {
-  +elements: ReadonlyArray<
+  readonly elements: ReadonlyArray<
     MaybeDetachedNode<RecordDeclarationBodyType['elements'][number]>,
   >,
 };
 
 export type RecordDeclarationImplementsProps = {
-  +id: MaybeDetachedNode<RecordDeclarationImplementsType['id']>,
-  +typeArguments?: ?MaybeDetachedNode<
+  readonly id: MaybeDetachedNode<RecordDeclarationImplementsType['id']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
     RecordDeclarationImplementsType['typeArguments'],
   >,
 };
 
 export type RecordDeclarationPropertyProps = {
-  +key: MaybeDetachedNode<RecordDeclarationPropertyType['key']>,
-  +typeAnnotation: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<RecordDeclarationPropertyType['key']>,
+  readonly typeAnnotation: MaybeDetachedNode<
     RecordDeclarationPropertyType['typeAnnotation'],
   >,
-  +defaultValue?: ?MaybeDetachedNode<
+  readonly defaultValue?: ?MaybeDetachedNode<
     RecordDeclarationPropertyType['defaultValue'],
   >,
 };
 
 export type RecordDeclarationStaticPropertyProps = {
-  +key: MaybeDetachedNode<RecordDeclarationStaticPropertyType['key']>,
-  +typeAnnotation: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<RecordDeclarationStaticPropertyType['key']>,
+  readonly typeAnnotation: MaybeDetachedNode<
     RecordDeclarationStaticPropertyType['typeAnnotation'],
   >,
-  +value: MaybeDetachedNode<RecordDeclarationStaticPropertyType['value']>,
+  readonly value: MaybeDetachedNode<
+    RecordDeclarationStaticPropertyType['value'],
+  >,
 };
 
 export type RecordExpressionProps = {
-  +recordConstructor: MaybeDetachedNode<
+  readonly recordConstructor: MaybeDetachedNode<
     RecordExpressionType['recordConstructor'],
   >,
-  +typeArguments?: ?MaybeDetachedNode<RecordExpressionType['typeArguments']>,
-  +properties: MaybeDetachedNode<RecordExpressionType['properties']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
+    RecordExpressionType['typeArguments'],
+  >,
+  readonly properties: MaybeDetachedNode<RecordExpressionType['properties']>,
 };
 
 export type RecordExpressionPropertiesProps = {
-  +properties: ReadonlyArray<
+  readonly properties: ReadonlyArray<
     MaybeDetachedNode<RecordExpressionPropertiesType['properties'][number]>,
   >,
 };
 
 export type RestElementProps = {
-  +argument: MaybeDetachedNode<RestElementType['argument']>,
+  readonly argument: MaybeDetachedNode<RestElementType['argument']>,
 };
 
 export type ReturnStatementProps = {
-  +argument?: ?MaybeDetachedNode<ReturnStatementType['argument']>,
+  readonly argument?: ?MaybeDetachedNode<ReturnStatementType['argument']>,
 };
 
 export type SequenceExpressionProps = {
-  +expressions: ReadonlyArray<
+  readonly expressions: ReadonlyArray<
     MaybeDetachedNode<SequenceExpressionType['expressions'][number]>,
   >,
 };
 
 export type SpreadElementProps = {
-  +argument: MaybeDetachedNode<SpreadElementType['argument']>,
+  readonly argument: MaybeDetachedNode<SpreadElementType['argument']>,
 };
 
 export type StaticBlockProps = {
-  +body: ReadonlyArray<MaybeDetachedNode<StaticBlockType['body'][number]>>,
+  readonly body: ReadonlyArray<
+    MaybeDetachedNode<StaticBlockType['body'][number]>,
+  >,
 };
 
 export type StringLiteralTypeAnnotationProps = {
-  +value: StringLiteralTypeAnnotationType['value'],
-  +raw: StringLiteralTypeAnnotationType['raw'],
+  readonly value: StringLiteralTypeAnnotationType['value'],
+  readonly raw: StringLiteralTypeAnnotationType['raw'],
 };
 
 export type StringTypeAnnotationProps = {};
@@ -1192,15 +1292,15 @@ export type StringTypeAnnotationProps = {};
 export type SuperProps = {};
 
 export type SwitchCaseProps = {
-  +test?: ?MaybeDetachedNode<SwitchCaseType['test']>,
-  +consequent: ReadonlyArray<
+  readonly test?: ?MaybeDetachedNode<SwitchCaseType['test']>,
+  readonly consequent: ReadonlyArray<
     MaybeDetachedNode<SwitchCaseType['consequent'][number]>,
   >,
 };
 
 export type SwitchStatementProps = {
-  +discriminant: MaybeDetachedNode<SwitchStatementType['discriminant']>,
-  +cases: ReadonlyArray<
+  readonly discriminant: MaybeDetachedNode<SwitchStatementType['discriminant']>,
+  readonly cases: ReadonlyArray<
     MaybeDetachedNode<SwitchStatementType['cases'][number]>,
   >,
 };
@@ -1208,15 +1308,15 @@ export type SwitchStatementProps = {
 export type SymbolTypeAnnotationProps = {};
 
 export type TaggedTemplateExpressionProps = {
-  +tag: MaybeDetachedNode<TaggedTemplateExpressionType['tag']>,
-  +quasi: MaybeDetachedNode<TaggedTemplateExpressionType['quasi']>,
+  readonly tag: MaybeDetachedNode<TaggedTemplateExpressionType['tag']>,
+  readonly quasi: MaybeDetachedNode<TaggedTemplateExpressionType['quasi']>,
 };
 
 export type TemplateLiteralProps = {
-  +quasis: ReadonlyArray<
+  readonly quasis: ReadonlyArray<
     MaybeDetachedNode<TemplateLiteralType['quasis'][number]>,
   >,
-  +expressions: ReadonlyArray<
+  readonly expressions: ReadonlyArray<
     MaybeDetachedNode<TemplateLiteralType['expressions'][number]>,
   >,
 };
@@ -1226,100 +1326,112 @@ export type ThisExpressionProps = {};
 export type ThisTypeAnnotationProps = {};
 
 export type ThrowStatementProps = {
-  +argument: MaybeDetachedNode<ThrowStatementType['argument']>,
+  readonly argument: MaybeDetachedNode<ThrowStatementType['argument']>,
 };
 
 export type TryStatementProps = {
-  +block: MaybeDetachedNode<TryStatementType['block']>,
-  +handler?: ?MaybeDetachedNode<TryStatementType['handler']>,
-  +finalizer?: ?MaybeDetachedNode<TryStatementType['finalizer']>,
+  readonly block: MaybeDetachedNode<TryStatementType['block']>,
+  readonly handler?: ?MaybeDetachedNode<TryStatementType['handler']>,
+  readonly finalizer?: ?MaybeDetachedNode<TryStatementType['finalizer']>,
 };
 
 export type TupleTypeAnnotationProps = {
-  +elementTypes: ReadonlyArray<
+  readonly elementTypes: ReadonlyArray<
     MaybeDetachedNode<TupleTypeAnnotationType['elementTypes'][number]>,
   >,
-  +inexact: TupleTypeAnnotationType['inexact'],
+  readonly inexact: TupleTypeAnnotationType['inexact'],
 };
 
 export type TupleTypeLabeledElementProps = {
-  +label: MaybeDetachedNode<TupleTypeLabeledElementType['label']>,
-  +elementType: MaybeDetachedNode<TupleTypeLabeledElementType['elementType']>,
-  +optional: TupleTypeLabeledElementType['optional'],
-  +variance?: ?MaybeDetachedNode<TupleTypeLabeledElementType['variance']>,
+  readonly label: MaybeDetachedNode<TupleTypeLabeledElementType['label']>,
+  readonly elementType: MaybeDetachedNode<
+    TupleTypeLabeledElementType['elementType'],
+  >,
+  readonly optional: TupleTypeLabeledElementType['optional'],
+  readonly variance?: ?MaybeDetachedNode<
+    TupleTypeLabeledElementType['variance'],
+  >,
 };
 
 export type TupleTypeSpreadElementProps = {
-  +label?: ?MaybeDetachedNode<TupleTypeSpreadElementType['label']>,
-  +typeAnnotation: MaybeDetachedNode<
+  readonly label?: ?MaybeDetachedNode<TupleTypeSpreadElementType['label']>,
+  readonly typeAnnotation: MaybeDetachedNode<
     TupleTypeSpreadElementType['typeAnnotation'],
   >,
 };
 
 export type TypeAliasProps = {
-  +id: MaybeDetachedNode<TypeAliasType['id']>,
-  +typeParameters?: ?MaybeDetachedNode<TypeAliasType['typeParameters']>,
-  +right: MaybeDetachedNode<TypeAliasType['right']>,
+  readonly id: MaybeDetachedNode<TypeAliasType['id']>,
+  readonly typeParameters?: ?MaybeDetachedNode<TypeAliasType['typeParameters']>,
+  readonly right: MaybeDetachedNode<TypeAliasType['right']>,
 };
 
 export type TypeAnnotationProps = {
-  +typeAnnotation: MaybeDetachedNode<TypeAnnotationType['typeAnnotation']>,
+  readonly typeAnnotation: MaybeDetachedNode<
+    TypeAnnotationType['typeAnnotation'],
+  >,
 };
 
 export type TypeCastExpressionProps = {
-  +expression: MaybeDetachedNode<TypeCastExpressionType['expression']>,
-  +typeAnnotation: MaybeDetachedNode<TypeCastExpressionType['typeAnnotation']>,
+  readonly expression: MaybeDetachedNode<TypeCastExpressionType['expression']>,
+  readonly typeAnnotation: MaybeDetachedNode<
+    TypeCastExpressionType['typeAnnotation'],
+  >,
 };
 
 export type TypeofTypeAnnotationProps = {
-  +argument: MaybeDetachedNode<TypeofTypeAnnotationType['argument']>,
-  +typeArguments?: ?MaybeDetachedNode<
+  readonly argument: MaybeDetachedNode<TypeofTypeAnnotationType['argument']>,
+  readonly typeArguments?: ?MaybeDetachedNode<
     TypeofTypeAnnotationType['typeArguments'],
   >,
 };
 
 export type TypeOperatorProps = {
-  +operator: TypeOperatorType['operator'],
-  +typeAnnotation: MaybeDetachedNode<TypeOperatorType['typeAnnotation']>,
+  readonly operator: TypeOperatorType['operator'],
+  readonly typeAnnotation: MaybeDetachedNode<
+    TypeOperatorType['typeAnnotation'],
+  >,
 };
 
 export type TypeParameterProps = {
-  +name: TypeParameterType['name'],
-  +const: TypeParameterType['const'],
-  +bound?: ?MaybeDetachedNode<TypeParameterType['bound']>,
-  +variance?: ?MaybeDetachedNode<TypeParameterType['variance']>,
-  +default?: ?MaybeDetachedNode<TypeParameterType['default']>,
-  +usesExtendsBound: TypeParameterType['usesExtendsBound'],
+  readonly name: TypeParameterType['name'],
+  readonly const: TypeParameterType['const'],
+  readonly bound?: ?MaybeDetachedNode<TypeParameterType['bound']>,
+  readonly variance?: ?MaybeDetachedNode<TypeParameterType['variance']>,
+  readonly default?: ?MaybeDetachedNode<TypeParameterType['default']>,
+  readonly usesExtendsBound: TypeParameterType['usesExtendsBound'],
 };
 
 export type TypeParameterDeclarationProps = {
-  +params: ReadonlyArray<
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<TypeParameterDeclarationType['params'][number]>,
   >,
 };
 
 export type TypeParameterInstantiationProps = {
-  +params: ReadonlyArray<
+  readonly params: ReadonlyArray<
     MaybeDetachedNode<TypeParameterInstantiationType['params'][number]>,
   >,
 };
 
 export type TypePredicateProps = {
-  +parameterName: MaybeDetachedNode<TypePredicateType['parameterName']>,
-  +typeAnnotation?: ?MaybeDetachedNode<TypePredicateType['typeAnnotation']>,
-  +kind?: ?TypePredicateType['kind'],
+  readonly parameterName: MaybeDetachedNode<TypePredicateType['parameterName']>,
+  readonly typeAnnotation?: ?MaybeDetachedNode<
+    TypePredicateType['typeAnnotation'],
+  >,
+  readonly kind?: ?TypePredicateType['kind'],
 };
 
 export type UnaryExpressionProps = {
-  +operator: UnaryExpressionType['operator'],
-  +argument: MaybeDetachedNode<UnaryExpressionType['argument']>,
-  +prefix: UnaryExpressionType['prefix'],
+  readonly operator: UnaryExpressionType['operator'],
+  readonly argument: MaybeDetachedNode<UnaryExpressionType['argument']>,
+  readonly prefix: UnaryExpressionType['prefix'],
 };
 
 export type UndefinedTypeAnnotationProps = {};
 
 export type UnionTypeAnnotationProps = {
-  +types: ReadonlyArray<
+  readonly types: ReadonlyArray<
     MaybeDetachedNode<UnionTypeAnnotationType['types'][number]>,
   >,
 };
@@ -1327,47 +1439,47 @@ export type UnionTypeAnnotationProps = {
 export type UnknownTypeAnnotationProps = {};
 
 export type UpdateExpressionProps = {
-  +operator: UpdateExpressionType['operator'],
-  +argument: MaybeDetachedNode<UpdateExpressionType['argument']>,
-  +prefix: UpdateExpressionType['prefix'],
+  readonly operator: UpdateExpressionType['operator'],
+  readonly argument: MaybeDetachedNode<UpdateExpressionType['argument']>,
+  readonly prefix: UpdateExpressionType['prefix'],
 };
 
 export type VariableDeclarationProps = {
-  +kind: VariableDeclarationType['kind'],
-  +declarations: ReadonlyArray<
+  readonly kind: VariableDeclarationType['kind'],
+  readonly declarations: ReadonlyArray<
     MaybeDetachedNode<VariableDeclarationType['declarations'][number]>,
   >,
 };
 
 export type VariableDeclaratorProps = {
-  +init?: ?MaybeDetachedNode<VariableDeclaratorType['init']>,
-  +id: MaybeDetachedNode<VariableDeclaratorType['id']>,
+  readonly init?: ?MaybeDetachedNode<VariableDeclaratorType['init']>,
+  readonly id: MaybeDetachedNode<VariableDeclaratorType['id']>,
 };
 
 export type VarianceProps = {
-  +kind: VarianceType['kind'],
+  readonly kind: VarianceType['kind'],
 };
 
 export type VoidTypeAnnotationProps = {};
 
 export type WhileStatementProps = {
-  +body: MaybeDetachedNode<WhileStatementType['body']>,
-  +test: MaybeDetachedNode<WhileStatementType['test']>,
+  readonly body: MaybeDetachedNode<WhileStatementType['body']>,
+  readonly test: MaybeDetachedNode<WhileStatementType['test']>,
 };
 
 export type WithStatementProps = {
-  +object: MaybeDetachedNode<WithStatementType['object']>,
-  +body: MaybeDetachedNode<WithStatementType['body']>,
+  readonly object: MaybeDetachedNode<WithStatementType['object']>,
+  readonly body: MaybeDetachedNode<WithStatementType['body']>,
 };
 
 export type YieldExpressionProps = {
-  +argument?: ?MaybeDetachedNode<YieldExpressionType['argument']>,
-  +delegate?: ?YieldExpressionType['delegate'],
+  readonly argument?: ?MaybeDetachedNode<YieldExpressionType['argument']>,
+  readonly delegate?: ?YieldExpressionType['delegate'],
 };
 
 export function AnyTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<AnyTypeAnnotationType> {
   return detachedProps<AnyTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -1377,7 +1489,7 @@ export function AnyTypeAnnotation(
 
 export function ArrayExpression(props: {
   ...ArrayExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ArrayExpressionType> {
   const node = detachedProps<ArrayExpressionType>(props.parent as $FlowFixMe, {
     type: 'ArrayExpression',
@@ -1390,7 +1502,7 @@ export function ArrayExpression(props: {
 
 export function ArrayPattern(props: {
   ...ArrayPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ArrayPatternType> {
   const node = detachedProps<ArrayPatternType>(props.parent as $FlowFixMe, {
     type: 'ArrayPattern',
@@ -1403,7 +1515,7 @@ export function ArrayPattern(props: {
 
 export function ArrayTypeAnnotation(props: {
   ...ArrayTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ArrayTypeAnnotationType> {
   const node = detachedProps<ArrayTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -1418,7 +1530,7 @@ export function ArrayTypeAnnotation(props: {
 
 export function AsConstExpression(props: {
   ...AsConstExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<AsConstExpressionType> {
   const node = detachedProps<AsConstExpressionType>(
     props.parent as $FlowFixMe,
@@ -1433,7 +1545,7 @@ export function AsConstExpression(props: {
 
 export function AsExpression(props: {
   ...AsExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<AsExpressionType> {
   const node = detachedProps<AsExpressionType>(props.parent as $FlowFixMe, {
     type: 'AsExpression',
@@ -1446,7 +1558,7 @@ export function AsExpression(props: {
 
 export function AssignmentExpression(props: {
   ...AssignmentExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<AssignmentExpressionType> {
   const node = detachedProps<AssignmentExpressionType>(
     props.parent as $FlowFixMe,
@@ -1463,7 +1575,7 @@ export function AssignmentExpression(props: {
 
 export function AssignmentPattern(props: {
   ...AssignmentPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<AssignmentPatternType> {
   const node = detachedProps<AssignmentPatternType>(
     props.parent as $FlowFixMe,
@@ -1479,7 +1591,7 @@ export function AssignmentPattern(props: {
 
 export function AwaitExpression(props: {
   ...AwaitExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<AwaitExpressionType> {
   const node = detachedProps<AwaitExpressionType>(props.parent as $FlowFixMe, {
     type: 'AwaitExpression',
@@ -1491,7 +1603,7 @@ export function AwaitExpression(props: {
 
 export function BigIntLiteralTypeAnnotation(props: {
   ...BigIntLiteralTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<BigIntLiteralTypeAnnotationType> {
   const node = detachedProps<BigIntLiteralTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -1506,7 +1618,7 @@ export function BigIntLiteralTypeAnnotation(props: {
 
 export function BigIntTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<BigIntTypeAnnotationType> {
   return detachedProps<BigIntTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -1516,7 +1628,7 @@ export function BigIntTypeAnnotation(
 
 export function BinaryExpression(props: {
   ...BinaryExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<BinaryExpressionType> {
   const node = detachedProps<BinaryExpressionType>(props.parent as $FlowFixMe, {
     type: 'BinaryExpression',
@@ -1530,7 +1642,7 @@ export function BinaryExpression(props: {
 
 export function BooleanLiteralTypeAnnotation(props: {
   ...BooleanLiteralTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<BooleanLiteralTypeAnnotationType> {
   const node = detachedProps<BooleanLiteralTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -1546,7 +1658,7 @@ export function BooleanLiteralTypeAnnotation(props: {
 
 export function BooleanTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<BooleanTypeAnnotationType> {
   return detachedProps<BooleanTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -1556,7 +1668,7 @@ export function BooleanTypeAnnotation(
 
 export function BreakStatement(props: {
   ...BreakStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<BreakStatementType> {
   const node = detachedProps<BreakStatementType>(props.parent as $FlowFixMe, {
     type: 'BreakStatement',
@@ -1568,7 +1680,7 @@ export function BreakStatement(props: {
 
 export function CallExpression(props: {
   ...CallExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<CallExpressionType> {
   const node = detachedProps<CallExpressionType>(props.parent as $FlowFixMe, {
     type: 'CallExpression',
@@ -1582,7 +1694,7 @@ export function CallExpression(props: {
 
 export function CatchClause(props: {
   ...CatchClauseProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<CatchClauseType> {
   const node = detachedProps<CatchClauseType>(props.parent as $FlowFixMe, {
     type: 'CatchClause',
@@ -1595,7 +1707,7 @@ export function CatchClause(props: {
 
 export function ChainExpression(props: {
   ...ChainExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ChainExpressionType> {
   const node = detachedProps<ChainExpressionType>(props.parent as $FlowFixMe, {
     type: 'ChainExpression',
@@ -1607,7 +1719,7 @@ export function ChainExpression(props: {
 
 export function ClassBody(props: {
   ...ClassBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ClassBodyType> {
   const node = detachedProps<ClassBodyType>(props.parent as $FlowFixMe, {
     type: 'ClassBody',
@@ -1619,7 +1731,7 @@ export function ClassBody(props: {
 
 export function ClassExpression(props: {
   ...ClassExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ClassExpressionType> {
   const node = detachedProps<ClassExpressionType>(props.parent as $FlowFixMe, {
     type: 'ClassExpression',
@@ -1637,7 +1749,7 @@ export function ClassExpression(props: {
 
 export function ClassImplements(props: {
   ...ClassImplementsProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ClassImplementsType> {
   const node = detachedProps<ClassImplementsType>(props.parent as $FlowFixMe, {
     type: 'ClassImplements',
@@ -1650,7 +1762,7 @@ export function ClassImplements(props: {
 
 export function ComponentDeclaration(props: {
   ...ComponentDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ComponentDeclarationType> {
   const node = detachedProps<ComponentDeclarationType>(
     props.parent as $FlowFixMe,
@@ -1670,7 +1782,7 @@ export function ComponentDeclaration(props: {
 
 export function ComponentParameter(props: {
   ...ComponentParameterProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ComponentParameterType> {
   const node = detachedProps<ComponentParameterType>(
     props.parent as $FlowFixMe,
@@ -1687,7 +1799,7 @@ export function ComponentParameter(props: {
 
 export function ComponentTypeAnnotation(props: {
   ...ComponentTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ComponentTypeAnnotationType> {
   const node = detachedProps<ComponentTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -1705,7 +1817,7 @@ export function ComponentTypeAnnotation(props: {
 
 export function ComponentTypeParameter(props: {
   ...ComponentTypeParameterProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ComponentTypeParameterType> {
   const node = detachedProps<ComponentTypeParameterType>(
     props.parent as $FlowFixMe,
@@ -1722,7 +1834,7 @@ export function ComponentTypeParameter(props: {
 
 export function ConditionalExpression(props: {
   ...ConditionalExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ConditionalExpressionType> {
   const node = detachedProps<ConditionalExpressionType>(
     props.parent as $FlowFixMe,
@@ -1739,7 +1851,7 @@ export function ConditionalExpression(props: {
 
 export function ConditionalTypeAnnotation(props: {
   ...ConditionalTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ConditionalTypeAnnotationType> {
   const node = detachedProps<ConditionalTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -1757,7 +1869,7 @@ export function ConditionalTypeAnnotation(props: {
 
 export function ContinueStatement(props: {
   ...ContinueStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ContinueStatementType> {
   const node = detachedProps<ContinueStatementType>(
     props.parent as $FlowFixMe,
@@ -1772,7 +1884,7 @@ export function ContinueStatement(props: {
 
 export function DebuggerStatement(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<DebuggerStatementType> {
   return detachedProps<DebuggerStatementType>(props.parent as $FlowFixMe, {
@@ -1782,7 +1894,7 @@ export function DebuggerStatement(
 
 export function DeclareClass(props: {
   ...DeclareClassProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareClassType> {
   const node = detachedProps<DeclareClassType>(props.parent as $FlowFixMe, {
     type: 'DeclareClass',
@@ -1799,7 +1911,7 @@ export function DeclareClass(props: {
 
 export function DeclareComponent(props: {
   ...DeclareComponentProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareComponentType> {
   const node = detachedProps<DeclareComponentType>(props.parent as $FlowFixMe, {
     type: 'DeclareComponent',
@@ -1815,7 +1927,7 @@ export function DeclareComponent(props: {
 
 export function DeclaredPredicate(props: {
   ...DeclaredPredicateProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclaredPredicateType> {
   const node = detachedProps<DeclaredPredicateType>(
     props.parent as $FlowFixMe,
@@ -1830,7 +1942,7 @@ export function DeclaredPredicate(props: {
 
 export function DeclareEnum(props: {
   ...DeclareEnumProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareEnumType> {
   const node = detachedProps<DeclareEnumType>(props.parent as $FlowFixMe, {
     type: 'DeclareEnum',
@@ -1843,7 +1955,7 @@ export function DeclareEnum(props: {
 
 export function DeclareExportAllDeclaration(props: {
   ...DeclareExportAllDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareExportAllDeclarationType> {
   const node = detachedProps<DeclareExportAllDeclarationType>(
     props.parent as $FlowFixMe,
@@ -1858,7 +1970,7 @@ export function DeclareExportAllDeclaration(props: {
 
 export function DeclareInterface(props: {
   ...DeclareInterfaceProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareInterfaceType> {
   const node = detachedProps<DeclareInterfaceType>(props.parent as $FlowFixMe, {
     type: 'DeclareInterface',
@@ -1873,7 +1985,7 @@ export function DeclareInterface(props: {
 
 export function DeclareModule(props: {
   ...DeclareModuleProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareModuleType> {
   const node = detachedProps<DeclareModuleType>(props.parent as $FlowFixMe, {
     type: 'DeclareModule',
@@ -1886,7 +1998,7 @@ export function DeclareModule(props: {
 
 export function DeclareModuleExports(props: {
   ...DeclareModuleExportsProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareModuleExportsType> {
   const node = detachedProps<DeclareModuleExportsType>(
     props.parent as $FlowFixMe,
@@ -1901,7 +2013,7 @@ export function DeclareModuleExports(props: {
 
 export function DeclareNamespace(props: {
   ...DeclareNamespaceProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareNamespaceType> {
   const node = detachedProps<DeclareNamespaceType>(props.parent as $FlowFixMe, {
     type: 'DeclareNamespace',
@@ -1914,7 +2026,7 @@ export function DeclareNamespace(props: {
 
 export function DeclareOpaqueType(props: {
   ...DeclareOpaqueTypeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareOpaqueTypeType> {
   const node = detachedProps<DeclareOpaqueTypeType>(
     props.parent as $FlowFixMe,
@@ -1934,7 +2046,7 @@ export function DeclareOpaqueType(props: {
 
 export function DeclareTypeAlias(props: {
   ...DeclareTypeAliasProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareTypeAliasType> {
   const node = detachedProps<DeclareTypeAliasType>(props.parent as $FlowFixMe, {
     type: 'DeclareTypeAlias',
@@ -1948,7 +2060,7 @@ export function DeclareTypeAlias(props: {
 
 export function DeclareVariable(props: {
   ...DeclareVariableProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DeclareVariableType> {
   const node = detachedProps<DeclareVariableType>(props.parent as $FlowFixMe, {
     type: 'DeclareVariable',
@@ -1962,7 +2074,7 @@ export function DeclareVariable(props: {
 
 export function Decorator(props: {
   ...DecoratorProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DecoratorType> {
   const node = detachedProps<DecoratorType>(props.parent as $FlowFixMe, {
     type: 'Decorator',
@@ -1974,7 +2086,7 @@ export function Decorator(props: {
 
 export function DoWhileStatement(props: {
   ...DoWhileStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DoWhileStatementType> {
   const node = detachedProps<DoWhileStatementType>(props.parent as $FlowFixMe, {
     type: 'DoWhileStatement',
@@ -1987,7 +2099,7 @@ export function DoWhileStatement(props: {
 
 export function EmptyStatement(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<EmptyStatementType> {
   return detachedProps<EmptyStatementType>(props.parent as $FlowFixMe, {
@@ -1997,7 +2109,7 @@ export function EmptyStatement(
 
 export function EmptyTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<EmptyTypeAnnotationType> {
   return detachedProps<EmptyTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -2007,7 +2119,7 @@ export function EmptyTypeAnnotation(
 
 export function EnumBigIntBody(props: {
   ...EnumBigIntBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumBigIntBodyType> {
   const node = detachedProps<EnumBigIntBodyType>(props.parent as $FlowFixMe, {
     type: 'EnumBigIntBody',
@@ -2021,7 +2133,7 @@ export function EnumBigIntBody(props: {
 
 export function EnumBigIntMember(props: {
   ...EnumBigIntMemberProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumBigIntMemberType> {
   const node = detachedProps<EnumBigIntMemberType>(props.parent as $FlowFixMe, {
     type: 'EnumBigIntMember',
@@ -2034,7 +2146,7 @@ export function EnumBigIntMember(props: {
 
 export function EnumBooleanBody(props: {
   ...EnumBooleanBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumBooleanBodyType> {
   const node = detachedProps<EnumBooleanBodyType>(props.parent as $FlowFixMe, {
     type: 'EnumBooleanBody',
@@ -2048,7 +2160,7 @@ export function EnumBooleanBody(props: {
 
 export function EnumBooleanMember(props: {
   ...EnumBooleanMemberProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumBooleanMemberType> {
   const node = detachedProps<EnumBooleanMemberType>(
     props.parent as $FlowFixMe,
@@ -2064,7 +2176,7 @@ export function EnumBooleanMember(props: {
 
 export function EnumDeclaration(props: {
   ...EnumDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumDeclarationType> {
   const node = detachedProps<EnumDeclarationType>(props.parent as $FlowFixMe, {
     type: 'EnumDeclaration',
@@ -2077,7 +2189,7 @@ export function EnumDeclaration(props: {
 
 export function EnumDefaultedMember(props: {
   ...EnumDefaultedMemberProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumDefaultedMemberType> {
   const node = detachedProps<EnumDefaultedMemberType>(
     props.parent as $FlowFixMe,
@@ -2092,7 +2204,7 @@ export function EnumDefaultedMember(props: {
 
 export function EnumNumberBody(props: {
   ...EnumNumberBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumNumberBodyType> {
   const node = detachedProps<EnumNumberBodyType>(props.parent as $FlowFixMe, {
     type: 'EnumNumberBody',
@@ -2106,7 +2218,7 @@ export function EnumNumberBody(props: {
 
 export function EnumNumberMember(props: {
   ...EnumNumberMemberProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumNumberMemberType> {
   const node = detachedProps<EnumNumberMemberType>(props.parent as $FlowFixMe, {
     type: 'EnumNumberMember',
@@ -2119,7 +2231,7 @@ export function EnumNumberMember(props: {
 
 export function EnumStringBody(props: {
   ...EnumStringBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumStringBodyType> {
   const node = detachedProps<EnumStringBodyType>(props.parent as $FlowFixMe, {
     type: 'EnumStringBody',
@@ -2133,7 +2245,7 @@ export function EnumStringBody(props: {
 
 export function EnumStringMember(props: {
   ...EnumStringMemberProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumStringMemberType> {
   const node = detachedProps<EnumStringMemberType>(props.parent as $FlowFixMe, {
     type: 'EnumStringMember',
@@ -2146,7 +2258,7 @@ export function EnumStringMember(props: {
 
 export function EnumSymbolBody(props: {
   ...EnumSymbolBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<EnumSymbolBodyType> {
   const node = detachedProps<EnumSymbolBodyType>(props.parent as $FlowFixMe, {
     type: 'EnumSymbolBody',
@@ -2159,7 +2271,7 @@ export function EnumSymbolBody(props: {
 
 export function ExistsTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<ExistsTypeAnnotationType> {
   return detachedProps<ExistsTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -2169,7 +2281,7 @@ export function ExistsTypeAnnotation(
 
 export function ExportAllDeclaration(props: {
   ...ExportAllDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExportAllDeclarationType> {
   const node = detachedProps<ExportAllDeclarationType>(
     props.parent as $FlowFixMe,
@@ -2186,7 +2298,7 @@ export function ExportAllDeclaration(props: {
 
 export function ExportDefaultDeclaration(props: {
   ...ExportDefaultDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExportDefaultDeclarationType> {
   const node = detachedProps<ExportDefaultDeclarationType>(
     props.parent as $FlowFixMe,
@@ -2201,7 +2313,7 @@ export function ExportDefaultDeclaration(props: {
 
 export function ExportSpecifier(props: {
   ...ExportSpecifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExportSpecifierType> {
   const node = detachedProps<ExportSpecifierType>(props.parent as $FlowFixMe, {
     type: 'ExportSpecifier',
@@ -2214,7 +2326,7 @@ export function ExportSpecifier(props: {
 
 export function ExpressionStatement(props: {
   ...ExpressionStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ExpressionStatementType> {
   const node = detachedProps<ExpressionStatementType>(
     props.parent as $FlowFixMe,
@@ -2230,7 +2342,7 @@ export function ExpressionStatement(props: {
 
 export function ForInStatement(props: {
   ...ForInStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ForInStatementType> {
   const node = detachedProps<ForInStatementType>(props.parent as $FlowFixMe, {
     type: 'ForInStatement',
@@ -2244,7 +2356,7 @@ export function ForInStatement(props: {
 
 export function ForOfStatement(props: {
   ...ForOfStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ForOfStatementType> {
   const node = detachedProps<ForOfStatementType>(props.parent as $FlowFixMe, {
     type: 'ForOfStatement',
@@ -2259,7 +2371,7 @@ export function ForOfStatement(props: {
 
 export function ForStatement(props: {
   ...ForStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ForStatementType> {
   const node = detachedProps<ForStatementType>(props.parent as $FlowFixMe, {
     type: 'ForStatement',
@@ -2274,7 +2386,7 @@ export function ForStatement(props: {
 
 export function FunctionDeclaration(props: {
   ...FunctionDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<FunctionDeclarationType> {
   const node = detachedProps<FunctionDeclarationType>(
     props.parent as $FlowFixMe,
@@ -2296,7 +2408,7 @@ export function FunctionDeclaration(props: {
 
 export function FunctionExpression(props: {
   ...FunctionExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<FunctionExpressionType> {
   const node = detachedProps<FunctionExpressionType>(
     props.parent as $FlowFixMe,
@@ -2318,7 +2430,7 @@ export function FunctionExpression(props: {
 
 export function FunctionTypeAnnotation(props: {
   ...FunctionTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<FunctionTypeAnnotationType> {
   const node = detachedProps<FunctionTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2337,7 +2449,7 @@ export function FunctionTypeAnnotation(props: {
 
 export function FunctionTypeParam(props: {
   ...FunctionTypeParamProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<FunctionTypeParamType> {
   const node = detachedProps<FunctionTypeParamType>(
     props.parent as $FlowFixMe,
@@ -2354,7 +2466,7 @@ export function FunctionTypeParam(props: {
 
 export function GenericTypeAnnotation(props: {
   ...GenericTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<GenericTypeAnnotationType> {
   const node = detachedProps<GenericTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2370,7 +2482,7 @@ export function GenericTypeAnnotation(props: {
 
 export function HookDeclaration(props: {
   ...HookDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<HookDeclarationType> {
   const node = detachedProps<HookDeclarationType>(props.parent as $FlowFixMe, {
     type: 'HookDeclaration',
@@ -2387,7 +2499,7 @@ export function HookDeclaration(props: {
 
 export function HookTypeAnnotation(props: {
   ...HookTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<HookTypeAnnotationType> {
   const node = detachedProps<HookTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2405,7 +2517,7 @@ export function HookTypeAnnotation(props: {
 
 export function IfStatement(props: {
   ...IfStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<IfStatementType> {
   const node = detachedProps<IfStatementType>(props.parent as $FlowFixMe, {
     type: 'IfStatement',
@@ -2419,7 +2531,7 @@ export function IfStatement(props: {
 
 export function ImportAttribute(props: {
   ...ImportAttributeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportAttributeType> {
   const node = detachedProps<ImportAttributeType>(props.parent as $FlowFixMe, {
     type: 'ImportAttribute',
@@ -2432,7 +2544,7 @@ export function ImportAttribute(props: {
 
 export function ImportDeclaration(props: {
   ...ImportDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportDeclarationType> {
   const node = detachedProps<ImportDeclarationType>(
     props.parent as $FlowFixMe,
@@ -2450,7 +2562,7 @@ export function ImportDeclaration(props: {
 
 export function ImportDefaultSpecifier(props: {
   ...ImportDefaultSpecifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportDefaultSpecifierType> {
   const node = detachedProps<ImportDefaultSpecifierType>(
     props.parent as $FlowFixMe,
@@ -2465,7 +2577,7 @@ export function ImportDefaultSpecifier(props: {
 
 export function ImportExpression(props: {
   ...ImportExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportExpressionType> {
   const node = detachedProps<ImportExpressionType>(props.parent as $FlowFixMe, {
     type: 'ImportExpression',
@@ -2478,7 +2590,7 @@ export function ImportExpression(props: {
 
 export function ImportNamespaceSpecifier(props: {
   ...ImportNamespaceSpecifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportNamespaceSpecifierType> {
   const node = detachedProps<ImportNamespaceSpecifierType>(
     props.parent as $FlowFixMe,
@@ -2493,7 +2605,7 @@ export function ImportNamespaceSpecifier(props: {
 
 export function ImportSpecifier(props: {
   ...ImportSpecifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ImportSpecifierType> {
   const node = detachedProps<ImportSpecifierType>(props.parent as $FlowFixMe, {
     type: 'ImportSpecifier',
@@ -2507,7 +2619,7 @@ export function ImportSpecifier(props: {
 
 export function IndexedAccessType(props: {
   ...IndexedAccessTypeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<IndexedAccessTypeType> {
   const node = detachedProps<IndexedAccessTypeType>(
     props.parent as $FlowFixMe,
@@ -2523,7 +2635,7 @@ export function IndexedAccessType(props: {
 
 export function InferredPredicate(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<InferredPredicateType> {
   return detachedProps<InferredPredicateType>(props.parent as $FlowFixMe, {
@@ -2533,7 +2645,7 @@ export function InferredPredicate(
 
 export function InferTypeAnnotation(props: {
   ...InferTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<InferTypeAnnotationType> {
   const node = detachedProps<InferTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2548,7 +2660,7 @@ export function InferTypeAnnotation(props: {
 
 export function InterfaceDeclaration(props: {
   ...InterfaceDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<InterfaceDeclarationType> {
   const node = detachedProps<InterfaceDeclarationType>(
     props.parent as $FlowFixMe,
@@ -2566,7 +2678,7 @@ export function InterfaceDeclaration(props: {
 
 export function InterfaceExtends(props: {
   ...InterfaceExtendsProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<InterfaceExtendsType> {
   const node = detachedProps<InterfaceExtendsType>(props.parent as $FlowFixMe, {
     type: 'InterfaceExtends',
@@ -2579,7 +2691,7 @@ export function InterfaceExtends(props: {
 
 export function InterfaceTypeAnnotation(props: {
   ...InterfaceTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<InterfaceTypeAnnotationType> {
   const node = detachedProps<InterfaceTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2595,7 +2707,7 @@ export function InterfaceTypeAnnotation(props: {
 
 export function IntersectionTypeAnnotation(props: {
   ...IntersectionTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<IntersectionTypeAnnotationType> {
   const node = detachedProps<IntersectionTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2610,7 +2722,7 @@ export function IntersectionTypeAnnotation(props: {
 
 export function JSXAttribute(props: {
   ...JSXAttributeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXAttributeType> {
   const node = detachedProps<JSXAttributeType>(props.parent as $FlowFixMe, {
     type: 'JSXAttribute',
@@ -2623,7 +2735,7 @@ export function JSXAttribute(props: {
 
 export function JSXClosingElement(props: {
   ...JSXClosingElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXClosingElementType> {
   const node = detachedProps<JSXClosingElementType>(
     props.parent as $FlowFixMe,
@@ -2638,7 +2750,7 @@ export function JSXClosingElement(props: {
 
 export function JSXClosingFragment(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXClosingFragmentType> {
   return detachedProps<JSXClosingFragmentType>(props.parent as $FlowFixMe, {
@@ -2648,7 +2760,7 @@ export function JSXClosingFragment(
 
 export function JSXElement(props: {
   ...JSXElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXElementType> {
   const node = detachedProps<JSXElementType>(props.parent as $FlowFixMe, {
     type: 'JSXElement',
@@ -2662,7 +2774,7 @@ export function JSXElement(props: {
 
 export function JSXEmptyExpression(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXEmptyExpressionType> {
   return detachedProps<JSXEmptyExpressionType>(props.parent as $FlowFixMe, {
@@ -2672,7 +2784,7 @@ export function JSXEmptyExpression(
 
 export function JSXExpressionContainer(props: {
   ...JSXExpressionContainerProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXExpressionContainerType> {
   const node = detachedProps<JSXExpressionContainerType>(
     props.parent as $FlowFixMe,
@@ -2687,7 +2799,7 @@ export function JSXExpressionContainer(props: {
 
 export function JSXFragment(props: {
   ...JSXFragmentProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXFragmentType> {
   const node = detachedProps<JSXFragmentType>(props.parent as $FlowFixMe, {
     type: 'JSXFragment',
@@ -2701,7 +2813,7 @@ export function JSXFragment(props: {
 
 export function JSXIdentifier(props: {
   ...JSXIdentifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXIdentifierType> {
   const node = detachedProps<JSXIdentifierType>(props.parent as $FlowFixMe, {
     type: 'JSXIdentifier',
@@ -2713,7 +2825,7 @@ export function JSXIdentifier(props: {
 
 export function JSXMemberExpression(props: {
   ...JSXMemberExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXMemberExpressionType> {
   const node = detachedProps<JSXMemberExpressionType>(
     props.parent as $FlowFixMe,
@@ -2729,7 +2841,7 @@ export function JSXMemberExpression(props: {
 
 export function JSXNamespacedName(props: {
   ...JSXNamespacedNameProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXNamespacedNameType> {
   const node = detachedProps<JSXNamespacedNameType>(
     props.parent as $FlowFixMe,
@@ -2745,7 +2857,7 @@ export function JSXNamespacedName(props: {
 
 export function JSXOpeningElement(props: {
   ...JSXOpeningElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXOpeningElementType> {
   const node = detachedProps<JSXOpeningElementType>(
     props.parent as $FlowFixMe,
@@ -2763,7 +2875,7 @@ export function JSXOpeningElement(props: {
 
 export function JSXOpeningFragment(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<JSXOpeningFragmentType> {
   return detachedProps<JSXOpeningFragmentType>(props.parent as $FlowFixMe, {
@@ -2773,7 +2885,7 @@ export function JSXOpeningFragment(
 
 export function JSXSpreadAttribute(props: {
   ...JSXSpreadAttributeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXSpreadAttributeType> {
   const node = detachedProps<JSXSpreadAttributeType>(
     props.parent as $FlowFixMe,
@@ -2788,7 +2900,7 @@ export function JSXSpreadAttribute(props: {
 
 export function JSXSpreadChild(props: {
   ...JSXSpreadChildProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXSpreadChildType> {
   const node = detachedProps<JSXSpreadChildType>(props.parent as $FlowFixMe, {
     type: 'JSXSpreadChild',
@@ -2800,7 +2912,7 @@ export function JSXSpreadChild(props: {
 
 export function JSXText(props: {
   ...JSXTextProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<JSXTextType> {
   const node = detachedProps<JSXTextType>(props.parent as $FlowFixMe, {
     type: 'JSXText',
@@ -2813,7 +2925,7 @@ export function JSXText(props: {
 
 export function KeyofTypeAnnotation(props: {
   ...KeyofTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<KeyofTypeAnnotationType> {
   const node = detachedProps<KeyofTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -2828,7 +2940,7 @@ export function KeyofTypeAnnotation(props: {
 
 export function LabeledStatement(props: {
   ...LabeledStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<LabeledStatementType> {
   const node = detachedProps<LabeledStatementType>(props.parent as $FlowFixMe, {
     type: 'LabeledStatement',
@@ -2841,7 +2953,7 @@ export function LabeledStatement(props: {
 
 export function LogicalExpression(props: {
   ...LogicalExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<LogicalExpressionType> {
   const node = detachedProps<LogicalExpressionType>(
     props.parent as $FlowFixMe,
@@ -2858,7 +2970,7 @@ export function LogicalExpression(props: {
 
 export function MatchArrayPattern(props: {
   ...MatchArrayPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchArrayPatternType> {
   const node = detachedProps<MatchArrayPatternType>(
     props.parent as $FlowFixMe,
@@ -2874,7 +2986,7 @@ export function MatchArrayPattern(props: {
 
 export function MatchAsPattern(props: {
   ...MatchAsPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchAsPatternType> {
   const node = detachedProps<MatchAsPatternType>(props.parent as $FlowFixMe, {
     type: 'MatchAsPattern',
@@ -2887,7 +2999,7 @@ export function MatchAsPattern(props: {
 
 export function MatchBindingPattern(props: {
   ...MatchBindingPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchBindingPatternType> {
   const node = detachedProps<MatchBindingPatternType>(
     props.parent as $FlowFixMe,
@@ -2903,7 +3015,7 @@ export function MatchBindingPattern(props: {
 
 export function MatchExpression(props: {
   ...MatchExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchExpressionType> {
   const node = detachedProps<MatchExpressionType>(props.parent as $FlowFixMe, {
     type: 'MatchExpression',
@@ -2916,7 +3028,7 @@ export function MatchExpression(props: {
 
 export function MatchExpressionCase(props: {
   ...MatchExpressionCaseProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchExpressionCaseType> {
   const node = detachedProps<MatchExpressionCaseType>(
     props.parent as $FlowFixMe,
@@ -2933,7 +3045,7 @@ export function MatchExpressionCase(props: {
 
 export function MatchIdentifierPattern(props: {
   ...MatchIdentifierPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchIdentifierPatternType> {
   const node = detachedProps<MatchIdentifierPatternType>(
     props.parent as $FlowFixMe,
@@ -2948,7 +3060,7 @@ export function MatchIdentifierPattern(props: {
 
 export function MatchInstanceObjectPattern(props: {
   ...MatchInstanceObjectPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchInstanceObjectPatternType> {
   const node = detachedProps<MatchInstanceObjectPatternType>(
     props.parent as $FlowFixMe,
@@ -2964,7 +3076,7 @@ export function MatchInstanceObjectPattern(props: {
 
 export function MatchInstancePattern(props: {
   ...MatchInstancePatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchInstancePatternType> {
   const node = detachedProps<MatchInstancePatternType>(
     props.parent as $FlowFixMe,
@@ -2980,7 +3092,7 @@ export function MatchInstancePattern(props: {
 
 export function MatchLiteralPattern(props: {
   ...MatchLiteralPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchLiteralPatternType> {
   const node = detachedProps<MatchLiteralPatternType>(
     props.parent as $FlowFixMe,
@@ -2995,7 +3107,7 @@ export function MatchLiteralPattern(props: {
 
 export function MatchMemberPattern(props: {
   ...MatchMemberPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchMemberPatternType> {
   const node = detachedProps<MatchMemberPatternType>(
     props.parent as $FlowFixMe,
@@ -3011,7 +3123,7 @@ export function MatchMemberPattern(props: {
 
 export function MatchObjectPattern(props: {
   ...MatchObjectPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchObjectPatternType> {
   const node = detachedProps<MatchObjectPatternType>(
     props.parent as $FlowFixMe,
@@ -3027,7 +3139,7 @@ export function MatchObjectPattern(props: {
 
 export function MatchObjectPatternProperty(props: {
   ...MatchObjectPatternPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchObjectPatternPropertyType> {
   const node = detachedProps<MatchObjectPatternPropertyType>(
     props.parent as $FlowFixMe,
@@ -3044,7 +3156,7 @@ export function MatchObjectPatternProperty(props: {
 
 export function MatchOrPattern(props: {
   ...MatchOrPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchOrPatternType> {
   const node = detachedProps<MatchOrPatternType>(props.parent as $FlowFixMe, {
     type: 'MatchOrPattern',
@@ -3056,7 +3168,7 @@ export function MatchOrPattern(props: {
 
 export function MatchRestPattern(props: {
   ...MatchRestPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchRestPatternType> {
   const node = detachedProps<MatchRestPatternType>(props.parent as $FlowFixMe, {
     type: 'MatchRestPattern',
@@ -3068,7 +3180,7 @@ export function MatchRestPattern(props: {
 
 export function MatchStatement(props: {
   ...MatchStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchStatementType> {
   const node = detachedProps<MatchStatementType>(props.parent as $FlowFixMe, {
     type: 'MatchStatement',
@@ -3081,7 +3193,7 @@ export function MatchStatement(props: {
 
 export function MatchStatementCase(props: {
   ...MatchStatementCaseProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchStatementCaseType> {
   const node = detachedProps<MatchStatementCaseType>(
     props.parent as $FlowFixMe,
@@ -3098,7 +3210,7 @@ export function MatchStatementCase(props: {
 
 export function MatchUnaryPattern(props: {
   ...MatchUnaryPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MatchUnaryPatternType> {
   const node = detachedProps<MatchUnaryPatternType>(
     props.parent as $FlowFixMe,
@@ -3114,7 +3226,7 @@ export function MatchUnaryPattern(props: {
 
 export function MatchWildcardPattern(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<MatchWildcardPatternType> {
   return detachedProps<MatchWildcardPatternType>(props.parent as $FlowFixMe, {
@@ -3124,7 +3236,7 @@ export function MatchWildcardPattern(
 
 export function MetaProperty(props: {
   ...MetaPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MetaPropertyType> {
   const node = detachedProps<MetaPropertyType>(props.parent as $FlowFixMe, {
     type: 'MetaProperty',
@@ -3137,7 +3249,7 @@ export function MetaProperty(props: {
 
 export function MethodDefinition(props: {
   ...MethodDefinitionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<MethodDefinitionType> {
   const node = detachedProps<MethodDefinitionType>(props.parent as $FlowFixMe, {
     type: 'MethodDefinition',
@@ -3154,7 +3266,7 @@ export function MethodDefinition(props: {
 
 export function MixedTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<MixedTypeAnnotationType> {
   return detachedProps<MixedTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3164,7 +3276,7 @@ export function MixedTypeAnnotation(
 
 export function NeverTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<NeverTypeAnnotationType> {
   return detachedProps<NeverTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3174,7 +3286,7 @@ export function NeverTypeAnnotation(
 
 export function NewExpression(props: {
   ...NewExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<NewExpressionType> {
   const node = detachedProps<NewExpressionType>(props.parent as $FlowFixMe, {
     type: 'NewExpression',
@@ -3188,7 +3300,7 @@ export function NewExpression(props: {
 
 export function NullableTypeAnnotation(props: {
   ...NullableTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<NullableTypeAnnotationType> {
   const node = detachedProps<NullableTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3203,7 +3315,7 @@ export function NullableTypeAnnotation(props: {
 
 export function NullLiteralTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<NullLiteralTypeAnnotationType> {
   return detachedProps<NullLiteralTypeAnnotationType>(
@@ -3216,7 +3328,7 @@ export function NullLiteralTypeAnnotation(
 
 export function NumberLiteralTypeAnnotation(props: {
   ...NumberLiteralTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<NumberLiteralTypeAnnotationType> {
   const node = detachedProps<NumberLiteralTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3232,7 +3344,7 @@ export function NumberLiteralTypeAnnotation(props: {
 
 export function NumberTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<NumberTypeAnnotationType> {
   return detachedProps<NumberTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3242,7 +3354,7 @@ export function NumberTypeAnnotation(
 
 export function ObjectExpression(props: {
   ...ObjectExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectExpressionType> {
   const node = detachedProps<ObjectExpressionType>(props.parent as $FlowFixMe, {
     type: 'ObjectExpression',
@@ -3254,7 +3366,7 @@ export function ObjectExpression(props: {
 
 export function ObjectPattern(props: {
   ...ObjectPatternProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectPatternType> {
   const node = detachedProps<ObjectPatternType>(props.parent as $FlowFixMe, {
     type: 'ObjectPattern',
@@ -3267,7 +3379,7 @@ export function ObjectPattern(props: {
 
 export function ObjectTypeAnnotation(props: {
   ...ObjectTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeAnnotationType> {
   const node = detachedProps<ObjectTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3289,7 +3401,7 @@ export function ObjectTypeAnnotation(props: {
 
 export function ObjectTypeCallProperty(props: {
   ...ObjectTypeCallPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeCallPropertyType> {
   const node = detachedProps<ObjectTypeCallPropertyType>(
     props.parent as $FlowFixMe,
@@ -3305,7 +3417,7 @@ export function ObjectTypeCallProperty(props: {
 
 export function ObjectTypeIndexer(props: {
   ...ObjectTypeIndexerProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeIndexerType> {
   const node = detachedProps<ObjectTypeIndexerType>(
     props.parent as $FlowFixMe,
@@ -3324,7 +3436,7 @@ export function ObjectTypeIndexer(props: {
 
 export function ObjectTypeInternalSlot(props: {
   ...ObjectTypeInternalSlotProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeInternalSlotType> {
   const node = detachedProps<ObjectTypeInternalSlotType>(
     props.parent as $FlowFixMe,
@@ -3343,7 +3455,7 @@ export function ObjectTypeInternalSlot(props: {
 
 export function ObjectTypeMappedTypeProperty(props: {
   ...ObjectTypeMappedTypePropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeMappedTypePropertyType> {
   const node = detachedProps<ObjectTypeMappedTypePropertyType>(
     props.parent as $FlowFixMe,
@@ -3362,7 +3474,7 @@ export function ObjectTypeMappedTypeProperty(props: {
 
 export function ObjectTypeSpreadProperty(props: {
   ...ObjectTypeSpreadPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectTypeSpreadPropertyType> {
   const node = detachedProps<ObjectTypeSpreadPropertyType>(
     props.parent as $FlowFixMe,
@@ -3377,7 +3489,7 @@ export function ObjectTypeSpreadProperty(props: {
 
 export function OpaqueType(props: {
   ...OpaqueTypeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<OpaqueTypeType> {
   const node = detachedProps<OpaqueTypeType>(props.parent as $FlowFixMe, {
     type: 'OpaqueType',
@@ -3394,7 +3506,7 @@ export function OpaqueType(props: {
 
 export function OptionalIndexedAccessType(props: {
   ...OptionalIndexedAccessTypeProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<OptionalIndexedAccessTypeType> {
   const node = detachedProps<OptionalIndexedAccessTypeType>(
     props.parent as $FlowFixMe,
@@ -3411,7 +3523,7 @@ export function OptionalIndexedAccessType(props: {
 
 export function PrivateIdentifier(props: {
   ...PrivateIdentifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<PrivateIdentifierType> {
   const node = detachedProps<PrivateIdentifierType>(
     props.parent as $FlowFixMe,
@@ -3426,7 +3538,7 @@ export function PrivateIdentifier(props: {
 
 export function Property(props: {
   ...PropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<PropertyType> {
   const node = detachedProps<PropertyType>(props.parent as $FlowFixMe, {
     type: 'Property',
@@ -3443,7 +3555,7 @@ export function Property(props: {
 
 export function PropertyDefinition(props: {
   ...PropertyDefinitionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<PropertyDefinitionType> {
   const node = detachedProps<PropertyDefinitionType>(
     props.parent as $FlowFixMe,
@@ -3466,7 +3578,7 @@ export function PropertyDefinition(props: {
 
 export function QualifiedTypeIdentifier(props: {
   ...QualifiedTypeIdentifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<QualifiedTypeIdentifierType> {
   const node = detachedProps<QualifiedTypeIdentifierType>(
     props.parent as $FlowFixMe,
@@ -3482,7 +3594,7 @@ export function QualifiedTypeIdentifier(props: {
 
 export function QualifiedTypeofIdentifier(props: {
   ...QualifiedTypeofIdentifierProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<QualifiedTypeofIdentifierType> {
   const node = detachedProps<QualifiedTypeofIdentifierType>(
     props.parent as $FlowFixMe,
@@ -3498,7 +3610,7 @@ export function QualifiedTypeofIdentifier(props: {
 
 export function RecordDeclaration(props: {
   ...RecordDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordDeclarationType> {
   const node = detachedProps<RecordDeclarationType>(
     props.parent as $FlowFixMe,
@@ -3516,7 +3628,7 @@ export function RecordDeclaration(props: {
 
 export function RecordDeclarationBody(props: {
   ...RecordDeclarationBodyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordDeclarationBodyType> {
   const node = detachedProps<RecordDeclarationBodyType>(
     props.parent as $FlowFixMe,
@@ -3531,7 +3643,7 @@ export function RecordDeclarationBody(props: {
 
 export function RecordDeclarationImplements(props: {
   ...RecordDeclarationImplementsProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordDeclarationImplementsType> {
   const node = detachedProps<RecordDeclarationImplementsType>(
     props.parent as $FlowFixMe,
@@ -3547,7 +3659,7 @@ export function RecordDeclarationImplements(props: {
 
 export function RecordDeclarationProperty(props: {
   ...RecordDeclarationPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordDeclarationPropertyType> {
   const node = detachedProps<RecordDeclarationPropertyType>(
     props.parent as $FlowFixMe,
@@ -3564,7 +3676,7 @@ export function RecordDeclarationProperty(props: {
 
 export function RecordDeclarationStaticProperty(props: {
   ...RecordDeclarationStaticPropertyProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordDeclarationStaticPropertyType> {
   const node = detachedProps<RecordDeclarationStaticPropertyType>(
     props.parent as $FlowFixMe,
@@ -3581,7 +3693,7 @@ export function RecordDeclarationStaticProperty(props: {
 
 export function RecordExpression(props: {
   ...RecordExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordExpressionType> {
   const node = detachedProps<RecordExpressionType>(props.parent as $FlowFixMe, {
     type: 'RecordExpression',
@@ -3595,7 +3707,7 @@ export function RecordExpression(props: {
 
 export function RecordExpressionProperties(props: {
   ...RecordExpressionPropertiesProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RecordExpressionPropertiesType> {
   const node = detachedProps<RecordExpressionPropertiesType>(
     props.parent as $FlowFixMe,
@@ -3610,7 +3722,7 @@ export function RecordExpressionProperties(props: {
 
 export function RestElement(props: {
   ...RestElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<RestElementType> {
   const node = detachedProps<RestElementType>(props.parent as $FlowFixMe, {
     type: 'RestElement',
@@ -3622,7 +3734,7 @@ export function RestElement(props: {
 
 export function ReturnStatement(props: {
   ...ReturnStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ReturnStatementType> {
   const node = detachedProps<ReturnStatementType>(props.parent as $FlowFixMe, {
     type: 'ReturnStatement',
@@ -3634,7 +3746,7 @@ export function ReturnStatement(props: {
 
 export function SequenceExpression(props: {
   ...SequenceExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<SequenceExpressionType> {
   const node = detachedProps<SequenceExpressionType>(
     props.parent as $FlowFixMe,
@@ -3649,7 +3761,7 @@ export function SequenceExpression(props: {
 
 export function SpreadElement(props: {
   ...SpreadElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<SpreadElementType> {
   const node = detachedProps<SpreadElementType>(props.parent as $FlowFixMe, {
     type: 'SpreadElement',
@@ -3661,7 +3773,7 @@ export function SpreadElement(props: {
 
 export function StaticBlock(props: {
   ...StaticBlockProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<StaticBlockType> {
   const node = detachedProps<StaticBlockType>(props.parent as $FlowFixMe, {
     type: 'StaticBlock',
@@ -3673,7 +3785,7 @@ export function StaticBlock(props: {
 
 export function StringLiteralTypeAnnotation(props: {
   ...StringLiteralTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<StringLiteralTypeAnnotationType> {
   const node = detachedProps<StringLiteralTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3689,7 +3801,7 @@ export function StringLiteralTypeAnnotation(props: {
 
 export function StringTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<StringTypeAnnotationType> {
   return detachedProps<StringTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3699,7 +3811,7 @@ export function StringTypeAnnotation(
 
 export function Super(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<SuperType> {
   return detachedProps<SuperType>(props.parent as $FlowFixMe, {
@@ -3709,7 +3821,7 @@ export function Super(
 
 export function SwitchCase(props: {
   ...SwitchCaseProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<SwitchCaseType> {
   const node = detachedProps<SwitchCaseType>(props.parent as $FlowFixMe, {
     type: 'SwitchCase',
@@ -3722,7 +3834,7 @@ export function SwitchCase(props: {
 
 export function SwitchStatement(props: {
   ...SwitchStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<SwitchStatementType> {
   const node = detachedProps<SwitchStatementType>(props.parent as $FlowFixMe, {
     type: 'SwitchStatement',
@@ -3735,7 +3847,7 @@ export function SwitchStatement(props: {
 
 export function SymbolTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<SymbolTypeAnnotationType> {
   return detachedProps<SymbolTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3745,7 +3857,7 @@ export function SymbolTypeAnnotation(
 
 export function TaggedTemplateExpression(props: {
   ...TaggedTemplateExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TaggedTemplateExpressionType> {
   const node = detachedProps<TaggedTemplateExpressionType>(
     props.parent as $FlowFixMe,
@@ -3761,7 +3873,7 @@ export function TaggedTemplateExpression(props: {
 
 export function TemplateLiteral(props: {
   ...TemplateLiteralProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TemplateLiteralType> {
   const node = detachedProps<TemplateLiteralType>(props.parent as $FlowFixMe, {
     type: 'TemplateLiteral',
@@ -3774,7 +3886,7 @@ export function TemplateLiteral(props: {
 
 export function ThisExpression(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<ThisExpressionType> {
   return detachedProps<ThisExpressionType>(props.parent as $FlowFixMe, {
@@ -3784,7 +3896,7 @@ export function ThisExpression(
 
 export function ThisTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<ThisTypeAnnotationType> {
   return detachedProps<ThisTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -3794,7 +3906,7 @@ export function ThisTypeAnnotation(
 
 export function ThrowStatement(props: {
   ...ThrowStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ThrowStatementType> {
   const node = detachedProps<ThrowStatementType>(props.parent as $FlowFixMe, {
     type: 'ThrowStatement',
@@ -3806,7 +3918,7 @@ export function ThrowStatement(props: {
 
 export function TryStatement(props: {
   ...TryStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TryStatementType> {
   const node = detachedProps<TryStatementType>(props.parent as $FlowFixMe, {
     type: 'TryStatement',
@@ -3820,7 +3932,7 @@ export function TryStatement(props: {
 
 export function TupleTypeAnnotation(props: {
   ...TupleTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TupleTypeAnnotationType> {
   const node = detachedProps<TupleTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3836,7 +3948,7 @@ export function TupleTypeAnnotation(props: {
 
 export function TupleTypeLabeledElement(props: {
   ...TupleTypeLabeledElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TupleTypeLabeledElementType> {
   const node = detachedProps<TupleTypeLabeledElementType>(
     props.parent as $FlowFixMe,
@@ -3854,7 +3966,7 @@ export function TupleTypeLabeledElement(props: {
 
 export function TupleTypeSpreadElement(props: {
   ...TupleTypeSpreadElementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TupleTypeSpreadElementType> {
   const node = detachedProps<TupleTypeSpreadElementType>(
     props.parent as $FlowFixMe,
@@ -3870,7 +3982,7 @@ export function TupleTypeSpreadElement(props: {
 
 export function TypeAlias(props: {
   ...TypeAliasProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeAliasType> {
   const node = detachedProps<TypeAliasType>(props.parent as $FlowFixMe, {
     type: 'TypeAlias',
@@ -3884,7 +3996,7 @@ export function TypeAlias(props: {
 
 export function TypeAnnotation(props: {
   ...TypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeAnnotationType> {
   const node = detachedProps<TypeAnnotationType>(props.parent as $FlowFixMe, {
     type: 'TypeAnnotation',
@@ -3896,7 +4008,7 @@ export function TypeAnnotation(props: {
 
 export function TypeCastExpression(props: {
   ...TypeCastExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeCastExpressionType> {
   const node = detachedProps<TypeCastExpressionType>(
     props.parent as $FlowFixMe,
@@ -3912,7 +4024,7 @@ export function TypeCastExpression(props: {
 
 export function TypeofTypeAnnotation(props: {
   ...TypeofTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeofTypeAnnotationType> {
   const node = detachedProps<TypeofTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -3928,7 +4040,7 @@ export function TypeofTypeAnnotation(props: {
 
 export function TypeOperator(props: {
   ...TypeOperatorProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeOperatorType> {
   const node = detachedProps<TypeOperatorType>(props.parent as $FlowFixMe, {
     type: 'TypeOperator',
@@ -3941,7 +4053,7 @@ export function TypeOperator(props: {
 
 export function TypeParameter(props: {
   ...TypeParameterProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeParameterType> {
   const node = detachedProps<TypeParameterType>(props.parent as $FlowFixMe, {
     type: 'TypeParameter',
@@ -3958,7 +4070,7 @@ export function TypeParameter(props: {
 
 export function TypeParameterDeclaration(props: {
   ...TypeParameterDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeParameterDeclarationType> {
   const node = detachedProps<TypeParameterDeclarationType>(
     props.parent as $FlowFixMe,
@@ -3973,7 +4085,7 @@ export function TypeParameterDeclaration(props: {
 
 export function TypeParameterInstantiation(props: {
   ...TypeParameterInstantiationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypeParameterInstantiationType> {
   const node = detachedProps<TypeParameterInstantiationType>(
     props.parent as $FlowFixMe,
@@ -3988,7 +4100,7 @@ export function TypeParameterInstantiation(props: {
 
 export function TypePredicate(props: {
   ...TypePredicateProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<TypePredicateType> {
   const node = detachedProps<TypePredicateType>(props.parent as $FlowFixMe, {
     type: 'TypePredicate',
@@ -4002,7 +4114,7 @@ export function TypePredicate(props: {
 
 export function UnaryExpression(props: {
   ...UnaryExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<UnaryExpressionType> {
   const node = detachedProps<UnaryExpressionType>(props.parent as $FlowFixMe, {
     type: 'UnaryExpression',
@@ -4016,7 +4128,7 @@ export function UnaryExpression(props: {
 
 export function UndefinedTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<UndefinedTypeAnnotationType> {
   return detachedProps<UndefinedTypeAnnotationType>(
@@ -4029,7 +4141,7 @@ export function UndefinedTypeAnnotation(
 
 export function UnionTypeAnnotation(props: {
   ...UnionTypeAnnotationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<UnionTypeAnnotationType> {
   const node = detachedProps<UnionTypeAnnotationType>(
     props.parent as $FlowFixMe,
@@ -4044,7 +4156,7 @@ export function UnionTypeAnnotation(props: {
 
 export function UnknownTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<UnknownTypeAnnotationType> {
   return detachedProps<UnknownTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -4054,7 +4166,7 @@ export function UnknownTypeAnnotation(
 
 export function UpdateExpression(props: {
   ...UpdateExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<UpdateExpressionType> {
   const node = detachedProps<UpdateExpressionType>(props.parent as $FlowFixMe, {
     type: 'UpdateExpression',
@@ -4068,7 +4180,7 @@ export function UpdateExpression(props: {
 
 export function VariableDeclaration(props: {
   ...VariableDeclarationProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<VariableDeclarationType> {
   const node = detachedProps<VariableDeclarationType>(
     props.parent as $FlowFixMe,
@@ -4084,7 +4196,7 @@ export function VariableDeclaration(props: {
 
 export function VariableDeclarator(props: {
   ...VariableDeclaratorProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<VariableDeclaratorType> {
   const node = detachedProps<VariableDeclaratorType>(
     props.parent as $FlowFixMe,
@@ -4100,7 +4212,7 @@ export function VariableDeclarator(props: {
 
 export function Variance(props: {
   ...VarianceProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<VarianceType> {
   const node = detachedProps<VarianceType>(props.parent as $FlowFixMe, {
     type: 'Variance',
@@ -4112,7 +4224,7 @@ export function Variance(props: {
 
 export function VoidTypeAnnotation(
   props: {
-    +parent?: ESNode,
+    readonly parent?: ESNode,
   } = {...null},
 ): DetachedNode<VoidTypeAnnotationType> {
   return detachedProps<VoidTypeAnnotationType>(props.parent as $FlowFixMe, {
@@ -4122,7 +4234,7 @@ export function VoidTypeAnnotation(
 
 export function WhileStatement(props: {
   ...WhileStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<WhileStatementType> {
   const node = detachedProps<WhileStatementType>(props.parent as $FlowFixMe, {
     type: 'WhileStatement',
@@ -4135,7 +4247,7 @@ export function WhileStatement(props: {
 
 export function WithStatement(props: {
   ...WithStatementProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<WithStatementType> {
   const node = detachedProps<WithStatementType>(props.parent as $FlowFixMe, {
     type: 'WithStatement',
@@ -4148,7 +4260,7 @@ export function WithStatement(props: {
 
 export function YieldExpression(props: {
   ...YieldExpressionProps,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<YieldExpressionType> {
   const node = detachedProps<YieldExpressionType>(props.parent as $FlowFixMe, {
     type: 'YieldExpression',

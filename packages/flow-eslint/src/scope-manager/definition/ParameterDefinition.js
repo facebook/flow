@@ -32,12 +32,12 @@ class ParameterDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.Parameter;
+  declare readonly type: typeof DefinitionType.Parameter;
 
   /**
    * Whether the parameter definition is a part of a rest parameter.
    */
-  +rest: boolean;
+  readonly rest: boolean;
 
   constructor(
     name: Identifier,
@@ -48,8 +48,8 @@ class ParameterDefinition extends DefinitionBase<
     this.rest = rest;
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {ParameterDefinition};

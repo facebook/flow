@@ -28,7 +28,7 @@ class VariableDefinition extends DefinitionBase<
   DeclareVariable | VariableDeclaration | MatchBindingPattern | MatchAsPattern,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.Variable;
+  declare readonly type: typeof DefinitionType.Variable;
 
   constructor(
     name: Identifier,
@@ -42,8 +42,8 @@ class VariableDefinition extends DefinitionBase<
     super(DefinitionType.Variable, name, node, decl);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {VariableDefinition};

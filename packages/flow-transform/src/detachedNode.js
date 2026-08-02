@@ -12,8 +12,8 @@ import type {BaseNode, ESNode} from 'flow-estree';
 
 import {astNodeMutationHelpers} from 'flow-parser';
 
-export opaque type DetachedNode<+T> = T;
-export type MaybeDetachedNode<+T> = T | DetachedNode<T>;
+export opaque type DetachedNode<out T> = T;
+export type MaybeDetachedNode<out T> = T | DetachedNode<T>;
 
 type DetachConfig = Readonly<{
   preserveLocation?: boolean,

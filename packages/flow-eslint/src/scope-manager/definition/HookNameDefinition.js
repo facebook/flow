@@ -21,14 +21,14 @@ class HookNameDefinition extends DefinitionBase<
   null,
   Identifier,
 > {
-  declare +type: typeof DefinitionType.HookName;
+  declare readonly type: typeof DefinitionType.HookName;
 
   constructor(name: Identifier, node: HookNameDefinition['node']) {
     super(DefinitionType.HookName, name, node, null);
   }
 
-  +isTypeDefinition: boolean = false;
-  +isVariableDefinition: boolean = true;
+  readonly isTypeDefinition: boolean = false;
+  readonly isVariableDefinition: boolean = true;
 }
 
 export {HookNameDefinition};

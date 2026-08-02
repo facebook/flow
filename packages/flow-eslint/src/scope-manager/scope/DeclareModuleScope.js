@@ -22,7 +22,7 @@ class DeclareModuleScope extends ScopeBase<
   DeclareModule,
   Scope,
 > {
-  declare +type: typeof ScopeType.DeclareModule;
+  declare readonly type: typeof ScopeType.DeclareModule;
 
   constructor(
     scopeManager: ScopeManager,

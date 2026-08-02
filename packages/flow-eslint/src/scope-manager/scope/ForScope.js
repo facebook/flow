@@ -22,7 +22,7 @@ class ForScope extends ScopeBase<
   ForInStatement | ForOfStatement | ForStatement,
   Scope,
 > {
-  declare +type: typeof ScopeType.For;
+  declare readonly type: typeof ScopeType.For;
 
   constructor(
     scopeManager: ScopeManager,

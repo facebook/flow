@@ -28,14 +28,14 @@ import {
 } from '../../detachedNode';
 
 export type DestructuringObjectPropertyProps = {
-  +key: MaybeDetachedNode<DestructuringObjectPropertyType['key']>,
-  +value: MaybeDetachedNode<DestructuringObjectPropertyType['value']>,
-  +computed: DestructuringObjectPropertyType['computed'],
-  +shorthand: DestructuringObjectPropertyType['shorthand'],
+  readonly key: MaybeDetachedNode<DestructuringObjectPropertyType['key']>,
+  readonly value: MaybeDetachedNode<DestructuringObjectPropertyType['value']>,
+  readonly computed: DestructuringObjectPropertyType['computed'],
+  readonly shorthand: DestructuringObjectPropertyType['shorthand'],
 };
 export function DestructuringObjectProperty(props: {
   ...Readonly<DestructuringObjectPropertyProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyType> {
   const node = detachedProps<DestructuringObjectPropertyType>(props.parent, {
     type: 'Property',
@@ -51,16 +51,16 @@ export function DestructuringObjectProperty(props: {
 }
 
 export type DestructuringObjectPropertyWithNonShorthandStaticNameProps = {
-  +key: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<
     DestructuringObjectPropertyWithNonShorthandStaticNameType['key'],
   >,
-  +value: MaybeDetachedNode<
+  readonly value: MaybeDetachedNode<
     DestructuringObjectPropertyWithNonShorthandStaticNameType['value'],
   >,
 };
 export function DestructuringObjectPropertyWithNonShorthandStaticName(props: {
   ...Readonly<DestructuringObjectPropertyWithNonShorthandStaticNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithNonShorthandStaticNameType> {
   const node =
     detachedProps<DestructuringObjectPropertyWithNonShorthandStaticNameType>(
@@ -80,16 +80,16 @@ export function DestructuringObjectPropertyWithNonShorthandStaticName(props: {
 }
 
 export type DestructuringObjectPropertyWithShorthandStaticNameProps = {
-  +key: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<
     DestructuringObjectPropertyWithShorthandStaticNameType['key'],
   >,
-  +value: MaybeDetachedNode<
+  readonly value: MaybeDetachedNode<
     DestructuringObjectPropertyWithShorthandStaticNameType['value'],
   >,
 };
 export function DestructuringObjectPropertyWithShorthandStaticName(props: {
   ...Readonly<DestructuringObjectPropertyWithShorthandStaticNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithShorthandStaticNameType> {
   const node =
     detachedProps<DestructuringObjectPropertyWithShorthandStaticNameType>(
@@ -109,16 +109,16 @@ export function DestructuringObjectPropertyWithShorthandStaticName(props: {
 }
 
 export type DestructuringObjectPropertyWithComputedNameProps = {
-  +key: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<
     DestructuringObjectPropertyWithComputedNameType['key'],
   >,
-  +value: MaybeDetachedNode<
+  readonly value: MaybeDetachedNode<
     DestructuringObjectPropertyWithComputedNameType['value'],
   >,
 };
 export function DestructuringObjectPropertyWithComputedName(props: {
   ...Readonly<DestructuringObjectPropertyWithComputedNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<DestructuringObjectPropertyWithComputedNameType> {
   const node = detachedProps<DestructuringObjectPropertyWithComputedNameType>(
     props.parent,
@@ -137,16 +137,16 @@ export function DestructuringObjectPropertyWithComputedName(props: {
 }
 
 export type ObjectPropertyProps = {
-  +key: MaybeDetachedNode<ObjectPropertyType['key']>,
-  +value: MaybeDetachedNode<ObjectPropertyType['value']>,
-  +kind: ObjectPropertyType['kind'],
-  +computed: ObjectPropertyType['computed'],
-  +method: ObjectPropertyType['method'],
-  +shorthand: ObjectPropertyType['shorthand'],
+  readonly key: MaybeDetachedNode<ObjectPropertyType['key']>,
+  readonly value: MaybeDetachedNode<ObjectPropertyType['value']>,
+  readonly kind: ObjectPropertyType['kind'],
+  readonly computed: ObjectPropertyType['computed'],
+  readonly method: ObjectPropertyType['method'],
+  readonly shorthand: ObjectPropertyType['shorthand'],
 };
 export function ObjectProperty(props: {
   ...Readonly<ObjectPropertyProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectPropertyType> {
   const node = detachedProps<ObjectPropertyType>(props.parent, {
     type: 'Property',
@@ -162,16 +162,18 @@ export function ObjectProperty(props: {
 }
 
 export type ObjectPropertyWithNonShorthandStaticNameProps = {
-  +key: MaybeDetachedNode<ObjectPropertyWithNonShorthandStaticNameType['key']>,
-  +value: MaybeDetachedNode<
+  readonly key: MaybeDetachedNode<
+    ObjectPropertyWithNonShorthandStaticNameType['key'],
+  >,
+  readonly value: MaybeDetachedNode<
     ObjectPropertyWithNonShorthandStaticNameType['value'],
   >,
-  +kind: ObjectPropertyWithNonShorthandStaticNameType['kind'],
-  +method: ObjectPropertyWithNonShorthandStaticNameType['method'],
+  readonly kind: ObjectPropertyWithNonShorthandStaticNameType['kind'],
+  readonly method: ObjectPropertyWithNonShorthandStaticNameType['method'],
 };
 export function ObjectPropertyWithNonShorthandStaticName(props: {
   ...Readonly<ObjectPropertyWithNonShorthandStaticNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithNonShorthandStaticNameType> {
   const node = detachedProps<ObjectPropertyWithNonShorthandStaticNameType>(
     props.parent,
@@ -190,12 +192,16 @@ export function ObjectPropertyWithNonShorthandStaticName(props: {
 }
 
 export type ObjectPropertyWithShorthandStaticNameProps = {
-  +key: MaybeDetachedNode<ObjectPropertyWithShorthandStaticNameType['key']>,
-  +value: MaybeDetachedNode<ObjectPropertyWithShorthandStaticNameType['value']>,
+  readonly key: MaybeDetachedNode<
+    ObjectPropertyWithShorthandStaticNameType['key'],
+  >,
+  readonly value: MaybeDetachedNode<
+    ObjectPropertyWithShorthandStaticNameType['value'],
+  >,
 };
 export function ObjectPropertyWithShorthandStaticName(props: {
   ...Readonly<ObjectPropertyWithShorthandStaticNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithShorthandStaticNameType> {
   const node = detachedProps<ObjectPropertyWithShorthandStaticNameType>(
     props.parent,
@@ -214,14 +220,16 @@ export function ObjectPropertyWithShorthandStaticName(props: {
 }
 
 export type ObjectPropertyWithComputedNameProps = {
-  +key: MaybeDetachedNode<ObjectPropertyWithComputedNameType['key']>,
-  +value: MaybeDetachedNode<ObjectPropertyWithComputedNameType['value']>,
-  +kind: ObjectPropertyWithComputedNameType['kind'],
-  +method: ObjectPropertyWithComputedNameType['method'],
+  readonly key: MaybeDetachedNode<ObjectPropertyWithComputedNameType['key']>,
+  readonly value: MaybeDetachedNode<
+    ObjectPropertyWithComputedNameType['value'],
+  >,
+  readonly kind: ObjectPropertyWithComputedNameType['kind'],
+  readonly method: ObjectPropertyWithComputedNameType['method'],
 };
 export function ObjectPropertyWithComputedName(props: {
   ...Readonly<ObjectPropertyWithComputedNameProps>,
-  +parent?: ESNode,
+  readonly parent?: ESNode,
 }): DetachedNode<ObjectPropertyWithComputedNameType> {
   const node = detachedProps<ObjectPropertyWithComputedNameType>(props.parent, {
     type: 'Property',

@@ -34,22 +34,24 @@ import type {
  */
 
 interface FunctionDeclaration_With_id extends FunctionDeclaration {
-  +id: NonNullable<FunctionDeclaration['id']>;
+  readonly id: NonNullable<FunctionDeclaration['id']>;
 }
 
 export type ESQueryNodeSelectorsWithoutFallback = Readonly<{
-  +AnyTypeAnnotation?: (node: AnyTypeAnnotation) => void,
-  +CallExpression?: (node: CallExpression) => void,
-  +ClassDeclaration?: (node: ClassDeclaration) => void,
-  +ExpressionStatement?: (node: ExpressionStatement) => void,
-  +FunctionDeclaration?: (node: FunctionDeclaration) => void,
-  +'FunctionDeclaration[id]'?: (node: FunctionDeclaration_With_id) => void,
-  +FunctionExpression?: (node: FunctionExpression) => void,
-  +ImportDeclaration?: (node: ImportDeclaration) => void,
-  +Literal?: (node: Literal) => void,
-  +MethodDefinition?: (node: MethodDefinition) => void,
-  +NewExpression?: (node: NewExpression) => void,
-  +ReturnStatement?: (node: ReturnStatement) => void,
-  +VariableDeclaration?: (node: VariableDeclaration) => void,
-  +VariableDeclarator?: (node: VariableDeclarator) => void,
+  readonly AnyTypeAnnotation?: (node: AnyTypeAnnotation) => void,
+  readonly CallExpression?: (node: CallExpression) => void,
+  readonly ClassDeclaration?: (node: ClassDeclaration) => void,
+  readonly ExpressionStatement?: (node: ExpressionStatement) => void,
+  readonly FunctionDeclaration?: (node: FunctionDeclaration) => void,
+  readonly 'FunctionDeclaration[id]'?: (
+    node: FunctionDeclaration_With_id,
+  ) => void,
+  readonly FunctionExpression?: (node: FunctionExpression) => void,
+  readonly ImportDeclaration?: (node: ImportDeclaration) => void,
+  readonly Literal?: (node: Literal) => void,
+  readonly MethodDefinition?: (node: MethodDefinition) => void,
+  readonly NewExpression?: (node: NewExpression) => void,
+  readonly ReturnStatement?: (node: ReturnStatement) => void,
+  readonly VariableDeclaration?: (node: VariableDeclaration) => void,
+  readonly VariableDeclarator?: (node: VariableDeclarator) => void,
 }>;

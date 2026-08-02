@@ -22,7 +22,7 @@ class ClassStaticBlockScope extends ScopeBase<
   StaticBlock,
   ClassScope,
 > {
-  declare +type: typeof ScopeType.ClassStaticBlock;
+  declare readonly type: typeof ScopeType.ClassStaticBlock;
 
   constructor(
     scopeManager: ScopeManager,

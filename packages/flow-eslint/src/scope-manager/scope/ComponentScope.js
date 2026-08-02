@@ -24,7 +24,7 @@ class ComponentScope extends ScopeBase<
   ComponentDeclaration,
   Scope,
 > {
-  declare +type: typeof ScopeType.Component;
+  declare readonly type: typeof ScopeType.Component;
 
   constructor(
     scopeManager: ScopeManager,
