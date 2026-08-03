@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/named/single/type-alias 1`] = `
+"export type Foo = string;
+"
+`;

@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/function/params/this 1`] = `
+"type T = (this: string) => void;
+"
+`;

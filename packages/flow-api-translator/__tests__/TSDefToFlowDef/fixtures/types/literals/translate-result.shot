@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/literals 1`] = `
+"type T1 = 1n;
+
+type T2 = 1_0n;
+
+type T3 = 1234;
+
+type T4 = 5432.1;
+
+type T5 = 'string1';
+
+type T6 = 'string2';
+
+type T7 = true;
+"
+`;

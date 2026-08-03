@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef object/spread/leading/multiple 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+type Foo = Omit<T1, keyof T2 | keyof T3 | keyof T4 | 'prop'> &
+  Omit<T2, keyof T3 | keyof T4 | 'prop'> &
+  Omit<T3, keyof T4 | 'prop'> &
+  Omit<T4, 'prop'> & {prop: string};
+"
+`;

@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/declare/default/function 1`] = `
+"declare export default function foo(): void;
+"
+`;

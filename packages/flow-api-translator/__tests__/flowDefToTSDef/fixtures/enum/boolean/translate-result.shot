@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef enum/boolean 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+/**
+ * > 11 | enum Foo of boolean {
+ *      | ^^^^^^^^^^^^^^^^^^^^^
+ * > 12 |   A = true,
+ *      | ^^^^^^^^^^^
+ * > 13 |   B = false,
+ *      | ^^^^^^^^^^^
+ * > 14 | }
+ *      | ^^ Unsupported feature: Translating "boolean enums" is currently not supported.
+ **/
+type Foo = any;
+"
+`;

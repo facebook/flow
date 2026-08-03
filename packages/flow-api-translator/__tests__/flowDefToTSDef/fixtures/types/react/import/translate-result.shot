@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef types/react/import 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+import * as React from 'react';
+type T1 = React.ReactNode;
+type T2 = React.JSX.Element;
+type T3 = React.ReactElement<typeof Component>;
+type T4 = React.ComponentRef<typeof Component>;
+type T5 = React.ComponentType<Props>;
+type T6 = React.ComponentType<Props & React.RefAttributes<HTMLElement>>;
+type T7 = React.Context<Foo>;
+type T8 = React.ComponentType<Props>;
+type T9 = React.Fragment;
+type T10 = React.JSX.LibraryManagedAttributes<
+  typeof Component,
+  React.ComponentProps<typeof Component>
+>;
+type T11 = React.Ref<Instance>;
+type T12 = React.Key;
+type T13 = React.Component<Props, {}>;
+type T14 = React.ElementType;
+type T15 = T | ReadonlyArray<T>;
+type T15 = React.ComponentProps<T>;
+type Props = {A: string};
+declare function Component(props: Props): React.ReactNode;
+"
+`;

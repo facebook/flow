@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/named/specifiers 1`] = `
+"declare var a: string;
+
+declare var b: string;
+
+type T = string;
+
+declare export {a, b};
+
+declare export {T};
+"
+`;

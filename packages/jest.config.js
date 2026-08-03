@@ -32,6 +32,7 @@ module.exports = {
   // Limit test discovery to packages owned by this workspace.
   roots: [
     '<rootDir>/babel-plugin-syntax-flow-parser',
+    '<rootDir>/flow-api-translator',
     '<rootDir>/flow-eslint',
     '<rootDir>/flow-estree',
     '<rootDir>/flow-parser',

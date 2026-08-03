@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef function/params 1`] = `
+"declare function foo(
+  named1: string,
+
+  anonymous1: any,
+
+  named2: number,
+
+  anonymous2: any,
+): void;
+
+declare function foo_rest(...$$rest$$: string[]): void;
+
+declare function foo_this(this: string): void;
+
+declare function foo_this_and_reast(
+  this: string,
+
+  named: number,
+
+  anonymous: any,
+
+  ...$$rest$$: boolean[]
+): void;
+"
+`;

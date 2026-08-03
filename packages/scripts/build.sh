@@ -14,6 +14,7 @@ PACKAGES=(
   flow-parser
   flow-eslint
   flow-transform
+  flow-api-translator
 )
 
 BOOTSTRAP_PACKAGES=(

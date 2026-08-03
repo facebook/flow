@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef object/mapped-objects 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ */
+
+export type FlattenTokens<
+  T extends {
+    readonly [$$Key$$: string]:
+      string | {readonly default: string; readonly [$$Key$$: string]: string};
+  },
+> = {
+  readonly [Key in keyof T]: T[Key] extends {
+    readonly default: infer X;
+    readonly [$$Key$$: string]: infer Y;
+  }
+    ? X | Y
+    : T[Key];
+};
+type ObjectEntries<Obj extends {readonly [$$Key$$: string]: unknown}> = {
+  [Key in keyof Obj]?: [Key, Obj[Key]];
+};
+"
+`;

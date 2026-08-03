@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowToJS default-parameters 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+function foo(numVal) {}
+function foo(numVal) {}
+function foo(numVal) {}
+function foo(numVal) {}
+function foo(numVal) {}
+function foo(numVal) {}
+"
+`;

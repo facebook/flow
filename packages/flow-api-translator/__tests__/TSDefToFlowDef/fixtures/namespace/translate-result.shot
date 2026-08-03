@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef namespace 1`] = `
+"declare namespace React {
+  type ReactNode = string;
+
+  declare function useState<S>(
+    initialState: S | (() => S),
+  ): [S, (s: S) => void];
+}
+"
+`;

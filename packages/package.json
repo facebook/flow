@@ -39,6 +39,7 @@
     "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
   },
   "workspaces": [
+    "flow-api-translator",
     "flow-eslint",
     "flow-estree",
     "flow-parser",

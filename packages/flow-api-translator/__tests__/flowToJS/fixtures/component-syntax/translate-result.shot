@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowToJS component-syntax 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+function Foo1() {}
+function Foo2({foo, bar: BAR, ...rest}) {
+  return <div />;
+}
+const Foo3 = React.forwardRef(Foo3_withRef);
+function Foo3_withRef(_$$empty_props_placeholder$$, ref) {}
+function Foo4() {}
+"
+`;

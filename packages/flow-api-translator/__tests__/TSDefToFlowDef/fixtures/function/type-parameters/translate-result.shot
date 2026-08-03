@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef function/type-parameters 1`] = `
+"declare function foo<U, V>(): void;
+"
+`;

@@ -1797,10 +1797,18 @@ export interface DeclareClass extends BaseNode {
 export interface DeclareComponent extends BaseNode {
   readonly type: 'DeclareComponent';
   readonly id: Identifier;
-  readonly params: Array<ComponentTypeParameter>;
+  // The Flow parser emits the same param shape it uses for
+  // `ComponentDeclaration` — `ComponentParameter`/`RestElement` in `params`,
+  // with `rest` always null. Detached nodes built by `flow-transform` may
+  // instead use the `ComponentTypeParameter` + `rest` shape, which is what
+  // `ComponentTypeAnnotation` uses and what the printer emits.
+  readonly params: ReadonlyArray<
+    ComponentParameterAndRestElement | ComponentTypeParameter,
+  >;
   readonly rest: null | ComponentTypeParameter;
   readonly typeParameters: null | TypeParameterDeclaration;
   readonly rendersType: null | RendersType;
+  readonly implicitDeclare: boolean;
 }
 
 export interface DeclareHook extends BaseNode {

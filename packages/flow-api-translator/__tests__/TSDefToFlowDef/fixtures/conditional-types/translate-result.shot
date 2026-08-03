@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef conditional-types 1`] = `
+"type TypeOf<T> = T extends null
+  ? 'null'
+  : T extends void
+    ? 'undefined'
+    : T extends string
+      ? 'string'
+      : T extends number
+        ? 'number'
+        : T extends boolean
+          ? 'boolean'
+          : T extends (...$$rest$$: any) => mixed
+            ? 'function'
+            : 'object';
+"
+`;

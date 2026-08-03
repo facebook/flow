@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/function/params/this-and-rest-and-param 1`] = `
+"type T = (
+  this: string,
+
+  named: number,
+
+  anonymous: any,
+
+  ...$$rest$$: boolean[]
+) => void;
+"
+`;

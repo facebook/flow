@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/declare/named/single/function 1`] = `
+"declare export function foo(): void;
+"
+`;

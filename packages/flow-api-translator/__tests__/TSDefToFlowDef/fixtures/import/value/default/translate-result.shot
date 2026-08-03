@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef import/value/default 1`] = `
+"import Thing from 'module';
+"
+`;

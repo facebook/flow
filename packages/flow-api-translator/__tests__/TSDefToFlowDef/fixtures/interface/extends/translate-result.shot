@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef interface/extends 1`] = `
+"interface Foo extends Bar, Baz, Boz.Booz {}
+"
+`;

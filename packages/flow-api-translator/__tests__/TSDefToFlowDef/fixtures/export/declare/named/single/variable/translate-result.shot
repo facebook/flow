@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/declare/named/single/variable 1`] = `
+"declare export const foo1: string;
+
+declare export let foo2: string;
+
+declare export var foo3: string;
+"
+`;

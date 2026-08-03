@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef object 1`] = `
+"type Foo1 = {...};
+
+type Foo2 = {
+  constructor(): void,
+
+  property: string,
+
+  method(): string,
+
+  get foo(): string,
+
+  set foo(v: string): void,
+
+  (
+    this: void,
+
+    arg1: string,
+
+    anonymous: any,
+
+    ...$$rest$$: string[]
+  ): string,
+  ...
+};
+"
+`;

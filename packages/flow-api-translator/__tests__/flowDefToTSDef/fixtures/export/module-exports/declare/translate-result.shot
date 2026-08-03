@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef export/module-exports/declare 1`] = `
+[ExpectedTranslationError: 
+> 11 | declare module.exports: () => void;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports are not supported.]
+`;

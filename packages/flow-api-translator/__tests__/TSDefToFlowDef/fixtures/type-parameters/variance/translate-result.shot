@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef type-parameters/variance 1`] = `
+"type T1<A> = A;
+
+type T2<+A> = A;
+
+type T3<-A> = A;
+"
+`;

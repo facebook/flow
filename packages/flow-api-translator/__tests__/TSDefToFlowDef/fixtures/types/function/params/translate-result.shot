@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/function/params 1`] = `
+"type T = (
+  named1: string,
+
+  anonymous1: any,
+
+  named2: number,
+
+  anonymous2: any,
+) => void;
+"
+`;

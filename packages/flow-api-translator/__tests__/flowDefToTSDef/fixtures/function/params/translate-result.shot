@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef function/params 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+declare function foo(
+  named1: string,
+  $$PARAM_1$$: anonymous1,
+  named2: number,
+  $$PARAM_3$$: anonymous2,
+): void;
+"
+`;

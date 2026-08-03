@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef type-parameters/constraint 1`] = `
+"type T1<A: B> = A;
+"
+`;

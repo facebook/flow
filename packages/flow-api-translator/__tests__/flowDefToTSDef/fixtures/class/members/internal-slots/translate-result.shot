@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef class/members/internal-slots 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @format
+ */
+
+/**
+ * > 11 | declare class Foo {
+ *      |                   ^
+ * > 12 |   [[new]](): string;
+ *      | ^^^^^^^^^^^^^^^^^^^^
+ * > 13 | }
+ *      | ^^ Unsupported feature: Translating "Spreads in declare class are not allowed" is currently not supported.
+ **/
+declare type Foo = any;
+"
+`;

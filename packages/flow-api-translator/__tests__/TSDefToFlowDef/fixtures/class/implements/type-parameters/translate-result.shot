@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef class/implements/type-parameters 1`] = `
+"declare class Foo implements Bar<T> {}
+"
+`;

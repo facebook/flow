@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef component-syntax/component-type-annotation 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ */
+
+import * as React from 'react';
+type T = (props: {}) => React.ReactNode;
+type T = (props: {foo: string; bar?: string | undefined}) => React.ReactNode;
+type ExtraPropsFoo = {foo: string};
+type T = (props: ExtraPropsFoo) => React.ReactNode;
+type ExtraPropsBar = {bar: string};
+type T = (
+  props: Omit<ExtraPropsBar, 'ref' | 'foo'> & {
+    ref?: React.Ref<Foo> | undefined;
+    foo: string;
+  },
+) => React.ReactNode;
+"
+`;

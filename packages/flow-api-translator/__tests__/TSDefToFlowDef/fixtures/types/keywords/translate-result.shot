@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/keywords 1`] = `
+"type T0 = any;
+
+type T1 = bigint;
+
+type T2 = boolean;
+
+type T3 = empty;
+
+type T4 = mixed;
+
+type T5 = void;
+
+type T6 = number;
+
+type T7 = string;
+
+type T8 = symbol;
+
+type T9 = interface {};
+"
+`;

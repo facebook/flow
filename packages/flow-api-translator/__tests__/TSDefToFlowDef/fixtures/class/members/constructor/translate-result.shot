@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef class/members/constructor 1`] = `
+"declare class Foo {
+  constructor(): Foo;
+}
+"
+`;

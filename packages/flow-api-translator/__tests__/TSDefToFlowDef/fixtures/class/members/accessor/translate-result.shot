@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef class/members/accessor 1`] = `
+"declare class Foo {
+  get prop(): string;
+
+  set prop(string: any): void;
+}
+"
+`;

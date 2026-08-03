@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/array 1`] = `
+"type Foo = string;
+
+type T1 = Foo[];
+
+type T2 = $ReadOnlyArray<Foo>;
+"
+`;

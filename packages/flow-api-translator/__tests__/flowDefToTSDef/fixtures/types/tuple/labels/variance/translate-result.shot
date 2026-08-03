@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef types/tuple/labels/variance 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ */
+
+type T = [
+  a: string,
+  /**
+   * > 10 |  type T = [a: string, +b: string, -c: string];
+   *      |                       ^^^^^^^^^^ Unsupported feature: Translating "tuple type element variance annotations" is currently not supported.
+   **/
+  any,
+  /**
+   * > 10 |  type T = [a: string, +b: string, -c: string];
+   *      |                                   ^^^^^^^^^^ Unsupported feature: Translating "tuple type element variance annotations" is currently not supported.
+   **/
+  any,
+];
+"
+`;

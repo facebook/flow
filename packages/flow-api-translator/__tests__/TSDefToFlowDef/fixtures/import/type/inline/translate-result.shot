@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef import/type/inline 1`] = `
+"import {type Value} from 'module';
+"
+`;

@@ -244,7 +244,7 @@ jobs:
       run: ./scripts/build.sh "${RUNNER_TEMP}/flow-parser-wasm.js"
     - name: Test packages
       working-directory: packages
-      run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform'
+      run: yarn test -- --testPathPatterns='flow-parser|babel-plugin-syntax-flow-parser|flow-eslint|flow-transform|flow-api-translator'
     - name: Create package artifact
       run: |
         mkdir -p \

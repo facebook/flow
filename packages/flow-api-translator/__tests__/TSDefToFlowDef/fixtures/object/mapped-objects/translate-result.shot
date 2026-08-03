@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef object/mapped-objects 1`] = `
+"export type FlattenTokens<
+  T: {
+    [string]:
+      | string
+      | {
+          +default: string,
+
+          +[string]: string,
+          ...
+        },
+    ...
+  },
+> = {
+  +[Key in keyof T]: T[Key] extends {
+    +default: infer X,
+
+    +[string]: infer Y,
+    ...
+  }
+    ? X | Y
+    : T[Key],
+};
+
+type ObjectEntries<Obj: {+[string]: mixed, ...}> = {
+  [Key in keyof Obj]?: [Key, Obj[Key]],
+};
+"
+`;

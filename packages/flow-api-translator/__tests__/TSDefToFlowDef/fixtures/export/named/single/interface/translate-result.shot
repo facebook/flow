@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/named/single/interface 1`] = `
+"declare export interface Foo {}
+"
+`;

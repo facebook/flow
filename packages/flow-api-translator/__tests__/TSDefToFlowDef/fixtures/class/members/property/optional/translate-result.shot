@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef class/members/property/optional 1`] = `
+"declare class Foo {
+  prop?: string;
+}
+"
+`;

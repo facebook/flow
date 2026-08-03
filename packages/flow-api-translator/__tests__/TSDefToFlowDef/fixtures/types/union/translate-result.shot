@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/union 1`] = `
+"type T = A | B | C | D;
+
+type T = ((A | B) | C | D) | (E | F) | G | H;
+"
+`;

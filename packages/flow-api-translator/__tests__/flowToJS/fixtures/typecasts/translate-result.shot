@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowToJS typecasts 1`] = `
+"/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ *
+ * @noformat
+ */
+
+const xxx = 0;
+const yyy = '';
+
+xxx;
+({xxx: 0, yyy: 'hey'});
+xxx => xxx + 1;
+(xxx, yyy);
+xxx;
+
+// Note: re-enable formatting after Prettier is updated to handle \`as\` expressions
+xxx;
+
+xxx;
+"
+`;

@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef export/declare/default/identifier/import/value 1`] = `
+"import Foo from 'module';
+
+declare export default typeof Foo;
+"
+`;

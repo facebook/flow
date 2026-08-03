@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef conditional-types/infer 1`] = `
+"type ExtractValues<
+  T:
+    | string
+    | {
+        +default: string,
+
+        +[string]: string,
+        ...
+      },
+> = T extends {
+  +default: infer X,
+
+  +[string]: infer Y,
+  ...
+}
+  ? X | Y
+  : T;
+"
+`;

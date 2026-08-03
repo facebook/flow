@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TSDefToFlowDef types/index-accessed-type 1`] = `
+"type Foo = {Bar: string, ...};
+
+export type T = Foo['Bar'];
+"
+`;
