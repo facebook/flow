@@ -8,7 +8,6 @@
 use flow_lsp_server::flow_lsp;
 use flow_server_env::lsp_connect_params::ConnectParams;
 use flow_server_env::lsp_connect_params::OnMismatchBehavior;
-use flow_server_env::lsp_connect_params::SharedMemParams;
 
 use crate::command_spec;
 use crate::command_spec::arg_spec;
@@ -24,7 +23,6 @@ fn spec() -> command_spec::Spec {
     );
     let spec = command_utils::add_base_flags(spec);
     let spec = command_utils::add_temp_dir_flag(spec);
-    let spec = command_utils::add_shm_flags(spec);
     let spec = spec
         .flag(
             "--lazy",
@@ -47,7 +45,6 @@ fn main(args: &arg_spec::Values) {
     let flowconfig_name = base_flags.flowconfig_name;
     let temp_dir =
         command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string())).unwrap();
-    let shm_flags = command_utils::get_shm_flags(args);
     let _lazy = command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
     let _lazy_mode =
         command_spec::get(args, "--lazy-mode", &arg_spec::optional(arg_spec::string())).unwrap();
@@ -65,10 +62,6 @@ fn main(args: &arg_spec::Values) {
         from: flow_event_logger::get_from_i_am_a_clown(),
         lazy_mode: None,
         temp_dir,
-        shm_flags: SharedMemParams {
-            shm_heap_size: shm_flags.shm_heap_size,
-            shm_hash_table_pow: shm_flags.shm_hash_table_pow,
-        },
         ignore_version: false,
         quiet,
         on_mismatch: OnMismatchBehavior::ChooseNewest,

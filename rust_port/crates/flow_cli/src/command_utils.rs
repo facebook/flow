@@ -18,9 +18,7 @@ use std::process::Command as ProcessCommand;
 use std::process::Stdio;
 use std::sync::Arc;
 
-use flow_common::options;
 use flow_common::options::Format;
-use flow_common::options::GcControl;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
@@ -492,79 +490,6 @@ pub(crate) fn add_verbose_focus_flag(spec: command_spec::Spec) -> command_spec::
         "Print verbose output about target file only (implies --verbose)",
         None,
     )
-}
-
-#[derive(Clone, Debug, Default)]
-pub(crate) struct SharedMemParams {
-    pub(crate) shm_heap_size: Option<u64>,
-    pub(crate) shm_hash_table_pow: Option<u32>,
-}
-
-pub(crate) fn get_shm_flags(args: &arg_spec::Values) -> SharedMemParams {
-    let shm_heap_size = command_spec::get(
-        args,
-        "--sharedmemory-heap-size",
-        &arg_spec::optional(arg_spec::string()),
-    )
-    .unwrap()
-    .map(|value| match value.parse::<u64>() {
-        Ok(value) => value,
-        Err(_) => {
-            let msg = format!("Invalid --sharedmemory-heap-size value: {}", value);
-            flow_common_exit::exit(FlowExitStatus::CommandlineUsageError, Some(&msg));
-        }
-    });
-    let shm_hash_table_pow = command_spec::get(
-        args,
-        "--sharedmemory-hash-table-pow",
-        &arg_spec::optional(arg_spec::string()),
-    )
-    .unwrap()
-    .map(|value| match value.parse::<u32>() {
-        Ok(value) => value,
-        Err(_) => {
-            let msg = format!("Invalid --sharedmemory-hash-table-pow value: {}", value);
-            flow_common_exit::exit(FlowExitStatus::CommandlineUsageError, Some(&msg));
-        }
-    });
-    SharedMemParams {
-        shm_heap_size,
-        shm_hash_table_pow,
-    }
-}
-
-pub(crate) fn add_shm_flags(spec: command_spec::Spec) -> command_spec::Spec {
-    spec.flag(
-        "--sharedmemory-heap-size",
-        &arg_spec::optional(arg_spec::string()),
-        "The maximum size of the shared memory heap. The default is 26843545600 (25 * 2^30 bytes = 25 GiB)",
-        Some("FLOW_SHAREDMEM_HEAP_SIZE"),
-    )
-    .flag(
-        "--sharedmemory-hash-table-pow",
-        &arg_spec::optional(arg_spec::string()),
-        "The exponent for the size of the shared memory hash table. The default is 19, implying a size of 2^19 bytes",
-        None,
-    )
-}
-
-#[derive(Clone, Debug)]
-pub(crate) struct ShmConfig {
-    pub(crate) heap_size: u64,
-    pub(crate) hash_table_pow: u32,
-}
-
-pub(crate) fn shm_config(shm_flags: &SharedMemParams, flowconfig: &FlowConfig) -> ShmConfig {
-    let heap_size = shm_flags
-        .shm_heap_size
-        .unwrap_or(flowconfig.options.shm_heap_size);
-    let hash_table_pow = shm_flags
-        .shm_hash_table_pow
-        .unwrap_or(flowconfig.options.shm_hash_table_pow);
-    ShmConfig {
-        heap_size,
-        hash_table_pow,
-    }
 }
 
 pub fn add_from_flag(spec: command_spec::Spec) -> command_spec::Spec {
@@ -1337,7 +1262,6 @@ pub(crate) struct ConnectParams {
     pub(crate) autostop: bool,
     pub(crate) lazy_mode: Option<LazyMode>,
     pub(crate) temp_dir: Option<String>,
-    pub(crate) shm_flags: SharedMemParams,
     pub(crate) ignore_version: bool,
     pub(crate) quiet: bool,
     pub(crate) on_mismatch: OnMismatchBehavior,
@@ -1374,7 +1298,6 @@ pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
         lazy_mode,
         temp_dir: command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string()))
             .unwrap(),
-        shm_flags: get_shm_flags(args),
         ignore_version: command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
         quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
         on_mismatch: command_spec::get(
@@ -1415,7 +1338,6 @@ fn add_connect_flags_with_lazy_collector(spec: command_spec::Spec) -> command_sp
             None,
         );
     let spec = add_temp_dir_flag(spec);
-    let spec = add_shm_flags(spec);
     let spec = add_from_flag(spec);
     let spec = add_ignore_version_flag(spec);
     let spec = add_quiet_flag(spec);
@@ -1477,7 +1399,6 @@ pub(crate) struct OptionsFlags {
     pub(crate) vpn_less: Option<bool>,
     pub(crate) include_suppressions: bool,
     pub(crate) estimate_recheck_time: Option<bool>,
-    pub(crate) long_lived_workers: Option<bool>,
     pub(crate) distributed: bool,
     pub(crate) no_autoimports: bool,
 }
@@ -1590,12 +1511,6 @@ pub(crate) fn add_options_flags(spec: command_spec::Spec) -> command_spec::Spec 
         &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
         "",
         Some("FLOW_ESTIMATE_RECHECK_TIME"),
-    )
-    .flag(
-        "--long-lived-workers",
-        &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
-        "",
-        Some("FLOW_LONG_LIVED_WORKERS"),
     )
     .flag("--distributed", &arg_spec::truthy(), "", None)
     .flag(
@@ -1710,12 +1625,6 @@ pub(crate) fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
         estimate_recheck_time: command_spec::get(
             args,
             "--estimate-recheck-time",
-            &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
-        )
-        .unwrap(),
-        long_lived_workers: command_spec::get(
-            args,
-            "--long-lived-workers",
             &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
         )
         .unwrap(),
@@ -2087,7 +1996,6 @@ pub(super) fn make_options(
                 babel_loose_array_spread,
                 ban_spread_key_props,
                 casting_syntax_only_support_as_excludes,
-                channel_mode,
                 component_syntax,
                 async_component_syntax,
                 async_component_syntax_includes,
@@ -2114,13 +2022,6 @@ pub(super) fn make_options(
                 format_single_quotes,
                 #[cfg(fbcode_build)]
                     fox: _,
-                gc_worker_custom_major_ratio,
-                gc_worker_custom_minor_max_size,
-                gc_worker_custom_minor_ratio,
-                gc_worker_major_heap_increment,
-                gc_worker_minor_heap_size,
-                gc_worker_space_overhead,
-                gc_worker_window_size,
                 haste_module_ref_prefix,
                 haste_paths_excludes,
                 haste_paths_includes,
@@ -2134,7 +2035,6 @@ pub(super) fn make_options(
                 llm_context_include_imports,
                 log_per_error_typing_telemetry,
                 log_saving,
-                long_lived_workers,
                 max_files_checked_per_worker,
                 max_files_checked_per_worker_rust_port,
                 max_header_tokens,
@@ -2187,8 +2087,6 @@ pub(super) fn make_options(
                 saved_state_persist_export_index,
                 saved_state_reinit_on_lib_change,
                 saved_state_skip_version_check,
-                shm_hash_table_pow: _shm_hash_table_pow,
-                shm_heap_size: _shm_heap_size,
                 supported_operating_systems,
                 strict_es6_import_export,
                 export_star_excludes_default,
@@ -2240,7 +2138,6 @@ pub(super) fn make_options(
         vpn_less: vpn_less_override,
         include_suppressions: include_suppressions_override,
         estimate_recheck_time: estimate_recheck_time_override,
-        long_lived_workers: long_lived_workers_override,
         distributed: distributed_override,
         no_autoimports: no_autoimports_override,
     } = options_flags;
@@ -2276,11 +2173,6 @@ pub(super) fn make_options(
     let automatic_require_default = automatic_require_default.unwrap_or(false);
     let babel_loose_array_spread = babel_loose_array_spread.unwrap_or(false);
     let ban_spread_key_props = ban_spread_key_props.unwrap_or(false);
-    let channel_mode = match channel_mode {
-        Some(flow_config::ChannelMode::Pipe) => options::ChannelMode::Pipe,
-        Some(flow_config::ChannelMode::Socket) => options::ChannelMode::Socket,
-        None => options::ChannelMode::Pipe,
-    };
     let enable_const_params = enable_const_params.unwrap_or(false);
     let enable_pattern_matching = pattern_matching.unwrap_or(true);
     let enable_records = records.unwrap_or(false);
@@ -2434,16 +2326,6 @@ pub(super) fn make_options(
             .map(|(rollout, config)| (rollout, config.enabled_group))
             .collect(),
     );
-    let gc_worker = GcControl {
-        minor_heap_size: gc_worker_minor_heap_size.or(Some(1024 * 1024 * 2)),
-        major_heap_increment: gc_worker_major_heap_increment,
-        space_overhead: gc_worker_space_overhead,
-        window_size: gc_worker_window_size,
-        custom_major_ratio: gc_worker_custom_major_ratio,
-        custom_minor_ratio: gc_worker_custom_minor_ratio,
-        custom_minor_max_size: gc_worker_custom_minor_max_size,
-    };
-
     let format = Format {
         bracket_spacing: format_bracket_spacing.unwrap_or(true),
         single_quotes: format_single_quotes.unwrap_or(false),
@@ -2725,7 +2607,6 @@ pub(super) fn make_options(
         babel_loose_array_spread,
         ban_spread_key_props,
         casting_syntax_only_support_as_excludes,
-        channel_mode,
         component_syntax,
         async_component_syntax,
         async_component_syntax_includes,
@@ -2752,7 +2633,6 @@ pub(super) fn make_options(
         flowconfig_hash: FlowSmolStr::new(flowconfig_hash),
         flowconfig_name: FlowSmolStr::new(flowconfig_name),
         format,
-        gc_worker,
         haste_module_ref_prefix: haste_module_ref_prefix.map(FlowSmolStr::new),
         hook_compatibility,
         hook_compatibility_excludes,
@@ -2768,7 +2648,6 @@ pub(super) fn make_options(
         lint_severities,
         log_file: Arc::new(log_file),
         log_saving,
-        long_lived_workers: long_lived_workers_override.unwrap_or(long_lived_workers),
         max_files_checked_per_worker,
         max_header_tokens,
         max_seconds_for_check_per_worker,
@@ -2879,7 +2758,6 @@ fn make_env<'a>(
         expiry,
         autostop: connect_flags.autostop,
         tmp_dir,
-        shm_hash_table_pow: connect_flags.shm_flags.shm_hash_table_pow,
         ignore_version: connect_flags.ignore_version,
         emoji: flowconfig.options.emoji.unwrap_or(false),
         quiet: connect_flags.quiet,
@@ -3543,7 +3421,6 @@ pub(crate) fn choose_file_watcher_timeout(
 pub(crate) struct CodemodParams {
     pub(crate) options_flags: OptionsFlags,
     pub(crate) saved_state_options_flags: SavedStateFlags,
-    pub(crate) shm_flags: SharedMemParams,
     pub(crate) ignore_version: bool,
     pub(crate) write: bool,
     pub(crate) repeat: bool,
@@ -3557,7 +3434,6 @@ pub(crate) struct CodemodParams {
 pub(crate) fn get_codemod_flags(args: &arg_spec::Values) -> CodemodParams {
     let options_flags = get_options_flags(args);
     let saved_state_options_flags = get_saved_state_flags(args);
-    let shm_flags = get_shm_flags(args);
     let ignore_version = command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
     let write = command_spec::get(args, "--write", &arg_spec::truthy()).unwrap();
     let repeat = command_spec::get(args, "--repeat", &arg_spec::truthy()).unwrap();
@@ -3582,7 +3458,6 @@ pub(crate) fn get_codemod_flags(args: &arg_spec::Values) -> CodemodParams {
     CodemodParams {
         options_flags,
         saved_state_options_flags,
-        shm_flags,
         ignore_version,
         write,
         repeat,
@@ -3608,7 +3483,6 @@ fn log_level_flag() -> arg_spec::FlagType<Option<flow_hh_logger::Level>> {
 pub(crate) fn add_codemod_flags(spec: command_spec::Spec) -> command_spec::Spec {
     let spec = add_options_flags(spec);
     let spec = add_saved_state_flags(spec);
-    let spec = add_shm_flags(spec);
     let spec = add_from_flag(spec);
     let spec = add_ignore_version_flag(spec);
     let spec = spec

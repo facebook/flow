@@ -28,7 +28,6 @@ pub struct Env<'a> {
     pub lazy_mode: Option<&'a str>,
     pub autostop: bool,
     pub tmp_dir: &'a str,
-    pub shm_hash_table_pow: Option<u32>,
     pub ignore_version: bool,
     #[allow(dead_code)]
     pub emoji: bool,
@@ -44,11 +43,6 @@ fn arg(name: &str, value: Option<&str>, arr: &mut Vec<String>) {
     }
 }
 
-fn arg_map<T, F: Fn(&T) -> String>(name: &str, f: F, value: Option<&T>, arr: &mut Vec<String>) {
-    let value = value.map(f);
-    arg(name, value.as_deref(), arr);
-}
-
 fn flag(name: &str, value: bool, arr: &mut Vec<String>) {
     if value {
         arr.push(name.to_string());
@@ -61,7 +55,6 @@ fn start_flow_server(env: &Env) -> Result<(), (String, flow_common_exit_status::
         tmp_dir,
         lazy_mode,
         autostop,
-        shm_hash_table_pow,
         ignore_version,
         root,
         quiet,
@@ -79,12 +72,6 @@ fn start_flow_server(env: &Env) -> Result<(), (String, flow_common_exit_status::
 
     let root_str = root.to_string_lossy().to_string();
     let mut args = vec!["start".to_string(), root_str];
-    arg_map(
-        "--sharedmemory-hash-table-pow",
-        |v: &u32| v.to_string(),
-        shm_hash_table_pow.as_ref(),
-        &mut args,
-    );
     arg("--lazy-mode", *lazy_mode, &mut args);
     arg("--temp-dir", Some(tmp_dir), &mut args);
     let from = flow_event_logger::get_from_i_am_a_clown();

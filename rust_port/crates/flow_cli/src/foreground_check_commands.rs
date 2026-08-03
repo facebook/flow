@@ -208,7 +208,6 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
             vpn_less: None,
             include_suppressions: false,
             estimate_recheck_time: None,
-            long_lived_workers: None,
             distributed: false,
             no_autoimports: true,
         },
@@ -216,12 +215,9 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
     );
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
     command_utils::assert_version(&flowconfig_for_assert);
-    let _shared_mem_config = command_utils::shm_config(&Default::default(), &flowconfig_for_assert);
     let result = Rc::new(RefCell::new(None));
     let result_for_check = Rc::clone(&result);
-    let init_id = flow_common_utils::random_id::short_string();
     flow_server::server::check_once(
-        &init_id,
         options,
         move |(errors, warnings, suppressed_errors, _)| {
             let value = json_output::full_status_json_of_errors(
@@ -252,7 +248,6 @@ fn check_main(
     pretty: bool,
     json_version: Option<json_output::JsonVersion>,
     offset_style: Option<command_utils::OffsetStyle>,
-    shm_flags: command_utils::SharedMemParams,
     ignore_version: bool,
     path_opt: Option<String>,
     (): (),
@@ -263,7 +258,6 @@ fn check_main(
         options,
         flowconfig: flowconfig_for_assert,
     } = prepare_full_check(flowconfig_name, root, options_flags, ignore_version);
-    let init_id = flow_common_utils::random_id::short_string();
     let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
@@ -271,7 +265,6 @@ fn check_main(
     if !ignore_version {
         command_utils::assert_version(&flowconfig_for_assert);
     }
-    let _shared_mem_config = command_utils::shm_config(&shm_flags, &flowconfig_for_assert);
     let error_flags = command_utils::collect_error_flags(
         error_flags.color,
         error_flags.include_warnings,
@@ -294,7 +287,6 @@ fn check_main(
     };
 
     let (errors, warnings) = flow_server::server::check_once(
-        &init_id,
         options.clone(),
         |(errors, warnings, suppressed_errors, lazy_msg)| {
             let should_include_profile = options.profile;
@@ -342,7 +334,6 @@ mod full_check_command {
         let spec = command_utils::add_options_and_json_flags(spec);
         let spec = command_utils::add_json_version_flag(spec);
         let spec = command_utils::add_offset_style_flag(spec);
-        let spec = command_utils::add_shm_flags(spec);
         let spec = command_utils::add_ignore_version_flag(spec);
         let spec = command_utils::add_from_flag(spec);
         let spec = command_utils::add_no_cgroup_flag(spec);
@@ -365,7 +356,6 @@ mod full_check_command {
                 json_flags.pretty,
                 command_utils::get_json_version(args),
                 command_utils::get_offset_style(args),
-                command_utils::get_shm_flags(args),
                 command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
                 command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap(),
                 (),
@@ -394,7 +384,6 @@ mod focus_check_command {
         let spec = command_utils::add_json_version_flag(spec);
         let spec = command_utils::add_saved_state_flags(spec);
         let spec = command_utils::add_offset_style_flag(spec);
-        let spec = command_utils::add_shm_flags(spec);
         let spec = command_utils::add_ignore_version_flag(spec);
         let spec = command_utils::add_verbose_focus_flag(spec);
         let spec = command_utils::add_from_flag(spec);
@@ -413,7 +402,6 @@ mod focus_check_command {
         json_version: Option<json_output::JsonVersion>,
         saved_state_options_flags: command_utils::SavedStateFlags,
         offset_style: Option<command_utils::OffsetStyle>,
-        shm_flags: command_utils::SharedMemParams,
         ignore_version: bool,
         verbose_focus: bool,
         root: Option<String>,
@@ -467,7 +455,6 @@ mod focus_check_command {
             };
             Arc::make_mut(&mut options).verbose = Some(opt_verbose);
         }
-        let init_id = flow_common_utils::random_id::short_string();
         let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
         // initialize loggers before doing too much, especially anything that might exit
         flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
@@ -481,7 +468,6 @@ mod focus_check_command {
             command_utils::assert_version(&flowconfig_for_assert);
         }
 
-        let _shared_mem_config = command_utils::shm_config(&shm_flags, &flowconfig_for_assert);
         let focus_targets: FlowOrdSet<FileKey> = expanded_filenames
             .iter()
             .map(|file| {
@@ -512,7 +498,6 @@ mod focus_check_command {
         };
 
         let (errors, warnings) = flow_server::server::check_once(
-            &init_id,
             options.clone(),
             |(errors, warnings, suppressed_errors, lazy_msg)| {
                 let should_include_profile = options.profile;
@@ -559,7 +544,6 @@ mod focus_check_command {
                 command_utils::get_json_version(args),
                 command_utils::get_saved_state_flags(args),
                 command_utils::get_offset_style(args),
-                command_utils::get_shm_flags(args),
                 command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
                 command_spec::get(args, "--verbose-focus", &arg_spec::truthy()).unwrap(),
                 command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap(),

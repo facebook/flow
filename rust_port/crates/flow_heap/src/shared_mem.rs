@@ -47,8 +47,6 @@ pub struct SharedMem {
     pub(crate) haste_module_heap: GcMap<HasteModuleInfo, HasteModule>,
     pub(crate) entity_transaction: EntityTransaction,
     pub(crate) reader_cache: ReaderCache,
-    configured_heap_size: Option<u64>,
-    configured_hash_table_pow: Option<u32>,
     on_compact: RwLock<Option<Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>>>,
     pub(crate) gc_state: Mutex<GcState>,
     // Files whose entities have been advanced since the last commit. Lets
@@ -355,20 +353,11 @@ fn decompress_block(compressed: &[u8]) -> io::Result<Vec<u8>> {
 
 impl SharedMem {
     pub fn new() -> Self {
-        Self::new_with_config(None, None)
-    }
-
-    pub fn new_with_config(
-        configured_heap_size: Option<u64>,
-        configured_hash_table_pow: Option<u32>,
-    ) -> Self {
         Self {
             file_heap: GcMap::new(),
             haste_module_heap: GcMap::new(),
             entity_transaction: EntityTransaction::new(),
             reader_cache: ReaderCache::new(),
-            configured_heap_size,
-            configured_hash_table_pow,
             on_compact: RwLock::new(None),
             gc_state: Mutex::new(GcState::default()),
             changed_files: LockedSet::new(),
@@ -383,23 +372,15 @@ impl SharedMem {
         let file_count = self.file_heap.len() as i32;
         let haste_count = self.haste_module_heap.len() as i32;
         let used_slots = file_count + haste_count;
-        let slots = self
-            .configured_hash_table_pow
-            .and_then(|pow| 1_i32.checked_shl(pow))
-            .unwrap_or(used_slots);
         HashStats {
             nonempty_slots: used_slots,
             used_slots,
-            slots,
+            slots: used_slots,
         }
     }
 
     pub fn heap_size(&self) -> i32 {
         (self.file_heap.len() + self.haste_module_heap.len()) as i32
-    }
-
-    pub fn configured_heap_size(&self) -> Option<u64> {
-        self.configured_heap_size
     }
 
     pub fn set_on_compact(

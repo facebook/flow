@@ -170,7 +170,6 @@ pub(crate) fn prepare_codemod(
     let command_utils::CodemodParams {
         options_flags,
         saved_state_options_flags,
-        shm_flags: _shm_flags,
         ignore_version,
         write,
         repeat,

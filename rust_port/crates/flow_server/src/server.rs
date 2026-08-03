@@ -358,7 +358,7 @@ pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -
     }
 }
 
-pub fn create_program_init(init_id: &str, options: Arc<Options>) -> Genv {
+pub fn create_program_init(options: Arc<Options>) -> Genv {
     file_key::set_project_root(&options.root.display().to_string());
     match &options.file_options.default_lib_dir {
         Some(LibDir::Flowlib(path) | LibDir::Prelude(path) | LibDir::Tslib(path)) => {
@@ -372,7 +372,7 @@ pub fn create_program_init(init_id: &str, options: Arc<Options>) -> Genv {
     shared_mem.set_on_compact(Arc::new(move || {
         Box::new(on_compact(shared_mem_for_on_compact.clone()))
     }));
-    server_env_build::make_genv(options, init_id, shared_mem)
+    server_env_build::make_genv(options, shared_mem)
 }
 
 fn detect_linux_distro() -> Option<String> {
@@ -448,13 +448,12 @@ fn string_of_init_trigger(start_cause: server_status::StartCause) -> &'static st
 }
 
 fn run(
-    _init_id: &str,
-    _options: Arc<Options>,
+    options: Arc<Options>,
     monitor_channels: Option<monitor_rpc::Channels>,
     start_cause: server_status::StartCause,
 ) {
     // Check if the current operating system is supported
-    check_supported_operating_system(&_options);
+    check_supported_operating_system(&options);
 
     match monitor_channels {
         Some(channels) => monitor_rpc::init(channels),
@@ -463,7 +462,7 @@ fn run(
 
     flow_server_rechecker::rechecker::init_tokio_runtime();
 
-    let genv_arc = Arc::new(create_program_init(_init_id, _options.clone()));
+    let genv_arc = Arc::new(create_program_init(options.clone()));
     let listener_running = matches!(monitor_rpc::state(), monitor_rpc::StateKind::Initialized);
     if listener_running {
         let genv_for_listener = genv_arc.clone();
@@ -487,7 +486,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Initializing Server (This might take some time)");
 
-    let should_print_summary = _options.profile && !_options.quiet;
+    let should_print_summary = options.profile && !options.quiet;
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         init(profiling, None, &genv_arc)
     });
@@ -504,7 +503,7 @@ fn run(
     );
     monitor_rpc::status_update(server_status::Event::FinishingUp);
 
-    let saved_state_fetcher = string_of_saved_state_fetcher(&_options);
+    let saved_state_fetcher = string_of_saved_state_fetcher(&options);
     let init_trigger = string_of_init_trigger(start_cause);
 
     let profiling_props = profiling_to_event_logger_json(&profiling);
@@ -583,19 +582,17 @@ pub fn log_worker_exception(err_msg: &str) {
 }
 
 pub fn run_from_daemonize(
-    init_id: &str,
     options: Arc<Options>,
     monitor_channels: Option<monitor_rpc::Channels>,
     start_cause: server_status::StartCause,
 ) {
-    let init_id = init_id.to_string();
     install_panic_hook();
     let result = std::thread::Builder::new()
         .name("flow_server_main".to_string())
         .stack_size(SERVER_MAIN_THREAD_STACK_SIZE)
         .spawn(move || {
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                run(&init_id, options, monitor_channels, start_cause);
+                run(options, monitor_channels, start_cause);
             }))
         })
         .expect("failed to spawn flow_server_main thread")
@@ -636,7 +633,6 @@ pub fn run_from_daemonize(
 // Foreground type check for `flow full-check` / `flow focus-check`. Logs a
 // `WORKER_EXCEPTION` on panic, then resumes the unwind for the CLI to classify.
 pub fn check_once<'a, FormatErrors>(
-    init_id: &str,
     options: Arc<Options>,
     format_errors: FormatErrors,
     focus_targets: Option<FlowOrdSet<FileKey>>,
@@ -646,7 +642,7 @@ where
 {
     install_panic_hook();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        check_once_inner(init_id, options, format_errors, focus_targets)
+        check_once_inner(options, format_errors, focus_targets)
     }));
     match result {
         Ok(errors_and_warnings) => errors_and_warnings,
@@ -658,7 +654,6 @@ where
 }
 
 fn check_once_inner<'a, FormatErrors>(
-    init_id: &str,
     options: Arc<Options>,
     format_errors: FormatErrors,
     focus_targets: Option<FlowOrdSet<FileKey>>,
@@ -672,7 +667,7 @@ where
     flow_event_logger::set_eden(Some(flow_common_vcs::eden::is_eden(&options.root)));
     flow_logging_utils::set_server_options(&options);
 
-    let genv = create_program_init(init_id, Arc::clone(&options));
+    let genv = create_program_init(Arc::clone(&options));
     let should_print_summary = options.profile && !options.quiet;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {

@@ -46,12 +46,6 @@ pub enum LazyMode {
     WatchmanDeprecated,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ChannelMode {
-    Pipe,
-    Socket,
-}
-
 pub mod opts {
     use super::*;
 
@@ -85,7 +79,6 @@ pub mod opts {
         pub babel_loose_array_spread: Option<bool>,
         pub ban_spread_key_props: Option<bool>,
         pub casting_syntax_only_support_as_excludes: Vec<String>,
-        pub channel_mode: Option<ChannelMode>,
         pub component_syntax: bool,
         pub async_component_syntax: bool,
         pub async_component_syntax_includes: Vec<String>,
@@ -114,20 +107,6 @@ pub mod opts {
         pub format_single_quotes: Option<bool>,
         #[cfg(fbcode_build)]
         pub fox: bool,
-        /// Gc.control's custom_major_ratio
-        pub gc_worker_custom_major_ratio: Option<u32>,
-        /// Gc.control's custom_minor_max_size
-        pub gc_worker_custom_minor_max_size: Option<u32>,
-        /// Gc.control's custom_minor_ratio
-        pub gc_worker_custom_minor_ratio: Option<u32>,
-        /// Gc.control's major_heap_increment
-        pub gc_worker_major_heap_increment: Option<u32>,
-        /// Gc.control's minor_heap_size
-        pub gc_worker_minor_heap_size: Option<u32>,
-        /// Gc.control's space_overhead
-        pub gc_worker_space_overhead: Option<u32>,
-        /// Gc.control's window_size
-        pub gc_worker_window_size: Option<u32>,
         pub haste_module_ref_prefix: Option<String>,
         pub haste_paths_excludes: Vec<String>,
         pub haste_paths_includes: Vec<String>,
@@ -141,7 +120,6 @@ pub mod opts {
         pub llm_context_include_imports: bool,
         pub log_per_error_typing_telemetry: bool,
         pub log_saving: BTreeMap<String, LogSaving>,
-        pub long_lived_workers: bool,
         pub max_files_checked_per_worker: u32,
         pub max_files_checked_per_worker_rust_port: Option<u32>,
         pub max_header_tokens: u32,
@@ -196,8 +174,6 @@ pub mod opts {
         pub saved_state_persist_export_index: bool,
         pub saved_state_reinit_on_lib_change: bool,
         pub saved_state_skip_version_check: bool,
-        pub shm_hash_table_pow: u32,
-        pub shm_heap_size: u64,
         pub supported_operating_systems: Vec<SupportedOs>,
         pub strict_es6_import_export: bool,
         pub export_star_excludes_default: Option<bool>,
@@ -263,7 +239,6 @@ pub mod opts {
             babel_loose_array_spread: None,
             ban_spread_key_props: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
-            channel_mode: None,
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
@@ -290,13 +265,6 @@ pub mod opts {
             format_single_quotes: None,
             #[cfg(fbcode_build)]
             fox: false,
-            gc_worker_custom_major_ratio: None,
-            gc_worker_custom_minor_max_size: None,
-            gc_worker_custom_minor_ratio: None,
-            gc_worker_major_heap_increment: None,
-            gc_worker_minor_heap_size: None,
-            gc_worker_space_overhead: None,
-            gc_worker_window_size: None,
             haste_module_ref_prefix: None,
             haste_paths_excludes: vec![
                 ocaml_str_to_rust_regex("\\(.*\\)?/node_modules/.*"),
@@ -313,7 +281,6 @@ pub mod opts {
             llm_context_include_imports: false,
             log_per_error_typing_telemetry: false,
             log_saving: BTreeMap::new(),
-            long_lived_workers: false,
             max_files_checked_per_worker: 100,
             max_files_checked_per_worker_rust_port: None,
             max_header_tokens: 10,
@@ -381,8 +348,6 @@ pub mod opts {
             saved_state_persist_export_index: true,
             saved_state_reinit_on_lib_change: true,
             saved_state_skip_version_check: false,
-            shm_hash_table_pow: 19,
-            shm_heap_size: /* 25GB */ 1024 * 1024 * 25,
             supported_operating_systems: Vec::new(),
             strict_es6_import_export: false,
             export_star_excludes_default: None,
@@ -691,26 +656,6 @@ pub mod opts {
         opt(parser, setter, init, multiple, values, config)
     }
 
-    fn parse_u64(
-        setter: fn(&mut Opts, u64) -> Result<(), String>,
-        init: Option<fn(&mut Opts)>,
-        multiple: bool,
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        let parser = |s: &str| {
-            let v = s
-                .parse::<i64>()
-                .map_err(|e| format!("Failed to parse integer: {}", e))?;
-            if v < 0 {
-                Err("Number cannot be negative!".to_string())
-            } else {
-                Ok(v as u64)
-            }
-        };
-        opt(parser, setter, init, multiple, values, config)
-    }
-
     fn parse_mapping<T>(
         transformer: fn((String, String)) -> Result<T, String>,
         setter: fn(&mut Opts, T) -> Result<(), String>,
@@ -812,44 +757,6 @@ pub mod opts {
             },
             None,
             false,
-            values,
-            config,
-        )
-    }
-
-    fn channel_mode_parser(
-        values: RawValues,
-        config: &mut Opts,
-        enabled: bool,
-    ) -> Result<(), OptError> {
-        if !enabled {
-            return Ok(());
-        }
-        let allowed = vec![("pipe", ChannelMode::Pipe), ("socket", ChannelMode::Socket)];
-        enum_parser(
-            &allowed,
-            |opts, v| {
-                opts.channel_mode = Some(v);
-                Ok(())
-            },
-            values,
-            config,
-        )
-    }
-
-    fn long_lived_workers_parser(
-        values: RawValues,
-        config: &mut Opts,
-        enabled: bool,
-    ) -> Result<(), OptError> {
-        if !enabled {
-            return Ok(());
-        }
-        parse_boolean(
-            |opts, v| {
-                opts.long_lived_workers = v;
-                Ok(())
-            },
             values,
             config,
         )
@@ -1395,115 +1302,6 @@ pub mod opts {
         )
     }
 
-    fn gc_worker_major_heap_increment_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_major_heap_increment = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_minor_heap_size_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_minor_heap_size = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_space_overhead_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_space_overhead = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_window_size_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_window_size = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_custom_major_ratio_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_custom_major_ratio = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_custom_minor_ratio_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_custom_minor_ratio = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
-    fn gc_worker_custom_minor_max_size_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.gc_worker_custom_minor_max_size = Some(v);
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
     fn ignore_non_literal_requires_parser(
         values: RawValues,
         config: &mut Opts,
@@ -2021,19 +1819,6 @@ pub mod opts {
         )
     }
 
-    fn shm_hash_table_pow_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
-        parse_uint(
-            |opts, v| {
-                opts.shm_hash_table_pow = v;
-                Ok(())
-            },
-            None,
-            false,
-            values,
-            config,
-        )
-    }
-
     fn strict_es6_import_export_parser(
         values: RawValues,
         config: &mut Opts,
@@ -2290,12 +2075,6 @@ pub mod opts {
                 "experimental.async_component_syntax.includes",
                 |values, config| async_component_syntax_includes_parser(values, config),
             ),
-            ("experimental.channel_mode", |values, config| {
-                channel_mode_parser(values, config, true)
-            }),
-            ("experimental.channel_mode.windows", |values, config| {
-                channel_mode_parser(values, config, cfg!(windows))
-            }),
             (
                 "experimental.component_syntax.hook_compatibility",
                 |values, config| hook_compatibility_parser(values, config),
@@ -2358,13 +2137,6 @@ pub mod opts {
                         config,
                     )
                 },
-            ),
-            ("experimental.long_lived_workers", |values, config| {
-                long_lived_workers_parser(values, config, true)
-            }),
-            (
-                "experimental.long_lived_workers.windows",
-                |values, config| long_lived_workers_parser(values, config, cfg!(windows)),
             ),
             (
                 "experimental.llm_context.include_imports",
@@ -2657,27 +2429,6 @@ pub mod opts {
             }),
             ("format.single_quotes", |values, config| {
                 format_single_quotes_parser(values, config)
-            }),
-            ("gc.worker.custom_major_ratio", |values, config| {
-                gc_worker_custom_major_ratio_parser(values, config)
-            }),
-            ("gc.worker.custom_minor_max_size", |values, config| {
-                gc_worker_custom_minor_max_size_parser(values, config)
-            }),
-            ("gc.worker.custom_minor_ratio", |values, config| {
-                gc_worker_custom_minor_ratio_parser(values, config)
-            }),
-            ("gc.worker.major_heap_increment", |values, config| {
-                gc_worker_major_heap_increment_parser(values, config)
-            }),
-            ("gc.worker.minor_heap_size", |values, config| {
-                gc_worker_minor_heap_size_parser(values, config)
-            }),
-            ("gc.worker.space_overhead", |values, config| {
-                gc_worker_space_overhead_parser(values, config)
-            }),
-            ("gc.worker.window_size", |values, config| {
-                gc_worker_window_size_parser(values, config)
             }),
             ("include_warnings", |values, config| {
                 parse_boolean(
@@ -2997,21 +2748,6 @@ pub mod opts {
                         if cfg!(windows) {
                             opts.max_workers = Some(v);
                         }
-                        Ok(())
-                    },
-                    None,
-                    false,
-                    values,
-                    config,
-                )
-            }),
-            ("sharedmemory.hash_table_pow", |values, config| {
-                shm_hash_table_pow_parser(values, config)
-            }),
-            ("sharedmemory.heap_size", |values, config| {
-                parse_u64(
-                    |opts, v| {
-                        opts.shm_heap_size = v;
                         Ok(())
                     },
                     None,

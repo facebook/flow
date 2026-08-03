@@ -200,7 +200,6 @@ pub(super) struct AnnotateExportsOptions {
     pub(super) monitor_log_file: PathBuf,
     pub(super) wait_for_recheck: String,
     pub(super) file_watcher: String,
-    pub(super) long_lived_workers: String,
     pub(super) env: HashMap<String, String>,
 }
 
@@ -216,7 +215,6 @@ pub(super) fn run_annotate_exports(
         monitor_log_file,
         wait_for_recheck,
         file_watcher,
-        long_lived_workers,
         env,
     } = options;
     let mut output = String::new();
@@ -325,8 +323,6 @@ pub(super) fn run_annotate_exports(
         log_file.display().to_string(),
         "--monitor-log-file".to_owned(),
         monitor_log_file.display().to_string(),
-        "--long-lived-workers".to_owned(),
-        long_lived_workers,
     ]);
     let start_result = exec_file(
         &flow_bin.to_string_lossy(),

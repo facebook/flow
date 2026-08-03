@@ -123,7 +123,6 @@ fn build_monitor_options_and_start_args(
         vpn_less: args.vpn_less,
         include_suppressions: args.include_suppressions,
         estimate_recheck_time: args.estimate_recheck_time,
-        long_lived_workers: args.long_lived_workers,
         distributed: args.distributed,
         no_autoimports: args.no_autoimports,
     };
@@ -157,8 +156,6 @@ fn build_monitor_options_and_start_args(
         file_watcher_timeout: args.file_watcher_timeout,
         file_watcher_mergebase_with: args.file_watcher_mergebase_with.clone(),
         file_watcher_sync_timeout: args.file_watcher_sync_timeout,
-        shm_heap_size: args.shm_heap_size,
-        shm_hash_table_pow: args.shm_hash_table_pow,
         from: args.from.clone(),
         autostop: args.autostop,
         no_restart: args.no_restart,
@@ -208,7 +205,6 @@ fn build_server_daemon_options(
         vpn_less: args.vpn_less,
         include_suppressions: args.include_suppressions,
         estimate_recheck_time: args.estimate_recheck_time,
-        long_lived_workers: args.long_lived_workers,
         distributed: args.distributed,
         no_autoimports: args.cli_overrides.no_autoimports,
     };

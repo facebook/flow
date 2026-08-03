@@ -46,21 +46,16 @@ fn init_loggers(options: &Options) {
     flow_logging_utils::init_loggers(options, None);
 }
 
-fn shared_mem_init(
-    _num_workers: usize,
-    _shared_mem_config: &(),
-) -> Result<flow_heap::parsing_heaps::SharedMem, ()> {
-    Ok(flow_heap::parsing_heaps::SharedMem::new())
+fn shared_mem_init() -> flow_heap::parsing_heaps::SharedMem {
+    flow_heap::parsing_heaps::SharedMem::new()
 }
 
 fn make_genv(
-    init_id: &str,
     options: &Options,
     handle: flow_heap::parsing_heaps::SharedMem,
 ) -> flow_server_env::server_env::Genv {
     flow_server::server_env_build::make_genv(
         std::sync::Arc::new(options.clone()),
-        init_id,
         std::sync::Arc::new(handle),
     )
 }
@@ -147,19 +142,14 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         log_level: Option<flow_hh_logger::Level>,
         roots: BTreeSet<FileKey>,
     ) {
-        let init_id = flow_common_utils::random_id::short_string();
         initialize_logs(options);
         let log_level = match log_level {
             Some(level) => level,
             None => flow_hh_logger::Level::Off,
         };
         flow_hh_logger::level::set_min_level(log_level);
-        let num_workers = options.max_workers as usize;
-        let handle = match shared_mem_init(num_workers, &()) {
-            Ok(handle) => handle,
-            Err(()) => panic!("Out_of_shared_memory"),
-        };
-        let genv = make_genv(&init_id, options, handle);
+        let handle = shared_mem_init();
+        let genv = make_genv(options, handle);
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
         rt.block_on(Runner::run(&genv, write, repeat, roots));
     }

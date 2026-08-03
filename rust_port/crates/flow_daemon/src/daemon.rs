@@ -41,11 +41,6 @@ pub struct Handle<In, Out> {
     pub child: Child,
 }
 
-pub enum ChannelMode {
-    Pipe,
-    Socket,
-}
-
 pub fn to_channel<T: Serialize>(oc: &mut OutChannel<T>, v: &T, should_flush: bool) {
     bincode::serde::encode_into_std_write(v, &mut oc.stream, bincode::config::legacy())
         .expect("Daemon::to_channel: bincode serialize");
@@ -389,7 +384,7 @@ impl StdioFd {
     }
 }
 
-fn setup_channels(_channel_mode: ChannelMode) -> std::io::Result<(TcpListener, TcpListener)> {
+fn setup_channels() -> std::io::Result<(TcpListener, TcpListener)> {
     let parent_in_listener = TcpListener::bind("127.0.0.1:0")?;
     let parent_out_listener = TcpListener::bind("127.0.0.1:0")?;
     Ok((parent_in_listener, parent_out_listener))
@@ -465,7 +460,6 @@ fn accept_with_token(
 }
 
 pub fn spawn<P, I, O>(
-    channel_mode: Option<ChannelMode>,
     name: Option<&str>,
     stdio: (StdioFd, StdioFd, StdioFd),
     entry: &Entry<P, I, O>,
@@ -476,8 +470,7 @@ where
     I: Serialize + DeserializeOwned + Send + 'static,
     O: Serialize + DeserializeOwned + Send + 'static,
 {
-    let channel_mode = channel_mode.unwrap_or(ChannelMode::Pipe);
-    let (parent_in_listener, parent_out_listener) = setup_channels(channel_mode)?;
+    let (parent_in_listener, parent_out_listener) = setup_channels()?;
     let parent_in_addr = parent_in_listener.local_addr()?;
     let parent_out_addr = parent_out_listener.local_addr()?;
     let token: [u8; 32] = rand::random();

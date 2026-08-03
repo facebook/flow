@@ -583,7 +583,6 @@ pub mod server_instance {
             }
         };
         let crate::flow_server_monitor_options::MonitorOptions {
-            shared_mem_config: _shared_mem_config,
             server_options: _server_options,
             server_log_file: _log_file,
             lazy_mode,

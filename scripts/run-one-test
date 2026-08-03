@@ -159,7 +159,6 @@ start_flow_unsafe () {
         --file-watcher "$file_watcher" \
         --log-file "$abs_log_file" \
         --monitor-log-file "$abs_monitor_log_file" \
-        --long-lived-workers "$long_lived_workers" \
         "$@"
       return $?
     else
@@ -175,7 +174,6 @@ start_flow_unsafe () {
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
-      --long-lived-workers "$long_lived_workers" \
       "$@"
     return $?
   fi
@@ -390,8 +388,7 @@ runtest() {
               --file-watcher "$file_watcher" \
               --flowconfig-name "$flowconfig_name" \
               --log-file "$abs_log_file" \
-              --monitor-log-file "$abs_monitor_log_file" \
-              --long-lived-workers "$long_lived_workers" \
+              --monitor-log-file "$abs_monitor_log_file"
 
             local SAVED_STATE_FILENAME="$root/.flow.saved_state"
             local CHANGES_FILENAME="$root/.flow.saved_state_file_changes"
@@ -416,7 +413,6 @@ runtest() {
               "$FLOW" full-check . \
                 $flowlib \
                 --strip-root --show-all-errors \
-                --long-lived-workers "$long_lived_workers" \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi

@@ -51,12 +51,6 @@ pub use FileWatcher::EdenFS;
 pub use FileWatcher::NoFileWatcher;
 pub use FileWatcher::Watchman;
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct SharedMemConfig {
-    pub heap_size: u64,
-    pub hash_table_pow: u32,
-}
-
 #[derive(Clone)]
 pub struct MonitorOptions {
     // Where the monitor logs will go by default
@@ -80,8 +74,6 @@ pub struct MonitorOptions {
     pub no_flowlib: bool,
     // Whether version checks should be ignored when the monitor spawns servers.
     pub ignore_version: bool,
-    // The shared memory config
-    pub shared_mem_config: SharedMemConfig,
     // The argv of the process which created the server monitor
     pub argv: Vec<String>,
     // What to use for file watching

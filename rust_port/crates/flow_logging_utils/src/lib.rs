@@ -43,7 +43,6 @@ pub fn init_loggers(options: &Options, min_level: Option<flow_hh_logger::Level>)
 struct Formatted<'a> {
     lazy_mode: &'static str,
     max_workers: i32,
-    long_lived_workers: bool,
     enabled_rollouts: &'a std::collections::BTreeMap<String, String>,
     debug: bool,
     log_saving: &'a std::collections::BTreeMap<String, flow_common::options::LogSaving>,
@@ -57,7 +56,6 @@ fn format(server_options: &Options) -> Formatted<'_> {
         "off"
     };
     let max_workers = server_options.max_workers;
-    let long_lived_workers = server_options.long_lived_workers;
     let enabled_rollouts = server_options.enabled_rollouts.as_ref();
     let debug = server_options.debug;
     let log_saving = server_options.log_saving.as_ref();
@@ -65,7 +63,6 @@ fn format(server_options: &Options) -> Formatted<'_> {
     Formatted {
         lazy_mode,
         max_workers,
-        long_lived_workers,
         enabled_rollouts,
         debug,
         log_saving,
@@ -78,7 +75,6 @@ pub fn set_server_options(server_options: &Options) {
     flow_event_logger::set_server_options(
         f.lazy_mode,
         f.max_workers,
-        f.long_lived_workers,
         f.enabled_rollouts,
         f.debug,
         f.log_saving,
@@ -90,7 +86,6 @@ pub fn dump_server_options(server_options: &Options, log: &mut dyn FnMut(&str)) 
     let f = format(server_options);
     log(&format!("lazy_mode={}", f.lazy_mode));
     log(&format!("max_workers={}", f.max_workers));
-    log(&format!("long_lived_workers={}", f.long_lived_workers));
     log(&format!("debug={}", f.debug));
     for (method_name, log_saving) in f.log_saving.iter() {
         let limit_str = match log_saving.limit {

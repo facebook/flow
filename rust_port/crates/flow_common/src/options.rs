@@ -111,28 +111,10 @@ impl AssertOperator {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ChannelMode {
-    #[default]
-    Pipe,
-    Socket,
-}
-
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Format {
     pub bracket_spacing: bool,
     pub single_quotes: bool,
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct GcControl {
-    pub minor_heap_size: Option<u32>,
-    pub major_heap_increment: Option<u32>,
-    pub space_overhead: Option<u32>,
-    pub window_size: Option<u32>,
-    pub custom_major_ratio: Option<u32>,
-    pub custom_minor_ratio: Option<u32>,
-    pub custom_minor_max_size: Option<u32>,
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -154,7 +136,6 @@ pub struct Options {
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
     pub casting_syntax_only_support_as_excludes: Arc<[Regex]>,
-    pub channel_mode: ChannelMode,
     pub component_syntax: bool,
     pub async_component_syntax: bool,
     pub async_component_syntax_includes: Arc<[Regex]>,
@@ -180,7 +161,6 @@ pub struct Options {
     pub flowconfig_hash: FlowSmolStr,
     pub flowconfig_name: FlowSmolStr,
     pub format: Format,
-    pub gc_worker: GcControl,
     pub haste_module_ref_prefix: Option<FlowSmolStr>,
     pub hook_compatibility: bool,
     pub hook_compatibility_excludes: Arc<[Regex]>,
@@ -194,7 +174,6 @@ pub struct Options {
     pub lint_severities: LintSettings<Severity>,
     pub log_file: Arc<PathBuf>,
     pub log_saving: Arc<BTreeMap<String, LogSaving>>,
-    pub long_lived_workers: bool,
     pub max_files_checked_per_worker: i32,
     pub max_header_tokens: i32,
     pub max_seconds_for_check_per_worker: f64,

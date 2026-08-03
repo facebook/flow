@@ -49,7 +49,6 @@ pub struct Args {
     pub parallelism: Option<i32>,
     pub check_only: bool,
     pub saved_state: bool,
-    pub long_lived_workers: bool,
     pub record: bool,
     pub quiet: bool,
     pub verbose: bool,
@@ -81,7 +80,6 @@ pub fn run(args: Args) -> io::Result<bool> {
         parallelism,
         check_only,
         saved_state,
-        long_lived_workers,
         record,
         quiet,
         verbose,
@@ -118,16 +116,10 @@ pub fn run(args: Args) -> io::Result<bool> {
 
     // Handle specific test (-t) as filter
     if let Some(mut test_name) = test.or(run_test) {
-        // Strip suffixes like -saved-state or -long-lived-workers
+        // Strip the saved-state suffix.
         if saved_state {
             test_name = test_name
                 .strip_suffix("-saved-state")
-                .unwrap_or(&test_name)
-                .to_owned();
-        }
-        if long_lived_workers {
-            test_name = test_name
-                .strip_suffix("-long-lived-workers")
                 .unwrap_or(&test_name)
                 .to_owned();
         }
@@ -150,7 +142,6 @@ pub fn run(args: Args) -> io::Result<bool> {
         ),
         check_only,
         saved_state,
-        long_lived_workers,
         record,
         quiet: quiet || json_output,
         verbose,

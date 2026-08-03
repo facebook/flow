@@ -11,7 +11,6 @@ pub mod pid_log;
 #[cfg(test)]
 mod cross_process_tests;
 
-pub use daemon::ChannelMode;
 pub use daemon::ChannelPair;
 pub use daemon::Entry;
 pub use daemon::Handle;

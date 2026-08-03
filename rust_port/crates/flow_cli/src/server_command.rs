@@ -28,7 +28,6 @@ fn spec() -> command_spec::Spec {
     let spec = command_utils::add_lazy_flags(spec);
     let spec = command_utils::add_options_flags(spec);
     let spec = command_utils::add_saved_state_flags(spec);
-    let spec = command_utils::add_shm_flags(spec);
     let spec = command_utils::add_ignore_version_flag(spec);
     let spec = command_utils::add_from_flag(spec);
     let spec = command_utils::add_log_file_flags(spec);
@@ -43,7 +42,6 @@ fn main(
     lazy_mode: Option<flow_config::LazyMode>,
     options_flags: command_utils::OptionsFlags,
     saved_state_options_flags: command_utils::SavedStateFlags,
-    shm_flags: command_utils::SharedMemParams,
     ignore_version: bool,
     server_log_file: Option<String>,
     monitor_log_file: Option<String>,
@@ -84,7 +82,6 @@ fn main(
         command_utils::assert_version(&flowconfig);
     }
 
-    let shared_mem_config = command_utils::shm_config(&shm_flags, &flowconfig);
     let server_log_file = match server_log_file.or_else(|| std::env::var("FLOW_LOG_FILE").ok()) {
         Some(s) => s,
         None => command_utils::server_log_file(
@@ -135,8 +132,6 @@ fn main(
             file_watcher_timeout,
             file_watcher_mergebase_with,
             file_watcher_sync_timeout,
-            shm_heap_size: Some(shared_mem_config.heap_size),
-            shm_hash_table_pow: Some(shared_mem_config.hash_table_pow),
             from: flow_event_logger::get_from_i_am_a_clown(),
             autostop: false,
             no_restart,
@@ -170,7 +165,6 @@ pub(crate) fn command() -> command_spec::Command {
             command_utils::get_lazy_flags(args),
             command_utils::get_options_flags(args),
             command_utils::get_saved_state_flags(args),
-            command_utils::get_shm_flags(args),
             command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
             server_log_file,
             monitor_log_file,

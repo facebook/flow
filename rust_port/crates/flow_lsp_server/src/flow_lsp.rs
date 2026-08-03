@@ -547,16 +547,6 @@ fn flow_cli_command(
         command.arg("--temp-dir").arg(temp_dir);
     }
     if subcommand == "start" {
-        if let Some(shm_heap_size) = connect_params.shm_flags.shm_heap_size {
-            command
-                .arg("--sharedmemory-heap-size")
-                .arg(shm_heap_size.to_string());
-        }
-        if let Some(shm_hash_table_pow) = connect_params.shm_flags.shm_hash_table_pow {
-            command
-                .arg("--sharedmemory-hash-table-pow")
-                .arg(shm_hash_table_pow.to_string());
-        }
         if connect_params.autostop {
             command.arg("--autostop");
         }

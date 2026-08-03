@@ -136,7 +136,6 @@ pub(super) struct RunOneTestOptions {
     pub(super) version: String,
     pub(super) check_only: bool,
     pub(super) saved_state: bool,
-    pub(super) long_lived_workers: bool,
     pub(super) record: bool,
     pub(super) scripts_dir: PathBuf,
     pub(super) env: HashMap<String, String>,
@@ -149,12 +148,10 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
         version,
         check_only,
         saved_state,
-        long_lived_workers,
         record,
         scripts_dir,
         env: initial_env,
     } = opts;
-    let long_lived_workers = if long_lived_workers { "1" } else { "0" };
 
     let name = test_dir
         .file_name()
@@ -341,12 +338,7 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
             if no_flowlib {
                 args.push("--no-flowlib".to_owned());
             }
-            args.extend([
-                "--strip-root".to_owned(),
-                "--show-all-errors".to_owned(),
-                "--long-lived-workers".to_owned(),
-                long_lived_workers.to_owned(),
-            ]);
+            args.extend(["--strip-root".to_owned(), "--show-all-errors".to_owned()]);
             let command_result = exec_file(
                 &flow_bin.to_string_lossy(),
                 &args,
@@ -396,7 +388,6 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
                 monitor_log_file: monitor_log_file.clone(),
                 wait_for_recheck: config.wait_for_recheck.clone(),
                 file_watcher: config.file_watcher.clone(),
-                long_lived_workers: long_lived_workers.to_owned(),
                 env: env.clone(),
             })?;
             // runAnnotateExports stops the server internally, so clear the flag
@@ -453,7 +444,6 @@ abs_log_file="$_CT_LOG_FILE"
 abs_monitor_log_file="$_CT_MONITOR_LOG_FILE"
 wait_for_recheck="$_CT_WAIT_FOR_RECHECK"
 file_watcher="$_CT_FILE_WATCHER"
-long_lived_workers="$_CT_LONG_LIVED_WORKERS"
 
 SAVED_OPTION="$(set +o | grep errexit)"
 
@@ -527,8 +517,7 @@ create_saved_state() {
       --file-watcher "$file_watcher" \
       --flowconfig-name "$flowconfig_name" \
       --log-file "$abs_log_file" \
-      --monitor-log-file "$abs_monitor_log_file" \
-      --long-lived-workers "$long_lived_workers"
+      --monitor-log-file "$abs_monitor_log_file"
 
     local SAVED_STATE_FILENAME="$root/.flow.saved_state"
     local CHANGES_FILENAME="$root/.flow.saved_state_file_changes"
@@ -567,7 +556,6 @@ start_flow_unsafe() {
         --file-watcher "$file_watcher" \
         --log-file "$abs_log_file" \
         --monitor-log-file "$abs_monitor_log_file" \
-        --long-lived-workers "$long_lived_workers" \
         "$@"
       return $?
     else
@@ -582,7 +570,6 @@ start_flow_unsafe() {
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
-      --long-lived-workers "$long_lived_workers" \
       "$@"
     return $?
   fi
@@ -649,7 +636,6 @@ exit $_script_exit
                 ),
                 ("_CT_WAIT_FOR_RECHECK", config.wait_for_recheck.clone()),
                 ("_CT_FILE_WATCHER", config.file_watcher.clone()),
-                ("_CT_LONG_LIVED_WORKERS", long_lived_workers.to_owned()),
                 ("_CT_THIS_DIR", scripts_dir.display().to_string()),
                 ("_CT_ERR_FILE", err_file.display().to_string()),
                 ("_CT_START_ARGS", config.start_args.clone()),
@@ -731,7 +717,6 @@ exit $_script_exit
                         no_flowlib,
                         wait_for_recheck: &config.wait_for_recheck,
                         file_watcher: &config.file_watcher,
-                        long_lived_workers,
                         env: &env,
                     });
                     let ok = ctx.create_saved_state(&work_dir, flowconfig_name);
@@ -751,8 +736,6 @@ exit $_script_exit
                             log_file.display().to_string(),
                             "--monitor-log-file".to_owned(),
                             monitor_log_file.display().to_string(),
-                            "--long-lived-workers".to_owned(),
-                            long_lived_workers.to_owned(),
                         ]);
                         start_args.extend(extra_start_args);
                         let start_result = exec_file(
@@ -784,8 +767,6 @@ exit $_script_exit
                         log_file.display().to_string(),
                         "--monitor-log-file".to_owned(),
                         monitor_log_file.display().to_string(),
-                        "--long-lived-workers".to_owned(),
-                        long_lived_workers.to_owned(),
                     ]);
                     start_args.extend(extra_start_args);
                     let start_result = exec_file(

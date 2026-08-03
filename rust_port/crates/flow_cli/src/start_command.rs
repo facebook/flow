@@ -38,7 +38,6 @@ fn spec() -> command_spec::Spec {
     );
     let spec = command_utils::add_lazy_flags(spec);
     let spec = command_utils::add_autostop_flag(spec);
-    let spec = command_utils::add_shm_flags(spec);
     let spec = command_utils::add_ignore_version_flag(spec);
     let spec = command_utils::add_from_flag(spec);
     let spec = command_utils::add_no_restart_flag(spec);
@@ -58,7 +57,6 @@ fn main(
     wait: bool,
     lazy_mode: Option<LazyMode>,
     autostop: bool,
-    shm_flags: command_utils::SharedMemParams,
     ignore_version: bool,
     no_restart: bool,
     no_cgroup: bool,
@@ -90,7 +88,6 @@ fn main(
         options_flags.clone(),
         saved_state_options_flags.clone(),
     );
-    let _init_id = flow_common_utils::random_id::short_string();
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, None);
 
@@ -98,7 +95,6 @@ fn main(
         command_utils::assert_version(&flowconfig);
     }
 
-    let shared_mem_config = command_utils::shm_config(&shm_flags, &flowconfig);
     let server_log_file = match server_log_file {
         Some(server_log_file) => server_log_file,
         None => command_utils::server_log_file(&flowconfig_name, options.temp_dir.as_str(), &root),
@@ -152,7 +148,6 @@ fn main(
         lazy_mode: lazy_mode
             .map(command_utils::lazy_mode_arg)
             .map(ToOwned::to_owned),
-        long_lived_workers: options_flags.long_lived_workers,
         max_workers: options_flags.max_workers,
         wait_for_recheck: options_flags.wait_for_recheck,
         file_watcher,
@@ -160,8 +155,6 @@ fn main(
         file_watcher_timeout,
         file_watcher_mergebase_with: Some(file_watcher_mergebase_with),
         file_watcher_sync_timeout,
-        shm_heap_size: Some(shared_mem_config.heap_size),
-        shm_hash_table_pow: Some(shared_mem_config.hash_table_pow),
         profile: options_flags.profile,
         debug: server_options.debug,
         quiet: server_options.quiet,
@@ -236,7 +229,6 @@ pub(crate) fn command() -> command_spec::Command {
             command_spec::get(args, "--wait", &arg_spec::truthy()).unwrap(),
             command_utils::get_lazy_flags(args),
             command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap(),
-            command_utils::get_shm_flags(args),
             command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
             command_spec::get(args, "--no-auto-restart", &arg_spec::truthy()).unwrap(),
             command_spec::get(args, "--no-cgroup", &arg_spec::truthy()).unwrap(),

@@ -21,7 +21,6 @@ use flow_server_files::server_files_js;
 use crate::flow_server_monitor_daemon::WaitMsg;
 use crate::flow_server_monitor_options::FileWatcher;
 use crate::flow_server_monitor_options::MonitorOptions;
-use crate::flow_server_monitor_options::SharedMemConfig;
 use crate::status_stream;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -35,7 +34,6 @@ pub struct DaemonizeArgs {
     pub no_restart: bool,
     pub autostop: bool,
     pub lazy_mode: Option<String>,
-    pub long_lived_workers: Option<bool>,
     pub max_workers: Option<i32>,
     pub wait_for_recheck: Option<bool>,
     pub file_watcher: FileWatcher,
@@ -43,8 +41,6 @@ pub struct DaemonizeArgs {
     pub file_watcher_timeout: Option<u32>,
     pub file_watcher_mergebase_with: Option<String>,
     pub file_watcher_sync_timeout: Option<u32>,
-    pub shm_heap_size: Option<u64>,
-    pub shm_hash_table_pow: Option<u32>,
     pub profile: bool,
     pub debug: bool,
     pub quiet: bool,
@@ -91,8 +87,6 @@ pub struct StartArgs {
     pub file_watcher_timeout: Option<u32>,
     pub file_watcher_mergebase_with: Option<String>,
     pub file_watcher_sync_timeout: Option<u32>,
-    pub shm_heap_size: Option<u64>,
-    pub shm_hash_table_pow: Option<u32>,
     pub from: Option<String>,
     pub autostop: bool,
     pub no_restart: bool,
@@ -281,8 +275,6 @@ fn internal_start(
         file_watcher_timeout,
         file_watcher_mergebase_with,
         file_watcher_sync_timeout: _,
-        shm_heap_size,
-        shm_hash_table_pow,
         from: _,
         autostop,
         no_restart,
@@ -298,10 +290,6 @@ fn internal_start(
         lazy_mode,
         no_flowlib,
         ignore_version,
-        shared_mem_config: SharedMemConfig {
-            heap_size: shm_heap_size.unwrap_or(0),
-            hash_table_pow: shm_hash_table_pow.unwrap_or(0),
-        },
         argv: std::env::args().collect(),
         file_watcher,
         file_watcher_timeout: file_watcher_timeout.map(f64::from),
@@ -444,7 +432,7 @@ pub fn daemonize(args: DaemonizeArgs) -> Result<u32, String> {
     };
 
     let name = format!("monitor for {}", root_str);
-    let mut handle = flow_daemon::spawn(None, Some(&name), stdio, entry, param)
+    let mut handle = flow_daemon::spawn(Some(&name), stdio, entry, param)
         .map_err(|e| format!("failed to spawn monitor: {}", e))?;
     let pid = handle.child.id();
 

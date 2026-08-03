@@ -36,7 +36,6 @@ pub(super) struct RunnerArgs {
     pub(super) parallelism: usize,
     pub(super) check_only: bool,
     pub(super) saved_state: bool,
-    pub(super) long_lived_workers: bool,
     pub(super) record: bool,
     pub(super) quiet: bool,
     pub(super) verbose: bool,
@@ -110,7 +109,6 @@ pub(super) fn check_test_runner(args: RunnerArgs) -> io::Result<bool> {
         parallelism,
         check_only,
         saved_state,
-        long_lived_workers,
         record,
         quiet,
         verbose,
@@ -269,8 +267,6 @@ pub(super) fn check_test_runner(args: RunnerArgs) -> io::Result<bool> {
                 .map_or_else(String::new, |name| name.to_string_lossy().into_owned());
             if saved_state {
                 name.push_str("-saved-state");
-            } else if long_lived_workers {
-                name.push_str("-long-lived-workers");
             }
             println!("{name}");
         }
@@ -317,7 +313,6 @@ pub(super) fn check_test_runner(args: RunnerArgs) -> io::Result<bool> {
                 version: version.clone(),
                 check_only,
                 saved_state,
-                long_lived_workers,
                 record,
                 scripts_dir: scripts_dir.clone(),
                 env: env.clone(),

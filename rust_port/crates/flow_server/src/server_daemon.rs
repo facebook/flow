@@ -43,7 +43,6 @@ pub struct ServerDaemonArgs {
     pub debug: bool,
     pub quiet: bool,
     pub lazy_mode: Option<String>,
-    pub long_lived_workers: Option<bool>,
     pub max_workers: Option<i32>,
     pub wait_for_recheck: Option<bool>,
     pub profile: bool,
@@ -83,7 +82,6 @@ impl ServerDaemonArgs {
             debug: options.debug,
             quiet: options.quiet,
             lazy_mode,
-            long_lived_workers: Some(options.long_lived_workers),
             max_workers: Some(options.max_workers),
             wait_for_recheck: Some(options.wait_for_recheck),
             profile: options.profile,
@@ -195,14 +193,13 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
     let out_stream = flow_daemon::into_out_stream(out_chan);
     let channels: flow_server_env::monitor_rpc::Channels = (in_stream, out_stream);
 
-    crate::server::run_from_daemonize(&init_id, options, Some(channels), start_cause);
+    crate::server::run_from_daemonize(options, Some(channels), start_cause);
 }
 
 pub fn dump_server_options(options: &Options) {
     let lazy_mode = if options.lazy_mode { "on" } else { "off" };
     flow_hh_logger::info!("lazy_mode={}", lazy_mode);
     flow_hh_logger::info!("max_workers={}", options.max_workers);
-    flow_hh_logger::info!("long_lived_workers={}", options.long_lived_workers);
     flow_hh_logger::info!("debug={}", options.debug);
     for (method_name, log_saving) in options.log_saving.iter() {
         let limit_str = match log_saving.limit {
@@ -298,6 +295,6 @@ pub fn daemonize(
         StdioFd::Owned(try_open_log_file(log_file)?),
     );
 
-    flow_daemon::spawn(None, Some(&name), stdio, entry, param)
+    flow_daemon::spawn(Some(&name), stdio, entry, param)
         .map_err(|e| format!("Failed to spawn server daemon '{}': {}", name, e))
 }

@@ -280,18 +280,6 @@ Runs Flow's bash-style tests from the tests/ directory using the cross-platform 
     )
     .flag("-s", &arg_spec::truthy(), "Test using saved state", None)
     .flag(
-        "--long-lived-workers",
-        &arg_spec::truthy(),
-        "Test with long-lived workers",
-        None,
-    )
-    .flag(
-        "-L",
-        &arg_spec::truthy(),
-        "Test with long-lived workers",
-        None,
-    )
-    .flag(
         "--record",
         &arg_spec::truthy(),
         "Re-record failing tests to update expected output",
@@ -439,9 +427,6 @@ fn run_runtests(args: &arg_spec::Values) {
             || command_spec::get(args, "-c", &arg_spec::truthy()).unwrap(),
         saved_state: command_spec::get(args, "--saved-state", &arg_spec::truthy()).unwrap()
             || command_spec::get(args, "-s", &arg_spec::truthy()).unwrap(),
-        long_lived_workers: command_spec::get(args, "--long-lived-workers", &arg_spec::truthy())
-            .unwrap()
-            || command_spec::get(args, "-L", &arg_spec::truthy()).unwrap(),
         record: command_spec::get(args, "--record", &arg_spec::truthy()).unwrap()
             || command_spec::get(args, "-r", &arg_spec::truthy()).unwrap(),
         quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap()

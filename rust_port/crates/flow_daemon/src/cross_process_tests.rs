@@ -72,7 +72,6 @@ fn entries() -> &'static TestEntries {
 fn spawn_returns_distinct_pid() {
     let entries = entries();
     let mut h: Handle<String, String> = spawn(
-        None,
         Some("test_spawn_pid"),
         (StdioFd::Inherit, StdioFd::Inherit, StdioFd::Inherit),
         &entries.echo,
@@ -97,7 +96,6 @@ fn spawn_returns_distinct_pid() {
 fn roundtrip_bidirectional() {
     let entries = entries();
     let mut h: Handle<String, String> = spawn(
-        None,
         Some("test_roundtrip"),
         (StdioFd::Inherit, StdioFd::Inherit, StdioFd::Inherit),
         &entries.echo,
@@ -118,7 +116,6 @@ fn param_serialization_round_trip() {
     let entries = entries();
     let payload = "secret-payload-12345".to_string();
     let mut h: Handle<String, ()> = spawn(
-        None,
         Some("test_param_round_trip"),
         (StdioFd::Inherit, StdioFd::Inherit, StdioFd::Inherit),
         &entries.echo_param,
@@ -137,7 +134,6 @@ fn param_serialization_round_trip() {
 fn kill_child_does_not_kill_parent() {
     let entries = entries();
     let h: Handle<(), ()> = spawn(
-        None,
         Some("test_kill_does_not_kill_parent"),
         (StdioFd::Inherit, StdioFd::Inherit, StdioFd::Inherit),
         &entries.sleep,

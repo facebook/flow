@@ -268,7 +268,6 @@ pub fn daemonize(
                 None
             }
         }),
-        long_lived_workers: Some(server_options.long_lived_workers),
         max_workers: Some(server_options.max_workers),
         wait_for_recheck: Some(server_options.wait_for_recheck),
         file_watcher: monitor_options.file_watcher.clone(),
@@ -276,8 +275,6 @@ pub fn daemonize(
         file_watcher_timeout: monitor_options.file_watcher_timeout.map(|t| t as u32),
         file_watcher_mergebase_with: Some(monitor_options.file_watcher_mergebase_with.clone()),
         file_watcher_sync_timeout: None,
-        shm_heap_size: Some(monitor_options.shared_mem_config.heap_size),
-        shm_hash_table_pow: Some(monitor_options.shared_mem_config.hash_table_pow),
         profile: server_options.profile,
         debug: server_options.debug,
         quiet: server_options.quiet,
@@ -328,7 +325,7 @@ pub fn daemonize(
         StdioFd::Owned(null_fd()),
     );
 
-    let mut handle = match spawn(None, Some(&name), stdio, entry, param) {
+    let mut handle = match spawn(Some(&name), stdio, entry, param) {
         Ok(h) => h,
         Err(e) => {
             eprintln!("failed to spawn monitor: {}", e);

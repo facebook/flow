@@ -6,12 +6,6 @@
  */
 
 #[derive(Debug, Clone)]
-pub struct SharedMemParams {
-    pub shm_heap_size: Option<u64>,
-    pub shm_hash_table_pow: Option<u32>,
-}
-
-#[derive(Debug, Clone)]
 pub enum OnMismatchBehavior {
     ChooseNewest,
     StopServer,
@@ -28,7 +22,6 @@ pub struct ConnectParams {
     pub from: Option<String>,
     pub lazy_mode: Option<flow_config::LazyMode>,
     pub temp_dir: Option<String>,
-    pub shm_flags: SharedMemParams,
     pub ignore_version: bool,
     pub quiet: bool,
     pub on_mismatch: OnMismatchBehavior,

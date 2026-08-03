@@ -61,15 +61,8 @@ pub mod server_worker_state {
     }
 }
 
-pub fn make(
-    _n: i32,
-    _worker_mode: (),
-    _channel_mode: (), // channel_mode: OCaml IPC, not applicable to Rust threads
-    _gc_control: crate::server_env_build::StdlibGcControl,
-    _init_id: &str,
-    _heap_handle: (),
-) -> ThreadPool {
+pub fn make(n: i32) -> ThreadPool {
     ThreadPool::with_thread_count(ThreadCount::NumThreads(
-        std::num::NonZeroUsize::new(_n as usize).expect("worker count must be > 0"),
+        std::num::NonZeroUsize::new(n as usize).expect("worker count must be > 0"),
     ))
 }

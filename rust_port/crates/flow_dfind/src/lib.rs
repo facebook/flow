@@ -102,13 +102,7 @@ pub fn init(fds: DaemonFds, args: InitArgs) -> Result<Dfind, Error> {
         roots,
         log_file,
     };
-    let handle = spawn(
-        None,
-        Some(&name),
-        (stdin_fd, stdout_fd, stderr_fd),
-        entry,
-        param,
-    )?;
+    let handle = spawn(Some(&name), (stdin_fd, stdout_fd, stderr_fd), entry, param)?;
     Ok(Dfind {
         inner: Arc::new(Mutex::new(Some(handle))),
     })

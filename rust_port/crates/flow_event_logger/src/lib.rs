@@ -46,7 +46,6 @@ mod stub {
     pub struct ServerOptions {
         pub lazy_mode: String,
         pub max_workers: i32,
-        pub long_lived_workers: bool,
         pub enabled_rollouts: Vec<String>,
         pub debug: bool,
         pub log_saving: BTreeMap<String, flow_common::options::LogSaving>,
@@ -280,7 +279,6 @@ mod stub {
     pub fn set_server_options(
         lazy_mode: &str,
         max_workers: i32,
-        long_lived_workers: bool,
         enabled_rollouts: &BTreeMap<String, String>,
         debug: bool,
         log_saving: &BTreeMap<String, flow_common::options::LogSaving>,
@@ -293,7 +291,6 @@ mod stub {
         let server_options = Some(ServerOptions {
             lazy_mode: lazy_mode.to_string(),
             max_workers,
-            long_lived_workers,
             enabled_rollouts,
             debug,
             log_saving: log_saving.clone(),
@@ -688,7 +685,6 @@ mod fb_facade {
     pub struct ServerOptions {
         pub lazy_mode: String,
         pub max_workers: i32,
-        pub long_lived_workers: bool,
         pub enabled_rollouts: Vec<String>,
         pub debug: bool,
         pub log_saving: BTreeMap<String, flow_common::options::LogSaving>,
@@ -863,7 +859,6 @@ mod fb_facade {
             server_options: ctx.server_options.map(|s| fb::ServerOptions {
                 lazy_mode: s.lazy_mode,
                 max_workers: s.max_workers,
-                long_lived_workers: s.long_lived_workers,
                 enabled_rollouts: s.enabled_rollouts,
                 debug: s.debug,
                 log_saving: s.log_saving,
@@ -891,7 +886,6 @@ mod fb_facade {
             server_options: ctx.server_options.map(|s| ServerOptions {
                 lazy_mode: s.lazy_mode,
                 max_workers: s.max_workers,
-                long_lived_workers: s.long_lived_workers,
                 enabled_rollouts: s.enabled_rollouts,
                 debug: s.debug,
                 log_saving: s.log_saving,
@@ -1008,7 +1002,6 @@ mod fb_facade {
     pub fn set_server_options(
         lazy_mode: &str,
         max_workers: i32,
-        long_lived_workers: bool,
         enabled_rollouts: &BTreeMap<String, String>,
         debug: bool,
         log_saving: &BTreeMap<String, flow_common::options::LogSaving>,
@@ -1017,7 +1010,6 @@ mod fb_facade {
         fb::set_server_options(
             lazy_mode.to_string(),
             max_workers,
-            long_lived_workers,
             enabled_rollouts.clone(),
             debug,
             log_saving.clone(),

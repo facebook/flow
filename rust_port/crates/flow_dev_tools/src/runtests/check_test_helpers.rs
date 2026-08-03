@@ -22,7 +22,6 @@ pub(super) struct TestContextOptions<'a> {
     pub(super) no_flowlib: bool,
     pub(super) wait_for_recheck: &'a str,
     pub(super) file_watcher: &'a str,
-    pub(super) long_lived_workers: &'a str,
     pub(super) env: &'a HashMap<String, String>,
 }
 
@@ -34,7 +33,6 @@ pub(super) struct TestContext<'a> {
     no_flowlib: bool,
     wait_for_recheck: &'a str,
     file_watcher: &'a str,
-    long_lived_workers: &'a str,
     env: &'a HashMap<String, String>,
 }
 
@@ -48,7 +46,6 @@ impl<'a> TestContext<'a> {
             no_flowlib: opts.no_flowlib,
             wait_for_recheck: opts.wait_for_recheck,
             file_watcher: opts.file_watcher,
-            long_lived_workers: opts.long_lived_workers,
             env: opts.env,
         }
     }
@@ -85,8 +82,6 @@ impl<'a> TestContext<'a> {
             self.log_file.display().to_string(),
             "--monitor-log-file".to_owned(),
             self.monitor_log_file.display().to_string(),
-            "--long-lived-workers".to_owned(),
-            self.long_lived_workers.to_owned(),
         ]);
         let start_result = match self.flow_cmd(&start_args) {
             Ok(result) => result,

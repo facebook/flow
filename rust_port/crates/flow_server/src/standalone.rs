@@ -56,18 +56,10 @@ const CONNECTION_THREAD_STACK_SIZE: usize = 2 * 1024 * 1024;
 const MAX_CONNECTION_THREADS: usize = 128;
 const INITIAL_CONNECTION_READ_TIMEOUT_SECS: u64 = 5;
 
-pub fn start(
-    options: Arc<Options>,
-    flowconfig_name: String,
-    shm_heap_size: Option<u64>,
-    shm_hash_table_pow: Option<u32>,
-) {
+pub fn start(options: Arc<Options>, flowconfig_name: String) {
     crate::server::check_supported_operating_system(&options);
     flow_server_env::monitor_rpc::disable();
-    let shared_mem = Arc::new(SharedMem::new_with_config(
-        shm_heap_size,
-        shm_hash_table_pow,
-    ));
+    let shared_mem = Arc::new(SharedMem::new());
     let pool = ThreadPool::with_thread_count(ThreadCount::NumThreads(
         std::num::NonZeroUsize::new(options.max_workers as usize)
             .expect("max_workers should be positive"),
