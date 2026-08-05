@@ -27,4 +27,4 @@ flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 lz4_flex = "0.13.1"
 postcard = { version = "1.0.8", features = ["use-crc", "use-std"] }
-serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }

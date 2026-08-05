@@ -11,4 +11,4 @@ flow_aloc = { path = "../flow_aloc" }
 flow_parser = { path = "../flow_parser" }
 flow_typing_context = { path = "../flow_typing_context" }
 flow_typing_type = { path = "../flow_typing_type" }
-serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }

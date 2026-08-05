@@ -21,4 +21,4 @@ flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 lz4_flex = "0.13.1"
 parking_lot = { version = "0.12.1", features = ["arc_lock", "send_guard"] }
 rayon = "1.11.0"
-serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }

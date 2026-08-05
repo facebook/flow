@@ -11,7 +11,7 @@ flow_parser = { path = "../flow_parser" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 futures = { version = "0.3.31", features = ["async-await", "compat"] }
 regex = "1.13.1"
-serde = { version = "1.0.219", features = ["derive", "rc"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }
 serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 similar = { version = "2.2.0", features = ["bytes", "inline"] }
 tokio = { version = "1.52.4", features = ["full", "test-util", "tracing"] }
