@@ -234,6 +234,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         not_found,
         package_json,
         dirty_modules,
+        all_unordered_libs,
     } = parse_results;
     assert!(changed.is_empty());
     let local_errors =
@@ -268,6 +269,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         dirty_modules,
         local_errors,
         package_json,
+        all_unordered_libs,
     }
 }
 
@@ -282,6 +284,7 @@ struct CollatedParseResults {
         Vec<FileKey>,
         Vec<Option<(Loc, flow_parser::parse_error::ParseError)>>,
     ),
+    all_unordered_libs: BTreeSet<FlowSmolStr>,
 }
 
 fn parse(
@@ -1423,7 +1426,7 @@ pub(crate) mod recheck {
         env: &mut EnvTransaction,
     ) -> Result<IntermediateValues, RecheckError> {
         check_recheck_canceled()?;
-        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
+        let parse_all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
         let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
         let shared_mem_for_ast = shared_mem.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
@@ -1465,11 +1468,12 @@ pub(crate) mod recheck {
             dirty_modules,
             local_errors: new_local_errors,
             package_json: _,
+            all_unordered_libs: discovered_libs,
         } = reparse(
             pool,
             shared_mem,
             options,
-            all_unordered_libs.dupe(),
+            parse_all_unordered_libs,
             def_info,
             modified_next,
         );
@@ -1494,6 +1498,16 @@ pub(crate) mod recheck {
 
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
+
+        if options.file_options.importable_global_libdefs {
+            let mut all_unordered_libs = env.all_unordered_libs().clone();
+            for file in &new_or_changed_or_deleted {
+                all_unordered_libs.remove(file.to_absolute().as_str());
+            }
+            all_unordered_libs.extend(discovered_libs);
+            env.set_all_unordered_libs(all_unordered_libs);
+        }
+        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
 
         let freshparsed = updates.filter(|file, _kind| parsed_set.contains(file));
 
@@ -2532,7 +2546,9 @@ fn process_saved_state_updates(
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, String> {
     let file_options = &options.file_options;
-    let all_libs = {
+    let all_libs = if file_options.importable_global_libdefs {
+        BTreeSet::new()
+    } else {
         let known_libs: BTreeSet<String> = previous_all_unordered_libs
             .iter()
             .map(|s| s.to_string())
@@ -2570,7 +2586,11 @@ fn process_saved_state_updates(
     let libs: BTreeSet<String> = updates
         .iter()
         .filter(|filename| {
-            let is_lib = all_libs.contains(*filename) || **filename == flow_typed_path;
+            let is_lib = (if file_options.importable_global_libdefs {
+                files::is_configured_lib_file(file_options, filename)
+            } else {
+                all_libs.contains(*filename)
+            }) || **filename == flow_typed_path;
             is_lib && did_content_change(options, shared_mem, filename)
         })
         .cloned()
@@ -2762,10 +2782,17 @@ fn init_with_initial_state(
             .collect(),
     );
 
-    let additional_lib_files: Vec<FileKey> = all_unordered_libs
-        .iter()
-        .map(|name| files::lib_file_key(&options.file_options, name))
-        .collect();
+    let additional_lib_files: Vec<FileKey> = if options.file_options.importable_global_libdefs {
+        ordered_libs
+            .iter()
+            .map(|(_, name)| files::lib_file_key(&options.file_options, name))
+            .collect()
+    } else {
+        all_unordered_libs
+            .iter()
+            .map(|name| files::lib_file_key(&options.file_options, name))
+            .collect()
+    };
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
         Box::new(move || files.take().filter(|files| !files.is_empty()))
@@ -2779,6 +2806,7 @@ fn init_with_initial_state(
         dirty_modules: additional_dirty_modules,
         local_errors: additional_local_errors,
         package_json: _package_json,
+        all_unordered_libs: discovered_libs,
     } = parse(
         pool,
         shared_mem,
@@ -2786,6 +2814,12 @@ fn init_with_initial_state(
         all_unordered_libs_set.dupe(),
         next,
     );
+
+    let all_unordered_libs_set = if options.file_options.importable_global_libdefs {
+        Arc::new(discovered_libs)
+    } else {
+        all_unordered_libs_set
+    };
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
@@ -3297,6 +3331,7 @@ pub fn init_from_scratch(
             dirty_modules,
             local_errors,
             package_json: (package_json_files_list, package_json_errors),
+            all_unordered_libs: discovered_libs,
         } = parse(
             pool,
             shared_mem,
@@ -3305,6 +3340,12 @@ pub fn init_from_scratch(
             next,
         );
         handle.join().unwrap();
+
+        let all_unordered_libs_set = if options.file_options.importable_global_libdefs {
+            Arc::new(discovered_libs)
+        } else {
+            all_unordered_libs_set
+        };
 
         assert!(unchanged.is_empty());
 

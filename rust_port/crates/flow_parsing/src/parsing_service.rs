@@ -104,6 +104,8 @@ pub struct ParseResults {
     pub package_json: (Vec<FileKey>, Vec<Option<(Loc, ParseError)>>),
     // set of modules that need to be committed
     pub dirty_modules: BTreeSet<Modulename>,
+    // configured library files encountered by parse attempts
+    pub all_unordered_libs: BTreeSet<FlowSmolStr>,
 }
 
 // **************************** internal ********************************
@@ -438,6 +440,13 @@ fn reducer(
         return;
     }
 
+    if options.file_options.importable_global_libdefs
+        && files::is_configured_lib_file(&options.file_options, &filename_string)
+    {
+        acc.all_unordered_libs
+            .insert(FlowSmolStr::from(filename_string.as_str()));
+    }
+
     let content_str: Result<&str, ()> = std::str::from_utf8(&bytes).map_err(|_| ());
 
     // When the bytes aren't valid UTF-8 we cannot run `parse_docblock`
@@ -475,7 +484,11 @@ fn reducer(
         docblock.flow = Some(flow_common::docblock::FlowMode::OptOut);
     }
 
-    let is_lib_file = files::is_lib_file(&options.file_options, all_unordered_libs, &file_key);
+    let is_lib_file = if options.file_options.importable_global_libdefs {
+        files::is_configured_lib_file(&options.file_options, &filename_string)
+    } else {
+        files::is_lib_file(&options.file_options, all_unordered_libs, &file_key)
+    };
     match do_parse(
         options,
         &docblock,
@@ -601,6 +614,7 @@ fn merge(a: &mut ParseResults, b: ParseResults) {
     a.package_json.0.extend(b.package_json.0);
     a.package_json.1.extend(b.package_json.1);
     a.dirty_modules.extend(b.dirty_modules);
+    a.all_unordered_libs.extend(b.all_unordered_libs);
 }
 
 // ***************************** public ********************************

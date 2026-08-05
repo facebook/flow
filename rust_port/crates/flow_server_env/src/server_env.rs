@@ -162,9 +162,9 @@ pub struct Env {
     pub checked_files: CheckedSet,
     /// package.json files
     pub package_json_files: FlowOrdSet<FileKey>,
-    /// The lib files, in their merge order
+    /// The configured global lib files, in their merge order.
     pub ordered_libs: Arc<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
-    /// The lib files as a set
+    /// The global lib files found by discovery, as a membership set.
     pub all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     /// The files which didn't parse (skipped or errored)
     pub unparsed: FlowOrdSet<FileKey>,
@@ -356,6 +356,10 @@ impl EnvTransaction {
 
     pub fn set_unparsed(&mut self, unparsed: FlowOrdSet<FileKey>) {
         self.unparsed = Some(unparsed);
+    }
+
+    pub fn set_all_unordered_libs(&mut self, all_unordered_libs: BTreeSet<FlowSmolStr>) {
+        self.all_unordered_libs = Some(all_unordered_libs);
     }
 
     pub fn set_errors(&mut self, errors: OverlayErrors) {

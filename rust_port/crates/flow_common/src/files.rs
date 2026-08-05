@@ -637,8 +637,31 @@ pub fn ordered_and_unordered_lib_paths(
             .collect()
     };
 
-    let all_libs_set: BTreeSet<String> = libs.iter().map(|(_, lib)| lib.clone()).collect();
+    let all_libs_set: BTreeSet<String> = if options.importable_global_libdefs {
+        BTreeSet::new()
+    } else {
+        libs.iter().map(|(_, lib)| lib.clone()).collect()
+    };
     (libs, all_libs_set)
+}
+
+pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {
+    if is_json_file(path) {
+        return false;
+    }
+    let valid_path = is_valid_path(options, path);
+    let path = Path::new(path);
+    let in_default_lib_dir = options.default_lib_dir.as_ref().is_some_and(|libdir| {
+        let root = match libdir {
+            LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
+        };
+        path.starts_with(root)
+    });
+    in_default_lib_dir
+        || options
+            .lib_paths
+            .iter()
+            .any(|(_, lib_path)| path == lib_path || (path.starts_with(lib_path) && valid_path))
 }
 
 fn is_negated_pattern(pattern: &str) -> bool {
@@ -728,10 +751,15 @@ pub fn wanted(
     lib_fileset: &BTreeSet<String>,
     path: &str,
 ) -> bool {
-    if include_libdef {
-        !is_ignored(options, path).0 || lib_fileset.contains(path)
+    let is_lib_file = if options.importable_global_libdefs {
+        is_configured_lib_file(options, path)
     } else {
-        !is_ignored(options, path).0 && !lib_fileset.contains(path)
+        lib_fileset.contains(path)
+    };
+    if include_libdef {
+        !is_ignored(options, path).0 || is_lib_file
+    } else {
+        !is_ignored(options, path).0 && !is_lib_file
     }
 }
 
@@ -879,7 +907,12 @@ pub fn make_next_files(
     ) -> bool {
         let path_str = path.to_string_lossy();
         (is_valid_path(options, &path_str)
-            || (include_libdef && all_unordered_libs.contains(&path_str.to_string())))
+            || (include_libdef
+                && if options.importable_global_libdefs {
+                    is_configured_lib_file(options, &path_str)
+                } else {
+                    all_unordered_libs.contains(path_str.as_ref())
+                }))
             && wanted_filter(options, path, all, include_libdef, all_unordered_libs)
     }
 
@@ -894,7 +927,12 @@ pub fn make_next_files(
         ((options.implicitly_include_root && path.starts_with(root)) || {
             let path_str = path.to_string_lossy();
             is_included(options, &path_str)
-                || (include_libdef && all_unordered_libs.contains(&path_str.to_string()))
+                || (include_libdef
+                    && if options.importable_global_libdefs {
+                        is_configured_lib_file(options, &path_str)
+                    } else {
+                        all_unordered_libs.contains(path_str.as_ref())
+                    })
         }) && realpath_filter(options, path, all, include_libdef, all_unordered_libs)
     }
 
@@ -911,7 +949,12 @@ pub fn make_next_files(
             && ((options.implicitly_include_root && path.starts_with(root)) || {
                 let path_str = path.to_string_lossy();
                 is_included(options, &path_str)
-                    || (include_libdef && all_unordered_libs.contains(&path_str.to_string()))
+                    || (include_libdef
+                        && if options.importable_global_libdefs {
+                            is_configured_lib_file(options, &path_str)
+                        } else {
+                            all_unordered_libs.contains(path_str.as_ref())
+                        })
             })
             && realpath_filter(options, path, all, include_libdef, all_unordered_libs)
     }
@@ -920,15 +963,31 @@ pub fn make_next_files(
     let node_module_filter = |file: &str| is_node_module(&options, file);
 
     let starting_point_paths = {
-        let mut starting_point_paths: Vec<PathBuf> = if include_libdef {
-            all_unordered_libs.iter().map(PathBuf::from).collect()
-        } else {
-            Vec::new()
-        };
+        let mut starting_point_paths: Vec<PathBuf> =
+            if include_libdef && options.importable_global_libdefs {
+                options
+                    .default_lib_dir
+                    .as_ref()
+                    .map(|libdir| match libdir {
+                        LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => {
+                            path.clone()
+                        }
+                    })
+                    .into_iter()
+                    .collect()
+            } else if include_libdef {
+                all_unordered_libs.iter().map(PathBuf::from).collect()
+            } else {
+                Vec::new()
+            };
         if let Some(subdir) = subdir {
             starting_point_paths.push(subdir.to_path_buf());
         } else {
             starting_point_paths.extend(watched_paths(&options));
+        }
+        if options.importable_global_libdefs {
+            starting_point_paths.sort();
+            starting_point_paths.dedup_by(|b, a| b.starts_with(&*a));
         }
         starting_point_paths
     };
@@ -1325,7 +1384,12 @@ pub fn filename_from_string(
             FileKey::resource_file_of_absolute(path)
         }
         _ => {
-            if consider_libdefs && all_unordered_libs.contains(path) {
+            let is_lib_file = if options.importable_global_libdefs {
+                is_configured_lib_file(options, path)
+            } else {
+                all_unordered_libs.contains(path)
+            };
+            if consider_libdefs && is_lib_file {
                 lib_file_key(options, path)
             } else {
                 FileKey::source_file_of_absolute(path)
@@ -1345,7 +1409,7 @@ pub fn lib_file_key(options: &FileOptions, path: &str) -> flow_parser::file_key:
     }
 }
 
-/// Returns whether a file is one of the configured global library files.
+/// Returns whether a file is one of the discovered global library files.
 pub fn is_lib_file(
     options: &FileOptions,
     all_unordered_libs: &std::collections::BTreeSet<FlowSmolStr>,
