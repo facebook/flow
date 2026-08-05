@@ -1,3 +1,24 @@
+### 0.326.0
+
+Breaking changes:
+* The following flags are removed since they no longer change anything
+  * `experimental.channel_mode`
+  * `experimental.channel_mode.windows`
+  * `experimental.long_lived_workers`
+  * `experimental.long_lived_workers.windows`
+  * `gc.worker.custom_major_ratio`
+  * `gc.worker.custom_minor_max_size`
+  * `gc.worker.custom_minor_ratio`
+  * `gc.worker.major_heap_increment`
+  * `gc.worker.minor_heap_size`
+  * `gc.worker.space_overhead`
+  * `gc.worker.window_size`
+  * `sharedmemory.hash_table_pow`
+  * `sharedmemory.heap_size`
+
+Likely to cause new Flow errors:
+* General subtyping errors will print the types that are incompatible. Some errors might have new locations.
+
 ### 0.325.0
 
 No behavioral changes in this release
