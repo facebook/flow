@@ -14,4 +14,4 @@ flow_event_logger = { path = "../flow_event_logger" }
 flow_server_env = { path = "../flow_server_env" }
 flow_server_files = { path = "../flow_server_files" }
 flow_utils_tty = { path = "../flow_utils_tty" }
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

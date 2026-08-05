@@ -6,4 +6,4 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

@@ -8,4 +8,4 @@ edition = "2024"
 [dependencies]
 flow_common_exit_status = { path = "../flow_common_exit_status" }
 flow_hh_json = { path = "../flow_hh_json" }
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

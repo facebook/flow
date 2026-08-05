@@ -39,7 +39,7 @@ flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 flow_typing_visitors = { path = "../flow_typing_visitors" }
 lsp-types = "0.97"
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 vec1 = { version = "1.12.1", features = ["serde"] }
 
 [dev-dependencies]

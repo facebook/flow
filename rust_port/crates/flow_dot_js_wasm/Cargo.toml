@@ -30,4 +30,4 @@ flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 serde = { version = "1.0.229", features = ["derive", "rc"] }
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }

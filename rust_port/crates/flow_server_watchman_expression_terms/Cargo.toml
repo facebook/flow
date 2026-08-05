@@ -8,4 +8,4 @@ edition = "2024"
 [dependencies]
 flow_common = { path = "../flow_common" }
 flow_server_file_watcher_spec = { path = "../flow_server_file_watcher_spec" }
-serde_json = { version = "1.0.140", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
+serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
