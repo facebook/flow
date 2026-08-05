@@ -1270,12 +1270,14 @@ fn error_for_assignment_kind(
             def_loc,
             AssignedConstLikeBindingType::RecordNameBinding,
         )),
-        (BK::Import | BK::TsImport, PatternWriteKind::AssignmentWrite) => Some(binding_error(
-            BindingError::EImportReassigned,
-            assignment_loc,
-            name.dupe(),
-            def_loc,
-        )),
+        (BK::Import { .. } | BK::TsImport, PatternWriteKind::AssignmentWrite) => {
+            Some(binding_error(
+                BindingError::EImportReassigned,
+                assignment_loc,
+                name.dupe(),
+                def_loc,
+            ))
+        }
         (BK::DeclaredFunction, PatternWriteKind::AssignmentWrite) => {
             Some(const_like_binding_error(
                 assignment_loc,
@@ -1314,7 +1316,7 @@ fn error_for_assignment_kind(
             | BK::Enum
             | BK::Function
             | BK::Component
-            | BK::Import
+            | BK::Import { .. }
             | BK::TsImport
             | BK::Interface { .. },
             PatternWriteKind::VarBinding
@@ -2675,10 +2677,15 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         kind_at_loc: kind_at_loc.clone(),
                     })
                 }
-                BindingsKind::Import => {
+                BindingsKind::Import { .. } => {
                     let desc = VirtualReasonDesc::RIdentifier(name.dupe());
                     let reason = VirtualReason::new(desc, loc.dupe());
-                    let kind = if self.is_ts {
+                    // A namespace import keeps its kind. `TsImport` says the
+                    // binding covers both namespaces without saying it is one,
+                    // and being one is what decides `X.Y`.
+                    let kind = if self.is_ts
+                        && matches!(kind, BindingsKind::Import { namespace: false })
+                    {
                         BindingsKind::TsImport
                     } else {
                         *kind
@@ -8479,7 +8486,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     | BindingsKind::Component
                     | BindingsKind::Parameter
                     | BindingsKind::ComponentParameter
-                    | BindingsKind::Import
+                    | BindingsKind::Import { .. }
                     | BindingsKind::TsImport => Some(ErrorMessage::EBindingError(Box::new((
                         BindingError::ENameAlreadyBound,
                         loc.dupe(),

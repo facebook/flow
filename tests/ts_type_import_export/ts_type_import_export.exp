@@ -127,6 +127,87 @@ References:
                            ^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------- importer_namespace.ts:13:1
+
+Cannot cast `NS.myValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   importer_namespace.ts:13:1
+   13| NS.myValue satisfies string; // ERROR: number ~> string (proves the value resolved)
+       ^^^^^^^^^^
+
+References:
+   exporter.ts:21:23
+   21| export const myValue: number = 42;
+                             ^^^^^^ [1]
+   importer_namespace.ts:13:22
+   13| NS.myValue satisfies string; // ERROR: number ~> string (proves the value resolved)
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- importer_namespace.ts:20:1
+
+Cannot cast `t` to string because `MyType` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   importer_namespace.ts:20:1
+   20| t satisfies string; // ERROR: number ~> string (proves the type resolved)
+       ^
+
+References:
+   importer_namespace.ts:18:18
+   18| declare const t: NS.MyType;
+                        ^^^^^^^^^ [1]
+   importer_namespace.ts:20:13
+   20| t satisfies string; // ERROR: number ~> string (proves the type resolved)
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- importer_namespace.ts:24:1
+
+Cannot cast `i.x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   importer_namespace.ts:24:1
+   24| i.x satisfies number; // ERROR: string ~> number (proves the interface resolved)
+       ^^^
+
+References:
+   exporter.ts:9:35
+    9| export interface MyInterface { x: string }
+                                         ^^^^^^ [1]
+   importer_namespace.ts:24:15
+   24| i.x satisfies number; // ERROR: string ~> number (proves the interface resolved)
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- importer_namespace.ts:28:1
+
+Cannot cast `(new Sub()).x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   importer_namespace.ts:28:1
+   28| new Sub().x satisfies string; // ERROR: number ~> string (proves the class resolved)
+       ^^^^^^^^^^^
+
+References:
+   exporter.ts:24:6
+   24|   x: number;
+            ^^^^^^ [1]
+   importer_namespace.ts:28:23
+   28| new Sub().x satisfies string; // ERROR: number ~> string (proves the class resolved)
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- importer_namespace.ts:30:20
+
+Cannot get `NS.MyType` because property `MyType` is missing in module `./exporter` [1]. [missing-export]
+
+   importer_namespace.ts:30:20
+   30| const badType = NS.MyType; // ERROR: a type is not a runtime member of the namespace
+                          ^^^^^^
+
+References:
+   exporter.ts
+   ^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- importer_reexport.ts:14:1
 
 Cannot cast `a` to string because `FromType` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -314,4 +395,4 @@ References:
 
 
 
-Found 21 errors
+Found 26 errors

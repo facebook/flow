@@ -37,7 +37,11 @@ pub enum Kind {
     DeclaredNamespace,
     Parameter,
     CatchParameter,
-    Import,
+    Import {
+        /// Set for `import * as X`, which binds a namespace: `X.Y` can reach a
+        /// type, not only a value. A named or default import cannot.
+        namespace: bool,
+    },
     TsImport,
     DeclaredFunction,
     Internal,
@@ -151,9 +155,12 @@ impl Kind {
     pub fn namespaces(&self) -> &'static [Namespace] {
         match self {
             Self::Type { .. } | Self::TypeParam | Self::Interface { .. } => &[Namespace::Type],
-            Self::Class | Self::DeclaredClass | Self::Enum | Self::DeclaredNamespace => {
-                &[Namespace::Value, Namespace::Type]
-            }
+            Self::Class
+            | Self::DeclaredClass
+            | Self::Enum
+            | Self::DeclaredNamespace
+            | Self::Record
+            | Self::Import { namespace: true } => &[Namespace::Value, Namespace::Type],
             _ => &[Namespace::Value],
         }
     }

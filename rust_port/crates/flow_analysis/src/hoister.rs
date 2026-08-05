@@ -577,7 +577,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
                     ..,
                 ) => match decl.import_kind {
                     ast::statement::ImportKind::ImportValue => {
-                        self.add_const_binding(Some(Kind::Import), &decl.id);
+                        self.add_const_binding(Some(Kind::Import { namespace: false }), &decl.id);
                     }
                     ast::statement::ImportKind::ImportType
                     | ast::statement::ImportKind::ImportTypeof
@@ -618,7 +618,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
             } => match (kind, import_kind) {
                 (None, ast::statement::ImportKind::ImportValue)
                 | (Some(ast::statement::ImportKind::ImportValue), _) => {
-                    self.add_const_binding(Some(Kind::Import), binding);
+                    self.add_const_binding(Some(Kind::Import { namespace: false }), binding);
                 }
                 (
                     _,
@@ -649,7 +649,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
         if !self.lexical_only {
             match import_kind {
                 ast::statement::ImportKind::ImportValue => {
-                    self.add_const_binding(Some(Kind::Import), id);
+                    self.add_const_binding(Some(Kind::Import { namespace: false }), id);
                 }
                 ast::statement::ImportKind::ImportType
                 | ast::statement::ImportKind::ImportTypeof => {
@@ -671,7 +671,7 @@ impl<Loc: Dupe> AstVisitor<'_, Loc> for HoisterBase<Loc> {
         if !self.lexical_only {
             match import_kind {
                 ast::statement::ImportKind::ImportValue => {
-                    self.add_const_binding(Some(Kind::Import), id);
+                    self.add_const_binding(Some(Kind::Import { namespace: true }), id);
                 }
                 ast::statement::ImportKind::ImportType => {
                     if self.with_types {
