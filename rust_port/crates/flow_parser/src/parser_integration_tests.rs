@@ -1307,7 +1307,7 @@ mod hardcoded_tests {
     #[derive(Debug)]
     enum CaseResult {
         CaseOk,
-        CaseSkipped { reason: Option<String> },
+        CaseNoSnapshot,
         CaseError(Vec<String>),
     }
 
@@ -1531,7 +1531,7 @@ mod hardcoded_tests {
         };
 
         let Some(ref expected_ast_str) = case.expected_ast else {
-            return CaseResult::CaseSkipped { reason: None };
+            return CaseResult::CaseNoSnapshot;
         };
 
         let actual = parse_file(&case.options, content, case.filename.as_deref());
@@ -1591,7 +1591,26 @@ mod hardcoded_tests {
         Normal,
     }
 
-    fn run_internal(path: &str, verbose_mode: VerboseMode) {
+    fn record_tree(path: &str, test_name: &str, case_name: &str, case: &TestCase) -> bool {
+        let Some(ref content) = case.content else {
+            return false;
+        };
+        let filename = format!(
+            "{}{}{}{}{}.tree.json",
+            path,
+            std::path::MAIN_SEPARATOR,
+            test_name,
+            std::path::MAIN_SEPARATOR,
+            case_name
+        );
+        let json = parse_file(&case.options, content, case.filename.as_deref());
+        let json_str = serde_json::to_string_pretty(&json).unwrap();
+        fs::write(&filename, format!("{}\n", json_str))
+            .unwrap_or_else(|err| panic!("failed to write {}: {}", filename, err));
+        true
+    }
+
+    fn run_internal(path: &str, verbose_mode: VerboseMode, record: bool) {
         let tests = tests_of_path(path);
         let mut suite_results = SuiteResults::default();
 
@@ -1611,11 +1630,12 @@ mod hardcoded_tests {
                         }
                         result.ok += 1;
                     }
-                    Ok(CaseResult::CaseSkipped { reason }) => {
-                        if let Some(reason) = reason {
-                            if !reason.is_empty() && verbose_mode != VerboseMode::Quiet {
-                                eprintln!("[-] SKIP: {} - {}", key, reason);
-                            }
+                    Ok(CaseResult::CaseNoSnapshot) => {
+                        if verbose_mode != VerboseMode::Quiet {
+                            eprintln!("[-] SKIP: {} - no .tree.json", key);
+                        }
+                        if record && record_tree(path, &test_name, &key, &case) {
+                            eprintln!("[+] RECORD: {}", key);
                         }
                         result.skipped += 1;
                     }
@@ -1626,6 +1646,9 @@ mod hardcoded_tests {
                         eprintln!("[x] FAIL: {}", &key);
                         for err in &errs {
                             eprintln!("    {}", err);
+                        }
+                        if record && record_tree(path, &test_name, &key, &case) {
+                            eprintln!("[+] RECORD: {}", key);
                         }
                         result.failed += 1;
                         shown_header = true;
@@ -1690,7 +1713,11 @@ mod hardcoded_tests {
 
     #[test]
     fn run() {
-        let path = resource_path();
-        run_internal(&path, VerboseMode::Quiet);
+        // Buck copies the fixtures into its build output tree, so recording has
+        // to be pointed at the source tree to land anywhere useful.
+        match std::env::var("FLOW_PARSER_TEST_RECORD") {
+            Ok(path) if !path.is_empty() => run_internal(&path, VerboseMode::Quiet, true),
+            _ => run_internal(&resource_path(), VerboseMode::Quiet, false),
+        }
     }
 }
