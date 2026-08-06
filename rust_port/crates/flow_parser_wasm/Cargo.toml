@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 flow_parser = { path = "../flow_parser" }
-prettyplease = "0.2.29"
+prettyplease = { version = "0.3.0", features = ["verbatim"] }
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
-syn = { version = "2.0.119", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
+syn = { version = "3", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
