@@ -1241,7 +1241,7 @@ fn dump_use_t_<CX>(
             );
             p(cx, use_t, true, &extra)
         }
-        UseTInner::GetKeysT(_, _)
+        UseTInner::GetKeysT { .. }
         | UseTInner::GetValuesT(_, _)
         | UseTInner::GetDictValuesT(_, _) => p(cx, use_t, true, ""),
         UseTInner::GetPropT(data) => {

@@ -2381,7 +2381,10 @@ fn __flow_impl<'cx>(
                 trace,
                 (
                     o1,
-                    &UseT::new(UseTInner::GetKeysT(reason1.dupe(), Box::new(u.dupe()))),
+                    &UseT::new(UseTInner::GetKeysT {
+                        reason: reason1.dupe(),
+                        t_out: Box::new(u.dupe()),
+                    }),
                 ),
             )?;
             if let UseTInner::UseT(_, t) = u.deref() {
@@ -2550,9 +2553,13 @@ fn __flow_impl<'cx>(
                 type_: _,
             }),
         ) => {}
-        (TypeInner::DefT(_, def_t), UseTInner::GetKeysT(reason_op, keys))
-            if let DefTInner::ObjT(obj) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::GetKeysT {
+                reason: reason_op,
+                t_out: keys,
+            },
+        ) if let DefTInner::ObjT(obj) = def_t.deref() => {
             let ObjType {
                 flags, props_tmap, ..
             } = obj.as_ref();
@@ -2577,9 +2584,13 @@ fn __flow_impl<'cx>(
                 )?;
             }
         }
-        (TypeInner::DefT(_, def_t), UseTInner::GetKeysT(reason_op, keys))
-            if let DefTInner::InstanceT(instance_t) = def_t.deref() =>
-        {
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::GetKeysT {
+                reason: reason_op,
+                t_out: keys,
+            },
+        ) if let DefTInner::InstanceT(instance_t) = def_t.deref() => {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 cx,
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
@@ -2603,7 +2614,13 @@ fn __flow_impl<'cx>(
                 )?;
             }
         }
-        (TypeInner::AnyT(_, _), UseTInner::GetKeysT(reason_op, keys)) => {
+        (
+            TypeInner::AnyT(_, _),
+            UseTInner::GetKeysT {
+                reason: reason_op,
+                t_out: keys,
+            },
+        ) => {
             // rec_flow cx trace (StrModuleT.why reason_op, keys)
             let str_mod = str_module_t::why(reason_op.dupe());
             rec_flow(cx, trace, (&str_mod, keys))?;

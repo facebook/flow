@@ -2500,7 +2500,10 @@ pub enum UseTInner<CX = ()> {
     ObjTestProtoT(Reason, Type),
     ObjTestT(Reason, Type, Type),
     ArrRestT(Box<ArrRestTData>),
-    GetKeysT(Reason, Box<UseT<CX>>),
+    GetKeysT {
+        reason: Reason,
+        t_out: Box<UseT<CX>>,
+    },
     HasOwnPropT(Box<HasOwnPropTData>),
     GetValuesT(Reason, Type),
     GetDictValuesT(Reason, Box<UseT<CX>>),
@@ -2607,7 +2610,10 @@ impl<CX> Clone for UseTInner<CX> {
             UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
             UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
             UseTInner::ArrRestT(a) => UseTInner::ArrRestT(a.clone()),
-            UseTInner::GetKeysT(a, b) => UseTInner::GetKeysT(a.clone(), b.clone()),
+            UseTInner::GetKeysT { reason, t_out } => UseTInner::GetKeysT {
+                reason: reason.clone(),
+                t_out: t_out.clone(),
+            },
             UseTInner::HasOwnPropT(a) => UseTInner::HasOwnPropT(a.clone()),
             UseTInner::GetValuesT(a, b) => UseTInner::GetValuesT(a.clone(), b.clone()),
             UseTInner::GetDictValuesT(a, b) => UseTInner::GetDictValuesT(a.clone(), b.clone()),
@@ -2724,7 +2730,16 @@ impl<CX> PartialEq for UseTInner<CX> {
                 a1 == a2 && b1 == b2 && c1 == c2
             }
             (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1 == a2,
-            (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::GetKeysT {
+                    reason: r1,
+                    t_out: t1,
+                },
+                UseTInner::GetKeysT {
+                    reason: r2,
+                    t_out: t2,
+                },
+            ) => r1 == r2 && t1 == t2,
             (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1 == a2,
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => a1 == a2 && b1 == b2,
             (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
@@ -2886,9 +2901,9 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 c.hash(state);
             }
             UseTInner::ArrRestT(a) => a.hash(state),
-            UseTInner::GetKeysT(a, b) => {
-                a.hash(state);
-                b.hash(state);
+            UseTInner::GetKeysT { reason, t_out } => {
+                reason.hash(state);
+                t_out.hash(state);
             }
             UseTInner::HasOwnPropT(a) => a.hash(state),
             UseTInner::GetValuesT(a, b) => {
@@ -2991,7 +3006,7 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::ObjTestProtoT(..) => 31,
                 UseTInner::ObjTestT(..) => 32,
                 UseTInner::ArrRestT(..) => 33,
-                UseTInner::GetKeysT(..) => 34,
+                UseTInner::GetKeysT { .. } => 34,
                 UseTInner::HasOwnPropT(..) => 35,
                 UseTInner::GetValuesT(..) => 36,
                 UseTInner::GetDictValuesT(..) => 37,
@@ -3119,9 +3134,16 @@ impl<CX> Ord for UseTInner<CX> {
                 a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
             }
             (UseTInner::ArrRestT(a1), UseTInner::ArrRestT(a2)) => a1.cmp(a2),
-            (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => {
-                a1.cmp(a2).then_with(|| b1.cmp(b2))
-            }
+            (
+                UseTInner::GetKeysT {
+                    reason: r1,
+                    t_out: t1,
+                },
+                UseTInner::GetKeysT {
+                    reason: r2,
+                    t_out: t2,
+                },
+            ) => r1.cmp(r2).then_with(|| t1.cmp(t2)),
             (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1.cmp(a2),
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
@@ -3280,7 +3302,11 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(c)
                 .finish(),
             UseTInner::ArrRestT(a) => f.debug_tuple("ArrRestT").field(a).finish(),
-            UseTInner::GetKeysT(a, b) => f.debug_tuple("GetKeysT").field(a).field(b).finish(),
+            UseTInner::GetKeysT { reason, t_out } => f
+                .debug_struct("GetKeysT")
+                .field("reason", reason)
+                .field("t_out", t_out)
+                .finish(),
             UseTInner::HasOwnPropT(a) => f.debug_tuple("HasOwnPropT").field(a).finish(),
             UseTInner::GetValuesT(a, b) => f.debug_tuple("GetValuesT").field(a).field(b).finish(),
             UseTInner::GetDictValuesT(a, b) => {
@@ -11151,7 +11177,7 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::ConditionalT(..) => "ConditionalT".to_string(),
         UseTInner::ExtendsUseT(..) => "ExtendsUseT".to_string(),
         UseTInner::GetElemT(..) => "GetElemT".to_string(),
-        UseTInner::GetKeysT(..) => "GetKeysT".to_string(),
+        UseTInner::GetKeysT { .. } => "GetKeysT".to_string(),
         UseTInner::GetValuesT(..) => "GetValuesT".to_string(),
         UseTInner::GetDictValuesT(..) => "GetDictValuesT".to_string(),
         UseTInner::GetTypeFromNamespaceT(..) => "GetTypeFromNamespaceT".to_string(),

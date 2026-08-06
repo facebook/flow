@@ -96,10 +96,10 @@ impl NormalizerInput for FlowInput {
             let reason_clone = reason.dupe();
             let t_clone = t.dupe();
             let tout = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, tout| {
-                let use_t = UseT::new(UseTInner::GetKeysT(
-                    reason_clone.dupe(),
-                    Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
-                ));
+                let use_t = UseT::new(UseTInner::GetKeysT {
+                    reason: reason_clone.dupe(),
+                    t_out: Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
+                });
                 flow_js::flow_non_speculating(cx, (&t_clone, &use_t))
             })?;
             match lookahead::peek(cx, &tout) {

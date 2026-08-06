@@ -13956,10 +13956,13 @@ fn static_method_call_object<'a>(
                 cx,
                 (
                     obj_t,
-                    &UseT::new(UseTInner::GetKeysT(
-                        keys_reason,
-                        Box::new(UseT::new(UseTInner::UseT(use_op_clone.dupe(), tvar.dupe()))),
-                    )),
+                    &UseT::new(UseTInner::GetKeysT {
+                        reason: keys_reason,
+                        t_out: Box::new(UseT::new(UseTInner::UseT(
+                            use_op_clone.dupe(),
+                            tvar.dupe(),
+                        ))),
+                    }),
                 ),
             )?;
             Ok(())

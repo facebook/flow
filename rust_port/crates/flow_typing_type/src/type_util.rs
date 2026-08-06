@@ -732,14 +732,20 @@ pub fn util_use_op_of_use_t<T, CX>(
                 })))
             })
         }
-        UseTInner::GetKeysT(r, inner_use_t) => {
+        UseTInner::GetKeysT {
+            reason: r,
+            t_out: inner_use_t,
+        } => {
             let r = r.dupe();
 
             util_use_op_of_use_t(
                 &|_| nope(u),
                 &|_, inner_op, inner_make| {
                     util(u, inner_op, &|new_op| {
-                        UseT::new(UseTInner::GetKeysT(r.dupe(), Box::new(inner_make(new_op))))
+                        UseT::new(UseTInner::GetKeysT {
+                            reason: r.dupe(),
+                            t_out: Box::new(inner_make(new_op)),
+                        })
                     })
                 },
                 inner_use_t.as_ref(),

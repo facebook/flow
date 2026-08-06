@@ -905,7 +905,7 @@ pub fn object_like_op<CX>(u: &UseT<CX>) -> bool {
         | UseTInner::GetProtoT(_, _)
         | UseTInner::SetProtoT(_, _)
         | UseTInner::SuperT(..)
-        | UseTInner::GetKeysT(_, _)
+        | UseTInner::GetKeysT { .. }
         | UseTInner::HasOwnPropT(..)
         | UseTInner::GetValuesT(_, _)
         | UseTInner::GetDictValuesT(_, _)
@@ -1183,7 +1183,7 @@ pub fn error_message_kind_of_upper<CX>(
         }
         UseTInner::ConcretizeTypeAppsT(..) => UpperKind::IncompatibleSpecializeT,
         UseTInner::ThisSpecializeT(..) => UpperKind::IncompatibleThisSpecializeT,
-        UseTInner::GetKeysT(..) => UpperKind::IncompatibleGetKeysT,
+        UseTInner::GetKeysT { .. } => UpperKind::IncompatibleGetKeysT,
         UseTInner::HasOwnPropT(box HasOwnPropTData {
             reason: r,
             type_: t,
@@ -1268,7 +1268,7 @@ pub fn error_message_loc_of_upper<CX>(u: &UseT<CX>) -> ALoc {
         UseTInner::ObjTestProtoT(reason, _) => reason.loc().dupe(),
         UseTInner::ObjTestT(reason, _, _) => reason.loc().dupe(),
         UseTInner::ArrRestT(data) => data.reason.loc().dupe(),
-        UseTInner::GetKeysT(reason, _) => reason.loc().dupe(),
+        UseTInner::GetKeysT { reason, .. } => reason.loc().dupe(),
         UseTInner::HasOwnPropT(data) => data.reason.loc().dupe(),
         UseTInner::GetValuesT(reason, _) => reason.loc().dupe(),
         UseTInner::GetDictValuesT(reason, _) => reason.loc().dupe(),

@@ -3587,10 +3587,10 @@ pub fn rec_sub_t<'cx>(
                 cx,
                 trace,
                 o1,
-                &UseT::new(UseTInner::GetKeysT(
-                    reason1.dupe(),
-                    Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
-                )),
+                &UseT::new(UseTInner::GetKeysT {
+                    reason: reason1.dupe(),
+                    t_out: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                }),
             )
         }
 

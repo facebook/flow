@@ -239,8 +239,8 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::GetDictValuesT(_, use_) => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
         }
-        UseTInner::GetKeysT(_, use_) => {
-            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
+        UseTInner::GetKeysT { t_out, .. } => {
+            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), t_out)
         }
         UseTInner::HasOwnPropT(..) => Ok(()),
         UseTInner::GetValuesT(_, t) => resolve(t.dupe()),

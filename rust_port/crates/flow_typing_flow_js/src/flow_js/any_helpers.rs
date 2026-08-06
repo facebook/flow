@@ -462,7 +462,7 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::ConditionalT(..)
         | UseTInner::GetElemT(..)
         | UseTInner::GetEnumT(..)
-        | UseTInner::GetKeysT(..)
+        | UseTInner::GetKeysT { .. }
         | UseTInner::GetPrivatePropT(..)
         | UseTInner::GetPropT(..)
         | UseTInner::GetTypeFromNamespaceT(..)

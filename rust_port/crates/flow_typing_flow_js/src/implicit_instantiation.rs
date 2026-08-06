@@ -628,7 +628,7 @@ fn t_of_use_t<'cx>(
         | UseTInner::HasOwnPropT(..)
         | UseTInner::LookupT { .. }
         | UseTInner::OptionalIndexedAccessT { .. }
-        | UseTInner::GetKeysT(..)
+        | UseTInner::GetKeysT { .. }
         | UseTInner::GetValuesT(..)
         | UseTInner::GetDictValuesT(..)
         | UseTInner::SuperT(..)
