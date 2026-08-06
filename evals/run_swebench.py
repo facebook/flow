@@ -43,6 +43,8 @@ DEFAULT_JSONL = SCRIPT_DIR / "build" / "swebench" / "flow_evals.jsonl"
 # package). Pass --flow-bin to point at a locally built binary instead.
 DEFAULT_FLOW_BIN = SCRIPT_DIR / "node_modules" / ".bin" / "flow"
 DEFAULT_MODEL = "claude-sonnet-5"
+# Where --docs stages the documentation inside each eval workdir.
+DOCS_SUBDIR = "flow-docs"
 
 
 # Track per-eval workdirs so a SIGTERM/SIGINT can stop their Flow servers
@@ -146,7 +148,7 @@ def find_eval_dir(instance_id):
     return None
 
 
-def setup_workdir(eval_dir, workdir, flow_bin):
+def setup_workdir(eval_dir, workdir, flow_bin, docs_dir=None):
     """Copy input/ files into the working directory and set up Flow binary."""
     input_dir = (
         eval_dir / "context" if (eval_dir / "context").is_dir() else eval_dir / "input"
@@ -175,6 +177,15 @@ def setup_workdir(eval_dir, workdir, flow_bin):
     flow_wrapper = workdir / "flow"
     flow_wrapper.write_text(f'#!/bin/bash\nexec {flow_bin.resolve()} "$@"\n')
     flow_wrapper.chmod(0o755)
+
+    # --docs: stage the Flow documentation so the agent can consult it (see
+    # docs_note). Only .md is copied — anything Flow could resolve as a module
+    # would change what the graders see.
+    if docs_dir is not None:
+        for src in docs_dir.rglob("*.md"):
+            dst = workdir / DOCS_SUBDIR / src.relative_to(docs_dir)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
 
 
 def prewarm_flow_server(workdir, flow_bin):
@@ -453,6 +464,21 @@ def environment_note(test_patch):
     return base + "Run `./flow check .` to type-check."
 
 
+def docs_note():
+    """Point the agent at the documentation staged by --docs.
+
+    Deliberately just a pointer, not the docs inlined: the full corpus is ~150k
+    tokens, and reading only what the task needs is how a docs skill would
+    actually behave.
+    """
+    return (
+        f"\n\nFlow's official documentation is available in ./{DOCS_SUBDIR}/ "
+        "(markdown, the source of flow.org/en/docs). It is authoritative for "
+        "current Flow syntax and semantics — consult whatever pages the task "
+        "calls for before writing code."
+    )
+
+
 def run_eval(instance, args):
     """Run a single eval instance. Returns result dict."""
     instance_id = instance["instance_id"]
@@ -466,7 +492,12 @@ def run_eval(instance, args):
 
     try:
         # Setup
-        setup_workdir(eval_dir, workdir, Path(args.flow_bin))
+        setup_workdir(
+            eval_dir,
+            workdir,
+            Path(args.flow_bin),
+            Path(args.docs) if args.docs else None,
+        )
         if not args.dry_run:
             prewarm_flow_server(workdir, Path(args.flow_bin))
 
@@ -490,6 +521,8 @@ def run_eval(instance, args):
             prompt = instance["problem_statement"] + environment_note(
                 instance["test_patch"]
             )
+            if args.docs:
+                prompt += docs_note()
             claude_result = run_claude(
                 workdir,
                 prompt,
@@ -639,6 +672,13 @@ def main():
     )
     parser.add_argument(
         "--flow-bin", default=str(DEFAULT_FLOW_BIN), help="Path to Flow binary"
+    )
+    parser.add_argument(
+        "--docs",
+        default=None,
+        help="Stage a documentation tree (e.g. ../website/docs) in each workdir "
+        "and tell the agent to consult it. Measures docs-assisted performance "
+        "rather than what the model knows unaided.",
     )
     parser.add_argument(
         "--keep-tmp",
