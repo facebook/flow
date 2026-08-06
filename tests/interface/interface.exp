@@ -788,27 +788,27 @@ Cannot cast `o6` to interface type because in the indexer property's key: `strin
 `"asdf"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either make `{[string]: number}` [3] and `{["asdf"]: number}` [4] exactly the same
+- Either make `{[string]: number}` [3] and `{[key: "asdf"]: number}` [4] exactly the same
 - Or make the indexer in interface type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:59:1
-   59| o6 as interface {["asdf"] : number}; // error
+   59| o6 as interface {[key: "asdf"] : number}; // error
        ^^
 
 References:
    interface.js:57:22
    57| declare const o6 : {[string] : number};
                             ^^^^^^ [1]
-   interface.js:59:19
-   59| o6 as interface {["asdf"] : number}; // error
-                         ^^^^^^ [2]
+   interface.js:59:24
+   59| o6 as interface {[key: "asdf"] : number}; // error
+                              ^^^^^^ [2]
    interface.js:57:20
    57| declare const o6 : {[string] : number};
                           ^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:59:7
-   59| o6 as interface {["asdf"] : number}; // error
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   59| o6 as interface {[key: "asdf"] : number}; // error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- merging.js:9:1

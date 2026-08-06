@@ -56,4 +56,4 @@ o5 as interface {readonly [string] : number}; // OK
 
 declare const o6 : {[string] : number};
 
-o6 as interface {["asdf"] : number}; // error
+o6 as interface {[key: "asdf"] : number}; // error

@@ -6651,39 +6651,27 @@ fn mk_interface_super<'a>(
     ))
 }
 
-fn convert_indexer_internal(
+/// The value type of a bracketed member of an interface or a `declare class`
+/// body, and its typed node, whichever way its key is read. The key is taken
+/// already converted, since a computed key is converted as a value while an
+/// index signature key is converted as a type.
+fn convert_indexer_value(
     cx: &Context,
     env: &mut ConvertEnv,
     indexer: &ast::types::object::Indexer<ALoc, ALoc>,
+    key_ast: ast::types::Type<ALoc, (ALoc, Type)>,
 ) -> Result<
-    (
-        type_::DictType,
-        ast::types::object::Indexer<ALoc, (ALoc, Type)>,
-    ),
+    (Type, ast::types::object::Indexer<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let key_ast = convert_inner(cx, env, &indexer.key)?;
-    let (_, k) = key_ast.loc();
-    let k = k.dupe();
     let value_ast = convert_inner(cx, env, &indexer.value)?;
     let (annot_loc, v) = value_ast.loc();
     let annot_loc = annot_loc.dupe();
     let v = v.dupe();
-    let p = polarity(
-        cx,
-        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
-        indexer.variance.as_ref(),
-    );
     let v = if indexer.optional {
         type_util::optional(v, Some(annot_loc), false)
     } else {
         v
-    };
-    let dict = type_::DictType {
-        dict_name: indexer.id.as_ref().map(|id| id.name.dupe()),
-        key: k,
-        value: v.dupe(),
-        dict_polarity: p,
     };
     let indexer_ast = ast::types::object::Indexer {
         loc: indexer.loc.dupe(),
@@ -6701,7 +6689,138 @@ fn convert_indexer_internal(
         optional: indexer.optional,
         comments: indexer.comments.dupe(),
     };
+    Ok((v, indexer_ast))
+}
+
+fn convert_indexer_internal(
+    cx: &Context,
+    env: &mut ConvertEnv,
+    indexer: &ast::types::object::Indexer<ALoc, ALoc>,
+) -> Result<
+    (
+        type_::DictType,
+        ast::types::object::Indexer<ALoc, (ALoc, Type)>,
+    ),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let key_ast = convert_inner(cx, env, &indexer.key)?;
+    let (_, k) = key_ast.loc();
+    let k = k.dupe();
+    let (v, indexer_ast) = convert_indexer_value(cx, env, indexer, key_ast)?;
+    let p = polarity(
+        cx,
+        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+        indexer.variance.as_ref(),
+    );
+    let dict = type_::DictType {
+        dict_name: indexer.id.as_ref().map(|id| id.name.dupe()),
+        key: k,
+        value: v,
+        dict_polarity: p,
+    };
     Ok((dict, indexer_ast))
+}
+
+/// How a bracketed key in an interface or a `declare class` body is read. The
+/// reading only depends on the way the key is written and on the kind of
+/// binding its head name has, so it is settled before anything is converted,
+/// and the gates that only an index signature has to pass still run first.
+enum InterfaceKeyForm<'a> {
+    /// A computed key naming the property the literal spells.
+    Literal(FlowSmolStr),
+    /// A computed key written as the name of a value, read as that value's
+    /// type. It names a property when that type is a single literal.
+    ValueName {
+        loc: &'a ALoc,
+        generic: &'a ast::types::Generic<ALoc, ALoc>,
+    },
+    IndexSignature,
+}
+
+fn interface_key_form<'a>(
+    cx: &Context,
+    indexer: &'a ast::types::object::Indexer<ALoc, ALoc>,
+) -> InterfaceKeyForm<'a> {
+    // The labeled form `[label: K]` is an index signature outright.
+    if indexer.id.is_some() {
+        return InterfaceKeyForm::IndexSignature;
+    }
+    match object_type_key::object_type_key_form(&indexer.key) {
+        ObjectTypeKeyForm::Literal(name) => InterfaceKeyForm::Literal(name),
+        ObjectTypeKeyForm::Name { loc, generic, head }
+            if type_env::heads_computed_key(cx, &head.loc) =>
+        {
+            InterfaceKeyForm::ValueName { loc, generic }
+        }
+        ObjectTypeKeyForm::Name { .. } | ObjectTypeKeyForm::IndexSignature => {
+            InterfaceKeyForm::IndexSignature
+        }
+    }
+}
+
+/// The last key location of each method and accessor in an interface or
+/// `declare class` body, by the side it sits on and the name it spells. The
+/// signature pipeline stores every member of one name as a single entry
+/// ordered by that location, so a computed key has to lose to a name that goes
+/// on being written after it, whether that is the other half of a getter and
+/// setter pair or a further overload of a method. A plain property needs no
+/// entry: it is one member with one location, so folding in source order
+/// already puts it on the same side of the key in both pipelines. Unlike an
+/// object type body, this one names a member by a quoted or numeric key as
+/// well, so all three spellings are collected here.
+///
+/// Only a member that shares a map with the property a computed key adds can
+/// take the name from it. An interface body and the static side of a
+/// `declare class` keep one map, so a method or an accessor there counts. The
+/// instance side of a `declare class` keeps its fields apart from its methods
+/// and accessors, with a field shadowing whatever the proto side holds, so
+/// nothing there does.
+fn interface_shadowing_member_last_locs(
+    obj_kind: &intermediate_error_types::ObjKind,
+    properties: &[ast::types::object::Property<ALoc, ALoc>],
+) -> HashMap<(bool, Name), ALoc> {
+    use ast::types::object::Property;
+    use ast::types::object::PropertyValue;
+    use flow_parser::ast::expression::object::Key;
+
+    fn member_key(key: &ast::expression::object::Key<ALoc, ALoc>) -> Option<(Name, &ALoc)> {
+        match key {
+            Key::Identifier(id) => Some((Name::new(id.name.dupe()), &id.loc)),
+            Key::StringLiteral((loc, lit)) => Some((Name::new(lit.value.dupe()), loc)),
+            Key::NumberLiteral((loc, lit))
+                if flow_common::js_number::is_float_safe_integer(lit.value) =>
+            {
+                let name = flow_common::js_number::ecma_string_of_float(lit.value);
+                Some((Name::new(FlowSmolStr::new(name)), loc))
+            }
+            _ => None,
+        }
+    }
+
+    let mut last_locs: HashMap<(bool, Name), ALoc> = HashMap::new();
+    for prop in properties {
+        let Property::NormalProperty(p) = prop else {
+            continue;
+        };
+        let shares_map = p.static_ || *obj_kind == intermediate_error_types::ObjKind::Interface;
+        let shadows = shares_map
+            && (p.method || matches!(p.value, PropertyValue::Get(..) | PropertyValue::Set(..)));
+        if !shadows {
+            continue;
+        }
+        let Some((name, key_loc)) = member_key(&p.key) else {
+            continue;
+        };
+        last_locs
+            .entry((p.static_, name))
+            .and_modify(|last| {
+                if key_loc.quick_compare(last).is_gt() {
+                    *last = key_loc.dupe();
+                }
+            })
+            .or_insert_with(|| key_loc.dupe());
+    }
+    last_locs
 }
 
 fn add_interface_properties<'a>(
@@ -6728,6 +6847,7 @@ fn add_interface_properties<'a>(
     use flow_parser::ast::types::object::Property;
 
     let mut prop_asts: Vec<Property<ALoc, (ALoc, Type)>> = Vec::new();
+    let shadowing_member_last_locs = interface_shadowing_member_last_locs(&obj_kind, properties);
     for prop in properties {
         match prop {
             Property::CallProperty(cp) => {
@@ -6744,22 +6864,30 @@ fn add_interface_properties<'a>(
                     comments: cp.comments.dupe(),
                 }));
             }
-            Property::Indexer(idx) if class_sig::has_indexer(idx.static_, &s) => {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                        idx.loc.dupe(),
-                        intermediate_error_types::UnsupportedSyntax::MultipleIndexers,
-                    ))),
-                );
-                let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
-                    &mut typed_ast_utils::ErrorMapper,
-                    prop,
-                );
-                prop_asts.push(error_prop);
-            }
             Property::Indexer(idx) => {
-                if idx.optional && !cx.tslib_syntax() {
+                // `[K]: V` is ambiguous between a computed key and an index
+                // signature, and the way the key is written decides (see
+                // `object_type_key`). Classify before the two gates below, so a
+                // computed key is neither counted as an indexer nor rejected
+                // for carrying a `?`, which is TSLib-only syntax on an indexer.
+                let key_form = interface_key_form(cx, idx);
+                let is_index_signature = matches!(key_form, InterfaceKeyForm::IndexSignature);
+                if is_index_signature && class_sig::has_indexer(idx.static_, &s) {
+                    flow_js_utils::add_output_non_speculating(
+                        cx,
+                        ErrorMessage::EUnsupportedSyntax(Box::new((
+                            idx.loc.dupe(),
+                            intermediate_error_types::UnsupportedSyntax::MultipleIndexers,
+                        ))),
+                    );
+                    let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                        &mut typed_ast_utils::ErrorMapper,
+                        prop,
+                    );
+                    prop_asts.push(error_prop);
+                    continue;
+                }
+                if is_index_signature && idx.optional && !cx.tslib_syntax() {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EUnsupportedSyntax(Box::new((
@@ -6774,11 +6902,98 @@ fn add_interface_properties<'a>(
                         prop,
                     );
                     prop_asts.push(error_prop);
-                } else {
-                    let (dict, indexer_ast) = convert_indexer_internal(cx, env, idx)?;
-                    class_sig::add_indexer(idx.static_, dict, &mut s);
-                    prop_asts.push(Property::Indexer(indexer_ast));
+                    continue;
                 }
+                let (key_ast, named) = match key_form {
+                    InterfaceKeyForm::Literal(name) => {
+                        (convert_inner(cx, env, &idx.key)?, Some(Name::new(name)))
+                    }
+                    InterfaceKeyForm::ValueName { loc, generic } => {
+                        let (key_ast, name) = convert_value_object_type_key(cx, loc, generic)?;
+                        match name {
+                            // Every member of one name is a single member in
+                            // the signature pipeline, ordered by the last of
+                            // them, so a name still being written after this
+                            // key wins over it and the key adds nothing. Only a
+                            // value name needs this: a literal key is folded
+                            // there by name in source order, so it splits a
+                            // getter and setter pair there as it does here.
+                            Some(name)
+                                if shadowing_member_last_locs
+                                    .get(&(idx.static_, name.dupe()))
+                                    .is_some_and(|last| {
+                                        last.quick_compare(idx.key.loc()).is_gt()
+                                    }) =>
+                            {
+                                let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                                    &mut typed_ast_utils::ErrorMapper,
+                                    prop,
+                                );
+                                prop_asts.push(error_prop);
+                                continue;
+                            }
+                            Some(name) => (key_ast, Some(name)),
+                            // The value names no one property, so there is no
+                            // member to add. An index signature is not a sound
+                            // reading either: the author asked for one key.
+                            None => {
+                                let key_error_kind = if key_is_type_name(cx, &key_ast) {
+                                    InvalidObjKey::ComputedTypeName
+                                } else {
+                                    InvalidObjKey::ComputedNotLiteral
+                                };
+                                flow_js_utils::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedKeyInObject {
+                                        loc: idx.key.loc().dupe(),
+                                        obj_kind: obj_kind.clone(),
+                                        key_error_kind,
+                                    },
+                                );
+                                let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                                    &mut typed_ast_utils::ErrorMapper,
+                                    prop,
+                                );
+                                prop_asts.push(error_prop);
+                                continue;
+                            }
+                        }
+                    }
+                    InterfaceKeyForm::IndexSignature => (convert_inner(cx, env, &idx.key)?, None),
+                };
+                let key_t = key_ast.loc().1.dupe();
+                let (value_t, indexer_ast) = convert_indexer_value(cx, env, idx, key_ast)?;
+                let prop_polarity = polarity(
+                    cx,
+                    flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                    idx.variance.as_ref(),
+                );
+                match named {
+                    Some(name) => {
+                        let name = name.into_smol_str();
+                        record_field(&name, &value_t);
+                        class_sig::add_field(
+                            idx.static_,
+                            false,
+                            false,
+                            name,
+                            idx.key.loc().dupe(),
+                            prop_polarity,
+                            func_class_sig_types::class::Field::Annot(value_t),
+                            &mut s,
+                        );
+                    }
+                    None => {
+                        let dict = type_::DictType {
+                            dict_name: idx.id.as_ref().map(|id| id.name.dupe()),
+                            key: key_t,
+                            value: value_t,
+                            dict_polarity: prop_polarity,
+                        };
+                        class_sig::add_indexer(idx.static_, dict, &mut s);
+                    }
+                }
+                prop_asts.push(Property::Indexer(indexer_ast));
             }
             Property::MappedType(mt) => {
                 flow_js_utils::add_output_non_speculating(

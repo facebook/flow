@@ -8177,8 +8177,35 @@ fn interface_props<'arena, 'ast>(
                 interface_prop(opts, scope, scopes, tbls, xs, acc, p);
             }
             O::Property::Indexer(p) => {
-                let i = indexer(opts, scope, scopes, tbls, xs, p);
-                acc.add_indexer(i);
+                // `[K]: V` is ambiguous between a computed key and an index
+                // signature, and the way the key is written decides (see
+                // `object_type_key`), just as it does in an object type body.
+                let key_form = if p.id.is_some() {
+                    ObjectTypeKeyForm::IndexSignature
+                } else {
+                    object_type_key::object_type_key_form(&p.key)
+                };
+                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                match key_form {
+                    ObjectTypeKeyForm::Literal(name) => {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_field(name, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { generic, head, .. }
+                        if !xs.contains(&head.name)
+                            && scope::name_heads_computed_key(scopes, scope, &head.name) =>
+                    {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let key = value_object_type_key(scope, tbls, &generic.id);
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_computed_field(key, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { .. } | ObjectTypeKeyForm::IndexSignature => {
+                        let i = indexer(opts, scope, scopes, tbls, xs, p);
+                        acc.add_indexer(i);
+                    }
+                }
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
@@ -8533,8 +8560,35 @@ fn declare_class_props<'arena, 'ast>(
                 declare_class_prop(opts, scope, scopes, tbls, xs, acc, p);
             }
             O::Property::Indexer(p) => {
-                let i = indexer(opts, scope, scopes, tbls, xs, p);
-                acc.add_indexer(p.static_, i);
+                // `[K]: V` is ambiguous between a computed key and an index
+                // signature, and the way the key is written decides (see
+                // `object_type_key`), just as it does in an object type body.
+                let key_form = if p.id.is_some() {
+                    ObjectTypeKeyForm::IndexSignature
+                } else {
+                    object_type_key::object_type_key_form(&p.key)
+                };
+                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                match key_form {
+                    ObjectTypeKeyForm::Literal(name) => {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_field(p.static_, name, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { generic, head, .. }
+                        if !xs.contains(&head.name)
+                            && scope::name_heads_computed_key(scopes, scope, &head.name) =>
+                    {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let key = value_object_type_key(scope, tbls, &generic.id);
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_computed_field(p.static_, false, key, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { .. } | ObjectTypeKeyForm::IndexSignature => {
+                        let i = indexer(opts, scope, scopes, tbls, xs, p);
+                        acc.add_indexer(p.static_, i);
+                    }
+                }
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());

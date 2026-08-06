@@ -23,7 +23,6 @@ use flow_common::alpha_rename;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::flow_symbol::Symbol;
-use flow_common::name_utils;
 use flow_common::polarity::Polarity;
 use flow_common::reason;
 use flow_common::reason::Name;
@@ -1637,6 +1636,94 @@ fn insert_computed_prop(
         }
     }
     prop_locs.insert(name, loc);
+}
+
+/// A source location that orders an interface or `declare class` member against
+/// the others, the way `obj_annot_prop_source_loc` orders an object-type one. A
+/// field may carry no location, in which case it does not order at all and a
+/// computed key of the same name wins over it.
+fn interface_prop_source_loc<T>(prop: &InterfaceProp<ALoc, T>) -> Option<ALoc> {
+    match prop {
+        InterfaceProp::InterfaceField(box (loc, _, _)) => loc.dupe(),
+        InterfaceProp::InterfaceAccess(box accessor) => Some(match accessor {
+            Accessor::Get(box (loc, _)) | Accessor::Set(box (loc, _)) => loc.dupe(),
+            Accessor::GetSet(box (get_loc, _, set_loc, _)) => {
+                if get_loc.quick_compare(set_loc).is_gt() {
+                    get_loc.dupe()
+                } else {
+                    set_loc.dupe()
+                }
+            }
+        }),
+        // Overloads are written under one name, so the last of them is where
+        // that name was last written.
+        InterfaceProp::InterfaceMethod(box overloads) => Some(overloads.last().0.dupe()),
+    }
+}
+
+/// Record where a plain member's name was written, keeping the later location
+/// when the same name holds more than one member of the map.
+fn record_prop_loc<K: Ord + Dupe, T>(
+    prop_locs: &mut BTreeMap<K, ALoc>,
+    name: &K,
+    prop: &InterfaceProp<ALoc, T>,
+) {
+    let Some(loc) = interface_prop_source_loc(prop) else {
+        return;
+    };
+    if prop_locs
+        .get(name)
+        .is_none_or(|existing| loc.quick_compare(existing).is_gt())
+    {
+        prop_locs.insert(name.dupe(), loc);
+    }
+}
+
+/// Fold a computed-key member of an interface or a `declare class` into the
+/// name-keyed map its plain members were folded into. The in-file checker folds
+/// every member in one source-order pass, where a field, a getter or a setter
+/// replaces whatever else held the name, so the member written last in source
+/// wins here too. Two methods are the exception: they are overloads of one
+/// member whichever order they come in. `prop_locs` holds the source location
+/// of the current occupant of each name.
+///
+/// `sibling` is the other map a name can be taken from, and is given only where
+/// the checker takes it: an interface is structural, so one name holds one
+/// member across its own and proto sides. A `declare class` is not, and keeps
+/// each side to itself.
+fn insert_computed_class_prop<K: Ord + Dupe>(
+    target: &mut BTreeMap<K, type_::Property>,
+    sibling: Option<&mut BTreeMap<K, type_::Property>>,
+    prop_locs: &mut BTreeMap<K, ALoc>,
+    name: K,
+    prop: type_::Property,
+    loc: Option<ALoc>,
+) {
+    fn is_method(prop: &type_::Property) -> bool {
+        matches!(&**prop, type_::PropertyInner::Method { .. })
+    }
+
+    if let std::collections::btree_map::Entry::Occupied(mut e) = target.entry(name.dupe())
+        && is_method(e.get())
+        && is_method(&prop)
+    {
+        let merged = merge_overloaded_property(e.get(), prop);
+        e.insert(merged);
+        return;
+    }
+    if let Some(loc) = &loc
+        && let Some(existing) = prop_locs.get(&name)
+        && existing.quick_compare(loc).is_gt()
+    {
+        return;
+    }
+    if let Some(sibling) = sibling {
+        sibling.remove(&name);
+    }
+    target.insert(name.dupe(), prop);
+    if let Some(loc) = loc {
+        prop_locs.insert(name, loc);
+    }
 }
 
 fn merge_overloaded_property(
@@ -3901,9 +3988,11 @@ fn merge_interface<'cx>(
         ) = {
             let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
             let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
             for (k, prop) in props {
                 let t = merge_interface_prop(env, cx, file, prop, false);
                 let name = Name::new(k.dupe());
+                record_prop_loc(&mut prop_locs, &name, prop);
                 match prop {
                     InterfaceProp::InterfaceField(..) => {
                         own.insert(name, t);
@@ -3916,22 +4005,25 @@ fn merge_interface<'cx>(
             for (key, prop) in computed_props {
                 if let Some(name) = resolve_computed_key(env, cx, file, key) {
                     let t = merge_interface_prop(env, cx, file, prop, false);
-                    let update_map = |map: &mut BTreeMap<Name, type_::Property>| {
-                        name_utils::map::update(
-                            name.dupe(),
-                            |existing| match existing {
-                                None => Some(t.dupe()),
-                                Some(existing) => {
-                                    Some(merge_overloaded_property(existing, t.dupe()))
-                                }
-                            },
-                            map,
-                        )
-                    };
+                    let loc = interface_prop_source_loc(prop);
                     match prop {
-                        InterfaceProp::InterfaceField(..) => update_map(&mut own),
+                        InterfaceProp::InterfaceField(..) => insert_computed_class_prop(
+                            &mut own,
+                            Some(&mut proto),
+                            &mut prop_locs,
+                            name,
+                            t,
+                            loc,
+                        ),
                         InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
-                            update_map(&mut proto)
+                            insert_computed_class_prop(
+                                &mut proto,
+                                Some(&mut own),
+                                &mut prop_locs,
+                                name,
+                                t,
+                                loc,
+                            )
                         }
                     }
                 }
@@ -4962,23 +5054,25 @@ fn merge_declare_class<'cx>(
         let static_ = {
             let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
             let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+            let mut prop_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
             for (k, prop) in static_props {
                 let p = merge_interface_prop(&env, cx, file, prop, true);
+                record_prop_loc(&mut prop_locs, k, prop);
                 props_smap.insert(k.dupe(), p);
             }
             for (key, prop) in computed_static_props {
                 if let Some(name) = resolve_computed_key(&env, cx, file, key) {
-                    let name_str = name.into_smol_str();
                     let t = merge_interface_prop(&env, cx, file, prop, true);
-                    match props_smap.entry(name_str) {
-                        std::collections::btree_map::Entry::Vacant(e) => {
-                            e.insert(t);
-                        }
-                        std::collections::btree_map::Entry::Occupied(mut e) => {
-                            let merged = merge_overloaded_property(e.get(), t);
-                            e.insert(merged);
-                        }
-                    }
+                    // A static member holds its name on the static side alone,
+                    // so there is no other map to take it from.
+                    insert_computed_class_prop(
+                        &mut props_smap,
+                        None,
+                        &mut prop_locs,
+                        name.into_smol_str(),
+                        t,
+                        interface_prop_source_loc(prop),
+                    );
                 }
             }
             let mut props_map: BTreeMap<Name, type_::Property> = props_smap
@@ -5019,51 +5113,57 @@ fn merge_declare_class<'cx>(
                 static_proto,
             )
         };
-        let fold_computed_interface_props =
-            |computed_props: &[(Pack::Packed<ALoc>, InterfaceProp<ALoc, Pack::Packed<ALoc>>)],
-             props: &mut BTreeMap<FlowSmolStr, type_::Property>| {
-                for (key, prop) in computed_props {
-                    if let Some(name) = resolve_computed_key(&env, cx, file, key) {
-                        let name_str = name.into_smol_str();
-                        let t = merge_interface_prop(&env, cx, file, prop, false);
-                        match props.entry(name_str) {
-                            std::collections::btree_map::Entry::Vacant(e) => {
-                                e.insert(t);
-                            }
-                            std::collections::btree_map::Entry::Occupied(mut e) => {
-                                let merged = merge_overloaded_property(e.get(), t);
-                                e.insert(merged);
-                            }
-                        }
-                    }
-                }
-            };
-        let own_props = {
-            let mut props: BTreeMap<FlowSmolStr, type_::Property> = own_props
-                .iter()
-                .map(|(k, prop)| {
-                    let p = merge_interface_prop(&env, cx, file, prop, false);
-                    (k.dupe(), p)
-                })
-                .collect();
-            fold_computed_interface_props(computed_own_props, &mut props);
-            let pmap: type_::properties::PropertiesMap =
-                props.into_iter().map(|(k, v)| (Name::new(k), v)).collect();
-            cx.generate_property_map(pmap)
-        };
-        let proto_props = {
-            let mut proto_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+        // The two sides are folded apart, since a `declare class` is not
+        // structural: the in-file checker keeps a field in one map and a
+        // method, a getter or a setter in another, and lets the field shadow
+        // whatever the proto side holds under the same name. So only a member
+        // on the side the computed key lands on can take the name from it, and
+        // each side orders its members on its own.
+        let (own_props, proto_props) = {
+            let mut own: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+            let mut own_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
+            let mut proto: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+            let mut proto_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
+            for (k, prop) in own_props {
+                let p = merge_interface_prop(&env, cx, file, prop, false);
+                record_prop_loc(&mut own_locs, k, prop);
+                own.insert(k.dupe(), p);
+            }
             for (k, prop) in proto_props {
                 let p = merge_interface_prop(&env, cx, file, prop, false);
-                proto_map.insert(k.dupe(), p);
+                record_prop_loc(&mut proto_locs, k, prop);
+                proto.insert(k.dupe(), p);
             }
-            add_default_constructor(reason_c.dupe(), extends, &mut proto_map);
-            fold_computed_interface_props(computed_proto_props, &mut proto_map);
-            let pmap: type_::properties::PropertiesMap = proto_map
-                .into_iter()
-                .map(|(k, v)| (Name::new(k), v))
-                .collect();
-            cx.generate_property_map(pmap)
+            add_default_constructor(reason_c.dupe(), extends, &mut proto);
+            let fold_computed =
+                |computed_props: &[(
+                    Pack::Packed<ALoc>,
+                    InterfaceProp<ALoc, Pack::Packed<ALoc>>,
+                )],
+                 target: &mut BTreeMap<FlowSmolStr, type_::Property>,
+                 prop_locs: &mut BTreeMap<FlowSmolStr, ALoc>| {
+                    for (key, prop) in computed_props {
+                        if let Some(name) = resolve_computed_key(&env, cx, file, key) {
+                            let t = merge_interface_prop(&env, cx, file, prop, false);
+                            insert_computed_class_prop(
+                                target,
+                                None,
+                                prop_locs,
+                                name.into_smol_str(),
+                                t,
+                                interface_prop_source_loc(prop),
+                            );
+                        }
+                    }
+                };
+            fold_computed(computed_own_props, &mut own, &mut own_locs);
+            fold_computed(computed_proto_props, &mut proto, &mut proto_locs);
+            let to_pmap = |props: BTreeMap<FlowSmolStr, type_::Property>| {
+                let pmap: type_::properties::PropertiesMap =
+                    props.into_iter().map(|(k, v)| (Name::new(k), v)).collect();
+                cx.generate_property_map(pmap)
+            };
+            (to_pmap(own), to_pmap(proto))
         };
         let inst_call_t = {
             let ts: Vec<Type> = calls
