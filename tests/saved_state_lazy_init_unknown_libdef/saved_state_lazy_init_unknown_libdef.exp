@@ -1,0 +1,32 @@
+Generate a saved state that predates libs/extra.js
+No errors!
+
+Lazy init from that saved state must not crash on the new libdef
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 3/4 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+The new libdef's globals are usable once a file is focused
+Error -------------------------------------------------------------------------------------------------------- b.js:2:21
+
+Cannot assign `MyOtherGlobal` to `bad` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   b.js:2:21
+   2| const bad: string = MyOtherGlobal;
+                          ^^^^^^^^^^^^^
+
+References:
+   libs/extra.js:1:28
+   1| declare var MyOtherGlobal: number;
+                                 ^^^^^^ [1]
+   b.js:2:12
+   2| const bad: string = MyOtherGlobal;
+                 ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 4/5 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes

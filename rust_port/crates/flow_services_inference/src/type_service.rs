@@ -50,6 +50,7 @@ use flow_saved_state::LoadedSavedState;
 use flow_server_env::collated_errors::CollatedErrors;
 use flow_server_env::collated_errors::OverlayCollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
+use flow_server_env::dependency_info::OverlayDependencyInfo;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -2858,6 +2859,31 @@ fn init_with_initial_state(
     );
     resolve_requires(pool, shared_mem, options, &additional_parsed);
     let dependency_info = restore_dependency_info();
+
+    // The libdefs parsed above joined `parsed`, and so `env.files`, but the
+    // graph we just restored predates them: a libdef added to a `[libs]`
+    // directory since the saved state was written has no node at all, and
+    // toggling `experimental.importable_global_libdefs` re-keys every libdef
+    // between a lib file and a source file. Every other path that grows
+    // `env.files` grows the graph with it, so do the same here — lazy init goes
+    // on to focus and merge exactly these files, and merging one the sig graph
+    // has never heard of is fatal.
+    let additional_parsed_typed: FlowOrdSet<FileKey> = additional_parsed
+        .iter()
+        .filter(|file| shared_mem.get_typed_parse(file).is_some())
+        .duped()
+        .collect();
+    if !additional_parsed_typed.is_empty() {
+        let partial_dependency_graph = dep_service::calc_partial_dependency_graph(
+            pool,
+            shared_mem,
+            &additional_parsed_typed,
+            &parsed,
+        );
+        let mut overlay = OverlayDependencyInfo::new(dependency_info.dupe());
+        overlay.update(partial_dependency_graph, BTreeSet::new());
+        overlay.commit();
+    }
 
     let exports = if options.autoimports {
         match saved_export_index {
