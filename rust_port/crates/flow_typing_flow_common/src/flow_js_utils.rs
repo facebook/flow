@@ -5763,6 +5763,60 @@ pub fn is_str_intlike(s: &str) -> bool {
     INT_REGEX.is_match(s)
 }
 
+/// Returns the value of an int-like string key (for example `"0"` or `"42"`)
+/// when it is a JavaScript safe integer, or `None` otherwise. Pairs the
+/// `is_str_intlike` shape check with the safe-integer bound the numeric-key call
+/// sites need before treating the string as a number.
+fn intlike_str_safe_int(s: &str) -> Option<f64> {
+    if !is_str_intlike(s) {
+        return None;
+    }
+    match s.parse::<f64>() {
+        Ok(value) if flow_common::js_number::is_float_safe_integer(value) => Some(value),
+        Ok(_) | Err(_) => None,
+    }
+}
+
+/// Whether an element-access key is an array index: a number, or an int-like
+/// string whose value is a safe integer, since `arr['0']` indexes the array just
+/// like `arr[0]`. An int-like string outside the safe-integer range is not an
+/// index, so it is left to named member access, the same as `arr['map']`.
+pub fn is_array_index_key(def_t: &DefTInner) -> bool {
+    match def_t {
+        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. } => true,
+        DefTInner::SingletonStrT { value, .. } => intlike_str_safe_int(value).is_some(),
+        _ => false,
+    }
+}
+
+/// If `l` is an int-like string singleton whose value is a safe integer (for
+/// example the `'0'` in `arr['0']`), returns the equivalent numeric singleton so
+/// the array-index path resolves it as an index. Returns `None` for any other
+/// key.
+pub fn intlike_str_key_as_num(l: &Type) -> Option<Type> {
+    use std::ops::Deref;
+
+    use dupe::Dupe;
+    use flow_typing_type::type_::DefT;
+    use flow_typing_type::type_::NumberLiteral;
+    use flow_typing_type::type_util::reason_of_t;
+
+    let TypeInner::DefT(_, def_t) = l.deref() else {
+        return None;
+    };
+    let DefTInner::SingletonStrT { value, from_annot } = def_t.deref() else {
+        return None;
+    };
+    let float = intlike_str_safe_int(value)?;
+    Some(Type::new(TypeInner::DefT(
+        reason_of_t(l).dupe(),
+        DefT::new(DefTInner::SingletonNumT {
+            from_annot: *from_annot,
+            value: NumberLiteral(float, value.dupe()),
+        }),
+    )))
+}
+
 pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
@@ -5790,24 +5844,21 @@ pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> 
     // f({1: true});
     // ```
     // So, if we are in implicit instantiation, we always treat this as a string.
-    if is_str_intlike(str) && !cx.in_implicit_instantiation() {
-        match str.parse::<f64>() {
-            Ok(value) if flow_common::js_number::is_float_safe_integer(value) => {
-                let key_reason = reason
-                    .dupe()
-                    .update_desc(|_| VirtualReasonDesc::RProperty(Some(name.dupe())));
-                Type::new(TypeInner::DefT(
-                    key_reason,
-                    DefT::new(DefTInner::NumericStrKeyT(
-                        flow_typing_type::type_::NumberLiteral(
-                            value,
-                            flow_data_structure_wrapper::smol_str::FlowSmolStr::new(str),
-                        ),
-                    )),
-                ))
-            }
-            _ => str_key(),
-        }
+    if !cx.in_implicit_instantiation()
+        && let Some(value) = intlike_str_safe_int(str)
+    {
+        let key_reason = reason
+            .dupe()
+            .update_desc(|_| VirtualReasonDesc::RProperty(Some(name.dupe())));
+        Type::new(TypeInner::DefT(
+            key_reason,
+            DefT::new(DefTInner::NumericStrKeyT(
+                flow_typing_type::type_::NumberLiteral(
+                    value,
+                    flow_data_structure_wrapper::smol_str::FlowSmolStr::new(str),
+                ),
+            )),
+        ))
     } else {
         str_key()
     }

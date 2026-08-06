@@ -1,0 +1,215 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+
+Cannot cast `arr['length']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:17:1
+     17| arr['length'] as string; // ERROR: number is not string
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1190:13
+   1190|     length: number;
+                     ^^^^^^ [1]
+   test.js:17:18
+     17| arr['length'] as string; // ERROR: number is not string
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
+
+Cannot get `arr[k]` because `string` [1] is not an array index. [incompatible-use]
+
+   test.js:19:1
+   19| arr[k]; // ERROR: general string is not an array index
+       ^^^^^^
+
+References:
+   test.js:18:18
+   18| declare const k: string;
+                        ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:23:17
+
+Cannot assign `'x'` to `arr['length']` because `"x"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:23:17
+     23| arr['length'] = 'x'; // ERROR: string into number
+                         ^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1190:13
+   1190|     length: number;
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:5
+
+Cannot assign `3` to `arr['map']` because property `map` is not writable. [cannot-write]
+
+   24| arr['map'] = 3; // ERROR: method is not writable
+           ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:1
+
+Cannot cast `arr['0']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:28:1
+   28| arr['0'] as string; // ERROR: number is not string
+       ^^^^^^^^
+
+References:
+   test.js:7:26
+    7| declare const arr: Array<number>;
+                                ^^^^^^ [1]
+   test.js:28:13
+   28| arr['0'] as string; // ERROR: number is not string
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:1
+
+Cannot assign `5` to `ro['0']` because read-only arrays cannot be written to. [cannot-write]
+
+   35| ro['0'] = 5; // ERROR: cannot write to a read-only array
+       ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:1
+
+Cannot cast `tup['0']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:42:1
+   42| tup['0'] as string; // ERROR: number is not string
+       ^^^^^^^^
+
+References:
+   test.js:39:21
+   39| declare const tup: [number, string];
+                           ^^^^^^ [1]
+   test.js:42:13
+   42| tup['0'] as string; // ERROR: number is not string
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:1
+
+Cannot get `tup['2']` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+
+   test.js:43:1
+   43| tup['2']; // ERROR: out of bounds
+       ^^^^^^^^
+
+References:
+   test.js:39:20
+   39| declare const tup: [number, string];
+                          ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:45:12
+
+Cannot assign `'x'` to `tup['0']` because `"x"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:45:12
+   45| tup['0'] = 'x'; // ERROR: string into number element
+                  ^^^ [1]
+
+References:
+   test.js:39:21
+   39| declare const tup: [number, string];
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+
+Cannot cast `tup['length']` to number literal `3` because length `2` (number) of tuple [1] is incompatible with number
+literal `3` [2]. [incompatible-type]
+
+   test.js:47:1
+   47| tup['length'] as 3; // ERROR: the length is 2, not 3
+       ^^^^^^^^^^^^^
+
+References:
+   test.js:39:20
+   39| declare const tup: [number, string];
+                          ^^^^^^^^^^^^^^^^ [1]
+   test.js:47:18
+   47| tup['length'] as 3; // ERROR: the length is 2, not 3
+                        ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:53:1
+
+Cannot get `arr['9007199254740993']` because `"9007199254740993"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   test.js:53:1
+     53| arr['9007199254740993']; // ERROR: outside the safe-integer range, so a named key
+         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1018:12
+   1018|     +[key: number]: T;
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:54:1
+
+Cannot get `arr['1.5']` because `"1.5"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:54:1
+     54| arr['1.5']; // ERROR: not an integer, so a named key
+         ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1018:12
+   1018|     +[key: number]: T;
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:55:1
+
+Cannot get `arr['01']` because `"01"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:55:1
+     55| arr['01']; // ERROR: not a canonical integer, so a named key
+         ^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1018:12
+   1018|     +[key: number]: T;
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:56:1
+
+Cannot get `arr['nope']` because `"nope"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:56:1
+     56| arr['nope']; // ERROR: no such named member
+         ^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1018:12
+   1018|     +[key: number]: T;
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:57:1
+
+Cannot get `tup['9007199254740993']` because `"9007199254740993"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   test.js:57:1
+     57| tup['9007199254740993']; // ERROR: outside the safe-integer range, so a named key
+         ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:1018:12
+   1018|     +[key: number]: T;
+                    ^^^^^^ [2]
+
+
+
+Found 15 errors

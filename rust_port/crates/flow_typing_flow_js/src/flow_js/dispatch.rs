@@ -6728,7 +6728,8 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_))) =>
         {
-            elem_action_on_obj(cx, trace, use_op, l, obj, reason, action)?;
+            let propref = flow_js_utils::propref_for_elem_t(cx, l);
+            elem_action_on_obj(cx, trace, use_op, propref, obj, reason, action)?;
         }
         (
             _,
@@ -6822,12 +6823,19 @@ fn __flow_impl<'cx>(
                 obj,
                 action,
             }),
-        ) if matches!(
-            def_t_l.deref(),
-            DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
-        ) && let TypeInner::DefT(reason_tup, obj_def_t) = obj.deref()
+        ) if flow_js_utils::is_array_index_key(def_t_l.deref())
+            && let TypeInner::DefT(reason_tup, obj_def_t) = obj.deref()
             && let DefTInner::ArrT(arrtype) = obj_def_t.deref() =>
         {
+            // An int-like string key indexes the array just like the equivalent
+            // numeric key: `arr['0']` reads the element type, and `tup['2']`
+            // resolves the third element or reports out-of-bounds. So convert it
+            // to a numeric singleton before the index check. The guard accepts a
+            // string only when this conversion succeeds, so `None` here means the
+            // key is already a number.
+            let int_key = flow_js_utils::intlike_str_key_as_num(l);
+            let l = int_key.as_ref().unwrap_or(l);
+
             let (write_action, read_action, never_union_void_on_computed_prop_access) = match action
             {
                 box ElemAction::ReadElem(box ReadElemData { from_annot, .. }) => {
@@ -6851,6 +6859,24 @@ fn __flow_impl<'cx>(
                 _ => value,
             };
             perform_elem_action(cx, trace, use_op_out, is_tuple, reason, obj, &value, action)?;
+        }
+        // A string-literal key that is not an array index reads a named property
+        // off the array's object shape, e.g. `arr['map']` or
+        // `arr[Symbol.iterator]`, mirroring object and instance access. A general
+        // `string`/`number` key resolves to a `Computed` propref, fails this
+        // guard, and falls through to the "not an array index" error.
+        (
+            _,
+            UseTInner::ElemT(box ElemTData {
+                use_op,
+                reason,
+                obj,
+                action,
+            }),
+        ) if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)))
+            && let propref @ PropRef::Named { .. } = flow_js_utils::propref_for_elem_t(cx, l) =>
+        {
+            elem_action_on_obj(cx, trace, use_op, propref, obj, reason, action)?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ArrT(_))

@@ -292,12 +292,11 @@ pub(super) fn elem_action_on_obj<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
-    l: &Type,
+    propref: PropRef,
     obj: &Type,
     reason_op: &Reason,
     action: &ElemAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
-    let propref = flow_js_utils::propref_for_elem_t(cx, l);
     match action {
         ElemAction::ReadElem(box ReadElemData {
             id,
