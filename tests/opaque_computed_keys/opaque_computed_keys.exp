@@ -1,23 +1,37 @@
 Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
 
-Cannot cast `obj` to object type because property `special` is missing in object type [1] but exists in object
-literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer string literal
-`other` [3]. [incompatible-type]
+Cannot cast `obj` to object type because property `other` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
 
    defs.js:13:1
-   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
+   13| obj as {['other']: string}; // error: 'other' missing, 'special' extra
        ^^^
 
 References:
-   defs.js:13:8
-   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
-              ^^^^^^^^^^^^^^^^^^^ [1]
    defs.js:5:13
     5| const obj = {[op]: 'abc'};
-                   ^^^^^^^^^^^^^ [2]
-   defs.js:13:10
-   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
-                ^^^^^^^ [3]
+                   ^^^^^^^^^^^^^ [1]
+   defs.js:13:8
+   13| obj as {['other']: string}; // error: 'other' missing, 'special' extra
+              ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
+
+Cannot cast `obj` to object type because property `special` is extra in object literal [1] but missing in object
+type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   defs.js:13:1
+   13| obj as {['other']: string}; // error: 'other' missing, 'special' extra
+       ^^^
+
+References:
+   defs.js:5:13
+    5| const obj = {[op]: 'abc'};
+                   ^^^^^^^^^^^^^ [1]
+   defs.js:13:8
+   13| obj as {['other']: string}; // error: 'other' missing, 'special' extra
+              ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ main.js:9:1
@@ -51,32 +65,39 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:10:1
 
-Cannot cast `obj` to object type because in the indexer property's key: `Op` [1] is not exactly the same as
-`"special"` [2]. [incompatible-type]
-
-The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either annotate object literal [3] with `{["special"]: string}` [4]
-- Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+Cannot cast `obj` to object type because indexed object literal [1] is incompatible with exact object type [2].
+[incompatible-indexer]
 
    main.js:10:1
    10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
        ^^^
 
 References:
-   main.js:4:15
-    4| const obj = {[op]: 'abc'};
-                     ^^ [1]
-   main.js:10:10
-   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
-                ^^^^^^^^^ [2]
    main.js:4:13
     4| const obj = {[op]: 'abc'};
-                   ^^^^^^^^^^^^^ [3]
+                   ^^^^^^^^^^^^^ [1]
    main.js:10:8
    10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
-              ^^^^^^^^^^^^^^^^^^^^^ [4]
+              ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:10:1
+
+Cannot cast `obj` to object type because in the indexer property's key: `"special"` [1] is incompatible with `Op` [2].
+[incompatible-type]
+
+   main.js:10:1
+   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
+       ^^^
+
+References:
+   main.js:10:8
+   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   defs.js:3:18
+    3| export const op: Op = 'special';
+                        ^^ [2]
 
 
 
-Found 3 errors
+Found 5 errors

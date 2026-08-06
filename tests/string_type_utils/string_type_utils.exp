@@ -255,16 +255,16 @@ Cannot cast `x` to key set because template literal type [1] is incompatible wit
 [incompatible-type]
 
    prefix.js:36:3
-   36|   x as keyof {['xxx']: unknown}; // ERROR
+   36|   x as keyof {[key: 'xxx']: unknown}; // ERROR
          ^
 
 References:
    prefix.js:34:20
    34|   declare const x: DataProp;
                           ^^^^^^^^ [1]
-   prefix.js:36:16
-   36|   x as keyof {['xxx']: unknown}; // ERROR
-                      ^^^^^ [2]
+   prefix.js:36:21
+   36|   x as keyof {[key: 'xxx']: unknown}; // ERROR
+                           ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:57:5

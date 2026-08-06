@@ -46,11 +46,11 @@ o3 as interface {[string] : boolean}; // error
 o3 as interface {[number] : number}; // error
 ({x : 3} as interface {[number] : number}); // error
 
-declare const o4 : {["asdf"] : number};
+declare const o4 : {[key: "asdf"] : number};
 
 o4 as interface {[string] : number}; // error
 
-declare const o5 : {readonly ["asdf"] : number};
+declare const o5 : {readonly [key: "asdf"] : number};
 
 o5 as interface {readonly [string] : number}; // OK
 

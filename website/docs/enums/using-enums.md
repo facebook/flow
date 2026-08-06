@@ -523,7 +523,7 @@ Instead of:
 enum Status {Active, Paused, Off}
 declare const status: Status;
 
-const STATUS_ICON: {[Status]: string} = {
+const STATUS_ICON: {[key: Status]: string} = {
   [Status.Active]: 'green-checkmark',
   [Status.Paused]: 'grey-pause',
   [Status.Off]: 'red-x',
@@ -778,7 +778,7 @@ these trade-offs might not be right for you. In these cases, you can continue to
 
 
 #### Enum members as distinct object keys {#toc-enum-members-as-distinct-object-keys}
-You can use enum members as computed property keys in object literals. The resulting object is typed with an indexer type `{[E]: T}`:
+You can use enum members as computed property keys in object literals. The resulting object is typed with an indexer type `{[key: E]: T}`:
 
 ```js flow-check
 enum Status {
@@ -791,7 +791,7 @@ const o = {
   [Status.Active]: 0,
 };
 
-o as {[Status]: number}; // OK
+o as {[key: Status]: number}; // OK
 o[Status.Active] as number; // OK
 o[Status.Paused] = 1; // OK
 ```
@@ -813,7 +813,7 @@ const y: number = o[LegacyStatus.Off]; // OK
 const z: boolean = o[LegacyStatus.Active]; // Error - as expected
 ```
 
-This works because `LegacyStatus.Active` has the literal type `'Active'` and `LegacyStatus.Off` has the literal type `'Off'`. With Flow Enums, all members share the same enum type, so Flow can't distinguish between keys — the object can only have a single value type for all enum keys (via the indexer `{[E]: T}`).
+This works because `LegacyStatus.Active` has the literal type `'Active'` and `LegacyStatus.Off` has the literal type `'Off'`. With Flow Enums, all members share the same enum type, so Flow can't distinguish between keys — the object can only have a single value type for all enum keys (via the indexer `{[key: E]: T}`).
 
 If you need to map each enum member to a different value type, use a [function with an exhaustively-checked switch instead](#toc-mapping-enums-to-other-values).
 

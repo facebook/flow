@@ -1574,7 +1574,11 @@ fn resolve_computed_key<'cx>(
     file: &File<'cx>,
     key: &Pack::Packed<ALoc>,
 ) -> Option<Name> {
-    let key_t = merge_impl(env, cx, file, key, false, false);
+    // Merge the key as a `const` declaration would be read, so `const k = 'a'`
+    // gives the literal `'a'` and not the general `string`. The checking
+    // pipeline reads a computed key the same way, and a key that widened to
+    // `string` would name no property at all.
+    let key_t = merge_impl(env, cx, file, key, false, true);
     match cx.find_resolved(&key_t) {
         Some(resolved_t) => match flow_js_utils::propref_for_elem_t(cx, &resolved_t) {
             type_::PropRef::Named { name, .. } => Some(name),
@@ -1582,6 +1586,57 @@ fn resolve_computed_key<'cx>(
         },
         None => None,
     }
+}
+
+/// A source location that orders an object-type member against the others.
+/// Members do not overlap in source, so any interior location orders them,
+/// except a getter and setter pair, which is two members sharing a name. Its
+/// last location is used, so a computed key only wins when it follows both
+/// halves. A computed key written between them is still read as following
+/// both, which is the one ordering this cannot reproduce.
+fn obj_annot_prop_source_loc<T>(prop: &ObjAnnotProp<ALoc, T>) -> ALoc {
+    match prop {
+        ObjAnnotProp::ObjAnnotField(box (loc, _, _)) => loc.dupe(),
+        ObjAnnotProp::ObjAnnotAccess(box accessor) => match accessor {
+            Accessor::Get(box (loc, _)) | Accessor::Set(box (loc, _)) => loc.dupe(),
+            Accessor::GetSet(box (get_loc, _, set_loc, _)) => {
+                if get_loc.quick_compare(set_loc).is_gt() {
+                    get_loc.dupe()
+                } else {
+                    set_loc.dupe()
+                }
+            }
+        },
+        ObjAnnotProp::ObjAnnotMethod(box data) => data.id_loc.dupe(),
+    }
+}
+
+/// Fold a computed-key member into the property map. An ordinary property of
+/// the same name wins when it comes later in source, matching the in-file
+/// checker, which folds every member in one source-order pass. `prop_locs`
+/// holds the source location of the current occupant of each name.
+fn insert_computed_prop(
+    props_smap: &mut BTreeMap<Name, type_::Property>,
+    prop_locs: &mut BTreeMap<Name, ALoc>,
+    name: Name,
+    prop: type_::Property,
+    loc: ALoc,
+) {
+    if let Some(existing) = prop_locs.get(&name)
+        && existing.quick_compare(&loc).is_gt()
+    {
+        return;
+    }
+    match props_smap.entry(name.dupe()) {
+        std::collections::btree_map::Entry::Vacant(e) => {
+            e.insert(prop);
+        }
+        std::collections::btree_map::Entry::Occupied(mut e) => {
+            let merged = merge_overloaded_property(e.get(), prop);
+            e.insert(merged);
+        }
+    }
+    prop_locs.insert(name, loc);
 }
 
 fn merge_overloaded_property(
@@ -2426,25 +2481,19 @@ fn merge_annot<'cx>(
                     type_::ObjKind::Indexed(merge_dict(env, cx, file, dict, false))
                 }
             };
-            let mut props_smap: BTreeMap<Name, type_::Property> = props
-                .iter()
-                .map(|(key, prop)| {
-                    let p = merge_obj_annot_prop(env, cx, file, prop);
-                    (Name::new(key.dupe()), p)
-                })
-                .collect();
+            let mut props_smap: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
+            for (key, prop) in props {
+                let name = Name::new(key.dupe());
+                let p = merge_obj_annot_prop(env, cx, file, prop);
+                prop_locs.insert(name.dupe(), obj_annot_prop_source_loc(prop));
+                props_smap.insert(name, p);
+            }
             for (key, prop) in computed_props {
                 if let Some(name) = resolve_computed_key(env, cx, file, key) {
+                    let loc = obj_annot_prop_source_loc(prop);
                     let t = merge_obj_annot_prop(env, cx, file, prop);
-                    match props_smap.entry(name) {
-                        std::collections::btree_map::Entry::Vacant(e) => {
-                            e.insert(t);
-                        }
-                        std::collections::btree_map::Entry::Occupied(mut e) => {
-                            let merged = merge_overloaded_property(e.get(), t);
-                            e.insert(merged);
-                        }
-                    }
+                    insert_computed_prop(&mut props_smap, &mut prop_locs, name, t, loc);
                 }
             }
             let props_map = type_::properties::PropertiesMap::from_btree_map(props_smap);
@@ -2539,22 +2588,18 @@ fn merge_annot<'cx>(
             )]| {
                 let dict = dict.as_ref().map(|d| merge_dict(env, cx, file, d, false));
                 let mut props_smap: BTreeMap<Name, type_::Property> = BTreeMap::new();
+                let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
                 for (key, prop) in props {
+                    let name = Name::new(key.dupe());
                     let p = merge_obj_annot_prop(env, cx, file, prop);
-                    props_smap.insert(Name::new(key.dupe()), p);
+                    prop_locs.insert(name.dupe(), obj_annot_prop_source_loc(prop));
+                    props_smap.insert(name, p);
                 }
                 for (key, prop) in computed_props {
                     if let Some(name) = resolve_computed_key(env, cx, file, key) {
+                        let loc = obj_annot_prop_source_loc(prop);
                         let t = merge_obj_annot_prop(env, cx, file, prop);
-                        match props_smap.entry(name) {
-                            std::collections::btree_map::Entry::Vacant(e) => {
-                                e.insert(t);
-                            }
-                            std::collections::btree_map::Entry::Occupied(mut e) => {
-                                let merged = merge_overloaded_property(e.get(), t);
-                                e.insert(merged);
-                            }
-                        }
+                        insert_computed_prop(&mut props_smap, &mut prop_locs, name, t, loc);
                     }
                 }
                 let prop_map = type_::properties::PropertiesMap::from_btree_map(props_smap);

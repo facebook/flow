@@ -399,9 +399,9 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
            ^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   object_keys.js:35:20
-   35|   function(dict: {['hi']: unknown}) {
-                          ^^^^ [1]
+   object_keys.js:35:25
+   35|   function(dict: {[key: 'hi']: unknown}) {
+                               ^^^^ [1]
    object_keys.js:37:32
    37|     Object.keys(dict) as Array<'bye'>; // error
                                       ^^^^^ [2]
@@ -433,7 +433,53 @@ References:
                                 ^^^^^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:55:1
+Error ---------------------------------------------------------------------------------------------- object_keys.js:49:5
+
+Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1] is not exactly the same as
+`"bye"` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<"hi">` [1] and `Array<"bye">` [3] exactly the same
+- Or make array type [3] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   object_keys.js:49:5
+   49|     Object.keys(obj) as Array<'bye'>; // ERROR
+           ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:49:31
+   49|     Object.keys(obj) as Array<'bye'>; // ERROR
+                                     ^^^^^ [2]
+   object_keys.js:49:25
+   49|     Object.keys(obj) as Array<'bye'>; // ERROR
+                               ^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:55:5
+
+Cannot cast `Object.keys(...)` to array type because in array element: `"123"` [1] is not exactly the same as
+`"456"` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<"123">` [1] and `Array<"456">` [3] exactly the same
+- Or make array type [3] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   object_keys.js:55:5
+   55|     Object.keys(obj) as Array<'456'>; // ERROR
+           ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_keys.js:55:31
+   55|     Object.keys(obj) as Array<'456'>; // ERROR
+                                     ^^^^^ [2]
+   object_keys.js:55:25
+   55|     Object.keys(obj) as Array<'456'>; // ERROR
+                               ^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- object_keys.js:67:1
 
 Cannot cast `Object.keys(...)` to array type because in array element: `"x" | "y"` [1] is not exactly the same as
 `"$value" | "$key"` [2]. [incompatible-type]
@@ -443,125 +489,125 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   object_keys.js:55:1
-   55| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
+   object_keys.js:67:1
+   67| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   object_keys.js:55:33
-   55| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
+   object_keys.js:67:33
+   67| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
                                        ^^^^^^^^^^^^^^^^^ [2]
-   object_keys.js:55:27
-   55| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
+   object_keys.js:67:27
+   67| Object.keys(ifaceDict) as Array<'$value' | '$key'>; // ERROR
                                  ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:58:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:70:8
 
 Cannot call method `keys` because `void` [1] is not an object. [not-an-object]
 
-   object_keys.js:58:8
-   58| Object.keys(undefined); // ERROR
+   object_keys.js:70:8
+   70| Object.keys(undefined); // ERROR
               ^^^^
 
 References:
-   object_keys.js:58:13
-   58| Object.keys(undefined); // ERROR
+   object_keys.js:70:13
+   70| Object.keys(undefined); // ERROR
                    ^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:59:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:71:8
 
 Cannot call method `keys` because `null` [1] is not an object. [not-an-object]
 
-   object_keys.js:59:8
-   59| Object.keys(null); // ERROR
+   object_keys.js:71:8
+   71| Object.keys(null); // ERROR
               ^^^^
 
 References:
-   object_keys.js:59:13
-   59| Object.keys(null); // ERROR
+   object_keys.js:71:13
+   71| Object.keys(null); // ERROR
                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:60:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:72:8
 
 Cannot call method `keys` because `number` [1] is not an object. [not-an-object]
 
-   object_keys.js:60:8
-   60| Object.keys(1); // ERROR
+   object_keys.js:72:8
+   72| Object.keys(1); // ERROR
               ^^^^
 
 References:
-   object_keys.js:60:13
-   60| Object.keys(1); // ERROR
+   object_keys.js:72:13
+   72| Object.keys(1); // ERROR
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:61:8
+Error ---------------------------------------------------------------------------------------------- object_keys.js:73:8
 
 Cannot call method `keys` because `boolean` [1] is not an object. [not-an-object]
 
-   object_keys.js:61:8
-   61| Object.keys(true); // ERROR
+   object_keys.js:73:8
+   73| Object.keys(true); // ERROR
               ^^^^
 
 References:
-   object_keys.js:61:13
-   61| Object.keys(true); // ERROR
+   object_keys.js:73:13
+   73| Object.keys(true); // ERROR
                    ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:67:3
+Error ---------------------------------------------------------------------------------------------- object_keys.js:79:3
 
 Cannot cast `Object.keys(...)[0]` to `OpaqueKey` because `string` [1] is incompatible with `OpaqueKey` [2].
 [incompatible-type]
 
-   object_keys.js:67:3
-   67|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
+   object_keys.js:79:3
+   79|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:67:3
-   67|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
+   object_keys.js:79:3
+   79|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_keys.js:67:33
-   67|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
+   object_keys.js:79:33
+   79|   Object.keys(opaqueDict)[0] as OpaqueKey; // ERROR
                                        ^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:74:3
+Error ---------------------------------------------------------------------------------------------- object_keys.js:86:3
 
 Cannot cast `Object.keys(...)[0]` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   object_keys.js:74:3
-   74|   Object.keys(opaqueDict)[0] as empty; // ERROR
+   object_keys.js:86:3
+   86|   Object.keys(opaqueDict)[0] as empty; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:72:31
-   72|   declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
+   object_keys.js:84:31
+   84|   declare const opaqueDict: {[OpaqueKeyWithSupertype1]: number};
                                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_keys.js:74:33
-   74|   Object.keys(opaqueDict)[0] as empty; // ERROR
+   object_keys.js:86:33
+   86|   Object.keys(opaqueDict)[0] as empty; // ERROR
                                        ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- object_keys.js:87:3
+Error ---------------------------------------------------------------------------------------------- object_keys.js:99:3
 
 Cannot cast `Object.keys(...)[0]` to `OpaqueKeyWithSupertype3` because `string` [1] is incompatible with
 `OpaqueKeyWithSupertype3` [2]. [incompatible-type]
 
-   object_keys.js:87:3
-   87|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
+   object_keys.js:99:3
+   99|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   object_keys.js:87:3
-   87|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
+   object_keys.js:99:3
+   99|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_keys.js:87:33
-   87|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
+   object_keys.js:99:33
+   99|   Object.keys(opaqueDict)[0] as OpaqueKeyWithSupertype3; // ERROR
                                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1548,4 +1594,4 @@ References:
 
 
 
-Found 89 errors
+Found 91 errors

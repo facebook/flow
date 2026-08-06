@@ -10,4 +10,4 @@ obj as {[Op]: string};
 obj as {[string]: string};
 obj as {['special']: string};
 
-obj as {['other']: string}; // error 'other' is incompatible with 'special'
+obj as {['other']: string}; // error: 'other' missing, 'special' extra

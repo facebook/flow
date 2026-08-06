@@ -781,6 +781,12 @@ pub enum InvalidObjKey {
     NumberNonInt,
     NumberTooLarge,
     NumberTooSmall,
+    /// A computed key whose type is not a single literal, so it names no one
+    /// property.
+    ComputedNotLiteral,
+    /// A computed key whose name also names a type, which is almost always an
+    /// index signature written without a label.
+    ComputedTypeName,
 }
 
 impl InvalidObjKey {
@@ -805,6 +811,8 @@ impl InvalidObjKey {
             Self::NumberNonInt => "number non-int",
             Self::NumberTooLarge => "number too large",
             Self::NumberTooSmall => "number too small",
+            Self::ComputedNotLiteral => "computed not literal",
+            Self::ComputedTypeName => "computed type name",
         }
     }
 }

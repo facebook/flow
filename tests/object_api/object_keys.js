@@ -32,15 +32,27 @@ Object.keys(new Bar()) as Array<'error'>; // error: bar_prop ~> error
 
 var tests = [
   // dictionary of string literals -> array of string literals
-  function(dict: {['hi']: unknown}) {
+  function(dict: {[key: 'hi']: unknown}) {
     Object.keys(dict) as Array<'hi'>;
     Object.keys(dict) as Array<'bye'>; // error
   },
 
   // dictionary of number literals -> array of generic strings (for now)
-  function(dict: {[123]: unknown}) {
+  function(dict: {[key: 123]: unknown}) {
     Object.keys(dict) as Array<string>;
     Object.keys(dict) as Array<'123'>; // error: not supported yet
+  },
+
+  // a literal computed key is a named property, so its own name comes back
+  function(obj: {['hi']: unknown}) {
+    Object.keys(obj) as Array<'hi'>; // OK
+    Object.keys(obj) as Array<'bye'>; // ERROR
+  },
+
+  // a number literal computed key comes back as that key spelled as a string
+  function(obj: {[123]: unknown}) {
+    Object.keys(obj) as Array<'123'>; // OK
+    Object.keys(obj) as Array<'456'>; // ERROR
   },
 ];
 

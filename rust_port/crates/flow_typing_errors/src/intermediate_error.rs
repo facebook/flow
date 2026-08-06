@@ -5379,7 +5379,9 @@ where
             } => {
                 use super::intermediate_error_types::InvalidObjKey;
                 let suffix: Vec<friendly::MessageFeature<Loc>> = match kind {
-                    InvalidObjKey::Other => vec![],
+                    InvalidObjKey::Other
+                    | InvalidObjKey::ComputedNotLiteral
+                    | InvalidObjKey::ComputedTypeName => vec![],
                     InvalidObjKey::NumberNonInt => {
                         vec![text(" Only integer-like number literals are allowed.")]
                     }
@@ -9066,6 +9068,19 @@ where
                         code("Number.MIN_SAFE_INTEGER"),
                         text("."),
                     ],
+                    InvalidObjKey::ComputedNotLiteral => vec![
+                        text(" A computed key must have a single string or number literal type."),
+                        text(" To declare an index signature instead, label the key, as in "),
+                        code("[key: K]"),
+                        text("."),
+                    ],
+                    InvalidObjKey::ComputedTypeName => vec![
+                        text(" This name refers to a type, but an unlabeled key is read as a"),
+                        text(" value. To declare an index signature over that type, label the"),
+                        text(" key, as in "),
+                        code("[key: K]"),
+                        text("."),
+                    ],
                 };
                 let obj_kind_str = match obj_kind {
                     ObjKind::Type => "object type",
@@ -10074,7 +10089,9 @@ where
             } => {
                 use crate::intermediate_error_types::InvalidObjKey;
                 let suffix = match kind {
-                    InvalidObjKey::Other => vec![
+                    InvalidObjKey::Other
+                    | InvalidObjKey::ComputedNotLiteral
+                    | InvalidObjKey::ComputedTypeName => vec![
                         text(" Computed properties may only be numeric or string literal values,"),
                         text(" but this one is a "),
                         ref_(reason_prop),

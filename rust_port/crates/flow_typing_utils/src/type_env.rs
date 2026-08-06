@@ -506,6 +506,42 @@ fn find_var_opt<'a>(var_info: &'a EnvInfo<ALoc>, loc: &ALoc) -> Result<&'a EnvRe
     }
 }
 
+/// Whether the name read at `use_loc` can head a computed key, that is,
+/// whether it binds a value that is not a namespace.
+///
+/// A class and an enum bind a value, so they head one, even though they name a
+/// type as well: a bracketed key is read as an expression, and `C` there is the
+/// class object. A namespace does not, because `A.B` may be reaching a type
+/// through it, and a name that only names a type does not either.
+///
+/// The answer comes from the environment built before any typing, so it forces
+/// nothing and is available while an annotation is still being converted.
+pub fn heads_computed_key<'cx>(cx: &Context<'cx>, use_loc: &ALoc) -> bool {
+    use flow_analysis::bindings::Kind;
+    use flow_analysis::bindings::Namespace;
+
+    let env = cx.environment();
+    // One name can be bound in both namespaces, as `const K` next to `type K`.
+    // The scopes hold one binding per name, so they cannot say which was meant,
+    // but this read was already resolved against both, and the type wins in
+    // type position. The signature pipeline prefers the type the same way.
+    if let Ok(EnvRead { val_kind, .. }) = find_var_opt(&env.var_info, use_loc)
+        && matches!(val_kind, ValKind::Type { .. })
+    {
+        return false;
+    }
+    match env.var_info.scopes.def_of_use_opt(use_loc) {
+        None => false,
+        Some(def) => {
+            def.kind.namespaces().contains(&Namespace::Value)
+                && !matches!(
+                    def.kind,
+                    Kind::DeclaredNamespace | Kind::Import { namespace: true }
+                )
+        }
+    }
+}
+
 pub struct LocalExportBinding {
     pub def_loc: Option<ALoc>,
     pub val_kind: ValKind,

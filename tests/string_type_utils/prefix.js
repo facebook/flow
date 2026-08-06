@@ -33,7 +33,7 @@ type Dict = {readonly [DataProp]: unknown};
   'data-baz' as keyof Dict; // OK
   declare const x: DataProp;
   x as keyof Dict; // OK
-  x as keyof {['xxx']: unknown}; // ERROR
+  x as keyof {[key: 'xxx']: unknown}; // ERROR
 }
 
 // Can use string properties and methods

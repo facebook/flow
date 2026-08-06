@@ -1,0 +1,1390 @@
+Error ----------------------------------------------------------------------------------------------------- exp.js:19:26
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   19| export type FromWide = {[wide]: number}; // ERROR: `wide` names no one property
+                                ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:67:27
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   67| export type FromClass = {[Cls]: number}; // ERROR: a class object is not a key
+                                 ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:76:40
+
+Cannot get `Merged.Key` because property `Key` is missing in statics of `Merged` [1]. [prop-missing]
+
+   exp.js:76:40
+   76| export type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
+                                              ^^^
+
+References:
+   exp.js:72:15
+   72| declare class Merged {}
+                     ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:76:33
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   76| export type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
+                                       ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:42:1
+
+Cannot cast `one.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:42:1
+   42| one.a as string; // ERROR: number is not string
+       ^^^^^
+
+References:
+   exp.js:3:27
+    3| export type One = {['a']: number};
+                                 ^^^^^^ [1]
+   imp.js:42:10
+   42| one.a as string; // ERROR: number is not string
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:43:5
+
+Cannot get `one.b` because property `b` is missing in `One` [1]. [prop-missing]
+
+   imp.js:43:5
+   43| one.b; // ERROR: property `b` is missing (exact, no indexer default)
+           ^
+
+References:
+   imp.js:40:20
+   40| declare const one: One;
+                          ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:44:23
+
+Cannot assign object literal to `emptyOne` because property `a` is missing in object literal [1] but exists in
+`One` [2]. [incompatible-type]
+
+   imp.js:44:23
+   44| const emptyOne: One = {}; // ERROR: a named property is required, unlike an indexer
+                             ^^ [1]
+
+References:
+   imp.js:44:17
+   44| const emptyOne: One = {}; // ERROR: a named property is required, unlike an indexer
+                       ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:52:5
+
+Cannot get `num[99]` because property `99` is missing in `Num` [1]. [prop-missing]
+
+   imp.js:52:5
+   52| num[99]; // ERROR: property `99` is missing (named key, not a number indexer)
+           ^^
+
+References:
+   imp.js:50:20
+   50| declare const num: Num;
+                          ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:59:3
+
+Cannot get `u.c` because property `c` is missing in `Union` [1]. [prop-missing]
+
+   imp.js:59:3
+   59| u.c; // ERROR: `c` is not in the 'a' | 'b' indexer key set
+         ^
+
+References:
+   imp.js:57:18
+   57| declare const u: Union;
+                        ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:64:1
+
+Cannot cast `mixed.bar` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:64:1
+   64| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
+       ^^^^^^^^^
+
+References:
+   exp.js:8:44
+    8| export type Mixed = {foo: string, ['bar']: boolean, [string]: number};
+                                                  ^^^^^^^ [1]
+   imp.js:64:14
+   64| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:69:1
+
+Cannot cast `opt.a` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:69:1
+   69| opt.a as number; // ERROR: property is optional, so `void` is not a number
+       ^^^^^
+
+References:
+   exp.js:9:28
+    9| export type Opt = {['a']?: number};
+                                  ^^^^^^ [1]
+   imp.js:69:10
+   69| opt.a as number; // ERROR: property is optional, so `void` is not a number
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:73:1
+
+Cannot cast `p.__proto__` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:73:1
+   73| p.__proto__ as string; // ERROR: number is not string
+       ^^^^^^^^^^^
+
+References:
+   exp.js:10:37
+   10| export type Proto = {['__proto__']: number};
+                                           ^^^^^^ [1]
+   imp.js:73:16
+   73| p.__proto__ as string; // ERROR: number is not string
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:77:11
+
+Cannot get `fromConst.bar` because property `bar` is missing in `FromConst` [1]. [prop-missing]
+
+   imp.js:77:11
+   77| fromConst.bar; // ERROR: property `bar` is missing (named, not an indexer)
+                 ^^^
+
+References:
+   imp.js:75:26
+   75| declare const fromConst: FromConst;
+                                ^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:81:15
+
+Cannot get `fromQualified.foo` because property `foo` is missing in `FromQualified` [1]. [prop-missing]
+
+   imp.js:81:15
+   81| fromQualified.foo; // ERROR: the key is the value `'a'`, not the name `foo`
+                     ^^^
+
+References:
+   imp.js:79:30
+   79| declare const fromQualified: FromQualified;
+                                    ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:84:10
+
+Cannot get `fromWide.anything` because property `anything` is missing in `FromWide` [1]. [prop-missing]
+
+   imp.js:84:10
+   84| fromWide.anything; // ERROR: the member was dropped, as it is within the file
+                ^^^^^^^^
+
+References:
+   imp.js:83:25
+   83| declare const fromWide: FromWide;
+                               ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:93:1
+
+Cannot cast `keyofOne.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:93:1
+   93| keyofOne.a as number; // ERROR: string is not number
+       ^^^^^^^^^^
+
+References:
+   exp.js:25:41
+   25| export type KeyofOne = {[keyof OneKey]: string};
+                                               ^^^^^^ [1]
+   imp.js:93:15
+   93| keyofOne.a as number; // ERROR: string is not number
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:98:1
+
+Cannot cast `literalBound.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:98:1
+   98| literalBound.a as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^
+
+References:
+   exp.js:26:49
+   26| export type LiteralBound<T extends 'a'> = {[T]: number};
+                                                       ^^^^^^ [1]
+   imp.js:98:19
+   98| literalBound.a as string; // ERROR: number is not string
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:102:12
+
+Cannot get `valueParam.b` because property `b` is missing in `ValueParam` [1]. [prop-missing]
+
+   imp.js:102:12
+   102| valueParam.b; // ERROR: property `b` is missing (named, not an indexer)
+                   ^
+
+References:
+   imp.js:100:27
+   100| declare const valueParam: ValueParam<number>;
+                                  ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:106:1
+
+Cannot cast `labeledLit.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:106:1
+   106| labeledLit.a as string; // ERROR: number is not string
+        ^^^^^^^^^^^^
+
+References:
+   exp.js:30:41
+    30| export type LabeledLit = {[label: 'a']: number};
+                                                ^^^^^^ [1]
+   imp.js:106:17
+   106| labeledLit.a as string; // ERROR: number is not string
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:110:1
+
+Cannot cast `plainWins.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:110:1
+   110| plainWins.a as number; // ERROR: string is not number
+        ^^^^^^^^^^^
+
+References:
+   exp.js:35:44
+    35| export type PlainWins = {['a']: number, a: string};
+                                                   ^^^^^^ [1]
+   imp.js:110:16
+   110| plainWins.a as number; // ERROR: string is not number
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:114:1
+
+Cannot cast `literalWins.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:114:1
+   114| literalWins.a as string; // ERROR: number is not string
+        ^^^^^^^^^^^^^
+
+References:
+   exp.js:36:46
+    36| export type LiteralWins = {a: string, ['a']: number};
+                                                     ^^^^^^ [1]
+   imp.js:114:18
+   114| literalWins.a as string; // ERROR: number is not string
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:118:1
+
+Cannot cast `valueThenPlain.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:118:1
+   118| valueThenPlain.a as number; // ERROR: string is not number
+        ^^^^^^^^^^^^^^^^
+
+References:
+   exp.js:38:49
+    38| export type ValueThenPlain = {[dup]: number, a: string};
+                                                        ^^^^^^ [1]
+   imp.js:118:21
+   118| valueThenPlain.a as number; // ERROR: string is not number
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:122:1
+
+Cannot cast `plainThenValue.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:122:1
+   122| plainThenValue.a as string; // ERROR: number is not string
+        ^^^^^^^^^^^^^^^^
+
+References:
+   exp.js:39:49
+    39| export type PlainThenValue = {a: string, [dup]: number};
+                                                        ^^^^^^ [1]
+   imp.js:122:21
+   122| plainThenValue.a as string; // ERROR: number is not string
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:126:1
+
+Cannot cast `spreadOver.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:126:1
+   126| spreadOver.a as string; // ERROR: number is not string
+        ^^^^^^^^^^^^
+
+References:
+   exp.js:42:17
+    42| type Base = {a: number};
+                        ^^^^^^ [1]
+   imp.js:126:17
+   126| spreadOver.a as string; // ERROR: number is not string
+                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:130:1
+
+Cannot cast `litOver.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imp.js:130:1
+   130| litOver.a as number; // ERROR: string is not number
+        ^^^^^^^^^
+
+References:
+   exp.js:44:55
+    44| export type LiteralOverridesSpread = {...Base, ['a']: string};
+                                                              ^^^^^^ [1]
+   imp.js:130:14
+   130| litOver.a as number; // ERROR: string is not number
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:134:6
+
+Cannot get `dual.a` because property `a` is missing in `Dual` [1]. [prop-missing]
+
+   imp.js:134:6
+   134| dual.a; // ERROR: 'a' is the value, and the type won
+             ^
+
+References:
+   imp.js:132:21
+   132| declare const dual: Dual;
+                            ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:144:1
+
+Cannot cast `accessorMiddle.a` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   imp.js:144:1
+   144| accessorMiddle.a as boolean; // ERROR: number is not boolean
+        ^^^^^^^^^^^^^^^^
+
+References:
+   exp.js:54:40
+    54| export type AccessorMiddle = {get a(): number, [acc]: boolean, set a(x: number): void};
+                                               ^^^^^^ [1]
+   imp.js:144:21
+   144| accessorMiddle.a as boolean; // ERROR: number is not boolean
+                            ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:148:19
+
+Cannot get `fromImportedConst.KEY` because property `KEY` is missing in `FromImportedConst` [1]. [prop-missing]
+
+   imp.js:148:19
+   148| fromImportedConst.KEY; // ERROR: the key is the value, not the binding's name
+                          ^^^
+
+References:
+   imp.js:146:34
+   146| declare const fromImportedConst: FromImportedConst;
+                                         ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:152:8
+
+Cannot get `negKey[1]` because property `1` is missing in `NegKey` [1]. [prop-missing]
+
+   imp.js:152:8
+   152| negKey[1]; // ERROR: property `1` is missing
+               ^
+
+References:
+   imp.js:150:23
+   150| declare const negKey: NegKey;
+                              ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:157:13
+
+Cannot assign `1` to `readOnlyKey.a` because property `a` is not writable. [cannot-write]
+
+   157| readOnlyKey.a = 1; // ERROR: property `a` is not writable
+                    ^
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:158:13
+
+Cannot assign `'x'` to `readOnlyKey.shared` because property `shared` is not writable. [cannot-write]
+
+   158| readOnlyKey.shared = 'x'; // ERROR: property `shared` is not writable either
+                    ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:161:14
+
+Cannot get `writeOnlyKey.a` because property `a` is not readable. [cannot-read]
+
+   161| writeOnlyKey.a as number; // ERROR: property `a` is not readable
+                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:165:11
+
+Cannot get `fromClass.anything` because property `anything` is missing in `FromClass` [1]. [prop-missing]
+
+   imp.js:165:11
+   165| fromClass.anything; // ERROR: the member was dropped, as it is within the file
+                  ^^^^^^^^
+
+References:
+   imp.js:164:26
+   164| declare const fromClass: FromClass;
+                                 ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:169:17
+
+Cannot get `unlabeledMerged.merged` because property `merged` is missing in `UnlabeledMerged` [1]. [prop-missing]
+
+   imp.js:169:17
+   169| unlabeledMerged.merged; // ERROR: the rejected member was dropped by the signature
+                        ^^^^^^
+
+References:
+   imp.js:168:32
+   168| declare const unlabeledMerged: UnlabeledMerged;
+                                       ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- imp.js:174:15
+
+Cannot get `labeledMerged.other` because property `other` is missing in `LabeledMerged` [1]. [prop-missing]
+
+   imp.js:174:15
+   174| labeledMerged.other; // ERROR: `other` is not in the 'merged' indexer key set
+                      ^^^^^
+
+References:
+   imp.js:172:30
+   172| declare const labeledMerged: LabeledMerged;
+                                     ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:10:1
+
+Cannot cast `oneAlias.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   type_keys.js:10:1
+   10| oneAlias.a as string; // ERROR: number is not string
+       ^^^^^^^^^^
+
+References:
+   type_keys.js:7:28
+    7| type OneAlias = {[AliasA]: number};
+                                  ^^^^^^ [1]
+   type_keys.js:10:15
+   10| oneAlias.a as string; // ERROR: number is not string
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:12:10
+
+Cannot get `oneAlias.b` because property `b` is missing in `OneAlias` [1]. [prop-missing]
+
+   type_keys.js:12:10
+   12| oneAlias.b; // ERROR: `b` is not in the 'a' indexer key set
+                ^
+
+References:
+   type_keys.js:8:25
+    8| declare const oneAlias: OneAlias;
+                               ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:21:12
+
+Cannot get `fromAccess.bar` because property `bar` is missing in `FromAccess` [1]. [prop-missing]
+
+   type_keys.js:21:12
+   21| fromAccess.bar; // ERROR: `bar` is not in the 'foo' indexer key set
+                  ^^^
+
+References:
+   type_keys.js:18:27
+   18| declare const fromAccess: FromAccess;
+                                 ^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:29:1
+
+Cannot cast `keyofOne.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   type_keys.js:29:1
+   29| keyofOne.a as number; // ERROR: string is not number
+       ^^^^^^^^^^
+
+References:
+   type_keys.js:26:34
+   26| type KeyofOne = {[keyof OneKey]: string};
+                                        ^^^^^^ [1]
+   type_keys.js:29:15
+   29| keyofOne.a as number; // ERROR: string is not number
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:37:5
+
+Cannot get `x.anything` because property `anything` is missing in `Unbounded` [1]. [prop-missing]
+
+   type_keys.js:37:5
+   37|   x.anything as string; // ERROR: `anything` is not in the `keyof T` key set
+           ^^^^^^^^
+
+References:
+   type_keys.js:35:20
+   35|   declare const x: Unbounded<{a: number, b: number}>;
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:44:3
+
+Cannot cast `x.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   type_keys.js:44:3
+   44|   x.a as string; // ERROR: number is not string
+         ^^^
+
+References:
+   type_keys.js:40:42
+   40| type LiteralBound<T extends 'a'> = {[T]: number};
+                                                ^^^^^^ [1]
+   type_keys.js:44:10
+   44|   x.a as string; // ERROR: number is not string
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:66:20
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   66| type FromClass = {[C]: number}; // ERROR: a class object is not a key
+                          ^
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:67:19
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   67| type FromEnum = {[En]: number}; // ERROR: an enum object is not a key
+                         ^^
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:70:5
+
+Cannot get `x.anything` because property `anything` is missing in `FromClass` [1]. [prop-missing]
+
+   type_keys.js:70:5
+   70|   x.anything; // ERROR: the member was dropped, so nothing is there
+           ^^^^^^^^
+
+References:
+   type_keys.js:69:20
+   69|   declare const x: FromClass;
+                          ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:77:5
+
+Cannot get `x.anything` because property `anything` is missing in `LabeledClass` [1]. [prop-missing]
+
+   type_keys.js:77:5
+   77|   x.anything; // ERROR: `anything` is not a `C`, so it is not in the key set
+           ^^^^^^^^
+
+References:
+   type_keys.js:76:20
+   76|   declare const x: LabeledClass;
+                          ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:88:33
+
+Cannot get `Merged.Key` because property `Key` is missing in statics of `Merged` [1]. [prop-missing]
+
+   type_keys.js:88:33
+   88| type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
+                                       ^^^
+
+References:
+   type_keys.js:84:15
+   84| declare class Merged {}
+                     ^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:88:26
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   88| type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
+                                ^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:93:21
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   93| type BareMerged = {[Merged]: number}; // ERROR: the merged value is not a key
+                           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ type_keys.js:97:5
+
+Cannot get `x.other` because property `other` is missing in `LabeledMerged` [1]. [prop-missing]
+
+   type_keys.js:97:5
+   97|   x.other; // ERROR: `other` is not in the 'merged' indexer key set
+           ^^^^^
+
+References:
+   type_keys.js:95:20
+   95|   declare const x: LabeledMerged;
+                          ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:100:5
+
+Cannot get `y.anything` because property `anything` is missing in `BareMerged` [1]. [prop-missing]
+
+   type_keys.js:100:5
+   100|   y.anything; // ERROR: the member was dropped, so nothing is there
+            ^^^^^^^^
+
+References:
+   type_keys.js:99:20
+    99|   declare const y: BareMerged;
+                           ^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:109:5
+
+Cannot get `x.b` because property `b` is missing in `ValueParam` [1]. [prop-missing]
+
+   type_keys.js:109:5
+   109|   x.b; // ERROR: property `b` is missing (named, not an indexer)
+            ^
+
+References:
+   type_keys.js:107:20
+   107|   declare const x: ValueParam<number>;
+                           ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:121:5
+
+Cannot get `x.b` because property `b` is missing in `FromNs` [1]. [prop-missing]
+
+   type_keys.js:121:5
+   121|   x.b; // ERROR: `b` is not in the 'a' indexer key set
+            ^
+
+References:
+   type_keys.js:119:20
+   119|   declare const x: FromNs;
+                           ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_keys.js:128:21
+
+Cannot use `NsKeys` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
+definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   128| type FromNsBare = {[NsKeys]: number}; // ERROR: a namespace is not a type
+                            ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- type_keys.js:132:28
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   132| type FromImportedClass = {[ImportedC]: number}; // ERROR: a class object is not a key
+                                   ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- type_keys.js:133:27
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   133| type FromImportedEnum = {[ImportedE]: number}; // ERROR: an enum object is not a key
+                                  ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:136:5
+
+Cannot get `x.anything` because property `anything` is missing in `FromImportedClass` [1]. [prop-missing]
+
+   type_keys.js:136:5
+   136|   x.anything; // ERROR: the member was dropped, so nothing is there
+            ^^^^^^^^
+
+References:
+   type_keys.js:135:20
+   135|   declare const x: FromImportedClass;
+                           ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:138:5
+
+Cannot get `y.anything` because property `anything` is missing in `FromImportedEnum` [1]. [prop-missing]
+
+   type_keys.js:138:5
+   138|   y.anything; // ERROR: the member was dropped, so nothing is there
+            ^^^^^^^^
+
+References:
+   type_keys.js:137:20
+   137|   declare const y: FromImportedEnum;
+                           ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- type_keys.js:143:27
+
+Unsupported key in object type. This name refers to a type, but an unlabeled key is read as a value. To declare an index
+signature over that type, label the key, as in `[key: K]`. [illegal-key]
+
+   143| type FromDeclareClass = {[Declared]: number}; // ERROR: a class object is not a key
+                                  ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- type_keys.js:146:5
+
+Cannot get `x.anything` because property `anything` is missing in `FromDeclareClass` [1]. [prop-missing]
+
+   type_keys.js:146:5
+   146|   x.anything; // ERROR: the member was dropped, so nothing is there
+            ^^^^^^^^
+
+References:
+   type_keys.js:145:20
+   145|   declare const x: FromDeclareClass;
+                           ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ value_keys.js:8:1
+
+Cannot cast `fromConst.foo` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   value_keys.js:8:1
+   8| fromConst.foo as string; // ERROR: number is not string
+      ^^^^^^^^^^^^^
+
+References:
+   value_keys.js:5:26
+   5| type FromConst = {[key]: number};
+                               ^^^^^^ [1]
+   value_keys.js:8:18
+   8| fromConst.foo as string; // ERROR: number is not string
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- value_keys.js:9:11
+
+Cannot get `fromConst.bar` because property `bar` is missing in `FromConst` [1]. [prop-missing]
+
+   value_keys.js:9:11
+   9| fromConst.bar; // ERROR: property `bar` is missing (named, not an indexer)
+                ^^^
+
+References:
+   value_keys.js:6:26
+   6| declare const fromConst: FromConst;
+                               ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:17:15
+
+Cannot get `fromQualified.foo` because property `foo` is missing in `FromQualified` [1]. [prop-missing]
+
+   value_keys.js:17:15
+   17| fromQualified.foo; // ERROR: the key is the value `'a'`, not the name `foo`
+                     ^^^
+
+References:
+   value_keys.js:14:30
+   14| declare const fromQualified: FromQualified;
+                                    ^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:28:12
+
+Cannot get `fromStatic.k` because property `k` is missing in `FromStatic` [1]. [prop-missing]
+
+   value_keys.js:28:12
+   28| fromStatic.k; // ERROR: the key is the value `'kk'`, not the name `k`
+                  ^
+
+References:
+   value_keys.js:26:27
+   26| declare const fromStatic: FromStatic;
+                                 ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:37:25
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   37| type FromWideStatic = {[WideHolder.n]: number}; // ERROR: names no one property
+                               ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:43:39
+
+Cannot get `WideHolder.nope` because property `nope` is missing in statics of `WideHolder` [1]. [prop-missing]
+
+   value_keys.js:43:39
+   43| type FromMissingStatic = {[WideHolder.nope]: number}; // ERROR: names no one property
+                                             ^^^^
+
+References:
+   value_keys.js:34:15
+   34| declare class WideHolder {
+                     ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:43:28
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   43| type FromMissingStatic = {[WideHolder.nope]: number}; // ERROR: names no one property
+                                  ^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:50:12
+
+Cannot get `fromNumber[8]` because property `8` is missing in `FromNumber` [1]. [prop-missing]
+
+   value_keys.js:50:12
+   50| fromNumber[8]; // ERROR: property `8` is missing
+                  ^
+
+References:
+   value_keys.js:48:27
+   48| declare const fromNumber: FromNumber;
+                                 ^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:56:19
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   56| type FromWide = {[wide]: number}; // ERROR: `wide` names no one property
+                         ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:58:10
+
+Cannot get `fromWide.anything` because property `anything` is missing in `FromWide` [1]. [prop-missing]
+
+   value_keys.js:58:10
+   58| fromWide.anything; // ERROR: the member was dropped, so nothing is there
+                ^^^^^^^^
+
+References:
+   value_keys.js:57:25
+   57| declare const fromWide: FromWide;
+                               ^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:62:18
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   62| type FromLet = {[mutable]: number}; // ERROR: `mutable` names no one property
+                        ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- value_keys.js:71:1
+
+Cannot cast `valueThenPlain.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   value_keys.js:71:1
+   71| valueThenPlain.a as number; // ERROR: string is not number
+       ^^^^^^^^^^^^^^^^
+
+References:
+   value_keys.js:68:42
+   68| type ValueThenPlain = {[dup]: number, a: string};
+                                                ^^^^^^ [1]
+   value_keys.js:71:21
+   71| valueThenPlain.a as number; // ERROR: string is not number
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- value_keys.js:76:1
+
+Cannot cast `plainThenValue.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   value_keys.js:76:1
+   76| plainThenValue.a as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^^^
+
+References:
+   value_keys.js:73:42
+   73| type PlainThenValue = {a: string, [dup]: number};
+                                                ^^^^^^ [1]
+   value_keys.js:76:21
+   76| plainThenValue.a as string; // ERROR: number is not string
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- value_keys.js:82:1
+
+Cannot cast `optValue.foo` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   value_keys.js:82:1
+   82| optValue.foo as number; // ERROR: property is optional, so `void` is not a number
+       ^^^^^^^^^^^^
+
+References:
+   value_keys.js:79:26
+   79| type OptValue = {[key]?: number};
+                                ^^^^^^ [1]
+   value_keys.js:82:17
+   82| optValue.foo as number; // ERROR: property is optional, so `void` is not a number
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:86:15
+
+The following definitions recursively depend on each other, and Flow cannot compute their types:
+ - `cyclic` [1] depends on other definition [2]
+ - `cyclicKey` [3] depends on other definition [4]
+ - `Cyclic` [5] depends on other definition [6]
+Please add type annotations to these definitions [3] [definition-cycle]
+
+   value_keys.js:86:15
+   86| declare const cyclic: Cyclic; // ERROR: definition cycle through the key
+                     ^^^^^^ [1]
+
+References:
+   value_keys.js:86:23
+   86| declare const cyclic: Cyclic; // ERROR: definition cycle through the key
+                             ^^^^^^ [2]
+   value_keys.js:87:7
+   87| const cyclicKey = cyclic.x;
+             ^^^^^^^^^ [3]
+   value_keys.js:87:19
+   87| const cyclicKey = cyclic.x;
+                         ^^^^^^ [4]
+   value_keys.js:88:6
+   88| type Cyclic = {x: 'k', [cyclicKey]: number}; // ERROR: the cyclic key names nothing
+            ^^^^^^ [5]
+   value_keys.js:88:25
+   88| type Cyclic = {x: 'k', [cyclicKey]: number}; // ERROR: the cyclic key names nothing
+                               ^^^^^^^^^ [6]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:88:25
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   88| type Cyclic = {x: 'k', [cyclicKey]: number}; // ERROR: the cyclic key names nothing
+                               ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- value_keys.js:98:6
+
+Cannot get `dual.a` because property `a` is missing in `Dual` [1]. [prop-missing]
+
+   value_keys.js:98:6
+   98| dual.a; // ERROR: 'a' is the value, and the type won
+            ^
+
+References:
+   value_keys.js:96:21
+   96| declare const dual: Dual;
+                           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:125:1
+
+Cannot cast `accessorMiddle.a` to boolean because `number` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   value_keys.js:125:1
+   125| accessorMiddle.a as boolean; // ERROR: number is not boolean
+        ^^^^^^^^^^^^^^^^
+
+References:
+   value_keys.js:122:33
+   122| type AccessorMiddle = {get a(): number, [acc]: boolean, set a(x: number): void};
+                                        ^^^^^^ [1]
+   value_keys.js:125:21
+   125| accessorMiddle.a as boolean; // ERROR: number is not boolean
+                            ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:135:19
+
+Cannot get `fromImportedConst.KEY` because property `KEY` is missing in `FromImportedConst` [1]. [prop-missing]
+
+   value_keys.js:135:19
+   135| fromImportedConst.KEY; // ERROR: the key is the value, not the binding's name
+                          ^^^
+
+References:
+   value_keys.js:133:34
+   133| declare const fromImportedConst: FromImportedConst;
+                                         ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:143:20
+
+Cannot get `fromImportedStatic.k` because property `k` is missing in `FromImportedStatic` [1]. [prop-missing]
+
+   value_keys.js:143:20
+   143| fromImportedStatic.k; // ERROR: the key is the value `'kk'`, not the name `k`
+                           ^
+
+References:
+   value_keys.js:141:35
+   141| declare const fromImportedStatic: FromImportedStatic;
+                                          ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:147:25
+
+Unsupported key in object type. A computed key must have a single string or number literal type. To declare an index
+signature instead, label the key, as in `[key: K]`. [illegal-key]
+
+   147| type FromEnumMember = {[ImportedEnum.A]: number}; // ERROR: names no one property
+                                ^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- value_keys.js:155:8
+
+Cannot get `negKey[1]` because property `1` is missing in `NegKey` [1]. [prop-missing]
+
+   value_keys.js:155:8
+   155| negKey[1]; // ERROR: property `1` is missing
+               ^
+
+References:
+   value_keys.js:152:23
+   152| declare const negKey: NegKey;
+                              ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:162:13
+
+Cannot assign `1` to `readOnlyKey.a` because property `a` is not writable. [cannot-write]
+
+   162| readOnlyKey.a = 1; // ERROR: property `a` is not writable
+                    ^
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:163:13
+
+Cannot assign `'x'` to `readOnlyKey.shared` because property `shared` is not writable. [cannot-write]
+
+   163| readOnlyKey.shared = 'x'; // ERROR: property `shared` is not writable either
+                    ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- value_keys.js:167:14
+
+Cannot get `writeOnlyKey.a` because property `a` is not readable. [cannot-read]
+
+   167| writeOnlyKey.a as number; // ERROR: property `a` is not readable
+                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- within.js:5:1
+
+Cannot cast `one.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:5:1
+   5| one.a as string; // ERROR: number is not string
+      ^^^^^
+
+References:
+   within.js:2:20
+   2| type One = {['a']: number};
+                         ^^^^^^ [1]
+   within.js:5:10
+   5| one.a as string; // ERROR: number is not string
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- within.js:6:5
+
+Cannot get `one.b` because property `b` is missing in `One` [1]. [prop-missing]
+
+   within.js:6:5
+   6| one.b; // ERROR: property `b` is missing (exact, no indexer default)
+          ^
+
+References:
+   within.js:3:20
+   3| declare const one: One;
+                         ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:7:23
+
+Cannot assign object literal to `emptyOne` because property `a` is missing in object literal [1] but exists in
+`One` [2]. [incompatible-type]
+
+   within.js:7:23
+   7| const emptyOne: One = {}; // ERROR: a named property is required, unlike an indexer
+                            ^^ [1]
+
+References:
+   within.js:7:17
+   7| const emptyOne: One = {}; // ERROR: a named property is required, unlike an indexer
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:20:5
+
+Cannot get `num[99]` because property `99` is missing in `Num` [1]. [prop-missing]
+
+   within.js:20:5
+   20| num[99]; // ERROR: property `99` is missing (named key, not a number indexer)
+           ^^
+
+References:
+   within.js:17:20
+   17| declare const num: Num;
+                          ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:27:6
+
+Cannot get `frac[2.5]` because number literal `2.5` [1] is incompatible with number literal `1.5` [2].
+[incompatible-type]
+
+   within.js:27:6
+   27| frac[2.5]; // ERROR: 2.5 is not in the 1.5 indexer key set
+            ^^^ [1]
+
+References:
+   within.js:24:15
+   24| type Frac = {[1.5]: boolean};
+                     ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:33:1
+
+Cannot cast `dict.anything` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:33:1
+   33| dict.anything as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^
+
+References:
+   within.js:30:24
+   30| type Dict = {[string]: number};
+                              ^^^^^^ [1]
+   within.js:33:18
+   33| dict.anything as string; // ERROR: number is not string
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:39:3
+
+Cannot get `u.c` because property `c` is missing in `Union` [1]. [prop-missing]
+
+   within.js:39:3
+   39| u.c; // ERROR: `c` is not in the 'a' | 'b' indexer key set
+         ^
+
+References:
+   within.js:37:18
+   37| declare const u: Union;
+                        ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:48:1
+
+Cannot cast `mixed.bar` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   within.js:48:1
+   48| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
+       ^^^^^^^^^
+
+References:
+   within.js:44:37
+   44| type Mixed = {foo: string, ['bar']: boolean, [string]: number};
+                                           ^^^^^^^ [1]
+   within.js:48:14
+   48| mixed.bar as number; // ERROR: boolean is not number, so this is not the indexer
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:56:1
+
+Cannot cast `opt.a` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   within.js:56:1
+   56| opt.a as number; // ERROR: property is optional, so `void` is not a number
+       ^^^^^
+
+References:
+   within.js:53:21
+   53| type Opt = {['a']?: number};
+                           ^^^^^^ [1]
+   within.js:56:10
+   56| opt.a as number; // ERROR: property is optional, so `void` is not a number
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:64:1
+
+Cannot cast `p.__proto__` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:64:1
+   64| p.__proto__ as string; // ERROR: number is not string
+       ^^^^^^^^^^^
+
+References:
+   within.js:61:30
+   61| type Proto = {['__proto__']: number};
+                                    ^^^^^^ [1]
+   within.js:64:16
+   64| p.__proto__ as string; // ERROR: number is not string
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:71:1
+
+Cannot cast `labeled.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:71:1
+   71| labeled.a as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   within.js:68:31
+   68| type Labeled = {[label: 'a']: number};
+                                     ^^^^^^ [1]
+   within.js:71:14
+   71| labeled.a as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:75:39
+
+Multiple indexers are not supported. [unsupported-syntax]
+
+   75| type TwoIndexers = {[string]: number, [number]: string}; // ERROR: multiple indexers
+                                             ^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:82:1
+
+Cannot cast `plainWins.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   within.js:82:1
+   82| plainWins.a as number; // ERROR: string is not number
+       ^^^^^^^^^^^
+
+References:
+   within.js:79:37
+   79| type PlainWins = {['a']: number, a: string};
+                                           ^^^^^^ [1]
+   within.js:82:16
+   82| plainWins.a as number; // ERROR: string is not number
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:87:1
+
+Cannot cast `literalWins.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:87:1
+   87| literalWins.a as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^
+
+References:
+   within.js:84:39
+   84| type LiteralWins = {a: string, ['a']: number};
+                                             ^^^^^^ [1]
+   within.js:87:18
+   87| literalWins.a as string; // ERROR: number is not string
+                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:95:1
+
+Cannot cast `spreadOver.a` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:95:1
+   95| spreadOver.a as string; // ERROR: number is not string
+       ^^^^^^^^^^^^
+
+References:
+   within.js:91:17
+   91| type Base = {a: number};
+                       ^^^^^^ [1]
+   within.js:95:17
+   95| spreadOver.a as string; // ERROR: number is not string
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:101:1
+
+Cannot cast `litOver.a` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   within.js:101:1
+   101| litOver.a as number; // ERROR: string is not number
+        ^^^^^^^^^
+
+References:
+   within.js:98:48
+    98| type LiteralOverridesSpread = {...Base, ['a']: string};
+                                                       ^^^^^^ [1]
+   within.js:101:14
+   101| litOver.a as number; // ERROR: string is not number
+                     ^^^^^^ [2]
+
+
+
+Found 100 errors

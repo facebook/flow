@@ -162,7 +162,7 @@ Replace this pattern
 enum Status {Active, Paused, Off}
 declare const status: Status;
 
-const STATUS_ICON: {[Status]: string} = {
+const STATUS_ICON: {[key: Status]: string} = {
   [Status.Active]: 'green-checkmark',
   [Status.Paused]: 'grey-pause',
   [Status.Off]: 'red-x',

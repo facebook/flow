@@ -759,7 +759,7 @@ Cannot cast `o4` to interface type because in the indexer property's key: `"asdf
 `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
-- Either make `{["asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
+- Either make `{[key: "asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
 - Or make the indexer in interface type [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
@@ -768,15 +768,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
        ^^
 
 References:
-   interface.js:49:22
-   49| declare const o4 : {["asdf"] : number};
-                            ^^^^^^ [1]
+   interface.js:49:27
+   49| declare const o4 : {[key: "asdf"] : number};
+                                 ^^^^^^ [1]
    interface.js:51:19
    51| o4 as interface {[string] : number}; // error
                          ^^^^^^ [2]
    interface.js:49:20
-   49| declare const o4 : {["asdf"] : number};
-                          ^^^^^^^^^^^^^^^^^^^ [3]
+   49| declare const o4 : {[key: "asdf"] : number};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    interface.js:51:7
    51| o4 as interface {[string] : number}; // error
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]

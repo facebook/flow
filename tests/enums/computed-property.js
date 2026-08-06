@@ -7,7 +7,7 @@ const o = {
   [E.A]: 0, // OK
 };
 
-o as {[E]: number}; // OK
+o as {[key: E]: number}; // OK
 o[E.A] as number; // OK
 o[E.B] = 1; // OK
 
@@ -16,7 +16,7 @@ o[E.A] as empty; // ERROR
 o['A']; // ERROR
 
 const spread = {...o, [E.B]: 1}; // OK
-spread as {[E]: number}; // OK
+spread as {[key: E]: number}; // OK
 
 const err_spread_1 = {A: 1, ...o}; // ERROR
 declare const s: string;

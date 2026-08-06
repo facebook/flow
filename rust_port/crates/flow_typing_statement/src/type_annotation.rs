@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::HashMap;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -27,6 +28,8 @@ use flow_env_builder::name_def_types::Import as NameDefImport;
 use flow_parser::ast;
 use flow_parser::polymorphic_ast_mapper;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
+use flow_parser_utils::object_type_key;
+use flow_parser_utils::object_type_key::ObjectTypeKeyForm;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::ETSSyntaxData;
@@ -628,6 +631,182 @@ fn resolve_computed_key_name(
         };
         Ok((typed_expr, resolved_name))
     }
+}
+
+/// The property a computed key names, or `None` when the key type is not a
+/// single literal and so names no one property.
+fn resolve_key_type_name(
+    cx: &Context,
+    key_t: &Type,
+) -> Result<Option<Name>, flow_utils_concurrency::job_error::JobError> {
+    let reason = type_util::reason_of_t(key_t);
+    let concrete_keys = flow_js_utils::flow_js_result_to_job_error(
+        FlowJs::possible_concrete_types_for_computed_object_keys(cx, reason, key_t),
+    )?;
+    Ok(match concrete_keys.as_slice() {
+        [key] => match flow_js_utils::propref_for_elem_t(cx, key) {
+            type_::PropRef::Named { name, .. } => Some(name),
+            type_::PropRef::Computed(_) => None,
+        },
+        _ => None,
+    })
+}
+
+/// The last key location of each getter and setter pair in an object type
+/// body. The signature pipeline stores such a pair as one member and orders it
+/// by that location, so a computed key has to lose to a pair that ends after
+/// it. Folding members in source order instead would read
+/// `{get a(): T, [k]: U, set a(x: T): void}` as a lone setter, and the two
+/// pipelines would disagree on it.
+fn accessor_pair_last_locs(
+    properties: &[ast::types::object::Property<ALoc, ALoc>],
+) -> HashMap<Name, ALoc> {
+    use ast::types::object::Property;
+    use ast::types::object::PropertyValue;
+    use flow_parser::ast::expression::object::Key;
+
+    let mut halves: HashMap<Name, (Option<ALoc>, Option<ALoc>)> = HashMap::new();
+    for prop in properties {
+        let Property::NormalProperty(p) = prop else {
+            continue;
+        };
+        // Only an identifier key names an accessor here. Every other spelling
+        // is rejected as unsupported syntax before it can pair up.
+        let Key::Identifier(id) = &p.key else {
+            continue;
+        };
+        let entry = halves.entry(Name::new(id.name.dupe())).or_default();
+        match &p.value {
+            PropertyValue::Get(..) => entry.0 = Some(id.loc.dupe()),
+            PropertyValue::Set(..) => entry.1 = Some(id.loc.dupe()),
+            PropertyValue::Init(_) => {}
+        }
+    }
+    halves
+        .into_iter()
+        .filter_map(|(name, (get_loc, set_loc))| {
+            let (get_loc, set_loc) = (get_loc?, set_loc?);
+            let last = if get_loc.quick_compare(&set_loc).is_gt() {
+                get_loc
+            } else {
+                set_loc
+            };
+            Some((name, last))
+        })
+        .collect()
+}
+
+/// How a bracketed object-type key is read.
+enum KeyRead {
+    /// A computed key naming this property.
+    Named(Name),
+    /// An index signature.
+    IndexSignature,
+    /// A computed key whose value names no property, so the member is dropped.
+    /// Carries why, so the error can say what to write instead.
+    IllegalName(InvalidObjKey),
+}
+
+/// Whether a rejected key names a type, so it is an index signature written
+/// without a label rather than a computed key. Either the key was read as the
+/// value side of a name that also names a type, as in `{[C]: V}`, or it names a
+/// type the namespace half of a merge exposes, as in `{[C.K]: V}`.
+fn key_is_type_name(cx: &Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
+    is_type_name_value(cx, &key_ast.loc().1) || names_namespace_type(cx, key_ast)
+}
+
+/// Whether a type is the value side of something that also names a type: a
+/// class, an enum, or a namespace merged into one of them, which is the only
+/// way a namespace object reaches here at all. Answered from the type rather
+/// than the binding, so an imported class reads like a local one.
+fn is_type_name_value(cx: &Context, t: &Type) -> bool {
+    use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::PolyTData;
+    use flow_typing_type::type_::TypeInner;
+
+    let Some(resolved) = cx.find_resolved(t) else {
+        return false;
+    };
+    match resolved.deref() {
+        TypeInner::NamespaceT(_) => true,
+        TypeInner::DefT(_, def_t) => match def_t.deref() {
+            DefTInner::ClassT(_) | DefTInner::EnumObjectT { .. } => true,
+            DefTInner::PolyT(box PolyTData { t_out, .. }) => {
+                matches!(t_out.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::ClassT(_)))
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+/// Whether a qualified key reads a name that a namespace exposes as a type, as
+/// `{[C.K]: V}` does for a class merged with a namespace declaring `K`. Only
+/// the namespace half of a merge can hold such a name, so the value read the
+/// key went through was always going to land on nothing. Asked of the namespace
+/// the read walked to, so an ordinary missing property, as a misspelled static,
+/// is not mistaken for one.
+fn names_namespace_type(cx: &Context, key_ast: &ast::types::Type<ALoc, (ALoc, Type)>) -> bool {
+    use ast::types::TypeInner as AstTypeInner;
+    use ast::types::generic::Identifier;
+    use flow_typing_type::type_::TypeInner;
+
+    let AstTypeInner::Generic { inner, .. } = key_ast.deref() else {
+        return false;
+    };
+    let Identifier::Qualified(qualified) = &inner.id else {
+        return false;
+    };
+    let Some(namespace_t) = cx.find_resolved(type_of_type_name(&qualified.qualification)) else {
+        return false;
+    };
+    let TypeInner::NamespaceT(ns) = namespace_t.deref() else {
+        return false;
+    };
+    cx.find_props_opt(ns.types_tmap.dupe())
+        .is_some_and(|types| types.get(&Name::new(qualified.id.name.dupe())).is_some())
+}
+
+/// The type a converted type name was read as.
+fn type_of_type_name(id: &ast::types::generic::Identifier<ALoc, (ALoc, Type)>) -> &Type {
+    use ast::types::generic::Identifier;
+
+    match id {
+        Identifier::Unqualified(ident) => &ident.loc.1,
+        Identifier::Qualified(qualified) => &qualified.id.loc.1,
+        Identifier::ImportTypeAnnot(import) => &import.loc.1,
+    }
+}
+
+/// Convert an object-type key written as a value name, `{[x]: V}` or
+/// `{[x.y]: V}`. The name is read as the value's type, the way `typeof x` is,
+/// and names a property when that type is a single literal, matching the
+/// value-level computed key `{[x]: v}`. Returns the typed key and that name.
+fn convert_value_object_type_key<'a>(
+    cx: &Context<'a>,
+    loc: &ALoc,
+    generic: &ast::types::Generic<ALoc, ALoc>,
+) -> Result<
+    (ast::types::Type<ALoc, (ALoc, Type)>, Option<Name>),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let (value_t, id_ast) = convert_qualification_with_lookup_mode(
+        cx,
+        Some(type_env::LookupMode::ForTypeof),
+        "typeof-annotation",
+        &generic.id,
+    )?;
+    let name = resolve_key_type_name(cx, &value_t)?;
+    let key_ast = ast::types::Type::new(ast::types::TypeInner::Generic {
+        loc: (loc.dupe(), value_t),
+        inner: ast::types::Generic {
+            id: id_ast,
+            targs: None,
+            comments: generic.comments.dupe(),
+        }
+        .into(),
+    });
+    Ok((key_ast, name))
 }
 
 // =========================================================================
@@ -4774,6 +4953,7 @@ fn convert_object<'a>(
     // ========================================
     let mut acc = Acc::empty();
     let mut prop_asts: Vec<Property<ALoc, (ALoc, Type)>> = Vec::new();
+    let accessor_pair_last_locs = accessor_pair_last_locs(properties);
 
     for prop in properties {
         match prop {
@@ -4799,66 +4979,163 @@ fn convert_object<'a>(
                 prop_asts.push(Property::CallProperty(call_ast));
             }
             Property::Indexer(indexer) => {
-                if indexer.optional && !cx.tslib_syntax() {
-                    flow_js_utils::add_output_non_speculating(
-                        cx,
-                        ErrorMessage::EUnsupportedSyntax(Box::new((
-                            indexer.loc.dupe(),
-                            intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                                intermediate_error_types::TsLibSyntaxKind::OptionalIndexer,
-                            ),
-                        ))),
-                    );
-                    let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
-                        &mut typed_ast_utils::ErrorMapper,
-                        prop,
-                    );
-                    prop_asts.push(error_prop);
+                // `{[K]: V}` is ambiguous between a computed key and an index
+                // signature, and the way the key is written decides (see
+                // `object_type_key`). The labeled form `[label: K]` is an index
+                // signature outright. Convert the key before the optional gate,
+                // so an optional computed key `['a']?` becomes an optional named
+                // property instead of being rejected as an optional indexer,
+                // which is TSLib-only syntax.
+                let key_form = if indexer.id.is_some() {
+                    ObjectTypeKeyForm::IndexSignature
                 } else {
-                    let key_ast = convert_inner(cx, env, &indexer.key)?;
-                    let key_t = key_ast.loc().1.dupe();
-                    let value_ast = convert_inner(cx, env, &indexer.value)?;
-                    let annot_loc = value_ast.loc().0.dupe();
-                    let value_t = value_ast.loc().1.dupe();
-                    let value_t = if indexer.optional {
-                        type_util::optional(value_t, Some(annot_loc), false)
-                    } else {
-                        value_t
-                    };
-                    let d = DictType {
-                        dict_name: indexer.id.as_ref().map(ident_name),
-                        key: key_t,
-                        value: value_t,
-                        dict_polarity: polarity(
-                            cx,
-                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
-                            indexer.variance.as_ref(),
-                        ),
-                    };
-                    let indexer_ast = ast::types::object::Indexer {
-                        loc: indexer.loc.dupe(),
-                        id: indexer.id.as_ref().map(|id| {
-                            let Ok(v) = polymorphic_ast_mapper::t_identifier(
-                                &mut typed_ast_utils::ErrorMapper,
-                                id,
-                            );
-                            v
-                        }),
-                        key: key_ast,
-                        value: value_ast,
-                        static_: indexer.static_,
-                        variance: indexer.variance.clone(),
-                        optional: indexer.optional,
-                        comments: indexer.comments.dupe(),
-                    };
-                    if let Err(err) = acc.add_dict(d) {
+                    object_type_key::object_type_key_form(&indexer.key)
+                };
+                let (key_ast, key_read) = match key_form {
+                    ObjectTypeKeyForm::Literal(name) => (
+                        convert_inner(cx, env, &indexer.key)?,
+                        KeyRead::Named(Name::new(name)),
+                    ),
+                    ObjectTypeKeyForm::Name { loc, generic, head }
+                        if type_env::heads_computed_key(cx, &head.loc) =>
+                    {
+                        let (key_ast, name) = convert_value_object_type_key(cx, loc, generic)?;
+                        // The value names no one property, so there is no
+                        // member to add. An index signature is not a sound
+                        // reading either: the author asked for one key.
+                        let key_read = match name {
+                            Some(name) => KeyRead::Named(name),
+                            None if key_is_type_name(cx, &key_ast) => {
+                                KeyRead::IllegalName(InvalidObjKey::ComputedTypeName)
+                            }
+                            None => KeyRead::IllegalName(InvalidObjKey::ComputedNotLiteral),
+                        };
+                        (key_ast, key_read)
+                    }
+                    ObjectTypeKeyForm::Name { .. } | ObjectTypeKeyForm::IndexSignature => (
+                        convert_inner(cx, env, &indexer.key)?,
+                        KeyRead::IndexSignature,
+                    ),
+                };
+                // A rejected key adds no member at all. Past here the key is
+                // either a name or an index signature, so the two are the only
+                // cases the rest has to answer for.
+                let named = match key_read {
+                    KeyRead::IllegalName(key_error_kind) => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EUnsupportedSyntax(Box::new((indexer.loc.dupe(), err))),
+                            ErrorMessage::EUnsupportedKeyInObject {
+                                loc: indexer.key.loc().dupe(),
+                                obj_kind: intermediate_error_types::ObjKind::Type,
+                                key_error_kind,
+                            },
                         );
+                        let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                            &mut typed_ast_utils::ErrorMapper,
+                            prop,
+                        );
+                        prop_asts.push(error_prop);
+                        continue;
                     }
-                    prop_asts.push(Property::Indexer(indexer_ast));
+                    KeyRead::IndexSignature if indexer.optional && !cx.tslib_syntax() => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                indexer.loc.dupe(),
+                                intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                    intermediate_error_types::TsLibSyntaxKind::OptionalIndexer,
+                                ),
+                            ))),
+                        );
+                        let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                            &mut typed_ast_utils::ErrorMapper,
+                            prop,
+                        );
+                        prop_asts.push(error_prop);
+                        continue;
+                    }
+                    // A getter and setter pair is one member, ordered by its
+                    // last half, so a pair that ends after this key wins over
+                    // it and the key adds nothing.
+                    KeyRead::Named(name)
+                        if accessor_pair_last_locs
+                            .get(&name)
+                            .is_some_and(|last| last.quick_compare(indexer.key.loc()).is_gt()) =>
+                    {
+                        let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
+                            &mut typed_ast_utils::ErrorMapper,
+                            prop,
+                        );
+                        prop_asts.push(error_prop);
+                        continue;
+                    }
+                    KeyRead::Named(name) => Some(name),
+                    KeyRead::IndexSignature => None,
+                };
+                let value_ast = convert_inner(cx, env, &indexer.value)?;
+                let annot_loc = value_ast.loc().0.dupe();
+                let value_t = value_ast.loc().1.dupe();
+                let value_t = if indexer.optional {
+                    type_util::optional(value_t, Some(annot_loc), false)
+                } else {
+                    value_t
+                };
+                let dict_polarity = polarity(
+                    cx,
+                    flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                    indexer.variance.as_ref(),
+                );
+                match named {
+                    Some(name) => {
+                        let key_loc = indexer.key.loc().dupe();
+                        acc.add_prop(move |pmap| {
+                            pmap.insert(
+                                name,
+                                type_::Property::new(type_::PropertyInner::Field(Box::new(
+                                    FieldData {
+                                        preferred_def_locs: None,
+                                        key_loc: Some(key_loc),
+                                        type_: value_t,
+                                        polarity: dict_polarity,
+                                    },
+                                ))),
+                            );
+                        });
+                    }
+                    None => {
+                        let d = DictType {
+                            dict_name: indexer.id.as_ref().map(ident_name),
+                            key: key_ast.loc().1.dupe(),
+                            value: value_t,
+                            dict_polarity,
+                        };
+                        if let Err(err) = acc.add_dict(d) {
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EUnsupportedSyntax(Box::new((
+                                    indexer.loc.dupe(),
+                                    err,
+                                ))),
+                            );
+                        }
+                    }
                 }
+                prop_asts.push(Property::Indexer(ast::types::object::Indexer {
+                    loc: indexer.loc.dupe(),
+                    id: indexer.id.as_ref().map(|id| {
+                        let Ok(v) = polymorphic_ast_mapper::t_identifier(
+                            &mut typed_ast_utils::ErrorMapper,
+                            id,
+                        );
+                        v
+                    }),
+                    key: key_ast,
+                    value: value_ast,
+                    static_: indexer.static_,
+                    variance: indexer.variance.clone(),
+                    optional: indexer.optional,
+                    comments: indexer.comments.dupe(),
+                }));
             }
             Property::NormalProperty(obj_prop) => {
                 let prop_ast = named_property(cx, env, &mut acc, obj_prop)?;

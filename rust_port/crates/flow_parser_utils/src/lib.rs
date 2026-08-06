@@ -16,6 +16,7 @@ pub mod flow_ast_differ;
 pub mod graphql;
 pub mod iloc;
 pub mod indexed_ast_mapper;
+pub mod object_type_key;
 pub mod package_exports;
 pub mod package_json;
 pub mod record_utils;

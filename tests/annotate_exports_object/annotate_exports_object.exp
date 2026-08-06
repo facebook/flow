@@ -67,14 +67,14 @@ function bar() {
   return b;
 }
 
-export const bar_: { [1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3 } = bar();
+export const bar_: { "": 2, "-": 1, "1": 4, "\ud83d\ude0a": 3 } = bar();
 
 >>> Launching report...
 
 Stats:
   Files changed:                            4
   Number of annotations added:              5
-  Total size of annotations:               18
+  Total size of annotations:               17
   Number of sig. ver. errors:               5
   Number of annotations required:           5
   Number of annotations skipped:            0
@@ -164,7 +164,7 @@ function bar() {
   return b;
 }
 
-export const bar_: { [1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3 } = bar();
+export const bar_: { "": 2, "-": 1, "1": 4, "\ud83d\ude0a": 3 } = bar();
 
 
 === Diff between codemod-ed & autofix-ed ===

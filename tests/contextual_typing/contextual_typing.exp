@@ -1137,21 +1137,32 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:42
 
-Cannot assign object literal to `x` because property `42` is missing in object type [1] but exists in object
-literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer string literal
-`A` [3]. [incompatible-type]
+Cannot assign object literal to `x` because property `42` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [incompatible-type]
 
    unions.js:7:42
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
-                                               ^^^^^^^^^^^^^^ [2]
+                                               ^^^^^^^^^^^^^^ [1]
 
 References:
    unions.js:7:12
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   unions.js:7:14
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- unions.js:7:42
+
+Cannot assign object literal to `x` because property `A` is missing in object literal [1] but exists in object type [2].
+[incompatible-type]
+
+   unions.js:7:42
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
-                   ^^^ [3]
+                                               ^^^^^^^^^^^^^^ [1]
+
+References:
+   unions.js:7:12
+   7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:49
@@ -1273,4 +1284,4 @@ References:
 
 
 
-Found 90 errors
+Found 91 errors

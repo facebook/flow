@@ -41,6 +41,8 @@ use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
 use flow_parser_utils::enum_validate;
 use flow_parser_utils::graphql;
+use flow_parser_utils::object_type_key;
+use flow_parser_utils::object_type_key::ObjectTypeKeyForm;
 use flow_parser_utils::record_utils;
 use flow_parser_utils::signature_utils;
 use flow_parser_utils::type_param_analysis::analyze_type_params;
@@ -1659,6 +1661,53 @@ pub(super) mod scope {
                     }
                 },
             }
+        }
+    }
+
+    /// Whether a name written in type position can head a computed key, that
+    /// is, whether it binds a value that is not a namespace. A class and an
+    /// enum bind a value, so they head one, even though they name a type as
+    /// well. A namespace does not, because `A.B` may be reaching a type
+    /// through it.
+    ///
+    /// This pipeline has its own bindings, so it answers from those; the
+    /// checking pipeline asks `flow_analysis::bindings::Kind::namespaces` of
+    /// the corresponding source binding kind. The two must agree, or an
+    /// imported type would be read differently from the local one.
+    pub(crate) fn name_heads_computed_key<'arena, 'ast>(
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
+        name: &FlowSmolStr,
+    ) -> bool {
+        match lookup_type(scopes, id, name) {
+            None => false,
+            Some((binding, _)) => match binding {
+                BindingNode::LocalBinding(node) => match &*node.0.data() {
+                    LocalBinding::VarBinding { .. }
+                    | LocalBinding::LetConstBinding { .. }
+                    | LocalBinding::ParamBinding { .. }
+                    | LocalBinding::ConstRefBinding { .. }
+                    | LocalBinding::ConstFunBinding { .. }
+                    | LocalBinding::FunBinding { .. }
+                    | LocalBinding::DeclareFunBinding { .. }
+                    | LocalBinding::ComponentBinding { .. }
+                    | LocalBinding::ClassBinding { .. }
+                    | LocalBinding::DeclareClassBinding { .. }
+                    | LocalBinding::RecordBinding { .. }
+                    | LocalBinding::EnumBinding { .. } => true,
+                    LocalBinding::TypeBinding { .. } | LocalBinding::NamespaceBinding { .. } => {
+                        false
+                    }
+                },
+                BindingNode::RemoteBinding(node) => match &*node.0.data() {
+                    RemoteBinding::ImportBinding { .. } => true,
+                    RemoteBinding::ImportNsBinding { .. }
+                    | RemoteBinding::ImportTypeBinding { .. }
+                    | RemoteBinding::ImportTypeofBinding { .. }
+                    | RemoteBinding::ImportTypeofNsBinding { .. }
+                    | RemoteBinding::ImportTypeNsBinding { .. } => false,
+                },
+            },
         }
     }
 
@@ -6546,6 +6595,37 @@ fn expression_for_computed_key<'arena, 'ast>(
     }
 }
 
+/// Build the key of an object-type computed key written as a value name,
+/// `{[x]: V}` or `{[x.y]: V}`. The name is read as the value's type, the way
+/// `typeof x` is, which is also how the value-level `{[x]: v}` reads it.
+fn value_object_type_key<'arena, 'ast>(
+    scope: ScopeId,
+    tbls: &mut Tables<'arena, 'ast>,
+    id: &ast::types::generic::Identifier<Loc, Loc>,
+) -> Parsed<'arena, 'ast> {
+    match id {
+        ast::types::generic::Identifier::Unqualified(head) => {
+            let ref_loc = tbls.push_loc(head.loc.dupe());
+            val_ref(false, scope, ref_loc, head.name.dupe())
+        }
+        ast::types::generic::Identifier::Qualified(qualified) => {
+            let loc = tbls.push_loc(qualified.loc.dupe());
+            let base = value_object_type_key(scope, tbls, &qualified.qualification);
+            Parsed::Eval(
+                loc,
+                Box::new(base),
+                Box::new(Op::GetProp(Box::new(qualified.id.name.dupe()))),
+            )
+        }
+        // `object_type_key_form` reports the `Name` form only for a plain or a
+        // qualified name, and `import('m').X` is neither.
+        ast::types::generic::Identifier::ImportTypeAnnot(import_type) => {
+            let loc = tbls.push_loc(import_type.loc.dupe());
+            Parsed::Err(loc, Errno::CheckError)
+        }
+    }
+}
+
 enum ResolvedPropKey<'ast> {
     Named(FlowSmolStr, Loc),
     ComputedRef {
@@ -7402,18 +7482,31 @@ fn indexer<'arena, 'ast>(
 ) -> ObjAnnotDict<Parsed<'arena, 'ast>> {
     let name = dict.id.as_ref().map(|id| id_name(id).clone());
     let key = annot(opts, scope, scopes, tbls, xs, &dict.key);
-    let value = annot(opts, scope, scopes, tbls, xs, &dict.value);
-    let value = if dict.optional {
-        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(value))))
-    } else {
-        value
-    };
+    let value = indexer_value(opts, scope, scopes, tbls, xs, dict);
     let variance = dict.variance.as_ref().map(|v| (v.loc.dupe(), v.clone()));
     ObjAnnotDict {
         name,
         polarity: polarity(variance),
         key,
         value,
+    }
+}
+
+/// The value type of a bracketed object-type member, whichever way its key is
+/// read.
+fn indexer_value<'arena, 'ast>(
+    opts: &TypeSigOptions,
+    scope: ScopeId,
+    scopes: &mut scope::Scopes<'arena, 'ast>,
+    tbls: &mut Tables<'arena, 'ast>,
+    xs: &mut tparam_stack::TParamStack,
+    dict: &ast::types::object::Indexer<Loc, Loc>,
+) -> Parsed<'arena, 'ast> {
+    let value = annot(opts, scope, scopes, tbls, xs, &dict.value);
+    if dict.optional {
+        Parsed::Annot(Box::new(ParsedAnnot::Optional(Box::new(value))))
+    } else {
+        value
     }
 }
 
@@ -7765,8 +7858,36 @@ fn object_type<'arena, 'ast>(
                 acc.add_spread(t);
             }
             O::Property::Indexer(p) => {
-                let dict = indexer(opts, scope, scopes, tbls, xs, p);
-                acc.add_dict(dict);
+                // `{[K]: V}` is ambiguous between a computed key and an index
+                // signature, and the way the key is written decides (see
+                // `object_type_key`). The labeled form `[label: K]` is an index
+                // signature outright.
+                let key_form = if p.id.is_some() {
+                    ObjectTypeKeyForm::IndexSignature
+                } else {
+                    object_type_key::object_type_key_form(&p.key)
+                };
+                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                match key_form {
+                    ObjectTypeKeyForm::Literal(name) => {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_field(name, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { generic, head, .. }
+                        if !xs.contains(&head.name)
+                            && scope::name_heads_computed_key(scopes, scope, &head.name) =>
+                    {
+                        let key_loc = tbls.push_loc(p.key.loc().dupe());
+                        let key = value_object_type_key(scope, tbls, &generic.id);
+                        let value = indexer_value(opts, scope, scopes, tbls, xs, p);
+                        acc.add_computed_field(key, key_loc, polarity_val, value);
+                    }
+                    ObjectTypeKeyForm::Name { .. } | ObjectTypeKeyForm::IndexSignature => {
+                        let dict = indexer(opts, scope, scopes, tbls, xs, p);
+                        acc.add_dict(dict);
+                    }
+                }
             }
             O::Property::CallProperty(p) => {
                 let fn_loc = tbls.push_loc(p.value.0.dupe());
