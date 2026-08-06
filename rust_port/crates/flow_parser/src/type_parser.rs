@@ -2594,16 +2594,30 @@ fn object_type(
         variance: Option<Variance<Loc>>,
         leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
-        let (loc, mut indexer) = with_loc(Some(start_loc), env, |env| {
-            let id = if peek::token_after_current_is_colon(env) {
-                let id = parser_common::identifier_name(env)?;
-                expect::token(env, TokenKind::TColon)?;
-                Some(id)
-            } else {
-                None
-            };
-            let key = type_inner(env)?;
-            expect::token(env, TokenKind::TRbracket)?;
+        let id = if peek::token_after_current_is_colon(env) {
+            let id = parser_common::identifier_name(env)?;
+            expect::token(env, TokenKind::TColon)?;
+            Some(id)
+        } else {
+            None
+        };
+        let key = type_inner(env)?;
+        expect::token(env, TokenKind::TRbracket)?;
+        finish_indexer(env, start_loc, static_, variance, leading, id, key)
+    }
+
+    /// Finish an indexer once its key type has been parsed and the closing `]`
+    /// consumed: an optional `?`, then `: <value type>`.
+    fn finish_indexer(
+        env: &mut ParserEnv,
+        start_loc: Loc,
+        static_: Option<Loc>,
+        variance: Option<Variance<Loc>>,
+        leading: Vec<Comment<Loc>>,
+        id: Option<Identifier<Loc, Loc>>,
+        key: types::Type<Loc, Loc>,
+    ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
+        let (loc, mut indexer) = with_loc(Some(start_loc), env, move |env| {
             let optional = eat::maybe(env, TokenKind::TPling)?;
             let trailing = eat::trailing_comments(env);
             expect::token(env, TokenKind::TColon)?;
@@ -2828,7 +2842,23 @@ fn object_type(
                         is_class,
                     )
                 } else {
-                    indexer_property(env, start_loc, static_, variance, leading)
+                    // In a `.js`/lib position `[T]: V` is an indexer and
+                    // `[expr](): T` is a computed method, told apart only by what
+                    // follows `]`. Parse the bracket content once as a type, then
+                    // dispatch on the next token, converting a literal or
+                    // (possibly-qualified) reference key into its value-expression
+                    // form for the method case. No backtracking is needed.
+                    js_computed_or_indexer(
+                        env,
+                        start_loc,
+                        static_,
+                        abstract_,
+                        override_,
+                        variance,
+                        ts_accessibility,
+                        leading,
+                        is_class,
+                    )
                 }
             }
         }
@@ -3004,6 +3034,20 @@ fn object_type(
         }
     }
 
+    /// Whether the token after the just-consumed `]` begins a method: `(` or `<`
+    /// type params, or an optional `?` followed by either.
+    fn method_continuation(env: &mut ParserEnv) -> bool {
+        match peek::token(env) {
+            TokenKind::TLparen | TokenKind::TLessThan => true,
+            TokenKind::TPling => peek::class_optional_method_continuation_is_call_or_type_args(env),
+            _ => false,
+        }
+    }
+
+    /// Parse a computed-key member `[expr]...` in a `.d.ts` type, interface, or
+    /// `declare class` body, where `[expr]` is unambiguously a computed key (a
+    /// `.d.ts` body has no indexer to disambiguate from). The `[` has already
+    /// been consumed.
     fn computed_property(
         env: &mut ParserEnv,
         start_loc: Loc,
@@ -3037,6 +3081,211 @@ fn object_type(
             key,
             is_class,
         )
+    }
+
+    /// Parse an unnamed bracketed member `[...]` in a `.js`/lib type, interface,
+    /// or `declare class` body, disambiguating a computed method `[expr](): T`
+    /// from an indexer `[T]: V` by the token after `]`. The `[` has already been
+    /// consumed. The bracket content is parsed once as a type; for the method
+    /// case a literal or (possibly-qualified) reference key is turned into its
+    /// value-expression form, and any other key is an error.
+    fn js_computed_or_indexer(
+        env: &mut ParserEnv,
+        start_loc: Loc,
+        static_: Option<Loc>,
+        abstract_: bool,
+        override_: bool,
+        variance: Option<Variance<Loc>>,
+        ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
+        leading: Vec<Comment<Loc>>,
+        is_class: bool,
+    ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
+        let key_type = type_inner(env)?;
+        let computed_loc = Loc::between(&start_loc, peek::loc(env));
+        expect::token(env, TokenKind::TRbracket)?;
+        if !method_continuation(env) {
+            return finish_indexer(env, start_loc, static_, variance, leading, None, key_type);
+        }
+        let expression = match computed_key_expression_of_type(&key_type) {
+            Some(expression) => expression,
+            None => {
+                env.error_at(
+                    computed_loc.dupe(),
+                    ParseError::Unexpected(
+                        "computed key, expected a literal or a possibly-qualified reference"
+                            .to_owned(),
+                    ),
+                )?;
+                // Recover with a string-literal key rather than an identifier: a
+                // literal key is a named property that needs no resolution, so the
+                // parse error is not followed by a spurious cannot-resolve error.
+                expression::Expression::new(expression::ExpressionInner::StringLiteral {
+                    loc: computed_loc.dupe(),
+                    inner: Arc::new(StringLiteral {
+                        value: FlowSmolStr::new_inline(""),
+                        raw: FlowSmolStr::new_inline("\"\""),
+                        comments: None,
+                    }),
+                })
+            }
+        };
+        let key = expression::object::Key::Computed(ComputedKey {
+            loc: computed_loc.dupe(),
+            expression,
+            comments: mk_comments_opt(Some(leading.into()), None),
+        });
+        computed_key_property(
+            env,
+            start_loc,
+            static_,
+            abstract_,
+            override_,
+            variance,
+            ts_accessibility,
+            computed_loc,
+            key,
+            is_class,
+        )
+    }
+
+    /// Turn a type parsed as a computed key into its value-level expression, or
+    /// `None` if the type has no value form. A literal becomes a literal
+    /// expression, and a primitive keyword or (possibly-qualified) reference
+    /// becomes the matching identifier or member chain, so a bare `string` in
+    /// key position reads as the value `string`, just as in a `.d.ts` body.
+    fn computed_key_expression_of_type(
+        t: &types::Type<Loc, Loc>,
+    ) -> Option<expression::Expression<Loc, Loc>> {
+        match t.deref() {
+            TypeInner::StringLiteral { loc, literal } => Some(expression::Expression::new(
+                expression::ExpressionInner::StringLiteral {
+                    loc: loc.dupe(),
+                    inner: Arc::new(literal.clone()),
+                },
+            )),
+            // A negative numeric literal type carries its sign inside the single
+            // literal node (`-1`), but the value AST spells it as unary minus over
+            // a positive literal, matching how the expression parser reads `[-1]`.
+            TypeInner::NumberLiteral { loc, literal } => {
+                Some(match literal.raw.strip_prefix('-') {
+                    Some(unsigned_raw) => negated_key_expression(
+                        loc,
+                        expression::ExpressionInner::NumberLiteral {
+                            loc: loc.dupe(),
+                            inner: Arc::new(NumberLiteral {
+                                value: -literal.value,
+                                raw: FlowSmolStr::new(unsigned_raw),
+                                comments: literal.comments.dupe(),
+                            }),
+                        },
+                    ),
+                    None => {
+                        expression::Expression::new(expression::ExpressionInner::NumberLiteral {
+                            loc: loc.dupe(),
+                            inner: Arc::new(literal.clone()),
+                        })
+                    }
+                })
+            }
+            TypeInner::BigIntLiteral { loc, literal } => {
+                Some(match literal.raw.strip_prefix('-') {
+                    Some(unsigned_raw) => negated_key_expression(
+                        loc,
+                        expression::ExpressionInner::BigIntLiteral {
+                            loc: loc.dupe(),
+                            inner: Arc::new(BigIntLiteral {
+                                value: literal.value.map(|v| -v),
+                                raw: FlowSmolStr::new(unsigned_raw),
+                                comments: literal.comments.dupe(),
+                            }),
+                        },
+                    ),
+                    None => {
+                        expression::Expression::new(expression::ExpressionInner::BigIntLiteral {
+                            loc: loc.dupe(),
+                            inner: Arc::new(literal.clone()),
+                        })
+                    }
+                })
+            }
+            TypeInner::BooleanLiteral { loc, literal } => Some(expression::Expression::new(
+                expression::ExpressionInner::BooleanLiteral {
+                    loc: loc.dupe(),
+                    inner: Arc::new(literal.clone()),
+                },
+            )),
+            // `null` is a literal, not a value identifier: match the expression
+            // parser and a `.d.ts` body, which both read `[null]` as the null
+            // literal rather than a reference to a name `null`.
+            TypeInner::Null { loc, comments } => Some(expression::Expression::new(
+                expression::ExpressionInner::NullLiteral {
+                    loc: loc.dupe(),
+                    inner: Arc::new(comments.clone()),
+                },
+            )),
+            // `void` is a reserved word, not a value identifier, so it has no
+            // value form. A `.d.ts` body likewise rejects `[void]`, since `void`
+            // there is the unary operator with no operand.
+            TypeInner::Void { .. } => None,
+            TypeInner::Generic { inner, .. } if inner.targs.is_none() => {
+                computed_key_expression_of_type_reference(&inner.id)
+            }
+            // A bare primitive keyword (`string`, `number`, ...) is a value
+            // identifier in key position, reusing the same type-as-identifier
+            // reparse as `.d.ts` computed keys and function-parameter labels.
+            _ => type_annotation_as_identifier(t).map(|id| {
+                expression::Expression::new(expression::ExpressionInner::Identifier {
+                    loc: id.loc.dupe(),
+                    inner: id,
+                })
+            }),
+        }
+    }
+
+    /// Turn a (possibly-qualified) type reference into the matching value
+    /// expression: an unqualified name becomes an identifier, a qualified name a
+    /// member chain. An `import(...)`-rooted reference has no value form.
+    fn computed_key_expression_of_type_reference(
+        id: &types::generic::Identifier<Loc, Loc>,
+    ) -> Option<expression::Expression<Loc, Loc>> {
+        match id {
+            types::generic::Identifier::Unqualified(id) => Some(expression::Expression::new(
+                expression::ExpressionInner::Identifier {
+                    loc: id.loc.dupe(),
+                    inner: id.dupe(),
+                },
+            )),
+            types::generic::Identifier::Qualified(q) => {
+                let object = computed_key_expression_of_type_reference(&q.qualification)?;
+                Some(expression::Expression::new(
+                    expression::ExpressionInner::Member {
+                        loc: q.loc.dupe(),
+                        inner: Arc::new(expression::Member {
+                            object,
+                            property: expression::member::Property::PropertyIdentifier(q.id.dupe()),
+                            comments: None,
+                        }),
+                    },
+                ))
+            }
+            types::generic::Identifier::ImportTypeAnnot(_) => None,
+        }
+    }
+
+    /// Wrap a positive-literal argument in a unary-minus expression, reproducing
+    /// the `Unary(-, <literal>)` shape the expression parser gives a negative key.
+    fn negated_key_expression(
+        loc: &Loc,
+        argument: expression::ExpressionInner<Loc, Loc>,
+    ) -> expression::Expression<Loc, Loc> {
+        expression::Expression::new(expression::ExpressionInner::Unary {
+            loc: loc.dupe(),
+            inner: Arc::new(expression::Unary {
+                operator: expression::UnaryOperator::Minus,
+                argument: expression::Expression::new(argument),
+                comments: None,
+            }),
+        })
     }
 
     fn error_unexpected_proto(env: &mut ParserEnv, proto: Option<&Loc>) -> Result<(), Rollback> {

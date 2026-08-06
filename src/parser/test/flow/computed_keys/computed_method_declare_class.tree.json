@@ -1,0 +1,669 @@
+{
+  "body": [
+    {
+      "body": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [],
+        "internalSlots": [],
+        "loc": {
+          "end": {
+            "column": 30,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 16,
+            "line": 1
+          }
+        },
+        "properties": [
+          {
+            "abstract": false,
+            "computed": true,
+            "init": null,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 22,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 1
+                }
+              },
+              "range": [
+                19,
+                22
+              ],
+              "raw": "'m'",
+              "type": "Literal",
+              "value": "m"
+            },
+            "kind": "init",
+            "loc": {
+              "end": {
+                "column": 28,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 18,
+                "line": 1
+              }
+            },
+            "method": true,
+            "optional": false,
+            "proto": false,
+            "range": [
+              18,
+              28
+            ],
+            "static": false,
+            "type": "ObjectTypeProperty",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 28,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 1
+                }
+              },
+              "params": [],
+              "range": [
+                18,
+                28
+              ],
+              "rest": null,
+              "returnType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 28,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 27,
+                      "line": 1
+                    }
+                  },
+                  "name": "X",
+                  "optional": false,
+                  "range": [
+                    27,
+                    28
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 28,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 27,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  27,
+                  28
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            },
+            "variance": null
+          }
+        ],
+        "range": [
+          16,
+          30
+        ],
+        "type": "ObjectTypeAnnotation"
+      },
+      "extends": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 15,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 1
+          }
+        },
+        "name": "C",
+        "optional": false,
+        "range": [
+          14,
+          15
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 30,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "mixins": [],
+      "range": [
+        0,
+        30
+      ],
+      "type": "DeclareClass",
+      "typeParameters": null
+    },
+    {
+      "body": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [],
+        "internalSlots": [],
+        "loc": {
+          "end": {
+            "column": 37,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 16,
+            "line": 2
+          }
+        },
+        "properties": [
+          {
+            "abstract": false,
+            "computed": true,
+            "init": null,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 29,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 26,
+                  "line": 2
+                }
+              },
+              "range": [
+                57,
+                60
+              ],
+              "raw": "'s'",
+              "type": "Literal",
+              "value": "s"
+            },
+            "kind": "init",
+            "loc": {
+              "end": {
+                "column": 35,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 18,
+                "line": 2
+              }
+            },
+            "method": true,
+            "optional": false,
+            "proto": false,
+            "range": [
+              49,
+              66
+            ],
+            "static": true,
+            "type": "ObjectTypeProperty",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 35,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 2
+                }
+              },
+              "params": [],
+              "range": [
+                49,
+                66
+              ],
+              "rest": null,
+              "returnType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 35,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 34,
+                      "line": 2
+                    }
+                  },
+                  "name": "X",
+                  "optional": false,
+                  "range": [
+                    65,
+                    66
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 35,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 34,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  65,
+                  66
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            },
+            "variance": null
+          }
+        ],
+        "range": [
+          47,
+          68
+        ],
+        "type": "ObjectTypeAnnotation"
+      },
+      "extends": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 15,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 2
+          }
+        },
+        "name": "D",
+        "optional": false,
+        "range": [
+          45,
+          46
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 37,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "mixins": [],
+      "range": [
+        31,
+        68
+      ],
+      "type": "DeclareClass",
+      "typeParameters": null
+    },
+    {
+      "body": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [
+          {
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 30,
+                  "line": 3
+                }
+              },
+              "name": "key",
+              "optional": false,
+              "range": [
+                99,
+                102
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 41,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 35,
+                  "line": 3
+                }
+              },
+              "range": [
+                104,
+                110
+              ],
+              "type": "StringTypeAnnotation"
+            },
+            "loc": {
+              "end": {
+                "column": 45,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 29,
+                "line": 3
+              }
+            },
+            "range": [
+              98,
+              114
+            ],
+            "static": false,
+            "type": "ObjectTypeIndexer",
+            "value": {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 45,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 44,
+                    "line": 3
+                  }
+                },
+                "name": "Y",
+                "optional": false,
+                "range": [
+                  113,
+                  114
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 45,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 44,
+                  "line": 3
+                }
+              },
+              "range": [
+                113,
+                114
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            },
+            "variance": null
+          }
+        ],
+        "internalSlots": [],
+        "loc": {
+          "end": {
+            "column": 47,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 16,
+            "line": 3
+          }
+        },
+        "properties": [
+          {
+            "abstract": false,
+            "computed": true,
+            "init": null,
+            "key": {
+              "argument": {
+                "loc": {
+                  "end": {
+                    "column": 21,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 19,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  88,
+                  90
+                ],
+                "raw": "1",
+                "type": "Literal",
+                "value": 1
+              },
+              "loc": {
+                "end": {
+                  "column": 21,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 19,
+                  "line": 3
+                }
+              },
+              "operator": "-",
+              "prefix": true,
+              "range": [
+                88,
+                90
+              ],
+              "type": "UnaryExpression"
+            },
+            "kind": "init",
+            "loc": {
+              "end": {
+                "column": 27,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 18,
+                "line": 3
+              }
+            },
+            "method": true,
+            "optional": false,
+            "proto": false,
+            "range": [
+              87,
+              96
+            ],
+            "static": false,
+            "type": "ObjectTypeProperty",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 27,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 18,
+                  "line": 3
+                }
+              },
+              "params": [],
+              "range": [
+                87,
+                96
+              ],
+              "rest": null,
+              "returnType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 27,
+                      "line": 3
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 26,
+                      "line": 3
+                    }
+                  },
+                  "name": "X",
+                  "optional": false,
+                  "range": [
+                    95,
+                    96
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 27,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 26,
+                    "line": 3
+                  }
+                },
+                "range": [
+                  95,
+                  96
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            },
+            "variance": null
+          }
+        ],
+        "range": [
+          85,
+          116
+        ],
+        "type": "ObjectTypeAnnotation"
+      },
+      "extends": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 15,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 14,
+            "line": 3
+          }
+        },
+        "name": "E",
+        "optional": false,
+        "range": [
+          83,
+          84
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 47,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "mixins": [],
+      "range": [
+        69,
+        116
+      ],
+      "type": "DeclareClass",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 47,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    116
+  ],
+  "type": "Program"
+}

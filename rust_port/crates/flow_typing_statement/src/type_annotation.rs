@@ -6758,6 +6758,17 @@ fn interface_key_form<'a>(
     }
 }
 
+/// What a computed key has to lose the name to, from
+/// [`interface_shadowing_member_last_locs`]. `members` covers methods and
+/// accessors, which is what a key adding a field loses to. `accessors` narrows
+/// that to accessors alone: a key adding a method does not lose to a later
+/// method, since the two become overloads of one name in both pipelines, but it
+/// does lose to a later accessor, which cannot share a name with a method.
+struct ShadowingMemberLastLocs {
+    members: HashMap<(bool, Name), ALoc>,
+    accessors: HashMap<(bool, Name), ALoc>,
+}
+
 /// The last key location of each method and accessor in an interface or
 /// `declare class` body, by the side it sits on and the name it spells. The
 /// signature pipeline stores every member of one name as a single entry
@@ -6778,7 +6789,7 @@ fn interface_key_form<'a>(
 fn interface_shadowing_member_last_locs(
     obj_kind: &intermediate_error_types::ObjKind,
     properties: &[ast::types::object::Property<ALoc, ALoc>],
-) -> HashMap<(bool, Name), ALoc> {
+) -> ShadowingMemberLastLocs {
     use ast::types::object::Property;
     use ast::types::object::PropertyValue;
     use flow_parser::ast::expression::object::Key;
@@ -6797,22 +6808,9 @@ fn interface_shadowing_member_last_locs(
         }
     }
 
-    let mut last_locs: HashMap<(bool, Name), ALoc> = HashMap::new();
-    for prop in properties {
-        let Property::NormalProperty(p) = prop else {
-            continue;
-        };
-        let shares_map = p.static_ || *obj_kind == intermediate_error_types::ObjKind::Interface;
-        let shadows = shares_map
-            && (p.method || matches!(p.value, PropertyValue::Get(..) | PropertyValue::Set(..)));
-        if !shadows {
-            continue;
-        }
-        let Some((name, key_loc)) = member_key(&p.key) else {
-            continue;
-        };
+    fn record(last_locs: &mut HashMap<(bool, Name), ALoc>, key: (bool, Name), key_loc: &ALoc) {
         last_locs
-            .entry((p.static_, name))
+            .entry(key)
             .and_modify(|last| {
                 if key_loc.quick_compare(last).is_gt() {
                     *last = key_loc.dupe();
@@ -6820,7 +6818,75 @@ fn interface_shadowing_member_last_locs(
             })
             .or_insert_with(|| key_loc.dupe());
     }
-    last_locs
+
+    let mut out = ShadowingMemberLastLocs {
+        members: HashMap::new(),
+        accessors: HashMap::new(),
+    };
+    for prop in properties {
+        let Property::NormalProperty(p) = prop else {
+            continue;
+        };
+        let shares_map = p.static_ || *obj_kind == intermediate_error_types::ObjKind::Interface;
+        let is_accessor = matches!(p.value, PropertyValue::Get(..) | PropertyValue::Set(..));
+        let shadows = shares_map && (p.method || is_accessor);
+        if !shadows {
+            continue;
+        }
+        let Some((name, key_loc)) = member_key(&p.key) else {
+            continue;
+        };
+        record(&mut out.members, (p.static_, name.dupe()), key_loc);
+        if is_accessor {
+            record(&mut out.accessors, (p.static_, name), key_loc);
+        }
+    }
+    out
+}
+
+/// Whether the signature pipeline only learns this computed key's name at
+/// merge, so it appends the member after every member the body names outright.
+/// A literal key, and the well-known-symbol spelling that reads as one, is
+/// folded there by name in source order instead, exactly as it is here.
+fn computed_key_appends_at_merge(expr: &ast::expression::Expression<ALoc, ALoc>) -> bool {
+    use ast::expression::ExpressionInner;
+
+    if flow_parser::ast_utils::well_known_symbol_name(expr).is_some() {
+        return false;
+    }
+    matches!(
+        &*expr.0,
+        ExpressionInner::Identifier { .. } | ExpressionInner::Member { .. }
+    )
+}
+
+/// A computed-key method held back from the class signature until the body's
+/// own names are in, so its overload lands where the signature pipeline puts
+/// it. See [`computed_key_appends_at_merge`].
+struct DeferredMethod {
+    static_: bool,
+    abstract_: bool,
+    override_: bool,
+    name: FlowSmolStr,
+    id_loc: ALoc,
+    func_sig: func_class_sig_types::func::Func<FuncTypeParamsConfig>,
+}
+
+impl DeferredMethod {
+    fn apply(self, s: &mut func_class_sig_types::class::Class<FuncTypeParamsConfig>) {
+        class_sig::append_method(
+            self.static_,
+            self.abstract_,
+            self.override_,
+            self.name,
+            self.id_loc,
+            None,
+            self.func_sig,
+            None,
+            None,
+            s,
+        );
+    }
 }
 
 fn add_interface_properties<'a>(
@@ -6848,6 +6914,7 @@ fn add_interface_properties<'a>(
 
     let mut prop_asts: Vec<Property<ALoc, (ALoc, Type)>> = Vec::new();
     let shadowing_member_last_locs = interface_shadowing_member_last_locs(&obj_kind, properties);
+    let mut deferred_methods: Vec<DeferredMethod> = Vec::new();
     for prop in properties {
         match prop {
             Property::CallProperty(cp) => {
@@ -6920,6 +6987,7 @@ fn add_interface_properties<'a>(
                             // getter and setter pair there as it does here.
                             Some(name)
                                 if shadowing_member_last_locs
+                                    .members
                                     .get(&(idx.static_, name.dupe()))
                                     .is_some_and(|last| {
                                         last.quick_compare(idx.key.loc()).is_gt()
@@ -7341,18 +7409,25 @@ fn add_interface_properties<'a>(
                                                     this.dupe(),
                                                     &fsig,
                                                 );
-                                                class_sig::append_method(
-                                                    np.static_,
-                                                    abstract_on,
-                                                    override_on_declare_class,
-                                                    name.dupe(),
-                                                    id_loc.dupe(),
-                                                    None,
-                                                    fsig,
-                                                    None,
-                                                    None,
-                                                    &mut s,
-                                                );
+                                                let append = DeferredMethod {
+                                                    static_: np.static_,
+                                                    abstract_: abstract_on,
+                                                    override_: override_on_declare_class,
+                                                    name: name.dupe(),
+                                                    id_loc: id_loc.dupe(),
+                                                    func_sig: fsig,
+                                                };
+                                                if !computed_key_appends_at_merge(&ck.expression) {
+                                                    append.apply(&mut s);
+                                                } else if !shadowing_member_last_locs
+                                                    .accessors
+                                                    .get(&(np.static_, Name::new(name.dupe())))
+                                                    .is_some_and(|last| {
+                                                        last.quick_compare(&id_loc).is_gt()
+                                                    })
+                                                {
+                                                    deferred_methods.push(append);
+                                                }
                                                 prop_asts.push(Property::NormalProperty(
                                                     ast::types::object::NormalProperty {
                                                         loc: np.loc.dupe(),
@@ -8065,6 +8140,12 @@ fn add_interface_properties<'a>(
                 prop_asts.push(error_prop);
             }
         }
+    }
+    // Reversed: the signature pipeline folds the computed members of one name
+    // into its single entry back to front, so the last one written is the first
+    // overload among them.
+    for method in deferred_methods.into_iter().rev() {
+        method.apply(&mut s);
     }
     Ok((s, prop_asts))
 }

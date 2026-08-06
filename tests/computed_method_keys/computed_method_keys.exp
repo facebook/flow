@@ -1,0 +1,637 @@
+Error ------------------------------------------------------------------------------------------------------ exp.js:41:3
+
+Illegal name. [unsupported-syntax]
+
+   41|   [wide](): number; // ERROR: `wide` names no one property
+         ^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- illegal_name_keys.js:9:3
+
+Illegal name. [unsupported-syntax]
+
+   9|   [null](): number; // ERROR: a null literal names no property
+        ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- illegal_name_keys.js:12:3
+
+Illegal name. [unsupported-syntax]
+
+   12|   [true](): number; // ERROR: a boolean literal names no property
+         ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------- illegal_name_keys.js:15:3
+
+Illegal name. [unsupported-syntax]
+
+   15|   [1n](): number; // ERROR: a bigint literal names no property
+         ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:28:1
+
+Cannot cast `one.m()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:28:1
+   28| one.m() as string; // ERROR: number is not string
+       ^^^^^^^
+
+References:
+   exp.js:7:12
+    7|   ['m'](): number;
+                  ^^^^^^ [1]
+   imp.js:28:12
+   28| one.m() as string; // ERROR: number is not string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:32:1
+
+Cannot cast `num[42]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:32:1
+   32| num[42]() as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   exp.js:10:11
+   10|   [42](): number;
+                 ^^^^^^ [1]
+   imp.js:32:14
+   32| num[42]() as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:36:1
+
+Cannot cast `neg[-1]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:36:1
+   36| neg[-1]() as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   exp.js:13:11
+   13|   [-1](): number;
+                 ^^^^^^ [1]
+   imp.js:36:14
+   36| neg[-1]() as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:41:1
+
+Cannot cast `mixed.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:41:1
+   41| mixed.run() as string; // ERROR: number is not string
+       ^^^^^^^^^^^
+
+References:
+   exp.js:16:14
+   16|   ['run'](): number;
+                    ^^^^^^ [1]
+   imp.js:41:16
+   41| mixed.run() as string; // ERROR: number is not string
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:45:1
+
+Cannot cast `poly.id(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:45:1
+   45| poly.id(1) as string; // ERROR: number is not string
+       ^^^^^^^^^^
+
+References:
+   imp.js:45:9
+   45| poly.id(1) as string; // ERROR: number is not string
+               ^ [1]
+   imp.js:45:15
+   45| poly.id(1) as string; // ERROR: number is not string
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:49:1
+
+Cannot cast `ot.f()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:49:1
+   49| ot.f() as string; // ERROR: number is not string
+       ^^^^^^
+
+References:
+   exp.js:22:28
+   22| export type OT = {['f'](): number};
+                                  ^^^^^^ [1]
+   imp.js:49:11
+   49| ot.f() as string; // ERROR: number is not string
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:53:1
+
+Cannot cast `fromConst.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:53:1
+   53| fromConst.run() as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^^
+
+References:
+   exp.js:29:10
+   29|   [k](): number;
+                ^^^^^^ [1]
+   imp.js:53:20
+   53| fromConst.run() as string; // ERROR: number is not string
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:57:1
+
+Cannot cast `fromQualified.go()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:57:1
+   57| fromQualified.go() as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   exp.js:33:15
+   33|   [keys.m](): number;
+                     ^^^^^^ [1]
+   imp.js:57:23
+   57| fromQualified.go() as string; // ERROR: number is not string
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:61:1
+
+Cannot cast `fromPrimitiveKeyword.prim()` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   imp.js:61:1
+   61| fromPrimitiveKeyword.prim() as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exp.js:37:15
+   37|   [string](): number;
+                     ^^^^^^ [1]
+   imp.js:61:32
+   61| fromPrimitiveKeyword.prim() as string; // ERROR: number is not string
+                                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- imp.js:64:10
+
+Cannot get `fromWide.anything` because property `anything` is missing in `FromWide` [1]. [prop-missing]
+
+   imp.js:64:10
+   64| fromWide.anything; // ERROR: the member names no one property
+                ^^^^^^^^
+
+References:
+   imp.js:63:25
+   63| declare const fromWide: FromWide;
+                               ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:68:1
+
+Cannot cast `lf.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
+[incompatible-type]
+
+   imp.js:68:1
+   68| lf.a() as 'p'; // ERROR: 'q' is not 'p'
+       ^^^^^^
+
+References:
+   exp.js:50:12
+   50|   ['a'](): 'q';
+                  ^^^ [1]
+   imp.js:68:11
+   68| lf.a() as 'p'; // ERROR: 'q' is not 'p'
+                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:72:1
+
+Cannot cast `vf.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   imp.js:72:1
+   72| vf.a() as 'q'; // ERROR: 'p' is not 'q'
+       ^^^^^^
+
+References:
+   exp.js:55:8
+   55|   a(): 'p';
+              ^^^ [1]
+   imp.js:72:11
+   72| vf.a() as 'q'; // ERROR: 'p' is not 'q'
+                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:76:1
+
+Cannot cast `vl.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   imp.js:76:1
+   76| vl.a() as 'q'; // ERROR: 'p' is not 'q'
+       ^^^^^^
+
+References:
+   exp.js:58:8
+   58|   a(): 'p';
+              ^^^ [1]
+   imp.js:76:11
+   76| vl.a() as 'q'; // ERROR: 'p' is not 'q'
+                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:80:1
+
+Cannot cast `tv.a()` to string literal `q` because string literal `z` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   imp.js:80:1
+   80| tv.a() as 'q'; // ERROR: 'z' is not 'q'
+       ^^^^^^
+
+References:
+   exp.js:63:13
+   63|   [dup2](): 'z';
+                   ^^^ [1]
+   imp.js:80:11
+   80| tv.a() as 'q'; // ERROR: 'z' is not 'q'
+                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:84:1
+
+Cannot cast `al.a` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   imp.js:84:1
+   84| al.a as 'q'; // ERROR: 'p' is not 'q'
+       ^^^^
+
+References:
+   exp.js:67:12
+   67|   get a(): 'p';
+                  ^^^ [1]
+   imp.js:84:9
+   84| al.a as 'q'; // ERROR: 'p' is not 'q'
+               ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:88:1
+
+Cannot cast `af.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
+[incompatible-type]
+
+   imp.js:88:1
+   88| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
+       ^^^^^^
+
+References:
+   exp.js:71:12
+   71|   [dup](): 'q';
+                  ^^^ [1]
+   imp.js:88:11
+   88| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
+                 ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:94:1
+
+Cannot cast `holder.dm()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imp.js:94:1
+   94| holder.dm() as string; // ERROR: number is not string
+       ^^^^^^^^^^^
+
+References:
+   exp.js:76:13
+   76|   ['dm'](): number;
+                   ^^^^^^ [1]
+   imp.js:94:16
+   94| holder.dm() as string; // ERROR: number is not string
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- parse_error.js:7:13
+
+Unexpected computed key, expected a literal or a possibly-qualified reference [ParseError]
+
+   7| type Bad = {[string[]](): void}; // ERROR: an array type has no value form
+                  ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- void_key.js:6:13
+
+Unexpected computed key, expected a literal or a possibly-qualified reference [ParseError]
+
+   6| type Bad = {[void](): void}; // ERROR: `void` has no value form
+                  ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:17:1
+
+Cannot cast `i['m']()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:17:1
+   17| i['m']() as string; // ERROR: number is not string
+       ^^^^^^^^
+
+References:
+   within.js:8:12
+    8|   ['m'](): number;
+                  ^^^^^^ [1]
+   within.js:17:13
+   17| i['m']() as string; // ERROR: number is not string
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:27:1
+
+Cannot cast `c['dm']()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:27:1
+   27| c['dm']() as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   within.js:20:13
+   20|   ['dm'](): number;
+                   ^^^^^^ [1]
+   within.js:27:14
+   27| c['dm']() as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:33:1
+
+Cannot cast `ot.f()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:33:1
+   33| ot.f() as string; // ERROR: number is not string
+       ^^^^^^
+
+References:
+   within.js:29:21
+   29| type OT = {['f'](): number};
+                           ^^^^^^ [1]
+   within.js:33:11
+   33| ot.f() as string; // ERROR: number is not string
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:41:1
+
+Cannot cast `oi['x']` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:41:1
+   41| oi['x'] as string; // ERROR: number is not string
+       ^^^^^^^
+
+References:
+   within.js:38:22
+   38| type OI = {[string]: number};
+                            ^^^^^^ [1]
+   within.js:41:12
+   41| oi['x'] as string; // ERROR: number is not string
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:48:1
+
+Cannot cast `mx.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:48:1
+   48| mx.run() as string; // ERROR: number is not string
+       ^^^^^^^^
+
+References:
+   within.js:44:26
+   44| type Mixed = {['run'](): number, [string]: number};
+                                ^^^^^^ [1]
+   within.js:48:13
+   48| mx.run() as string; // ERROR: number is not string
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:56:1
+
+Cannot cast `neg[-1]()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:56:1
+   56| neg[-1]() as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   within.js:52:11
+   52|   [-1](): number;
+                 ^^^^^^ [1]
+   within.js:56:14
+   56| neg[-1]() as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:67:1
+
+Cannot cast `prim.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:67:1
+   67| prim.run() as string; // ERROR: number is not string
+       ^^^^^^^^^^
+
+References:
+   within.js:63:15
+   63|   [string](): number;
+                     ^^^^^^ [1]
+   within.js:67:15
+   67| prim.run() as string; // ERROR: number is not string
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:77:1
+
+Cannot cast `bare.run()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:77:1
+   77| bare.run() as string; // ERROR: number is not string
+       ^^^^^^^^^^
+
+References:
+   within.js:73:10
+   73|   [k](): number;
+                ^^^^^^ [1]
+   within.js:77:15
+   77| bare.run() as string; // ERROR: number is not string
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:86:1
+
+Cannot cast `qual.go()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:86:1
+   86| qual.go() as string; // ERROR: number is not string
+       ^^^^^^^^^
+
+References:
+   within.js:82:15
+   82|   [keys.m](): number;
+                     ^^^^^^ [1]
+   within.js:86:14
+   86| qual.go() as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- within.js:92:3
+
+Illegal name. [unsupported-syntax]
+
+   92|   [wide](): number; // ERROR: `wide` names no one property
+         ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:101:1
+
+Cannot cast `poly.id(...)` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   within.js:101:1
+   101| poly.id(1) as string; // ERROR: number is not string
+        ^^^^^^^^^^
+
+References:
+   within.js:101:9
+   101| poly.id(1) as string; // ERROR: number is not string
+                ^ [1]
+   within.js:101:15
+   101| poly.id(1) as string; // ERROR: number is not string
+                      ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:106:3
+
+Optional method signature is not enabled. [unsupported-syntax]
+
+   106|   ['m']?(): number; // ERROR: optional method signatures are tslib-only
+          ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:123:1
+
+Cannot cast `lf.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
+[incompatible-type]
+
+   within.js:123:1
+   123| lf.a() as 'p'; // ERROR: 'q' is not 'p'
+        ^^^^^^
+
+References:
+   within.js:118:12
+   118|   ['a'](): 'q';
+                   ^^^ [1]
+   within.js:123:11
+   123| lf.a() as 'p'; // ERROR: 'q' is not 'p'
+                  ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:133:1
+
+Cannot cast `vf.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   within.js:133:1
+   133| vf.a() as 'q'; // ERROR: 'p' is not 'q'
+        ^^^^^^
+
+References:
+   within.js:129:8
+   129|   a(): 'p';
+               ^^^ [1]
+   within.js:133:11
+   133| vf.a() as 'q'; // ERROR: 'p' is not 'q'
+                  ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:140:1
+
+Cannot cast `vl.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   within.js:140:1
+   140| vl.a() as 'q'; // ERROR: 'p' is not 'q'
+        ^^^^^^
+
+References:
+   within.js:135:8
+   135|   a(): 'p';
+               ^^^ [1]
+   within.js:140:11
+   140| vl.a() as 'q'; // ERROR: 'p' is not 'q'
+                  ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:151:1
+
+Cannot cast `tv.a()` to string literal `q` because string literal `z` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   within.js:151:1
+   151| tv.a() as 'q'; // ERROR: 'z' is not 'q'
+        ^^^^^^
+
+References:
+   within.js:147:13
+   147|   [dup2](): 'z';
+                    ^^^ [1]
+   within.js:151:11
+   151| tv.a() as 'q'; // ERROR: 'z' is not 'q'
+                  ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:161:1
+
+Cannot cast `al.a` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
+[incompatible-type]
+
+   within.js:161:1
+   161| al.a as 'q'; // ERROR: 'p' is not 'q'
+        ^^^^
+
+References:
+   within.js:157:12
+   157|   get a(): 'p';
+                   ^^^ [1]
+   within.js:161:9
+   161| al.a as 'q'; // ERROR: 'p' is not 'q'
+                ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- within.js:168:1
+
+Cannot cast `af.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
+[incompatible-type]
+
+   within.js:168:1
+   168| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
+        ^^^^^^
+
+References:
+   within.js:164:12
+   164|   [dup](): 'q';
+                   ^^^ [1]
+   within.js:168:11
+   168| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
+                  ^^^ [2]
+
+
+
+Found 41 errors

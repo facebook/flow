@@ -6681,6 +6681,29 @@ fn resolve_prop_key<'ast>(
                     FlowSmolStr::new(ast_utils::string_of_bigint(inner)),
                     loc.dupe(),
                 ),
+                // A negative numeric key is a unary minus over a positive
+                // literal, both from the expression parser and from the
+                // type-to-expression converter for a `.js` computed method key.
+                // The within-file checker names it by evaluating the key, so it
+                // has to be named here too or the property goes missing across a
+                // module boundary.
+                ExpressionInner::Unary { loc, inner, .. }
+                    if inner.operator == ast::expression::UnaryOperator::Minus =>
+                {
+                    match inner.argument.deref() {
+                        ExpressionInner::NumberLiteral { inner: num, .. }
+                            if flow_common::js_number::is_float_safe_integer(-num.value) =>
+                        {
+                            ResolvedPropKey::Named(
+                                FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(
+                                    -num.value,
+                                )),
+                                loc.dupe(),
+                            )
+                        }
+                        _ => ResolvedPropKey::ComputedError { loc: ck.loc.dupe() },
+                    }
+                }
                 ExpressionInner::Identifier { inner, .. } => ResolvedPropKey::ComputedRef {
                     expr_loc: inner.loc.dupe(),
                     ref_name: inner.name.dupe(),
