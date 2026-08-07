@@ -24,7 +24,7 @@ use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_printer::PrinterOptions;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
@@ -92,11 +92,11 @@ fn find_identifier_and_type(
 
 //  Extract per-prop documentation from flattened component props
 fn extract_prop_docs(
-    reader: &SharedMem,
+    reader: &Transaction,
     ast: &ast::Program<Loc, Loc>,
     ty: &ALocElt,
 ) -> Option<Vec<response::infer_type_of_name::PropDoc>> {
-    let get_ast_from_shared_mem = |file_key: &FileKey| -> Option<ast::Program<Loc, Loc>> {
+    let get_ast_from_heap = |file_key: &FileKey| -> Option<ast::Program<Loc, Loc>> {
         reader.get_ast(file_key).map(|arc| (*arc).clone())
     };
     let props = match ty {
@@ -122,8 +122,7 @@ fn extract_prop_docs(
             def_locs.first().map(|aloc| reader.loc_of_aloc(aloc))
         })
         .collect();
-    let jsdoc_map =
-        find_documentation::jsdocs_of_getdef_locs(ast, &get_ast_from_shared_mem, &prop_locs);
+    let jsdoc_map = find_documentation::jsdocs_of_getdef_locs(ast, &get_ast_from_heap, &prop_locs);
     let docs: Vec<response::infer_type_of_name::PropDoc> = props
         .iter()
         .filter_map(|prop| {
@@ -375,7 +374,7 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
 }
 
 fn format_ty_elt_response(
-    reader: &SharedMem,
+    reader: &Transaction,
     genv: &Genv<'_, '_>,
     ref_type_bodies_tbl: &Rc<RefCell<BTreeMap<String, Type>>>,
     loc: Loc,
@@ -404,14 +403,14 @@ fn format_ty_elt_response(
 
 fn type_of_name_from_artifacts<'a, 'cx: 'a>(
     doc_at_loc: &dyn Fn(
-        &SharedMem,
+        &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
         &FileKey,
         i32,
         i32,
     ) -> Option<String>,
-    reader: &SharedMem,
+    reader: &Transaction,
     check_result: &'a FileArtifacts<'cx>,
     expand_component_props: bool,
     actual_name: &str,
@@ -446,11 +445,11 @@ fn type_of_name_from_artifacts<'a, 'cx: 'a>(
 }
 
 fn member_doc_from_def_locs(
-    reader: &flow_heap::parsing_heaps::SharedMem,
+    reader: &flow_heap::parsing_heaps::Transaction,
     ast: &flow_parser::ast::Program<Loc, Loc>,
     def_locs: &[ALoc],
 ) -> Option<String> {
-    let get_ast_from_shared_mem =
+    let get_ast_from_heap =
         |file_key: &flow_parser::file_key::FileKey| -> Option<flow_parser::ast::Program<Loc, Loc>> {
             reader.get_ast(file_key).map(|arc| (*arc).clone())
         };
@@ -459,7 +458,7 @@ fn member_doc_from_def_locs(
             let loc = reader.loc_of_aloc(aloc);
             flow_services_autocomplete::find_documentation::jsdoc_of_getdef_loc(
                 ast,
-                &get_ast_from_shared_mem,
+                &get_ast_from_heap,
                 loc,
             )
             .and_then(|jsdoc| {
@@ -471,7 +470,7 @@ fn member_doc_from_def_locs(
 }
 
 fn type_of_name_member<'a, 'cx: 'a>(
-    reader: &SharedMem,
+    reader: &Transaction,
     check_result: &'a FileArtifacts<'cx>,
     full_name: &str,
     member_name: &str,
@@ -571,7 +570,7 @@ fn find_first_match<'a>(
 
 fn resolve_name_from_index(
     options: &Options,
-    reader: Arc<SharedMem>,
+    reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     exact_match_only: bool,
     target_name: &str,
@@ -668,7 +667,7 @@ fn resolve_name_from_index(
 
 fn type_of_name_from_index(
     doc_at_loc: &dyn Fn(
-        &SharedMem,
+        &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
         &FileKey,
@@ -676,7 +675,7 @@ fn type_of_name_from_index(
         i32,
     ) -> Option<String>,
     options: &Options,
-    reader: Arc<SharedMem>,
+    reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     expand_component_props: bool,
     exact_match_only: bool,
@@ -712,10 +711,10 @@ fn type_of_name_from_index(
 
 fn type_of_name_single<'a, 'cx: 'a>(
     options: &Options,
-    reader: Arc<SharedMem>,
+    reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     doc_at_loc: &dyn Fn(
-        &SharedMem,
+        &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
         &FileKey,
@@ -809,10 +808,10 @@ fn type_of_name_single<'a, 'cx: 'a>(
 
 pub fn type_of_name<'a, 'cx: 'a>(
     options: &Options,
-    reader: Arc<SharedMem>,
+    reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
     doc_at_loc: &dyn Fn(
-        &SharedMem,
+        &Transaction,
         &FileArtifacts,
         &ast::Program<Loc, Loc>,
         &FileKey,

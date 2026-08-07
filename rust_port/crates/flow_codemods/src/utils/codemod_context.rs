@@ -11,7 +11,7 @@ use flow_aloc::ALoc;
 use flow_common::docblock::Docblock;
 use flow_common::options::Options;
 use flow_common_ty::ty::ALocElt;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_lint_settings::lint_settings::LintSettings;
 use flow_lint_settings::severity::Severity;
 use flow_parser::ast;
@@ -41,7 +41,7 @@ pub mod typed {
         pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
         pub docblock: Docblock,
         pub iteration: i32,
-        pub reader: Arc<SharedMem>,
+        pub reader: Arc<Transaction>,
     }
 
     pub enum Error {
@@ -144,7 +144,7 @@ pub mod untyped_flow_init {
 
     pub struct UntypedFlowInitCodemodContext {
         pub file: FileKey,
-        pub reader: Arc<SharedMem>,
+        pub reader: Arc<Transaction>,
     }
 
     pub fn file(ccx: &UntypedFlowInitCodemodContext) -> &FileKey {

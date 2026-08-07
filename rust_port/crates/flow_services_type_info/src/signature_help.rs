@@ -770,9 +770,7 @@ pub mod callee_finder {
 
 pub fn find_signatures<'a>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(
-        &flow_parser::file_key::FileKey,
-    ) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<ast::Program<Loc, Loc>>,
     cx: &Context<'a>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     ast: &ast::Program<Loc, Loc>,
@@ -833,7 +831,7 @@ pub fn find_signatures<'a>(
                             let getdef_loc = locs.into_iter().next().unwrap();
                             find_documentation::jsdoc_of_getdef_loc(
                                 ast,
-                                get_ast_from_shared_mem,
+                                get_ast_from_heap,
                                 getdef_loc,
                             )
                         }
@@ -848,11 +846,7 @@ pub fn find_signatures<'a>(
                         .filter_map(|fn_t| {
                             let jsdoc = {
                                 let loc = loc_of_aloc(type_util::def_loc_of_t(fn_t));
-                                find_documentation::jsdoc_of_getdef_loc(
-                                    ast,
-                                    get_ast_from_shared_mem,
-                                    loc,
-                                )
+                                find_documentation::jsdoc_of_getdef_loc(ast, get_ast_from_heap, loc)
                             };
                             func_details_of_type(&jsdoc, fn_t)
                         })
@@ -893,7 +887,7 @@ pub fn find_signatures<'a>(
                             let loc = loc_of_aloc(type_util::loc_of_t(t));
                             let jsdoc = find_documentation::jsdoc_of_getdef_loc(
                                 ast,
-                                get_ast_from_shared_mem,
+                                get_ast_from_heap,
                                 loc,
                             );
                             let documentation =

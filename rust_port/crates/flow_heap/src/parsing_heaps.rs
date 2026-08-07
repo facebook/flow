@@ -28,37 +28,30 @@ use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module as TypeSigModule;
 use flow_type_sig::signature_error::TolerableError;
 
-use crate::entity::Dependency;
-use crate::entity::DependencyTarget;
-use crate::entity::ResolvedModule;
-use crate::entity::ResolvedRequires;
 use crate::haste_module::HasteModule;
 use crate::parse::FileEntry;
+use crate::parse::MergeHashes;
 use crate::parse::PackageParse;
 use crate::parse::Parse;
 use crate::parse::TypedParse;
-pub use crate::shared_mem::HashStats;
-pub use crate::shared_mem::SharedMem;
+use crate::resolved_requires::Dependency;
+use crate::resolved_requires::DependencyTarget;
+use crate::resolved_requires::ResolvedModule;
+use crate::resolved_requires::ResolvedRequires;
+pub use crate::transaction::HashStats;
+pub use crate::transaction::Transaction;
 
-impl SharedMem {
-    pub fn clear_reader_cache(&self) {
-        self.reader_cache.clear();
-    }
-
-    pub fn remove_reader_cache_batch(&self, keys: &[FileKey]) {
-        self.reader_cache.remove_batch(keys);
+impl Transaction {
+    pub fn latest_heap_reader(&self) -> crate::heap_state::HeapReader<'_> {
+        self.latest_reader()
     }
 
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
-        self.file_heap
-            .get(file)
-            .and_then(|entry| entry.get_haste_info_latest())
+        self.latest_reader().get_haste_info(file)
     }
 
     pub fn get_haste_info_committed(&self, file: &FileKey) -> Option<HasteModuleInfo> {
-        self.file_heap
-            .get(file)
-            .and_then(|entry| entry.get_haste_info_committed())
+        self.committed_reader().get_haste_info_committed(file)
     }
 
     pub fn get_haste_module_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
@@ -66,7 +59,7 @@ impl SharedMem {
     }
 
     pub fn get_haste_module(&self, info: &HasteModuleInfo) -> Option<HasteModule> {
-        self.haste_module_heap.get(info).map(|m| m.dupe())
+        self.latest_reader().get_haste_module(info)
     }
 
     pub fn get_haste_module_unsafe(&self, info: &HasteModuleInfo) -> HasteModule {
@@ -74,14 +67,29 @@ impl SharedMem {
             .unwrap_or_else(|| panic!("Haste module not found: {:?}", info))
     }
 
+    pub fn get_haste_provider_candidates(&self, info: &HasteModuleInfo) -> Vec<FileKey> {
+        self.latest_reader()
+            .haste_provider_candidates(info)
+            .into_iter()
+            .collect()
+    }
+
+    pub fn get_haste_dependents(&self, info: &HasteModuleInfo) -> Vec<FileKey> {
+        self.latest_reader()
+            .haste_dependents(info)
+            .into_iter()
+            .collect()
+    }
+
     pub fn get_dependency(&self, modulename: &Modulename) -> Option<Dependency> {
         match modulename {
             Modulename::Haste(haste_module_info) => self
                 .get_haste_module(haste_module_info)
                 .map(|module| module.dependency()),
-            Modulename::Filename(file_key) => {
-                self.file_heap.get(file_key).map(|entry| entry.dependency())
-            }
+            Modulename::Filename(file_key) => self
+                .latest_reader()
+                .file_entry(file_key)
+                .map(|entry| entry.dependency()),
         }
     }
 
@@ -92,8 +100,8 @@ impl SharedMem {
                 .map(|module| module.dependency())
                 .unwrap_or_else(|| panic!("Haste module not found: {:?}", haste_module_info)),
             Modulename::Filename(file_key) => self
-                .file_heap
-                .get(file_key)
+                .latest_reader()
+                .file_entry(file_key)
                 .map(|entry| entry.dependency())
                 .unwrap_or_else(|| panic!("File not found: {}", file_key.as_str())),
         }
@@ -127,73 +135,24 @@ impl SharedMem {
             DependencyTarget::HasteModule(haste_info) => {
                 self.get_or_create_haste_module(haste_info).dependency()
             }
-            DependencyTarget::File(file_key) => {
-                let (entry, _) = self.file_heap.ensure(&file_key, || {
-                    FileEntry::new_phantom(file_key.dupe(), self.entity_transaction.dupe())
-                });
-                entry.dependency()
-            }
+            DependencyTarget::File(file_key) => Dependency::file(file_key),
         }
     }
 
     pub fn get_provider(&self, dependency: &Dependency) -> Option<FileKey> {
-        match dependency.target() {
-            DependencyTarget::HasteModule(haste_info) => self
-                .get_haste_module(haste_info)
-                .and_then(|module| module.get_provider()),
-            DependencyTarget::File(file_key) => {
-                if let Some(file_entry) = self.file_heap.get(file_key) {
-                    if let Some(alternate) = file_entry.get_alternate_file() {
-                        if self.get_parse(&alternate).is_some() {
-                            return Some(alternate);
-                        }
-                    }
-                    if self.get_parse(file_key).is_some() {
-                        Some(file_key.dupe())
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-        }
+        self.latest_reader().get_provider(dependency)
     }
 
     pub fn get_provider_committed(&self, dependency: &Dependency) -> Option<FileKey> {
-        match dependency.target() {
-            DependencyTarget::HasteModule(haste_info) => self
-                .get_haste_module(haste_info)
-                .and_then(|module| module.get_provider_committed()),
-            DependencyTarget::File(file_key) => {
-                if let Some(file_entry) = self.file_heap.get(file_key) {
-                    if let Some(alternate) = file_entry.get_alternate_file() {
-                        if self.get_parse_committed(&alternate).is_some() {
-                            return Some(alternate);
-                        }
-                    }
-                    if self.get_parse_committed(file_key).is_some() {
-                        Some(file_key.dupe())
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
-            }
-        }
+        self.committed_reader().get_provider_committed(dependency)
     }
 
     pub fn get_parse(&self, file: &FileKey) -> Option<Parse> {
-        self.file_heap
-            .get(file)
-            .and_then(|entry| entry.parse_latest())
+        self.latest_reader().get_parse(file)
     }
 
     pub fn get_parse_committed(&self, file: &FileKey) -> Option<Parse> {
-        self.file_heap
-            .get(file)
-            .and_then(|entry| entry.parse_committed())
+        self.committed_reader().get_parse_committed(file)
     }
 
     pub fn get_typed_parse(&self, file: &FileKey) -> Option<TypedParse> {
@@ -227,7 +186,7 @@ impl SharedMem {
 
     pub fn get_leader(&self, file: &FileKey) -> Option<FileKey> {
         self.get_typed_parse(file)
-            .and_then(|typed| typed.leader.read_latest())
+            .and_then(|typed| typed.leader.dupe())
     }
 
     pub fn has_ast(&self, file: &FileKey) -> bool {
@@ -268,7 +227,7 @@ impl SharedMem {
     }
 
     pub fn get_ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
-        if let Some(cached) = self.reader_cache.get_ast(file) {
+        if let Some(cached) = self.committed().reader_cache.get_ast(file) {
             return cached;
         }
         let typed = self.get_typed_parse_unsafe(file);
@@ -276,14 +235,16 @@ impl SharedMem {
     }
 
     pub fn get_ast(&self, file: &FileKey) -> Option<Arc<Program<Loc, Loc>>> {
-        if let Some(cached) = self.reader_cache.get_ast(file) {
+        if let Some(cached) = self.committed().reader_cache.get_ast(file) {
             return Some(cached);
         }
         self.get_typed_parse(file)
             .and_then(|typed| match &typed.ast {
                 Some(bytes) => {
                     let ast = flow_heap_serialization::deserialize_ast(file, bytes);
-                    self.reader_cache.add_ast(file.dupe(), ast.dupe());
+                    self.committed()
+                        .reader_cache
+                        .add_ast(file.dupe(), ast.dupe());
                     Some(ast)
                 }
                 None => None,
@@ -318,12 +279,14 @@ impl SharedMem {
     }
 
     fn get_unpacked_aloc_table(&self, file: &FileKey) -> Option<Arc<ALocTable>> {
-        if let Some(cached) = self.reader_cache.get_aloc_table(file) {
+        if let Some(cached) = self.committed().reader_cache.get_aloc_table(file) {
             return Some(cached);
         }
         self.get_aloc_table(file).map(|packed| {
             let table = Arc::new(ALocTable::unpack(file.dupe(), &packed));
-            self.reader_cache.add_aloc_table(file.dupe(), table.dupe());
+            self.committed()
+                .reader_cache
+                .add_aloc_table(file.dupe(), table.dupe());
             table
         })
     }
@@ -416,10 +379,7 @@ impl SharedMem {
 
     pub fn get_resolved_requires_unsafe(&self, file: &FileKey) -> ResolvedRequires {
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .resolved_requires
-            .read_latest_clone()
-            .expect("ResolvedRequires should be set")
+        typed.resolved_requires_unsafe()
     }
 
     pub fn get_resolved_modules_unsafe(
@@ -439,27 +399,15 @@ impl SharedMem {
 
     pub fn get_leader_unsafe(&self, file: &FileKey) -> FileKey {
         let typed = self.get_typed_parse_unsafe(file);
-        typed.leader.get()
+        typed.leader_unsafe()
     }
 
     pub fn iter_dependents<F>(&self, f: &mut F, modulename: &Modulename)
     where
         F: FnMut(&FileKey),
     {
-        let dependents = match modulename {
-            Modulename::Haste(haste_info) => self
-                .get_haste_module(haste_info)
-                .map(|module| module.get_dependents()),
-            Modulename::Filename(file_key) => self
-                .file_heap
-                .get(file_key)
-                .and_then(|entry| entry.get_dependents()),
-        };
-
-        if let Some(deps) = dependents {
-            for file in deps {
-                f(&file);
-            }
+        for file in self.latest_reader().dependents(modulename) {
+            f(&file);
         }
     }
 
@@ -484,15 +432,12 @@ impl SharedMem {
                 file.as_str()
             )
         });
-        typed
-            .resolved_requires
-            .read_committed_clone()
-            .unwrap_or_else(|| {
-                panic!(
-                    "Committed resolved requires not found for file: {}",
-                    file.as_str()
-                )
-            })
+        typed.resolved_requires.dupe().unwrap_or_else(|| {
+            panic!(
+                "Committed resolved requires not found for file: {}",
+                file.as_str()
+            )
+        })
     }
 
     pub fn get_resolved_modules_committed_unsafe(
@@ -505,15 +450,12 @@ impl SharedMem {
                 file.as_str()
             )
         });
-        let resolved_requires = typed
-            .resolved_requires
-            .read_committed_clone()
-            .unwrap_or_else(|| {
-                panic!(
-                    "Committed resolved requires not found for file: {}",
-                    file.as_str()
-                )
-            });
+        let resolved_requires = typed.resolved_requires.dupe().unwrap_or_else(|| {
+            panic!(
+                "Committed resolved requires not found for file: {}",
+                file.as_str()
+            )
+        });
         let requires = &typed.requires;
         let resolved_modules = resolved_requires.get_resolved_modules();
         requires
@@ -547,63 +489,86 @@ impl SharedMem {
     }
 
     pub fn file_has_changed(&self, file: &FileKey) -> bool {
-        self.file_heap
-            .get(file)
-            .is_some_and(|entry| entry.parse_has_changed())
+        self.latest_reader().file_has_changed(file)
     }
 
     pub fn get_alternate_file(&self, file: &FileKey) -> Option<FileKey> {
-        self.file_heap
-            .get(file)
+        self.latest_reader()
+            .file_entry(file)
             .and_then(|entry| entry.get_alternate_file())
     }
 
     pub fn set_alternate_file(&self, file: &FileKey, alternate: FileKey) {
-        if let Some(entry) = self.file_heap.get(file) {
-            entry.set_alternate_file(Some(alternate));
+        let writer = self.heap_writer();
+        if let Some(entry) = writer.reader().file_entry(file) {
+            writer.set_file_entry(file.dupe(), entry.with_alternate_file(Some(alternate)));
         }
     }
 
     pub fn get_or_create_haste_module(&self, info: HasteModuleInfo) -> HasteModule {
-        let (module, inserted) = self.haste_module_heap.ensure(&info, || {
-            HasteModule::new(self.entity_transaction.dupe(), info.clone())
-        });
-        if inserted {
-            self.note_alloc();
+        let writer = self.heap_writer();
+        self.get_or_create_haste_module_with_writer(&writer, info)
+    }
+
+    fn get_or_create_haste_module_with_writer(
+        &self,
+        writer: &crate::heap_state::HeapWriter<'_>,
+        info: HasteModuleInfo,
+    ) -> HasteModule {
+        if let Some(module) = writer.reader().get_haste_module(&info) {
+            return module;
         }
-        module.dupe()
+        let module = HasteModule::new(info.dupe());
+        writer.set_haste_module(info, module.dupe());
+        self.note_alloc();
+        module
+    }
+
+    pub fn set_haste_module_provider(&self, info: &HasteModuleInfo, provider: Option<FileKey>) {
+        let writer = self.heap_writer();
+        let module = writer
+            .reader()
+            .get_haste_module(info)
+            .unwrap_or_else(|| HasteModule::new(info.dupe()));
+        writer.set_haste_module(info.dupe(), module.with_provider(provider));
+    }
+
+    fn add_haste_provider_candidate(&self, info: &HasteModuleInfo, file: &FileKey) {
+        self.get_or_create_haste_module(info.dupe());
+        self.heap_writer()
+            .add_haste_provider_candidate(info.dupe(), file.dupe());
+    }
+
+    fn remove_haste_provider_candidate(&self, info: &HasteModuleInfo, file: &FileKey) {
+        let writer = self.heap_writer();
+        if let Some(module) = writer.reader().get_haste_module(info)
+            && module.get_provider().as_ref() == Some(file)
+        {
+            writer.set_haste_module(info.dupe(), module.with_provider(None));
+        }
+        writer.remove_haste_provider_candidate(info.dupe(), file.dupe());
     }
 
     fn calc_dirty_modules(
         &self,
         file_key: &FileKey,
-        file_entry: &FileEntry,
+        old_entry: Option<&FileEntry>,
+        new_entry: &FileEntry,
     ) -> BTreeSet<Modulename> {
-        let haste_ent = file_entry.haste_info_entity();
-        let new_info = haste_ent.read_latest_clone();
-
-        let (old_haste_info, new_haste_info, changed_haste_info) = if haste_ent.has_changed() {
-            let old_info = haste_ent.read_committed_clone();
-            (old_info, new_info, None)
-        } else {
-            (None, None, new_info)
-        };
-
+        let old_info = old_entry.and_then(|entry| entry.get_haste_info());
+        let new_info = new_entry.get_haste_info();
         let mut dirty_modules = BTreeSet::new();
 
-        if let Some(info) = old_haste_info {
-            let module = self.get_or_create_haste_module(info.clone());
-            module.remove_provider(file_key);
-            dirty_modules.insert(Modulename::Haste(info));
-        }
-
-        if let Some(info) = new_haste_info.clone() {
-            let module = self.get_or_create_haste_module(info.clone());
-            module.add_provider(file_key.dupe());
-            dirty_modules.insert(Modulename::Haste(info));
-        }
-
-        if let Some(info) = changed_haste_info {
+        if old_info != new_info {
+            if let Some(info) = old_info {
+                self.remove_haste_provider_candidate(&info, file_key);
+                dirty_modules.insert(Modulename::Haste(info));
+            }
+            if let Some(info) = new_info {
+                self.add_haste_provider_candidate(&info, file_key);
+                dirty_modules.insert(Modulename::Haste(info));
+            }
+        } else if let Some(info) = new_info {
             dirty_modules.insert(Modulename::Haste(info));
         }
 
@@ -617,13 +582,18 @@ impl SharedMem {
             return BTreeSet::new();
         }
         let impl_key = files::chop_declaration_ext(file);
-        if self.file_heap.get(&impl_key).is_none() {
-            self.file_heap.insert(
-                impl_key.dupe(),
-                FileEntry::new_phantom(impl_key.dupe(), self.entity_transaction.dupe()),
-            );
+        let writer = self.heap_writer();
+        let (entry, inserted) = match writer.reader().file_entry(&impl_key) {
+            Some(entry) => (entry, false),
+            None => (FileEntry::new_empty(impl_key.dupe()), true),
+        };
+        writer.set_file_entry(
+            impl_key.dupe(),
+            entry.with_alternate_file(Some(file.dupe())),
+        );
+        if inserted {
+            self.note_alloc();
         }
-        self.set_alternate_file(&impl_key, file.dupe());
         BTreeSet::new()
     }
 
@@ -642,103 +612,66 @@ impl SharedMem {
         requires: Arc<[FlowImportSpecifier]>,
         imports: Arc<Imports>,
     ) -> BTreeSet<Modulename> {
-        self.record_changed_file(&file);
-        let has_dependents = !file.as_str().ends_with(".flow");
+        let writer = self.heap_writer();
+        let existing_entry = writer.reader().file_entry(&file);
+        let previous_entry = existing_entry.dupe();
 
-        let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
-            let existing_typed = existing_entry.parse_latest().and_then(|p| match p {
+        let existing_typed = existing_entry.as_ref().and_then(|entry| {
+            entry.parse_latest().and_then(|p| match p {
                 Parse::Typed(t) => Some(t),
                 _ => None,
-            });
+            })
+        });
 
-            let (resolved_requires, leader, sig_hash) = match existing_typed {
-                Some(ref existing) => (
-                    existing.resolved_requires.clone(),
-                    existing.leader.clone(),
-                    existing.sig_hash.clone(),
-                ),
-                None => (
-                    Arc::new(crate::entity::Entity::new(
-                        self.entity_transaction.dupe(),
-                        crate::entity::ResolvedRequires::new(vec![], vec![]),
-                    )),
-                    Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
-                    Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
-                ),
-            };
-
-            let typed_parse = TypedParse::new(
-                file_hash,
-                ast,
-                docblock,
-                aloc_table,
-                type_sig,
-                file_sig,
-                exports,
-                requires,
-                resolved_requires,
-                imports,
-                leader,
-                sig_hash,
-            );
-
-            existing_entry.parse().set(Parse::Typed(typed_parse));
-            if let Some(info) = haste_module_info {
-                existing_entry.haste_info_entity().set(info);
-            }
-            self.calc_dirty_modules(&file, &existing_entry)
-        } else {
-            let typed_parse = TypedParse::new(
-                file_hash,
-                ast,
-                docblock,
-                aloc_table,
-                type_sig,
-                file_sig,
-                exports,
-                requires,
-                Arc::new(crate::entity::Entity::new(
-                    self.entity_transaction.dupe(),
-                    crate::entity::ResolvedRequires::new(vec![], vec![]),
+        let (resolved_requires, leader, sig_hash) = match existing_typed {
+            Some(ref existing) => (
+                existing.resolved_requires.dupe(),
+                existing.leader.dupe(),
+                existing.sig_hash,
+            ),
+            None => (
+                Some(crate::resolved_requires::ResolvedRequires::new(
+                    vec![],
+                    vec![],
                 )),
-                imports,
-                Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
-                Arc::new(crate::entity::Entity::empty(self.entity_transaction.dupe())),
-            );
+                None,
+                None,
+            ),
+        };
 
-            let file_entry = FileEntry::new(
-                file.dupe(),
-                self.entity_transaction.dupe(),
-                Parse::Typed(typed_parse.dupe()),
-                haste_module_info.clone(),
-                has_dependents,
-            );
-            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => {
-                    self.note_alloc();
-                    self.calc_dirty_modules(&file, &file_entry)
+        let typed_parse = TypedParse::new(
+            file_hash,
+            ast,
+            docblock,
+            aloc_table,
+            type_sig,
+            file_sig,
+            exports,
+            requires,
+            resolved_requires,
+            imports,
+            leader,
+            sig_hash,
+        );
+        let new_entry = match existing_entry {
+            Some(entry) => {
+                let entry = entry.with_parse(Some(Parse::Typed(typed_parse)));
+                match haste_module_info {
+                    Some(info) => entry.with_haste_info(Some(info)),
+                    None => entry,
                 }
-                Some(_rejected) => {
-                    let in_map_entry = self.file_heap.get(&file).expect(
-                        "GcMap::insert returned Some(_) but get(&file) is None; \
-                         insert and get are guarded by the same map lock",
-                    );
-                    match in_map_entry.parse_latest() {
-                        None => {
-                            in_map_entry.parse().set(Parse::Typed(typed_parse));
-                            if let Some(info) = haste_module_info {
-                                in_map_entry.haste_info_entity().set(info);
-                            }
-                            self.calc_dirty_modules(&file, &in_map_entry)
-                        }
-                        // Two threads raced to add this file and the other thread
-                        // won. We don't need to mark any files as dirty; the other
-                        // thread will have done that for us. *)
-                        Some(_) => BTreeSet::new(),
-                    }
-                }
+            }
+            None => {
+                self.note_alloc();
+                FileEntry::new(
+                    file.dupe(),
+                    Parse::Typed(typed_parse),
+                    haste_module_info.clone(),
+                )
             }
         };
+        let mut dirty_modules = self.calc_dirty_modules(&file, previous_entry.as_ref(), &new_entry);
+        writer.set_file_entry(file.dupe(), new_entry);
 
         dirty_modules.extend(self.handle_flow_ext(&file));
         dirty_modules
@@ -751,57 +684,41 @@ impl SharedMem {
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::UntypedParse;
-        self.record_changed_file(&file);
-        let has_dependents = !file.as_str().ends_with(".flow");
+        let writer = self.heap_writer();
+        let existing_entry = writer.reader().file_entry(&file);
+        let previous_entry = existing_entry.dupe();
 
-        let mut dirty_modules = if let Some(existing_entry) = self.file_heap.get(&file) {
+        if let Some(existing_entry) = existing_entry.as_ref() {
             if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
-                if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
+                if let Some(old_rr) = old_typed.resolved_requires {
                     let old_deps = old_rr.all_dependencies();
                     for dep in &old_deps {
-                        self.remove_dependent_from(&file, dep);
+                        self.remove_dependent_from(&writer, &file, dep);
                     }
                 }
             }
-            existing_entry
-                .parse()
-                .set(Parse::Untyped(UntypedParse::new(file_hash)));
-            if let Some(info) = haste_module_info {
-                existing_entry.haste_info_entity().set(info);
+        }
+
+        let untyped_parse = UntypedParse::new(file_hash);
+        let new_entry = match existing_entry {
+            Some(entry) => {
+                let entry = entry.with_parse(Some(Parse::Untyped(untyped_parse)));
+                match haste_module_info {
+                    Some(info) => entry.with_haste_info(Some(info)),
+                    None => entry,
+                }
             }
-            self.calc_dirty_modules(&file, &existing_entry)
-        } else {
-            let untyped_parse = UntypedParse::new(file_hash);
-            let file_entry = FileEntry::new(
-                file.dupe(),
-                self.entity_transaction.dupe(),
-                Parse::Untyped(untyped_parse.dupe()),
-                haste_module_info.clone(),
-                has_dependents,
-            );
-            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => {
-                    self.note_alloc();
-                    self.calc_dirty_modules(&file, &file_entry)
-                }
-                Some(_rejected) => {
-                    let in_map_entry = self.file_heap.get(&file).expect(
-                        "GcMap::insert returned Some(_) but get(&file) is None; \
-                         insert and get are guarded by the same map lock",
-                    );
-                    match in_map_entry.parse_latest() {
-                        None => {
-                            in_map_entry.parse().set(Parse::Untyped(untyped_parse));
-                            if let Some(info) = haste_module_info {
-                                in_map_entry.haste_info_entity().set(info);
-                            }
-                            self.calc_dirty_modules(&file, &in_map_entry)
-                        }
-                        Some(_) => BTreeSet::new(),
-                    }
-                }
+            None => {
+                self.note_alloc();
+                FileEntry::new(
+                    file.dupe(),
+                    Parse::Untyped(untyped_parse),
+                    haste_module_info.clone(),
+                )
             }
         };
+        let mut dirty_modules = self.calc_dirty_modules(&file, previous_entry.as_ref(), &new_entry);
+        writer.set_file_entry(file.dupe(), new_entry);
 
         dirty_modules.extend(self.handle_flow_ext(&file));
         dirty_modules
@@ -815,31 +732,32 @@ impl SharedMem {
         file_key: FileKey,
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
-        self.record_changed_file(&file_key);
-        if let Some(existing_entry) = self.file_heap.get(&file_key) {
+        let writer = self.heap_writer();
+        if let Some(existing_entry) = writer.reader().file_entry(&file_key) {
             if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
-                if let Some(old_rr) = old_typed.resolved_requires.read_latest_clone() {
+                if let Some(old_rr) = old_typed.resolved_requires {
                     let old_deps = old_rr.all_dependencies();
                     for dep in &old_deps {
-                        self.remove_dependent_from(&file_key, dep);
+                        self.remove_dependent_from(&writer, &file_key, dep);
                     }
                 }
             }
-            existing_entry.parse().advance(None);
             let mut dirty_modules = BTreeSet::new();
             dirty_modules.insert(Modulename::Filename(files::chop_flow_ext(&file_key)));
-            if let Some(haste_info) = existing_entry.haste_info_entity().read_latest_clone() {
-                let module = self.get_or_create_haste_module(haste_info.clone());
-                module.remove_provider(&file_key);
-                existing_entry.haste_info_entity().advance(None);
+            if let Some(haste_info) = existing_entry.get_haste_info() {
+                self.remove_haste_provider_candidate(&haste_info, &file_key);
                 dirty_modules.insert(Modulename::Haste(haste_info));
             }
+            writer.set_file_entry(
+                file_key.dupe(),
+                existing_entry.with_parse(None).with_haste_info(None),
+            );
             dirty_modules
         } else {
             match haste_module_info {
                 None => BTreeSet::new(),
                 Some(haste_module_info) => {
-                    let _m = self.get_or_create_haste_module(haste_module_info.clone());
+                    let _m = self.get_or_create_haste_module(haste_module_info.dupe());
                     let mut dirty_modules = BTreeSet::new();
                     dirty_modules.insert(Modulename::Haste(haste_module_info));
                     dirty_modules
@@ -856,49 +774,31 @@ impl SharedMem {
         package_info: Arc<PackageJson>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::PackageParse;
-        self.record_changed_file(&file);
-        let has_dependents = true;
+        let writer = self.heap_writer();
+        let existing_entry = writer.reader().file_entry(&file);
+        let previous_entry = existing_entry.dupe();
+        let package_parse = PackageParse::new(file_hash, package_info);
 
-        if let Some(existing_entry) = self.file_heap.get(&file) {
-            existing_entry
-                .parse()
-                .set(Parse::Package(PackageParse::new(file_hash, package_info)));
-            if let Some(info) = haste_module_info {
-                existing_entry.haste_info_entity().set(info);
-            }
-            self.calc_dirty_modules(&file, &existing_entry)
-        } else {
-            let package_parse = PackageParse::new(file_hash, package_info);
-            let file_entry = FileEntry::new(
-                file.dupe(),
-                self.entity_transaction.dupe(),
-                Parse::Package(package_parse.dupe()),
-                haste_module_info.clone(),
-                has_dependents,
-            );
-            match self.file_heap.insert(file.dupe(), file_entry.dupe()) {
-                None => {
-                    self.note_alloc();
-                    self.calc_dirty_modules(&file, &file_entry)
-                }
-                Some(_rejected) => {
-                    let in_map_entry = self.file_heap.get(&file).expect(
-                        "GcMap::insert returned Some(_) but get(&file) is None; \
-                         insert and get are guarded by the same map lock",
-                    );
-                    match in_map_entry.parse_latest() {
-                        None => {
-                            in_map_entry.parse().set(Parse::Package(package_parse));
-                            if let Some(info) = haste_module_info {
-                                in_map_entry.haste_info_entity().set(info);
-                            }
-                            self.calc_dirty_modules(&file, &in_map_entry)
-                        }
-                        Some(_) => BTreeSet::new(),
-                    }
+        let new_entry = match existing_entry {
+            Some(entry) => {
+                let entry = entry.with_parse(Some(Parse::Package(package_parse)));
+                match haste_module_info {
+                    Some(info) => entry.with_haste_info(Some(info)),
+                    None => entry,
                 }
             }
-        }
+            None => {
+                self.note_alloc();
+                FileEntry::new(
+                    file.dupe(),
+                    Parse::Package(package_parse),
+                    haste_module_info.clone(),
+                )
+            }
+        };
+        let dirty_modules = self.calc_dirty_modules(&file, previous_entry.as_ref(), &new_entry);
+        writer.set_file_entry(file.dupe(), new_entry);
+        dirty_modules
     }
 
     // Given a file, it's old resolved requires, and new resolved requires,
@@ -906,31 +806,35 @@ impl SharedMem {
     pub fn set_resolved_requires(
         &self,
         file: &FileKey,
-        resolved_requires: crate::entity::ResolvedRequires,
+        resolved_requires: crate::resolved_requires::ResolvedRequires,
     ) {
-        if let Some(entry) = self.file_heap.get(file) {
+        let writer = self.heap_writer();
+        if let Some(entry) = writer.reader().file_entry(file) {
             if let Some(Parse::Typed(typed)) = entry.parse_latest() {
                 let old_deps = typed
                     .resolved_requires
-                    .read_latest_clone()
+                    .as_ref()
                     .map(|rr| rr.all_dependencies())
                     .unwrap_or_default();
-
                 let new_deps = resolved_requires.all_dependencies();
 
-                self.record_changed_file(file);
-                typed.resolved_requires.set(resolved_requires);
+                writer.set_file_entry(
+                    file.dupe(),
+                    entry.with_parse(Some(Parse::Typed(
+                        typed.with_resolved_requires(resolved_requires),
+                    ))),
+                );
 
                 let mut new_alloc_size = 0;
                 for dep in &old_deps {
                     if new_deps.binary_search(dep).is_err() {
-                        self.remove_dependent_from(file, dep);
+                        self.remove_dependent_from(&writer, file, dep);
                     }
                 }
 
                 for dep in &new_deps {
                     if old_deps.binary_search(dep).is_err() {
-                        new_alloc_size += self.add_dependent_to(file, dep);
+                        new_alloc_size += self.add_dependent_to(&writer, file, dep);
                     }
                 }
                 self.note_alloc_many(new_alloc_size);
@@ -938,421 +842,473 @@ impl SharedMem {
         }
     }
 
-    fn remove_dependent_from(&self, file: &FileKey, dep: &Dependency) {
+    fn remove_dependent_from(
+        &self,
+        writer: &crate::heap_state::HeapWriter<'_>,
+        file: &FileKey,
+        dep: &Dependency,
+    ) {
         match dep.target() {
             DependencyTarget::HasteModule(haste_info) => {
-                if let Some(module) = self.get_haste_module(haste_info) {
-                    module.remove_dependent(file);
-                }
+                writer.remove_haste_dependent(haste_info.dupe(), file.dupe());
             }
             DependencyTarget::File(dep_file) => {
-                if let Some(dep_entry) = self.file_heap.get(dep_file) {
-                    dep_entry.remove_dependent(file);
-                }
+                writer.remove_file_dependent(dep_file.dupe(), file.dupe());
             }
         }
     }
 
-    fn add_dependent_to(&self, file: &FileKey, dep: &Dependency) -> usize {
+    fn add_dependent_to(
+        &self,
+        writer: &crate::heap_state::HeapWriter<'_>,
+        file: &FileKey,
+        dep: &Dependency,
+    ) -> usize {
         match dep.target() {
             DependencyTarget::HasteModule(haste_info) => {
-                let module = self.get_or_create_haste_module(haste_info.dupe());
-                module.add_dependent(file.dupe());
+                self.get_or_create_haste_module_with_writer(writer, haste_info.dupe());
+                writer.add_haste_dependent(haste_info.dupe(), file.dupe());
                 0
             }
             DependencyTarget::File(dep_file) => {
-                let (dep_entry, inserted) = self.file_heap.ensure(dep_file, || {
-                    FileEntry::new_phantom(dep_file.dupe(), self.entity_transaction.dupe())
-                });
-                dep_entry.add_dependent(file.dupe());
-                usize::from(inserted)
+                writer.add_file_dependent(dep_file.dupe(), file.dupe());
+                0
             }
         }
     }
 
-    fn rollback_resolved_requires(
+    pub fn update_typed_parse(
         &self,
         file: &FileKey,
-        ent: &Arc<crate::entity::Entity<ResolvedRequires>>,
+        update: impl FnOnce(TypedParse) -> TypedParse,
     ) {
-        let old_resolved_requires = ent.read_committed_clone();
-        let new_resolved_requires = ent.read_latest_clone();
-        let old_dependencies = old_resolved_requires
-            .as_ref()
-            .map(ResolvedRequires::all_dependencies)
-            .unwrap_or_default();
-        let new_dependencies = new_resolved_requires
-            .as_ref()
-            .map(ResolvedRequires::all_dependencies)
-            .unwrap_or_default();
-        for dep in &new_dependencies {
-            if !old_dependencies.contains(dep) {
-                self.remove_dependent_from(file, dep);
-            }
-        }
-        let mut new_alloc_size = 0;
-        for dep in &old_dependencies {
-            if !new_dependencies.contains(dep) {
-                new_alloc_size += self.add_dependent_to(file, dep);
-            }
-        }
-        self.note_alloc_many(new_alloc_size);
-        ent.rollback();
-    }
-
-    fn rollback_leader(&self, parse: &TypedParse) {
-        parse.leader.rollback();
-        parse.sig_hash.rollback();
-    }
-
-    fn rollback_file(&self, file_key: &FileKey, file: &FileEntry) {
-        let old_typed_parse = file.parse_committed().and_then(|parse| match parse {
-            Parse::Typed(typed) => Some(typed),
-            _ => None,
-        });
-        let new_typed_parse = file.parse_latest().and_then(|parse| match parse {
-            Parse::Typed(typed) => Some(typed),
-            _ => None,
-        });
-        let haste_ent = file.haste_info_entity();
-        let (old_haste_module, new_haste_module) = if haste_ent.has_changed() {
-            let old_info = haste_ent.read_committed_clone();
-            let new_info = haste_ent.read_latest_clone();
-            (
-                old_info
-                    .as_ref()
-                    .and_then(|info| self.get_haste_module(info)),
-                new_info
-                    .as_ref()
-                    .and_then(|info| self.get_haste_module(info)),
-            )
-        } else {
-            (None, None)
-        };
-
-        match (old_typed_parse, new_typed_parse) {
-            (None, None) => {}
-            (Some(old_parse), None) => {
-                let old_resolved_requires = old_parse.resolved_requires.read_latest_clone();
-                let old_dependencies = old_resolved_requires
-                    .as_ref()
-                    .map(ResolvedRequires::all_dependencies)
-                    .unwrap_or_default();
-                let mut new_alloc_size = 0;
-                for dep in &old_dependencies {
-                    new_alloc_size += self.add_dependent_to(file_key, dep);
-                }
-                self.note_alloc_many(new_alloc_size);
-            }
-            (None, Some(new_parse)) => {
-                let new_resolved_requires = new_parse.resolved_requires.read_latest_clone();
-                let new_dependencies = new_resolved_requires
-                    .as_ref()
-                    .map(ResolvedRequires::all_dependencies)
-                    .unwrap_or_default();
-                for dep in &new_dependencies {
-                    self.remove_dependent_from(file_key, dep);
-                }
-            }
-            (Some(_), Some(new_parse)) => {
-                self.rollback_resolved_requires(file_key, &new_parse.resolved_requires);
-                self.rollback_leader(&new_parse);
-            }
-        }
-        if let Some(module) = &old_haste_module {
-            module.rollback_provider();
-        }
-        if let Some(module) = &new_haste_module {
-            module.rollback_provider();
-            module.remove_provider(file_key);
-        }
-        file.parse().rollback();
-        haste_ent.rollback();
-        if let Some(module) = old_haste_module {
-            module.add_provider(file_key.dupe());
+        let writer = self.heap_writer();
+        if let Some(entry) = writer.reader().file_entry(file)
+            && let Some(Parse::Typed(typed)) = entry.parse_latest()
+        {
+            writer.set_file_entry(
+                file.dupe(),
+                entry.with_parse(Some(Parse::Typed(update(typed)))),
+            );
         }
     }
 
-    pub fn rollback_entities(&self) {
-        // Only files advanced since the last commit need reverting. `rollback_file`
-        // restores each file's parse, resolved-requires revdeps, leader, and haste
-        // provider entities, so iterating the changed set is sufficient -- a no-op
-        // for any entity that wasn't actually advanced.
-        for file_key in self.changed_files.iter() {
-            if let Some(entry) = self.file_heap.get(&file_key) {
-                self.rollback_file(&file_key, &entry);
-            }
-        }
-        self.changed_files.clear();
+    pub fn set_merge_hashes(&self, file: &FileKey, hashes: MergeHashes) {
+        self.update_typed_parse(file, |typed| typed.with_merge_hashes(hashes));
     }
 }
 
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
+    use std::panic::AssertUnwindSafe;
+    use std::sync::Barrier;
+    use std::sync::atomic::AtomicBool;
+    use std::sync::atomic::Ordering;
+    use std::time::Duration;
 
     use dupe::Dupe;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::file_key::FileKeyInner;
 
     use super::*;
-    use crate::shared_mem::GC_MAP_SHARDS;
-    use crate::shared_mem::GcPhase;
+    use crate::heap_state::CommittedHeap;
+    use crate::transaction::GcPhase;
 
     fn source_file(name: &str) -> FileKey {
         FileKey::new(FileKeyInner::SourceFile(name.to_string()))
     }
 
-    fn bytes(data: &[u8]) -> Arc<[u8]> {
-        Arc::from(data.to_vec().into_boxed_slice())
+    fn committed_heap() -> Arc<CommittedHeap> {
+        Arc::new(CommittedHeap::default())
+    }
+
+    #[test]
+    fn writes_are_overlay_only_until_commit() {
+        let heap = committed_heap();
+        let transaction = Transaction::new(heap.dupe());
+        let file = source_file("a.js");
+
+        transaction.add_unparsed(file.dupe(), 1, None);
+        assert_eq!(transaction.get_file_hash(&file), Some(1));
+        assert_eq!(transaction.get_file_hash_committed(&file), None);
+        assert_eq!(heap.heap_size(), 0);
+
+        transaction.commit(&heap);
+
+        let reader = Transaction::new(heap.dupe());
+        assert_eq!(reader.get_file_hash(&file), Some(1));
+        assert_eq!(heap.heap_size(), 1);
+    }
+
+    #[test]
+    fn dropping_rolls_back_and_retry_gets_a_fresh_overlay() {
+        let heap = committed_heap();
+        let file = source_file("a.js");
+        let failed = Transaction::new(heap.dupe());
+        failed.add_unparsed(file.dupe(), 1, None);
+        drop(failed);
+
+        let retry = Transaction::new(heap.dupe());
+        assert_eq!(retry.get_file_hash(&file), None);
+        retry.add_unparsed(file.dupe(), 2, None);
+        retry.commit(&heap);
+
+        let reader = Transaction::new(heap.dupe());
+        assert_eq!(reader.get_file_hash(&file), Some(2));
+    }
+
+    #[test]
+    fn commit_rejects_retained_transaction_handles() {
+        let heap = committed_heap();
+        let transaction = Transaction::new(heap.dupe());
+        let retained = transaction.dupe();
+
+        let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+            transaction.dupe().commit(&heap);
+        }));
+        assert!(result.is_err());
+        drop(retained);
+        transaction.commit(&heap);
+    }
+
+    #[test]
+    fn gc_stays_idle_while_a_transaction_exists() {
+        let heap = committed_heap();
+        let seed = Transaction::new(heap.dupe());
+        seed.add_unparsed(source_file("a.js"), 1, None);
+        seed.commit(&heap);
+        heap.state.read().gc_state.lock().new_alloc_size = 1;
+
+        let transaction = Transaction::new(heap.dupe());
+        assert!(heap.collect_slice(1));
+        assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Idle);
+        drop(transaction);
+
+        assert!(!heap.collect_slice(1));
+        assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Mark);
     }
 
     #[test]
     fn compact_removes_committed_deleted_file() {
-        let shared_mem = SharedMem::new();
+        let heap = committed_heap();
         let file = source_file("a.js");
+        let insert = Transaction::new(heap.dupe());
+        insert.add_unparsed(file.dupe(), 1, None);
+        insert.commit(&heap);
+        let delete = Transaction::new(heap.dupe());
+        delete.clear_file(file, None);
+        delete.commit(&heap);
 
-        shared_mem.add_unparsed(file.dupe(), 1, None);
-        shared_mem.commit_entities();
-        assert_eq!(shared_mem.heap_size(), 1);
-
-        shared_mem.clear_file(file.dupe(), None);
-        shared_mem.commit_entities();
-        shared_mem.compact();
-
-        assert_eq!(shared_mem.heap_size(), 0);
-    }
-
-    #[test]
-    fn compact_revalidates_free_file_before_removing() {
-        let shared_mem = SharedMem::new();
-        let file = source_file("a.js");
-
-        shared_mem.add_unparsed(file.dupe(), 1, None);
-        shared_mem.commit_entities();
-        shared_mem.clear_file(file.dupe(), None);
-        shared_mem.commit_entities();
-
-        {
-            let mut gc_state = shared_mem.gc_state.lock();
-            shared_mem.start_cycle(&mut gc_state);
-            shared_mem.mark_slice(&mut gc_state, usize::MAX);
-            SharedMem::sweep_slice(&shared_mem, &mut gc_state, usize::MAX);
-        }
-
-        shared_mem.add_unparsed(file.dupe(), 2, None);
-        let (free_files, free_haste_modules) = {
-            let mut gc_state = shared_mem.gc_state.lock();
-            (
-                std::mem::take(&mut gc_state.free_files),
-                std::mem::take(&mut gc_state.free_haste_modules),
-            )
-        };
-        shared_mem.compact_helper(free_files, free_haste_modules);
-
-        assert!(matches!(
-            shared_mem.get_parse(&file),
-            Some(Parse::Untyped(_))
-        ));
-        assert_eq!(shared_mem.heap_size(), 1);
-    }
-
-    #[test]
-    fn commit_entities_commits_the_current_transaction() {
-        let shared_mem = SharedMem::new();
-        let a = source_file("a.js");
-        let b = source_file("b.js");
-
-        shared_mem.add_unparsed(a.dupe(), 1, None);
-        shared_mem.add_unparsed(b.dupe(), 1, None);
-        shared_mem.commit_entities();
-
-        shared_mem.add_unparsed(a.dupe(), 2, None);
-        shared_mem.add_unparsed(b.dupe(), 2, None);
-        shared_mem.commit_entities();
-
-        assert_eq!(shared_mem.get_file_hash_committed(&a), Some(2));
-        assert_eq!(shared_mem.get_file_hash_committed(&b), Some(2));
-
-        shared_mem.rollback_entities();
-
-        assert_eq!(shared_mem.get_file_hash(&a), Some(2));
-        assert_eq!(shared_mem.get_file_hash(&b), Some(2));
+        heap.compact();
+        assert_eq!(heap.heap_size(), 0);
     }
 
     #[test]
     fn save_heap_and_load_heap_preserve_committed_heap_data() {
-        let shared_mem = SharedMem::new();
+        let heap = committed_heap();
         let file = source_file("a.js");
         let haste = HasteModuleInfo::mk(FlowSmolStr::new("A"));
-
-        shared_mem.add_unparsed(file.dupe(), 42, Some(haste.dupe()));
-        let module = shared_mem
-            .get_haste_module(&haste)
-            .expect("haste module should be created when adding a haste provider");
-        module.set_provider(Some(file.dupe()));
-        module.add_dependent(file.dupe());
-        shared_mem.commit_entities();
+        let write = Transaction::new(heap.dupe());
+        write.add_unparsed(file.dupe(), 42, Some(haste.dupe()));
+        write.set_haste_module_provider(&haste, Some(file.dupe()));
+        write
+            .heap_writer()
+            .add_haste_dependent(haste.dupe(), file.dupe());
+        write.commit(&heap);
 
         let mut bytes = Vec::new();
-        shared_mem
-            .save_heap(&mut bytes)
-            .expect("heap should serialize");
-
-        let loaded = SharedMem::new();
-        loaded
+        heap.save_heap(&mut bytes).expect("heap should serialize");
+        let loaded_heap = committed_heap();
+        loaded_heap
             .load_heap(&mut Cursor::new(bytes))
             .expect("heap should deserialize");
+        let loaded = Transaction::new(loaded_heap);
 
         assert_eq!(loaded.get_file_hash(&file), Some(42));
-        assert_eq!(loaded.get_haste_info(&file), Some(haste.dupe()));
-        let loaded_module = loaded
-            .get_haste_module(&haste)
-            .expect("haste module should be restored");
-        assert_eq!(loaded_module.get_provider(), Some(file.dupe()));
-        assert_eq!(loaded_module.get_all_providers(), vec![file.dupe()]);
-        let mut dependents = Vec::new();
-        loaded.iter_dependents(
-            &mut |dependent| dependents.push(dependent.dupe()),
-            &Modulename::Haste(haste),
-        );
-        assert_eq!(dependents, vec![file]);
+        assert_eq!(loaded.get_haste_info(&file), Some(haste));
     }
 
     #[test]
-    fn save_heap_strips_typed_lazy_fields_like_hh_prepare_saved_state() {
-        let shared_mem = SharedMem::new();
-        let file = source_file("typed.js");
-        let exports = Exports::empty();
-        let imports = Imports::empty();
-        let typed_parse = TypedParse {
-            file_hash: 42,
-            ast: Some(bytes(&[1])),
-            docblock: Some(bytes(&[2])),
-            aloc_table: Some(bytes(&[3])),
-            type_sig: Some(bytes(&[4])),
-            file_sig: Some(bytes(&[5])),
-            exports: Arc::from(
-                flow_heap_serialization::serialize_exports(&exports).into_boxed_slice(),
-            ),
-            requires: Arc::from(Vec::<FlowImportSpecifier>::new().into_boxed_slice()),
-            resolved_requires: Arc::new(crate::entity::Entity::new(
-                shared_mem.entity_transaction.dupe(),
-                ResolvedRequires::new(Vec::new(), Vec::new()),
-            )),
-            imports: Arc::from(
-                flow_heap_serialization::serialize_imports(&imports).into_boxed_slice(),
-            ),
-            leader: Arc::new(crate::entity::Entity::new(
-                shared_mem.entity_transaction.dupe(),
-                file.dupe(),
-            )),
-            sig_hash: Arc::new(crate::entity::Entity::new(
-                shared_mem.entity_transaction.dupe(),
-                123,
-            )),
-            merge_hashes: Arc::new(parking_lot::RwLock::new(None)),
-        };
-        let entry = FileEntry::new(
-            file.dupe(),
-            shared_mem.entity_transaction.dupe(),
-            Parse::Typed(typed_parse),
-            None,
-            true,
-        );
-        assert!(shared_mem.file_heap.insert(file.dupe(), entry).is_none());
-        shared_mem.commit_entities();
-
-        assert!(shared_mem.has_ast(&file));
-        assert_eq!(shared_mem.get_leader(&file), Some(file.dupe()));
-
-        let mut bytes = Vec::new();
-        shared_mem
-            .save_heap(&mut bytes)
-            .expect("heap should serialize");
-
-        let loaded = SharedMem::new();
-        loaded
-            .load_heap(&mut Cursor::new(bytes))
-            .expect("heap should deserialize");
-
-        assert_eq!(loaded.get_file_hash(&file), Some(42));
-        assert!(!loaded.has_ast(&file));
-        assert_eq!(loaded.get_leader(&file), None);
-        let loaded_typed = loaded.get_typed_parse_unsafe(&file);
-        assert!(loaded_typed.docblock.is_none());
-        assert!(loaded_typed.aloc_table.is_none());
-        assert!(loaded_typed.type_sig.is_none());
-        assert!(loaded_typed.file_sig.is_none());
-        assert_eq!(loaded_typed.sig_hash.read_latest(), None);
-    }
-
-    #[test]
-    fn collect_slice_uses_new_allocations_to_start_cycle() {
-        let shared_mem = SharedMem::new();
+    fn committed_heap_publication_is_atomic_across_maps() {
+        let heap = committed_heap();
         let file = source_file("a.js");
+        let even_dependent = source_file("even.js");
+        let odd_dependent = source_file("odd.js");
+        let seed = Transaction::new(heap.dupe());
+        seed.add_unparsed(file.dupe(), 0, None);
+        seed.heap_writer()
+            .add_file_dependent(file.dupe(), even_dependent.dupe());
+        seed.commit(&heap);
 
-        shared_mem.add_unparsed(file, 1, None);
-
-        assert!(!shared_mem.collect_slice(1));
-        assert_eq!(shared_mem.gc_state.lock().phase, GcPhase::Mark);
-        for _ in 0..(GC_MAP_SHARDS * 2) {
-            if shared_mem.gc_state.lock().phase == GcPhase::Sweep {
-                return;
+        let done = Arc::new(AtomicBool::new(false));
+        let start = Arc::new(Barrier::new(2));
+        let reader_heap = heap.dupe();
+        let reader_file = file.dupe();
+        let reader_even_dependent = even_dependent.dupe();
+        let reader_odd_dependent = odd_dependent.dupe();
+        let reader_done = done.dupe();
+        let reader_start = start.dupe();
+        let reader = std::thread::spawn(move || {
+            let mut first_read = true;
+            while !reader_done.load(Ordering::Acquire) {
+                let state = reader_heap.state.read();
+                let data = &state.data;
+                if first_read {
+                    reader_start.wait();
+                    first_read = false;
+                }
+                let file_hash = match data
+                    .files
+                    .get(&reader_file)
+                    .and_then(|entry| entry.parse_latest())
+                {
+                    Some(Parse::Untyped(parse)) => parse.file_hash,
+                    _ => panic!("committed test file should have an untyped parse"),
+                };
+                let expected_dependent = if file_hash % 2 == 0 {
+                    &reader_even_dependent
+                } else {
+                    &reader_odd_dependent
+                };
+                let dependents = data
+                    .file_dependents
+                    .get(&reader_file)
+                    .expect("committed test file should have one dependent");
+                assert_eq!(
+                    dependents.as_slice(),
+                    std::slice::from_ref(expected_dependent)
+                );
             }
-            assert!(!shared_mem.collect_slice(1));
+        });
+
+        start.wait();
+        for file_hash in 1..=100 {
+            let transaction = Transaction::new(heap.dupe());
+            transaction.add_unparsed(file.dupe(), file_hash, None);
+            let writer = transaction.heap_writer();
+            if file_hash % 2 == 0 {
+                writer.remove_file_dependent(file.dupe(), odd_dependent.dupe());
+                writer.add_file_dependent(file.dupe(), even_dependent.dupe());
+            } else {
+                writer.remove_file_dependent(file.dupe(), even_dependent.dupe());
+                writer.add_file_dependent(file.dupe(), odd_dependent.dupe());
+            }
+            transaction.commit(&heap);
         }
-        panic!("GC should reach sweep phase after incremental mark slices");
+        done.store(true, Ordering::Release);
+        reader
+            .join()
+            .expect("atomic committed heap reader should not panic");
+    }
+
+    #[test]
+    fn transaction_pins_committed_base_until_drop() {
+        let heap = committed_heap();
+        let file = source_file("a.js");
+        let seed = Transaction::new(heap.dupe());
+        seed.add_unparsed(file.dupe(), 1, None);
+        seed.commit(&heap);
+
+        let reader = Transaction::new(heap.dupe());
+        assert_eq!(reader.get_file_hash(&file), Some(1));
+
+        let writer = Transaction::new(heap.dupe());
+        writer.add_unparsed(file.dupe(), 2, None);
+        let writer_heap = heap.dupe();
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        let (done_tx, done_rx) = std::sync::mpsc::channel();
+        let writer_thread = std::thread::spawn(move || {
+            started_tx
+                .send(())
+                .expect("test should observe commit starting");
+            writer.commit(&writer_heap);
+            done_tx
+                .send(())
+                .expect("test should observe commit finishing");
+        });
+
+        started_rx
+            .recv()
+            .expect("writer should report commit starting");
+        assert_eq!(reader.get_file_hash(&file), Some(1));
+        assert!(
+            done_rx.recv_timeout(Duration::from_millis(100)).is_err(),
+            "writer should wait for the transaction reading the old base"
+        );
+
+        drop(reader);
+        done_rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("writer should finish after the reader is dropped");
+        writer_thread.join().expect("writer should not panic");
+
+        let reader = Transaction::new(heap);
+        assert_eq!(reader.get_file_hash(&file), Some(2));
+    }
+
+    #[test]
+    fn failed_heap_load_preserves_committed_heap() {
+        let heap = committed_heap();
+        let file = source_file("a.js");
+        let write = Transaction::new(heap.dupe());
+        write.add_unparsed(file.dupe(), 42, None);
+        write.commit(&heap);
+
+        let result = heap.load_heap(&mut Cursor::new(Vec::<u8>::new()));
+
+        assert!(result.is_err());
+        let read = Transaction::new(heap);
+        assert_eq!(read.get_file_hash(&file), Some(42));
+    }
+
+    #[test]
+    fn dropping_successful_heap_load_preserves_committed_heap() {
+        let saved_heap = committed_heap();
+        let saved_file = source_file("saved.js");
+        let saved_write = Transaction::new(saved_heap.dupe());
+        saved_write.add_unparsed(saved_file.dupe(), 42, None);
+        saved_write.commit(&saved_heap);
+        let mut bytes = Vec::new();
+        saved_heap
+            .save_heap(&mut bytes)
+            .expect("saved heap should serialize");
+
+        let heap = committed_heap();
+        let committed_file = source_file("committed.js");
+        let committed_write = Transaction::new(heap.dupe());
+        committed_write.add_unparsed(committed_file.dupe(), 7, None);
+        committed_write.commit(&heap);
+
+        let load = Transaction::new(heap.dupe());
+        load.load_heap(&mut Cursor::new(bytes))
+            .expect("replacement heap should deserialize");
+        assert_eq!(load.get_file_hash(&saved_file), Some(42));
+        assert_eq!(load.get_file_hash(&committed_file), None);
+        drop(load);
+
+        let reader = Transaction::new(heap);
+        assert_eq!(reader.get_file_hash(&committed_file), Some(7));
+        assert_eq!(reader.get_file_hash(&saved_file), None);
+    }
+
+    #[test]
+    fn committing_successful_heap_load_replaces_committed_heap() {
+        let saved_heap = committed_heap();
+        let saved_file = source_file("saved.js");
+        let saved_write = Transaction::new(saved_heap.dupe());
+        saved_write.add_unparsed(saved_file.dupe(), 42, None);
+        saved_write.commit(&saved_heap);
+        let mut bytes = Vec::new();
+        saved_heap
+            .save_heap(&mut bytes)
+            .expect("saved heap should serialize");
+
+        let heap = committed_heap();
+        let old_file = source_file("old.js");
+        let old_write = Transaction::new(heap.dupe());
+        old_write.add_unparsed(old_file.dupe(), 7, None);
+        old_write.commit(&heap);
+
+        let load = Transaction::new(heap.dupe());
+        load.load_heap(&mut Cursor::new(bytes))
+            .expect("replacement heap should deserialize");
+        load.commit(&heap);
+
+        let reader = Transaction::new(heap);
+        assert_eq!(reader.get_file_hash(&old_file), None);
+        assert_eq!(reader.get_file_hash(&saved_file), Some(42));
+    }
+
+    #[test]
+    fn provider_candidates_follow_latest_haste_info_in_transaction() {
+        let transaction = Transaction::new(committed_heap());
+        let file = source_file("a.js");
+        let old_haste = HasteModuleInfo::mk(FlowSmolStr::new("Old"));
+        let new_haste = HasteModuleInfo::mk(FlowSmolStr::new("New"));
+
+        transaction.add_unparsed(file.dupe(), 1, Some(old_haste.dupe()));
+        transaction.add_unparsed(file.dupe(), 2, Some(new_haste.dupe()));
+
+        assert_eq!(
+            transaction.get_haste_provider_candidates(&old_haste),
+            Vec::<FileKey>::new()
+        );
+        assert_eq!(
+            transaction.get_haste_provider_candidates(&new_haste),
+            vec![file]
+        );
     }
 }
 
 pub mod merge_context_mutator {
     use super::*;
 
-    fn update_leader(leader: Option<FileKey>, parse: &TypedParse) {
-        parse.leader.advance(leader);
-    }
-
-    fn update_sig_hash(hash: Option<u64>, parse: &TypedParse) {
-        parse.sig_hash.advance(hash);
-    }
-
-    fn add_sig_hash(for_find_all_refs: bool, parse: &TypedParse, sig_hash: u64) -> bool {
-        let prev_sig_hash = parse.sig_hash.read_committed();
+    fn sig_hash_differs(transaction: &Transaction, file: &FileKey, sig_hash: u64) -> bool {
+        let prev_sig_hash = transaction
+            .get_typed_parse_committed(file)
+            .and_then(|parse| parse.sig_hash);
 
         match prev_sig_hash {
             Some(prev_hash) if prev_hash == sig_hash => false,
-            _ => {
-                if !for_find_all_refs {
-                    parse.sig_hash.advance(Some(sig_hash));
-                }
-                true
-            }
+            _ => true,
         }
     }
 
+    struct MergeMetadata {
+        leader: FileKey,
+        sig_hash: Option<Option<u64>>,
+        merge_hashes: MergeHashes,
+    }
+
+    fn update_merge_metadata(transaction: &Transaction, file: &FileKey, metadata: MergeMetadata) {
+        transaction.update_typed_parse(file, |mut parse| {
+            parse.leader = Some(metadata.leader);
+            if let Some(sig_hash) = metadata.sig_hash {
+                parse.sig_hash = sig_hash;
+            }
+            parse.merge_hashes = Some(Arc::new(metadata.merge_hashes));
+            parse
+        });
+    }
+
     pub fn add_merge_on_diff(
-        shared_mem: &SharedMem,
+        transaction: &Transaction,
         for_find_all_refs: bool,
         component: &[(FileKey, TypedParse)],
         sig_hash: u64,
+        merge_hashes: Vec<MergeHashes>,
     ) -> bool {
         if component.is_empty() {
             return false;
         }
-        for (file, _) in component.iter() {
-            shared_mem.record_changed_file(file);
-        }
-        let (leader_key, leader_parse) = &component[0];
-        let rest = &component[1..];
-        for (_, parse) in component.iter() {
-            update_leader(Some(leader_key.dupe()), parse);
-        }
-        let diff = add_sig_hash(for_find_all_refs, leader_parse, sig_hash);
-        if diff && !for_find_all_refs {
-            for (_, parse) in rest.iter() {
-                update_sig_hash(None, parse);
-            }
+        assert_eq!(
+            component.len(),
+            merge_hashes.len(),
+            "merge hashes should match component files"
+        );
+        let (leader_key, _) = &component[0];
+        let diff = sig_hash_differs(transaction, leader_key, sig_hash);
+
+        for (i, ((file, _), merge_hashes)) in component.iter().zip(merge_hashes).enumerate() {
+            let sig_hash = if diff && !for_find_all_refs {
+                if i == 0 {
+                    Some(Some(sig_hash))
+                } else {
+                    Some(None)
+                }
+            } else {
+                None
+            };
+            update_merge_metadata(
+                transaction,
+                file,
+                MergeMetadata {
+                    leader: leader_key.dupe(),
+                    sig_hash,
+                    merge_hashes,
+                },
+            );
         }
 
         diff

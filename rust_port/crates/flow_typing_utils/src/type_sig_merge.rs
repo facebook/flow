@@ -201,7 +201,7 @@ impl<'cx> File<'cx> {
     }
 
     /// Break Rc reference cycles by clearing closure-holding fields.
-    /// The `dependencies` Lazy closures capture `Arc<SharedMem>` and
+    /// The `dependencies` Lazy closures capture `Arc<Transaction>` and
     /// `Rc<CheckCache>`, forming cycles that prevent deallocation.
     /// Other closure fields (`local_defs`, `remote_refs`, etc.) capture
     /// `file_cell` (Weak — safe) and `cx.dupe()` which also forms cycles.

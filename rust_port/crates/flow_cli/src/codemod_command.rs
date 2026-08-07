@@ -294,7 +294,7 @@ fn save_ast_diff(
 
 fn mk_module_system_info(
     options: &Options,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
 ) -> LspModuleSystemInfo {
     let node_resolver_root_relative_dirnames = if options.node_resolver_allow_root_relative {
         let root = options.root.to_string_lossy().to_string();
@@ -311,24 +311,24 @@ fn mk_module_system_info(
     } else {
         vec![]
     };
-    let shared_mem_clone = shared_mem.clone();
-    let shared_mem_clone2 = shared_mem.clone();
-    let shared_mem_clone3 = shared_mem.clone();
+    let transaction_clone = transaction.clone();
+    let transaction_clone2 = transaction.clone();
+    let transaction_clone3 = transaction.clone();
     LspModuleSystemInfo {
         file_options: options.file_options.dupe(),
         haste_module_system: options.module_system == flow_common::options::ModuleSystem::Haste,
-        get_haste_module_info: Arc::new(move |f| shared_mem_clone.get_haste_module_info(f)),
+        get_haste_module_info: Arc::new(move |f| transaction_clone.get_haste_module_info(f)),
         get_package_info: Box::new(move |f| {
-            shared_mem_clone2
+            transaction_clone2
                 .get_package_info(f)
                 .map(|package| Ok((*package).clone()))
         }),
         is_package_file: Box::new(move |module_path, module_name| {
             let _ = module_path;
-            let dependency = shared_mem_clone3
+            let dependency = transaction_clone3
                 .get_dependency(&Modulename::Haste(HasteModuleInfo::mk(module_name.into())));
-            match dependency.and_then(|dependency| shared_mem_clone3.get_provider(&dependency)) {
-                Some(addr) => shared_mem_clone3.is_package_file(&addr),
+            match dependency.and_then(|dependency| transaction_clone3.get_provider(&dependency)) {
+                Some(addr) => transaction_clone3.is_package_file(&addr),
                 None => false,
             }
         }),
@@ -782,7 +782,7 @@ mod fix_errors_command {
             _state: &Self::PrepassState,
             _file: FileKey,
             _file_options: &Arc<flow_common::files::FileOptions>,
-            reader: &Arc<flow_heap::parsing_heaps::SharedMem>,
+            reader: &Arc<flow_heap::parsing_heaps::Transaction>,
             _file_sig: &Arc<flow_parser_utils::file_sig::FileSig>,
             _typed_ast: &ast::Program<flow_aloc::ALoc, (flow_aloc::ALoc, Type)>,
         ) -> Self::PrepassResult {
@@ -791,7 +791,7 @@ mod fix_errors_command {
                 let reader = reader.clone();
                 Arc::new(move |aloc: &flow_aloc::ALoc| reader.loc_of_aloc(aloc))
             };
-            let get_ast_from_shared_mem = {
+            let get_ast_from_heap = {
                 let reader = reader.clone();
                 Arc::new(move |file: &FileKey| reader.get_ast(file).map(|ast| (*ast).clone()))
             };
@@ -848,7 +848,7 @@ mod fix_errors_command {
                     let transforms = code_action_service::ast_transforms_of_error(
                         loc_of_aloc.dupe(),
                         Some(lazy_error_loc),
-                        get_ast_from_shared_mem.dupe(),
+                        get_ast_from_heap.dupe(),
                         module_system_info.get_haste_module_info.dupe(),
                         get_type_sig.dupe(),
                         None,
@@ -909,7 +909,7 @@ mod fix_errors_command {
                 let reader = cctx.reader.clone();
                 Arc::new(move |aloc: &flow_aloc::ALoc| reader.loc_of_aloc(aloc))
             };
-            let get_ast_from_shared_mem = {
+            let get_ast_from_heap = {
                 let reader = cctx.reader.clone();
                 Arc::new(move |file: &FileKey| reader.get_ast(file).map(|ast| (*ast).clone()))
             };
@@ -935,7 +935,7 @@ mod fix_errors_command {
                         let transforms = code_action_service::ast_transforms_of_error(
                             loc_of_aloc.dupe(),
                             None,
-                            get_ast_from_shared_mem.dupe(),
+                            get_ast_from_heap.dupe(),
                             module_system_info.get_haste_module_info.dupe(),
                             get_type_sig.dupe(),
                             None,

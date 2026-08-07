@@ -23,7 +23,8 @@ use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_utils::checked_set::CheckedSet;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::file_key::FileKey;
 use flow_server_command_handler::command_handler;
 use flow_server_env::error_collator;
@@ -59,13 +60,13 @@ const INITIAL_CONNECTION_READ_TIMEOUT_SECS: u64 = 5;
 pub fn start(options: Arc<Options>, flowconfig_name: String) {
     crate::server::check_supported_operating_system(&options);
     flow_server_env::monitor_rpc::disable();
-    let shared_mem = Arc::new(SharedMem::new());
+    let committed_heap = Arc::new(CommittedHeap::new());
     let pool = ThreadPool::with_thread_count(ThreadCount::NumThreads(
         std::num::NonZeroUsize::new(options.max_workers as usize)
             .expect("max_workers should be positive"),
     ));
     let tmp_dir = options.temp_dir.to_string();
-    let server = FlowServer::new(options, shared_mem, pool, flowconfig_name, tmp_dir);
+    let server = FlowServer::new(options, committed_heap, pool, flowconfig_name, tmp_dir);
     server.run();
 }
 
@@ -142,7 +143,7 @@ impl Drop for ConnectionSlotGuard {
 
 pub(crate) struct FlowServer {
     options: Arc<Options>,
-    shared_mem: Arc<SharedMem>,
+    committed_heap: Arc<CommittedHeap>,
     pool: ThreadPool,
     flowconfig_name: String,
     tmp_dir: String,
@@ -151,14 +152,14 @@ pub(crate) struct FlowServer {
 impl FlowServer {
     pub(crate) fn new(
         options: Arc<Options>,
-        shared_mem: Arc<SharedMem>,
+        committed_heap: Arc<CommittedHeap>,
         pool: ThreadPool,
         flowconfig_name: String,
         tmp_dir: String,
     ) -> Self {
         Self {
             options,
-            shared_mem,
+            committed_heap,
             pool,
             flowconfig_name,
             tmp_dir,
@@ -261,7 +262,7 @@ impl FlowServer {
 
         let init_state = state.clone();
         let init_options = self.options.dupe();
-        let init_shared_mem = self.shared_mem.dupe();
+        let init_committed_heap = self.committed_heap.dupe();
         let init_pool_workers = self.pool.num_workers();
         let init_lock_path = lock_path.clone();
         let init_socket_path = socket_path.clone();
@@ -282,11 +283,15 @@ impl FlowServer {
                                 .expect("pool_workers should be positive"),
                         ),
                     );
-                    let (env, _first_internal_error) =
-                        match type_service::init(&init_options, &pool, &init_shared_mem, None) {
-                            Ok(result) => result,
-                            Err(error) => panic!("init failed: {:?}", error),
-                        };
+                    let (env, _first_internal_error) = match type_service::init(
+                        &init_options,
+                        &pool,
+                        &init_committed_heap,
+                        None,
+                    ) {
+                        Ok(result) => result,
+                        Err(error) => panic!("init failed: {:?}", error),
+                    };
                     let mut env = server_monitor_listener_state::update_env(Arc::new(env));
                     let init_duration = init_start.elapsed().as_secs_f64();
                     let finishing_up_status = server_status::Status::Typechecking(
@@ -345,7 +350,7 @@ impl FlowServer {
                     process_pending_rechecks(
                         &init_state,
                         &init_options,
-                        &init_shared_mem,
+                        &init_committed_heap,
                         init_pool_workers,
                         &init_serial_workloads_allowed,
                         &init_pids_path,
@@ -372,7 +377,7 @@ impl FlowServer {
 
         let workload_state = state.clone();
         let workload_options = self.options.dupe();
-        let workload_shared_mem = self.shared_mem.dupe();
+        let workload_committed_heap = self.committed_heap.dupe();
         let workload_serial_workloads_allowed = serial_workloads_allowed.clone();
         std::thread::Builder::new()
             .stack_size(SERVER_THREAD_STACK_SIZE)
@@ -380,7 +385,7 @@ impl FlowServer {
                 process_persistent_workloads(
                     &workload_state,
                     &workload_options,
-                    &workload_shared_mem,
+                    &workload_committed_heap,
                     &workload_serial_workloads_allowed,
                 );
             })
@@ -401,7 +406,7 @@ impl FlowServer {
                     };
                     let state = state.clone();
                     let options = self.options.dupe();
-                    let shared_mem = self.shared_mem.dupe();
+                    let committed_heap = self.committed_heap.dupe();
                     let pool_workers = self.pool.num_workers();
                     let pids_path = pids_path.clone();
                     let lock_path = lock_path.clone();
@@ -413,7 +418,7 @@ impl FlowServer {
                             handle_connection(
                                 &state,
                                 &options,
-                                &shared_mem,
+                                &committed_heap,
                                 pool_workers,
                                 stream,
                                 &pids_path,
@@ -438,7 +443,7 @@ enum RecheckOutcome {
 fn process_persistent_workloads(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     _options: &Arc<Options>,
-    _shared_mem: &Arc<SharedMem>,
+    _committed_heap: &Arc<CommittedHeap>,
     serial_workloads_allowed: &Arc<AtomicBool>,
 ) -> ! {
     loop {
@@ -603,7 +608,7 @@ fn spawn_recheck_cancel_monitor() -> RecheckCancelMonitor {
 fn do_rechecks(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Arc<Options>,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     pool_workers: usize,
 ) -> RecheckOutcome {
     let pool = ThreadPool::with_thread_count(
@@ -622,7 +627,7 @@ fn do_rechecks(
         let process_updates = |skip_incompatible: bool,
                                updates: &BTreeSet<String>|
          -> server_monitor_listener_state::Updates {
-            rechecker::process_updates(skip_incompatible, options, &env, shared_mem, updates)
+            rechecker::process_updates(skip_incompatible, options, &env, committed_heap, updates)
         };
         let mut will_be_checked_files = env.checked_files.dupe();
         let (_priority, workload) = server_monitor_listener_state::get_and_clear_recheck_workload(
@@ -703,7 +708,7 @@ fn do_rechecks(
 
         let recheck_result = type_service::recheck(
             &pool,
-            shared_mem,
+            committed_heap,
             options,
             &updates,
             &find_ref_request,
@@ -775,7 +780,7 @@ fn do_rechecks(
                 eprintln!(
                     "Recheck successfully canceled. Restarting the recheck to include new file changes"
                 );
-                let _done: bool = shared_mem.collect_slice(256000);
+                let _done: bool = committed_heap.collect_slice(256000);
                 server_monitor_listener_state::requeue_workload(workload);
                 if !changed_files.is_empty()
                     && changed_files
@@ -789,14 +794,13 @@ fn do_rechecks(
                     };
                     env = type_service::parse_and_update_dependency_info(
                         &pool,
-                        shared_mem,
+                        committed_heap,
                         options,
                         &updates,
                         &find_ref_request.def_info,
                         CheckedSet::empty(),
                         EnvTransaction::new(old_env.dupe()),
                     )
-                    .map(|env| env.commit())
                     .unwrap_or(old_env);
                     env = server_monitor_listener_state::update_env(env);
                     let (lock, cvar) = &**state;
@@ -819,7 +823,7 @@ fn do_rechecks(
 fn process_pending_rechecks(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Arc<Options>,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     pool_workers: usize,
     serial_workloads_allowed: &Arc<AtomicBool>,
     pids_path: &str,
@@ -860,7 +864,7 @@ fn process_pending_rechecks(
             let server_state = lock.lock().unwrap();
             if server_state.env.is_some() {
                 drop(server_state);
-                do_rechecks(state, options, shared_mem, pool_workers)
+                do_rechecks(state, options, committed_heap, pool_workers)
             } else {
                 RecheckOutcome::Ok
             }
@@ -958,7 +962,7 @@ fn remove_persistent_client(
 fn handle_persistent_request(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Options,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     expected_client_id: flow_server_env::lsp_prot::ClientId,
     request: ServerRequest,
 ) -> (ServerResponse, bool) {
@@ -986,7 +990,7 @@ fn handle_persistent_request(
             let genv = Arc::new(flow_server_env::server_env::Genv {
                 options: Arc::new(options.clone()),
                 workers: None,
-                shared_mem: shared_mem.dupe(),
+                committed_heap: committed_heap.dupe(),
             });
             command_handler::enqueue_persistent(&genv, client_id, request);
             (ServerResponse::PersistentAck, false)
@@ -1035,7 +1039,7 @@ fn handle_persistent_request(
 fn handle_connection(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Options,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     _pool_workers: usize,
     mut stream: std::net::TcpStream,
     pids_path: &str,
@@ -1132,7 +1136,7 @@ fn handle_connection(
                 }
             };
             let (response, should_close) =
-                handle_persistent_request(state, options, shared_mem, client_id, request);
+                handle_persistent_request(state, options, committed_heap, client_id, request);
             if let Err(e) = server_socket_rpc::send_message(&mut stream, &response) {
                 eprintln!("Error sending response: {}", e);
                 remove_persistent_client(state, client_id);
@@ -1149,7 +1153,7 @@ fn handle_connection(
             let genv = flow_server_env::server_env::Genv {
                 options: Arc::new(options.clone()),
                 workers: None,
-                shared_mem: shared_mem.dupe(),
+                committed_heap: committed_heap.dupe(),
             };
             let command = command.into_server_command();
             loop {
@@ -1244,7 +1248,7 @@ fn handle_connection(
                 handle_status(
                     env,
                     options,
-                    shared_mem,
+                    committed_heap,
                     error_flags.clone().into(),
                     from,
                     strip_root,
@@ -1316,7 +1320,7 @@ fn handle_connection(
                 .unwrap();
 
             if let Some(ref env) = server_state.env {
-                handle_save_state(env, options, shared_mem, out)
+                handle_save_state(env, options, committed_heap, out)
             } else {
                 ServerResponse::Error {
                     message: "Server not initialized".to_string(),
@@ -1350,7 +1354,7 @@ fn handle_connection(
                 match handle_check_contents(
                     env,
                     options,
-                    shared_mem,
+                    committed_heap,
                     input.clone(),
                     verbose.clone().map(flow_common::verbose::Verbose::from),
                     force,
@@ -1414,7 +1418,7 @@ fn handle_connection(
 fn handle_status(
     env: &flow_server_env::server_env::Env,
     options: &Options,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     error_flags: cli_output::ErrorFlags,
     from: Option<String>,
     client_strip_root: bool,
@@ -1424,6 +1428,7 @@ fn handle_status(
     offset_kind: flow_parser::offset_utils::OffsetKind,
     lazy_mode: bool,
 ) -> ServerResponse {
+    let transaction = Transaction::new(committed_heap.dupe());
     let (errors, warnings, suppressed_errors) = if options.include_suppressions {
         error_collator::get(env)
     } else {
@@ -1437,8 +1442,8 @@ fn handle_status(
     } else {
         None
     };
-    let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
-    let get_ast = |file: &flow_parser::file_key::FileKey| shared_mem.get_ast(file);
+    let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
+    let get_ast = |file: &flow_parser::file_key::FileKey| transaction.get_ast(file);
     let suppressed_errors: Vec<_> = suppressed_errors
         .into_iter()
         .map(|(e, loc_set)| {
@@ -1551,9 +1556,10 @@ fn handle_status(
 fn handle_save_state(
     env: &flow_server_env::server_env::Env,
     options: &Options,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     out: SaveStateOut,
 ) -> ServerResponse {
+    let transaction = Transaction::new(committed_heap.dupe());
     let path = match out {
         SaveStateOut::File(path) => PathBuf::from(flow_common::files::imaginary_realpath(&path)),
         SaveStateOut::Scm => match flow_saved_state::output_filename(options) {
@@ -1579,7 +1585,7 @@ fn handle_save_state(
             };
         }
     }
-    let result = match flow_saved_state::save(&path, shared_mem, env, options) {
+    let result = match flow_saved_state::save(&path, &transaction, env, options) {
         Ok(()) => Ok(format!("Created saved-state file `{}`", path.display())),
         Err(reason) => Err(format!(
             "Failed to create saved-state file `{}`:\n{}",
@@ -1593,7 +1599,7 @@ fn handle_save_state(
 fn handle_check_contents(
     env: &flow_server_env::server_env::Env,
     options: &Options,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     input: server_socket_rpc::FileInput,
     verbose: Option<flow_common::verbose::Verbose>,
     force: bool,
@@ -1604,6 +1610,7 @@ fn handle_check_contents(
     json_version: Option<flow_common_errors::error_utils::json_output::JsonVersion>,
     offset_kind: flow_parser::offset_utils::OffsetKind,
 ) -> Result<ServerResponse, CheckedDependenciesCanceled> {
+    let transaction = Transaction::new(committed_heap.dupe());
     let mut options = options.clone();
     options.all = options.all || force;
     options.verbose = verbose.map(Arc::new);
@@ -1666,7 +1673,7 @@ fn handle_check_contents(
         flow_services_inference::type_contents::type_parse_artifacts(
             &options,
             env.all_unordered_libs.dupe(),
-            shared_mem.dupe(),
+            transaction.dupe(),
             env.master_cx.dupe(),
             file_key.dupe(),
             intermediate_result,
@@ -1679,7 +1686,7 @@ fn handle_check_contents(
         flow_services_inference::type_contents::printable_errors_of_file_artifacts_result(
             &options,
             env,
-            shared_mem,
+            &transaction,
             &file_key,
             result.as_ref(),
         );

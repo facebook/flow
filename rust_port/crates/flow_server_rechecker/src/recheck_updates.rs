@@ -17,7 +17,7 @@ use flow_common_semver::semver;
 use flow_config::FlowConfig;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::file_key::FileKey;
 use flow_parsing::parsing_service;
 use flow_server_files::server_files_js;
@@ -40,7 +40,7 @@ pub enum Error {
 // watchman file watcher!
 fn is_incompatible_package_json(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     want: &dyn Fn(&str) -> bool,
     sroot: &str,
     file_options: &FileOptions,
@@ -59,7 +59,7 @@ fn is_incompatible_package_json(
                     &filename,
                 )
                 .map_err(|_| ());
-                let old_package = shared_mem
+                let old_package = transaction
                     .get_package_info(&filename)
                     .map(|pkg| Ok((*pkg).clone()));
                 flow_services_module::package_incompatible(&filename, old_package, result)
@@ -175,19 +175,19 @@ fn check_for_package_json_changes(
     }
 }
 
-fn did_content_change(options: &Options, shared_mem: &SharedMem, filename: &str) -> bool {
+fn did_content_change(options: &Options, transaction: &Transaction, filename: &str) -> bool {
     let file = files::lib_file_key(&options.file_options, filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
-            !parsing_service::does_content_match_file_hash(shared_mem, &file, &content)
+            !parsing_service::does_content_match_file_hash(transaction, &file, &content)
         }
     }
 }
 
 fn check_for_lib_changes(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     all_libs: &BTreeSet<String>,
     root: &Path,
     skip_incompatible: bool,
@@ -199,7 +199,7 @@ fn check_for_lib_changes(
         .to_string();
     let is_changed_lib = |filename: &String| -> bool {
         let is_lib = all_libs.contains(filename) || *filename == flow_typed_path;
-        is_lib && did_content_change(options, shared_mem, filename)
+        is_lib && did_content_change(options, transaction, filename)
     };
     let libs: BTreeSet<String> = updates
         .iter()
@@ -252,7 +252,7 @@ pub fn process_updates(
     skip_incompatible: bool,
     options: &Options,
     previous_all_unordered_libs: &BTreeSet<FlowSmolStr>,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, Error> {
     let file_options = &options.file_options;
@@ -276,13 +276,13 @@ pub fn process_updates(
         filter_wanted_updates(file_options, &sroot, &want, updates)
     };
     let is_incompatible_pj = |f: &str| -> PackageIncompatibleReturn {
-        is_incompatible_package_json(options, shared_mem, &want, &sroot, file_options, f)
+        is_incompatible_package_json(options, transaction, &want, &sroot, file_options, f)
     };
     check_for_flowconfig_change(options, skip_incompatible, &config_path, updates)?;
     check_for_package_json_changes(&is_incompatible_pj, skip_incompatible, updates)?;
     check_for_lib_changes(
         options,
-        shared_mem,
+        transaction,
         &all_libs,
         root,
         skip_incompatible,

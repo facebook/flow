@@ -25,8 +25,9 @@ use flow_common_modulename::Modulename;
 use flow_common_utils::graph::Graph;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::entity::ResolvedModule;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::Transaction;
+use flow_heap::resolved_requires::ResolvedModule;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::file_key::FileKey;
@@ -114,10 +115,10 @@ pub struct SavedStateData {
     pub export_index: Option<ExportIndex>,
 }
 
-// Direct serialization saved state data: the shared memory heap is dumped
-// directly to disk via SharedMem.save_heap. This type holds only lightweight
+// Direct serialization saved state data: the committed heap is dumped directly
+// to disk via CommittedHeap.save_heap. This type holds only lightweight
 // env-level metadata (file sets, dependency graph, etc.) - the per-file data
-// lives in the heap dump itself. On load, SharedMem.load_heap bulk-loads the
+// lives in the heap dump itself. On load, CommittedHeap.load_heap bulk-loads the
 // heap, so no per-file restoration is needed.
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SavedStateEnvData {
@@ -462,13 +463,13 @@ fn collect_dependency_graph(dependency_info: &DependencyInfo) -> SavedStateDepen
 }
 
 // Collect all the data for a single parsed file
-fn collect_parsed_data(shared_mem: &SharedMem, file: &FileKey) -> ParsedFileData {
-    let requires = shared_mem
+fn collect_parsed_data(transaction: &Transaction, file: &FileKey) -> ParsedFileData {
+    let requires = transaction
         .get_requires_unsafe(file)
         .iter()
         .cloned()
         .collect();
-    let resolved_requires = shared_mem.get_resolved_requires_unsafe(file);
+    let resolved_requires = transaction.get_resolved_requires_unsafe(file);
     let resolved_modules = resolved_requires.get_resolved_modules().to_vec();
     let phantom_dependencies = resolved_requires
         .get_phantom_dependencies()
@@ -476,21 +477,21 @@ fn collect_parsed_data(shared_mem: &SharedMem, file: &FileKey) -> ParsedFileData
         .map(|dep| dep.to_modulename())
         .collect();
     ParsedFileData {
-        haste_module_info: shared_mem.get_haste_module_info(file),
+        haste_module_info: transaction.get_haste_module_info(file),
         normalized_file_data: NormalizedFileData {
             requires,
             resolved_modules,
             phantom_dependencies,
-            exports: (*shared_mem.get_exports_unsafe(file)).clone(),
-            hash: shared_mem.get_file_hash_unsafe(file),
-            imports: (*shared_mem.get_imports_unsafe(file)).clone(),
+            exports: (*transaction.get_exports_unsafe(file)).clone(),
+            hash: transaction.get_file_hash_unsafe(file),
+            imports: (*transaction.get_imports_unsafe(file)).clone(),
         },
     }
 }
 
 // Collect all the data for all the files
 fn collect_saved_state_data(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     env: &Env,
     options: &Options,
 ) -> SavedStateData {
@@ -499,7 +500,7 @@ fn collect_saved_state_data(
         .files
         .iter()
         .filter(|file| !files::is_lib_file(&options.file_options, &env.all_unordered_libs, file))
-        .map(|file| (file.dupe(), collect_parsed_data(shared_mem, file)))
+        .map(|file| (file.dupe(), collect_parsed_data(transaction, file)))
         .collect();
     let unparsed_heaps = env
         .unparsed
@@ -509,8 +510,8 @@ fn collect_saved_state_data(
             (
                 file.dupe(),
                 UnparsedFileData {
-                    unparsed_haste_module_info: shared_mem.get_haste_module_info(file),
-                    unparsed_hash: shared_mem.get_file_hash_unsafe(file),
+                    unparsed_haste_module_info: transaction.get_haste_module_info(file),
+                    unparsed_hash: transaction.get_file_hash_unsafe(file),
                 },
             )
         })
@@ -522,9 +523,9 @@ fn collect_saved_state_data(
             (
                 file.dupe(),
                 PackageFileData {
-                    package_haste_module_info: shared_mem.get_haste_module_info(file),
-                    package_hash: shared_mem.get_file_hash_unsafe(file),
-                    package_info: shared_mem
+                    package_haste_module_info: transaction.get_haste_module_info(file),
+                    package_hash: transaction.get_file_hash_unsafe(file),
+                    package_info: transaction
                         .get_package_info(file)
                         .map(|pkg| Ok((*pkg).clone()))
                         .unwrap_or(Err(())),
@@ -1310,7 +1311,7 @@ fn read_compressed_data(
 // as the perf of loading
 pub fn save(
     path: &Path,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     env: &Env,
     options: &Options,
 ) -> Result<(), InvalidReason> {
@@ -1327,10 +1328,11 @@ pub fn save(
         File::create(&tmp_path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     write_version(&mut file)?;
     let result: Result<(), InvalidReason> = if options.saved_state_direct_serialization {
+        let committed_heap = transaction.committed_heap();
         let env_data = collect_saved_state_env_data(env, options);
         if options.saved_state_parallel_decompress {
             flow_hh_logger::info!("Serializing env metadata");
-            let heap_files = shared_mem.collect_heap_file_table();
+            let heap_files = committed_heap.collect_heap_file_table();
             let files = {
                 let dependency_info = env.dependency_info();
                 write_serialized_env_data_with_heap_files(
@@ -1341,12 +1343,12 @@ pub fn save(
                 )?
             };
             flow_hh_logger::info!("Saving heap to saved-state file");
-            shared_mem
+            committed_heap
                 .save_heap_with_file_table(&mut file, &files)
                 .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))
         } else {
             flow_hh_logger::info!("Serializing env metadata");
-            let heap_files = shared_mem.collect_heap_file_table();
+            let heap_files = committed_heap.collect_heap_file_table();
             let files = {
                 let dependency_info = env.dependency_info();
                 write_serialized_env_data_with_heap_files(
@@ -1357,12 +1359,12 @@ pub fn save(
                 )?
             };
             flow_hh_logger::info!("Saving heap to saved-state file");
-            shared_mem
+            committed_heap
                 .save_heap_with_file_table(&mut file, &files)
                 .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))
         }
     } else {
-        let data = collect_saved_state_data(shared_mem, env, options);
+        let data = collect_saved_state_data(transaction, env, options);
         flow_hh_logger::info!("Compressing saved state with lz4");
         write_compressed(&mut file, &data)
     };
@@ -1438,7 +1440,7 @@ fn denormalize_direct_data(
 
 pub fn load(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     path: &Path,
     options: &Options,
 ) -> Result<LoadedSavedState, InvalidReason> {
@@ -1507,7 +1509,7 @@ pub fn load(
                 ))
             });
             let heap_start = Instant::now();
-            shared_mem
+            committed_heap
                 .load_heap_with_file_table(&mut file, files.clone())
                 .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
             flow_hh_logger::info!("Loaded heap in {:?}", heap_start.elapsed());
@@ -1532,7 +1534,7 @@ pub fn load(
             flow_hh_logger::info!("Deserializing env metadata");
             let (data, files) = read_serialized_env_data_with_files(&mut file)?;
             flow_hh_logger::info!("Loading heap from saved-state file");
-            shared_mem
+            committed_heap
                 .load_heap_with_file_table(&mut file, files)
                 .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
             let data = denormalize_direct_data(options, data)?;

@@ -16,9 +16,9 @@ use flow_common::flow_projects::FlowProjects;
 use flow_common_modulename::Modulename;
 use flow_common_utils::utils_js;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::entity::ResolvedRequires;
 use flow_heap::parse::TypedParse;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
+use flow_heap::resolved_requires::ResolvedRequires;
 use flow_imports_exports::exports::Export;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports;
@@ -63,19 +63,19 @@ mod module_resolution_lazy_stream {
         pub(super) typed_parse: TypedParse,
         pub(super) file_key: FileKey,
         pub(super) next: Box<dyn Fn(&str) -> Option<StreamResult<'a>> + 'a>,
-        pub(super) shared_mem: &'a SharedMem,
+        pub(super) transaction: &'a Transaction,
     }
 
     pub(super) fn get_dep_and_next_resolver<'a>(
-        shared_mem: &'a SharedMem,
+        transaction: &'a Transaction,
         file_key: FileKey,
         typed_parse: TypedParse,
     ) -> Box<dyn Fn(&str) -> Option<StreamResult<'a>> + 'a> {
-        Box::new(move |mref: &str| next(shared_mem, &file_key, &typed_parse, mref))
+        Box::new(move |mref: &str| next(transaction, &file_key, &typed_parse, mref))
     }
 
     fn next<'a>(
-        shared_mem: &'a SharedMem,
+        transaction: &'a Transaction,
         _file_key: &FileKey,
         typed_parse: &TypedParse,
         mref: &str,
@@ -89,19 +89,19 @@ mod module_resolution_lazy_stream {
             .and_then(|i| resolved_modules.get(i))
             .and_then(|rm| rm.to_result().ok());
         let dependency = dependency?;
-        let dep_file_addr = shared_mem.get_provider(&dependency)?;
-        let dep_parse = shared_mem.get_typed_parse(&dep_file_addr)?;
+        let dep_file_addr = transaction.get_provider(&dependency)?;
+        let dep_parse = transaction.get_typed_parse(&dep_file_addr)?;
         let dep_file_key = dep_file_addr;
         let next_fn: Box<dyn Fn(&str) -> Option<StreamResult<'a>> + 'a> = {
             let dep_file_key = dep_file_key.dupe();
             let dep_parse = dep_parse.dupe();
-            Box::new(move |mref: &str| next(shared_mem, &dep_file_key, &dep_parse, mref))
+            Box::new(move |mref: &str| next(transaction, &dep_file_key, &dep_parse, mref))
         };
         Some(StreamResult {
             typed_parse: dep_parse,
             file_key: dep_file_key,
             next: next_fn,
-            shared_mem,
+            transaction,
         })
     }
 }
@@ -209,13 +209,13 @@ fn with_reexports<'a>(
             typed_parse: _parse,
             file_key,
             next,
-            shared_mem,
+            transaction,
         }) => {
             if visited_deps.contains(&file_key) {
                 return;
             }
             visited_deps.insert(file_key.dupe());
-            let dep_exports = shared_mem.get_exports_unsafe(&file_key);
+            let dep_exports = transaction.get_exports_unsafe(&file_key);
             entries_of_exports_helper(
                 module_name,
                 &*next,
@@ -272,7 +272,7 @@ fn add_imports(
     imports_list: &imports::Imports,
     resolved_requires: &ResolvedRequires,
     requires: &[FlowImportSpecifier],
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     index: &mut ExportIndex,
 ) {
     for import in imports_list.iter() {
@@ -311,7 +311,7 @@ fn add_imports(
                                     export_index::add(&name, file_key, kind, index);
                                 }
                                 Modulename::Haste(_) => {
-                                    if let Some(file) = shared_mem.get_provider(&dependency) {
+                                    if let Some(file) = transaction.get_provider(&dependency) {
                                         let file_key = Source::FileKey(file);
                                         export_index::add(&name, file_key, kind, index);
                                     }
@@ -339,21 +339,21 @@ fn add_imports(
 // exports of [file_key] from its [parse] entry in shared memory. [haste_info]
 // is used to fetch the module name from [file_key].
 fn add_exports_of_checked_file(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file_key: &FileKey,
     typed_parse: &TypedParse,
     haste_info: Option<&flow_common_modulename::HasteModuleInfo>,
     index: &mut ExportIndex,
 ) {
     let source = Source::FileKey(file_key.dupe());
-    let exports = shared_mem.get_exports_unsafe(file_key);
+    let exports = transaction.get_exports_unsafe(file_key);
     let module_name = match haste_info {
         Some(info) => Modulename::Haste(info.clone()),
         None => Modulename::Filename(files::chop_flow_ext(file_key)),
     };
     let module_name_str = module_name.as_str();
     let get_dep_and_next_resolver = module_resolution_lazy_stream::get_dep_and_next_resolver(
-        shared_mem,
+        transaction,
         file_key.dupe(),
         typed_parse.dupe(),
     );
@@ -411,7 +411,7 @@ pub fn add_exports_of_builtins(
 // shared memory and adds all of the current exports to [exports_to_add], and all of the
 // previous exports to [exports_to_remove].
 fn index_file(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file_key: &FileKey,
     new_available_exports: &mut ExportIndex,
     old_available_exports: &mut ExportIndex,
@@ -422,13 +422,13 @@ fn index_file(
         return;
     }
 
-    if let Some(old_parse) = shared_mem.get_typed_parse_committed(file_key) {
-        let old_imports = shared_mem.get_imports_unsafe(file_key);
-        let old_haste_info = shared_mem.get_haste_info_committed(file_key);
+    if let Some(old_parse) = transaction.get_typed_parse_committed(file_key) {
+        let old_imports = transaction.get_imports_unsafe(file_key);
+        let old_haste_info = transaction.get_haste_info_committed(file_key);
         let old_resolved_requires = old_parse.resolved_requires_unsafe();
         let old_requires = old_parse.requires();
         add_exports_of_checked_file(
-            shared_mem,
+            transaction,
             file_key,
             &old_parse,
             old_haste_info.as_ref(),
@@ -438,18 +438,18 @@ fn index_file(
             &old_imports,
             &old_resolved_requires,
             &old_requires,
-            shared_mem,
+            transaction,
             imports_to_remove,
         );
     }
 
-    if let Some(new_parse) = shared_mem.get_typed_parse(file_key) {
-        let new_imports = shared_mem.get_imports_unsafe(file_key);
-        let new_haste_info = shared_mem.get_haste_info(file_key);
+    if let Some(new_parse) = transaction.get_typed_parse(file_key) {
+        let new_imports = transaction.get_imports_unsafe(file_key);
+        let new_haste_info = transaction.get_haste_info(file_key);
         let new_resolved_requires = new_parse.resolved_requires_unsafe();
         let new_requires = new_parse.requires();
         add_exports_of_checked_file(
-            shared_mem,
+            transaction,
             file_key,
             &new_parse,
             new_haste_info.as_ref(),
@@ -459,7 +459,7 @@ fn index_file(
             &new_imports,
             &new_resolved_requires,
             &new_requires,
-            shared_mem,
+            transaction,
             imports_to_add,
         );
     }
@@ -473,13 +473,13 @@ fn index_file(
 // version of the file to know what to remove.
 pub fn index(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     parsed: &BTreeSet<FileKey>,
 ) -> (ExportIndex, ExportIndex, ExportIndex, ExportIndex) {
     let total_count = parsed.len() as i32;
     let parsed: Vec<_> = parsed.iter().map(|file| file.dupe()).collect();
 
-    let shared_mem = shared_mem.dupe();
+    let transaction = transaction.dupe();
     let job = move |files: Vec<FileKey>| {
         let mut new_available_exports = export_index::empty();
         let mut old_available_exports = export_index::empty();
@@ -487,7 +487,7 @@ pub fn index(
         let mut imports_to_remove = export_index::empty();
         for file_key in &files {
             index_file(
-                &shared_mem,
+                &transaction,
                 file_key,
                 &mut new_available_exports,
                 &mut old_available_exports,
@@ -599,12 +599,12 @@ pub fn index(
 // as well as the builtin libdefs.
 pub fn init(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     libs: &(Exports, Vec<(FlowProjects, Exports)>),
     parsed: &BTreeSet<FileKey>,
 ) -> ExportSearch {
     let (new_available_exports, _old_available_exports, imports_to_add, _imports_to_remove) =
-        index(pool, shared_mem, parsed);
+        index(pool, transaction, parsed);
     flow_hh_logger::info!("Indexing files: adding exports of builtins...");
     let mut exports_to_add = new_available_exports;
     add_exports_of_builtins(libs, &mut exports_to_add);
@@ -620,12 +620,12 @@ pub fn init(
 // in the [previous] [Export_search.t].
 pub fn update(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     dirty_files: &BTreeSet<FileKey>,
     previous: &ExportSearch,
 ) -> ExportSearch {
     let (new_available_exports, old_available_exports, imports_to_add, imports_to_remove) =
-        index(pool, shared_mem, dirty_files);
+        index(pool, transaction, dirty_files);
     let result = export_search::merge_available_exports(
         &old_available_exports,
         &new_available_exports,

@@ -357,7 +357,7 @@ impl FileKey {
 
     // Returns the full absolute path — resolves the root on demand.
     // Allocates a new string via concatenation. Use suffix for hot paths
-    // that don't need the absolute path (compare, SharedMem hashing).
+    // that don't need the absolute path (compare, Transaction hashing).
     pub fn to_absolute(&self) -> String {
         match self.inner.as_ref() {
             FileKeyInner::LibFile(x) => {

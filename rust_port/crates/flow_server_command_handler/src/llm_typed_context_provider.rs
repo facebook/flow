@@ -15,7 +15,7 @@ use flow_common_ty::ty::Elt;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_ty::ty_symbol::Symbol;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast;
 use flow_parser::ast::statement::StatementInner;
 use flow_parser::file_key::FileKey;
@@ -51,7 +51,7 @@ fn normalize_type(
     cx: &Context<'_>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     t: &Type,
 ) -> (String, Option<Vec<(String, Loc)>>) {
     let options = NormalizerOptions {
@@ -68,7 +68,7 @@ fn normalize_type(
     let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig.clone());
     match ty_normalizer_flow::from_type(&genv, t) {
         Ok(elt) => {
-            let loc_of_aloc = |aloc: &ALoc| shared_mem.loc_of_aloc(aloc);
+            let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
             let refs: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
             let refs_some = Some(refs);
             let opts = PrinterOptions::default();
@@ -115,7 +115,7 @@ struct ContextExtractor<'a, 'cx> {
     cx: &'a Context<'cx>,
     file_sig: &'a Arc<FileSig>,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
-    shared_mem: &'a SharedMem,
+    transaction: &'a Transaction,
     exports: Vec<String>,
 }
 
@@ -125,14 +125,14 @@ impl<'a, 'cx> ContextExtractor<'a, 'cx> {
         cx: &'a Context<'cx>,
         file_sig: &'a Arc<FileSig>,
         typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
-        shared_mem: &'a SharedMem,
+        transaction: &'a Transaction,
     ) -> Self {
         Self {
             strip_root,
             cx,
             file_sig,
             typed_ast,
-            shared_mem,
+            transaction,
             exports: Vec::new(),
         }
     }
@@ -179,7 +179,7 @@ impl<'a, 'cx> ContextExtractor<'a, 'cx> {
                             self.cx,
                             self.file_sig,
                             self.typed_ast,
-                            self.shared_mem,
+                            self.transaction,
                             func_type,
                         );
                         let refs_str = format_refs(self.strip_root, &refs);
@@ -202,7 +202,7 @@ impl<'a, 'cx> ContextExtractor<'a, 'cx> {
                         self.cx,
                         self.file_sig,
                         self.typed_ast,
-                        self.shared_mem,
+                        self.transaction,
                         component_type,
                     );
                     let refs_str = format_refs(self.strip_root, &refs);
@@ -243,7 +243,7 @@ impl<'a, 'cx> ContextExtractor<'a, 'cx> {
                             self.cx,
                             self.file_sig,
                             self.typed_ast,
-                            self.shared_mem,
+                            self.transaction,
                             component_type,
                         );
                         let refs_str = format_refs(self.strip_root, &refs);
@@ -260,7 +260,7 @@ impl<'a, 'cx> ContextExtractor<'a, 'cx> {
                                 self.cx,
                                 self.file_sig,
                                 self.typed_ast,
-                                self.shared_mem,
+                                self.transaction,
                                 func_type,
                             );
                             let refs_str = format_refs(self.strip_root, &refs);
@@ -335,9 +335,9 @@ pub fn extract_declarations(
     cx: &Context<'_>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
 ) -> Vec<String> {
-    let mut extractor = ContextExtractor::new(strip_root, cx, file_sig, typed_ast, shared_mem);
+    let mut extractor = ContextExtractor::new(strip_root, cx, file_sig, typed_ast, transaction);
     extractor.visit_program();
     extractor.get_exports()
 }
@@ -373,12 +373,12 @@ pub fn generate_file_context(
     ast: &ast::Program<Loc, Loc>,
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     opts: &FileSigOptions,
 ) -> String {
     let imports = extract_imports(file_key, ast, opts);
     let file_sig = Arc::new(FileSig::from_program(file_key, ast, opts));
-    let declarations = extract_declarations(strip_root, cx, &file_sig, typed_ast, shared_mem);
+    let declarations = extract_declarations(strip_root, cx, &file_sig, typed_ast, transaction);
     format_file_context(strip_root, file_key, &imports, &declarations)
 }
 
@@ -393,7 +393,7 @@ pub struct TypedFileInfo<'a, 'cx> {
     pub ast: Arc<ast::Program<Loc, Loc>>,
     pub cx: &'a Context<'cx>,
     pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
-    pub shared_mem: &'a SharedMem,
+    pub transaction: &'a Transaction,
 }
 
 pub fn legacy_syntax_header() -> String {
@@ -423,7 +423,7 @@ pub fn generate_context<'a, 'cx>(
                     &info.ast,
                     info.cx,
                     &info.typed_ast,
-                    info.shared_mem,
+                    info.transaction,
                     file_sig_opts,
                 );
                 let tokens = count_tokens(&context);

@@ -143,7 +143,7 @@ pub fn stub<'a, 'b>(
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -185,7 +185,7 @@ pub fn stub<'a, 'b>(
         file_sig.dupe(),
         typed_ast.clone(),
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         &locs,

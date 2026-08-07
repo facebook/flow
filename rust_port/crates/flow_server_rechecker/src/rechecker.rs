@@ -16,7 +16,8 @@ use std::time::Instant;
 use dupe::Dupe;
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::Transaction;
 use flow_server_env::error_collator;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_rpc;
@@ -159,14 +160,15 @@ pub fn process_updates(
     skip_incompatible: bool,
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &SharedMem,
+    committed_heap: &Arc<CommittedHeap>,
     updates: &BTreeSet<String>,
 ) -> Updates {
+    let transaction = Transaction::new(committed_heap.dupe());
     match recheck_updates::process_updates(
         skip_incompatible,
         options,
         &env.all_unordered_libs,
-        shared_mem,
+        &transaction,
         updates,
     ) {
         Ok(updates) => Updates::NormalUpdates(updates),
@@ -239,7 +241,7 @@ fn recheck(
 
     let recheck_result = type_service::recheck(
         workers,
-        &genv.shared_mem,
+        &genv.committed_heap,
         options,
         &updates,
         &find_ref_request,
@@ -405,7 +407,7 @@ pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
     env: server_env::EnvRef,
-    shared_mem: &SharedMem,
+    committed_heap: &Arc<CommittedHeap>,
     // When a recheck is canceled and restarted, the parallelizable-workload loop
     // from the canceled attempt is handed to the restart instead of being stopped
     // and started afresh. This keeps hovers/liveErrors served (from the original
@@ -424,7 +426,7 @@ pub(crate) fn recheck_single(
     let mut env = env;
     let mut reused_loop = reused_loop;
     loop {
-        match recheck_single_attempt(recheck_count, genv, env, shared_mem, reused_loop) {
+        match recheck_single_attempt(recheck_count, genv, env, committed_heap, reused_loop) {
             RecheckAttempt::Done(outcome) => return outcome,
             RecheckAttempt::Restart {
                 env: next_env,
@@ -448,7 +450,7 @@ fn recheck_single_attempt(
     recheck_count: usize,
     genv: &server_env::Genv,
     env: server_env::EnvRef,
-    shared_mem: &SharedMem,
+    committed_heap: &Arc<CommittedHeap>,
     reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckAttempt {
     let env = server_monitor_listener_state::update_env(env);
@@ -457,7 +459,7 @@ fn recheck_single_attempt(
     let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.dupe()));
     let (priority, workload) = {
         let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-            process_updates(skip_incompatible, options, &env, shared_mem, updates)
+            process_updates(skip_incompatible, options, &env, committed_heap, updates)
         };
         let get_forced = || {
             will_be_checked_files
@@ -501,7 +503,7 @@ fn recheck_single_attempt(
     let env_snapshot = env.dupe();
 
     let options_for_cancel = options.dupe();
-    let shared_mem_for_cancel = genv.shared_mem.dupe();
+    let committed_heap_for_cancel = genv.committed_heap.dupe();
     let env_snapshot_for_updates = env_snapshot.dupe();
     let process_updates_for_cancel =
         move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
@@ -509,7 +511,7 @@ fn recheck_single_attempt(
                 skip_incompatible,
                 &options_for_cancel,
                 &env_snapshot_for_updates,
-                &shared_mem_for_cancel,
+                &committed_heap_for_cancel,
                 updates,
             )
         };
@@ -533,7 +535,7 @@ fn recheck_single_attempt(
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
     // may have introduced garbage into shared memory. Since we immediately start another
-    // recheck, we should first check whether we need to compact. Otherwise, sharedmem could
+    // recheck, we should first check whether we need to compact. Otherwise, the heap could
     // potentially grow unbounded.
     // The constant budget provided here should be sufficient to fully scan a 5G heap within 5
     // iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
@@ -608,7 +610,7 @@ fn recheck_single_attempt(
             flow_hh_logger::info!(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
-            let _done: bool = shared_mem.collect_slice(256000);
+            let _done: bool = committed_heap.collect_slice(256000);
             server_monitor_listener_state::requeue_workload(workload);
             // Hand the pre-recheck `Env` ref and the still-running loop back to
             // the driver loop, which restarts the recheck without recursing.
@@ -630,14 +632,14 @@ fn recheck_single_attempt(
 pub fn recheck_loop(
     genv: &server_env::Genv,
     env: server_env::EnvRef,
-    shared_mem: &SharedMem,
+    committed_heap: &Arc<CommittedHeap>,
 ) -> (Vec<ProfilingFinished>, server_env::EnvRef) {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     let mut env = env;
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, env, shared_mem, None);
+        let recheck_result = recheck_single(1, genv, env, committed_heap, None);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };

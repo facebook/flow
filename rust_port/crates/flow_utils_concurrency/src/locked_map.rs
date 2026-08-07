@@ -49,9 +49,16 @@ impl<K, V> LockedMap<K, V> {
     pub fn len(&self) -> usize {
         self.map.len()
     }
+
+    pub fn into_entries(self) -> impl Iterator<Item = (K, V)> {
+        self.map.into_iter().map(|entry| {
+            let (key, value) = *entry;
+            (key.into_key(), value)
+        })
+    }
 }
 
-impl<K: Eq + Hash + 'static, V: Dupe + 'static> LockedMap<K, V> {
+impl<K: Eq + Hash + 'static, V: 'static> LockedMap<K, V> {
     fn equals(a: &(WithHash<K>, V), b: &(WithHash<K>, V)) -> bool {
         a.0.key() == b.0.key()
     }
@@ -121,5 +128,16 @@ mod tests {
         assert_eq!(mp.insert(1, "foo"), None);
         assert_eq!(mp.insert(1, "bar"), Some("bar"));
         assert_eq!(mp.get(&1), Some(&"foo"))
+    }
+
+    #[test]
+    fn test_into_entries() {
+        let mp = LockedMap::new();
+        assert_eq!(mp.insert(1, "one"), None);
+        assert_eq!(mp.insert(2, "two"), None);
+
+        let mut entries = mp.into_entries().collect::<Vec<_>>();
+        entries.sort_unstable();
+        assert_eq!(entries, vec![(1, "one"), (2, "two")]);
     }
 }

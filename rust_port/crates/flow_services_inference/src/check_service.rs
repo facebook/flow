@@ -28,10 +28,10 @@ use flow_common::reason;
 use flow_common::reason::VirtualReasonDesc::*;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::entity::Dependency;
-use flow_heap::entity::ResolvedModule;
 use flow_heap::parse::TypedParse;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
+use flow_heap::resolved_requires::Dependency;
+use flow_heap::resolved_requires::ResolvedModule;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
@@ -158,7 +158,7 @@ fn get_lint_severities(
 /// environment which defines caches that can be re-used when checking multiple
 /// files.
 pub fn mk_check_file(
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
@@ -175,7 +175,7 @@ pub fn mk_check_file(
         cx: &Context<'static>,
         mref: &FlowImportSpecifier,
         resolved_module: Result<Dependency, Option<FlowImportSpecifier>>,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
@@ -186,7 +186,7 @@ pub fn mk_check_file(
                 let m = mapped_name.as_ref().unwrap_or(mref);
                 unknown_module_t(cx, m)
             }
-            Ok(m) => match shared_mem.get_provider(&m) {
+            Ok(m) => match transaction.get_provider(&m) {
                 None => {
                     let modulename = m.to_modulename();
                     unknown_module_t(
@@ -224,11 +224,11 @@ pub fn mk_check_file(
                         );
                         ResolvedRequire::TypedModule(thunk)
                     }
-                    _ => match shared_mem.get_typed_parse(&dep_file_key) {
+                    _ => match transaction.get_typed_parse(&dep_file_key) {
                         Some(parse) => ResolvedRequire::TypedModule(sig_module_t(
                             &dep_file_key,
                             parse,
-                            shared_mem,
+                            transaction,
                             all_unordered_libs,
                             base_metadata,
                             mk_builtins_fn,
@@ -244,7 +244,7 @@ pub fn mk_check_file(
     fn sig_module_t(
         file_key: &FileKey,
         parse: TypedParse,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
@@ -253,7 +253,7 @@ pub fn mk_check_file(
     {
         let file_key_for_create = file_key.dupe();
         let parse_for_create = parse.dupe();
-        let shared_mem_for_create = shared_mem.dupe();
+        let transaction_for_create = transaction.dupe();
         let all_unordered_libs_for_create = all_unordered_libs.dupe();
         let base_metadata_for_create = base_metadata.clone();
         let mk_builtins_for_create = mk_builtins_fn.dupe();
@@ -270,7 +270,7 @@ pub fn mk_check_file(
                     &file_key_for_create,
                     parse_for_create.dupe(),
                     ccx,
-                    &shared_mem_for_create,
+                    &transaction_for_create,
                     &all_unordered_libs_for_create,
                     &base_metadata_for_create,
                     &mk_builtins_for_create,
@@ -296,7 +296,7 @@ pub fn mk_check_file(
         file_key: &FileKey,
         parse: TypedParse,
         ccx: Rc<ComponentT<'static>>,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         all_unordered_libs: &Arc<BTreeSet<FlowSmolStr>>,
         base_metadata: &Metadata,
         mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
@@ -378,7 +378,7 @@ pub fn mk_check_file(
                 let key = mref.dupe();
                 let mref = mref.dupe();
                 let m = m.to_result();
-                let shared_mem = shared_mem.dupe();
+                let transaction = transaction.dupe();
                 let base_metadata = base_metadata.clone();
                 let mk_builtins_fn = mk_builtins_fn.dupe();
                 let cache = cache.dupe();
@@ -390,7 +390,7 @@ pub fn mk_check_file(
                             cx,
                             &mref,
                             m,
-                            &shared_mem,
+                            &transaction,
                             &all_unordered_libs,
                             &base_metadata,
                             &mk_builtins_fn,
@@ -872,7 +872,7 @@ pub fn mk_check_file(
     let options = options.dupe();
 
     let make_cx = {
-        let shared_mem = shared_mem.dupe();
+        let transaction = transaction.dupe();
         let base_metadata = base_metadata.clone();
         let mk_builtins_fn = mk_builtins_fn.dupe();
         let cache = cache.dupe();
@@ -922,7 +922,7 @@ pub fn mk_check_file(
                             &cx,
                             mref,
                             m.to_result(),
-                            &shared_mem,
+                            &transaction,
                             &all_unordered_libs,
                             &base_metadata,
                             &mk_builtins_fn,

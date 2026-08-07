@@ -15,7 +15,8 @@ use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common_modulename::ModulenameSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::HeapReader;
+use flow_heap::parsing_heaps::Transaction;
 use flow_heap::resolved_requires::ResolvedModule;
 use flow_parser::file_key::FileKey;
 use flow_server_env::DependencyInfo;
@@ -97,7 +98,7 @@ use flow_utils_concurrency::thread_pool::ThreadPool;
 //
 // Return the subset of candidates directly dependent on root_modules / root_files.
 pub fn calc_unchanged_dependents(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     _workers: Option<Vec<()>>,
     changed_modules: ModulenameSet,
 ) -> BTreeSet<FileKey> {
@@ -106,7 +107,7 @@ pub fn calc_unchanged_dependents(
     let mut iter_f = |file: &FileKey| {
         // Skip dependents which have themselves changed, since changed files will
         // already be part of the recheck set.
-        let file_changed = || -> bool { shared_mem.file_has_changed(file) };
+        let file_changed = || -> bool { transaction.file_has_changed(file) };
 
         if !file_changed() {
             acc.insert(file.dupe());
@@ -114,7 +115,7 @@ pub fn calc_unchanged_dependents(
     };
 
     for m in changed_modules.iter() {
-        shared_mem.iter_dependents(&mut iter_f, m);
+        transaction.iter_dependents(&mut iter_f, m);
     }
 
     acc
@@ -129,12 +130,12 @@ pub fn calc_unchanged_dependents(
 // before any file that requires module r, so this notion naturally gives rise
 // to a dependency ordering among files for merging.
 fn implementation_file(
-    shared_mem: &SharedMem,
+    reader: &HeapReader<'_>,
     resolved_module: &ResolvedModule,
 ) -> Option<FileKey> {
     if let Some(dependency) = resolved_module.as_dependency() {
-        if let Some(f) = shared_mem.get_provider(&dependency) {
-            if shared_mem.is_typed_file(&f) {
+        if let Some(f) = reader.get_provider(&dependency) {
+            if reader.is_typed_file(&f) {
                 return Some(f);
             }
         }
@@ -143,22 +144,22 @@ fn implementation_file(
 }
 
 fn file_dependencies(
-    shared_mem: &SharedMem,
+    reader: &HeapReader<'_>,
     file: &FileKey,
     parsed: &FlowOrdSet<FileKey>,
 ) -> (BTreeSet<FileKey>, BTreeSet<FileKey>) {
-    let type_sig = shared_mem.get_type_sig_unsafe(file);
+    let type_sig = reader.get_type_sig_unsafe(file);
     let sig_require_set: HashSet<&Userland> = type_sig.module_refs.iter().collect();
 
-    let requires = shared_mem.get_requires_unsafe(file);
-    let resolved_requires = shared_mem.get_resolved_requires_unsafe(file);
+    let requires = reader.get_requires_unsafe(file);
+    let resolved_requires = reader.get_resolved_requires_unsafe(file);
     let resolved_modules = resolved_requires.get_resolved_modules();
 
     let mut sig_files = BTreeSet::new();
     let mut all_files = BTreeSet::new();
 
     for (mref, resolved_module) in requires.iter().zip(resolved_modules.iter()) {
-        if let Some(f) = implementation_file(shared_mem, resolved_module) {
+        if let Some(f) = implementation_file(reader, resolved_module) {
             if parsed.contains(&f) {
                 all_files.insert(f.dupe());
                 let FlowImportSpecifier::Userland(u) = mref;
@@ -176,7 +177,7 @@ fn file_dependencies(
 // Dependencies not in parsed are ignored.
 pub fn calc_partial_dependency_graph(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     files: &FlowOrdSet<FileKey>,
     parsed: &FlowOrdSet<FileKey>,
 ) -> PartialDependencyGraph {
@@ -194,8 +195,9 @@ pub fn calc_partial_dependency_graph(
             next,
             |acc: &mut BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
              batch: Vec<FileKey>| {
+                let reader = transaction.latest_heap_reader();
                 for file in batch {
-                    let dependencies = file_dependencies(shared_mem, &file, parsed);
+                    let dependencies = file_dependencies(&reader, &file, parsed);
                     acc.insert(file, dependencies);
                 }
             },
@@ -209,9 +211,9 @@ pub fn calc_partial_dependency_graph(
 
 pub fn calc_dependency_info(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     parsed: &FlowOrdSet<FileKey>,
 ) -> DependencyInfo {
-    let dependency_graph = calc_partial_dependency_graph(pool, shared_mem, parsed, parsed);
+    let dependency_graph = calc_partial_dependency_graph(pool, transaction, parsed, parsed);
     DependencyInfo::of_map(pool, dependency_graph)
 }

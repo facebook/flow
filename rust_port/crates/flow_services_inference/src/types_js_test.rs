@@ -206,7 +206,7 @@ fn include_dependencies_and_dependents(
 // system to get information about its usage. If the shared memory system is not initialized, we get
 // crashes, so we have to initialize it before running tests.
 // (Rust port: the underlying `debug_*` aliases do not perform shared-memory sampling, so no
-// SharedMem initialization is required for these tests.)
+// Transaction initialization is required for these tests.)
 
 #[test]
 fn types_js_determine_what_to_recheck_simple_test() {

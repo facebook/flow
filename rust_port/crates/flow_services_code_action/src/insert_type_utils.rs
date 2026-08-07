@@ -1307,7 +1307,7 @@ pub mod graphql {
     pub fn extract_graphql_fragment(
         cx: &flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-        get_ast_from_shared_mem: &dyn Fn(
+        get_ast_from_heap: &dyn Fn(
             &flow_parser::file_key::FileKey,
         ) -> Option<flow_parser::ast::Program<Loc, Loc>>,
         file_sig: &flow_parser_utils::file_sig::FileSig,
@@ -1315,7 +1315,7 @@ pub mod graphql {
         tgt_aloc: ALoc,
     ) -> Option<ALocTy> {
         let graphql_file = tgt_aloc.source()?;
-        let graphql_ast = get_ast_from_shared_mem(graphql_file)?;
+        let graphql_ast = get_ast_from_heap(graphql_file)?;
         // The typed_ast branch (Some) only invokes add_bind_ident_from_typed_ast which
         // does not call import_named_specifier_type — so cancel cannot surface here.
         // Convert to None on the (unreachable) cancel branch; this matches the OCaml
@@ -1348,7 +1348,7 @@ pub mod graphql {
 pub struct TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
     pub cx: &'a flow_typing_context::Context<'cx>,
     pub loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    pub get_ast_from_shared_mem:
+    pub get_ast_from_heap:
         &'a dyn Fn(&flow_parser::file_key::FileKey) -> Option<flow_parser::ast::Program<Loc, Loc>>,
     pub file_sig: &'a flow_parser_utils::file_sig::FileSig,
     pub typed_ast: &'a flow_parser::ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
@@ -1365,7 +1365,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
     pub fn new(
         cx: &'a flow_typing_context::Context<'cx>,
         loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-        get_ast_from_shared_mem: &'a dyn Fn(
+        get_ast_from_heap: &'a dyn Fn(
             &flow_parser::file_key::FileKey,
         ) -> Option<flow_parser::ast::Program<Loc, Loc>>,
         file_sig: &'a flow_parser_utils::file_sig::FileSig,
@@ -1386,7 +1386,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
         TypeNormalizationHardcodedFixesMapper {
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             file_sig,
             typed_ast,
             lint_severities,
@@ -1731,11 +1731,11 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 let aloc = obj.obj_def_loc.as_ref().unwrap();
                 let remote_file = aloc.source().unwrap();
                 if remote_file.as_str().ends_with("graphql.js") {
-                    //         ~get_ast_from_shared_mem file_sig typed_ast aloc with
+                    //         ~get_ast_from_heap file_sig typed_ast aloc with
                     let result = graphql::extract_graphql_fragment(
                         self.cx,
                         self.loc_of_aloc,
-                        self.get_ast_from_shared_mem,
+                        self.get_ast_from_heap,
                         self.file_sig,
                         self.typed_ast,
                         aloc.dupe(),
@@ -1809,17 +1809,17 @@ pub mod make_hardcoded_fixes {
         }
     }
 
-    //       ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast
+    //       ~cx ~loc_of_aloc ~get_ast_from_heap ~file_sig ~typed_ast
     //       ~generalize_maybe ~generalize_react_mixed_element ~merge_arrays
     //       ~lint_severities ~allow_dollar_flowfixme acc loc t =
     //       new type_normalization_hardcoded_fixes_mapper
-    //         ~cx ~loc_of_aloc ~get_ast_from_shared_mem ~file_sig ~typed_ast
+    //         ~cx ~loc_of_aloc ~get_ast_from_heap ~file_sig ~typed_ast
     //         ~lint_severities ~allow_dollar_flowfixme ~generalize_maybe
     //         ~generalize_react_mixed_element ~add_warning
     pub fn run<Extra: BaseStats>(
         cx: &flow_typing_context::Context,
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-        get_ast_from_shared_mem: &dyn Fn(
+        get_ast_from_heap: &dyn Fn(
             &flow_parser::file_key::FileKey,
         ) -> Option<flow_parser::ast::Program<Loc, Loc>>,
         file_sig: &flow_parser_utils::file_sig::FileSig,
@@ -1842,7 +1842,7 @@ pub mod make_hardcoded_fixes {
         let mut mapper = TypeNormalizationHardcodedFixesMapper::new(
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             file_sig,
             typed_ast,
             lint_severities,

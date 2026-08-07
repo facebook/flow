@@ -140,7 +140,7 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
         let file_sig = &self.cctx.file_sig;
         let typed_ast = &self.cctx.typed_ast;
         let loc_of_aloc = |aloc: &flow_aloc::ALoc| reader.loc_of_aloc(aloc);
-        let get_ast_from_shared_mem =
+        let get_ast_from_transaction =
             |file: &flow_parser::file_key::FileKey| -> Option<ast::Program<Loc, Loc>> {
                 reader.get_ast(file).map(|arc| (*arc).clone())
             };
@@ -247,7 +247,7 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
                     let result = flow_services_code_action::insert_type::insert_type_ty(
                         cx,
                         &loc_of_aloc,
-                        &get_ast_from_shared_mem,
+                        &get_ast_from_transaction,
                         &get_haste_module_info,
                         &get_type_sig,
                         file_sig,

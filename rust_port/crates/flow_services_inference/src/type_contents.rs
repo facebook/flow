@@ -17,7 +17,7 @@ use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -233,14 +233,14 @@ fn errors_of_file_artifacts(
 pub fn printable_errors_of_file_artifacts_result(
     options: &Options,
     env: &Env,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     filename: &FileKey,
     result: Result<&FileArtifacts, &TypeContentsError>,
 ) -> (ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet) {
     let root = &*options.root;
-    let loc_of_aloc = |aloc: &ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
+    let loc_of_aloc = |aloc: &ALoc| -> Loc { transaction.loc_of_aloc(aloc) };
     let get_ast =
-        |file: &FileKey| -> Option<Arc<ast::Program<Loc, Loc>>> { shared_mem.get_ast(file) };
+        |file: &FileKey| -> Option<Arc<ast::Program<Loc, Loc>>> { transaction.get_ast(file) };
     match result {
         Ok(file_artifacts) => {
             let (errors, warnings) = errors_of_file_artifacts(
@@ -275,17 +275,17 @@ pub fn printable_errors_of_file_artifacts_result(
 #[allow(dead_code)]
 fn unchecked_dependencies(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
 ) -> FlowOrdSet<FileKey> {
     fn unchecked_dependency(
-        shared_mem: &SharedMem,
-        m: &flow_heap::entity::Dependency,
+        transaction: &Transaction,
+        m: &flow_heap::resolved_requires::Dependency,
     ) -> Option<FileKey> {
-        let file = shared_mem.get_provider(m)?;
-        let _parse = shared_mem.get_typed_parse(&file)?;
-        match shared_mem.get_leader(&file) {
+        let file = transaction.get_provider(m)?;
+        let _parse = transaction.get_typed_parse(&file)?;
+        match transaction.get_leader(&file) {
             None => Some(file),
             Some(_) => None,
         }
@@ -297,14 +297,14 @@ fn unchecked_dependencies(
         FlowOrdSet::new(),
         |mut acc, r| match flow_services_module::imported_module(
             options,
-            shared_mem,
+            transaction,
             &node_modules_containers,
             file,
             None,
             r,
         ) {
             Err(_) => acc,
-            Ok(m) => match unchecked_dependency(shared_mem, &m) {
+            Ok(m) => match unchecked_dependency(transaction, &m) {
                 None => acc,
                 Some(f) => {
                     acc.insert(f);
@@ -322,11 +322,11 @@ fn unchecked_dependencies(
 // available, but since it doesn't use workers it can't go parse everything itself.
 fn ensure_checked_dependencies(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
 ) -> Result<(), CheckedDependenciesCanceled> {
-    let unchecked_deps = unchecked_dependencies(options, shared_mem, file, requires);
+    let unchecked_deps = unchecked_dependencies(options, transaction, file, requires);
     if !unchecked_deps.is_empty() {
         let n = unchecked_deps.len();
         flow_hh_logger::info!("Canceling command due to {} unchecked dependencies", n);
@@ -351,7 +351,7 @@ fn ensure_checked_dependencies(
 // file+contents may not agree with file system state
 pub fn check_contents(
     options: &Options,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
@@ -364,11 +364,11 @@ pub fn check_contents(
     flow_utils_concurrency::job_error::JobError,
 > {
     with_timer(options, "MergeContents", || {
-        if let Err(e) = ensure_checked_dependencies(options, &shared_mem, &filename, requires) {
+        if let Err(e) = ensure_checked_dependencies(options, &transaction, &filename, requires) {
             return Ok(Err(e));
         }
         Ok(Ok(merge_service::check_contents_context(
-            shared_mem,
+            transaction,
             Arc::new(options.clone()),
             all_unordered_libs,
             master_cx,
@@ -383,7 +383,7 @@ pub fn check_contents(
 // IDE service: enable for_ide flag to ensure declaration files are fully checked
 pub fn compute_env_of_contents(
     options: &Options,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
@@ -397,11 +397,12 @@ pub fn compute_env_of_contents(
 > {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
-            if let Err(e) = ensure_checked_dependencies(options, &shared_mem, &filename, requires) {
+            if let Err(e) = ensure_checked_dependencies(options, &transaction, &filename, requires)
+            {
                 return Ok(Err(e));
             }
             Ok(Ok(merge_service::compute_env_of_contents(
-                shared_mem,
+                transaction,
                 Arc::new(options.clone()),
                 all_unordered_libs,
                 master_cx,
@@ -418,7 +419,7 @@ pub fn compute_env_of_contents(
 pub fn type_parse_artifacts(
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     master_cx: Arc<MasterContext>,
     filename: FileKey,
     intermediate_result: (Option<ParseArtifacts>, ErrorSet),
@@ -435,12 +436,12 @@ pub fn type_parse_artifacts(
                 parse_errors,
             } = parse_artifacts;
             let (result, obj_to_obj_map) = {
-                let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
+                let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
                 type_inference_hooks_js::with_for_ide(true, || {
                     obj_to_obj_hook::with_obj_to_obj_hook(true, &loc_of_aloc, || {
                         check_contents(
                             options,
-                            shared_mem.dupe(),
+                            transaction.dupe(),
                             all_unordered_libs,
                             master_cx,
                             filename,

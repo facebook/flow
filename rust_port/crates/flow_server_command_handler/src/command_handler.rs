@@ -23,6 +23,7 @@ use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_clock;
 use flow_server_env::flow_lsp_conversions;
@@ -200,7 +201,7 @@ fn type_parse_artifacts_with_cache(
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     master_cx: Arc<flow_typing_context::MasterContext>,
     file: flow_parser::file_key::FileKey,
     content: Arc<str>,
@@ -214,7 +215,7 @@ fn type_parse_artifacts_with_cache(
             let result = type_parse_artifacts(
                 options,
                 all_unordered_libs,
-                shared_mem,
+                transaction,
                 master_cx,
                 file,
                 artifacts(),
@@ -235,7 +236,7 @@ fn type_parse_artifacts_with_cache(
                     result: type_parse_artifacts(
                         options,
                         all_unordered_libs,
-                        shared_mem,
+                        transaction,
                         master_cx,
                         file_for_result,
                         artifacts(),
@@ -355,7 +356,7 @@ fn status_log(errors: &ConcreteLocPrintableErrorSet) {
 }
 
 fn convert_errors(
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     options: &Options,
     errors: ConcreteLocPrintableErrorSet,
     warnings: ConcreteLocPrintableErrorSet,
@@ -372,8 +373,8 @@ fn convert_errors(
         } else {
             None
         };
-        let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
-        let get_ast = |file: &flow_parser::file_key::FileKey| shared_mem.get_ast(file);
+        let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
+        let get_ast = |file: &flow_parser::file_key::FileKey| transaction.get_ast(file);
         let suppressed_errors: Vec<_> = suppressed_errors
             .into_iter()
             .map(|(e, loc_set)| {
@@ -636,15 +637,15 @@ fn of_file_input(
 }
 
 fn get_haste_module_info(
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     f: &flow_parser::file_key::FileKey,
 ) -> Option<flow_common_modulename::HasteModuleInfo> {
-    shared_mem.get_haste_module_info(f)
+    transaction.get_haste_module_info(f)
 }
 
 fn mk_module_system_info(
     options: &Options,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
 ) -> flow_services_autocomplete::module_system_info::LspModuleSystemInfo {
     let node_resolver_root_relative_dirnames = if options.node_resolver_allow_root_relative {
         let root = options.root.to_string_lossy().to_string();
@@ -661,24 +662,24 @@ fn mk_module_system_info(
     } else {
         vec![]
     };
-    let shared_mem_clone = shared_mem.clone();
-    let shared_mem_clone2 = shared_mem.clone();
-    let shared_mem_clone3 = shared_mem.clone();
+    let transaction_clone = transaction.clone();
+    let transaction_clone2 = transaction.clone();
+    let transaction_clone3 = transaction.clone();
     flow_services_autocomplete::module_system_info::LspModuleSystemInfo {
         file_options: options.file_options.dupe(),
         haste_module_system: options.module_system == flow_common::options::ModuleSystem::Haste,
-        get_haste_module_info: Arc::new(move |f| shared_mem_clone.get_haste_module_info(f)),
+        get_haste_module_info: Arc::new(move |f| transaction_clone.get_haste_module_info(f)),
         get_package_info: Box::new(move |f| {
-            shared_mem_clone2
+            transaction_clone2
                 .get_package_info(f)
                 .map(|pkg| Ok((*pkg).clone()))
         }),
         is_package_file: Box::new(move |module_path, module_name| {
             let _ = module_path;
-            let dependency = shared_mem_clone3
+            let dependency = transaction_clone3
                 .get_dependency(&Modulename::Haste(HasteModuleInfo::mk(module_name.into())));
-            match dependency.and_then(|dependency| shared_mem_clone3.get_provider(&dependency)) {
-                Some(addr) => shared_mem_clone3.is_package_file(&addr),
+            match dependency.and_then(|dependency| transaction_clone3.get_provider(&dependency)) {
+                Some(addr) => transaction_clone3.is_package_file(&addr),
                 None => false,
             }
         }),
@@ -695,7 +696,7 @@ fn mk_module_system_info(
 fn get_status(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
 ) -> (
     server_prot::response::StatusResponse,
     flow_server_env::server_prot::response::LazyStats,
@@ -726,7 +727,7 @@ fn get_status(
         };
         status_log(&errors);
         flow_event_logger::status_response(errors.cardinal() as i32);
-        convert_errors(shared_mem, options, errors, warnings, suppressed_errors)
+        convert_errors(transaction, options, errors, warnings, suppressed_errors)
     };
     (status_response, lazy_stats)
 }
@@ -960,7 +961,7 @@ fn type_parse_artifacts_for_ac_with_cache(
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&AutocompleteArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     master_cx: Arc<flow_typing_context::MasterContext>,
     file: flow_parser::file_key::FileKey,
     contents: String,
@@ -984,7 +985,7 @@ fn type_parse_artifacts_for_ac_with_cache(
             } = parse_artifacts;
             let cx = match flow_services_inference::type_contents::compute_env_of_contents(
                 options,
-                shared_mem.clone(),
+                transaction.clone(),
                 all_unordered_libs.dupe(),
                 master_cx.clone(),
                 file_for_result.dupe(),
@@ -1021,7 +1022,7 @@ fn type_parse_artifacts_for_ac_with_cache(
 fn autocomplete_on_parsed(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: Option<lsp_prot::ClientId>,
     filename: &flow_parser::file_key::FileKey,
     contents: &str,
@@ -1068,7 +1069,7 @@ fn autocomplete_on_parsed(
         options,
         env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache.as_ref(),
-        shared_mem.clone(),
+        transaction.clone(),
         env.master_cx.clone(),
         filename.dupe(),
         contents.clone(),
@@ -1132,23 +1133,23 @@ fn autocomplete_on_parsed(
             };
             let layout_options =
                 flow_services_code_action::code_action_utils::layout_options(options);
-            let module_system_info = mk_module_system_info(options, shared_mem.clone());
-            let shared_mem_loa = shared_mem.clone();
+            let module_system_info = mk_module_system_info(options, transaction.clone());
+            let transaction_loa = transaction.clone();
             let loc_of_aloc: Box<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
-                Box::new(move |aloc| shared_mem_loa.loc_of_aloc(aloc));
-            let shared_mem_ast = shared_mem.clone();
-            let get_ast_from_shared_mem: Box<
+                Box::new(move |aloc| transaction_loa.loc_of_aloc(aloc));
+            let transaction_ast = transaction.clone();
+            let get_ast_from_transaction: Box<
                 dyn Fn(
                     &flow_parser::file_key::FileKey,
                 ) -> Option<
                     flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>,
                 >,
-            > = Box::new(move |f| shared_mem_ast.get_ast(f).map(|a| (*a).clone()));
+            > = Box::new(move |f| transaction_ast.get_ast(f).map(|a| (*a).clone()));
             let canon_token_owned = canon_token;
             let typing = flow_services_autocomplete::autocomplete_service_js::mk_typing_artifacts(
                 &layout_options,
                 loc_of_aloc,
-                get_ast_from_shared_mem,
+                get_ast_from_transaction,
                 &module_system_info,
                 &*search_exported_values_fn,
                 &*search_exported_types_fn,
@@ -1216,24 +1217,24 @@ fn autocomplete_on_parsed(
 fn autofix_errors_cli(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     include_best_effort_fix: bool,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
     let file_key = file_key_of_file_input(options, env, input);
     let file_content = input.content_of_file_input_arc()?;
-    let shared_mem_loa = shared_mem.clone();
+    let transaction_loa = transaction.clone();
     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
-        Arc::new(move |aloc| shared_mem_loa.loc_of_aloc(aloc));
-    let shared_mem_ast = shared_mem.clone();
-    let get_ast_from_shared_mem: Arc<
+        Arc::new(move |aloc| transaction_loa.loc_of_aloc(aloc));
+    let transaction_ast = transaction.clone();
+    let get_ast_from_transaction: Arc<
         dyn Fn(
             &flow_parser::file_key::FileKey,
         )
             -> Option<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
-    > = Arc::new(move |f| shared_mem_ast.get_ast(f).map(|a| (*a).clone()));
-    let module_system_info = mk_module_system_info(options, shared_mem.clone());
-    let shared_mem_ts = shared_mem.clone();
+    > = Arc::new(move |f| transaction_ast.get_ast(f).map(|a| (*a).clone()));
+    let module_system_info = mk_module_system_info(options, transaction.clone());
+    let transaction_ts = transaction.clone();
     let get_type_sig: Arc<
         dyn Fn(
             &flow_parser::file_key::FileKey,
@@ -1243,7 +1244,7 @@ fn autofix_errors_cli(
             >,
         >,
     > = Arc::new(move |f| {
-        shared_mem_ts.get_type_sig(f).map(|arc| {
+        transaction_ts.get_type_sig(f).map(|arc| {
             let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
                 .expect("get_type_sig: serialize");
             bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
@@ -1254,9 +1255,9 @@ fn autofix_errors_cli(
     let edits = flow_services_code_action::code_action_service::autofix_errors_cli(
         options,
         env,
-        shared_mem,
+        transaction,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_transaction,
         &module_system_info,
         get_type_sig,
         include_best_effort_fix,
@@ -1269,18 +1270,18 @@ fn autofix_errors_cli(
 fn autofix_imports_cli(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
     let file_key = file_key_of_file_input(options, env, input);
     let file_content = input.content_of_file_input_arc()?;
-    let shared_mem_loa = shared_mem.clone();
-    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
-    let module_system_info = mk_module_system_info(options, shared_mem.clone());
+    let transaction_loa = transaction.clone();
+    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
+    let module_system_info = mk_module_system_info(options, transaction.clone());
     let edits = flow_services_code_action::code_action_service::autofix_imports_cli(
         options,
         env,
-        shared_mem,
+        transaction,
         &loc_of_aloc,
         &module_system_info,
         &file_key,
@@ -1292,18 +1293,18 @@ fn autofix_imports_cli(
 fn suggest_imports_cli(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> server_prot::response::SuggestImportsResponse {
     let file_key = file_key_of_file_input(options, env, input);
     let file_content = input.content_of_file_input_arc()?;
-    let shared_mem_loa = shared_mem.clone();
-    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
-    let module_system_info = mk_module_system_info(options, shared_mem.clone());
+    let transaction_loa = transaction.clone();
+    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
+    let module_system_info = mk_module_system_info(options, transaction.clone());
     let result = flow_services_code_action::code_action_service::suggest_imports_cli(
         options,
         env,
-        shared_mem,
+        transaction,
         &loc_of_aloc,
         &module_system_info,
         &file_key,
@@ -1317,7 +1318,7 @@ fn suggest_imports_cli(
 fn autocomplete(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: Option<lsp_prot::ClientId>,
     input: &FileInput,
     trigger_character: Option<&str>,
@@ -1348,7 +1349,7 @@ fn autocomplete(
             let (initial_json_props, ac_result) = autocomplete_on_parsed(
                 options,
                 env,
-                shared_mem,
+                transaction,
                 client_id,
                 &filename,
                 &contents,
@@ -1373,7 +1374,7 @@ enum ErrorsOfFileError {
 fn errors_of_file(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     force: bool,
     file_input: &FileInput,
 ) -> Result<(ConcreteLocPrintableErrorSet, ConcreteLocPrintableErrorSet), ErrorsOfFileError> {
@@ -1392,7 +1393,7 @@ fn errors_of_file(
                 type_parse_artifacts(
                     &options,
                     env.all_unordered_libs.dupe(),
-                    shared_mem.clone(),
+                    transaction.clone(),
                     env.master_cx.clone(),
                     file_key.clone(),
                     intermediate_result,
@@ -1404,7 +1405,7 @@ fn errors_of_file(
             let (errors, warnings) = printable_errors_of_file_artifacts_result(
                 &options,
                 env,
-                &shared_mem,
+                &transaction,
                 &file_key,
                 result.as_ref(),
             );
@@ -1416,17 +1417,17 @@ fn errors_of_file(
 fn check_file(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     force: bool,
     file_input: &FileInput,
 ) -> Result<server_prot::response::StatusResponse, WorkloadCanceled> {
-    match errors_of_file(options, env, shared_mem.clone(), force, file_input) {
+    match errors_of_file(options, env, transaction.clone(), force, file_input) {
         Err(ErrorsOfFileError::NotCovered) => {
             Ok(server_prot::response::StatusResponse::NOT_COVERED)
         }
         Err(ErrorsOfFileError::Canceled) => Err(WorkloadCanceled),
         Ok((errors, warnings)) => Ok(convert_errors(
-            &shared_mem,
+            &transaction,
             options,
             errors,
             warnings,
@@ -1439,7 +1440,7 @@ fn check_file(
 }
 
 fn get_def_of_check_result(
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     file: &flow_parser::file_key::FileKey,
     line: u32,
     col: u32,
@@ -1453,7 +1454,7 @@ fn get_def_of_check_result(
     let loc = flow_parser::loc::Loc::cursor(Some(file.clone()), line as i32, col as i32);
     let (ref parse_artifacts, ref typecheck_artifacts) = *check_result;
     let result = match get_def_js::get_def(
-        &|aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc),
+        &|aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc),
         &typecheck_artifacts.cx,
         &parse_artifacts.file_sig,
         file_content,
@@ -1609,7 +1610,7 @@ fn infer_type_to_response(
 }
 
 fn documentation_at_loc(
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     file_key: &flow_parser::file_key::FileKey,
     line: u32,
     column: u32,
@@ -1618,7 +1619,7 @@ fn documentation_at_loc(
 ) -> Option<String> {
     let (getdef_loc_result, _) = try_with_json(|| {
         let (result, _json_props) = get_def_of_check_result(
-            shared_mem,
+            transaction,
             file_key,
             line,
             column,
@@ -1633,7 +1634,7 @@ fn documentation_at_loc(
             let getdef_loc = locs.first().unwrap().clone();
             flow_services_autocomplete::find_documentation::jsdoc_of_getdef_loc(
                 ast,
-                &|file_key| shared_mem.get_ast(file_key).map(|a| (*a).clone()),
+                &|file_key| transaction.get_ast(file_key).map(|a| (*a).clone()),
                 getdef_loc,
             )
             .as_ref()
@@ -1657,7 +1658,7 @@ fn infer_type(
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::infer_type_options::T,
     include_refinement_info: bool,
 ) -> Result<
@@ -1709,7 +1710,7 @@ fn infer_type(
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 content.dupe(),
@@ -1730,7 +1731,7 @@ fn infer_type(
                 Ok(ref check_result) => {
                     let (ref parse_artifacts, ref typecheck_artifacts) = *check_result;
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
-                        shared_mem.loc_of_aloc(aloc)
+                        transaction.loc_of_aloc(aloc)
                     };
                     let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
                         match flow_services_type_info::type_info_service::type_at_pos(
@@ -1764,7 +1765,7 @@ fn infer_type(
                             }
                         };
                     let documentation = documentation_at_loc(
-                        &shared_mem,
+                        &transaction,
                         &file_key,
                         line as u32,
                         column as u32,
@@ -1806,7 +1807,7 @@ fn type_of_name(
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::type_of_name_options::T,
 ) -> Result<Vec<server_prot::response::InferTypeOfNameResponse>, WorkloadCanceled> {
     let server_prot::type_of_name_options::T {
@@ -1830,7 +1831,7 @@ fn type_of_name(
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 content.dupe(),
@@ -1842,7 +1843,7 @@ fn type_of_name(
                     Ok(names.iter().map(|_| Err(err_str.clone())).collect())
                 }
                 Ok(check_result) => {
-                    let doc_at_loc = |reader: &flow_heap::parsing_heaps::SharedMem,
+                    let doc_at_loc = |reader: &flow_heap::parsing_heaps::Transaction,
                                       check_result: &CheckResult<'_>,
                                       ast: &flow_parser::ast::Program<
                         flow_parser::loc::Loc,
@@ -1863,7 +1864,7 @@ fn type_of_name(
                     };
                     Ok(flow_services_type_of_name::type_of_name::type_of_name(
                         &options,
-                        shared_mem,
+                        transaction,
                         env,
                         &doc_at_loc,
                         file_key,
@@ -1880,7 +1881,7 @@ fn inlay_hint(
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::inlay_hint_options::T,
 ) -> Result<
     (
@@ -1913,7 +1914,7 @@ fn inlay_hint(
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 content.dupe(),
@@ -1939,7 +1940,7 @@ fn inlay_hint(
                 Ok(check_result) => {
                     let (parse_artifacts, typecheck_artifacts) = check_result;
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
-                        shared_mem.loc_of_aloc(aloc)
+                        transaction.loc_of_aloc(aloc)
                     };
                     // LSP boundary: convert JobError (cancel/timeout) escaping
                     // batched_type_at_pos_from_special_comments into an empty
@@ -1968,7 +1969,7 @@ fn inlay_hint(
                         let line = type_loc.start.line;
                         let column = type_loc.start.column;
                         let documentation = documentation_at_loc(
-                            &shared_mem,
+                            &transaction,
                             &file_key,
                             line as u32,
                             column as u32,
@@ -2004,7 +2005,7 @@ fn inlay_hint(
 fn insert_type(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     file_input: &FileInput,
     target: &flow_parser::loc::Loc,
     omit_targ_defaults: bool,
@@ -2015,21 +2016,21 @@ fn insert_type(
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
-    let shared_mem_loa = shared_mem.clone();
-    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
-    let shared_mem_ast = shared_mem.clone();
-    let get_ast_from_shared_mem =
-        move |f: &flow_parser::file_key::FileKey| shared_mem_ast.get_ast(f).map(|a| (*a).clone());
-    let shared_mem_hmi = shared_mem.clone();
+    let transaction_loa = transaction.clone();
+    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
+    let transaction_ast = transaction.clone();
+    let get_ast_from_transaction =
+        move |f: &flow_parser::file_key::FileKey| transaction_ast.get_ast(f).map(|a| (*a).clone());
+    let transaction_hmi = transaction.clone();
     let get_haste_module_info =
-        move |f: &flow_parser::file_key::FileKey| shared_mem_hmi.get_haste_module_info(f);
-    let shared_mem_ts = shared_mem.clone();
+        move |f: &flow_parser::file_key::FileKey| transaction_hmi.get_haste_module_info(f);
+    let transaction_ts = transaction.clone();
     let get_type_sig = move |f: &flow_parser::file_key::FileKey| -> Option<
         flow_type_sig::packed_type_sig::Module<
             flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
         >,
     > {
-        shared_mem_ts.get_type_sig(f).map(|arc| {
+        transaction_ts.get_type_sig(f).map(|arc| {
             let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
                 .expect("get_type_sig: serialize");
             bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
@@ -2046,17 +2047,17 @@ fn insert_type(
     let file_artifacts_result = type_parse_artifacts(
         options,
         env.all_unordered_libs.dupe(),
-        shared_mem,
+        transaction,
         env.master_cx.clone(),
         file_key,
         intermediate_result,
     );
-    match &file_artifacts_result {
+    let result = (|| match &file_artifacts_result {
         Ok((parse_artifacts, typecheck_artifacts)) => {
-            let edits = match flow_services_code_action::code_action_service::insert_type_fn(
+            match flow_services_code_action::code_action_service::insert_type_fn(
                 options,
                 &loc_of_aloc,
-                &get_ast_from_shared_mem,
+                &get_ast_from_transaction,
                 &get_haste_module_info,
                 &get_type_sig,
                 &file_content,
@@ -2066,27 +2067,30 @@ fn insert_type(
                 parse_artifacts,
                 typecheck_artifacts,
             ) {
-                Ok(e) => e,
-                Err(s) => return Ok(Err(s)),
-            };
-            Ok(Ok(
-                flow_parser_utils_output::replacement_printer::loc_patch_to_patch(
-                    &file_content,
-                    &edits,
-                ),
-            ))
+                Ok(edits) => Ok(Ok(
+                    flow_parser_utils_output::replacement_printer::loc_patch_to_patch(
+                        &file_content,
+                        &edits,
+                    ),
+                )),
+                Err(error) => Ok(Err(error)),
+            }
         }
         Err(error) => Ok(Err(type_contents_error_to_string(
             error,
             "Failed to type-check file",
         )?)),
+    })();
+    if let Ok((_, typecheck_artifacts)) = &file_artifacts_result {
+        typecheck_artifacts.cx.post_inference_cleanup();
     }
+    result
 }
 
 fn autofix_exports(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixExportsResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
@@ -2094,17 +2098,17 @@ fn autofix_exports(
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
-    let shared_mem_loa = shared_mem.clone();
+    let transaction_loa = transaction.clone();
     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
-        Arc::new(move |aloc| shared_mem_loa.loc_of_aloc(aloc));
-    let shared_mem_ast = shared_mem.clone();
-    let get_ast_from_shared_mem =
-        move |f: &flow_parser::file_key::FileKey| shared_mem_ast.get_ast(f).map(|a| (*a).clone());
-    let shared_mem_hmi = shared_mem.clone();
+        Arc::new(move |aloc| transaction_loa.loc_of_aloc(aloc));
+    let transaction_ast = transaction.clone();
+    let get_ast_from_transaction =
+        move |f: &flow_parser::file_key::FileKey| transaction_ast.get_ast(f).map(|a| (*a).clone());
+    let transaction_hmi = transaction.clone();
     let get_haste_module_info: Arc<
         dyn Fn(&flow_parser::file_key::FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
-    > = Arc::new(move |f| shared_mem_hmi.get_haste_module_info(f));
-    let shared_mem_ts = shared_mem.clone();
+    > = Arc::new(move |f| transaction_hmi.get_haste_module_info(f));
+    let transaction_ts = transaction.clone();
     let get_type_sig: Arc<
         dyn Fn(
             &flow_parser::file_key::FileKey,
@@ -2114,7 +2118,7 @@ fn autofix_exports(
             >,
         >,
     > = Arc::new(move |f| {
-        shared_mem_ts.get_type_sig(f).map(|arc| {
+        transaction_ts.get_type_sig(f).map(|arc| {
             let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
                 .expect("get_type_sig: serialize");
             bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
@@ -2131,7 +2135,7 @@ fn autofix_exports(
     let file_artifacts_result = type_parse_artifacts(
         options,
         env.all_unordered_libs.dupe(),
-        shared_mem,
+        transaction,
         env.master_cx.clone(),
         file_key.clone(),
         intermediate_result,
@@ -2142,7 +2146,7 @@ fn autofix_exports(
                 flow_services_code_action::code_action_service::autofix_exports_fn(
                     options,
                     loc_of_aloc,
-                    &get_ast_from_shared_mem,
+                    &get_ast_from_transaction,
                     get_haste_module_info,
                     get_type_sig,
                     file_key,
@@ -2174,7 +2178,7 @@ fn autofix_exports(
 fn autofix_missing_local_annot(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixMissingLocalAnnotResponse, WorkloadCanceled> {
     let file_key = file_key_of_file_input(options, env, input);
@@ -2182,21 +2186,21 @@ fn autofix_missing_local_annot(
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
-    let shared_mem_loa = shared_mem.clone();
-    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| shared_mem_loa.loc_of_aloc(aloc);
-    let shared_mem_ast = shared_mem.clone();
-    let get_ast_from_shared_mem =
-        move |f: &flow_parser::file_key::FileKey| shared_mem_ast.get_ast(f).map(|a| (*a).clone());
-    let shared_mem_hmi = shared_mem.clone();
+    let transaction_loa = transaction.clone();
+    let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
+    let transaction_ast = transaction.clone();
+    let get_ast_from_transaction =
+        move |f: &flow_parser::file_key::FileKey| transaction_ast.get_ast(f).map(|a| (*a).clone());
+    let transaction_hmi = transaction.clone();
     let get_haste_module_info =
-        move |f: &flow_parser::file_key::FileKey| shared_mem_hmi.get_haste_module_info(f);
-    let shared_mem_ts = shared_mem.clone();
+        move |f: &flow_parser::file_key::FileKey| transaction_hmi.get_haste_module_info(f);
+    let transaction_ts = transaction.clone();
     let get_type_sig = move |f: &flow_parser::file_key::FileKey| -> Option<
         flow_type_sig::packed_type_sig::Module<
             flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
         >,
     > {
-        shared_mem_ts.get_type_sig(f).map(|arc| {
+        transaction_ts.get_type_sig(f).map(|arc| {
             let bytes = bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
                 .expect("get_type_sig: serialize");
             bincode::serde::decode_from_slice(&bytes, bincode::config::legacy())
@@ -2213,7 +2217,7 @@ fn autofix_missing_local_annot(
     let file_artifacts_result = type_parse_artifacts(
         options,
         env.all_unordered_libs.dupe(),
-        shared_mem,
+        transaction,
         env.master_cx.clone(),
         file_key,
         intermediate_result,
@@ -2231,7 +2235,7 @@ fn autofix_missing_local_annot(
     let edits = match flow_services_code_action::code_action_service::autofix_missing_local_annot_fn(
         options,
         &loc_of_aloc,
-        &get_ast_from_shared_mem,
+        &get_ast_from_transaction,
         &get_haste_module_info,
         &get_type_sig,
         &file_content,
@@ -2249,7 +2253,7 @@ fn autofix_missing_local_annot(
 fn collect_rage(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     files: Option<&[String]>,
 ) -> Vec<(String, String)> {
     let mut items = Vec::new();
@@ -2309,7 +2313,9 @@ fn collect_rage(
                     Err(_) => "ERROR! FAILED TO READ".to_string(),
                     Ok(content) => {
                         if flow_parsing::parsing_service::does_content_match_file_hash(
-                            shared_mem, &file_key, &content,
+                            transaction,
+                            &file_key,
+                            &content,
                         ) {
                             "OK".to_string()
                         } else {
@@ -2328,7 +2334,7 @@ fn collect_rage(
 fn dump_types(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     file_input: &FileInput,
@@ -2343,7 +2349,7 @@ fn dump_types(
     let file_artifacts_result = type_parse_artifacts(
         options,
         env.all_unordered_libs.dupe(),
-        shared_mem,
+        transaction,
         env.master_cx.clone(),
         file_key,
         intermediate_result,
@@ -2370,7 +2376,7 @@ fn coverage(
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     file_key: &flow_parser::file_key::FileKey,
     content: &str,
     force: bool,
@@ -2389,7 +2395,7 @@ fn coverage(
         &options,
         env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache,
-        shared_mem,
+        transaction,
         env.master_cx.clone(),
         file_key.clone(),
         Arc::from(content),
@@ -2559,7 +2565,7 @@ fn get_cycle(
 
 fn find_module(
     options: &Options,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     moduleref: &str,
     filename: &str,
 ) -> server_prot::response::FindModuleResponse {
@@ -2571,7 +2577,7 @@ fn find_module(
     let node_modules_containers = files::node_modules_containers.read().unwrap();
     let resolved_module = flow_services_module::imported_module(
         options,
-        &shared_mem,
+        &transaction,
         &node_modules_containers,
         &file,
         Some(&mut phantom_acc),
@@ -2585,7 +2591,7 @@ fn find_module(
         })
         .collect();
     let provider = match resolved_module {
-        Ok(ref m) => shared_mem.get_provider(m),
+        Ok(ref m) => transaction.get_provider(m),
         Err(_) => None,
     };
     match provider {
@@ -2598,7 +2604,7 @@ fn get_def(
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     file_input: &FileInput,
     line: u32,
     col: u32,
@@ -2632,7 +2638,7 @@ fn get_def(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
                 content.dupe(),
@@ -2659,7 +2665,7 @@ fn get_def(
                 }
                 Ok(ref check_result) => {
                     let (result, json_props) = get_def_of_check_result(
-                        &shared_mem,
+                        &transaction,
                         &file_key,
                         line,
                         col,
@@ -2716,9 +2722,10 @@ fn save_state(
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
+    let transaction = Transaction::new(genv.committed_heap.dupe());
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
-        &genv.shared_mem,
+        &transaction,
         env,
         &genv.options,
     )
@@ -2794,7 +2801,7 @@ fn rank_autoimports_by_usage(options: &Options, client_id: lsp_prot::ClientId) -
 fn handle_apply_code_action(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     action: &server_prot::code_action::T,
     file_input: &FileInput,
 ) -> EphemeralParallelizableResult {
@@ -2806,7 +2813,7 @@ fn handle_apply_code_action(
                 autofix_errors_cli(
                     options,
                     env,
-                    shared_mem.clone(),
+                    transaction.clone(),
                     *include_best_effort_fix,
                     file_input,
                 )
@@ -2818,7 +2825,7 @@ fn handle_apply_code_action(
         }
         server_prot::code_action::T::SourceAddMissingImports => {
             let result: Result<_, String> =
-                try_with(|| autofix_imports_cli(options, env, shared_mem.clone(), file_input));
+                try_with(|| autofix_imports_cli(options, env, transaction.clone(), file_input));
             Ok((
                 server_prot::response::Response::APPLY_CODE_ACTION(result),
                 None,
@@ -2826,7 +2833,7 @@ fn handle_apply_code_action(
         }
         server_prot::code_action::T::SuggestImports => {
             let result =
-                try_with(|| suggest_imports_cli(options, env, shared_mem.clone(), file_input));
+                try_with(|| suggest_imports_cli(options, env, transaction.clone(), file_input));
             Ok((
                 server_prot::response::Response::SUGGEST_IMPORTS(result),
                 None,
@@ -2838,7 +2845,7 @@ fn handle_apply_code_action(
 fn handle_autocomplete(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
     trigger_character: Option<&str>,
     cursor: (i32, i32),
@@ -2849,7 +2856,7 @@ fn handle_autocomplete(
     let (result, json_data) = autocomplete(
         options,
         env,
-        shared_mem,
+        transaction,
         None,
         input,
         trigger_character,
@@ -2868,10 +2875,10 @@ fn handle_autocomplete(
 fn handle_autofix_exports(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_exports(options, env, shared_mem, input)?;
+    let result = autofix_exports(options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
@@ -2881,10 +2888,10 @@ fn handle_autofix_exports(
 fn handle_autofix_missing_local_annot(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_missing_local_annot(options, env, shared_mem, input)?;
+    let result = autofix_missing_local_annot(options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
@@ -2894,18 +2901,18 @@ fn handle_autofix_missing_local_annot(
 fn handle_check_file(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     force: bool,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let response = check_file(options, env, shared_mem, force, input)?;
+    let response = check_file(options, env, transaction, force, input)?;
     Ok((server_prot::response::Response::CHECK_FILE(response), None))
 }
 
 fn handle_coverage(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
     force: bool,
 ) -> EphemeralParallelizableResult {
@@ -2918,7 +2925,7 @@ fn handle_coverage(
             &options,
             env,
             None,
-            shared_mem.clone(),
+            transaction.clone(),
             &file_key,
             &file_contents,
             force,
@@ -2997,7 +3004,7 @@ fn build_file_entry(
 fn query(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     request: &Query,
 ) -> Result<String, String> {
     // `fields` must be a non-empty list of distinct fields. Enforcing it here keeps the
@@ -3023,7 +3030,7 @@ fn query(
             })
             .map(|file_key| {
                 let content_hash = if want_content {
-                    shared_mem.get_file_hash_committed(file_key)
+                    transaction.get_file_hash_committed(file_key)
                 } else {
                     None
                 };
@@ -3045,17 +3052,17 @@ fn query(
 fn handle_query(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     request: &Query,
 ) -> EphemeralNonparallelizableResult {
-    let response = query(options, env, shared_mem, request);
+    let response = query(options, env, transaction, request);
     Ok((server_prot::response::Response::QUERY(response), None))
 }
 
 fn handle_dump_types(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
     input: &FileInput,
@@ -3063,7 +3070,7 @@ fn handle_dump_types(
     let response = dump_types(
         options,
         env,
-        shared_mem,
+        transaction,
         evaluate_type_destructors,
         for_tool,
         input,
@@ -3073,11 +3080,11 @@ fn handle_dump_types(
 
 fn handle_find_module(
     options: &Options,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     moduleref: &str,
     filename: &str,
 ) -> EphemeralParallelizableResult {
-    let response = find_module(options, shared_mem, moduleref, filename);
+    let response = find_module(options, transaction, moduleref, filename);
     Ok((server_prot::response::Response::FIND_MODULE(response), None))
 }
 
@@ -3103,12 +3110,12 @@ fn handle_force_recheck(
 fn handle_get_def(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
     line: u32,
     col: u32,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = get_def(options, env, None, shared_mem, input, line, col)?;
+    let (result, json_data) = get_def(options, env, None, transaction, input, line, col)?;
     Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
@@ -3129,10 +3136,10 @@ fn handle_graph_dep_graph(
 fn handle_infer_type(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = infer_type(options, env, None, shared_mem.clone(), input, true)?;
+    let (result, json_data) = infer_type(options, env, None, transaction.clone(), input, true)?;
     Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
@@ -3142,14 +3149,14 @@ fn handle_infer_type(
 fn handle_type_of_name(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::type_of_name_options::T,
 ) -> EphemeralParallelizableResult {
     let (result, json_data): (
         Vec<server_prot::response::InferTypeOfNameResponse>,
         Option<lsp_prot::Json>,
     ) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        type_of_name(options, env, None, shared_mem, input)
+        type_of_name(options, env, None, transaction, input)
     })) {
         Ok(result) => (result?, None),
         Err(_exn) => {
@@ -3172,10 +3179,10 @@ fn handle_type_of_name(
 fn handle_inlay_hint(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::inlay_hint_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = inlay_hint(options, env, None, shared_mem.clone(), input)?;
+    let (result, json_data) = inlay_hint(options, env, None, transaction.clone(), input)?;
     Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
@@ -3185,7 +3192,7 @@ fn handle_inlay_hint(
 fn handle_llm_context(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::llm_context_options::T,
 ) -> EphemeralParallelizableResult {
     let server_prot::llm_context_options::T {
@@ -3211,7 +3218,7 @@ fn handle_llm_context(
             let file_artifacts_result = type_parse_artifacts(
                 options,
                 env.all_unordered_libs.dupe(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
                 intermediate_result,
@@ -3226,7 +3233,7 @@ fn handle_llm_context(
                             &parse_artifacts.ast,
                             &typecheck_artifacts.cx,
                             &typecheck_artifacts.typed_ast,
-                            &shared_mem,
+                            &transaction,
                             &file_sig_opts,
                         );
                         let tokens = crate::llm_typed_context_provider::count_tokens(&context);
@@ -3274,7 +3281,7 @@ fn handle_llm_context(
 fn handle_insert_type(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     file_input: &FileInput,
     target: &flow_parser::loc::Loc,
     omit_targ_defaults: bool,
@@ -3283,7 +3290,7 @@ fn handle_insert_type(
     let result = insert_type(
         options,
         env,
-        shared_mem,
+        transaction,
         file_input,
         target,
         omit_targ_defaults,
@@ -3295,19 +3302,19 @@ fn handle_insert_type(
 fn handle_rage(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     files: Option<&[String]>,
 ) -> EphemeralParallelizableResult {
-    let items = collect_rage(options, env, shared_mem, files);
+    let items = collect_rage(options, env, transaction, files);
     Ok((server_prot::response::Response::RAGE(items), None))
 }
 
 fn handle_status(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
 ) -> EphemeralNonparallelizableResult {
-    let (status_response, lazy_stats) = get_status(options, env, shared_mem);
+    let (status_response, lazy_stats) = get_status(options, env, transaction);
     Ok((
         server_prot::response::Response::STATUS {
             status_response,
@@ -3332,13 +3339,13 @@ pub fn handle_ephemeral_command_for_standalone(
     command: server_prot::request::Command,
 ) -> EphemeralParallelizableResult {
     let options = &*genv.options;
-    let shared_mem = genv.shared_mem.dupe();
+    let transaction = Transaction::new(genv.committed_heap.dupe());
     match command {
         server_prot::request::Command::APPLY_CODE_ACTION {
             input,
             action,
             wait_for_recheck: _,
-        } => handle_apply_code_action(options, env, shared_mem, &action, &input),
+        } => handle_apply_code_action(options, env, transaction, &action, &input),
         server_prot::request::Command::AUTOCOMPLETE {
             input,
             cursor,
@@ -3350,7 +3357,7 @@ pub fn handle_ephemeral_command_for_standalone(
         } => handle_autocomplete(
             options,
             env,
-            shared_mem,
+            transaction,
             &input,
             trigger_character.as_deref(),
             cursor,
@@ -3362,12 +3369,12 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_exports(options, env, shared_mem, &input),
+        } => handle_autofix_exports(options, env, transaction, &input),
         server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT {
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_missing_local_annot(options, env, shared_mem, &input),
+        } => handle_autofix_missing_local_annot(options, env, transaction, &input),
         server_prot::request::Command::CHECK_FILE {
             input,
             verbose: _,
@@ -3377,13 +3384,13 @@ pub fn handle_ephemeral_command_for_standalone(
         } => {
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
-            handle_check_file(&options, env, shared_mem, force, &input)
+            handle_check_file(&options, env, transaction, force, &input)
         }
         server_prot::request::Command::COVERAGE {
             input,
             force,
             wait_for_recheck: _,
-        } => handle_coverage(options, env, shared_mem, &input, force),
+        } => handle_coverage(options, env, transaction, &input, force),
         server_prot::request::Command::BATCH_COVERAGE {
             batch,
             wait_for_recheck: _,
@@ -3396,7 +3403,7 @@ pub fn handle_ephemeral_command_for_standalone(
             handle_cycle(env, &file_key, types_only)
         }
         server_prot::request::Command::QUERY { query } => {
-            handle_query(options, env, &shared_mem, &query)
+            handle_query(options, env, &transaction, &query)
         }
         server_prot::request::Command::DUMP_TYPES {
             input,
@@ -3406,7 +3413,7 @@ pub fn handle_ephemeral_command_for_standalone(
         } => handle_dump_types(
             options,
             env,
-            shared_mem,
+            transaction,
             if evaluate_type_destructors {
                 flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode::EvaluateAll
             } else {
@@ -3419,7 +3426,7 @@ pub fn handle_ephemeral_command_for_standalone(
             moduleref,
             filename,
             wait_for_recheck: _,
-        } => handle_find_module(options, shared_mem, &moduleref, &filename),
+        } => handle_find_module(options, transaction, &moduleref, &filename),
         server_prot::request::Command::FORCE_RECHECK {
             files,
             focus,
@@ -3436,7 +3443,14 @@ pub fn handle_ephemeral_command_for_standalone(
             line,
             r#char,
             wait_for_recheck: _,
-        } => handle_get_def(options, env, shared_mem, &input, line as u32, r#char as u32),
+        } => handle_get_def(
+            options,
+            env,
+            transaction,
+            &input,
+            line as u32,
+            r#char as u32,
+        ),
         server_prot::request::Command::GRAPH_DEP_GRAPH {
             root,
             strip_root,
@@ -3444,13 +3458,13 @@ pub fn handle_ephemeral_command_for_standalone(
             types_only,
         } => handle_graph_dep_graph(env, &root, strip_root, &outfile, types_only),
         server_prot::request::Command::INFER_TYPE(input) => {
-            handle_infer_type(options, env, shared_mem, &input)
+            handle_infer_type(options, env, transaction, &input)
         }
         server_prot::request::Command::INLAY_HINT(input) => {
-            handle_inlay_hint(options, env, shared_mem, &input)
+            handle_inlay_hint(options, env, transaction, &input)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {
-            handle_type_of_name(options, env, shared_mem, &input)
+            handle_type_of_name(options, env, transaction, &input)
         }
         server_prot::request::Command::INSERT_TYPE {
             input,
@@ -3462,14 +3476,14 @@ pub fn handle_ephemeral_command_for_standalone(
         } => handle_insert_type(
             options,
             env,
-            shared_mem,
+            transaction,
             &input,
             &target,
             omit_targ_defaults,
             location_is_strict,
         ),
         server_prot::request::Command::RAGE { files } => {
-            handle_rage(options, env, &shared_mem, Some(&files))
+            handle_rage(options, env, &transaction, Some(&files))
         }
         server_prot::request::Command::SAVE_STATE { out } => {
             let filename = match out {
@@ -3495,10 +3509,10 @@ pub fn handle_ephemeral_command_for_standalone(
         server_prot::request::Command::STATUS { include_warnings } => {
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
-            handle_status(&options, env, &shared_mem)
+            handle_status(&options, env, &transaction)
         }
         server_prot::request::Command::LLM_CONTEXT(input) => {
-            handle_llm_context(options, env, shared_mem, &input)
+            handle_llm_context(options, env, transaction, &input)
         }
     }
 }
@@ -3534,7 +3548,7 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
 fn find_code_actions(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     params: &lsp_types::CodeActionParams,
 ) -> (
@@ -3570,7 +3584,7 @@ fn find_code_actions(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 file_contents.dupe(),
@@ -3590,18 +3604,20 @@ fn find_code_actions(
                         false,
                         &parse_artifacts.ast,
                     );
-                    let shared_mem_clone = shared_mem.clone();
+                    let transaction_clone = transaction.clone();
                     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
-                        Arc::new(move |aloc| shared_mem_clone.loc_of_aloc(aloc));
-                    let shared_mem_clone2 = shared_mem.clone();
-                    let get_ast_from_shared_mem: Arc<
+                        Arc::new(move |aloc| transaction_clone.loc_of_aloc(aloc));
+                    let transaction_clone2 = transaction.clone();
+                    let get_ast_from_transaction: Arc<
                         dyn Fn(
                             &flow_parser::file_key::FileKey,
                         ) -> Option<
                             flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>,
                         >,
-                    > = Arc::new(move |fk| shared_mem_clone2.get_ast(fk).map(|arc| (*arc).clone()));
-                    let shared_mem_ts = shared_mem.clone();
+                    > = Arc::new(move |fk| {
+                        transaction_clone2.get_ast(fk).map(|arc| (*arc).clone())
+                    });
+                    let transaction_ts = transaction.clone();
                     let get_type_sig: Arc<
                         dyn Fn(
                             &flow_parser::file_key::FileKey,
@@ -3611,7 +3627,7 @@ fn find_code_actions(
                             >,
                         >,
                     > = Arc::new(move |fk| {
-                        shared_mem_ts.get_type_sig(fk).map(|arc| {
+                        transaction_ts.get_type_sig(fk).map(|arc| {
                             let bytes =
                                 bincode::serde::encode_to_vec(&*arc, bincode::config::legacy())
                                     .expect("get_type_sig: serialize");
@@ -3620,7 +3636,7 @@ fn find_code_actions(
                                 .0
                         })
                     });
-                    let module_system_info = mk_module_system_info(options, shared_mem.clone());
+                    let module_system_info = mk_module_system_info(options, transaction.clone());
                     let code_actions =
                         flow_services_code_action::code_action_service::code_actions_at_loc(
                             options,
@@ -3628,7 +3644,7 @@ fn find_code_actions(
                             imports_ranked_usage,
                             env,
                             loc_of_aloc,
-                            get_ast_from_shared_mem,
+                            get_ast_from_transaction,
                             get_type_sig,
                             &module_system_info,
                             &typecheck_artifacts.cx,
@@ -3673,7 +3689,7 @@ fn find_code_actions(
 fn add_missing_imports(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     text_document: &lsp_types::TextDocumentIdentifier,
 ) -> Result<Vec<lsp_types::TextEdit>, String> {
@@ -3697,7 +3713,7 @@ fn add_missing_imports(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 file_contents.dupe(),
@@ -3706,8 +3722,8 @@ fn add_missing_imports(
             match file_artifacts_result {
                 Err(_) => Ok(vec![]),
                 Ok((ref parse_artifacts, ref typecheck_artifacts)) => {
-                    let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
-                    let module_system_info = mk_module_system_info(options, shared_mem.clone());
+                    let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
+                    let module_system_info = mk_module_system_info(options, transaction.clone());
                     Ok(
                         flow_services_code_action::code_action_service::autofix_imports_lsp(
                             options,
@@ -4040,7 +4056,7 @@ fn run_command_in_serial(
                     "Command successfully canceled. Running a recheck before restarting the command"
                 );
                 let (_recheck_profiling, new_env) =
-                    flow_server_rechecker::rechecker::recheck_loop(genv, env, &genv.shared_mem);
+                    flow_server_rechecker::rechecker::recheck_loop(genv, env, &genv.committed_heap);
                 env = new_env;
                 flow_hh_logger::info!("Now restarting the command");
                 continue;
@@ -4696,7 +4712,7 @@ fn handle_persistent_did_change_configuration_notification(
 fn handle_persistent_get_def(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::GotoDefinitionParams,
@@ -4717,7 +4733,7 @@ fn handle_persistent_get_def(
         options,
         env,
         type_parse_artifacts_cache.as_ref(),
-        shared_mem,
+        transaction,
         &file_input,
         line,
         col,
@@ -4778,7 +4794,7 @@ fn loc_to_vscode_linked_location_in_markdown(
 fn handle_persistent_infer_type(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::HoverParams,
@@ -4815,7 +4831,7 @@ fn handle_persistent_infer_type(
         options,
         env,
         type_parse_artifacts_cache.as_ref(),
-        shared_mem.clone(),
+        transaction.clone(),
         &input,
         include_refinement_info,
     )?;
@@ -4955,13 +4971,13 @@ fn handle_persistent_infer_type(
 fn handle_persistent_code_action_request(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::CodeActionParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (result, extra_data) = find_code_actions(options, env, shared_mem, client_id, params);
+    let (result, extra_data) = find_code_actions(options, env, transaction, client_id, params);
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(code_actions) => {
@@ -4976,7 +4992,7 @@ fn handle_persistent_code_action_request(
 fn handle_persistent_autocomplete_lsp(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::CompletionParams,
@@ -5027,7 +5043,7 @@ fn handle_persistent_autocomplete_lsp(
     let (result, extra_data) = autocomplete(
         options,
         env,
-        shared_mem,
+        transaction,
         Some(client_id),
         file_input,
         trigger_character,
@@ -5103,7 +5119,7 @@ fn handle_persistent_autocomplete_lsp(
 fn handle_persistent_signaturehelp_lsp(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::SignatureHelpParams,
@@ -5140,7 +5156,7 @@ fn handle_persistent_signaturehelp_lsp(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 path.dupe(),
                 contents.dupe(),
@@ -5160,18 +5176,18 @@ fn handle_persistent_signaturehelp_lsp(
                 ),
                 Ok((parse_artifacts, typecheck_artifacts)) => {
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
-                        shared_mem.loc_of_aloc(aloc)
+                        transaction.loc_of_aloc(aloc)
                     };
-                    let get_ast_from_shared_mem = |file_key: &flow_parser::file_key::FileKey| -> Option<
+                    let get_ast_from_transaction = |file_key: &flow_parser::file_key::FileKey| -> Option<
                         flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>,
                     > {
-                        shared_mem.get_ast(file_key).map(|arc| (*arc).clone())
+                        transaction.get_ast(file_key).map(|arc| (*arc).clone())
                     };
                     let cursor_loc = flow_parser::loc::Loc::cursor(Some(path.dupe()), line, col);
                     let func_details =
                         match flow_services_type_info::signature_help::find_signatures(
                             &loc_of_aloc,
-                            &get_ast_from_shared_mem,
+                            &get_ast_from_transaction,
                             &typecheck_artifacts.cx,
                             parse_artifacts.file_sig.clone(),
                             &parse_artifacts.ast,
@@ -5314,7 +5330,7 @@ fn handle_persistent_workspace_symbol(
 fn get_file_artifacts(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     pos: &lsp_types::TextDocumentPositionParams,
     supplied_file_input: Option<&FileInput>,
@@ -5343,7 +5359,7 @@ fn get_file_artifacts(
                     options,
                     env.all_unordered_libs.dupe(),
                     type_parse_artifacts_cache.as_ref(),
-                    shared_mem.dupe(),
+                    transaction.dupe(),
                     env.master_cx.clone(),
                     file_key.dupe(),
                     content.dupe(),
@@ -5441,7 +5457,7 @@ fn find_local_references<'cx>(
 fn map_local_find_references_results<T>(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     f: &dyn Fn(&flow_services_references::find_refs_types::SingleRef) -> Option<T>,
     text_doc_position: &lsp_types::TextDocumentPositionParams,
@@ -5450,14 +5466,14 @@ fn map_local_find_references_results<T>(
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
         options,
         env,
-        shared_mem.clone(),
+        transaction.clone(),
         client_id,
         text_doc_position,
         file_input,
     );
     match file_artifacts_opt {
         Ok(Some((file_artifacts, file_key))) => {
-            let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
+            let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
             let (local_refs, extra_data) = find_local_references(
                 &loc_of_aloc,
                 &file_artifacts,
@@ -5493,7 +5509,7 @@ type RefsToLspResult = Box<
 fn handle_global_find_references(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     metadata: lsp_prot::Metadata,
@@ -5505,7 +5521,7 @@ fn handle_global_find_references(
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
         options,
         env,
-        shared_mem.clone(),
+        transaction.clone(),
         client_id,
         text_doc_position,
         None,
@@ -5529,7 +5545,7 @@ fn handle_global_find_references(
         }
         Ok(Some((file_artifacts, file_key))) => {
             let ast = file_artifacts.0.ast.dupe();
-            let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
+            let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
             let line = text_doc_position.position.line + 1;
             let col = text_doc_position.position.character;
             let ast_info: flow_services_get_def::find_refs_utils::AstInfo = (
@@ -5680,7 +5696,7 @@ fn handle_global_find_references(
 fn handle_persistent_find_references(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::ReferenceParams,
@@ -5716,7 +5732,7 @@ fn handle_persistent_find_references(
     handle_global_find_references(
         options,
         env,
-        shared_mem,
+        transaction,
         client_id,
         id,
         metadata,
@@ -5730,7 +5746,7 @@ fn handle_persistent_find_references(
 fn handle_persistent_document_highlight(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::DocumentHighlightParams,
@@ -5750,7 +5766,7 @@ fn handle_persistent_document_highlight(
     let (result, extra_data) = map_local_find_references_results(
         options,
         env,
-        shared_mem,
+        transaction,
         client_id,
         &ref_to_highlight,
         &params.text_document_position_params,
@@ -5770,7 +5786,7 @@ fn handle_persistent_document_highlight(
 fn handle_persistent_prepare_rename(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::TextDocumentPositionParams,
@@ -5778,7 +5794,7 @@ fn handle_persistent_prepare_rename(
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (file_artifacts_opt, extra_parse_data) =
-        get_file_artifacts(options, env, shared_mem, client_id, params, file_input);
+        get_file_artifacts(options, env, transaction, client_id, params, file_input);
     match file_artifacts_opt {
         Err(reason) => {
             let metadata = with_data(
@@ -5813,7 +5829,7 @@ fn handle_persistent_prepare_rename(
 fn handle_persistent_rename(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp_types::RenameParams,
@@ -5825,12 +5841,17 @@ fn handle_persistent_rename(
         position: params.text_document_position.position,
     };
     let options_for_closure = options.clone();
-    let shared_mem_for_closure = shared_mem.dupe();
+    // Global find-refs parks this closure until after the recheck it schedules,
+    // so it must not hold `transaction`: the recheck cannot publish while a read
+    // guard on the committed heap is outstanding. Start one when the closure
+    // runs, which also reads the ASTs the recheck just published.
+    let committed_heap_for_closure = transaction.committed_heap();
     let refs_to_lsp_result: RefsToLspResult = Box::new(
         move |current_ast: Option<
             &Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
         >,
               refs: Vec<flow_services_references::find_refs_types::SingleRef>| {
+            let transaction = Transaction::new(committed_heap_for_closure.dupe());
             let mut ref_map: std::collections::BTreeMap<
                 flow_parser::loc::Loc,
                 flow_services_references::find_refs_types::RefKind,
@@ -5851,7 +5872,7 @@ fn handle_persistent_rename(
                 .iter()
                 .filter_map(|filename| match current_ast {
                     Some(ast) if ast.loc.source.as_ref() == Some(filename) => Some(ast.dupe()),
-                    _ => shared_mem_for_closure.get_ast(filename),
+                    _ => transaction.get_ast(filename),
                 })
                 .collect();
             let all_diffs: Vec<_> = asts
@@ -5890,7 +5911,7 @@ fn handle_persistent_rename(
     handle_global_find_references(
         options,
         env,
-        shared_mem,
+        transaction,
         client_id,
         id,
         metadata,
@@ -5904,7 +5925,7 @@ fn handle_persistent_rename(
 fn handle_persistent_coverage(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::type_coverage::Params,
@@ -5951,7 +5972,7 @@ fn handle_persistent_coverage(
                 options,
                 env,
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem,
+                transaction,
                 &file_key,
                 &file_contents,
                 force,
@@ -6028,7 +6049,7 @@ fn handle_persistent_coverage(
 fn handle_persistent_llm_context(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::llm_context::Params,
@@ -6067,7 +6088,7 @@ fn handle_persistent_llm_context(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
                 content.dupe(),
@@ -6087,7 +6108,7 @@ fn handle_persistent_llm_context(
                 ast: parse_artifacts.ast.dupe(),
                 cx: &typecheck_artifacts.cx,
                 typed_ast: typecheck_artifacts.typed_ast.clone(),
-                shared_mem: shared_mem.as_ref(),
+                transaction: transaction.as_ref(),
             }
         })
         .collect::<Vec<_>>();
@@ -6109,7 +6130,8 @@ fn handle_persistent_rage(
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let root = genv.options.root.display().to_string();
-    let items = collect_rage(&genv.options, env, genv.shared_mem.as_ref(), None)
+    let transaction = Transaction::new(genv.committed_heap.dupe());
+    let items = collect_rage(&genv.options, env, &transaction, None)
         .into_iter()
         .map(|(title, data)| lsp::rage::RageItem {
             title: Some(format!("{}:{}", root, title)),
@@ -6173,13 +6195,13 @@ fn send_workspace_edit(
 fn handle_persistent_add_missing_imports_command(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     text_document: &lsp_types::TextDocumentIdentifier,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let edits = add_missing_imports(options, env, shared_mem, client_id, text_document);
+    let edits = add_missing_imports(options, env, transaction, client_id, text_document);
     match edits {
         Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
         Ok(ref e) if e.is_empty() => {
@@ -6324,7 +6346,7 @@ fn auto_close_jsx_handler(
 fn prepare_document_paste(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     params: &lsp::document_paste::PrepareParams,
 ) -> (
@@ -6350,7 +6372,7 @@ fn prepare_document_paste(
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
-                shared_mem.clone(),
+                transaction.clone(),
                 env.master_cx.clone(),
                 file_key.dupe(),
                 contents.dupe(),
@@ -6362,7 +6384,7 @@ fn prepare_document_paste(
                     Some(serde_json::json!({"error": "Couldn't parse file in parse_contents"})),
                 ),
                 Ok((ref parse_artifacts, ref typecheck_artifacts)) => {
-                    let loc_of_aloc = |aloc: &flow_aloc::ALoc| shared_mem.loc_of_aloc(aloc);
+                    let loc_of_aloc = |aloc: &flow_aloc::ALoc| transaction.loc_of_aloc(aloc);
                     let ranges: Vec<flow_parser::loc::Loc> = params
                         .ranges
                         .iter()
@@ -6386,7 +6408,7 @@ fn prepare_document_paste(
 fn provide_document_paste(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     params: &lsp::document_paste::ProvideParams,
 ) -> (lsp_types::WorkspaceEdit, Option<lsp_prot::Json>) {
     let uri = &params.text_document.uri;
@@ -6440,7 +6462,7 @@ fn provide_document_paste(
             let src_dir = std::path::Path::new(&file_path)
                 .parent()
                 .map(|p| p.to_string_lossy().to_string());
-            let module_system_info = mk_module_system_info(options, shared_mem);
+            let module_system_info = mk_module_system_info(options, transaction);
             let layout_options =
                 flow_services_code_action::code_action_utils::layout_options(options);
             let edits = flow_services_code_action::document_paste::provide_document_paste_edits(
@@ -6473,13 +6495,14 @@ fn provide_document_paste(
 fn handle_persistent_prepare_document_paste(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::document_paste::PrepareParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (imports, extra_data) = prepare_document_paste(options, env, shared_mem, client_id, params);
+    let (imports, extra_data) =
+        prepare_document_paste(options, env, transaction, client_id, params);
     let metadata = with_data(extra_data, metadata);
     let imports_lsp: Vec<lsp::document_paste::ImportItem> = imports
         .into_iter()
@@ -6521,12 +6544,12 @@ fn handle_persistent_prepare_document_paste(
 fn handle_persistent_provide_document_paste_edits(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     id: lsp_prot::LspId,
     params: &lsp::document_paste::ProvideParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (workspace_edit, extra_data) = provide_document_paste(options, env, shared_mem, params);
+    let (workspace_edit, extra_data) = provide_document_paste(options, env, transaction, params);
     let metadata = with_data(extra_data, metadata);
     let response =
         LspMessage::ResponseMessage(id, LspResult::ProvideDocumentPasteResult(workspace_edit));
@@ -6605,7 +6628,7 @@ fn linked_editing_range_handler(
 fn handle_persistent_rename_file_imports(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::rename_file_imports::Params,
@@ -6634,7 +6657,7 @@ fn handle_persistent_rename_file_imports(
             match (old_haste_name, new_haste_name) {
                 (Some(old_haste_info), Some(new_haste_info)) => {
                     flow_services_references::rename_module::get_rename_edits(
-                        shared_mem.as_ref(),
+                        transaction.as_ref(),
                         options,
                         old_haste_info.module_name().as_str(),
                         new_haste_info.module_name().as_str(),
@@ -6717,7 +6740,7 @@ fn handle_result_from_client(
 fn live_diagnostics_of_uri(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     uri: &str,
     metadata: lsp_prot::Metadata,
@@ -6789,7 +6812,7 @@ fn live_diagnostics_of_uri(
                                     options,
                                     env.all_unordered_libs.dupe(),
                                     type_parse_artifacts_cache.as_ref(),
-                                    shared_mem.clone(),
+                                    transaction.clone(),
                                     env.master_cx.clone(),
                                     file_key.dupe(),
                                     content.dupe(),
@@ -6801,7 +6824,7 @@ fn live_diagnostics_of_uri(
                             printable_errors_of_file_artifacts_result(
                                 options,
                                 env,
-                                &shared_mem,
+                                &transaction,
                                 &file_key,
                                 result.as_ref(),
                             );
@@ -6811,7 +6834,7 @@ fn live_diagnostics_of_uri(
                                     .cx
                                     .switch_to_match_eligible_locations()
                                     .iter()
-                                    .map(|aloc| shared_mem.loc_of_aloc(aloc))
+                                    .map(|aloc| transaction.loc_of_aloc(aloc))
                                     .collect(),
                                 _ => vec![],
                             };
@@ -6820,7 +6843,7 @@ fn live_diagnostics_of_uri(
                                 .cx
                                 .refined_locations()
                                 .iter()
-                                .map(|(aloc, _)| shared_mem.loc_of_aloc(aloc))
+                                .map(|(aloc, _)| transaction.loc_of_aloc(aloc))
                                 .collect(),
                             _ => vec![],
                         };
@@ -6893,7 +6916,7 @@ fn live_diagnostics_of_uri(
 fn handle_live_errors_request(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     uri: &str,
     metadata: lsp_prot::Metadata,
@@ -6902,7 +6925,7 @@ fn handle_live_errors_request(
         return live_errors_canceled_response(uri, metadata);
     }
 
-    let ret = match live_diagnostics_of_uri(options, env, shared_mem, client_id, uri, metadata) {
+    let ret = match live_diagnostics_of_uri(options, env, transaction, client_id, uri, metadata) {
         (Err((e, _file_input)), metadata) => {
             (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
         }
@@ -6925,7 +6948,7 @@ fn handle_live_errors_request(
 fn handle_persistent_text_document_diagnostics_lsp(
     options: &Options,
     env: &server_env::Env,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     client_id: lsp_prot::ClientId,
     id: lsp_prot::LspId,
     params: &lsp::text_document_diagnostics::Params,
@@ -6935,7 +6958,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
     let (result, metadata) = live_diagnostics_of_uri(
         options,
         env,
-        shared_mem.clone(),
+        transaction.clone(),
         client_id,
         uri.as_str(),
         metadata,
@@ -6949,7 +6972,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
             LspResult::TextDocumentDiagnosticsResult(live_diagnostics),
         ),
         Err((_failure, file_input)) => {
-            match errors_of_file(options, env, shared_mem, false, &file_input) {
+            match errors_of_file(options, env, transaction, false, &file_input) {
                 Err(_) => LspMessage::ResponseMessage(
                     id,
                     LspResult::TextDocumentDiagnosticsResult(vec![]),
@@ -7012,6 +7035,10 @@ fn get_persistent_handler(
             }));
         }
     }
+    // Start the transaction where the request is served, not here: a queued
+    // handler that holds one keeps a read guard on the committed heap, and a
+    // recheck cannot publish until every such guard is gone.
+    let committed_heap = &genv.committed_heap;
     match request_inner {
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
@@ -7141,14 +7168,14 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     handle_persistent_get_def(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7171,14 +7198,14 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     handle_persistent_infer_type(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7197,14 +7224,14 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_code_action_request(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7224,14 +7251,14 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     handle_persistent_autocomplete_lsp(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7254,14 +7281,14 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_signaturehelp_lsp(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7280,14 +7307,14 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = Arc::new(options.clone());
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_text_document_diagnostics_lsp(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7309,14 +7336,14 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_document_highlight(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7335,12 +7362,12 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_find_references(
                     &options_arc,
                     env,
-                    shared_mem,
+                    Transaction::new(committed_heap.dupe()),
                     client_id,
                     id,
                     &params,
@@ -7358,14 +7385,14 @@ fn get_persistent_handler(
             let params = params.clone();
             let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_prepare_rename(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7384,12 +7411,12 @@ fn get_persistent_handler(
             let params = params.clone();
             let metadata = metadata.clone();
             let options_arc = Arc::new(genv.options.clone());
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_rename(
                     &options_arc,
                     env,
-                    shared_mem,
+                    Transaction::new(committed_heap.dupe()),
                     client_id,
                     id,
                     &params,
@@ -7430,14 +7457,14 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     handle_persistent_coverage(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7452,12 +7479,13 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     let root = options_arc.root.display().to_string();
-                    let items = collect_rage(&options_arc, env, shared_mem.as_ref(), None)
+                    let transaction = Transaction::new(committed_heap.dupe());
+                    let items = collect_rage(&options_arc, env, transaction.as_ref(), None)
                         .into_iter()
                         .map(|(title, data)| lsp::rage::RageItem {
                             title: Some(format!("{}:{}", root, title)),
@@ -7504,14 +7532,14 @@ fn get_persistent_handler(
                     match text_document {
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
-                            let shared_mem = genv.shared_mem.clone();
+                            let committed_heap = committed_heap.dupe();
                             mk_parallelizable_persistent(
                                 options,
                                 Box::new(move |env| {
                                     Ok(handle_persistent_add_missing_imports_command(
                                         &options_arc,
                                         env,
-                                        shared_mem,
+                                        Transaction::new(committed_heap.dupe()),
                                         client_id,
                                         id,
                                         &text_document,
@@ -7593,14 +7621,14 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_persistent_prepare_document_paste(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7618,12 +7646,12 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                 Ok(handle_persistent_provide_document_paste_edits(
                     &options_arc,
                     env,
-                    shared_mem,
+                    Transaction::new(committed_heap.dupe()),
                     id,
                     &params,
                     metadata,
@@ -7661,7 +7689,7 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
@@ -7669,7 +7697,7 @@ fn get_persistent_handler(
                     Ok(handle_persistent_rename_file_imports(
                         &options_for_closure,
                         env,
-                        shared_mem.clone(),
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7686,7 +7714,7 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
@@ -7694,7 +7722,7 @@ fn get_persistent_handler(
                     Ok(handle_persistent_llm_context(
                         &options_for_closure,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         id,
                         &params,
@@ -7738,14 +7766,14 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
-            let shared_mem = genv.shared_mem.clone();
+            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env| {
                     Ok(handle_live_errors_request(
                         &options_arc,
                         env,
-                        shared_mem,
+                        Transaction::new(committed_heap.dupe()),
                         client_id,
                         &uri,
                         metadata,
@@ -7943,7 +7971,7 @@ fn mk_nonparallelizable_persistent_workload(
                             flow_server_rechecker::rechecker::recheck_loop(
                                 &genv_for_handler,
                                 env,
-                                &genv_for_handler.shared_mem,
+                                &genv_for_handler.committed_heap,
                             );
                         env = new_env;
                         flow_hh_logger::info!("Now restarting the command");

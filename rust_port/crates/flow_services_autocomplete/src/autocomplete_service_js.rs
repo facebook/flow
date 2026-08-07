@@ -409,7 +409,7 @@ fn ty_normalizer_options() -> flow_typing_ty_normalizer::env::Options {
 pub struct Typing<'a, 'cx: 'a> {
     pub layout_options: &'a flow_parser_utils_output::js_layout_generator::Opts,
     pub loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
-    pub get_ast_from_shared_mem: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
+    pub get_ast_from_heap: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
     pub module_system_info: &'a LspModuleSystemInfo,
     pub search_exported_values:
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
@@ -457,7 +457,7 @@ fn search_with_filtered_auto_import_results<'a>(
 pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     layout_options: &'a flow_parser_utils_output::js_layout_generator::Opts,
     loc_of_aloc: Box<dyn Fn(&ALoc) -> Loc + 'a>,
-    get_ast_from_shared_mem: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
+    get_ast_from_heap: Box<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>> + 'a>,
     module_system_info: &'a LspModuleSystemInfo,
     search_exported_values: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
     search_exported_types: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
@@ -469,7 +469,7 @@ pub fn mk_typing_artifacts<'a, 'cx: 'a>(
     Typing {
         layout_options,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         module_system_info,
         search_exported_values: search_with_filtered_auto_import_results(
             cx,
@@ -498,7 +498,7 @@ pub type AutocompleteServiceResult = AutocompleteServiceResultGeneric<ac_complet
 
 fn jsdoc_of_def_loc(typing: &Typing<'_, '_>, def_loc: &ALoc) -> Option<flow_parser::jsdoc::Jsdoc> {
     let def_loc = (typing.loc_of_aloc)(def_loc);
-    find_documentation::jsdoc_of_getdef_loc(&typing.ast, &*typing.get_ast_from_shared_mem, def_loc)
+    find_documentation::jsdoc_of_getdef_loc(&typing.ast, &*typing.get_ast_from_heap, def_loc)
 }
 
 fn jsdoc_of_loc(
@@ -520,7 +520,7 @@ fn jsdoc_of_loc(
             let getdef_loc = locs.into_iter().next().unwrap();
             find_documentation::jsdoc_of_getdef_loc(
                 &typing.ast,
-                &*typing.get_ast_from_shared_mem,
+                &*typing.get_ast_from_heap,
                 getdef_loc,
             )
         }
@@ -2662,7 +2662,7 @@ fn unused_super_methods(
                     .def_locs
                     .first()
                     .map(|loc| (*typing.loc_of_aloc)(loc))
-                    .and_then(|loc| find_method::find(&*typing.get_ast_from_shared_mem, &loc))
+                    .and_then(|loc| find_method::find(&*typing.get_ast_from_heap, &loc))
                     .map(|method_| {
                         autocomplete_create_result_method(
                             &method_,

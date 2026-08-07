@@ -23,7 +23,7 @@ use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_ty::ty_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::WriteLoc;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast;
 use flow_parser::ast::types::TypeInner;
 use flow_parser::file_key::FileKey;
@@ -227,7 +227,7 @@ fn autofix_exports_code_actions<'a, 'b>(
     options: &Options,
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -251,7 +251,7 @@ fn autofix_exports_code_actions<'a, 'b>(
             None, // remote_converter
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             get_haste_module_info,
             get_type_sig,
             file_sig,
@@ -275,7 +275,7 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
     options: &Options,
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -302,7 +302,7 @@ fn autofix_missing_local_annot_code_actions<'a, 'b>(
                 None, // remote_converter
                 cx,
                 loc_of_aloc,
-                get_ast_from_shared_mem,
+                get_ast_from_heap,
                 get_haste_module_info,
                 get_type_sig,
                 file_sig,
@@ -327,7 +327,7 @@ fn code_action_insert_inferred_render_type<'a, 'b>(
     options: &Options,
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -346,7 +346,7 @@ fn code_action_insert_inferred_render_type<'a, 'b>(
         None, // remote_converter
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,
@@ -391,7 +391,7 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -456,7 +456,7 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                         file_sig.dupe(),
                         typed_ast,
                         loc_of_aloc,
-                        get_ast_from_shared_mem,
+                        get_ast_from_heap,
                         get_haste_module_info,
                         get_type_sig,
                         support_experimental_snippet_text_edit,
@@ -479,7 +479,7 @@ fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
                 file_sig,
                 typed_ast,
                 loc_of_aloc,
-                get_ast_from_shared_mem,
+                get_ast_from_heap,
                 get_haste_module_info,
                 get_type_sig,
                 loc.dupe(),
@@ -505,7 +505,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
-    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_ast_from_heap: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
     get_type_sig: Arc<
         dyn Fn(
@@ -560,7 +560,7 @@ fn insert_inferred_type_as_cast_code_actions<'a>(
                     match insert_type::insert_type(
                         cx,
                         &*loc_of_aloc,
-                        &*get_ast_from_shared_mem,
+                        &*get_ast_from_heap,
                         &*get_haste_module_info,
                         &*get_type_sig,
                         file_sig,
@@ -1041,7 +1041,7 @@ pub fn untyped_ast_transform(
 
 fn autofix_in_upstream_file(
     cx: &Context,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: Arc<FileSig>,
     diagnostics: &[Diagnostic],
     ast: &ast::Program<Loc, Loc>,
@@ -1058,7 +1058,7 @@ fn autofix_in_upstream_file(
     let (ast, uri) = if *ast_src != src {
         match src {
             None => return None,
-            Some(source_file) => match get_ast_from_shared_mem(&source_file) {
+            Some(source_file) => match get_ast_from_heap(&source_file) {
                 None => (ast.clone(), uri.clone()),
                 Some(upstream_ast) => {
                     let file_path = source_file.to_path_buf();
@@ -1104,7 +1104,7 @@ fn loc_opt_intersects(loc: Option<Loc>, error_loc: Loc) -> bool {
 pub fn ast_transforms_of_error(
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
     lazy_error_loc: Option<Loc>,
-    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_ast_from_heap: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
     get_type_sig: Arc<
         dyn Fn(
@@ -1192,7 +1192,7 @@ pub fn ast_transforms_of_error(
                 let lower_loc_clone = lower_loc.dupe();
                 let upper_ty_clone = upper_ty.dupe();
                 let loc_of_aloc_clone = loc_of_aloc.dupe();
-                let get_ast_from_shared_mem_clone = get_ast_from_shared_mem.dupe();
+                let get_ast_from_heap_clone = get_ast_from_heap.dupe();
                 let get_haste_module_info_clone = get_haste_module_info.dupe();
                 let get_type_sig_clone = get_type_sig.dupe();
                 let transform: AstTransform = Box::new(
@@ -1204,7 +1204,7 @@ pub fn ast_transforms_of_error(
                         let result = insert_type::insert_type_ty(
                             cx,
                             &*loc_of_aloc_clone,
-                            &*get_ast_from_shared_mem_clone,
+                            &*get_ast_from_heap_clone,
                             &*get_haste_module_info_clone,
                             &*get_type_sig_clone,
                             &file_sig,
@@ -2413,7 +2413,7 @@ fn fix_all_in_file_code_actions(
 fn code_actions_of_errors(
     options: &Options,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
-    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_ast_from_heap: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     module_system_info: &LspModuleSystemInfo,
     get_type_sig: Arc<
         dyn Fn(
@@ -2492,7 +2492,7 @@ fn code_actions_of_errors(
                 let transforms = ast_transforms_of_error(
                     loc_of_aloc.dupe(),
                     Some(lazy_error_loc),
-                    get_ast_from_shared_mem.dupe(),
+                    get_ast_from_heap.dupe(),
                     module_system_info.get_haste_module_info.dupe(),
                     get_type_sig.dupe(),
                     Some(loc.dupe()),
@@ -2503,7 +2503,7 @@ fn code_actions_of_errors(
                     .filter_map(|t| {
                         autofix_in_upstream_file(
                             cx,
-                            &*get_ast_from_shared_mem,
+                            &*get_ast_from_heap,
                             file_sig.dupe(),
                             diagnostics,
                             ast,
@@ -2701,7 +2701,7 @@ pub fn code_actions_at_loc<'a>(
     imports_ranked_usage: bool,
     env: &Env,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
-    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_ast_from_heap: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     get_type_sig: Arc<
         dyn Fn(
             &FileKey,
@@ -2740,7 +2740,7 @@ pub fn code_actions_at_loc<'a>(
         options,
         cx,
         &*loc_of_aloc,
-        &*get_ast_from_shared_mem,
+        &*get_ast_from_heap,
         get_haste_module_info,
         &*get_type_sig,
         ast,
@@ -2756,7 +2756,7 @@ pub fn code_actions_at_loc<'a>(
         options,
         cx,
         &*loc_of_aloc,
-        &*get_ast_from_shared_mem,
+        &*get_ast_from_heap,
         get_haste_module_info,
         &*get_type_sig,
         ast,
@@ -2772,7 +2772,7 @@ pub fn code_actions_at_loc<'a>(
         options,
         cx,
         &*loc_of_aloc,
-        &*get_ast_from_shared_mem,
+        &*get_ast_from_heap,
         get_haste_module_info,
         &*get_type_sig,
         ast,
@@ -2790,7 +2790,7 @@ pub fn code_actions_at_loc<'a>(
         file_sig,
         typed_ast,
         &*loc_of_aloc,
-        &*get_ast_from_shared_mem,
+        &*get_ast_from_heap,
         get_haste_module_info,
         &*get_type_sig,
         only,
@@ -2855,7 +2855,7 @@ pub fn code_actions_at_loc<'a>(
     let error_fixes = code_actions_of_errors(
         options,
         loc_of_aloc.dupe(),
-        get_ast_from_shared_mem.dupe(),
+        get_ast_from_heap.dupe(),
         module_system_info,
         get_type_sig.dupe(),
         cx,
@@ -2911,7 +2911,7 @@ pub fn code_actions_at_loc<'a>(
                 file_sig,
                 typed_ast,
                 loc_of_aloc.dupe(),
-                get_ast_from_shared_mem.dupe(),
+                get_ast_from_heap.dupe(),
                 module_system_info.get_haste_module_info.dupe(),
                 get_type_sig.dupe(),
                 uri,
@@ -3052,7 +3052,7 @@ fn autofix_imports_fn(
 fn with_type_checked_file<T>(
     options: &Options,
     env: &Env,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     file_key: &FileKey,
     file_content: &str,
     f: &dyn Fn(
@@ -3078,7 +3078,7 @@ fn with_type_checked_file<T>(
             type_contents::type_parse_artifacts(
                 options,
                 env.all_unordered_libs.dupe(),
-                shared_mem,
+                transaction,
                 env.master_cx.dupe(),
                 file_key.clone(),
                 intermediate_result,
@@ -3099,9 +3099,9 @@ fn with_type_checked_file<T>(
 pub fn autofix_errors_cli(
     options: &Options,
     env: &Env,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
-    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_ast_from_heap: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
     module_system_info: &LspModuleSystemInfo,
     get_type_sig: Arc<
         dyn Fn(
@@ -3119,7 +3119,7 @@ pub fn autofix_errors_cli(
     with_type_checked_file(
         options,
         env,
-        shared_mem,
+        transaction,
         file_key,
         file_content,
         &|cx: &Context,
@@ -3142,7 +3142,7 @@ pub fn autofix_errors_cli(
                     let transforms = ast_transforms_of_error(
                         loc_of_aloc.dupe(),
                         Some(lazy_error_loc),
-                        get_ast_from_shared_mem.dupe(),
+                        get_ast_from_heap.dupe(),
                         module_system_info.get_haste_module_info.dupe(),
                         get_type_sig.dupe(),
                         None,
@@ -3213,7 +3213,7 @@ pub fn autofix_errors_cli(
 pub fn autofix_imports_cli(
     options: &Options,
     env: &Env,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
     file_key: &FileKey,
@@ -3226,7 +3226,7 @@ pub fn autofix_imports_cli(
     with_type_checked_file(
         options,
         env,
-        shared_mem,
+        transaction,
         file_key,
         file_content,
         &|cx: &Context,
@@ -3250,7 +3250,7 @@ pub fn autofix_imports_cli(
 pub fn suggest_imports_cli(
     options: &Options,
     env: &Env,
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     module_system_info: &LspModuleSystemInfo,
     file_key: &FileKey,
@@ -3264,7 +3264,7 @@ pub fn suggest_imports_cli(
     with_type_checked_file(
         options,
         env,
-        shared_mem,
+        transaction,
         file_key,
         file_content,
         &|cx: &Context,
@@ -3347,7 +3347,7 @@ pub fn autofix_imports_lsp(
 pub fn autofix_exports_fn<'a>(
     options: &Options,
     loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
     get_type_sig: Arc<
         dyn Fn(
@@ -3377,7 +3377,7 @@ pub fn autofix_exports_fn<'a>(
         cx,
         &*loc_of_aloc,
         options.file_options.dupe(),
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         &*get_haste_module_info,
         &*get_type_sig,
         file_sig,
@@ -3394,7 +3394,7 @@ pub fn autofix_exports_fn<'a>(
 pub fn autofix_missing_local_annot_fn<'a>(
     options: &Options,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &dyn Fn(
         &FileKey,
@@ -3413,7 +3413,7 @@ pub fn autofix_missing_local_annot_fn<'a>(
         None, // no remote_converter
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,
@@ -3430,7 +3430,7 @@ pub fn autofix_missing_local_annot_fn<'a>(
 pub fn insert_type_fn<'a>(
     options: &Options,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &dyn Fn(
         &FileKey,
@@ -3451,7 +3451,7 @@ pub fn insert_type_fn<'a>(
     let new_ast = insert_type::insert_type(
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,

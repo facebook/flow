@@ -233,7 +233,7 @@ fn assert_refactored(
         &typed_ast,
         // loc_of_aloc: in test context, ALoc is identity-mapped from Loc
         &|aloc: &ALoc| aloc.to_loc_exn().clone(),
-        // get_ast_from_shared_mem: no shared mem in tests
+        // get_ast_from_heap: no shared mem in tests
         &|_: &FileKey| None,
         // get_haste_module_info: no haste in tests
         &|_: &FileKey| None,

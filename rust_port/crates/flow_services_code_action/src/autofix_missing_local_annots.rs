@@ -74,7 +74,7 @@ pub fn fix_missing_param_annot_at_loc<'a, 'cx>(
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
     cx: &Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'a dyn Fn(
         &FileKey,
@@ -92,7 +92,7 @@ pub fn fix_missing_param_annot_at_loc<'a, 'cx>(
     insert_type::insert_type_t(
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,
@@ -110,7 +110,7 @@ pub fn fix_all_missing_param_annot_errors_in_file<'a, 'cx>(
     mut remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
     cx: &Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'a dyn Fn(
         &FileKey,
@@ -129,7 +129,7 @@ pub fn fix_all_missing_param_annot_errors_in_file<'a, 'cx>(
         ast = insert_type::insert_type_t(
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             get_haste_module_info,
             get_type_sig,
             file_sig,

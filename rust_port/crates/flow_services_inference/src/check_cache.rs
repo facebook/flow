@@ -170,7 +170,7 @@ impl<'cx> CheckCache<'cx> {
 
     /// Break Rc cycles in all cached files. Call before dropping the cache.
     /// Clears both Context Rc cycles (via post_inference_cleanup) and File
-    /// closure fields that capture Arc<SharedMem> and Rc<CheckCache>.
+    /// closure fields that capture Arc<Transaction> and Rc<CheckCache>.
     pub fn cleanup_all_files(&mut self) {
         for (_, cached_file) in self.files.iter() {
             cached_file.cx.post_inference_cleanup();

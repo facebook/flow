@@ -31,7 +31,7 @@ use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
 use flow_common_ty::ty_printer;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_heap::resolved_requires::Dependency;
 use flow_heap::resolved_requires::ResolvedModule;
 use flow_lsp::lsp::lsp_range_to_flow_loc;
@@ -102,7 +102,7 @@ pub(crate) static GLEAN_RUNTIME_CONFIG: OnceLock<GleanRuntimeConfig> = OnceLock:
 type OffsetTableOfFileKey<'a> = dyn Fn(&FileKey) -> Option<Arc<OffsetTable>> + 'a;
 type LocOfALoc = dyn Fn(&ALoc) -> Loc;
 
-fn make_loc_of_aloc(reader: Arc<SharedMem>) -> impl Fn(&ALoc) -> Loc {
+fn make_loc_of_aloc(reader: Arc<Transaction>) -> impl Fn(&ALoc) -> Loc {
     let tables: RefCell<HashMap<FileKey, LazyALocTable>> = RefCell::new(HashMap::new());
     move |aloc| {
         let source = match aloc.source() {
@@ -131,12 +131,12 @@ fn make_loc_of_aloc(reader: Arc<SharedMem>) -> impl Fn(&ALoc) -> Loc {
 
 #[allow(dead_code)]
 fn implementation_file(
-    shared_mem: &flow_heap::parsing_heaps::SharedMem,
+    transaction: &flow_heap::parsing_heaps::Transaction,
     resolved_module: &ResolvedModule,
 ) -> Option<FileKey> {
     if let Some(dependency) = resolved_module.as_dependency() {
-        if let Some(file) = shared_mem.get_provider(&dependency) {
-            if shared_mem.is_typed_file(&file) {
+        if let Some(file) = transaction.get_provider(&dependency) {
+            if transaction.is_typed_file(&file) {
                 return Some(file);
             }
         }

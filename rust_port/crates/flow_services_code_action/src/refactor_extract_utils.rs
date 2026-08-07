@@ -1052,7 +1052,7 @@ pub mod type_synthesizer {
         pub file_sig: std::sync::Arc<FileSig>,
         pub typed_ast: ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
         pub loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-        pub get_ast_from_shared_mem: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+        pub get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
         pub get_haste_module_info:
             &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
         pub get_type_sig: &'a dyn Fn(
@@ -1190,7 +1190,7 @@ pub mod type_synthesizer {
         file_sig: std::sync::Arc<FileSig>,
         typed_ast: ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
         loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-        get_ast_from_shared_mem: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+        get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
         get_haste_module_info: &'a dyn Fn(
             &FileKey,
         )
@@ -1213,7 +1213,7 @@ pub mod type_synthesizer {
             file_sig,
             typed_ast,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             get_haste_module_info,
             get_type_sig,
             type_at_loc_map,
@@ -1256,7 +1256,7 @@ pub mod type_synthesizer {
             file_sig,
             typed_ast,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             get_haste_module_info,
             get_type_sig,
             type_at_loc_map,
@@ -1287,7 +1287,7 @@ pub mod type_synthesizer {
                     None,
                     &cx_clone,
                     loc_of_aloc,
-                    get_ast_from_shared_mem,
+                    get_ast_from_heap,
                     &file_sig_clone,
                     &typed_ast,
                     false,

@@ -881,7 +881,7 @@ impl_jsdoc_documentation_searcher!(DefLocToCommentLocMapSearcher, !, add_to_map)
 
 pub fn jsdocs_of_getdef_locs(
     ast: &ast::Program<Loc, Loc>,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     def_locs: &[Loc],
 ) -> BTreeMap<Loc, jsdoc::Jsdoc> {
     let mut by_file: BTreeMap<FileKey, BTreeSet<Loc>> = BTreeMap::new();
@@ -909,7 +909,7 @@ pub fn jsdocs_of_getdef_locs(
             for (k, v) in file_results {
                 results.entry(k).or_insert(v);
             }
-        } else if let Some(file_ast) = get_ast_from_shared_mem(source) {
+        } else if let Some(file_ast) = get_ast_from_heap(source) {
             let file_results = search_jsdocs(locs, &file_ast);
             for (k, v) in file_results {
                 results.entry(k).or_insert(v);
@@ -921,9 +921,7 @@ pub fn jsdocs_of_getdef_locs(
 
 pub fn jsdoc_of_getdef_loc(
     ast: &ast::Program<Loc, Loc>,
-    get_ast_from_shared_mem: &dyn Fn(
-        &flow_parser::file_key::FileKey,
-    ) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<ast::Program<Loc, Loc>>,
     def_loc: Loc,
 ) -> Option<jsdoc::Jsdoc> {
     let source = def_loc.source()?.clone();
@@ -931,7 +929,7 @@ pub fn jsdoc_of_getdef_loc(
     if *current_file_source == source {
         search_jsdoc(&def_loc, ast)
     } else {
-        let ast = get_ast_from_shared_mem(&source)?;
+        let ast = get_ast_from_heap(&source)?;
         search_jsdoc(&def_loc, &ast)
     }
 }

@@ -14,7 +14,7 @@ use crate::server_worker;
 
 pub fn make_genv(
     options: Arc<Options>,
-    shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>,
+    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
 ) -> Genv {
     let workers = {
         let num_workers = options.max_workers;
@@ -27,6 +27,6 @@ pub fn make_genv(
     Genv {
         options,
         workers,
-        shared_mem,
+        committed_heap,
     }
 }

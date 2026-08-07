@@ -48,7 +48,7 @@ fn hardcoded_ty_fixes_run<Extra: BaseStats>(
 ) -> (Acc<Extra>, ALocTy) {
     let reader = &cctx.reader;
     let loc_of_aloc = |aloc: &flow_aloc::ALoc| reader.loc_of_aloc(aloc);
-    let get_ast_from_shared_mem = |file: &FileKey| -> Option<ast::Program<Loc, Loc>> {
+    let get_ast_from_transaction = |file: &FileKey| -> Option<ast::Program<Loc, Loc>> {
         reader.get_ast(file).map(|arc| (*arc).clone())
     };
     use flow_services_code_action::insert_type_utils::warning;
@@ -60,7 +60,7 @@ fn hardcoded_ty_fixes_run<Extra: BaseStats>(
         flow_services_code_action::insert_type_utils::TypeNormalizationHardcodedFixesMapper::new(
             &cctx.cx,
             &loc_of_aloc,
-            &get_ast_from_shared_mem,
+            &get_ast_from_transaction,
             &cctx.file_sig,
             &cctx.typed_ast,
             lint_severities,

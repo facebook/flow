@@ -19,7 +19,7 @@ use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports;
@@ -353,41 +353,45 @@ fn hash_content(content: &[u8]) -> u64 {
 }
 
 fn content_hash_matches_file_hash(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file: &FileKey,
     content_hash: u64,
 ) -> bool {
-    shared_mem
+    transaction
         .get_parse(file)
-        .map(|_| shared_mem.get_file_hash_unsafe(file) == content_hash)
+        .map(|_| transaction.get_file_hash_unsafe(file) == content_hash)
         .unwrap_or(false)
 }
 
 fn content_hash_matches_old_file_hash(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file: &FileKey,
     content_hash: u64,
 ) -> bool {
-    shared_mem
+    transaction
         .get_file_hash(file)
         .map(|old_hash| old_hash == content_hash)
         .unwrap_or(false)
 }
 
-pub fn does_content_match_file_hash(shared_mem: &SharedMem, file: &FileKey, content: &str) -> bool {
+pub fn does_content_match_file_hash(
+    transaction: &Transaction,
+    file: &FileKey,
+    content: &str,
+) -> bool {
     let content_hash = hash_content(content.as_bytes());
-    content_hash_matches_file_hash(shared_mem, file, content_hash)
+    content_hash_matches_file_hash(transaction, file, content_hash)
 }
 
 fn fold_failed(
     acc: &mut ParseResults,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file_key: FileKey,
     hash: u64,
     haste_module_info: Option<HasteModuleInfo>,
     error: ParseFailure,
 ) {
-    let dirty_modules = shared_mem.add_unparsed(file_key.dupe(), hash, haste_module_info);
+    let dirty_modules = transaction.add_unparsed(file_key.dupe(), hash, haste_module_info);
 
     acc.failed.0.push(file_key);
     acc.failed.1.push(error);
@@ -397,7 +401,7 @@ fn fold_failed(
 // parse file, store AST to shared heap on success.
 // Add success/error info to passed accumulator.
 fn reducer(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     all_unordered_libs: &BTreeSet<FlowSmolStr>,
     skip_changed: bool,
@@ -408,8 +412,9 @@ fn reducer(
     file_key: FileKey,
 ) {
     if is_init
-        && shared_mem.get_parse(&file_key).is_some()
-        && shared_mem.get_parse_committed(&file_key).is_none()
+        && transaction.get_parse(&file_key).is_some()
+        && transaction.get_parse_committed(&file_key).is_none()
+        && transaction.has_ast(&file_key)
     {
         return;
     }
@@ -421,7 +426,7 @@ fn reducer(
         Err(_) => {
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
-            let dirty_modules = shared_mem.clear_file(file_key.dupe(), haste_module_info);
+            let dirty_modules = transaction.clear_file(file_key.dupe(), haste_module_info);
             acc.not_found.insert(file_key);
             acc.dirty_modules.extend(dirty_modules);
             return;
@@ -430,12 +435,12 @@ fn reducer(
 
     let hash = hash_content(&bytes);
 
-    if skip_changed && !content_hash_matches_file_hash(shared_mem, &file_key, hash) {
+    if skip_changed && !content_hash_matches_file_hash(transaction, &file_key, hash) {
         acc.changed.insert(file_key);
         return;
     }
 
-    if skip_unchanged && content_hash_matches_old_file_hash(shared_mem, &file_key, hash) {
+    if skip_unchanged && content_hash_matches_old_file_hash(transaction, &file_key, hash) {
         acc.unchanged.insert(file_key);
         return;
     }
@@ -467,7 +472,7 @@ fn reducer(
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
             fold_failed(
                 acc,
-                shared_mem,
+                transaction,
                 file_key,
                 hash,
                 haste_module_info,
@@ -518,7 +523,7 @@ fn reducer(
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
 
-            let dirty_modules = shared_mem.add_parsed(
+            let dirty_modules = transaction.add_parsed(
                 file_key.dupe(),
                 hash,
                 haste_module_info,
@@ -540,7 +545,7 @@ fn reducer(
             let error = parse_errors.first().clone();
             fold_failed(
                 acc,
-                shared_mem,
+                transaction,
                 file_key,
                 hash,
                 haste_module_info,
@@ -552,7 +557,7 @@ fn reducer(
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
             fold_failed(
                 acc,
-                shared_mem,
+                transaction,
                 file_key,
                 hash,
                 haste_module_info,
@@ -566,7 +571,7 @@ fn reducer(
                 let package_info = PackageInfo::new(Some(package_json.clone()));
                 let haste_module_info =
                     flow_services_module::exported_module(options, &file_key, &package_info);
-                let dirty_modules = shared_mem.add_package(
+                let dirty_modules = transaction.add_package(
                     file_key.dupe(),
                     hash,
                     haste_module_info,
@@ -577,7 +582,7 @@ fn reducer(
             Err(parse_error) => {
                 acc.package_json.0.push(file_key.dupe());
                 acc.package_json.1.push(Some(parse_error));
-                let dirty_modules = shared_mem.add_unparsed(file_key, hash, None);
+                let dirty_modules = transaction.add_unparsed(file_key, hash, None);
                 acc.dirty_modules.extend(dirty_modules);
             }
         },
@@ -585,7 +590,7 @@ fn reducer(
         | ParseResult::ParseSkip(ParseSkipReason::SkipResourceFile) => {
             let haste_module_info =
                 flow_services_module::exported_module(options, &file_key, &PackageInfo::none());
-            let dirty_modules = shared_mem.add_unparsed(file_key.dupe(), hash, haste_module_info);
+            let dirty_modules = transaction.add_unparsed(file_key.dupe(), hash, haste_module_info);
             acc.unparsed.insert(file_key);
             acc.dirty_modules.extend(dirty_modules);
         }
@@ -654,7 +659,7 @@ const PARSE_BATCH_MAX_SIZE: usize = 16;
 
 fn parse(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     skip_changed: bool,
@@ -663,7 +668,7 @@ fn parse(
     locs_to_dirtify: &[Loc],
     next: Next,
 ) -> ParseResults {
-    let shared_mem_for_job = shared_mem.clone();
+    let transaction_for_job = transaction.clone();
     let options_for_job = options.clone();
     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
     let all_unordered_libs_for_job = all_unordered_libs.dupe();
@@ -698,14 +703,14 @@ fn parse(
             }
         },
         {
-            let shared_mem = shared_mem_for_job.clone();
+            let transaction = transaction_for_job.clone();
             let options = options_for_job.clone();
             let locs = locs_to_dirtify_vec.clone();
             let all_unordered_libs = all_unordered_libs_for_job.dupe();
             move |acc: &mut ParseResults, batch: Vec<FileKey>| {
                 for file_key in batch {
                     reducer(
-                        &shared_mem,
+                        &transaction,
                         &options,
                         &all_unordered_libs,
                         skip_changed,
@@ -749,7 +754,7 @@ fn parse(
 
 pub fn parse_with_defaults(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
@@ -757,7 +762,7 @@ pub fn parse_with_defaults(
 ) -> ParseResults {
     parse(
         pool,
-        shared_mem,
+        transaction,
         options,
         all_unordered_libs,
         false, // skip_changed
@@ -770,7 +775,7 @@ pub fn parse_with_defaults(
 
 pub fn reparse_with_defaults(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
@@ -779,7 +784,7 @@ pub fn reparse_with_defaults(
     let skip_unchanged = locs_to_dirtify.is_empty();
     parse(
         pool,
-        shared_mem,
+        transaction,
         options,
         all_unordered_libs,
         false, // skip_changed
@@ -795,7 +800,7 @@ pub fn reparse_with_defaults(
 // and returned to the caller.
 pub fn ensure_parsed(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
@@ -803,7 +808,7 @@ pub fn ensure_parsed(
 ) -> FlowOrdSet<FileKey> {
     let files_vec: Vec<FileKey> = files.into_iter().collect();
     let files_missing_asts: FlowOrdSet<FileKey> = {
-        let shared_mem = shared_mem.dupe();
+        let transaction = transaction.dupe();
         let num_workers = pool.num_workers();
         let chunk_size = if files_vec.is_empty() {
             1
@@ -819,10 +824,10 @@ pub fn ensure_parsed(
             pool,
             chunks,
             {
-                let shared_mem = shared_mem.dupe();
+                let transaction = transaction.dupe();
                 move |acc: &mut FlowOrdSet<FileKey>, chunk: &Vec<FileKey>| {
                     for file in chunk {
-                        if !shared_mem.has_ast(file) {
+                        if !transaction.has_ast(file) {
                             acc.insert(file.dupe());
                         }
                     }
@@ -848,7 +853,7 @@ pub fn ensure_parsed(
 
     let results = parse(
         pool,
-        shared_mem,
+        transaction,
         options,
         all_unordered_libs,
         true,

@@ -30,11 +30,11 @@ use flow_common_xx as xx;
 use flow_common_xx::content_hash_of;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::entity::ResolvedModule;
 use flow_heap::parse::MergeHashes;
 use flow_heap::parse::TypedParse;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_heap::parsing_heaps::merge_context_mutator;
+use flow_heap::resolved_requires::ResolvedModule;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
@@ -84,9 +84,9 @@ pub type MergeResults<A> = (Vec<A>, SigOptsData);
 pub fn sig_hash(
     check_dirty_set: bool,
     _root: &Path,
-    shared_mem: &SharedMem,
-    component: &Vec1<FileKey>,
-) -> u64 {
+    transaction: &Transaction,
+    component: &[(FileKey, TypedParse)],
+) -> (u64, Vec<MergeHashes>) {
     type ComponentRec = Rc<OnceCell<Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>>>>;
 
     fn hash_file_key(file_key: &FileKey) -> u64 {
@@ -433,13 +433,13 @@ pub fn sig_hash(
      -> Dependency {
         match resolved_module.to_result() {
             Err(_) => Dependency::Unchecked,
-            Ok(dep_ref) => match shared_mem.get_provider(&dep_ref) {
+            Ok(dep_ref) => match transaction.get_provider(&dep_ref) {
                 None => Dependency::Unchecked,
                 Some(dep_file) => {
                     if matches!(dep_file.inner(), FileKeyInner::ResourceFile(_)) {
                         resource_dep(&dep_file)
                     } else {
-                        match shared_mem.get_typed_parse(&dep_file) {
+                        match transaction.get_typed_parse(&dep_file) {
                             None => Dependency::Unchecked,
                             Some(dep_parse) => {
                                 if let Some(&i) = component_map.get(&dep_file) {
@@ -588,23 +588,18 @@ pub fn sig_hash(
         Rc::new(cyclic_dep(file_key, parse, &file))
     };
 
-    let component_vec: Vec<(FileKey, TypedParse)> = component
-        .iter()
-        .filter_map(|f| shared_mem.get_typed_parse(f).map(|p| (f.dupe(), p)))
-        .collect();
-
-    if component_vec.is_empty() {
-        return 0u64;
+    if component.is_empty() {
+        return (0u64, Vec::new());
     }
 
-    let component_map: BTreeMap<FileKey, usize> = component_vec
+    let component_map: BTreeMap<FileKey, usize> = component
         .iter()
         .enumerate()
         .map(|(i, (f, _))| (f.dupe(), i))
         .collect();
 
     let component_rec: ComponentRec = Rc::new(OnceCell::new());
-    let files: Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>> = component_vec
+    let files: Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>> = component
         .iter()
         .map(|(file_key, parse)| component_file(&component_rec, &component_map, file_key, parse))
         .collect();
@@ -623,9 +618,11 @@ pub fn sig_hash(
         }
     }
 
-    for (i, checked_dep) in component_rec.get().unwrap().iter().enumerate() {
-        let (file_key, parse) = &component_vec[i];
-        let merge_hashes = match checked_dep.as_ref() {
+    let merge_hashes = component_rec
+        .get()
+        .unwrap()
+        .iter()
+        .map(|checked_dep| match checked_dep.as_ref() {
             CheckedDep::CJS {
                 type_exports,
                 exports,
@@ -655,16 +652,14 @@ pub fn sig_hash(
                     .collect(),
                 ns_hash: cycle_hash::read_hash(ns),
             },
-        };
-        parse.set_merge_hashes(merge_hashes);
-        let _ = file_key;
-    }
+        })
+        .collect();
 
-    component_hash
+    (component_hash, merge_hashes)
 }
 
 fn merge_component(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     for_find_all_refs: bool,
     component: Vec1<FileKey>,
@@ -673,7 +668,7 @@ fn merge_component(
 
     let typed_component: Vec<_> = component
         .iter()
-        .filter_map(|f| shared_mem.get_typed_parse(f).map(|p| (f.dupe(), p)))
+        .filter_map(|f| transaction.get_typed_parse(f).map(|p| (f.dupe(), p)))
         .collect();
 
     if typed_component.is_empty() {
@@ -681,7 +676,12 @@ fn merge_component(
     }
 
     worker_cancel::check_should_cancel()?;
-    let hash = sig_hash(for_find_all_refs, &options.root, shared_mem, &component);
+    let (hash, merge_hashes) = sig_hash(
+        for_find_all_refs,
+        &options.root,
+        transaction,
+        &typed_component,
+    );
     worker_cancel::check_should_cancel()?;
 
     let mut suppressions = ErrorSuppressions::empty();
@@ -712,10 +712,11 @@ fn merge_component(
 
     worker_cancel::check_should_cancel()?;
     let diff = merge_context_mutator::add_merge_on_diff(
-        shared_mem,
+        transaction,
         for_find_all_refs,
         &typed_component,
         hash,
+        merge_hashes,
     );
     let duration = start_time.elapsed().as_secs_f64();
 
@@ -774,7 +775,7 @@ pub fn finish_check_file<R>(
 }
 
 fn mk_check_file(
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
@@ -795,7 +796,7 @@ fn mk_check_file(
         mut check_file,
         compute_env: _,
     } = check_service::mk_check_file(
-        shared_mem.dupe(),
+        transaction.dupe(),
         options.dupe(),
         all_unordered_libs,
         master_cx,
@@ -804,7 +805,7 @@ fn mk_check_file(
 
     let check_file_fn = Box::new(move |file: FileKey| {
         let start_time = Instant::now();
-        let parse = match shared_mem.get_typed_parse(&file) {
+        let parse = match transaction.get_typed_parse(&file) {
             Some(p) => p,
             None => return Ok(None),
         };
@@ -852,7 +853,7 @@ fn mk_check_file(
             &find_ref_request.def_info,
             flow_services_get_def::get_def_types::DefInfo::PropertyDefinition(_)
         );
-        let loc_of_aloc = |aloc: &ALoc| shared_mem.loc_of_aloc(aloc);
+        let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
         let (typed_ast_result, obj_to_obj_map) =
             obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
                 check_file(&cx, &file, file_sig.dupe(), &metadata, comments, aloc_ast)
@@ -950,7 +951,7 @@ pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache<'static>>> {
 }
 
 pub fn check_contents_context(
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
@@ -964,9 +965,9 @@ pub fn check_contents_context(
 > {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
-        let shared_mem_for_aloc = shared_mem.dupe();
+        let transaction_for_aloc = transaction.dupe();
         Rc::new(LazyCell::new(Box::new(move || {
-            match shared_mem_for_aloc.get_aloc_table(&file_for_aloc) {
+            match transaction_for_aloc.get_aloc_table(&file_for_aloc) {
                 Some(packed) => Rc::new(ALocTable::unpack(file_for_aloc.dupe(), &packed)),
                 None => Rc::new(ALocTable::empty(file_for_aloc.dupe())),
             }
@@ -978,7 +979,7 @@ pub fn check_contents_context(
         let f = |mref: &FlowImportSpecifier| {
             flow_services_module::imported_module(
                 &options,
-                &shared_mem,
+                &transaction,
                 &node_modules_containers,
                 &file,
                 None,
@@ -1000,7 +1001,7 @@ pub fn check_contents_context(
         compute_env: _,
     } = CHECK_CONTENTS_CACHE.with(|cache| {
         check_service::mk_check_file(
-            shared_mem.dupe(),
+            transaction.dupe(),
             options.dupe(),
             all_unordered_libs,
             master_cx.as_ref(),
@@ -1026,7 +1027,7 @@ pub fn check_contents_context(
 }
 
 pub fn compute_env_of_contents(
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: Arc<MasterContext>,
@@ -1037,9 +1038,9 @@ pub fn compute_env_of_contents(
 ) -> Result<Context<'static>, flow_utils_concurrency::job_error::JobError> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
-        let shared_mem_for_aloc = shared_mem.dupe();
+        let transaction_for_aloc = transaction.dupe();
         Rc::new(LazyCell::new(Box::new(move || {
-            match shared_mem_for_aloc.get_aloc_table(&file_for_aloc) {
+            match transaction_for_aloc.get_aloc_table(&file_for_aloc) {
                 Some(packed) => Rc::new(ALocTable::unpack(file_for_aloc.dupe(), &packed)),
                 None => Rc::new(ALocTable::empty(file_for_aloc.dupe())),
             }
@@ -1055,7 +1056,7 @@ pub fn compute_env_of_contents(
             // Module_js.imported_module ~options ~reader ~node_modules_containers ~importing_file:file mref
             flow_services_module::imported_module(
                 &options,
-                &shared_mem,
+                &transaction,
                 &node_modules_containers,
                 &file,
                 None,
@@ -1078,7 +1079,7 @@ pub fn compute_env_of_contents(
         mut compute_env,
     } = CHECK_CONTENTS_CACHE.with(|cache| {
         check_service::mk_check_file(
-            shared_mem.dupe(),
+            transaction.dupe(),
             options.dupe(),
             all_unordered_libs,
             master_cx.as_ref(),
@@ -1098,7 +1099,7 @@ pub fn compute_env_of_contents(
 }
 
 fn merge_job<A, F>(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     for_find_all_refs: bool,
     job: &F,
@@ -1106,7 +1107,7 @@ fn merge_job<A, F>(
 ) -> Result<MergeResult<A>, worker_cancel::WorkerCanceled>
 where
     F: Fn(
-        &SharedMem,
+        &Transaction,
         &Options,
         bool,
         Vec1<FileKey>,
@@ -1118,7 +1119,7 @@ where
             worker_cancel::check_should_cancel()?;
             let leader = component.first().dupe();
             let component_cloned = (*component).clone();
-            let (diff, result) = job(shared_mem, options, for_find_all_refs, component_cloned)?;
+            let (diff, result) = job(transaction, options, for_find_all_refs, component_cloned)?;
             Ok((leader, diff, result))
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -1127,7 +1128,7 @@ where
 
 pub fn merge_runner<A, F>(
     pool: &ThreadPool,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     for_find_all_refs: bool,
     sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
@@ -1138,7 +1139,7 @@ pub fn merge_runner<A, F>(
 where
     A: Send + Sync + Default + std::fmt::Debug + 'static,
     F: Fn(
-            &SharedMem,
+            &Transaction,
             &Options,
             bool,
             Vec1<FileKey>,
@@ -1169,7 +1170,7 @@ where
     let stream_ref = stream.dupe();
     let stream_merge = stream.dupe();
 
-    let shared_mem_clone = shared_mem.dupe();
+    let transaction_clone = transaction.dupe();
 
     let results: MergeAcc<A> = flow_utils_concurrency::map_reduce::call(
         pool,
@@ -1178,7 +1179,7 @@ where
             if acc.0.is_err() {
                 return;
             }
-            match merge_job(shared_mem_clone, options, for_find_all_refs, &job, batch) {
+            match merge_job(transaction_clone, options, for_find_all_refs, &job, batch) {
                 Ok(merged) => {
                     let acc_vec = acc.0.as_mut().unwrap();
                     let new_acc = stream_merge.merge(merged, std::mem::take(acc_vec));
@@ -1223,7 +1224,7 @@ where
 
 pub fn merge(
     pool: &ThreadPool,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     for_find_all_refs: bool,
     sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
@@ -1232,14 +1233,14 @@ pub fn merge(
 ) -> Result<MergeResults<Option<(ErrorSuppressions, f64)>>, worker_cancel::WorkerCanceled> {
     merge_runner(
         pool,
-        shared_mem,
+        transaction,
         options,
         for_find_all_refs,
         sig_dependency_graph,
         components,
         recheck_set,
-        |shared_mem, options, for_find_all_refs, component| {
-            merge_component(shared_mem, options, for_find_all_refs, component)
+        |transaction, options, for_find_all_refs, component| {
+            merge_component(transaction, options, for_find_all_refs, component)
         },
     )
 }
@@ -1257,7 +1258,7 @@ pub enum CheckJobOutcome {
 }
 
 pub fn mk_check(
-    shared_mem: Arc<SharedMem>,
+    transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     master_cx: &MasterContext,
@@ -1267,7 +1268,7 @@ pub fn mk_check(
     Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
     let (mut check_file, cache) = mk_check_file(
-        shared_mem.dupe(),
+        transaction.dupe(),
         options.dupe(),
         all_unordered_libs,
         master_cx,

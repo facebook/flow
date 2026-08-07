@@ -93,11 +93,11 @@ pub fn empty_method_of_property_type(
 }
 
 pub fn find(
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     target_loc: &Loc,
 ) -> Option<class::Method<Loc, Loc>> {
     let source = target_loc.source()?;
-    let program = get_ast_from_shared_mem(source)?;
+    let program = get_ast_from_heap(source)?;
     let mut finder = Finder {
         target_loc: target_loc.clone(),
     };

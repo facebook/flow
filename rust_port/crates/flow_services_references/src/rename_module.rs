@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_common::options::Options;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_lsp::lsp::loc_to_lsp_range;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
@@ -32,16 +32,14 @@ use lsp_types::Uri;
 use lsp_types::WorkspaceEdit;
 
 fn get_dependents(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     file_key: &FileKey,
 ) -> Option<Vec<(FileKey, Option<Arc<ast::Program<Loc, Loc>>>)>> {
-    let haste_info = shared_mem.get_haste_info(file_key);
+    let haste_info = transaction.get_haste_info(file_key);
     haste_info.map(|haste_info| {
-        let haste_module = shared_mem.get_haste_module_unsafe(&haste_info);
-        let haste_dependents = haste_module.get_dependents();
         let mut dependents = Vec::new();
-        for file_key in haste_dependents {
-            let ast = shared_mem.get_ast(&file_key);
+        for file_key in transaction.get_haste_dependents(&haste_info) {
+            let ast = transaction.get_ast(&file_key);
             dependents.insert(0, (file_key, ast));
         }
         dependents
@@ -128,7 +126,7 @@ fn get_edits_for_file(
 }
 
 pub fn get_rename_edits(
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     options: &Options,
     old_haste_name: &str,
     new_haste_name: &str,
@@ -148,7 +146,7 @@ pub fn get_rename_edits(
         is_lib_file: false,
     };
     let workspace_edit = {
-        get_dependents(shared_mem, old_file_key).map(|dependents| {
+        get_dependents(transaction, old_file_key).map(|dependents| {
             // TODO: Allow partial edits
             let changes: Result<HashMap<Uri, Vec<TextEdit>>, String> = dependents
                 .into_iter()

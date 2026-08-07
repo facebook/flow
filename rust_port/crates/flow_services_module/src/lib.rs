@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::sync::Arc;
 use std::sync::LazyLock;
 
 use dupe::Dupe;
@@ -18,9 +19,10 @@ use flow_common::options::Options;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::entity::Dependency;
+use flow_heap::heap_state::HeapReader;
 use flow_heap::parse::Parse;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
+use flow_heap::resolved_requires::Dependency;
 use flow_parser::file_key::FileKey;
 use flow_parser_utils::package_json::PackageJson;
 use regex::Regex;
@@ -292,6 +294,48 @@ impl PhantomAcc {
     }
 }
 
+struct ModuleResolver<'a> {
+    transaction: &'a Transaction,
+    reader: HeapReader<'a>,
+}
+
+impl<'a> ModuleResolver<'a> {
+    fn new(transaction: &'a Transaction) -> Self {
+        Self {
+            transaction,
+            reader: transaction.latest_heap_reader(),
+        }
+    }
+
+    fn get_dependency(&self, modulename: &Modulename) -> Option<Dependency> {
+        self.reader.get_dependency(modulename)
+    }
+
+    fn get_provider(&self, dependency: &Dependency) -> Option<FileKey> {
+        self.reader.get_provider(dependency)
+    }
+
+    fn get_package_info(&self, file: &FileKey) -> Option<Arc<PackageJson>> {
+        self.reader.get_package_info(file)
+    }
+
+    fn is_typed_file(&self, file: &FileKey) -> bool {
+        self.reader.is_typed_file(file)
+    }
+
+    fn is_package_file(&self, file: &FileKey) -> bool {
+        self.reader.is_package_file(file)
+    }
+
+    fn get_requires_unsafe(&self, file: &FileKey) -> Arc<[FlowImportSpecifier]> {
+        self.reader.get_requires_unsafe(file)
+    }
+
+    fn intern_dependency_from_modulename(&self, mname: Modulename) -> Dependency {
+        self.transaction.intern_dependency_from_modulename(mname)
+    }
+}
+
 static CURRENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\.").unwrap());
 static PARENT_DIR_NAME: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^\.\.").unwrap());
 static ABSOLUTE_PATH_REGEXP: LazyLock<Regex> =
@@ -333,7 +377,7 @@ trait ModuleSystemSig {
 
     fn imported_module(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
         phantom_acc: Option<&mut PhantomAcc>,
@@ -361,7 +405,6 @@ mod node {
     use flow_common::options::Options;
     use flow_common_modulename::Modulename;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-    use flow_heap::parsing_heaps::SharedMem;
     use flow_parser::file_key::FileKey;
     use flow_parser_utils::package_json::PackageJson;
     use vec1::Vec1;
@@ -381,7 +424,7 @@ mod node {
 
         fn imported_module(
             options: &Options,
-            shared_mem: &SharedMem,
+            transaction: &ModuleResolver<'_>,
             node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
             importing_file: &FileKey,
             phantom_acc: Option<&mut PhantomAcc>,
@@ -389,7 +432,7 @@ mod node {
         ) -> Result<Dependency, Option<FlowImportSpecifier>> {
             imported_module_impl(
                 options,
-                shared_mem,
+                transaction,
                 node_modules_containers,
                 importing_file,
                 phantom_acc,
@@ -409,7 +452,7 @@ mod node {
     }
 
     fn path_if_exists(
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         phantom_acc: Option<&mut PhantomAcc>,
         path: &str,
@@ -423,9 +466,9 @@ mod node {
         );
         let mname = Modulename::eponymous_module(file_key);
 
-        let dependency = shared_mem.get_dependency(&mname);
+        let dependency = transaction.get_dependency(&mname);
         match &dependency {
-            Some(dep) if shared_mem.get_provider(dep).is_some() => dependency,
+            Some(dep) if transaction.get_provider(dep).is_some() => dependency,
             _ => {
                 super::record_phantom_dependency(mname, dependency, phantom_acc);
                 None
@@ -434,7 +477,7 @@ mod node {
     }
 
     fn try_dts_counterpart(
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         phantom_acc: Option<&mut PhantomAcc>,
         ts_lib_support: bool,
@@ -442,7 +485,7 @@ mod node {
     ) -> Option<Dependency> {
         if ts_lib_support {
             match files::js_to_dts(path) {
-                Some(dts_path) => path_if_exists(shared_mem, file_options, phantom_acc, &dts_path),
+                Some(dts_path) => path_if_exists(transaction, file_options, phantom_acc, &dts_path),
                 None => None,
             }
         } else {
@@ -451,7 +494,7 @@ mod node {
     }
 
     fn path_if_exists_with_file_exts(
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         phantom_acc: Option<&mut PhantomAcc>,
         path: &str,
@@ -461,7 +504,7 @@ mod node {
         for ext in file_exts {
             let full_path = format!("{}{}", path, ext);
             if let Some(result) = path_if_exists(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc.as_deref_mut(),
                 &full_path,
@@ -474,19 +517,19 @@ mod node {
 
     fn parse_package(
         _options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         package_filename: &str,
     ) -> Arc<PackageJson> {
         let package_filename = super::resolve_symlinks(package_filename);
         let file_key = FileKey::json_file_of_absolute(&package_filename);
 
-        shared_mem
+        transaction
             .get_package_info(&file_key)
             .unwrap_or_else(|| Arc::new(PackageJson::empty()))
     }
 
     fn parse_exports(
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         options: &Options,
         mut phantom_acc: Option<&mut PhantomAcc>,
         package_dir: &str,
@@ -501,7 +544,7 @@ mod node {
             .map(FlowSmolStr::new)
             .collect();
         let package_json_path = Path::new(package_dir).join("package.json");
-        let package = parse_package(options, shared_mem, package_json_path.to_str().unwrap());
+        let package = parse_package(options, transaction, package_json_path.to_str().unwrap());
 
         let source_path = package
             .exports()
@@ -511,16 +554,18 @@ mod node {
             let path = files::normalize_path(package_dir, file.as_str());
             let ts_lib_support = options.typescript_library_definition_support;
             try_dts_counterpart(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc.as_deref_mut(),
                 ts_lib_support,
                 &path,
             )
-            .or_else(|| path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path))
+            .or_else(|| {
+                path_if_exists(transaction, file_options, phantom_acc.as_deref_mut(), &path)
+            })
             .or_else(|| {
                 path_if_exists_with_file_exts(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc,
                     &path,
@@ -532,14 +577,14 @@ mod node {
 
     fn parse_main(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         ts_lib_support: bool,
         mut phantom_acc: Option<&mut PhantomAcc>,
         package_filename: &str,
         file_exts: &[FlowSmolStr],
     ) -> Option<Dependency> {
-        let package = parse_package(options, shared_mem, package_filename);
+        let package = parse_package(options, transaction, package_filename);
         package.main().and_then(|main| {
             let dir = Path::new(package_filename).parent()?.to_str()?;
             let path = files::normalize_path(dir, main.as_str());
@@ -547,16 +592,18 @@ mod node {
             let path_w_index_str = path_w_index.to_str()?;
 
             try_dts_counterpart(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc.as_deref_mut(),
                 ts_lib_support,
                 &path,
             )
-            .or_else(|| path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path))
+            .or_else(|| {
+                path_if_exists(transaction, file_options, phantom_acc.as_deref_mut(), &path)
+            })
             .or_else(|| {
                 path_if_exists_with_file_exts(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &path,
@@ -565,7 +612,7 @@ mod node {
             })
             .or_else(|| {
                 path_if_exists_with_file_exts(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc,
                     path_w_index_str,
@@ -576,7 +623,7 @@ mod node {
     }
 
     fn resolve_types_field(
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         mut phantom_acc: Option<&mut PhantomAcc>,
         package_dir: &str,
@@ -588,10 +635,10 @@ mod node {
             let path_w_index = Path::new(&path).join("index");
             let path_w_index_str = path_w_index.to_str()?;
 
-            path_if_exists(shared_mem, file_options, phantom_acc.as_deref_mut(), &path)
+            path_if_exists(transaction, file_options, phantom_acc.as_deref_mut(), &path)
                 .or_else(|| {
                     path_if_exists_with_file_exts(
-                        shared_mem,
+                        transaction,
                         file_options,
                         phantom_acc.as_deref_mut(),
                         &path,
@@ -600,7 +647,7 @@ mod node {
                 })
                 .or_else(|| {
                     path_if_exists_with_file_exts(
-                        shared_mem,
+                        transaction,
                         file_options,
                         phantom_acc,
                         path_w_index_str,
@@ -612,7 +659,7 @@ mod node {
 
     pub(super) fn resolve_package(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         subpath: Option<&str>,
         package_dir: &str,
@@ -629,13 +676,13 @@ mod node {
         let get_package = || -> Arc<PackageJson> {
             package
                 .get_or_init(|| {
-                    parse_package(options, shared_mem, package_json_path.to_str().unwrap())
+                    parse_package(options, transaction, package_json_path.to_str().unwrap())
                 })
                 .clone()
         };
 
         parse_exports(
-            shared_mem,
+            transaction,
             options,
             phantom_acc.as_deref_mut(),
             package_dir,
@@ -648,7 +695,7 @@ mod node {
                 && (subpath.is_none() || subpath == Some("."))
             {
                 resolve_types_field(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     package_dir,
@@ -663,7 +710,7 @@ mod node {
             let package_json = Path::new(&full_package_path).join("package.json");
             parse_main(
                 options,
-                shared_mem,
+                transaction,
                 file_options,
                 ts_lib_support,
                 phantom_acc.as_deref_mut(),
@@ -674,7 +721,7 @@ mod node {
         .or_else(|| {
             let index_path = Path::new(&full_package_path).join("index");
             path_if_exists_with_file_exts(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc,
                 index_path.to_str().unwrap(),
@@ -730,7 +777,7 @@ mod node {
 
     pub(super) fn resolve_relative(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         relative_to_directory: &str,
@@ -754,7 +801,7 @@ mod node {
             None,
         ) {
             None => try_dts_counterpart(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc.as_deref_mut(),
                 ts_lib_support,
@@ -762,7 +809,7 @@ mod node {
             )
             .or_else(|| {
                 path_if_exists(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &full_path,
@@ -770,7 +817,7 @@ mod node {
             })
             .or_else(|| {
                 path_if_exists_with_file_exts(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &full_path,
@@ -780,14 +827,14 @@ mod node {
             .or_else(|| {
                 resolve_package(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     subpath,
                     &package_path,
                 )
             }),
             Some(ordered_platforms) => try_dts_counterpart(
-                shared_mem,
+                transaction,
                 file_options,
                 phantom_acc.as_deref_mut(),
                 ts_lib_support,
@@ -795,7 +842,7 @@ mod node {
             )
             .or_else(|| {
                 path_if_exists(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &full_path,
@@ -805,7 +852,7 @@ mod node {
                 for platform in &ordered_platforms {
                     let platform_path = format!("{}.{}", full_path, platform);
                     if let Some(result) = path_if_exists_with_file_exts(
-                        shared_mem,
+                        transaction,
                         file_options,
                         phantom_acc.as_deref_mut(),
                         &platform_path,
@@ -818,14 +865,14 @@ mod node {
             })
             .or_else(|| {
                 path_if_exists_with_file_exts(
-                    shared_mem,
+                    transaction,
                     file_options,
                     phantom_acc.as_deref_mut(),
                     &full_path,
                     file_exts,
                 )
             })
-            .or_else(|| resolve_package(options, shared_mem, phantom_acc, subpath, &package_path)),
+            .or_else(|| resolve_package(options, transaction, phantom_acc, subpath, &package_path)),
         }
     }
 
@@ -864,7 +911,7 @@ mod node {
 
     pub(super) fn node_module(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
@@ -881,7 +928,7 @@ mod node {
                 if existing_node_modules_dirs.contains(&FlowSmolStr::new(dirname)) {
                     if let Some(result) = resolve_relative(
                         options,
-                        shared_mem,
+                        transaction,
                         phantom_acc.as_deref_mut(),
                         importing_file,
                         possible_node_module_container_dir,
@@ -899,7 +946,7 @@ mod node {
         if parent_str != possible_node_module_container_dir {
             node_module(
                 options,
-                shared_mem,
+                transaction,
                 node_modules_containers,
                 phantom_acc,
                 importing_file,
@@ -913,7 +960,7 @@ mod node {
 
     pub(super) fn flow_typed_module(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         import_specifier: &str,
@@ -921,7 +968,7 @@ mod node {
         for relative_to_directory in &options.file_options.module_declaration_dirnames {
             if let Some(result) = resolve_relative(
                 options,
-                shared_mem,
+                transaction,
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 relative_to_directory,
@@ -954,7 +1001,7 @@ mod node {
 
     fn resolve_at_types(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
@@ -980,7 +1027,7 @@ mod node {
                 );
                 node_module(
                     options,
-                    shared_mem,
+                    transaction,
                     node_modules_containers,
                     phantom_acc,
                     importing_file,
@@ -998,7 +1045,7 @@ mod node {
     // type declarations and a separate @types package provides them.
     pub(super) fn node_module_or_at_types(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
@@ -1007,7 +1054,7 @@ mod node {
     ) -> Option<Dependency> {
         let result = node_module(
             options,
-            shared_mem,
+            transaction,
             node_modules_containers,
             phantom_acc.as_deref_mut(),
             importing_file,
@@ -1020,7 +1067,7 @@ mod node {
             let try_at_types = |phantom_acc: Option<&mut PhantomAcc>| {
                 resolve_at_types(
                     options,
-                    shared_mem,
+                    transaction,
                     node_modules_containers,
                     phantom_acc,
                     importing_file,
@@ -1036,8 +1083,8 @@ mod node {
                     try_at_types(phantom_acc)
                 }
                 Some(dep) => {
-                    let is_typed = match shared_mem.get_provider(&dep) {
-                        Some(file_addr) => shared_mem.is_typed_file(&file_addr),
+                    let is_typed = match transaction.get_provider(&dep) {
+                        Some(file_addr) => transaction.is_typed_file(&file_addr),
                         None => false,
                     };
                     if is_typed {
@@ -1066,7 +1113,7 @@ mod node {
 
     pub(super) fn resolve_root_relative(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         import_specifier: &str,
@@ -1093,7 +1140,7 @@ mod node {
             if applicable {
                 if let Some(result) = resolve_relative(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     importing_file,
                     &relative_to_directory,
@@ -1110,7 +1157,7 @@ mod node {
 
     fn resolve_import(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
         mut phantom_acc: Option<&mut PhantomAcc>,
@@ -1122,7 +1169,7 @@ mod node {
         if super::is_relative_or_absolute(import_specifier) {
             resolve_relative(
                 options,
-                shared_mem,
+                transaction,
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 importing_file_dir,
@@ -1132,7 +1179,7 @@ mod node {
         } else {
             resolve_root_relative(
                 options,
-                shared_mem,
+                transaction,
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 import_specifier,
@@ -1140,7 +1187,7 @@ mod node {
             .or_else(|| {
                 flow_typed_module(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     importing_file,
                     import_specifier,
@@ -1149,7 +1196,7 @@ mod node {
             .or_else(|| {
                 node_module_or_at_types(
                     options,
-                    shared_mem,
+                    transaction,
                     node_modules_containers,
                     phantom_acc,
                     importing_file,
@@ -1162,7 +1209,7 @@ mod node {
 
     fn imported_module_impl(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
         mut phantom_acc: Option<&mut PhantomAcc>,
@@ -1175,7 +1222,7 @@ mod node {
                 for candidate in candidates.as_slice() {
                     if let Some(m) = resolve_import(
                         options,
-                        shared_mem,
+                        transaction,
                         node_modules_containers,
                         importing_file,
                         phantom_acc.as_deref_mut(),
@@ -1211,7 +1258,6 @@ mod haste {
     use flow_common_modulename::HasteModuleInfo;
     use flow_common_modulename::Modulename;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-    use flow_heap::parsing_heaps::SharedMem;
     use flow_parser::file_key::FileKey;
     use flow_parser::file_key::FileKeyInner;
     use vec1::Vec1;
@@ -1231,7 +1277,7 @@ mod haste {
 
         fn imported_module(
             options: &Options,
-            shared_mem: &SharedMem,
+            transaction: &ModuleResolver<'_>,
             node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
             importing_file: &FileKey,
             phantom_acc: Option<&mut PhantomAcc>,
@@ -1239,7 +1285,7 @@ mod haste {
         ) -> Result<Dependency, Option<FlowImportSpecifier>> {
             imported_module_impl(
                 options,
-                shared_mem,
+                transaction,
                 node_modules_containers,
                 importing_file,
                 phantom_acc,
@@ -1313,8 +1359,8 @@ mod haste {
         }
     }
 
-    fn package_dir_opt(shared_mem: &SharedMem, file: &FileKey) -> Option<String> {
-        if shared_mem.is_package_file(file) {
+    fn package_dir_opt(transaction: &ModuleResolver<'_>, file: &FileKey) -> Option<String> {
+        if transaction.is_package_file(file) {
             use std::path::Path;
             let abs = file.to_absolute();
             Path::new(&abs)
@@ -1328,7 +1374,7 @@ mod haste {
 
     fn resolve_haste_module(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         importing_file_dir: &str,
@@ -1339,19 +1385,19 @@ mod haste {
         let mut resolve = || -> Option<Dependency> {
             let haste_info = HasteModuleInfo::mk(name.clone().into());
             let mname = Modulename::Haste(haste_info.clone());
-            let dependency = shared_mem.get_dependency(&mname);
+            let dependency = transaction.get_dependency(&mname);
 
             if let Some(provider_file) = dependency
                 .as_ref()
-                .and_then(|dep| shared_mem.get_provider(dep))
+                .and_then(|dep| transaction.get_provider(dep))
             {
                 match (
-                    package_dir_opt(shared_mem, &provider_file),
+                    package_dir_opt(transaction, &provider_file),
                     subpath.as_slice(),
                 ) {
                     (Some(package_dir), []) => super::node::resolve_package(
                         options,
-                        shared_mem,
+                        transaction,
                         phantom_acc.as_deref_mut(),
                         None,
                         &package_dir,
@@ -1367,7 +1413,7 @@ mod haste {
                         let path = files::construct_path(&package_dir, &subpath_strs);
                         super::node::resolve_relative(
                             options,
-                            shared_mem,
+                            transaction,
                             phantom_acc.as_deref_mut(),
                             importing_file,
                             importing_file_dir,
@@ -1410,7 +1456,7 @@ mod haste {
 
     fn resolve_haste_module_disallow_platform_specific(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         mut phantom_acc: Option<&mut PhantomAcc>,
         importing_file: &FileKey,
         import_specifier: &str,
@@ -1423,7 +1469,7 @@ mod haste {
 
         let dependency = resolve_haste_module(
             options,
-            shared_mem,
+            transaction,
             phantom_acc.as_deref_mut(),
             importing_file,
             importing_file_dir,
@@ -1458,7 +1504,7 @@ mod haste {
 
     fn resolve_import(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
         mut phantom_acc: Option<&mut PhantomAcc>,
@@ -1473,7 +1519,7 @@ mod haste {
         if super::is_relative_or_absolute(import_specifier) {
             return super::node::resolve_relative(
                 options,
-                shared_mem,
+                transaction,
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 importing_file_dir,
@@ -1488,7 +1534,7 @@ mod haste {
         if !file_options.multi_platform {
             resolve_haste_module(
                 options,
-                shared_mem,
+                transaction,
                 phantom_acc.as_deref_mut(),
                 importing_file,
                 importing_file_dir,
@@ -1497,7 +1543,7 @@ mod haste {
             .or_else(|| {
                 super::node::resolve_root_relative(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     importing_file,
                     import_specifier,
@@ -1506,7 +1552,7 @@ mod haste {
             .or_else(|| {
                 super::node::flow_typed_module(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     importing_file,
                     import_specifier,
@@ -1515,7 +1561,7 @@ mod haste {
             .or_else(|| {
                 super::node::node_module_or_at_types(
                     options,
-                    shared_mem,
+                    transaction,
                     node_modules_containers,
                     phantom_acc.as_deref_mut(),
                     importing_file,
@@ -1534,7 +1580,7 @@ mod haste {
             match ordered_platforms {
                 None => resolve_haste_module_disallow_platform_specific(
                     options,
-                    shared_mem,
+                    transaction,
                     phantom_acc.as_deref_mut(),
                     importing_file,
                     import_specifier,
@@ -1542,7 +1588,7 @@ mod haste {
                 .or_else(|| {
                     super::node::resolve_root_relative(
                         options,
-                        shared_mem,
+                        transaction,
                         phantom_acc.as_deref_mut(),
                         importing_file,
                         import_specifier,
@@ -1551,7 +1597,7 @@ mod haste {
                 .or_else(|| {
                     super::node::flow_typed_module(
                         options,
-                        shared_mem,
+                        transaction,
                         phantom_acc.as_deref_mut(),
                         importing_file,
                         import_specifier,
@@ -1560,7 +1606,7 @@ mod haste {
                 .or_else(|| {
                     super::node::node_module_or_at_types(
                         options,
-                        shared_mem,
+                        transaction,
                         node_modules_containers,
                         phantom_acc.as_deref_mut(),
                         importing_file,
@@ -1573,7 +1619,7 @@ mod haste {
                         let platform_specifier = format!("{}.{}", import_specifier, platform);
                         if let Some(result) = resolve_haste_module(
                             options,
-                            shared_mem,
+                            transaction,
                             phantom_acc.as_deref_mut(),
                             importing_file,
                             importing_file_dir,
@@ -1585,7 +1631,7 @@ mod haste {
 
                     resolve_haste_module_disallow_platform_specific(
                         options,
-                        shared_mem,
+                        transaction,
                         phantom_acc.as_deref_mut(),
                         importing_file,
                         import_specifier,
@@ -1593,7 +1639,7 @@ mod haste {
                     .or_else(|| {
                         super::node::resolve_root_relative(
                             options,
-                            shared_mem,
+                            transaction,
                             phantom_acc.as_deref_mut(),
                             importing_file,
                             import_specifier,
@@ -1602,7 +1648,7 @@ mod haste {
                     .or_else(|| {
                         super::node::flow_typed_module(
                             options,
-                            shared_mem,
+                            transaction,
                             phantom_acc.as_deref_mut(),
                             importing_file,
                             import_specifier,
@@ -1611,7 +1657,7 @@ mod haste {
                     .or_else(|| {
                         super::node::node_module_or_at_types(
                             options,
-                            shared_mem,
+                            transaction,
                             node_modules_containers,
                             phantom_acc,
                             importing_file,
@@ -1626,7 +1672,7 @@ mod haste {
 
     fn imported_module_impl(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &ModuleResolver<'_>,
         node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
         importing_file: &FileKey,
         phantom_acc: Option<&mut PhantomAcc>,
@@ -1639,7 +1685,7 @@ mod haste {
 
                 if let Some(m) = resolve_import(
                     options,
-                    shared_mem,
+                    transaction,
                     node_modules_containers,
                     importing_file,
                     phantom_acc,
@@ -1704,7 +1750,26 @@ pub fn exported_module(
 
 pub fn imported_module(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    importing_file: &FileKey,
+    phantom_acc: Option<&mut PhantomAcc>,
+    import_specifier: &FlowImportSpecifier,
+) -> Result<Dependency, Option<FlowImportSpecifier>> {
+    let resolver = ModuleResolver::new(transaction);
+    imported_module_with_resolver(
+        options,
+        &resolver,
+        node_modules_containers,
+        importing_file,
+        phantom_acc,
+        import_specifier,
+    )
+}
+
+fn imported_module_with_resolver(
+    options: &Options,
+    transaction: &ModuleResolver<'_>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     importing_file: &FileKey,
     phantom_acc: Option<&mut PhantomAcc>,
@@ -1713,7 +1778,7 @@ pub fn imported_module(
     match options.module_system {
         ModuleSystem::Node => node::Node::imported_module(
             options,
-            shared_mem,
+            transaction,
             node_modules_containers,
             importing_file,
             phantom_acc,
@@ -1721,7 +1786,7 @@ pub fn imported_module(
         ),
         ModuleSystem::Haste => haste::Haste::imported_module(
             options,
-            shared_mem,
+            transaction,
             node_modules_containers,
             importing_file,
             phantom_acc,
@@ -1744,15 +1809,16 @@ pub fn choose_provider(
 
 pub fn add_parsed_resolved_requires(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     file: &FileKey,
 ) -> Result<(), String> {
-    use flow_heap::entity::Dependency;
-    use flow_heap::entity::ResolvedModule;
-    use flow_heap::entity::ResolvedRequires;
+    use flow_heap::resolved_requires::Dependency;
+    use flow_heap::resolved_requires::ResolvedModule;
+    use flow_heap::resolved_requires::ResolvedRequires;
 
-    let requires = shared_mem.get_requires_unsafe(file);
+    let resolver = ModuleResolver::new(transaction);
+    let requires = resolver.get_requires_unsafe(file);
 
     let phantom_acc_map = std::collections::BTreeMap::new();
     let mut phantom_acc = PhantomAcc(phantom_acc_map);
@@ -1760,15 +1826,15 @@ pub fn add_parsed_resolved_requires(
     let resolved_modules: Vec<ResolvedModule> = requires
         .iter()
         .map(|import_specifier| {
-            match imported_module(
+            match imported_module_with_resolver(
                 options,
-                shared_mem,
+                &resolver,
                 node_modules_containers,
                 file,
                 Some(&mut phantom_acc),
                 import_specifier,
             ) {
-                Ok(dependency) => shared_mem.resolved_module_for_dependency(&dependency),
+                Ok(dependency) => transaction.resolved_module_for_dependency(&dependency),
                 Err(None) => ResolvedModule::null(),
                 Err(Some(spec)) => ResolvedModule::from_result(Err(Some(spec))),
             }
@@ -1780,13 +1846,13 @@ pub fn add_parsed_resolved_requires(
         .into_iter()
         .map(|(mname, dep_opt)| match dep_opt {
             Some(dep) => dep,
-            None => shared_mem.intern_dependency_from_modulename(mname),
+            None => resolver.intern_dependency_from_modulename(mname),
         })
         .collect();
 
     let resolved_requires = ResolvedRequires::new(resolved_modules, phantom_dependencies);
 
-    shared_mem.set_resolved_requires(file, resolved_requires);
+    transaction.set_resolved_requires(file, resolved_requires);
 
     Ok(())
 }
@@ -1794,7 +1860,7 @@ pub fn add_parsed_resolved_requires(
 pub fn commit_modules(
     pool: &flow_utils_concurrency::thread_pool::ThreadPool,
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     dirty_modules: flow_common_modulename::ModulenameSet,
 ) -> (
     flow_common_modulename::ModulenameSet,
@@ -1810,7 +1876,8 @@ pub fn commit_modules(
 
     fn commit_haste(
         options: &Options,
-        shared_mem: &SharedMem,
+        transaction: &Transaction,
+        reader: &HeapReader<'_>,
         debug: bool,
         unchanged: &mut ModulenameSet,
         errmap: &mut BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
@@ -1818,9 +1885,14 @@ pub fn commit_modules(
         haste_info: &HasteModuleInfo,
     ) {
         let name = haste_info.module_name();
-        let haste_module = shared_mem.get_haste_module_unsafe(haste_info);
+        let haste_module = reader
+            .get_haste_module(haste_info)
+            .unwrap_or_else(|| panic!("Haste module not found: {:?}", haste_info));
 
-        let all_providers = haste_module.get_all_providers();
+        let all_providers = reader
+            .haste_provider_candidates(haste_info)
+            .into_iter()
+            .collect();
 
         let old_provider = haste_module.get_provider();
 
@@ -1831,18 +1903,27 @@ pub fn commit_modules(
                 if debug {
                     eprintln!("no remaining providers: {}", name);
                 }
-                haste_module.set_provider(None);
+                transaction.set_haste_module_provider(haste_info, None);
             }
             (None, Some(p)) => {
-                haste_module.set_provider(Some(p.dupe()));
+                transaction.set_haste_module_provider(haste_info, Some(p.dupe()));
             }
             (Some(old_p), Some(new_p)) => {
                 if old_p == new_p {
                     if debug {
                         eprintln!("unchanged provider: {} -> {}", name, new_p.as_str());
                     }
-                    let old_typed = shared_mem.get_typed_parse_committed(new_p);
-                    let new_typed = shared_mem.get_typed_parse(new_p);
+                    let old_typed =
+                        reader
+                            .get_parse_committed(new_p)
+                            .and_then(|parse| match parse {
+                                Parse::Typed(typed) => Some(typed),
+                                _ => None,
+                            });
+                    let new_typed = reader.get_parse(new_p).and_then(|parse| match parse {
+                        Parse::Typed(typed) => Some(typed),
+                        _ => None,
+                    });
 
                     match (old_typed, new_typed) {
                         (Some(_), None) | (None, Some(_)) => {}
@@ -1859,23 +1940,20 @@ pub fn commit_modules(
                             old_p.as_str()
                         );
                     }
-                    haste_module.set_provider(Some(new_p.dupe()));
+                    transaction.set_haste_module_provider(haste_info, Some(new_p.dupe()));
                 }
             }
         }
     }
 
     fn commit_file(
-        shared_mem: &SharedMem,
+        reader: &HeapReader<'_>,
         unchanged: &mut ModulenameSet,
         mname: &Modulename,
         file_key: &FileKey,
     ) {
         let get_parses = |key: &FileKey| -> (Option<Parse>, Option<Parse>) {
-            (
-                shared_mem.get_parse_committed(key),
-                shared_mem.get_parse(key),
-            )
+            (reader.get_parse_committed(key), reader.get_parse(key))
         };
 
         let decl_key = file_key.with_suffix(files::FLOW_EXT);
@@ -1921,14 +1999,22 @@ pub fn commit_modules(
         ),
          &mname| {
             let (unchanged, errmap) = acc;
+            let reader = transaction.latest_heap_reader();
             match mname {
                 Modulename::Haste(haste_info) => {
                     commit_haste(
-                        options, shared_mem, debug, unchanged, errmap, mname, haste_info,
+                        options,
+                        transaction,
+                        &reader,
+                        debug,
+                        unchanged,
+                        errmap,
+                        mname,
+                        haste_info,
                     );
                 }
                 Modulename::Filename(file_key) => {
-                    commit_file(shared_mem, unchanged, mname, file_key);
+                    commit_file(&reader, unchanged, mname, file_key);
                 }
             }
         },

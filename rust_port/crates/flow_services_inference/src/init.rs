@@ -25,7 +25,7 @@ use flow_aloc::ALocTable;
 use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::parsing_heaps::Transaction;
 use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
 use flow_parser::ast;
@@ -56,7 +56,7 @@ use flow_typing_flow_common::flow_js_utils::add_output_non_speculating;
 fn load_lib_files(
     ccx: &Rc<flow_typing_context::ComponentT<'static>>,
     options: &Options,
-    reader: &SharedMem,
+    reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: &[(Option<String>, String)],
 ) -> (
@@ -213,7 +213,7 @@ fn error_set_to_filemap(map: &mut BTreeMap<FileKey, ErrorSet>, err_set: ErrorSet
 /// returns list of (lib file, success) pairs.
 pub fn init(
     options: &Options,
-    reader: &SharedMem,
+    reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     lib_files: Vec<(Option<String>, String)>,
 ) -> InitResult {

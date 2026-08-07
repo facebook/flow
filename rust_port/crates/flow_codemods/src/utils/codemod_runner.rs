@@ -18,6 +18,7 @@ use dupe::Dupe;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -216,7 +217,7 @@ pub trait UntypedRunnerConfig {
 pub trait UntypedFlowInitRunnerConfig {
     type Accumulator;
 
-    fn init(reader: &Arc<flow_heap::parsing_heaps::SharedMem>);
+    fn init(reader: &Arc<flow_heap::parsing_heaps::Transaction>);
     fn reporter() -> codemod_report::CodemodReport<Self::Accumulator>;
     fn visit(
         options: &Options,
@@ -303,7 +304,7 @@ fn merge_job(
     _mutator: &(),
     options: &Options,
     for_find_all_refs: bool,
-    reader: &flow_heap::parsing_heaps::SharedMem,
+    reader: &flow_heap::parsing_heaps::Transaction,
     component: vec1::Vec1<FileKey>,
 ) -> (bool, ()) {
     let leader = component.first();
@@ -311,18 +312,18 @@ fn merge_job(
     let diff = match reader.typed_component(leader, rest) {
         None => false,
         Some(typed_component) => {
-            let _root = &options.root;
-            let hash = flow_services_inference::merge_service::sig_hash(
+            let (hash, merge_hashes) = flow_services_inference::merge_service::sig_hash(
                 for_find_all_refs,
                 &options.root,
                 reader,
-                &component,
+                &typed_component,
             );
             flow_heap::parsing_heaps::merge_context_mutator::add_merge_on_diff(
                 reader,
                 for_find_all_refs,
                 &typed_component,
                 hash,
+                merge_hashes,
             )
         }
     };
@@ -337,7 +338,7 @@ fn post_check<A>(
         codemod_context::typed::TypedCodemodContext<'_>,
     ) -> A,
     _iteration: i32,
-    _reader: &Arc<flow_heap::parsing_heaps::SharedMem>,
+    _reader: &Arc<flow_heap::parsing_heaps::Transaction>,
     _options: &Options,
     _metadata: &Metadata,
     _file: &FileKey,
@@ -526,7 +527,7 @@ fn check_all_files<A, Wrap>(
     workers: &Option<ThreadPool>,
     options: &Options,
     files: Vec<FileKey>,
-    reader: &Arc<flow_heap::parsing_heaps::SharedMem>,
+    reader: &Arc<flow_heap::parsing_heaps::Transaction>,
     master_cx: &flow_typing_context::MasterContext,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     wrap: Wrap,
@@ -646,7 +647,7 @@ pub trait TypedRunnerWithPrepassConfig {
         state: &Self::PrepassState,
         file: FileKey,
         file_options: &Arc<flow_common::files::FileOptions>,
-        reader: &Arc<flow_heap::parsing_heaps::SharedMem>,
+        reader: &Arc<flow_heap::parsing_heaps::Transaction>,
         file_sig: &Arc<flow_parser_utils::file_sig::FileSig>,
         typed_ast: &ast::Program<flow_aloc::ALoc, (flow_aloc::ALoc, flow_typing_type::type_::Type)>,
     ) -> Self::PrepassResult;
@@ -670,7 +671,7 @@ pub trait TypedRunnerConfig {
         profiling: &(),
         roots: BTreeSet<FileKey>,
         iteration: i32,
-        shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+        transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     ) -> impl std::future::Future<
         Output = Result<
             ResultList<Self::Accumulator>,
@@ -703,11 +704,11 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         _profiling: &(),
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
-        _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+        _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
     {
         let _should_print = _options.profile;
-        let reader = _shared_mem.clone();
+        let reader = _transaction.clone();
         let get_dependent_files = |_: &flow_common_utils::graph::Graph<FileKey>,
                                    _: &flow_common_utils::graph::Graph<FileKey>,
                                    _: &BTreeSet<FileKey>|
@@ -737,7 +738,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
-                move |_shared_mem: &flow_heap::parsing_heaps::SharedMem,
+                move |_transaction: &flow_heap::parsing_heaps::Transaction,
                       _opts: &Options,
                       _for_find_all_refs: bool,
                       _component: vec1::Vec1<FileKey>| {
@@ -745,7 +746,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                         &mutator,
                         _opts,
                         _for_find_all_refs,
-                        _shared_mem,
+                        _transaction,
                         _component,
                     ))
                 },
@@ -841,11 +842,11 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         _profiling: &(),
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
-        _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+        _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
     {
         let _should_print = _options.profile;
-        let reader = _shared_mem.clone();
+        let reader = _transaction.clone();
         let get_dependent_files = |_: &flow_common_utils::graph::Graph<FileKey>,
                                    _: &flow_common_utils::graph::Graph<FileKey>,
                                    _: &BTreeSet<FileKey>|
@@ -875,7 +876,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
-                move |_sm: &flow_heap::parsing_heaps::SharedMem,
+                move |_sm: &flow_heap::parsing_heaps::Transaction,
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
@@ -960,7 +961,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 _dependency_info2.sig_dependency_graph(),
                 _components2,
                 &files_to_merge2,
-                move |_sm: &flow_heap::parsing_heaps::SharedMem,
+                move |_sm: &flow_heap::parsing_heaps::Transaction,
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
@@ -1020,11 +1021,11 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         _profiling: &(),
         _roots: BTreeSet<FileKey>,
         _iteration: i32,
-        _shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+        _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     ) -> Result<ResultList<Self::Accumulator>, flow_utils_concurrency::worker_cancel::WorkerCanceled>
     {
         let _should_print = _options.profile;
-        let reader = _shared_mem.clone();
+        let reader = _transaction.clone();
         let get_dependent_files = |sig_dep: &flow_common_utils::graph::Graph<FileKey>,
                                    impl_dep: &flow_common_utils::graph::Graph<FileKey>,
                                    roots: &BTreeSet<FileKey>|
@@ -1067,7 +1068,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 _dependency_info.sig_dependency_graph(),
                 _components,
                 &files_to_merge,
-                move |_sm: &flow_heap::parsing_heaps::SharedMem,
+                move |_sm: &flow_heap::parsing_heaps::Transaction,
                       _o: &Options,
                       _f: bool,
                       _c: vec1::Vec1<FileKey>| {
@@ -1189,7 +1190,8 @@ where
         let should_print_summary = options.profile;
         let profiling = profiling_start("Codemod", should_print_summary);
         extract_flowlibs_or_exit(options);
-        let shared_mem = &_genv.shared_mem;
+        let heap_transaction = Transaction::new(_genv.committed_heap.clone());
+        let transaction = &heap_transaction;
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
@@ -1197,7 +1199,7 @@ where
         let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
             &options_arc,
             pool,
-            shared_mem,
+            transaction,
             root,
         );
         let file_options = &options.file_options;
@@ -1213,7 +1215,8 @@ where
         let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
         log_input_files(&roots);
         let results =
-            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, shared_mem).await?;
+            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, transaction).await?;
+        heap_transaction.commit(&_genv.committed_heap);
         Ok(((), (env, results)))
     }
 
@@ -1232,7 +1235,6 @@ where
         let should_print_summary = options.profile;
         let profiling = profiling_start("Codemod", should_print_summary);
         diff_heaps_remove_batch(&_roots);
-        let shared_mem = &_genv.shared_mem;
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for recheck");
         let mut updates = flow_common_utils::checked_set::CheckedSet::empty();
@@ -1244,7 +1246,7 @@ where
         let mut will_be_checked_files = flow_common_utils::checked_set::CheckedSet::empty();
         let recheck_result = flow_services_inference::type_service::recheck(
             pool,
-            shared_mem,
+            &_genv.committed_heap,
             &options_arc,
             &updates,
             &find_ref_request,
@@ -1256,9 +1258,16 @@ where
             Arc::new(env),
         );
         let (_, _, _, env) = recheck_result.expect("recheck failed");
+        let transaction = Transaction::new(_genv.committed_heap.clone());
         log_input_files(&_roots);
         let results = TRC::merge_and_check(
-            &env, workers, options, &profiling, _roots, _iteration, shared_mem,
+            &env,
+            workers,
+            options,
+            &profiling,
+            _roots,
+            _iteration,
+            &transaction,
         )
         .await?;
         let env = EnvTransaction::new(env).into_env();
@@ -1294,7 +1303,7 @@ where
 pub fn untyped_runner_job<A, Ctx>(
     mk_ccx: impl Fn(&FileKey) -> Ctx,
     visit: impl Fn(&ast::Program<Loc, Loc>, Ctx) -> A,
-    abstract_reader: &flow_heap::parsing_heaps::SharedMem,
+    abstract_reader: &flow_heap::parsing_heaps::Transaction,
     file_list: Vec<FileKey>,
 ) -> ResultList<A> {
     file_list.into_iter().fold(Vec::new(), |mut acc, file| {
@@ -1346,7 +1355,7 @@ where
             flow_common::files::ordered_and_unordered_lib_paths(file_options);
         let filename_set = get_target_filename_set(file_options, &all_unordered_libs, all, _roots);
         let next = next_of_filename_set(workers, &filename_set);
-        let reader = _genv.shared_mem.clone();
+        let reader = Transaction::new(_genv.committed_heap.clone());
         let parse_results = flow_parsing::parsing_service::parse_with_defaults(
             workers.as_ref().unwrap(),
             &reader,
@@ -1428,14 +1437,14 @@ where
         let mut options = options.clone();
         options.all = true;
         extract_flowlibs_or_exit(&options);
-        let shared_mem = &_genv.shared_mem;
+        let transaction = Transaction::new(_genv.committed_heap.clone());
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
         let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
             &options_arc,
             pool,
-            shared_mem,
+            &transaction,
             root,
         );
         let file_options = &options.file_options;
@@ -1450,7 +1459,7 @@ where
         let filename_set: BTreeSet<FileKey> =
             filename_set.intersection(&env_files).cloned().collect();
         let _next = next_of_filename_set(workers, &filename_set);
-        let reader = shared_mem.clone();
+        let reader = transaction.clone();
         C::init(&reader);
         let reader_for_ccx = reader.clone();
         let mk_ccx =

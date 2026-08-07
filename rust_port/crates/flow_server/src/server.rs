@@ -83,10 +83,10 @@ fn profiling_to_event_logger_json(profiling: &ProfilingFinished) -> serde_json::
 
 fn sample_init_memory(
     profiling: &ProfilingRunning,
-    shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
 ) {
-    let hash_stats = shared_mem.hash_stats();
-    let heap_size = shared_mem.heap_size();
+    let hash_stats = committed_heap.hash_stats();
+    let heap_size = committed_heap.heap_size();
     let memory_metrics = [
         ("heap.size", heap_size),
         ("hash_table.nonempty_slots", hash_stats.nonempty_slots),
@@ -186,18 +186,20 @@ fn init(
 
     extract_flowlibs_or_exit(options);
 
-    let (env, first_internal_error) =
-        flow_profiling::memory_utils::with_shared_mem(Arc::clone(&genv.shared_mem), || {
+    let (env, first_internal_error) = flow_profiling::memory_utils::with_committed_heap(
+        Arc::clone(&genv.committed_heap),
+        || {
             flow_services_inference::type_service::init(
                 options,
                 workers,
-                &genv.shared_mem,
+                &genv.committed_heap,
                 focus_targets,
             )
-        })?;
+        },
+    )?;
 
-    sample_init_memory(profiling, &genv.shared_mem);
-    flow_event_logger::sharedmem_init_done(genv.shared_mem.heap_size() as u64);
+    sample_init_memory(profiling, &genv.committed_heap);
+    flow_event_logger::sharedmem_init_done(genv.committed_heap.heap_size() as u64);
     Ok((env, first_internal_error))
 }
 
@@ -259,17 +261,21 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
     }
 }
 
-async fn gc_loop(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) {
+async fn gc_loop(committed_heap: Arc<flow_heap::heap_state::CommittedHeap>) {
     loop {
         tokio::task::yield_now().await;
-        let done = shared_mem.collect_slice(10000);
+        let done = committed_heap.collect_slice(10000);
         if done {
             break;
         }
     }
 }
 
-fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_heaps::SharedMem>) {
+fn serve(
+    _genv: &Genv,
+    mut _env: EnvRef,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
+) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -287,7 +293,7 @@ fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_hea
             let idle_thread = async {
                 tokio::join!(
                     idle_logging_loop(Arc::clone(_options), _start_time),
-                    gc_loop(Arc::clone(shared_mem)),
+                    gc_loop(Arc::clone(committed_heap)),
                 );
             };
             let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| {
@@ -295,7 +301,7 @@ fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_hea
                     skip_incompatible,
                     _options,
                     &_env,
-                    shared_mem,
+                    committed_heap,
                     updates,
                 )
             };
@@ -312,7 +318,7 @@ fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_hea
         });
 
         let (_profiling, new_env) =
-            flow_server_rechecker::rechecker::recheck_loop(_genv, _env, shared_mem);
+            flow_server_rechecker::rechecker::recheck_loop(_genv, _env, committed_heap);
         _env = new_env;
 
         let next_workload = server_monitor_listener_state::pop_next_workload();
@@ -330,20 +336,22 @@ fn serve(_genv: &Genv, mut _env: EnvRef, shared_mem: &Arc<flow_heap::parsing_hea
 }
 
 #[allow(dead_code)]
-pub(crate) fn on_compact(shared_mem: Arc<flow_heap::parsing_heaps::SharedMem>) -> impl FnOnce() {
+pub(crate) fn on_compact(
+    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
+) -> impl FnOnce() {
     monitor_rpc::status_update(server_status::Event::GCStart);
-    let old_size = shared_mem.heap_size();
+    let old_size = committed_heap.heap_size();
     let start_t = std::time::Instant::now();
     flow_services_inference::merge_service::check_contents_cache()
         .borrow_mut()
         .clear();
     persistent_connection::clear_type_parse_artifacts_caches();
     move || {
-        let new_size = shared_mem.heap_size();
+        let new_size = committed_heap.heap_size();
         let time_taken = start_t.elapsed().as_secs_f64();
         if old_size != new_size {
             flow_hh_logger::info!(
-                "Sharedmem GC: {} bytes before; {} bytes after; in {} seconds",
+                "Heap GC: {} bytes before; {} bytes after; in {} seconds",
                 old_size,
                 new_size,
                 time_taken
@@ -367,12 +375,12 @@ pub fn create_program_init(options: Arc<Options>) -> Genv {
         None => {}
     }
 
-    let shared_mem = Arc::new(flow_heap::parsing_heaps::SharedMem::new());
-    let shared_mem_for_on_compact = shared_mem.clone();
-    shared_mem.set_on_compact(Arc::new(move || {
-        Box::new(on_compact(shared_mem_for_on_compact.clone()))
+    let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
+    let committed_heap_for_on_compact = committed_heap.clone();
+    committed_heap.set_on_compact(Arc::new(move || {
+        Box::new(on_compact(committed_heap_for_on_compact.clone()))
     }));
-    server_env_build::make_genv(options, shared_mem)
+    server_env_build::make_genv(options, committed_heap)
 }
 
 fn detect_linux_distro() -> Option<String> {
@@ -522,7 +530,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(&genv_arc, Arc::new(env), &genv_arc.shared_mem);
+    serve(&genv_arc, Arc::new(env), &genv_arc.committed_heap);
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
@@ -684,10 +692,11 @@ where
         };
 
         let print_errors = profiling.with_timer(false, "FormatErrors", || {
-            let shared_mem = &genv.shared_mem;
-            let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
+            let transaction =
+                flow_heap::parsing_heaps::Transaction::new(genv.committed_heap.clone());
+            let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { transaction.loc_of_aloc(aloc) };
             let get_ast =
-                |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { shared_mem.get_ast(file) };
+                |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { transaction.get_ast(file) };
             let strip_root = if options.strip_root {
                 Some(options.root.as_path())
             } else {

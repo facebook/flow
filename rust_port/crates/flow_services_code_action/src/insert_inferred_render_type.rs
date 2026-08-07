@@ -97,7 +97,7 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
     remote_converter: Option<&mut insert_type_imports::imports_helper::RemoteConverter<'a>>,
     cx: &Context<'cx>,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'a dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'a dyn Fn(
         &FileKey,
@@ -147,7 +147,7 @@ pub fn insert_render_type_at_loc<'a, 'cx>(
                     let ast_result = insert_type::insert_type_t(
                         cx,
                         loc_of_aloc,
-                        get_ast_from_shared_mem,
+                        get_ast_from_heap,
                         get_haste_module_info,
                         get_type_sig,
                         file_sig,

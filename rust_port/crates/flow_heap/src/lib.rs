@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub mod entity;
 pub mod haste_module;
+pub mod heap_state;
 pub mod parse;
 pub mod parsing_heaps;
 pub mod resolved_requires;
-pub mod shared_mem;
+pub mod transaction;

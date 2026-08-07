@@ -19,7 +19,8 @@ pub use flow_data_structure_wrapper::overlay_map::EnvCellReadGuard;
 use flow_data_structure_wrapper::overlay_map::OverlayMap;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::file_key::FileKey;
 use flow_services_coverage::FileCoverage;
 use flow_services_export::export_search::ExportSearch;
@@ -40,7 +41,7 @@ use crate::persistent_connection::PersistentConnection;
 pub struct Genv {
     pub options: Arc<Options>,
     pub workers: Option<ThreadPool>,
-    pub shared_mem: Arc<SharedMem>,
+    pub committed_heap: Arc<CommittedHeap>,
 }
 
 // The environment constantly maintained by the server.
@@ -155,6 +156,7 @@ pub type OverlayCoverage =
     OverlayMap<FileKey, FileCoverage, EnvCellMapBase<Coverage, FileKey, FileCoverage>>;
 
 pub struct Env {
+    pub heap: Arc<CommittedHeap>,
     /// All the files that we at least parse (includes libs).
     pub files: FlowOrdSet<FileKey>,
     pub dependency_info: Arc<EnvCell<DependencyInfo>>,
@@ -427,9 +429,9 @@ impl EnvTransaction {
         if let Some(collated_errors) = collated_errors {
             collated_errors.commit();
         }
-
         if needs_new_env {
             Arc::new(Env {
+                heap: env.heap.dupe(),
                 files: files.unwrap_or_else(|| env.files.dupe()),
                 dependency_info: env.dependency_info.dupe(),
                 checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
@@ -452,6 +454,12 @@ impl EnvTransaction {
         } else {
             env
         }
+    }
+
+    /// Commits the heap and Env fields together at the consuming transaction boundary.
+    pub fn commit_with_transaction(self, transaction: Arc<Transaction>) -> EnvRef {
+        transaction.commit(&self.env.heap);
+        self.commit()
     }
 
     pub fn into_env(self) -> Env {
@@ -486,8 +494,8 @@ impl EnvTransaction {
         if let Some(collated_errors) = collated_errors {
             collated_errors.commit();
         }
-
         Env {
+            heap: env.heap.dupe(),
             files: files.unwrap_or_else(|| env.files.dupe()),
             dependency_info: env.dependency_info.dupe(),
             checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
@@ -506,6 +514,12 @@ impl EnvTransaction {
             exports: exports.unwrap_or_else(|| env.exports.dupe()),
             master_cx: master_cx.unwrap_or_else(|| env.master_cx.dupe()),
         }
+    }
+
+    /// Commits the heap and consumes the remaining Env transaction into an owned Env.
+    pub fn into_env_with_transaction(self, transaction: Arc<Transaction>) -> Env {
+        transaction.commit(&self.env.heap);
+        self.into_env()
     }
 }
 
@@ -542,6 +556,7 @@ mod tests {
 
     fn env_ref() -> EnvRef {
         Arc::new(Env {
+            heap: Arc::new(CommittedHeap::default()),
             files: FlowOrdSet::new(),
             dependency_info: env_cell(DependencyInfo::empty()),
             checked_files: CheckedSet::empty(),
@@ -560,6 +575,35 @@ mod tests {
 
     fn source_file(name: &str) -> FileKey {
         FileKey::source_file_of_absolute(&format!("/tmp/{name}.js"))
+    }
+
+    #[test]
+    fn heap_changes_publish_only_at_transaction_commit() {
+        let env = env_ref();
+        let heap_transaction = Transaction::new(env.heap.dupe());
+        let env_transaction = EnvTransaction::new(env.dupe());
+        let file = source_file("file");
+
+        heap_transaction.add_unparsed(file.dupe(), 42, None);
+
+        assert!(
+            heap_transaction
+                .latest_heap_reader()
+                .committed_file_entry(&file)
+                .is_none()
+        );
+        assert!(heap_transaction.get_parse(&file).is_some());
+
+        let committed_env = env_transaction.commit_with_transaction(heap_transaction);
+        let reader = Transaction::new(committed_env.heap.dupe());
+
+        assert!(
+            reader
+                .latest_heap_reader()
+                .committed_file_entry(&file)
+                .is_some()
+        );
+        assert!(reader.get_parse_committed(&file).is_some());
     }
 
     fn partial_dependency_graph(

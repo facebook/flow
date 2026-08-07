@@ -82,7 +82,7 @@ pub fn simplify(ty: ALocTy) -> ALocTy {
 pub fn serialize(
     cx: &Context<'_>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &FileSig,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     loc: Loc,
@@ -94,7 +94,7 @@ pub fn serialize(
     let mut mapper = insert_type_utils::TypeNormalizationHardcodedFixesMapper::new(
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         file_sig,
         typed_ast,
         &empty_severities,
@@ -715,7 +715,7 @@ pub fn synth_type<'a, 'cx>(
     size_limit: Option<usize>,
     cx: &'a Context<'cx>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     file_sig: &Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, flow_typing_type::type_::Type)>,
     omit_targ_defaults: bool,
@@ -773,7 +773,7 @@ pub fn synth_type<'a, 'cx>(
                 let ast = serialize(
                     cx,
                     loc_of_aloc,
-                    get_ast_from_shared_mem,
+                    get_ast_from_heap,
                     file_sig,
                     typed_ast,
                     type_loc.dupe(),
@@ -963,7 +963,7 @@ pub fn insert_type_custom_synth_type<'a>(
 pub fn insert_type_<'a, 'b>(
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -992,7 +992,7 @@ pub fn insert_type_<'a, 'b>(
             None,
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             file_sig,
             typed_ast,
             omit_targ_defaults,
@@ -1017,7 +1017,7 @@ pub fn insert_type_<'a, 'b>(
 pub fn insert_type<'a, 'b>(
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -1040,7 +1040,7 @@ pub fn insert_type<'a, 'b>(
     insert_type_(
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,
@@ -1057,7 +1057,7 @@ pub fn insert_type<'a, 'b>(
 pub fn insert_type_t<'a, 'b>(
     cx: &Context<'a>,
     loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'b dyn Fn(
         &FileKey,
@@ -1080,7 +1080,7 @@ pub fn insert_type_t<'a, 'b>(
     insert_type_(
         cx,
         loc_of_aloc,
-        get_ast_from_shared_mem,
+        get_ast_from_heap,
         get_haste_module_info,
         get_type_sig,
         file_sig,
@@ -1097,7 +1097,7 @@ pub fn insert_type_t<'a, 'b>(
 pub fn insert_type_ty<'a>(
     cx: &Context,
     loc_of_aloc: &'a dyn Fn(&ALoc) -> Loc,
-    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_ast_from_heap: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
     get_haste_module_info: &'a dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
     get_type_sig: &'a dyn Fn(
         &FileKey,
@@ -1127,7 +1127,7 @@ pub fn insert_type_ty<'a>(
         let ast = serialize(
             cx,
             loc_of_aloc,
-            get_ast_from_shared_mem,
+            get_ast_from_heap,
             file_sig,
             typed_ast,
             loc.dupe(),

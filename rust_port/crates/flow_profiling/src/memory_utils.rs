@@ -11,33 +11,33 @@ use std::time::Instant;
 
 use flow_cgroup as cgroup;
 use flow_common_utils::measure;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
 
 use crate::profiling_js;
 
 thread_local! {
-    static CURRENT_SHARED_MEM: RefCell<Option<Arc<SharedMem>>> = const { RefCell::new(None) };
+    static CURRENT_COMMITTED_HEAP: RefCell<Option<Arc<CommittedHeap>>> = const { RefCell::new(None) };
 }
 
-pub fn with_shared_mem<T>(shared_mem: Arc<SharedMem>, f: impl FnOnce() -> T) -> T {
-    let previous = CURRENT_SHARED_MEM.with(|current| current.replace(Some(shared_mem)));
+pub fn with_committed_heap<T>(committed_heap: Arc<CommittedHeap>, f: impl FnOnce() -> T) -> T {
+    let previous = CURRENT_COMMITTED_HEAP.with(|current| current.replace(Some(committed_heap)));
     let ret = f();
-    CURRENT_SHARED_MEM.with(|current| {
+    CURRENT_COMMITTED_HEAP.with(|current| {
         current.replace(previous);
     });
     ret
 }
 
-fn current_shared_mem() -> Option<Arc<SharedMem>> {
-    CURRENT_SHARED_MEM.with(|current| current.borrow().clone())
+fn current_committed_heap() -> Option<Arc<CommittedHeap>> {
+    CURRENT_COMMITTED_HEAP.with(|current| current.borrow().clone())
 }
 
 pub fn sample_memory(profiling: &profiling_js::Running) {
-    let Some(shared_mem) = current_shared_mem() else {
+    let Some(committed_heap) = current_committed_heap() else {
         return;
     };
-    let heap = shared_mem.heap_size();
-    let hash_stats = shared_mem.hash_stats();
+    let heap = committed_heap.heap_size();
+    let hash_stats = committed_heap.hash_stats();
     profiling.sample_memory(None, "heap", f64::from(heap));
     profiling.sample_memory(
         None,
@@ -49,11 +49,11 @@ pub fn sample_memory(profiling: &profiling_js::Running) {
 }
 
 pub fn sample_init_memory(profiling: &profiling_js::Running) {
-    let Some(shared_mem) = current_shared_mem() else {
+    let Some(committed_heap) = current_committed_heap() else {
         return;
     };
-    let hash_stats = shared_mem.hash_stats();
-    let heap_size = shared_mem.heap_size();
+    let hash_stats = committed_heap.hash_stats();
+    let heap_size = committed_heap.heap_size();
     let memory_metrics = [
         ("heap.size", heap_size),
         ("hash_table.nonempty_slots", hash_stats.nonempty_slots),
@@ -76,11 +76,11 @@ fn with_memory_info(
     callback: impl FnOnce(Result<cgroup::Stats, String>, flow_heap::parsing_heaps::HashStats, i32),
 ) {
     let cgroup_stats = cgroup::get_stats();
-    let Some(shared_mem) = current_shared_mem() else {
+    let Some(committed_heap) = current_committed_heap() else {
         return;
     };
-    let hash_stats = shared_mem.hash_stats();
-    let heap_size = shared_mem.heap_size();
+    let hash_stats = committed_heap.hash_stats();
+    let heap_size = committed_heap.heap_size();
     callback(cgroup_stats, hash_stats, heap_size);
 }
 

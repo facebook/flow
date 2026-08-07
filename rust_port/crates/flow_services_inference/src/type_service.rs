@@ -39,7 +39,8 @@ use flow_data_structure_wrapper::overlay_map::OverlayMap;
 use flow_data_structure_wrapper::overlay_map::OverlayMapBase;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::SharedMem;
+use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -290,7 +291,7 @@ struct CollatedParseResults {
 
 fn parse(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     parse_next: parsing_service::Next,
@@ -298,7 +299,7 @@ fn parse(
     with_memory_timer(options, "Parsing", || {
         let results = parsing_service::parse_with_defaults(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs,
             &[],
@@ -310,7 +311,7 @@ fn parse(
 
 fn reparse(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     def_info: &DefInfo,
@@ -320,7 +321,7 @@ fn reparse(
         let locs_to_dirtify = flow_services_get_def::get_def_utils::all_locs_of_def_info(def_info);
         let results = parsing_service::reparse_with_defaults(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs,
             &locs_to_dirtify,
@@ -367,7 +368,7 @@ impl DuplicateProvidersMap for OverlayDuplicateProviders {
 fn commit_modules<M: DuplicateProvidersMap>(
     pool: &ThreadPool,
     options: &Arc<Options>,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     mut duplicate_providers: M,
     dirty_modules: flow_common_modulename::ModulenameSet,
 ) -> (flow_common_modulename::ModulenameSet, M) {
@@ -383,7 +384,7 @@ fn commit_modules<M: DuplicateProvidersMap>(
             }
         }
         let (changed_modules, new_duplicate_providers) =
-            flow_services_module::commit_modules(pool, options, shared_mem, dirty_modules);
+            flow_services_module::commit_modules(pool, options, transaction, dirty_modules);
         for (key, value) in new_duplicate_providers {
             duplicate_providers.insert_provider_if_absent(key, value);
         }
@@ -393,7 +394,7 @@ fn commit_modules<M: DuplicateProvidersMap>(
 
 fn resolve_requires_impl(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     parsed: &FlowOrdSet<FileKey>,
     cancelable: bool,
@@ -413,7 +414,7 @@ fn resolve_requires_impl(
             parsed_files,
         );
         let options_clone = options.dupe();
-        let shared_mem_clone = shared_mem.dupe();
+        let transaction_clone = transaction.dupe();
         flow_utils_concurrency::map_reduce::iter(pool, next, move |batch| {
             for file in batch {
                 if cancelable && worker_cancel::should_cancel() {
@@ -421,7 +422,7 @@ fn resolve_requires_impl(
                 }
                 let Ok(()) = flow_services_module::add_parsed_resolved_requires(
                     &options_clone,
-                    &shared_mem_clone,
+                    &transaction_clone,
                     &node_modules_containers,
                     &file,
                 ) else {
@@ -438,21 +439,21 @@ fn resolve_requires_impl(
 
 fn resolve_requires(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     parsed: &FlowOrdSet<FileKey>,
 ) {
-    resolve_requires_impl(pool, shared_mem, options, parsed, false)
+    resolve_requires_impl(pool, transaction, options, parsed, false)
         .expect("non-recheck resolve requires should not be canceled");
 }
 
 fn resolve_requires_for_recheck(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     parsed: &FlowOrdSet<FileKey>,
 ) -> Result<(), RecheckError> {
-    resolve_requires_impl(pool, shared_mem, options, parsed, true)
+    resolve_requires_impl(pool, transaction, options, parsed, true)
 }
 
 fn error_set_of_internal_error(
@@ -773,7 +774,7 @@ fn update_check_results(mut acc: CheckAcc, (file, result): (FileKey, CheckResult
 
 fn run_merge_service(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     for_find_all_refs: bool,
     sig_dependency_graph: &(impl GraphLike<FileKey> + ?Sized),
@@ -785,7 +786,7 @@ fn run_merge_service(
         check_recheck_canceled()?;
         let (results, sig_opts_data) = merge_service::merge(
             pool,
-            shared_mem,
+            transaction,
             options,
             for_find_all_refs,
             sig_dependency_graph,
@@ -807,7 +808,7 @@ fn run_merge_service(
 
 fn merge(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     for_find_all_refs: bool,
     to_merge: &CheckedSet,
@@ -840,7 +841,7 @@ fn merge(
 
     let (suppressions, skipped_count, sig_new_or_changed) = run_merge_service(
         pool,
-        shared_mem,
+        transaction,
         options,
         for_find_all_refs,
         sig_dependency_graph,
@@ -874,7 +875,7 @@ mod check_files {
     pub fn check_files(
         options: Arc<Options>,
         pool: &ThreadPool,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         errors: OverlayErrors,
@@ -959,13 +960,13 @@ mod check_files {
                 static WORKER_CHECK: RefCell<Option<WorkerState>> = const { RefCell::new(None) };
             }
             let mk_check: Arc<dyn Fn() -> WorkerState + Send + Sync> = {
-                let shared_mem = shared_mem.dupe();
+                let transaction = transaction.dupe();
                 let options = options.dupe();
                 let all_unordered_libs = all_unordered_libs.dupe();
                 let find_ref_request = find_ref_request.clone();
                 Arc::new(move || {
                     merge_service::mk_check(
-                        shared_mem.dupe(),
+                        transaction.dupe(),
                         options.dupe(),
                         all_unordered_libs.dupe(),
                         master_cx.as_ref(),
@@ -1099,7 +1100,11 @@ mod check_files {
             );
             pool.broadcast(move |_| {
                 WORKER_CHECK.with(|cell| {
-                    *cell.borrow_mut() = None;
+                    let mut worker = cell.borrow_mut();
+                    if let Some((_, cache)) = worker.as_mut() {
+                        cache.borrow_mut().clear();
+                    }
+                    *worker = None;
                 });
                 WORKER_DEQUE.with(|cell| {
                     *cell.borrow_mut() = None;
@@ -1185,7 +1190,7 @@ fn handle_unexpected_file_changes(changed_files: Vec<FileKey>) -> RecheckError {
 
 fn ensure_parsed(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
@@ -1193,7 +1198,7 @@ fn ensure_parsed(
     with_memory_timer(options, "EnsureParsed", || {
         let parse_unexpected_skips = parsing_service::ensure_parsed(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs,
             files,
@@ -1218,12 +1223,12 @@ fn ensure_parsed(
 
 pub fn ensure_parsed_or_trigger_recheck(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), RecheckError> {
-    match ensure_parsed(pool, shared_mem, options, all_unordered_libs, files) {
+    match ensure_parsed(pool, transaction, options, all_unordered_libs, files) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
             Err(handle_unexpected_file_changes(changed_files))
@@ -1233,7 +1238,7 @@ pub fn ensure_parsed_or_trigger_recheck(
 
 fn init_libs(
     options: &Arc<Options>,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     ordered_libs: Vec<(Option<String>, String)>,
     local_errors: BTreeMap<FileKey, ErrorSet>,
@@ -1261,7 +1266,7 @@ fn init_libs(
             suppressions: lib_suppressions,
             exports: lib_exports,
             master_cx,
-        } = init::init(options, shared_mem, all_unordered_libs, ordered_libs);
+        } = init::init(options, transaction, all_unordered_libs, ordered_libs);
         let local_errors = {
             let mut acc = lib_errors;
             for (file, errset) in local_errors {
@@ -1418,20 +1423,20 @@ pub(crate) mod recheck {
 
     pub(crate) fn recheck_parse_and_update_dependency_info(
         pool: &ThreadPool,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut side_effect_transaction::Transaction,
+        side_effects: &mut side_effect_transaction::Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
         env: &mut EnvTransaction,
     ) -> Result<IntermediateValues, RecheckError> {
         check_recheck_canceled()?;
         let parse_all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
-        let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
-        let shared_mem_for_ast = shared_mem.dupe();
+        let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
+        let transaction_for_ast = transaction.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
-            shared_mem_for_ast.get_ast(file)
+            transaction_for_ast.get_ast(file)
         };
         let errors = env.take_errors();
         let collated_errors = env.take_collated_errors();
@@ -1472,7 +1477,7 @@ pub(crate) mod recheck {
             all_unordered_libs: discovered_libs,
         } = reparse(
             pool,
-            shared_mem,
+            transaction,
             options,
             parse_all_unordered_libs,
             def_info,
@@ -1485,12 +1490,14 @@ pub(crate) mod recheck {
             .filter(|file| !unchanged_parse.contains(file))
             .map(|file| file.dupe())
             .collect();
-        let shared_mem_for_reparse_commit = shared_mem.dupe();
+        let transaction_for_reparse_commit = transaction.dupe();
         side_effect_transaction::add(
-            transaction,
+            side_effects,
             move || {
                 flow_hh_logger::info!("Committing reparse");
-                shared_mem_for_reparse_commit.remove_reader_cache_batch(&changed_files);
+                transaction_for_reparse_commit
+                    .committed_heap()
+                    .remove_reader_cache_batch(&changed_files);
             },
             || {
                 flow_hh_logger::info!("Rolling back reparse");
@@ -1621,7 +1628,7 @@ pub(crate) mod recheck {
         let (changed_modules, duplicate_providers) = commit_modules(
             pool,
             options,
-            shared_mem,
+            transaction,
             duplicate_providers,
             dirty_modules,
         );
@@ -1638,7 +1645,7 @@ pub(crate) mod recheck {
         let dirty_direct_dependents: FlowOrdSet<FileKey> =
             with_memory_timer(options, "DirectDependentFiles", || {
                 let dirty_direct_dependents_btree =
-                    dep_service::calc_unchanged_dependents(shared_mem, None, changed_modules);
+                    dep_service::calc_unchanged_dependents(transaction, None, changed_modules);
                 dirty_direct_dependents_btree.into_iter().collect()
             });
 
@@ -1646,7 +1653,7 @@ pub(crate) mod recheck {
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
         ensure_parsed(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs,
             dirty_direct_dependents_set,
@@ -1655,7 +1662,7 @@ pub(crate) mod recheck {
             handle_unexpected_file_changes(changed_files)
         })?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
-        resolve_requires_for_recheck(pool, shared_mem, options, &parsed_set_for_resolve)?;
+        resolve_requires_for_recheck(pool, transaction, options, &parsed_set_for_resolve)?;
         check_recheck_canceled()?;
 
         flow_hh_logger::info!("Recalculating dependency graph");
@@ -1665,7 +1672,7 @@ pub(crate) mod recheck {
             let files_to_update_dependency_info = parsed_set.union(dirty_direct_dependents.dupe());
             let partial_dependency_graph = dep_service::calc_partial_dependency_graph(
                 pool,
-                shared_mem,
+                transaction,
                 &files_to_update_dependency_info,
                 &parsed,
             );
@@ -1765,7 +1772,7 @@ pub(crate) mod recheck {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn recheck_merge(
         pool: &ThreadPool,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         options: &Arc<Options>,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         for_find_all_refs: bool,
@@ -1830,7 +1837,7 @@ pub(crate) mod recheck {
             check_recheck_canceled()?;
             ensure_parsed_or_trigger_recheck(
                 pool,
-                shared_mem,
+                transaction,
                 options,
                 all_unordered_libs.dupe(),
                 to_merge.dupe().all(),
@@ -1848,7 +1855,7 @@ pub(crate) mod recheck {
                 time_to_merge,
             } = merge(
                 pool,
-                shared_mem,
+                transaction,
                 options,
                 for_find_all_refs,
                 &to_merge,
@@ -1868,7 +1875,7 @@ pub(crate) mod recheck {
                             sig_new_or_changed.iter().duped().collect();
                         flow_services_export::export_service::update(
                             pool,
-                            shared_mem,
+                            transaction,
                             &dirty_files,
                             exports,
                         )
@@ -1893,7 +1900,7 @@ pub(crate) mod recheck {
             ) = check_files::check_files(
                 options.dupe(),
                 pool,
-                shared_mem,
+                transaction,
                 all_unordered_libs,
                 find_ref_request,
                 errors,
@@ -2014,10 +2021,10 @@ pub(crate) mod recheck {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn full(
         pool: &ThreadPool,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut side_effect_transaction::Transaction,
+        side_effects: &mut side_effect_transaction::Transaction,
         find_ref_request: &flow_services_references::find_refs_types::Request,
         files_to_force: CheckedSet,
         changed_mergebase: Option<bool>,
@@ -2035,10 +2042,10 @@ pub(crate) mod recheck {
         let def_info = &find_ref_request.def_info;
         let intermediate_values = recheck_parse_and_update_dependency_info(
             pool,
-            shared_mem,
+            transaction,
             options,
             updates,
-            transaction,
+            side_effects,
             def_info,
             files_to_force,
             env,
@@ -2049,7 +2056,7 @@ pub(crate) mod recheck {
         };
         recheck_merge(
             pool,
-            shared_mem,
+            transaction,
             options,
             find_ref_request,
             for_find_all_refs,
@@ -2062,20 +2069,20 @@ pub(crate) mod recheck {
 
     pub(crate) fn parse_and_update_dependency_info(
         pool: &ThreadPool,
-        shared_mem: &Arc<SharedMem>,
+        transaction: &Arc<Transaction>,
         options: &Arc<Options>,
         updates: &CheckedSet,
-        transaction: &mut side_effect_transaction::Transaction,
+        side_effects: &mut side_effect_transaction::Transaction,
         def_info: &DefInfo,
         files_to_force: CheckedSet,
         env: &mut EnvTransaction,
     ) -> Result<(), RecheckError> {
         let intermediate_values = recheck_parse_and_update_dependency_info(
             pool,
-            shared_mem,
+            transaction,
             options,
             updates,
-            transaction,
+            side_effects,
             def_info,
             files_to_force,
             env,
@@ -2119,7 +2126,7 @@ fn with_transaction_result<T, E>(
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn recheck_impl(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     updates: &CheckedSet,
     find_ref_request: &flow_services_references::find_refs_types::Request,
@@ -2137,13 +2144,13 @@ pub(crate) fn recheck_impl(
 > {
     check_recheck_canceled()?;
     let (stats, record_recheck_time, find_ref_results, first_internal_error) =
-        match with_transaction_result("recheck", |transaction| {
+        match with_transaction_result("recheck", |side_effects| {
             recheck::full(
                 pool,
-                shared_mem,
+                transaction,
                 options,
                 updates,
-                transaction,
+                side_effects,
                 find_ref_request,
                 files_to_force,
                 changed_mergebase,
@@ -2153,13 +2160,13 @@ pub(crate) fn recheck_impl(
         }) {
             Ok(result) => result,
             Err(err) => {
-                shared_mem.rollback_entities();
+                transaction.committed_heap().clear_reader_cache();
                 return Err(err);
             }
         };
 
     if worker_cancel::should_cancel() {
-        shared_mem.rollback_entities();
+        transaction.committed_heap().clear_reader_cache();
         return Err(RecheckError::Canceled(Vec::new()));
     }
 
@@ -2176,48 +2183,56 @@ pub(crate) fn recheck_impl(
         num_slow_files,
     } = stats;
 
-    shared_mem.commit_entities();
-    check_recheck_canceled()?;
+    if let Err(err) = check_recheck_canceled() {
+        transaction.committed_heap().clear_reader_cache();
+        return Err(err);
+    }
 
-    let (collated_errors, error_resolution_stat) =
-        with_memory_timer(options, "CollateErrors", || {
-            check_recheck_canceled()?;
-            let focused_to_check = to_check.focused().dupe();
-            let dependents_to_check = to_check.dependents().dupe();
-            let files = FlowOrdSet::from(
-                focused_to_check
-                    .into_inner()
-                    .union(dependents_to_check.into_inner()),
-            );
-            let (new_errors, all_suppressions) = {
-                let errors = env.errors();
-                (filter_errors(&files, errors), errors.suppressions.clone())
+    let collate_result = with_memory_timer(options, "CollateErrors", || {
+        check_recheck_canceled()?;
+        let focused_to_check = to_check.focused().dupe();
+        let dependents_to_check = to_check.dependents().dupe();
+        let files = FlowOrdSet::from(
+            focused_to_check
+                .into_inner()
+                .union(dependents_to_check.into_inner()),
+        );
+        let (new_errors, all_suppressions) = {
+            let errors = env.errors();
+            (filter_errors(&files, errors), errors.suppressions.clone())
+        };
+        let mut collated_errors = env.take_collated_errors();
+        collated_errors.clear_merge(&files);
+
+        {
+            let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
+            let transaction_for_ast = transaction.dupe();
+            let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
+                transaction_for_ast.get_ast(file)
             };
-            let mut collated_errors = env.take_collated_errors();
-            collated_errors.clear_merge(&files);
+            error_collator::update_collated_errors(
+                &loc_of_aloc,
+                &get_ast,
+                options,
+                env.checked_files(),
+                &all_suppressions,
+                &new_errors,
+                &mut collated_errors,
+            );
+        }
+        let error_resolution_stat =
+            error_collator::update_error_state_timestamps(&mut collated_errors);
 
-            {
-                let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
-                let shared_mem_for_ast = shared_mem.dupe();
-                let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
-                    shared_mem_for_ast.get_ast(file)
-                };
-                error_collator::update_collated_errors(
-                    &loc_of_aloc,
-                    &get_ast,
-                    options,
-                    env.checked_files(),
-                    &all_suppressions,
-                    &new_errors,
-                    &mut collated_errors,
-                );
-            }
-            let error_resolution_stat =
-                error_collator::update_error_state_timestamps(&mut collated_errors);
-
-            check_recheck_canceled()?;
-            Ok((collated_errors, error_resolution_stat))
-        })?;
+        check_recheck_canceled()?;
+        Ok((collated_errors, error_resolution_stat))
+    });
+    let (collated_errors, error_resolution_stat) = match collate_result {
+        Ok(result) => result,
+        Err(err) => {
+            transaction.committed_heap().clear_reader_cache();
+            return Err(err);
+        }
+    };
 
     let typing_errors_data = if options.log_per_error_typing_telemetry {
         let per_file_errors = error_collator::compute_per_file_errors(10, &collated_errors);
@@ -2309,17 +2324,18 @@ pub struct RecheckStats {
 #[allow(clippy::too_many_arguments)]
 pub fn parse_and_update_dependency_info(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     updates: &CheckedSet,
     def_info: &DefInfo,
     files_to_force: CheckedSet,
     mut env: EnvTransaction,
-) -> Result<EnvTransaction, RecheckError> {
-    with_transaction_result("parse and update dependency info", |transaction| {
+) -> Result<EnvRef, RecheckError> {
+    let heap_transaction = Transaction::new(committed_heap.dupe());
+    let result = with_transaction_result("parse and update dependency info", |transaction| {
         recheck::parse_and_update_dependency_info(
             pool,
-            shared_mem,
+            &heap_transaction,
             options,
             updates,
             transaction,
@@ -2327,8 +2343,14 @@ pub fn parse_and_update_dependency_info(
             files_to_force,
             &mut env,
         )
-    })?;
-    Ok(env)
+    });
+    match result {
+        Ok(()) => Ok(env.commit_with_transaction(heap_transaction)),
+        Err(err) => {
+            heap_transaction.committed_heap().clear_reader_cache();
+            Err(err)
+        }
+    }
 }
 
 pub fn make_next_files(
@@ -2367,6 +2389,7 @@ pub fn make_next_files(
 }
 
 fn mk_env(
+    heap: Arc<CommittedHeap>,
     files: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
     package_json_files: FlowOrdSet<FileKey>,
@@ -2379,6 +2402,7 @@ fn mk_env(
     master_cx: Arc<MasterContext>,
 ) -> Env {
     Env {
+        heap,
         files,
         unparsed,
         dependency_info: env_cell(dependency_info),
@@ -2398,13 +2422,13 @@ fn mk_env(
 #[allow(dead_code)]
 // Verify that the hash in shared memory matches what's on disk.
 // Used to verify saved state.
-fn verify_hash(shared_mem: &Arc<SharedMem>, file_key: &FileKey) -> bool {
+fn verify_hash(transaction: &Arc<Transaction>, file_key: &FileKey) -> bool {
     let filename_string = file_key.as_str();
     let content = match std::fs::read_to_string(filename_string) {
         Ok(c) => c,
         Err(_) => return false,
     };
-    parsing_service::does_content_match_file_hash(shared_mem, file_key, &content)
+    parsing_service::does_content_match_file_hash(transaction, file_key, &content)
 }
 
 #[allow(dead_code)]
@@ -2432,7 +2456,7 @@ fn assert_valid_hashes(updates: &CheckedSet, invalid_hashes: Vec<FileKey>) {
 
 fn is_incompatible_package_json(
     options: &Options,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     want: &dyn Fn(&str) -> bool,
     sroot: &str,
     file_options: &FileOptions,
@@ -2451,7 +2475,7 @@ fn is_incompatible_package_json(
                     &filename,
                 )
                 .map_err(|_| ());
-                let old_package = shared_mem
+                let old_package = transaction
                     .get_package_info(&filename)
                     .map(|pkg| Ok((*pkg).clone()));
                 flow_services_module::package_incompatible(&filename, old_package, result)
@@ -2509,12 +2533,12 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     }
 }
 
-fn did_content_change(options: &Options, shared_mem: &SharedMem, filename: &str) -> bool {
+fn did_content_change(options: &Options, transaction: &Transaction, filename: &str) -> bool {
     let file = files::lib_file_key(&options.file_options, filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
-            !parsing_service::does_content_match_file_hash(shared_mem, &file, &content)
+            !parsing_service::does_content_match_file_hash(transaction, &file, &content)
         }
     }
 }
@@ -2543,7 +2567,7 @@ fn filter_saved_state_updates(
 fn process_saved_state_updates(
     options: &Options,
     previous_all_unordered_libs: &BTreeSet<FlowSmolStr>,
-    shared_mem: &SharedMem,
+    transaction: &Transaction,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, String> {
     let file_options = &options.file_options;
@@ -2570,7 +2594,8 @@ fn process_saved_state_updates(
     let sroot = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
     let want = |f: &str| -> bool { files::wanted(file_options, false, &all_libs, f) };
     for file in updates {
-        match is_incompatible_package_json(options, shared_mem, &want, &sroot, file_options, file) {
+        match is_incompatible_package_json(options, transaction, &want, &sroot, file_options, file)
+        {
             PackageIncompatibleReturn::Compatible => {}
             PackageIncompatibleReturn::Incompatible(reason) => {
                 return Err(format!(
@@ -2592,7 +2617,7 @@ fn process_saved_state_updates(
             } else {
                 all_libs.contains(*filename)
             }) || **filename == flow_typed_path;
-            is_lib && did_content_change(options, shared_mem, filename)
+            is_lib && did_content_change(options, transaction, filename)
         })
         .cloned()
         .collect();
@@ -2631,26 +2656,26 @@ fn saved_duplicate_providers_from_direct_state(
 }
 
 fn restore_resolved_requires(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     file: &FileKey,
-    resolved_modules: Vec<flow_heap::entity::ResolvedModule>,
+    resolved_modules: Vec<flow_heap::resolved_requires::ResolvedModule>,
     phantom_dependencies: Vec<Modulename>,
 ) {
     let resolved_modules = resolved_modules
         .into_iter()
-        .map(|module| shared_mem.intern_resolved_module(module))
+        .map(|module| transaction.intern_resolved_module(module))
         .collect();
     let phantom_dependencies = phantom_dependencies
         .into_iter()
-        .map(|module| shared_mem.intern_dependency_from_modulename(module))
+        .map(|module| transaction.intern_dependency_from_modulename(module))
         .collect();
     let resolved_requires =
-        flow_heap::entity::ResolvedRequires::new(resolved_modules, phantom_dependencies);
-    shared_mem.set_resolved_requires(file, resolved_requires);
+        flow_heap::resolved_requires::ResolvedRequires::new(resolved_modules, phantom_dependencies);
+    transaction.set_resolved_requires(file, resolved_requires);
 }
 
 fn restore_parsed(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     file: &FileKey,
     parsed_file_data: flow_saved_state::ParsedFileData,
 ) -> BTreeSet<Modulename> {
@@ -2666,7 +2691,7 @@ fn restore_parsed(
         hash,
         imports,
     } = normalized_file_data;
-    let dirty_modules = shared_mem.add_parsed(
+    let dirty_modules = transaction.add_parsed(
         file.dupe(),
         hash,
         haste_module_info,
@@ -2679,16 +2704,16 @@ fn restore_parsed(
         Arc::from(requires),
         Arc::new(imports),
     );
-    restore_resolved_requires(shared_mem, file, resolved_modules, phantom_dependencies);
+    restore_resolved_requires(transaction, file, resolved_modules, phantom_dependencies);
     dirty_modules
 }
 
 fn restore_unparsed(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     file: &FileKey,
     unparsed_file_data: flow_saved_state::UnparsedFileData,
 ) -> BTreeSet<Modulename> {
-    shared_mem.add_unparsed(
+    transaction.add_unparsed(
         file.dupe(),
         unparsed_file_data.unparsed_hash,
         unparsed_file_data.unparsed_haste_module_info,
@@ -2696,7 +2721,7 @@ fn restore_unparsed(
 }
 
 fn restore_package(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     file: &FileKey,
     package_data: flow_saved_state::PackageFileData,
 ) -> BTreeSet<Modulename> {
@@ -2706,18 +2731,18 @@ fn restore_package(
         package_info,
     } = package_data;
     match package_info {
-        Ok(package_json) => shared_mem.add_package(
+        Ok(package_json) => transaction.add_package(
             file.dupe(),
             package_hash,
             package_haste_module_info,
             Arc::new(package_json),
         ),
-        Err(()) => shared_mem.add_unparsed(file.dupe(), package_hash, package_haste_module_info),
+        Err(()) => transaction.add_unparsed(file.dupe(), package_hash, package_haste_module_info),
     }
 }
 
 fn clear_deleted_heaps(
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     env: Option<&Env>,
     parsed: &FlowOrdSet<FileKey>,
     unparsed: &FlowOrdSet<FileKey>,
@@ -2741,7 +2766,8 @@ fn clear_deleted_heaps(
         .relative_complement(current_files)
         .iter()
         .fold(BTreeSet::new(), |mut acc, file| {
-            let dirty = shared_mem.clear_file(file.dupe(), shared_mem.get_haste_module_info(file));
+            let dirty =
+                transaction.clear_file(file.dupe(), transaction.get_haste_module_info(file));
             acc.extend(dirty);
             acc
         })
@@ -2750,7 +2776,7 @@ fn clear_deleted_heaps(
 #[allow(clippy::too_many_arguments)]
 fn init_with_initial_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     restore_dependency_info: impl FnOnce() -> Arc<EnvCell<DependencyInfo>>,
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
@@ -2810,7 +2836,7 @@ fn init_with_initial_state(
         all_unordered_libs: discovered_libs,
     } = parse(
         pool,
-        shared_mem,
+        transaction,
         options,
         all_unordered_libs_set.dupe(),
         next,
@@ -2824,7 +2850,7 @@ fn init_with_initial_state(
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
-        shared_mem,
+        transaction,
         all_unordered_libs_set.dupe(),
         ordered_libs.clone(),
         local_errors,
@@ -2853,11 +2879,11 @@ fn init_with_initial_state(
     let (_changed_modules, duplicate_providers) = commit_modules(
         pool,
         options,
-        shared_mem,
+        transaction,
         saved_duplicate_providers,
         dirty_modules,
     );
-    resolve_requires(pool, shared_mem, options, &additional_parsed);
+    resolve_requires(pool, transaction, options, &additional_parsed);
     let dependency_info = restore_dependency_info();
 
     // The libdefs parsed above joined `parsed`, and so `env.files`, but the
@@ -2870,13 +2896,13 @@ fn init_with_initial_state(
     // has never heard of is fatal.
     let additional_parsed_typed: FlowOrdSet<FileKey> = additional_parsed
         .iter()
-        .filter(|file| shared_mem.get_typed_parse(file).is_some())
+        .filter(|file| transaction.get_typed_parse(file).is_some())
         .duped()
         .collect();
     if !additional_parsed_typed.is_empty() {
         let partial_dependency_graph = dep_service::calc_partial_dependency_graph(
             pool,
-            shared_mem,
+            transaction,
             &additional_parsed_typed,
             &parsed,
         );
@@ -2901,7 +2927,7 @@ fn init_with_initial_state(
                     let parsed: BTreeSet<FileKey> = parsed.iter().duped().collect();
                     flow_services_export::export_service::init(
                         pool,
-                        shared_mem,
+                        transaction,
                         &lib_exports,
                         &parsed,
                     )
@@ -2915,10 +2941,10 @@ fn init_with_initial_state(
     };
     let mut collated_errors = OverlayCollatedErrors::from_collated_errors(CollatedErrors::empty());
     {
-        let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
-        let shared_mem_for_ast = shared_mem.dupe();
+        let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
+        let transaction_for_ast = transaction.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
-            shared_mem_for_ast.get_ast(file)
+            transaction_for_ast.get_ast(file)
         };
         let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
             options.unsuppressable_error_codes.iter().duped().collect();
@@ -2945,7 +2971,9 @@ fn init_with_initial_state(
         warnings,
         suppressions,
     };
+    let heap = transaction.committed_heap();
     let env = Env {
+        heap,
         files: parsed,
         dependency_info,
         checked_files: CheckedSet::empty(),
@@ -2977,7 +3005,7 @@ fn init_with_initial_state(
 
 pub fn init_from_legacy_saved_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     saved_state: flow_saved_state::SavedStateData,
     updates: &CheckedSet,
@@ -3019,12 +3047,12 @@ pub fn init_from_legacy_saved_state(
             parsed_heaps,
         ),
         {
-            let shared_mem = shared_mem.dupe();
+            let transaction = transaction.dupe();
             move |acc: &mut RestoreAcc, batch: Vec<(FileKey, flow_saved_state::ParsedFileData)>| {
                 for (file, parsed_file_data) in batch {
                     acc.1
-                        .extend(restore_parsed(&shared_mem, &file, parsed_file_data));
-                    if verify && !verify_hash(&shared_mem, &file) {
+                        .extend(restore_parsed(&transaction, &file, parsed_file_data));
+                    if verify && !verify_hash(&transaction, &file) {
                         acc.2.push(file.dupe());
                     }
                     acc.0.insert(file);
@@ -3047,13 +3075,13 @@ pub fn init_from_legacy_saved_state(
             unparsed_heaps,
         ),
         {
-            let shared_mem = shared_mem.dupe();
+            let transaction = transaction.dupe();
             move |acc: &mut RestoreAcc,
                   batch: Vec<(FileKey, flow_saved_state::UnparsedFileData)>| {
                 for (file, unparsed_file_data) in batch {
                     acc.1
-                        .extend(restore_unparsed(&shared_mem, &file, unparsed_file_data));
-                    if verify && !verify_hash(&shared_mem, &file) {
+                        .extend(restore_unparsed(&transaction, &file, unparsed_file_data));
+                    if verify && !verify_hash(&transaction, &file) {
                         acc.2.push(file.dupe());
                     }
                     acc.0.insert(file);
@@ -3072,8 +3100,8 @@ pub fn init_from_legacy_saved_state(
             .into_iter()
             .fold(Default::default(), |mut acc, (file, package_data)| {
                 acc.1
-                    .extend(restore_package(shared_mem, &file, package_data));
-                if verify && !verify_hash(shared_mem, &file) {
+                    .extend(restore_package(transaction, &file, package_data));
+                if verify && !verify_hash(transaction, &file) {
                     acc.2.push(file.dupe());
                 }
                 acc.0.insert(file);
@@ -3088,7 +3116,7 @@ pub fn init_from_legacy_saved_state(
     dirty_modules.extend(dirty_modules_unparsed);
     dirty_modules.extend(dirty_modules_packages);
     dirty_modules.extend(clear_deleted_heaps(
-        shared_mem,
+        transaction,
         env,
         &parsed,
         &unparsed,
@@ -3104,7 +3132,7 @@ pub fn init_from_legacy_saved_state(
 
     let (env, libs_ok) = init_with_initial_state(
         pool,
-        shared_mem,
+        transaction,
         options,
         || {
             env_cell(flow_saved_state::restore_dependency_info(
@@ -3125,13 +3153,12 @@ pub fn init_from_legacy_saved_state(
         dirty_modules,
         local_errors,
     );
-    shared_mem.commit_entities();
     (env, libs_ok)
 }
 
 pub fn init_from_direct_saved_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     saved_state: flow_saved_state::SavedStateEnvData,
     updates: &CheckedSet,
@@ -3151,7 +3178,7 @@ pub fn init_from_direct_saved_state(
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Direct serialization saved state: the heap was already bulk-loaded by
-    // SharedMem.load_heap during the load step, so all file data is already in
+    // Transaction.load_heap during the load step, so all file data is already in
     // shared memory. The saved state metadata contains only FilenameSet.t (not
     // per-file data). We just need to:
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
@@ -3163,10 +3190,10 @@ pub fn init_from_direct_saved_state(
     let unparsed = unparsed_files;
     let package_json_files = saved_package_json_files;
     let dirty_modules =
-        clear_deleted_heaps(shared_mem, env, &parsed, &unparsed, &package_json_files);
+        clear_deleted_heaps(transaction, env, &parsed, &unparsed, &package_json_files);
     let invalid_hashes = if options.saved_state_verify {
         let check_hash = |mut acc: Vec<FileKey>, file: &FileKey| {
-            if !verify_hash(shared_mem, file) {
+            if !verify_hash(transaction, file) {
                 acc.push(file.dupe());
             }
             acc
@@ -3187,7 +3214,7 @@ pub fn init_from_direct_saved_state(
 
     let (env, libs_ok) = init_with_initial_state(
         pool,
-        shared_mem,
+        transaction,
         options,
         || env_cell(dependency_info),
         saved_duplicate_providers_from_direct_state(duplicate_providers),
@@ -3203,13 +3230,12 @@ pub fn init_from_direct_saved_state(
         dirty_modules,
         local_errors,
     );
-    shared_mem.commit_entities();
     (env, libs_ok)
 }
 
 pub fn init_from_saved_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     saved_state: LoadedSavedState,
     updates: &CheckedSet,
@@ -3217,29 +3243,30 @@ pub fn init_from_saved_state(
 ) -> (Env, bool) {
     match saved_state {
         LoadedSavedState::Legacy_saved_state(data) => {
-            init_from_legacy_saved_state(pool, shared_mem, options, data, updates, env)
+            init_from_legacy_saved_state(pool, transaction, options, data, updates, env)
         }
         LoadedSavedState::Direct_saved_state(data) => {
-            init_from_direct_saved_state(pool, shared_mem, options, data, updates, env)
+            init_from_direct_saved_state(pool, transaction, options, data, updates, env)
         }
     }
 }
 
 pub fn handle_updates_since_saved_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
+    mut transaction: Arc<Transaction>,
     options: &Arc<Options>,
     libs_ok: bool,
     updates: &CheckedSet,
     env: Env,
-) -> Env {
+) -> (Env, Arc<Transaction>) {
     let should_force_recheck = options.saved_state_force_recheck;
     // We know that all the files in updates have changed since the saved state was generated. We
     // have two ways to deal with them:
     if !options.lazy_mode || should_force_recheck {
         if updates.is_empty() || !libs_ok {
             // Don't recheck if the libs are not ok
-            return env;
+            return (env, transaction);
         }
         // In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
         // fanout, this can be a huge recheck, but it's sound.
@@ -3253,7 +3280,7 @@ pub fn handle_updates_since_saved_state(
         let mut env_transaction = EnvTransaction::new(Arc::new(env));
         let (_log_recheck_event, _summary_info, _find_ref_results) = recheck_impl(
             pool,
-            shared_mem,
+            &transaction,
             options,
             updates,
             &find_ref_request,
@@ -3265,7 +3292,7 @@ pub fn handle_updates_since_saved_state(
         .unwrap_or_else(|_| {
             panic!("saved-state recheck during init failed");
         });
-        env_transaction.into_env()
+        (env_transaction.into_env(), transaction)
     } else {
         // In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
         // is to update the dependency graph and stuff like that. We don't actually want to merge
@@ -3274,29 +3301,29 @@ pub fn handle_updates_since_saved_state(
         let env = Arc::new(env);
         loop {
             let mut env_transaction = EnvTransaction::new(env.dupe());
-            match with_transaction_result("lazy init update deps", |transaction| {
+            match with_transaction_result("lazy init update deps", |side_effects| {
                 recheck::parse_and_update_dependency_info(
                     pool,
-                    shared_mem,
+                    &transaction,
                     options,
                     &updated_files,
-                    transaction,
+                    side_effects,
                     &DefInfo::NoDefinition(None),
                     CheckedSet::empty(),
                     &mut env_transaction,
                 )
             }) {
                 Ok(()) => {
-                    shared_mem.commit_entities();
-                    return env_transaction.into_env();
+                    return (env_transaction.into_env(), transaction);
                 }
                 Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
-                    shared_mem.rollback_entities();
+                    transaction.committed_heap().clear_reader_cache();
+                    transaction = Transaction::new(committed_heap.dupe());
                     let dependencies = changed_files.into_iter().collect();
                     updated_files.add(None, None, Some(dependencies));
                 }
                 Err(err) => {
-                    shared_mem.rollback_entities();
+                    transaction.committed_heap().clear_reader_cache();
                     panic!("lazy init update deps failed: {:?}", err);
                 }
             }
@@ -3307,7 +3334,7 @@ pub fn handle_updates_since_saved_state(
 pub fn init_from_scratch(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     root: &Path,
 ) -> (Env, bool /* libs_ok */) {
     with_transaction("init", |_transaction| {
@@ -3360,7 +3387,7 @@ pub fn init_from_scratch(
             all_unordered_libs: discovered_libs,
         } = parse(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs_set.dupe(),
             next,
@@ -3374,12 +3401,6 @@ pub fn init_from_scratch(
         };
 
         assert!(unchanged.is_empty());
-
-        let parsed_set: FlowOrdSet<FileKey> = parsed_set
-            .iter()
-            .filter(|f| shared_mem.get_typed_parse(f).is_some())
-            .map(|f| f.dupe())
-            .collect();
 
         let dirty_modules_ordered: flow_common_modulename::ModulenameSet =
             dirty_modules.into_iter().collect();
@@ -3411,7 +3432,7 @@ pub fn init_from_scratch(
         flow_hh_logger::info!("Loading libraries");
         let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
             options,
-            shared_mem,
+            transaction,
             all_unordered_libs_set.dupe(),
             ordered_libs.clone(),
             local_errors,
@@ -3424,25 +3445,25 @@ pub fn init_from_scratch(
         let (_changed_modules, duplicate_providers) = commit_modules(
             pool,
             options,
-            shared_mem,
+            transaction,
             BTreeMap::new(),
             dirty_modules_ordered,
         );
 
-        resolve_requires(pool, shared_mem, options, &parsed_set);
+        resolve_requires(pool, transaction, options, &parsed_set);
 
         monitor_rpc::status_update(server_status::Event::CalculatingDependenciesProgress);
         let dependency_info = with_memory_timer(options, "CalcDepsTypecheck", || {
-            dep_service::calc_dependency_info(pool, shared_mem, &parsed_set)
+            dep_service::calc_dependency_info(pool, transaction, &parsed_set)
         });
 
         let mut collated_errors =
             OverlayCollatedErrors::from_collated_errors(CollatedErrors::empty());
         {
-            let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
-            let shared_mem_for_ast = shared_mem.dupe();
+            let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
+            let transaction_for_ast = transaction.dupe();
             let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
-                shared_mem_for_ast.get_ast(file)
+                transaction_for_ast.get_ast(file)
             };
             let unsuppressable_error_codes: BTreeSet<FlowSmolStr> =
                 options.unsuppressable_error_codes.iter().duped().collect();
@@ -3474,14 +3495,16 @@ pub fn init_from_scratch(
             flow_hh_logger::info!("Indexing files");
             let exports = with_memory_timer(options, "Indexing", || {
                 let parsed: BTreeSet<FileKey> = parsed_set.iter().duped().collect();
-                flow_services_export::export_service::init(pool, shared_mem, &lib_exports, &parsed)
+                flow_services_export::export_service::init(pool, transaction, &lib_exports, &parsed)
             });
             flow_hh_logger::info!("Indexing files Done");
             Some(exports)
         } else {
             None
         };
+        let heap = transaction.committed_heap();
         let env = mk_env(
+            heap,
             parsed_set.dupe(),
             unparsed_set.dupe(),
             package_json_files,
@@ -3502,8 +3525,6 @@ pub fn init_from_scratch(
             master_cx,
         );
 
-        shared_mem.commit_entities();
-
         (env, libs_ok)
     })
 }
@@ -3518,11 +3539,16 @@ pub fn exit_if_no_fallback(msg: Option<&str>, options: &Options) {
     }
 }
 
+// Loads the saved state and returns the transaction to continue init under. The heap
+// dump replaces the whole base heap, so it is installed into the committed heap before
+// the transaction opens: a transaction holds a read guard on the heap, and staging a
+// whole heap through its overlay would mean two serial passes over every entry and
+// dependency edge.
 pub fn load_saved_state(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
-) -> Result<(LoadedSavedState, CheckedSet), String> {
+) -> Result<(Arc<Transaction>, LoadedSavedState, CheckedSet), String> {
     // Does a best-effort job to load a saved state. If it fails, returns None
     let (fetch_profiling, fetch_result) =
         flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
@@ -3561,27 +3587,31 @@ pub fn load_saved_state(
             saved_state_filename,
             changed_files,
         } => {
-            let saved_state =
-                match flow_saved_state::load(pool, shared_mem, &saved_state_filename, options) {
-                    Ok(saved_state) => saved_state,
-                    Err(reason) => {
-                        shared_mem.rollback_entities();
-                        shared_mem.clear_reader_cache();
-                        let msg = format!("Failed to load saved state: {}", reason);
-                        exit_if_no_fallback(Some(&msg), options);
-                        return Err(msg);
-                    }
-                };
+            let saved_state = match flow_saved_state::load(
+                pool,
+                committed_heap,
+                &saved_state_filename,
+                options,
+            ) {
+                Ok(saved_state) => saved_state,
+                Err(reason) => {
+                    committed_heap.clear_reader_cache();
+                    let msg = format!("Failed to load saved state: {}", reason);
+                    exit_if_no_fallback(Some(&msg), options);
+                    return Err(msg);
+                }
+            };
+            let transaction = Transaction::new(committed_heap.dupe());
             let updates = match process_saved_state_updates(
                 options,
                 flow_saved_state::non_flowlib_libs(&saved_state),
-                shared_mem,
+                &transaction,
                 &changed_files,
             ) {
                 Ok(updates) => updates,
                 Err(msg) => {
-                    shared_mem.rollback_entities();
-                    shared_mem.clear_reader_cache();
+                    drop(transaction);
+                    committed_heap.clear_reader_cache();
                     flow_hh_logger::error!(
                         "The saved state is no longer valid due to file changes: {}",
                         msg
@@ -3597,7 +3627,7 @@ pub fn load_saved_state(
             );
             let mut checked = CheckedSet::empty();
             checked.add(Some(updates), None, None);
-            Ok((saved_state, checked))
+            Ok((transaction, saved_state, checked))
         }
     }
 }
@@ -3605,26 +3635,35 @@ pub fn load_saved_state(
 pub fn init(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     focus_targets: Option<FlowOrdSet<FileKey>>,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let start_time = Instant::now();
-    let (env, libs_ok) = match load_saved_state(pool, shared_mem, options) {
-        Ok((saved_state, updates)) => {
+    let (transaction, env, libs_ok) = match load_saved_state(pool, committed_heap, options) {
+        Ok((transaction, saved_state, updates)) => {
             // We loaded a saved state successfully! We are awesome!
             let (env, libs_ok) =
-                init_from_saved_state(pool, shared_mem, options, saved_state, &updates, None);
-            let env =
-                handle_updates_since_saved_state(pool, shared_mem, options, libs_ok, &updates, env);
-            (env, libs_ok)
+                init_from_saved_state(pool, &transaction, options, saved_state, &updates, None);
+            let (env, transaction) = handle_updates_since_saved_state(
+                pool,
+                committed_heap,
+                transaction,
+                options,
+                libs_ok,
+                &updates,
+                env,
+            );
+            (transaction, env, libs_ok)
         }
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
             flow_hh_logger::info!("Failed to load saved state: {}", msg);
-            init_from_scratch(options, pool, shared_mem, options.root.as_path())
+            let transaction = Transaction::new(committed_heap.dupe());
+            let (env, libs_ok) =
+                init_from_scratch(options, pool, &transaction, options.root.as_path());
+            (transaction, env, libs_ok)
         }
     };
-
     let init_time = start_time.elapsed().as_secs_f64();
     recheck_stats::init(options, init_time, env.files.len() as i64);
 
@@ -3632,22 +3671,23 @@ pub fn init(
         (env, None)
     } else if options.lazy_mode {
         match focus_targets {
-            None => libdef_check_for_lazy_init(options, pool, shared_mem, env)?,
+            None => libdef_check_for_lazy_init(options, pool, &transaction, env)?,
             Some(focus_targets) => {
-                focus_check_for_init(options, pool, shared_mem, focus_targets, env)?
+                focus_check_for_init(options, pool, &transaction, focus_targets, env)?
             }
         }
     } else {
-        full_check_for_init(options, pool, shared_mem, env)?
+        full_check_for_init(options, pool, &transaction, env)?
     };
 
+    let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
     Ok((env, first_internal_error))
 }
 
 #[allow(clippy::too_many_arguments)]
 pub fn reinit(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     allow_fallback: bool,
     reason: &str,
@@ -3661,31 +3701,31 @@ pub fn reinit(
     FindRefResults,
     EnvRef,
 )> {
-    let (saved_state, updates_since_saved_state) = match load_saved_state(pool, shared_mem, options)
-    {
-        Ok(result) => result,
-        Err(msg) => {
-            // Either there is no saved state or we failed to load it for some reason
-            flow_hh_logger::info!("Failed to load saved state: {}", msg);
-            if allow_fallback {
-                return None;
-            } else {
-                // TODO: fully re-initializing from scratch doesn't make sense. instead, we should
-                // recrawl to find the files that changed (since the file watcher can't tell us)
-                // and recheck all of that.
-                //
-                // for now, we exit and get restarted from scratch like we've done historically.
-                flow_common_exit_status::exit(
-                    flow_common_exit_status::FlowExitStatus::FileWatcherMissedChanges,
-                );
+    let (transaction, saved_state, updates_since_saved_state) =
+        match load_saved_state(pool, committed_heap, options) {
+            Ok(result) => result,
+            Err(msg) => {
+                // Either there is no saved state or we failed to load it for some reason
+                flow_hh_logger::info!("Failed to load saved state: {}", msg);
+                if allow_fallback {
+                    return None;
+                } else {
+                    // TODO: fully re-initializing from scratch doesn't make sense. instead, we should
+                    // recrawl to find the files that changed (since the file watcher can't tell us)
+                    // and recheck all of that.
+                    //
+                    // for now, we exit and get restarted from scratch like we've done historically.
+                    flow_common_exit_status::exit(
+                        flow_common_exit_status::FlowExitStatus::FileWatcherMissedChanges,
+                    );
+                }
             }
-        }
-    };
+        };
     // We loaded a saved state successfully! We are awesome!
     flow_hh_logger::info!("Reinitializing from saved state");
     let (env, _libs_ok) = init_from_saved_state(
         pool,
-        shared_mem,
+        &transaction,
         options,
         saved_state,
         &updates_since_saved_state,
@@ -3724,13 +3764,14 @@ pub fn reinit(
         changed_file_count: 0,
         top_cycle: None,
     };
-    Some((log_recheck_event, recheck_stats, Ok(vec![]), Arc::new(env)))
+    let env = EnvTransaction::new(Arc::new(env)).commit_with_transaction(transaction);
+    Some((log_recheck_event, recheck_stats, Ok(vec![]), env))
 }
 
 #[allow(dead_code)]
 pub fn reinit_full_check(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     updates: &CheckedSet,
     files_to_force: CheckedSet,
@@ -3745,13 +3786,14 @@ pub fn reinit_full_check(
     ),
     RecheckError,
 > {
-    shared_mem.clear_reader_cache();
+    let transaction = Transaction::new(committed_heap.dupe());
+    transaction.committed_heap().clear_reader_cache();
     flow_hh_logger::info!("Reiniting with a full check.");
     let env = {
         let (env, _libs_ok) = with_transaction_result("partial-reinit", |_transaction| {
             Ok::<_, std::convert::Infallible>(init_with_initial_state(
                 pool,
-                shared_mem,
+                &transaction,
                 options,
                 || env.dependency_info.dupe(),
                 env.errors().duplicate_providers.clone(),
@@ -3765,7 +3807,6 @@ pub fn reinit_full_check(
             ))
         })
         .unwrap();
-        shared_mem.commit_entities();
         env
     };
     // schedule a recheck of all changes since saved state -- both the upstream
@@ -3791,13 +3832,14 @@ pub fn reinit_full_check(
         changed_file_count: 0,
         top_cycle: None,
     };
-    Ok((log_recheck_event, recheck_stats, Ok(vec![]), Arc::new(env)))
+    let env = EnvTransaction::new(Arc::new(env)).commit_with_transaction(transaction);
+    Ok((log_recheck_event, recheck_stats, Ok(vec![]), env))
 }
 
 #[allow(clippy::too_many_arguments)]
 pub fn recheck(
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     updates: &CheckedSet,
     find_ref_request: &flow_services_references::find_refs_types::Request,
@@ -3825,7 +3867,7 @@ pub fn recheck(
         if incompatible_lib_change {
             reinit_full_check(
                 pool,
-                shared_mem,
+                committed_heap,
                 options,
                 updates,
                 files_to_force,
@@ -3833,10 +3875,11 @@ pub fn recheck(
                 env,
             )
         } else {
+            let heap_transaction = Transaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             let (log_recheck_event, recheck_stats, find_ref_results) = recheck_impl(
                 pool,
-                shared_mem,
+                &heap_transaction,
                 options,
                 updates,
                 find_ref_request,
@@ -3849,7 +3892,7 @@ pub fn recheck(
                 log_recheck_event,
                 recheck_stats,
                 find_ref_results,
-                env_transaction.commit(),
+                env_transaction.commit_with_transaction(heap_transaction),
             ))
         }
     } else {
@@ -3864,7 +3907,7 @@ pub fn recheck(
             // allow_fallback is false, so reinit exits on error and always returns Some
             reinit(
                 pool,
-                shared_mem,
+                committed_heap,
                 options,
                 false,
                 reason,
@@ -3885,7 +3928,7 @@ pub fn recheck(
             );
             match reinit(
                 pool,
-                shared_mem,
+                committed_heap,
                 options,
                 true,
                 "libdef_change_with_mergebase_change",
@@ -3901,7 +3944,7 @@ pub fn recheck(
                     );
                     reinit_full_check(
                         pool,
-                        shared_mem,
+                        committed_heap,
                         options,
                         updates,
                         files_to_force,
@@ -3920,10 +3963,11 @@ pub fn recheck(
         } else {
             let env_for_reinit = env.dupe();
             let files_to_force_for_reinit = files_to_force.dupe();
+            let heap_transaction = Transaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             match recheck_impl(
                 pool,
-                shared_mem,
+                &heap_transaction,
                 options,
                 updates,
                 find_ref_request,
@@ -3936,14 +3980,17 @@ pub fn recheck(
                     log_recheck_event,
                     recheck_stats,
                     find_ref_results,
-                    env_transaction.commit(),
+                    env_transaction.commit_with_transaction(heap_transaction),
                 )),
-                Err(RecheckError::TooSlow) => Ok(reinit_or_restart(
-                    "recheck_too_slow",
-                    files_to_force_for_reinit,
-                    will_be_checked_files,
-                    env_for_reinit,
-                )),
+                Err(RecheckError::TooSlow) => {
+                    drop(heap_transaction);
+                    Ok(reinit_or_restart(
+                        "recheck_too_slow",
+                        files_to_force_for_reinit,
+                        will_be_checked_files,
+                        env_for_reinit,
+                    ))
+                }
                 Err(RecheckError::Canceled(changed_files)) => {
                     Err(RecheckError::Canceled(changed_files))
                 }
@@ -3955,13 +4002,14 @@ pub fn recheck(
 pub fn check_files_for_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     parsed: FlowOrdSet<FileKey>,
     message: &str,
     env: Env,
 ) -> Result<(Env, Option<String> /* check_internal_error */), RecheckError> {
     with_transaction_result(message, |_transaction| -> Result<_, RecheckError> {
         let Env {
+            heap,
             dependency_info,
             errors: env_errors,
             coverage: env_coverage,
@@ -3998,14 +4046,14 @@ pub fn check_files_for_init(
         );
         ensure_parsed_or_trigger_recheck(
             pool,
-            shared_mem,
+            transaction,
             options,
             all_unordered_libs.dupe(),
             to_merge.dupe().all(),
         )?;
         let merge_result = merge(
             pool,
-            shared_mem,
+            transaction,
             options,
             false, // for_find_all_refs: init path doesn't use find-all-refs
             &to_merge,
@@ -4026,7 +4074,7 @@ pub fn check_files_for_init(
         ) = check_files::check_files(
             options.dupe(),
             pool,
-            shared_mem,
+            transaction,
             all_unordered_libs.dupe(),
             &flow_services_references::find_refs_types::empty_request(),
             env_errors,
@@ -4096,10 +4144,10 @@ pub fn check_files_for_init(
         // Update collated errors
         let mut collated_errors = env_collated_errors;
         with_timer(options, "CollateErrors", || {
-            let loc_of_aloc = |loc: &ALoc| -> Loc { shared_mem.loc_of_aloc(loc) };
-            let shared_mem_for_ast = shared_mem.dupe();
+            let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
+            let transaction_for_ast = transaction.dupe();
             let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
-                shared_mem_for_ast.get_ast(file)
+                transaction_for_ast.get_ast(file)
             };
             error_collator::update_collated_overlay_errors(
                 &loc_of_aloc,
@@ -4120,6 +4168,7 @@ pub fn check_files_for_init(
         }
         collated_errors.commit();
         let env = Env {
+            heap,
             files: env_files,
             dependency_info: dependency_info_cell,
             checked_files: {
@@ -4139,8 +4188,6 @@ pub fn check_files_for_init(
             master_cx,
         };
 
-        shared_mem.commit_entities();
-
         flow_hh_logger::info!(
             "Checked set: {}",
             env.checked_files.debug_counts_to_string()
@@ -4153,7 +4200,7 @@ pub fn check_files_for_init(
 pub fn libdef_check_for_lazy_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let parsed: FlowOrdSet<FileKey> = env
@@ -4161,53 +4208,52 @@ pub fn libdef_check_for_lazy_init(
         .iter()
         .map(|n| files::lib_file_key(&options.file_options, n))
         .collect();
-    check_files_for_init(options, pool, shared_mem, parsed, "lazy init check", env)
+    check_files_for_init(options, pool, transaction, parsed, "lazy init check", env)
 }
 
 pub fn focus_check_for_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     focus_targets: FlowOrdSet<FileKey>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
-    let (env, first_internal_error) = libdef_check_for_lazy_init(options, pool, shared_mem, env)?;
+    let (env, first_internal_error) = libdef_check_for_lazy_init(options, pool, transaction, env)?;
     let files_to_force = {
         let mut checked_set = CheckedSet::empty();
         checked_set.add(Some(focus_targets), None, None);
         checked_set
     };
     let mut will_be_checked_files = files_to_force.dupe();
-    let (_, _, _, env) = recheck(
+    let mut env_transaction = EnvTransaction::new(Arc::new(env));
+    let (_, _, _) = recheck_impl(
         pool,
-        shared_mem,
+        transaction,
         options,
         &CheckedSet::empty(),
         &flow_services_references::find_refs_types::empty_request(),
         files_to_force,
-        false,
         None,
-        false,
         &mut will_be_checked_files,
-        Arc::new(env),
+        &mut env_transaction,
     )?;
-    Ok((EnvTransaction::new(env).into_env(), first_internal_error))
+    Ok((env_transaction.into_env(), first_internal_error))
 }
 
 pub fn full_check_for_init(
     options: &Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    transaction: &Arc<Transaction>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let parsed = env.files.dupe();
-    check_files_for_init(options, pool, shared_mem, parsed, "full check", env)
+    check_files_for_init(options, pool, transaction, parsed, "full check", env)
 }
 
 pub fn check_once(
     options: Arc<Options>,
     pool: &ThreadPool,
-    shared_mem: &Arc<SharedMem>,
+    committed_heap: &Arc<CommittedHeap>,
     root: &Path,
     focus_targets: Option<FlowOrdSet<FileKey>>,
 ) -> (
@@ -4217,28 +4263,31 @@ pub fn check_once(
     Option<String>, /* lazy_msg */
 ) {
     let total_start = Instant::now();
+    let transaction = Transaction::new(committed_heap.dupe());
 
     // OCaml full-check still routes through the dummy saved-state fetcher, whose
     // fetch function contributes a `FetchSavedState` child profile.
     with_timer(&options, "FetchSavedState", || {});
 
-    let (env, libs_ok) = init_from_scratch(&options, pool, shared_mem, root);
+    let (env, libs_ok) = init_from_scratch(&options, pool, &transaction, root);
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {
-                None => libdef_check_for_lazy_init(&options, pool, shared_mem, env),
+                None => libdef_check_for_lazy_init(&options, pool, &transaction, env),
                 Some(focus_targets) => {
-                    focus_check_for_init(&options, pool, shared_mem, focus_targets, env)
+                    focus_check_for_init(&options, pool, &transaction, focus_targets, env)
                 }
             }
         } else {
-            full_check_for_init(&options, pool, shared_mem, env)
+            full_check_for_init(&options, pool, &transaction, env)
         }
         .expect("Unexpected file changes during full check");
         env
     } else {
         env
     };
+    let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
+    let transaction = Transaction::new(committed_heap.dupe());
 
     let total_time = total_start.elapsed();
     if !options.quiet && !options.profile {
@@ -4260,8 +4309,8 @@ pub fn check_once(
     } else {
         None
     };
-    let loc_of_aloc = |aloc: &ALoc| -> Loc { shared_mem.loc_of_aloc(aloc) };
-    let get_ast = |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { shared_mem.get_ast(file) };
+    let loc_of_aloc = |aloc: &ALoc| -> Loc { transaction.loc_of_aloc(aloc) };
+    let get_ast = |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { transaction.get_ast(file) };
     let suppressed_errors = if options.include_suppressions {
         suppressed_errors
             .into_iter()

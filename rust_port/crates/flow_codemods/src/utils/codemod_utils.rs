@@ -46,18 +46,15 @@ fn init_loggers(options: &Options) {
     flow_logging_utils::init_loggers(options, None);
 }
 
-fn shared_mem_init() -> flow_heap::parsing_heaps::SharedMem {
-    flow_heap::parsing_heaps::SharedMem::new()
+fn committed_heap_init() -> std::sync::Arc<flow_heap::heap_state::CommittedHeap> {
+    std::sync::Arc::new(flow_heap::heap_state::CommittedHeap::new())
 }
 
 fn make_genv(
     options: &Options,
-    handle: flow_heap::parsing_heaps::SharedMem,
+    committed_heap: std::sync::Arc<flow_heap::heap_state::CommittedHeap>,
 ) -> flow_server_env::server_env::Genv {
-    flow_server::server_env_build::make_genv(
-        std::sync::Arc::new(options.clone()),
-        std::sync::Arc::new(handle),
-    )
+    flow_server::server_env_build::make_genv(std::sync::Arc::new(options.clone()), committed_heap)
 }
 
 pub enum AbstractCodemodRunner<A, T> {
@@ -68,7 +65,7 @@ pub enum AbstractCodemodRunner<A, T> {
 pub enum CodemodRunner<'cx, A> {
     TypedRunner(AbstractCodemodRunner<A, codemod_context::typed::TypedCodemodContext<'cx>>),
     UntypedFlowInitRunner {
-        init: Box<dyn Fn(&std::sync::Arc<flow_heap::parsing_heaps::SharedMem>) + Send + Sync>,
+        init: Box<dyn Fn(&std::sync::Arc<flow_heap::parsing_heaps::Transaction>) + Send + Sync>,
         runner: AbstractCodemodRunner<
             A,
             codemod_context::untyped_flow_init::UntypedFlowInitCodemodContext,
@@ -148,8 +145,8 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
             None => flow_hh_logger::Level::Off,
         };
         flow_hh_logger::level::set_min_level(log_level);
-        let handle = shared_mem_init();
-        let genv = make_genv(options, handle);
+        let committed_heap = committed_heap_init();
+        let genv = make_genv(options, committed_heap);
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
         rt.block_on(Runner::run(&genv, write, repeat, roots));
     }

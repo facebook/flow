@@ -22,14 +22,10 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module;
 use flow_type_sig::signature_error::TolerableError;
-use flow_utils_concurrency::locked_set::LockedSet;
-use parking_lot::RwLock;
 
-use crate::entity::Dependency;
-use crate::entity::DependencyTarget;
-use crate::entity::Entity;
-use crate::entity::EntityTransaction;
-use crate::entity::ResolvedRequires;
+use crate::resolved_requires::Dependency;
+use crate::resolved_requires::DependencyTarget;
+use crate::resolved_requires::ResolvedRequires;
 
 /// Compressed serialized bytes wrapper for heap-stored data.
 /// Fields are stored as compressed bincode bytes to reduce memory footprint.
@@ -41,144 +37,96 @@ pub struct FileEntry(Arc<FileEntryData>);
 #[derive(Debug)]
 struct FileEntryData {
     dependency: Dependency,
-    parse: Entity<Parse>,
-    haste_info: Entity<HasteModuleInfo>,
-    dependents: Option<LockedSet<FileKey>>,
-    alternate_file: RwLock<Option<FileKey>>,
+    parse: Option<Parse>,
+    haste_info: Option<HasteModuleInfo>,
+    alternate_file: Option<FileKey>,
 }
 
 impl FileEntry {
     pub(crate) fn new(
         file_key: FileKey,
-        transaction: EntityTransaction,
         parse: Parse,
         haste_info: Option<HasteModuleInfo>,
-        has_dependents: bool,
     ) -> Self {
         let dependency = Dependency::new(DependencyTarget::File(file_key));
         Self(Arc::new(FileEntryData {
             dependency,
-            parse: Entity::new(transaction.dupe(), parse),
-            haste_info: if let Some(info) = haste_info {
-                Entity::new(transaction, info)
-            } else {
-                Entity::empty(transaction)
-            },
-            dependents: if has_dependents {
-                Some(LockedSet::new())
-            } else {
-                None
-            },
-            alternate_file: RwLock::new(None),
+            parse: Some(parse),
+            haste_info,
+            alternate_file: None,
         }))
     }
 
-    /// Create a phantom file entry that only tracks dependents.
-    /// OCaml's prepare_find_or_add_phantom_file creates these for files that
-    /// don't exist yet but are referenced as dependencies. The entry has no
-    /// parse data and no haste info — it exists solely to hold the dependents
-    /// list so that reverse-dep edges survive until the file is actually created.
-    pub(crate) fn new_phantom(file_key: FileKey, transaction: EntityTransaction) -> Self {
+    pub(crate) fn new_empty(file_key: FileKey) -> Self {
         let dependency = Dependency::new(DependencyTarget::File(file_key));
         Self(Arc::new(FileEntryData {
             dependency,
-            parse: Entity::empty(transaction.dupe()),
-            haste_info: Entity::empty(transaction),
-            dependents: Some(LockedSet::new()),
-            alternate_file: RwLock::new(None),
+            parse: None,
+            haste_info: None,
+            alternate_file: None,
         }))
     }
 
     pub(crate) fn new_committed(
         file_key: FileKey,
-        transaction: EntityTransaction,
         parse: Option<Parse>,
         haste_info: Option<HasteModuleInfo>,
-        dependents: Option<LockedSet<FileKey>>,
         alternate_file: Option<FileKey>,
     ) -> Self {
         let dependency = Dependency::new(DependencyTarget::File(file_key));
         Self(Arc::new(FileEntryData {
             dependency,
-            parse: match parse {
-                Some(parse) => Entity::new_committed(transaction.dupe(), parse),
-                None => Entity::empty_committed(transaction.dupe()),
-            },
-            haste_info: match haste_info {
-                Some(info) => Entity::new_committed(transaction, info),
-                None => Entity::empty_committed(transaction),
-            },
-            dependents,
-            alternate_file: RwLock::new(alternate_file),
+            parse,
+            haste_info,
+            alternate_file,
         }))
-    }
-
-    pub(crate) fn parse(&self) -> &Entity<Parse> {
-        &self.0.parse
     }
 
     pub(crate) fn dependency(&self) -> Dependency {
         self.0.dependency.dupe()
     }
 
+    pub(crate) fn parse(&self) -> Option<Parse> {
+        self.0.parse.dupe()
+    }
+
     pub(crate) fn parse_latest(&self) -> Option<Parse> {
-        self.0.parse.read_latest()
+        self.parse()
     }
 
-    pub(crate) fn parse_committed(&self) -> Option<Parse> {
-        self.0.parse.read_committed()
+    pub(crate) fn with_parse(&self, parse: Option<Parse>) -> Self {
+        Self(Arc::new(FileEntryData {
+            dependency: self.0.dependency.dupe(),
+            parse,
+            haste_info: self.0.haste_info.dupe(),
+            alternate_file: self.0.alternate_file.dupe(),
+        }))
     }
 
-    pub(crate) fn parse_has_changed(&self) -> bool {
-        self.0.parse.has_changed()
+    pub(crate) fn get_haste_info(&self) -> Option<HasteModuleInfo> {
+        self.0.haste_info.dupe()
     }
 
-    pub(crate) fn haste_info_entity(&self) -> &Entity<HasteModuleInfo> {
-        &self.0.haste_info
-    }
-
-    pub(crate) fn get_haste_info_latest(&self) -> Option<HasteModuleInfo> {
-        self.0.haste_info.read_latest_clone()
-    }
-
-    pub(crate) fn get_haste_info_committed(&self) -> Option<HasteModuleInfo> {
-        self.0.haste_info.read_committed_clone()
-    }
-
-    #[expect(dead_code)]
-    pub(crate) fn set_haste_info(&self, info: Option<HasteModuleInfo>) {
-        self.0.haste_info.advance(info);
-    }
-
-    pub(crate) fn add_dependent(&self, dependent: FileKey) {
-        if let Some(deps) = &self.0.dependents {
-            deps.insert(dependent);
-        }
-    }
-
-    pub(crate) fn remove_dependent(&self, dependent: &FileKey) {
-        if let Some(deps) = &self.0.dependents {
-            deps.remove(dependent);
-        }
-    }
-
-    pub(crate) fn get_dependents(&self) -> Option<Vec<FileKey>> {
-        self.0.dependents.as_ref().map(|deps| deps.iter().collect())
-    }
-
-    pub(crate) fn has_dependents(&self) -> bool {
-        self.0
-            .dependents
-            .as_ref()
-            .is_some_and(|deps| !deps.is_empty())
+    pub(crate) fn with_haste_info(&self, haste_info: Option<HasteModuleInfo>) -> Self {
+        Self(Arc::new(FileEntryData {
+            dependency: self.0.dependency.dupe(),
+            parse: self.0.parse.dupe(),
+            haste_info,
+            alternate_file: self.0.alternate_file.dupe(),
+        }))
     }
 
     pub(crate) fn get_alternate_file(&self) -> Option<FileKey> {
-        self.0.alternate_file.read().dupe()
+        self.0.alternate_file.dupe()
     }
 
-    pub(crate) fn set_alternate_file(&self, alternate: Option<FileKey>) {
-        *self.0.alternate_file.write() = alternate;
+    pub(crate) fn with_alternate_file(&self, alternate_file: Option<FileKey>) -> Self {
+        Self(Arc::new(FileEntryData {
+            dependency: self.0.dependency.dupe(),
+            parse: self.0.parse.dupe(),
+            haste_info: self.0.haste_info.dupe(),
+            alternate_file,
+        }))
     }
 }
 
@@ -211,11 +159,11 @@ pub struct TypedParse {
     pub(crate) file_sig: Option<CompressedBytes>,
     pub(crate) exports: CompressedBytes,
     pub(crate) requires: Arc<[FlowImportSpecifier]>,
-    pub(crate) resolved_requires: Arc<Entity<ResolvedRequires>>,
+    pub(crate) resolved_requires: Option<ResolvedRequires>,
     pub(crate) imports: CompressedBytes,
-    pub(crate) leader: Arc<Entity<FileKey>>,
-    pub(crate) sig_hash: Arc<Entity<u64>>,
-    pub(crate) merge_hashes: Arc<RwLock<Option<MergeHashes>>>,
+    pub(crate) leader: Option<FileKey>,
+    pub(crate) sig_hash: Option<u64>,
+    pub(crate) merge_hashes: Option<Arc<MergeHashes>>,
 }
 
 impl TypedParse {
@@ -229,10 +177,10 @@ impl TypedParse {
         file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
         exports: Arc<Exports>,
         requires: Arc<[FlowImportSpecifier]>,
-        resolved_requires: Arc<Entity<ResolvedRequires>>,
+        resolved_requires: Option<ResolvedRequires>,
         imports: Arc<Imports>,
-        leader: Arc<Entity<FileKey>>,
-        sig_hash: Arc<Entity<u64>>,
+        leader: Option<FileKey>,
+        sig_hash: Option<u64>,
     ) -> Self {
         Self {
             file_hash,
@@ -252,8 +200,18 @@ impl TypedParse {
             imports: Arc::from(flow_heap_serialization::serialize_imports(&imports)),
             leader,
             sig_hash,
-            merge_hashes: Arc::new(RwLock::new(None)),
+            merge_hashes: None,
         }
+    }
+
+    pub(crate) fn with_resolved_requires(mut self, resolved_requires: ResolvedRequires) -> Self {
+        self.resolved_requires = Some(resolved_requires);
+        self
+    }
+
+    pub(crate) fn with_merge_hashes(mut self, hashes: MergeHashes) -> Self {
+        self.merge_hashes = Some(Arc::new(hashes));
+        self
     }
 
     pub fn ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
@@ -297,12 +255,12 @@ impl TypedParse {
 
     pub fn resolved_requires_unsafe(&self) -> ResolvedRequires {
         self.resolved_requires
-            .read_latest_clone()
+            .dupe()
             .expect("ResolvedRequires should be set")
     }
 
     pub fn leader_unsafe(&self) -> FileKey {
-        self.leader.get()
+        self.leader.dupe().expect("Leader should be set")
     }
 
     pub fn docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
@@ -322,14 +280,11 @@ impl TypedParse {
         flow_heap_serialization::deserialize_imports(&self.imports)
     }
 
-    /// Store per-element hashes computed by cycle_hash during merge.
-    pub fn set_merge_hashes(&self, hashes: MergeHashes) {
-        *self.merge_hashes.write() = Some(hashes);
-    }
-
     /// Read per-element merge hashes. Returns None if merge hasn't run yet.
     pub fn get_merge_hashes(&self) -> Option<MergeHashes> {
-        self.merge_hashes.read().clone()
+        self.merge_hashes
+            .as_ref()
+            .map(|hashes| hashes.as_ref().clone())
     }
 }
 

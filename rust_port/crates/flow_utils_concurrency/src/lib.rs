@@ -11,6 +11,7 @@ pub mod job_error;
 pub mod lock;
 pub mod locked_map;
 pub mod locked_set;
+pub mod lockfree_overlay_map;
 pub mod map_reduce;
 pub mod thread_pool;
 pub mod with_hash;
