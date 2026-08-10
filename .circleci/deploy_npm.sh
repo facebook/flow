@@ -25,6 +25,10 @@ npm publish ./dist/npm-flow-eslint.tgz;
 echo "Publishing flow-transform";
 npm publish ./dist/npm-flow-transform.tgz;
 
+# Depends on the four packages above at exact versions, so it goes after them.
+echo "Publishing flow-api-translator";
+npm publish ./dist/npm-flow-api-translator.tgz;
+
 echo "Publishing flow-remove-types";
 npm publish ./dist/npm-flow-remove-types.tgz;
 

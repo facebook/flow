@@ -248,10 +248,12 @@ jobs:
     - name: Create package artifact
       run: |
         mkdir -p \
+          "${RUNNER_TEMP}/build_js_packages/flow-api-translator" \
           "${RUNNER_TEMP}/build_js_packages/flow-eslint" \
           "${RUNNER_TEMP}/build_js_packages/flow-estree" \
           "${RUNNER_TEMP}/build_js_packages/flow-parser" \
           "${RUNNER_TEMP}/build_js_packages/flow-transform"
+        cp -R packages/flow-api-translator/dist "${RUNNER_TEMP}/build_js_packages/flow-api-translator/dist"
         cp -R packages/flow-eslint/dist "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist"
         cp -R packages/flow-estree/dist "${RUNNER_TEMP}/build_js_packages/flow-estree/dist"
         cp -R packages/flow-parser/dist "${RUNNER_TEMP}/build_js_packages/flow-parser/dist"
@@ -390,14 +392,17 @@ jobs:
         path: ${{ runner.temp }}/build_js_packages
     - name: Install generated package artifacts
       run: |
+        test -f "${RUNNER_TEMP}/build_js_packages/flow-api-translator/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-estree/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-parser/dist/index.js"
         test -f "${RUNNER_TEMP}/build_js_packages/flow-transform/dist/index.js"
+        test ! -e packages/flow-api-translator/dist
         test ! -e packages/flow-eslint/dist
         test ! -e packages/flow-estree/dist
         test ! -e packages/flow-parser/dist
         test ! -e packages/flow-transform/dist
+        cp -R "${RUNNER_TEMP}/build_js_packages/flow-api-translator/dist" packages/flow-api-translator/dist
         cp -R "${RUNNER_TEMP}/build_js_packages/flow-eslint/dist" packages/flow-eslint/dist
         cp -R "${RUNNER_TEMP}/build_js_packages/flow-estree/dist" packages/flow-estree/dist
         cp -R "${RUNNER_TEMP}/build_js_packages/flow-parser/dist" packages/flow-parser/dist
@@ -418,6 +423,10 @@ jobs:
       run: |
         test -f packages/flow-transform/dist/index.js
         make dist/npm-flow-transform.tgz
+    - name: Pack flow-api-translator
+      run: |
+        test -f packages/flow-api-translator/dist/index.js
+        make dist/npm-flow-api-translator.tgz
     - name: Pack flow-remove-types and flow-node
       run: |
         rm -rf packages/flow-node
@@ -437,6 +446,7 @@ jobs:
       with:
         name: npm_pack
         path: |
+          dist/npm-flow-api-translator.tgz
           dist/npm-flow-eslint.tgz
           dist/npm-flow-estree.tgz
           dist/npm-flow-parser.tgz
