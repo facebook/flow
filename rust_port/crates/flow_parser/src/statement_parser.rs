@@ -3580,6 +3580,35 @@ fn export_declaration(
     })
 }
 
+type DeclareExportDefaultResult = (
+    Option<statement::declare_export_declaration::Declaration<Loc, Loc>>,
+    Vec<Comment<Loc>>,
+);
+
+// `declare export default [type];`
+fn declare_export_default_type(
+    env: &mut ParserEnv,
+) -> Result<DeclareExportDefaultResult, Rollback> {
+    let mut type_ = type_parser::parse_type(env)?;
+    let trailing = match semicolon(env, None, true)? {
+        SemicolonType::Explicit(trailing) => trailing,
+        SemicolonType::Implicit(result) => {
+            if let Some(mut remover) = result.remover {
+                type_ = remover.map_type_(&type_);
+            }
+            Vec::new()
+        }
+    };
+    Ok((
+        Some(
+            statement::declare_export_declaration::Declaration::DefaultType {
+                type_: Arc::new(type_),
+            },
+        ),
+        trailing,
+    ))
+}
+
 // Helper function for parsing the body of a declare export declaration.
 // This is shared between `declare export ...` and `export declare ...` syntaxes.
 // The [allow_specifiers] parameter controls whether batch exports (`* from`)
@@ -3655,18 +3684,24 @@ fn declare_export_declaration_body(
                     TokenKind::TIdentifier { raw, .. }
                         if raw == "component" && parse_components =>
                     {
-                        // declare export default component Foo() { ... }
-                        let (loc, declaration) =
-                            with_loc(None, env, |env| declare_component(env, Vec::new()))?;
-                        Ok((
-                            Some(
-                                statement::declare_export_declaration::Declaration::Component {
-                                    loc,
-                                    declaration: Arc::new(declaration),
-                                },
-                            ),
-                            Vec::new(),
-                        ))
+                        if peek::token_after_current_starts_type_call(env) {
+                            // declare export default component(...);
+                            // A nameless `component` is a type annotation.
+                            declare_export_default_type(env)
+                        } else {
+                            // declare export default component Foo() { ... }
+                            let (loc, declaration) =
+                                with_loc(None, env, |env| declare_component(env, Vec::new()))?;
+                            Ok((
+                                Some(
+                                    statement::declare_export_declaration::Declaration::Component {
+                                        loc,
+                                        declaration: Arc::new(declaration),
+                                    },
+                                ),
+                                Vec::new(),
+                            ))
+                        }
                     }
                     TokenKind::TAsync if parse_components => {
                         // Check if it's `declare export default async component`
@@ -3720,40 +3755,27 @@ fn declare_export_declaration_body(
                         }
                     }
                     TokenKind::TIdentifier { raw, .. } if raw == "hook" && parse_components => {
-                        // declare export default hook foo (...): ...
-                        let (loc, declaration) =
-                            with_loc(None, env, |env| declare_function(env, false, Vec::new()))?;
-                        Ok((
-                            Some(
-                                statement::declare_export_declaration::Declaration::Function {
-                                    loc,
-                                    declaration: Arc::new(declaration),
-                                },
-                            ),
-                            Vec::new(),
-                        ))
+                        if peek::token_after_current_starts_type_call(env) {
+                            // declare export default hook (...): ...;
+                            // A nameless `hook` is a type annotation.
+                            declare_export_default_type(env)
+                        } else {
+                            // declare export default hook foo (...): ...
+                            let (loc, declaration) = with_loc(None, env, |env| {
+                                declare_function(env, false, Vec::new())
+                            })?;
+                            Ok((
+                                Some(
+                                    statement::declare_export_declaration::Declaration::Function {
+                                        loc,
+                                        declaration: Arc::new(declaration),
+                                    },
+                                ),
+                                Vec::new(),
+                            ))
+                        }
                     }
-                    _ => {
-                        // declare export default [type];
-                        let mut type_ = type_parser::parse_type(env)?;
-                        let trailing = match semicolon(env, None, true)? {
-                            SemicolonType::Explicit(trailing) => trailing,
-                            SemicolonType::Implicit(result) => {
-                                if let Some(mut remover) = result.remover {
-                                    type_ = remover.map_type_(&type_);
-                                }
-                                Vec::new()
-                            }
-                        };
-                        Ok((
-                            Some(
-                                statement::declare_export_declaration::Declaration::DefaultType {
-                                    type_: Arc::new(type_),
-                                },
-                            ),
-                            trailing,
-                        ))
-                    }
+                    _ => declare_export_default_type(env),
                 }
             })?;
 

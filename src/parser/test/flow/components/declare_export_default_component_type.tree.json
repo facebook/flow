@@ -1,0 +1,845 @@
+{
+  "body": [
+    {
+      "declaration": {
+        "loc": {
+          "end": {
+            "column": 45,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 1
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 44,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 33,
+                "line": 1
+              }
+            },
+            "name": {
+              "loc": {
+                "end": {
+                  "column": 36,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 1
+                }
+              },
+              "name": "foo",
+              "optional": false,
+              "range": [
+                33,
+                36
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "optional": false,
+            "range": [
+              33,
+              44
+            ],
+            "type": "ComponentTypeParameter",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 44,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 38,
+                  "line": 1
+                }
+              },
+              "range": [
+                38,
+                44
+              ],
+              "type": "StringTypeAnnotation"
+            }
+          }
+        ],
+        "range": [
+          23,
+          45
+        ],
+        "rendersType": null,
+        "rest": null,
+        "type": "ComponentTypeAnnotation",
+        "typeParameters": null
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 46,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        46
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "loc": {
+          "end": {
+            "column": 43,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 3
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 42,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 36,
+                "line": 3
+              }
+            },
+            "name": {
+              "loc": {
+                "end": {
+                  "column": 39,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 36,
+                  "line": 3
+                }
+              },
+              "name": "foo",
+              "optional": false,
+              "range": [
+                84,
+                87
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "optional": false,
+            "range": [
+              84,
+              90
+            ],
+            "type": "ComponentTypeParameter",
+            "typeAnnotation": {
+              "id": {
+                "loc": {
+                  "end": {
+                    "column": 42,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 41,
+                    "line": 3
+                  }
+                },
+                "name": "T",
+                "optional": false,
+                "range": [
+                  89,
+                  90
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 41,
+                  "line": 3
+                }
+              },
+              "range": [
+                89,
+                90
+              ],
+              "type": "GenericTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        ],
+        "range": [
+          71,
+          91
+        ],
+        "rendersType": null,
+        "rest": null,
+        "type": "ComponentTypeAnnotation",
+        "typeParameters": {
+          "loc": {
+            "end": {
+              "column": 35,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 32,
+              "line": 3
+            }
+          },
+          "params": [
+            {
+              "bound": null,
+              "const": false,
+              "default": null,
+              "loc": {
+                "end": {
+                  "column": 34,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 3
+                }
+              },
+              "name": "T",
+              "range": [
+                81,
+                82
+              ],
+              "type": "TypeParameter",
+              "variance": null
+            }
+          ],
+          "range": [
+            80,
+            83
+          ],
+          "type": "TypeParameterDeclaration"
+        }
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 44,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
+        }
+      },
+      "range": [
+        48,
+        92
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "loc": {
+          "end": {
+            "column": 56,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 5
+          }
+        },
+        "params": [],
+        "range": [
+          117,
+          150
+        ],
+        "rendersType": {
+          "loc": {
+            "end": {
+              "column": 56,
+              "line": 5
+            },
+            "source": null,
+            "start": {
+              "column": 35,
+              "line": 5
+            }
+          },
+          "operator": "renders",
+          "range": [
+            129,
+            150
+          ],
+          "type": "TypeOperator",
+          "typeAnnotation": {
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 56,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 43,
+                  "line": 5
+                }
+              },
+              "name": "SomeComponent",
+              "optional": false,
+              "range": [
+                137,
+                150
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 56,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 43,
+                "line": 5
+              }
+            },
+            "range": [
+              137,
+              150
+            ],
+            "type": "GenericTypeAnnotation",
+            "typeParameters": null
+          }
+        },
+        "rest": null,
+        "type": "ComponentTypeAnnotation",
+        "typeParameters": null
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 57,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        94,
+        151
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "loc": {
+          "end": {
+            "column": 49,
+            "line": 7
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 7
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 40,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 29,
+                "line": 7
+              }
+            },
+            "name": {
+              "loc": {
+                "end": {
+                  "column": 32,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 29,
+                  "line": 7
+                }
+              },
+              "name": "foo",
+              "optional": false,
+              "range": [
+                182,
+                185
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "optional": false,
+            "range": [
+              182,
+              193
+            ],
+            "type": "FunctionTypeParam",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 40,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 34,
+                  "line": 7
+                }
+              },
+              "range": [
+                187,
+                193
+              ],
+              "type": "StringTypeAnnotation"
+            }
+          }
+        ],
+        "range": [
+          176,
+          202
+        ],
+        "rest": null,
+        "returnType": {
+          "loc": {
+            "end": {
+              "column": 49,
+              "line": 7
+            },
+            "source": null,
+            "start": {
+              "column": 45,
+              "line": 7
+            }
+          },
+          "range": [
+            198,
+            202
+          ],
+          "type": "VoidTypeAnnotation"
+        },
+        "type": "HookTypeAnnotation",
+        "typeParameters": null
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 50,
+          "line": 7
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 7
+        }
+      },
+      "range": [
+        153,
+        203
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 38,
+              "line": 9
+            },
+            "source": null,
+            "start": {
+              "column": 33,
+              "line": 9
+            }
+          },
+          "name": "Named",
+          "optional": false,
+          "range": [
+            238,
+            243
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "loc": {
+          "end": {
+            "column": 52,
+            "line": 9
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 9
+          }
+        },
+        "params": [
+          {
+            "loc": {
+              "end": {
+                "column": 50,
+                "line": 9
+              },
+              "source": null,
+              "start": {
+                "column": 39,
+                "line": 9
+              }
+            },
+            "local": {
+              "loc": {
+                "end": {
+                  "column": 50,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 39,
+                  "line": 9
+                }
+              },
+              "name": "foo",
+              "optional": false,
+              "range": [
+                244,
+                255
+              ],
+              "type": "Identifier",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 50,
+                    "line": 9
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 42,
+                    "line": 9
+                  }
+                },
+                "range": [
+                  247,
+                  255
+                ],
+                "type": "TypeAnnotation",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 50,
+                      "line": 9
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 44,
+                      "line": 9
+                    }
+                  },
+                  "range": [
+                    249,
+                    255
+                  ],
+                  "type": "StringTypeAnnotation"
+                }
+              }
+            },
+            "name": {
+              "loc": {
+                "end": {
+                  "column": 42,
+                  "line": 9
+                },
+                "source": null,
+                "start": {
+                  "column": 39,
+                  "line": 9
+                }
+              },
+              "name": "foo",
+              "optional": false,
+              "range": [
+                244,
+                247
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "range": [
+              244,
+              255
+            ],
+            "shorthand": true,
+            "type": "ComponentParameter"
+          }
+        ],
+        "range": [
+          228,
+          257
+        ],
+        "rendersType": null,
+        "type": "DeclareComponent",
+        "typeParameters": null
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 52,
+          "line": 9
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 9
+        }
+      },
+      "range": [
+        205,
+        257
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    },
+    {
+      "declaration": {
+        "id": {
+          "loc": {
+            "end": {
+              "column": 52,
+              "line": 11
+            },
+            "source": null,
+            "start": {
+              "column": 28,
+              "line": 11
+            }
+          },
+          "name": "named",
+          "optional": false,
+          "range": [
+            287,
+            311
+          ],
+          "type": "Identifier",
+          "typeAnnotation": {
+            "loc": {
+              "end": {
+                "column": 52,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 33,
+                "line": 11
+              }
+            },
+            "range": [
+              292,
+              311
+            ],
+            "type": "TypeAnnotation",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 33,
+                  "line": 11
+                }
+              },
+              "params": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 45,
+                      "line": 11
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 34,
+                      "line": 11
+                    }
+                  },
+                  "name": {
+                    "loc": {
+                      "end": {
+                        "column": 37,
+                        "line": 11
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 34,
+                        "line": 11
+                      }
+                    },
+                    "name": "foo",
+                    "optional": false,
+                    "range": [
+                      293,
+                      296
+                    ],
+                    "type": "Identifier",
+                    "typeAnnotation": null
+                  },
+                  "optional": false,
+                  "range": [
+                    293,
+                    304
+                  ],
+                  "type": "FunctionTypeParam",
+                  "typeAnnotation": {
+                    "loc": {
+                      "end": {
+                        "column": 45,
+                        "line": 11
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 39,
+                        "line": 11
+                      }
+                    },
+                    "range": [
+                      298,
+                      304
+                    ],
+                    "type": "StringTypeAnnotation"
+                  }
+                }
+              ],
+              "range": [
+                292,
+                311
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 11
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 48,
+                    "line": 11
+                  }
+                },
+                "range": [
+                  307,
+                  311
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "type": "HookTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        },
+        "implicitDeclare": false,
+        "loc": {
+          "end": {
+            "column": 53,
+            "line": 11
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 11
+          }
+        },
+        "range": [
+          282,
+          312
+        ],
+        "type": "DeclareHook"
+      },
+      "default": true,
+      "loc": {
+        "end": {
+          "column": 53,
+          "line": 11
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 11
+        }
+      },
+      "range": [
+        259,
+        312
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 53,
+      "line": 11
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    312
+  ],
+  "type": "Program"
+}
