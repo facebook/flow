@@ -7,8 +7,8 @@ Cannot return `input + 1` because `Promise<number>` [1] is incompatible with `nu
                   ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2285:15
-   2285| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2289:15
+   2289| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    test.js:9:41
       9| async hook useAsyncData(input: number): number {
@@ -24,8 +24,8 @@ Cannot return `"hello"` because `Promise<"hello">` [1] is incompatible with `str
                   ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2285:15
-   2285| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2289:15
+   2289| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    test.js:13:26
      13| async hook useChained(): string {
@@ -41,8 +41,8 @@ Cannot return `42` because `Promise<42>` [1] is incompatible with `string` [2]. 
                   ^^
 
 References:
-   <BUILTINS>/core.js:2285:15
-   2285| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2289:15
+   2289| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    test.js:18:28
      18| async hook useBadReturn(): string {

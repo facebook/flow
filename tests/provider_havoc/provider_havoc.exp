@@ -231,8 +231,8 @@ References:
    provider_edge_cases.js:5:30
       5| if (((x: unknown) => 42) === console.log) { // constant-condition error
                                       ^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2991:5
-   2991|     log(...data: Array<any>): void,
+   <BUILTINS>/core.js:2995:5
+   2995|     log(...data: Array<any>): void,
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

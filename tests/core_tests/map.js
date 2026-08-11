@@ -34,4 +34,32 @@ let tests = [
     x.get('foo') as boolean; // error, string | void
     x.get(123); // error, wrong key type
   },
+
+  // getOrInsert() and getOrInsertComputed()
+  function(x: Map<string, number>) {
+    x.getOrInsert('foo', 123) as number;
+    x.getOrInsert(123, 123); // error, wrong key type
+    x.getOrInsert('foo', 'bar'); // error, wrong value type
+
+    x.getOrInsertComputed('foo', key => {
+      key as string;
+      return 123;
+    }) as number;
+    x.getOrInsertComputed(123, () => 123); // error, wrong key type
+    x.getOrInsertComputed('foo', () => 'bar'); // error, wrong value type
+  },
+
+  // WeakMap getOrInsert() and getOrInsertComputed()
+  function(x: WeakMap<{foo: string}, number>, key: {foo: string}) {
+    x.getOrInsert(key, 123) as number;
+    x.getOrInsert('foo', 123); // error, wrong key type
+    x.getOrInsert(key, 'bar'); // error, wrong value type
+
+    x.getOrInsertComputed(key, callbackKey => {
+      callbackKey as {foo: string};
+      return 123;
+    }) as number;
+    x.getOrInsertComputed('foo', () => 123); // error, wrong key type
+    x.getOrInsertComputed(key, () => 'bar'); // error, wrong value type
+  },
 ];

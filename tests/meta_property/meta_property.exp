@@ -8,13 +8,13 @@ Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is inc
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3115:20
+   <BUILTINS>/core.js:3119:20
                             v
-   3115| type Import$Meta = {
-   3116|   [string]: unknown,
-   3117|   url?: string,
-   3118|   ...
-   3119| };
+   3119| type Import$Meta = {
+   3120|   [string]: unknown,
+   3121|   url?: string,
+   3122|   ...
+   3123| };
          ^ [1]
    import_meta.js:5:16
       5| import.meta as 1; // Error
@@ -31,8 +31,8 @@ Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is inc
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3116:13
-   3116|   [string]: unknown,
+   <BUILTINS>/core.js:3120:13
+   3120|   [string]: unknown,
                      ^^^^^^^ [1]
    import_meta.js:6:20
       6| import.meta.XXX as 1; // Error
