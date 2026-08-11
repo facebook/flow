@@ -2513,7 +2513,6 @@ fn __flow_impl<'cx>(
         {
             let x = Name::new(x.dupe());
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
-                cx,
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
                 instance_t,
             )?;
@@ -2635,7 +2634,6 @@ fn __flow_impl<'cx>(
             },
         ) if let DefTInner::InstanceT(instance_t) = def_t.deref() => {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
-                cx,
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
                 instance_t,
             )?;

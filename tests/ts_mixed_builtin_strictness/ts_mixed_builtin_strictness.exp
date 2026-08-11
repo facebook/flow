@@ -19,5 +19,42 @@ References:
                                                 ^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
 
-Found 1 error
+Cannot cast `'mousedown'` to `typeof flowKeys` because property `mousedown` is missing in `FlowDerivedMap` [1].
+[prop-missing]
+
+   test.js:9:1
+   9| 'mousedown' as typeof flowKeys; // ERROR: inherited members are not Flow keys.
+      ^^^^^^^^^^^
+
+References:
+   test.js:9:16
+   9| 'mousedown' as typeof flowKeys; // ERROR: inherited members are not Flow keys.
+                     ^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:12
+
+Cannot call `tsListener.on` because: [incompatible-type]
+ - Either `1` [1] is incompatible with `string` [2].
+ - Or `1` [1] is incompatible with `string` [3].
+
+   test.js:13:12
+   13| tsListener.on('custom', 1); // ERROR: the keyed overload types `custom` as `string`.
+                  ^^
+
+References:
+   test.js:13:25
+   13| tsListener.on('custom', 1); // ERROR: the keyed overload types `custom` as `string`.
+                               ^ [1]
+   b_ts.d.ts:24:11
+   24|   custom: string;
+                 ^^^^^^ [2]
+   b_ts.d.ts:30:27
+   30|   on(type: string, value: string): void;
+                                 ^^^^^^ [3]
+
+
+
+Found 3 errors

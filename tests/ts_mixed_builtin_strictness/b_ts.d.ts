@@ -16,3 +16,17 @@ declare class TsBuiltinBox<T> {
 
 declare var flowDogTsBox: TsBuiltinBox<FlowDog>;
 declare var tsDogFlowBox: FlowBuiltinBox<TsDog>;
+
+interface TsBaseMap {
+  mousedown: number;
+}
+interface TsDerivedMap extends TsBaseMap {
+  custom: string;
+}
+declare var tsKeys: keyof TsDerivedMap;
+
+interface TsListener {
+  on<K extends keyof TsDerivedMap>(type: K, value: TsDerivedMap[K]): void;
+  on(type: string, value: string): void;
+}
+declare var tsListener: TsListener;

@@ -7094,12 +7094,17 @@ fn ts_interface_key_sources<E>(
 
 /// Returns property maps and dictionary key types that contribute to `keyof`/`$Keys`
 /// for an instance type.
-pub fn key_sources_of_instance_t<'cx, E>(
-    cx: &Context<'cx>,
+///
+/// TS `keyof` sees inherited members, Flow `$Keys` sees only own ones. The choice is
+/// keyed on where the interface was *declared*, not on the file being checked: `keyof`
+/// resolves lazily, so a `.d.ts` interface is almost always keyed from a `.js` consumer.
+pub fn key_sources_of_instance_t<E>(
     mut concretize: impl FnMut(&Reason, &Type) -> Result<Vec<Type>, E>,
     instance: &InstanceT,
 ) -> Result<KeySources, E> {
-    if cx.ts_syntax() && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. }) {
+    if instance.inst.strictness_kind.is_typescript_loose()
+        && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. })
+    {
         ts_interface_key_sources(&mut concretize, instance)
     } else {
         Ok(instance_own_key_sources(&instance.inst))

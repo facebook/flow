@@ -6,3 +6,11 @@ declare class FlowDog extends FlowAnimal {
 declare class FlowBuiltinBox<T> {
   value: T;
 }
+
+declare interface FlowBaseMap {
+  mousedown: number;
+}
+declare interface FlowDerivedMap extends FlowBaseMap {
+  custom: string;
+}
+declare var flowKeys: $Keys<FlowDerivedMap>;

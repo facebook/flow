@@ -1314,7 +1314,6 @@ fn elab_t_concrete<'cx>(
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
-                cx,
                 |reason, t| -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
                     let collector = TypeCollector::create();
                     elab_t(
