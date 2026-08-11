@@ -13,9 +13,13 @@ use tokio::runtime::Runtime;
 use tokio::task::JoinHandle;
 
 static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .thread_name("flow-tokio-runtime")
+    let mut builder = tokio::runtime::Builder::new_multi_thread();
+    builder.enable_all().thread_name("flow-tokio-runtime");
+    // Blocking-pool threads run parallelizable LSP workloads and deep `Env` drops, both of
+    // which recurse as deeply as the type checker. Tokio's 2MiB default overflows on them.
+    #[cfg(not(target_arch = "wasm32"))]
+    builder.thread_stack_size(flow_utils_concurrency::thread_pool::DEFAULT_STACK_SIZE);
+    builder
         .build()
         .expect("failed to create tokio runtime for Flow")
 });

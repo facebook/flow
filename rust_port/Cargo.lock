@@ -1864,6 +1864,7 @@ dependencies = [
 name = "flow_tokio_runtime"
 version = "0.0.0"
 dependencies = [
+ "flow_utils_concurrency",
  "tokio",
 ]
 

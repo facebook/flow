@@ -30,7 +30,7 @@ use crate::lock::Mutex;
 /// The Flow type checker uses deep recursion (e.g., dispatch::__flow), so we need a
 /// large stack.
 #[cfg(not(target_arch = "wasm32"))]
-const DEFAULT_STACK_SIZE: usize = {
+pub const DEFAULT_STACK_SIZE: usize = {
     if cfg!(debug_assertions) {
         256 * 1024 * 1024
     } else if cfg!(windows) {
