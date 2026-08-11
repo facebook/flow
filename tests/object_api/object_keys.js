@@ -14,7 +14,7 @@ Object.keys(dict).forEach(k => {
 }
 
 var any: any = {};
-Object.keys(any) as Array<number>; // error, Array<string>
+Object.keys(any) as Array<number>; // no error, Array<any>
 
 class Foo {
   prop: string;

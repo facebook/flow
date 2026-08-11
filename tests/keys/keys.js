@@ -7,7 +7,24 @@ function testKeysOfAny(str: string, lit: 'hi') {
   }
   'hi' as keyof any; // String literal should be fine
 
-  123 as keyof any; // Error: number -> keys of any
+  123 as keyof any; // No error, `keyof any` is `any`
+}
+
+type AnyAlias = any;
+type Id<T> = T;
+function testKeysOfAnyIsAny(
+  k: keyof any,
+  kAlias: keyof AnyAlias,
+  kApp: keyof Id<any>,
+  sym: symbol,
+) {
+  k as number; // No error, `keyof any` is `any` in the source position too
+  kAlias as number; // No error, the alias is resolved
+  kApp as number; // No error, the type application is resolved
+
+  sym as keyof any; // No error, every key type is allowed
+  123 as keyof AnyAlias; // No error, the alias is resolved
+  123 as keyof Id<any>; // No error, the type application is resolved
 }
 
 type StrDict = {[key: string]: unknown};

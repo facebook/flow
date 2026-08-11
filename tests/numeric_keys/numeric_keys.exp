@@ -431,8 +431,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:26:29
 
-Cannot assign `1` to `x` because `1` [1] is incompatible with `keyof {"1": boolean, "2": boolean}` [2].
-[incompatible-type]
+Cannot assign `1` to `x` because number literal `1` [1] is incompatible with key set [2]. [incompatible-type]
 
    test.js:26:29
    26|   const x: keyof typeof o = 1; // ERROR

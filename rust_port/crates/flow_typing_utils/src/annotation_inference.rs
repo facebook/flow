@@ -1348,8 +1348,9 @@ fn elab_t_concrete<'cx>(
             });
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
         }
-        (TypeInner::AnyT(_, _), OpInner::AnnotGetKeysT(reason_op)) => {
-            type_::str_module_t::why(reason_op.dupe())
+        // keyof any -> any: any in any out.
+        (TypeInner::AnyT(_, src), OpInner::AnnotGetKeysT(reason_op)) => {
+            type_::any_t::why(*src, reason_op.dupe())
         }
         // **********
         //  $Values

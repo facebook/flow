@@ -1,33 +1,3 @@
-Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
-
-Cannot instantiate `Record` because in type argument `K`: `number` [1] is incompatible with `keyof any` [2].
-[incompatible-type]
-
-   <BUILTINS>/lib.decorators.d.ts:37:39
-     37| type DecoratorMetadataObject = Record<PropertyKey, unknown> & object;
-                                               ^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/lib.es5.d.ts:1614:23
-   1614| type Record<K extends keyof any, T> = {
-                               ^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------- <BUILTINS>/lib.decorators.d.ts:37:39
-
-Cannot instantiate `Record` because in type argument `K`: `symbol` [1] is incompatible with `keyof any` [2].
-[incompatible-type]
-
-   <BUILTINS>/lib.decorators.d.ts:37:39
-     37| type DecoratorMetadataObject = Record<PropertyKey, unknown> & object;
-                                               ^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/lib.es5.d.ts:1614:23
-   1614| type Record<K extends keyof any, T> = {
-                               ^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.dom.d.ts:14164:5
 
 Multiple indexers are not supported. [unsupported-syntax]
@@ -654,4 +624,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 68 errors
+Found 66 errors

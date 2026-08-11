@@ -128,136 +128,152 @@ References:
           ^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:10:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:38:3
 
-Cannot cast `123` to key set because `123` [1] is incompatible with `keyof any` [2]. [incompatible-type]
+Cannot cast `123` to key set because `123` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   keys.js:10:3
-   10|   123 as keyof any; // Error: number -> keys of any
+   keys.js:38:3
+   38|   123 as keyof StrDict; // Error: number -> keys of StrDict
          ^^^ [1]
 
 References:
-   keys.js:10:10
-   10|   123 as keyof any; // Error: number -> keys of any
-                ^^^^^^^^^ [2]
+   keys.js:30:23
+   30| type StrDict = {[key: string]: unknown};
+                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:21:3
-
-Cannot cast `123` to key set because `123` [1] is incompatible with `keyof StrDict` [2]. [incompatible-type]
-
-   keys.js:21:3
-   21|   123 as keyof StrDict; // Error: number -> keys of StrDict
-         ^^^ [1]
-
-References:
-   keys.js:21:10
-   21|   123 as keyof StrDict; // Error: number -> keys of StrDict
-                ^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- keys.js:26:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:43:3
 
 Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
 [incompatible-type]
 
-   keys.js:26:3
-   26|   str as keyof StrLitDict; // Error: Not all strings are allowed
+   keys.js:43:3
+   43|   str as keyof StrLitDict; // Error: Not all strings are allowed
          ^^^ [1]
 
 References:
-   keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: unknown};
+   keys.js:41:26
+   41| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:28:5
+Error ----------------------------------------------------------------------------------------------------- keys.js:45:5
 
 Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
 [incompatible-type]
 
-   keys.js:28:5
-   28|     str as keyof StrLitDict; // Error: Not all truthy strings are allowed
+   keys.js:45:5
+   45|     str as keyof StrLitDict; // Error: Not all truthy strings are allowed
            ^^^ [1]
 
 References:
-   keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: unknown};
+   keys.js:41:26
+   41| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:31:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:48:3
 
 Cannot cast `'bye'` to key set because property `bye` [1] is incompatible with string literal `hi` [2].
 [incompatible-type]
 
-   keys.js:31:3
-   31|   'bye' as keyof StrLitDict; // Error: The wrong string literal is not allowed
+   keys.js:48:3
+   48|   'bye' as keyof StrLitDict; // Error: The wrong string literal is not allowed
          ^^^^^ [1]
 
 References:
-   keys.js:24:26
-   24| type StrLitDict = {[key: 'hi']: unknown};
+   keys.js:41:26
+   41| type StrLitDict = {[key: 'hi']: unknown};
                                 ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:33:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:50:3
 
-Cannot cast `123` to key set because `123` [1] is incompatible with `keyof StrLitDict` [2]. [incompatible-type]
+Cannot cast `123` to key set because `123` [1] is incompatible with `"hi"` [2]. [incompatible-type]
 
-   keys.js:33:3
-   33|   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
+   keys.js:50:3
+   50|   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
          ^^^ [1]
 
 References:
-   keys.js:33:10
-   33|   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
-                ^^^^^^^^^^^^^^^^ [2]
+   keys.js:41:26
+   41| type StrLitDict = {[key: 'hi']: unknown};
+                                ^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:38:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:55:3
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
 `ObjLit` [1]. [prop-missing]
 
-   keys.js:38:3
-   38|   str as keyof ObjLit; // Error: string -> keys of ObjLit
+   keys.js:55:3
+   55|   str as keyof ObjLit; // Error: string -> keys of ObjLit
          ^^^
 
 References:
-   keys.js:38:16
-   38|   str as keyof ObjLit; // Error: string -> keys of ObjLit
+   keys.js:55:16
+   55|   str as keyof ObjLit; // Error: string -> keys of ObjLit
                       ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:40:5
+Error ----------------------------------------------------------------------------------------------------- keys.js:57:5
 
 Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
 `ObjLit` [1]. [prop-missing]
 
-   keys.js:40:5
-   40|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
+   keys.js:57:5
+   57|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
            ^^^
 
 References:
-   keys.js:40:18
-   40|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
+   keys.js:57:18
+   57|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
                         ^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- keys.js:44:3
+Error ----------------------------------------------------------------------------------------------------- keys.js:61:3
 
-Cannot cast `123` to key set because `123` [1] is incompatible with `keyof ObjLit` [2]. [incompatible-type]
+Cannot cast `123` to key set because number literal `123` [1] is incompatible with key set [2]. [incompatible-type]
 
-   keys.js:44:3
-   44|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
+   keys.js:61:3
+   61|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
          ^^^ [1]
 
 References:
-   keys.js:44:10
-   44|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
+   keys.js:61:10
+   61|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
                 ^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- suppressions.js:29:1
 
-Found 18 errors
+Cannot cast `s` to key set because an index signature declaring the expected key / value type is missing in
+`ObjLit` [1]. [prop-missing]
+
+   suppressions.js:29:1
+   29| s as keyof ObjLit; // Error: prop-missing
+       ^
+
+References:
+   suppressions.js:29:12
+   29| s as keyof ObjLit; // Error: prop-missing
+                  ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- suppressions.js:30:1
+
+Cannot cast `s` to key set because an index signature declaring the expected key / value type is missing in `Cls` [1].
+[prop-missing]
+
+   suppressions.js:30:1
+   30| s as keyof Cls; // Error: prop-missing
+       ^
+
+References:
+   suppressions.js:30:12
+   30| s as keyof Cls; // Error: prop-missing
+                  ^^^ [1]
+
+
+
+Found 19 errors

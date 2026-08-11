@@ -2442,27 +2442,48 @@ fn __flow_impl<'cx>(
                     rec_flow_t(cx, trace, use_op.dupe(), (&mod_key, expected_key))?;
                 }
                 _ => {
-                    let dropped2 = drop_generic(key.dupe());
-                    let (prop, suggestion) = match dropped2.deref() {
-                        TypeInner::DefT(_, inner_def2)
-                            if let DefTInner::SingletonStrT { value: prop, .. } =
-                                inner_def2.deref() =>
-                        {
-                            (
-                                Some(Name::new(prop.dupe())),
-                                prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
-                            )
-                        }
-                        _ => (None, None),
+                    let names_a_prop = match dropped.deref() {
+                        TypeInner::DefT(_, inner_def2) => matches!(
+                            inner_def2.deref(),
+                            DefTInner::SingletonStrT { .. }
+                                | DefTInner::StrGeneralT(_)
+                                | DefTInner::NumericStrKeyT(_)
+                        ),
+                        TypeInner::TemplateLiteralT { .. } => true,
+                        _ => false,
                     };
-                    let err =
+                    let err = if names_a_prop {
+                        let (prop, suggestion) = match dropped.deref() {
+                            TypeInner::DefT(_, inner_def2)
+                                if let DefTInner::SingletonStrT { value: prop, .. } =
+                                    inner_def2.deref() =>
+                            {
+                                (
+                                    Some(Name::new(prop.dupe())),
+                                    prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
+                                )
+                            }
+                            _ => (None, None),
+                        };
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: prop,
                             prop_loc: reason_op.loc().dupe(),
                             reason_obj: reason_o.dupe(),
                             use_op: use_op.dupe(),
                             suggestion,
-                        }));
+                        }))
+                    } else {
+                        ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
+                            use_op: use_op.dupe(),
+                            reason_lower: reason_op.dupe(),
+                            // `ReposLowerT` gave the object the loc of the
+                            // `keyof`, so this names the key set.
+                            reason_upper: reason_o
+                                .dupe()
+                                .replace_desc_new(VirtualReasonDesc::RKeySet),
+                            explanation: None,
+                        }))
+                    };
                     flow_js_utils::add_output(cx, err)?;
                 }
             }
@@ -2532,16 +2553,38 @@ fn __flow_impl<'cx>(
             UseTInner::HasOwnPropT(box HasOwnPropTData {
                 use_op,
                 reason: reason_op,
-                type_: _,
+                type_: key,
             }),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
-            let err = ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                prop_name: None,
-                prop_loc: reason_op.loc().dupe(),
-                reason_obj: reason_o.dupe(),
-                use_op: use_op.dupe(),
-                suggestion: None,
-            }));
+            // Same as for objects above: a key that cannot spell a property
+            // name is not a missing property, it is not a key at all.
+            let dropped = drop_generic(key.dupe());
+            let names_a_prop = match dropped.deref() {
+                TypeInner::DefT(_, key_def) => matches!(
+                    key_def.deref(),
+                    DefTInner::SingletonStrT { .. }
+                        | DefTInner::StrGeneralT(_)
+                        | DefTInner::NumericStrKeyT(_)
+                ),
+                TypeInner::TemplateLiteralT { .. } => true,
+                _ => false,
+            };
+            let err = if names_a_prop {
+                ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                    prop_name: None,
+                    prop_loc: reason_op.loc().dupe(),
+                    reason_obj: reason_o.dupe(),
+                    use_op: use_op.dupe(),
+                    suggestion: None,
+                }))
+            } else {
+                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
+                    use_op: use_op.dupe(),
+                    reason_lower: reason_op.dupe(),
+                    reason_upper: reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
+                    explanation: None,
+                }))
+            };
             flow_js_utils::add_output(cx, err)?;
         }
         // AnyT has every prop
@@ -2614,16 +2657,16 @@ fn __flow_impl<'cx>(
                 )?;
             }
         }
+        // keyof any -> any: any in any out.
         (
-            TypeInner::AnyT(_, _),
+            TypeInner::AnyT(_, src),
             UseTInner::GetKeysT {
                 reason: reason_op,
                 t_out: keys,
             },
         ) => {
-            // rec_flow cx trace (StrModuleT.why reason_op, keys)
-            let str_mod = str_module_t::why(reason_op.dupe());
-            rec_flow(cx, trace, (&str_mod, keys))?;
+            let any = any_t::why(*src, reason_op.dupe());
+            rec_flow(cx, trace, (&any, keys))?;
         }
 
         // In general, typechecking is monotonic in the sense that more constraints

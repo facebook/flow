@@ -6342,6 +6342,31 @@ pub fn rec_sub_t<'cx>(
             )
         }
 
+        // Every remaining lower bound asks `o` whether it is one of its keys,
+        // the same way the key rules above do. `o` is not necessarily concrete
+        // -- it can be an alias, an import or a type application -- and only
+        // the constraint system can resolve it. `keyof any` accepting every key
+        // falls out of this: `any` has every prop.
+        // NOTE: this has to stay below the union, intersection and generic
+        // rules, which own their lower bound whatever the upper bound is.
+        (_, TypeInner::KeysT(reason_op, o)) => {
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op,
+                reason: type_util::reason_of_t(l).dupe(),
+                type_: l.dupe(),
+            })));
+            FlowJs::rec_flow(
+                cx,
+                trace,
+                o,
+                &UseT::new(UseTInner::ReposLowerT {
+                    reason: reason_op.dupe(),
+                    use_desc: false,
+                    use_t: Box::new(u_use),
+                }),
+            )
+        }
+
         _ => {
             let type_or_explanatory_desc = |t: &Type| {
                 let desc = type_util::reason_of_t(t).desc(true);
