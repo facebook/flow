@@ -19,6 +19,7 @@ use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::parse::Parse;
 use flow_heap::parsing_heaps::Transaction;
 use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
@@ -826,8 +827,11 @@ pub fn ensure_parsed(
             {
                 let transaction = transaction.dupe();
                 move |acc: &mut FlowOrdSet<FileKey>, chunk: &Vec<FileKey>| {
+                    let access = transaction.latest_heap_reader();
+                    let reader = access.reader();
                     for file in chunk {
-                        if !transaction.has_ast(file) {
+                        if !matches!(reader.get_parse(file), Some(Parse::Typed(parse)) if parse.has_ast())
+                        {
                             acc.insert(file.dupe());
                         }
                     }

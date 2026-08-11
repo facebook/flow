@@ -296,39 +296,39 @@ impl PhantomAcc {
 
 struct ModuleResolver<'a> {
     transaction: &'a Transaction,
-    reader: HeapReader<'a>,
+    access: flow_heap::transaction::HeapAccess<'a>,
 }
 
 impl<'a> ModuleResolver<'a> {
     fn new(transaction: &'a Transaction) -> Self {
         Self {
             transaction,
-            reader: transaction.latest_heap_reader(),
+            access: transaction.latest_heap_reader(),
         }
     }
 
     fn get_dependency(&self, modulename: &Modulename) -> Option<Dependency> {
-        self.reader.get_dependency(modulename)
+        self.access.reader().get_dependency(modulename)
     }
 
     fn get_provider(&self, dependency: &Dependency) -> Option<FileKey> {
-        self.reader.get_provider(dependency)
+        self.access.reader().get_provider(dependency)
     }
 
     fn get_package_info(&self, file: &FileKey) -> Option<Arc<PackageJson>> {
-        self.reader.get_package_info(file)
+        self.access.reader().get_package_info(file)
     }
 
     fn is_typed_file(&self, file: &FileKey) -> bool {
-        self.reader.is_typed_file(file)
+        self.access.reader().is_typed_file(file)
     }
 
     fn is_package_file(&self, file: &FileKey) -> bool {
-        self.reader.is_package_file(file)
+        self.access.reader().is_package_file(file)
     }
 
     fn get_requires_unsafe(&self, file: &FileKey) -> Arc<[FlowImportSpecifier]> {
-        self.reader.get_requires_unsafe(file)
+        self.access.reader().get_requires_unsafe(file)
     }
 
     fn intern_dependency_from_modulename(&self, mname: Modulename) -> Dependency {
@@ -1988,7 +1988,12 @@ pub fn commit_modules(
         }
     }
 
-    let work_items: Vec<&Modulename> = dirty_modules.iter().collect();
+    const BATCH_SIZE: usize = 500;
+    let modules: Vec<&Modulename> = dirty_modules.iter().collect();
+    let work_items: Vec<Vec<&Modulename>> = modules
+        .chunks(BATCH_SIZE)
+        .map(|batch| batch.to_vec())
+        .collect();
 
     let (unchanged, errmap) = flow_utils_concurrency::map_reduce::fold(
         pool,
@@ -1997,24 +2002,27 @@ pub fn commit_modules(
             ModulenameSet,
             BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
         ),
-         &mname| {
+         batch| {
             let (unchanged, errmap) = acc;
-            let reader = transaction.latest_heap_reader();
-            match mname {
-                Modulename::Haste(haste_info) => {
-                    commit_haste(
-                        options,
-                        transaction,
-                        &reader,
-                        debug,
-                        unchanged,
-                        errmap,
-                        mname,
-                        haste_info,
-                    );
-                }
-                Modulename::Filename(file_key) => {
-                    commit_file(&reader, unchanged, mname, file_key);
+            let access = transaction.latest_heap_reader();
+            let reader = access.reader();
+            for &mname in batch {
+                match mname {
+                    Modulename::Haste(haste_info) => {
+                        commit_haste(
+                            options,
+                            transaction,
+                            &reader,
+                            debug,
+                            unchanged,
+                            errmap,
+                            mname,
+                            haste_info,
+                        );
+                    }
+                    Modulename::Filename(file_key) => {
+                        commit_file(&reader, unchanged, mname, file_key);
+                    }
                 }
             }
         },

@@ -491,7 +491,11 @@ fn process_persistent_workloads(
                     && let Some(workload) =
                         server_monitor_listener_state::pop_next_parallelizable_workload()
                 {
-                    (workload.parallelizable_workload_handler)(env);
+                    // Same ownership rule as the rechecker's loop: this dispatcher owns
+                    // the transaction and releases its guard when the workload returns.
+                    let transaction = Transaction::new(env.heap.dupe());
+                    let _release_guard = transaction.release_on_drop();
+                    (workload.parallelizable_workload_handler)(env, &transaction);
                     true
                 } else {
                     false

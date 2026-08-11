@@ -42,16 +42,18 @@ pub use crate::transaction::HashStats;
 pub use crate::transaction::Transaction;
 
 impl Transaction {
-    pub fn latest_heap_reader(&self) -> crate::heap_state::HeapReader<'_> {
+    pub fn latest_heap_reader(&self) -> crate::transaction::HeapAccess<'_> {
         self.latest_reader()
     }
 
     pub fn get_haste_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
-        self.latest_reader().get_haste_info(file)
+        self.latest_reader().reader().get_haste_info(file)
     }
 
     pub fn get_haste_info_committed(&self, file: &FileKey) -> Option<HasteModuleInfo> {
-        self.committed_reader().get_haste_info_committed(file)
+        self.committed_reader()
+            .reader()
+            .get_haste_info_committed(file)
     }
 
     pub fn get_haste_module_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
@@ -59,7 +61,7 @@ impl Transaction {
     }
 
     pub fn get_haste_module(&self, info: &HasteModuleInfo) -> Option<HasteModule> {
-        self.latest_reader().get_haste_module(info)
+        self.latest_reader().reader().get_haste_module(info)
     }
 
     pub fn get_haste_module_unsafe(&self, info: &HasteModuleInfo) -> HasteModule {
@@ -69,6 +71,7 @@ impl Transaction {
 
     pub fn get_haste_provider_candidates(&self, info: &HasteModuleInfo) -> Vec<FileKey> {
         self.latest_reader()
+            .reader()
             .haste_provider_candidates(info)
             .into_iter()
             .collect()
@@ -76,6 +79,7 @@ impl Transaction {
 
     pub fn get_haste_dependents(&self, info: &HasteModuleInfo) -> Vec<FileKey> {
         self.latest_reader()
+            .reader()
             .haste_dependents(info)
             .into_iter()
             .collect()
@@ -88,6 +92,7 @@ impl Transaction {
                 .map(|module| module.dependency()),
             Modulename::Filename(file_key) => self
                 .latest_reader()
+                .reader()
                 .file_entry(file_key)
                 .map(|entry| entry.dependency()),
         }
@@ -101,6 +106,7 @@ impl Transaction {
                 .unwrap_or_else(|| panic!("Haste module not found: {:?}", haste_module_info)),
             Modulename::Filename(file_key) => self
                 .latest_reader()
+                .reader()
                 .file_entry(file_key)
                 .map(|entry| entry.dependency())
                 .unwrap_or_else(|| panic!("File not found: {}", file_key.as_str())),
@@ -140,19 +146,21 @@ impl Transaction {
     }
 
     pub fn get_provider(&self, dependency: &Dependency) -> Option<FileKey> {
-        self.latest_reader().get_provider(dependency)
+        self.latest_reader().reader().get_provider(dependency)
     }
 
     pub fn get_provider_committed(&self, dependency: &Dependency) -> Option<FileKey> {
-        self.committed_reader().get_provider_committed(dependency)
+        self.committed_reader()
+            .reader()
+            .get_provider_committed(dependency)
     }
 
     pub fn get_parse(&self, file: &FileKey) -> Option<Parse> {
-        self.latest_reader().get_parse(file)
+        self.latest_reader().reader().get_parse(file)
     }
 
     pub fn get_parse_committed(&self, file: &FileKey) -> Option<Parse> {
-        self.committed_reader().get_parse_committed(file)
+        self.committed_reader().reader().get_parse_committed(file)
     }
 
     pub fn get_typed_parse(&self, file: &FileKey) -> Option<TypedParse> {
@@ -227,7 +235,7 @@ impl Transaction {
     }
 
     pub fn get_ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
-        if let Some(cached) = self.committed().reader_cache.get_ast(file) {
+        if let Some(cached) = self.with_reader_cache(|c| c.get_ast(file)) {
             return cached;
         }
         let typed = self.get_typed_parse_unsafe(file);
@@ -235,16 +243,14 @@ impl Transaction {
     }
 
     pub fn get_ast(&self, file: &FileKey) -> Option<Arc<Program<Loc, Loc>>> {
-        if let Some(cached) = self.committed().reader_cache.get_ast(file) {
+        if let Some(cached) = self.with_reader_cache(|c| c.get_ast(file)) {
             return Some(cached);
         }
         self.get_typed_parse(file)
             .and_then(|typed| match &typed.ast {
                 Some(bytes) => {
                     let ast = flow_heap_serialization::deserialize_ast(file, bytes);
-                    self.committed()
-                        .reader_cache
-                        .add_ast(file.dupe(), ast.dupe());
+                    self.with_reader_cache(|c| c.add_ast(file.dupe(), ast.dupe()));
                     Some(ast)
                 }
                 None => None,
@@ -279,14 +285,12 @@ impl Transaction {
     }
 
     fn get_unpacked_aloc_table(&self, file: &FileKey) -> Option<Arc<ALocTable>> {
-        if let Some(cached) = self.committed().reader_cache.get_aloc_table(file) {
+        if let Some(cached) = self.with_reader_cache(|c| c.get_aloc_table(file)) {
             return Some(cached);
         }
         self.get_aloc_table(file).map(|packed| {
             let table = Arc::new(ALocTable::unpack(file.dupe(), &packed));
-            self.committed()
-                .reader_cache
-                .add_aloc_table(file.dupe(), table.dupe());
+            self.with_reader_cache(|c| c.add_aloc_table(file.dupe(), table.dupe()));
             table
         })
     }
@@ -406,7 +410,7 @@ impl Transaction {
     where
         F: FnMut(&FileKey),
     {
-        for file in self.latest_reader().dependents(modulename) {
+        for file in self.latest_reader().reader().dependents(modulename) {
             f(&file);
         }
     }
@@ -489,24 +493,27 @@ impl Transaction {
     }
 
     pub fn file_has_changed(&self, file: &FileKey) -> bool {
-        self.latest_reader().file_has_changed(file)
+        self.latest_reader().reader().file_has_changed(file)
     }
 
     pub fn get_alternate_file(&self, file: &FileKey) -> Option<FileKey> {
         self.latest_reader()
+            .reader()
             .file_entry(file)
             .and_then(|entry| entry.get_alternate_file())
     }
 
     pub fn set_alternate_file(&self, file: &FileKey, alternate: FileKey) {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         if let Some(entry) = writer.reader().file_entry(file) {
             writer.set_file_entry(file.dupe(), entry.with_alternate_file(Some(alternate)));
         }
     }
 
     pub fn get_or_create_haste_module(&self, info: HasteModuleInfo) -> HasteModule {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         self.get_or_create_haste_module_with_writer(&writer, info)
     }
 
@@ -525,7 +532,8 @@ impl Transaction {
     }
 
     pub fn set_haste_module_provider(&self, info: &HasteModuleInfo, provider: Option<FileKey>) {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         let module = writer
             .reader()
             .get_haste_module(info)
@@ -536,11 +544,13 @@ impl Transaction {
     fn add_haste_provider_candidate(&self, info: &HasteModuleInfo, file: &FileKey) {
         self.get_or_create_haste_module(info.dupe());
         self.heap_writer()
+            .writer()
             .add_haste_provider_candidate(info.dupe(), file.dupe());
     }
 
     fn remove_haste_provider_candidate(&self, info: &HasteModuleInfo, file: &FileKey) {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         if let Some(module) = writer.reader().get_haste_module(info)
             && module.get_provider().as_ref() == Some(file)
         {
@@ -582,7 +592,8 @@ impl Transaction {
             return BTreeSet::new();
         }
         let impl_key = files::chop_declaration_ext(file);
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         let (entry, inserted) = match writer.reader().file_entry(&impl_key) {
             Some(entry) => (entry, false),
             None => (FileEntry::new_empty(impl_key.dupe()), true),
@@ -612,7 +623,8 @@ impl Transaction {
         requires: Arc<[FlowImportSpecifier]>,
         imports: Arc<Imports>,
     ) -> BTreeSet<Modulename> {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         let existing_entry = writer.reader().file_entry(&file);
         let previous_entry = existing_entry.dupe();
 
@@ -684,7 +696,8 @@ impl Transaction {
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::UntypedParse;
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         let existing_entry = writer.reader().file_entry(&file);
         let previous_entry = existing_entry.dupe();
 
@@ -732,7 +745,8 @@ impl Transaction {
         file_key: FileKey,
         haste_module_info: Option<HasteModuleInfo>,
     ) -> BTreeSet<Modulename> {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         if let Some(existing_entry) = writer.reader().file_entry(&file_key) {
             if let Some(Parse::Typed(old_typed)) = existing_entry.parse_latest() {
                 if let Some(old_rr) = old_typed.resolved_requires {
@@ -774,7 +788,8 @@ impl Transaction {
         package_info: Arc<PackageJson>,
     ) -> BTreeSet<Modulename> {
         use crate::parse::PackageParse;
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         let existing_entry = writer.reader().file_entry(&file);
         let previous_entry = existing_entry.dupe();
         let package_parse = PackageParse::new(file_hash, package_info);
@@ -808,7 +823,8 @@ impl Transaction {
         file: &FileKey,
         resolved_requires: crate::resolved_requires::ResolvedRequires,
     ) {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         if let Some(entry) = writer.reader().file_entry(file) {
             if let Some(Parse::Typed(typed)) = entry.parse_latest() {
                 let old_deps = typed
@@ -882,7 +898,8 @@ impl Transaction {
         file: &FileKey,
         update: impl FnOnce(TypedParse) -> TypedParse,
     ) {
-        let writer = self.heap_writer();
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
         if let Some(entry) = writer.reader().file_entry(file)
             && let Some(Parse::Typed(typed)) = entry.parse_latest()
         {
@@ -921,6 +938,86 @@ mod tests {
 
     fn committed_heap() -> Arc<CommittedHeap> {
         Arc::new(CommittedHeap::default())
+    }
+
+    /// Stands in for a dispatcher serving one LSP request: it owns the transaction, runs
+    /// the workload, then hands the committed-heap guard back. The returned `Arc` is what
+    /// the request's typed artifacts keep alive in an IDE cache.
+    fn serve_one_request(heap: &Arc<CommittedHeap>) -> Arc<Transaction> {
+        let transaction = Transaction::new(heap.dupe());
+        // The workload reads through it and caches what it produced.
+        let _ = transaction.get_parse(&source_file("read_by_the_workload.js"));
+        transaction.release();
+        transaction
+    }
+
+    /// Regression test for the "collating errors" hang.
+    ///
+    /// A `textDocument/definition` request left its transaction in a thread-local artifact
+    /// cache on the parallelizable-workload loop thread. The transaction still held a read
+    /// guard on the committed heap, so the next recheck's `apply_commit_deltas` waited on
+    /// `state.write()` forever — the server reported "collating errors" indefinitely at 0%
+    /// CPU while the guard sat on an idle thread.
+    ///
+    /// The invariant that prevents it: a dispatcher releases the guard when its workload
+    /// returns, so a cache may keep the `Arc<Transaction>` but never the guard. This fails
+    /// if any dispatcher stops calling `release`.
+    #[test]
+    fn a_cached_transaction_does_not_block_the_next_recheck() {
+        let heap = committed_heap();
+        let cached_by_the_ide = serve_one_request(&heap);
+        assert_eq!(
+            Arc::strong_count(&cached_by_the_ide),
+            1,
+            "the cache should be the transaction's sole owner"
+        );
+
+        // The next recheck publishes.
+        let recheck = Transaction::new(heap.dupe());
+        recheck.add_unparsed(source_file("changed.js"), 42, None);
+        let heap_for_commit = heap.dupe();
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            recheck.commit(&heap_for_commit);
+            tx.send(())
+                .expect("the commit completion receiver should remain alive");
+        });
+
+        assert!(
+            rx.recv_timeout(Duration::from_secs(30)).is_ok(),
+            "the recheck's commit blocked behind a transaction that an IDE cache is still \
+             holding; this is the \"collating errors\" deadlock"
+        );
+        drop(cached_by_the_ide);
+    }
+
+    /// The other half of the contract: while a transaction still holds its guard, a commit
+    /// waits. That is what keeps a reader from seeing a half-applied commit, and it is why
+    /// the guard has to be released explicitly rather than simply never taken.
+    #[test]
+    fn an_unreleased_transaction_blocks_a_commit() {
+        let heap = committed_heap();
+        let reading = Transaction::new(heap.dupe());
+
+        let committing = Transaction::new(heap.dupe());
+        committing.add_unparsed(source_file("b.js"), 42, None);
+        let heap_for_commit = heap.dupe();
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            committing.commit(&heap_for_commit);
+            tx.send(())
+                .expect("the commit completion receiver should remain alive");
+        });
+
+        assert!(
+            rx.recv_timeout(Duration::from_millis(500)).is_err(),
+            "a commit must wait while a transaction is still reading the base"
+        );
+        reading.release();
+        assert!(
+            rx.recv_timeout(Duration::from_secs(30)).is_ok(),
+            "the commit should proceed once the guard is released"
+        );
     }
 
     #[test]
@@ -1014,6 +1111,7 @@ mod tests {
         write.set_haste_module_provider(&haste, Some(file.dupe()));
         write
             .heap_writer()
+            .writer()
             .add_haste_dependent(haste.dupe(), file.dupe());
         write.commit(&heap);
 
@@ -1038,6 +1136,7 @@ mod tests {
         let seed = Transaction::new(heap.dupe());
         seed.add_unparsed(file.dupe(), 0, None);
         seed.heap_writer()
+            .writer()
             .add_file_dependent(file.dupe(), even_dependent.dupe());
         seed.commit(&heap);
 
@@ -1086,13 +1185,16 @@ mod tests {
         for file_hash in 1..=100 {
             let transaction = Transaction::new(heap.dupe());
             transaction.add_unparsed(file.dupe(), file_hash, None);
-            let writer = transaction.heap_writer();
-            if file_hash % 2 == 0 {
-                writer.remove_file_dependent(file.dupe(), odd_dependent.dupe());
-                writer.add_file_dependent(file.dupe(), even_dependent.dupe());
-            } else {
-                writer.remove_file_dependent(file.dupe(), even_dependent.dupe());
-                writer.add_file_dependent(file.dupe(), odd_dependent.dupe());
+            {
+                let writer_guard = transaction.heap_writer();
+                let writer = writer_guard.writer();
+                if file_hash % 2 == 0 {
+                    writer.remove_file_dependent(file.dupe(), odd_dependent.dupe());
+                    writer.add_file_dependent(file.dupe(), even_dependent.dupe());
+                } else {
+                    writer.remove_file_dependent(file.dupe(), even_dependent.dupe());
+                    writer.add_file_dependent(file.dupe(), odd_dependent.dupe());
+                }
             }
             transaction.commit(&heap);
         }

@@ -179,9 +179,12 @@ pub enum CommandHandler {
 
 type PersistentImmediateWorkload =
     Box<dyn FnOnce() -> (lsp_prot::Response, lsp_prot::Metadata) + Send>;
+/// Reads through the transaction it is given rather than starting its own; the dispatcher
+/// that runs it owns that transaction and releases the committed-heap guard afterwards.
 type PersistentParallelizableWorkload = Box<
     dyn FnOnce(
             &server_env::Env,
+            &Arc<flow_heap::parsing_heaps::Transaction>,
         ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
         + Send,
 >;
@@ -4087,7 +4090,7 @@ fn handle_parallelizable_ephemeral(
     let parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
         Box::new(|| false);
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
-        move |env: &server_env::Env| {
+        move |env: &server_env::Env, _transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
             let workload_command = command.clone();
             let workload_genv = genv.clone();
             let mk_workload = || {
@@ -4423,10 +4426,10 @@ fn handle_parallelizable_persistent(
     let parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
         Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
-        move |env: &server_env::Env| {
+        move |env: &server_env::Env, transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
             let _result: Result<(), WorkloadCanceled> =
                 wrap_persistent_handler(&genv.options, client_id, request, (), || {
-                    let (response, metadata) = workload(env)?;
+                    let (response, metadata) = workload(env, transaction)?;
                     Ok(((), response, metadata))
                 });
         },
@@ -7006,7 +7009,12 @@ fn mk_parallelizable_persistent(
 ) -> PersistentCommandHandler {
     let wait_for_recheck = options.wait_for_recheck;
     if wait_for_recheck {
-        PersistentCommandHandler::HandleNonparallelizablePersistent(f)
+        PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+            let transaction = flow_heap::parsing_heaps::Transaction::new(env.heap.dupe());
+            let _release_guard = transaction.release_on_drop();
+
+            f(env, &transaction)
+        }))
     } else {
         PersistentCommandHandler::HandleParallelizablePersistent(f)
     }
@@ -7168,14 +7176,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     handle_persistent_get_def(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7198,14 +7205,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     handle_persistent_infer_type(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7224,14 +7230,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_code_action_request(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7251,14 +7256,13 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     handle_persistent_autocomplete_lsp(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7281,14 +7285,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_signaturehelp_lsp(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7307,14 +7310,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = Arc::new(options.clone());
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_text_document_diagnostics_lsp(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7336,14 +7338,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_document_highlight(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7364,10 +7365,12 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+                let transaction = Transaction::new(committed_heap.dupe());
+                let _release_guard = transaction.release_on_drop();
                 Ok(handle_persistent_find_references(
                     &options_arc,
                     env,
-                    Transaction::new(committed_heap.dupe()),
+                    transaction.dupe(),
                     client_id,
                     id,
                     &params,
@@ -7385,14 +7388,13 @@ fn get_persistent_handler(
             let params = params.clone();
             let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_prepare_rename(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7413,10 +7415,12 @@ fn get_persistent_handler(
             let options_arc = Arc::new(genv.options.clone());
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+                let transaction = Transaction::new(committed_heap.dupe());
+                let _release_guard = transaction.release_on_drop();
                 Ok(handle_persistent_rename(
                     &options_arc,
                     env,
-                    Transaction::new(committed_heap.dupe()),
+                    transaction.dupe(),
                     client_id,
                     id,
                     &params,
@@ -7435,7 +7439,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, _transaction| {
                     Ok(handle_persistent_workspace_symbol(
                         &options_arc,
                         env,
@@ -7457,14 +7461,13 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     handle_persistent_coverage(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7479,12 +7482,11 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     let root = options_arc.root.display().to_string();
-                    let transaction = Transaction::new(committed_heap.dupe());
+                    let transaction = transaction.dupe();
                     let items = collect_rage(&options_arc, env, transaction.as_ref(), None)
                         .into_iter()
                         .map(|(title, data)| lsp::rage::RageItem {
@@ -7503,7 +7505,7 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |_env| Ok(handle_persistent_ping(id, metadata))),
+                Box::new(move |_env, _transaction| Ok(handle_persistent_ping(id, metadata))),
             )
         }
 
@@ -7532,14 +7534,13 @@ fn get_persistent_handler(
                     match text_document {
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
-                            let committed_heap = committed_heap.dupe();
                             mk_parallelizable_persistent(
                                 options,
-                                Box::new(move |env| {
+                                Box::new(move |env, transaction| {
                                     Ok(handle_persistent_add_missing_imports_command(
                                         &options_arc,
                                         env,
-                                        Transaction::new(committed_heap.dupe()),
+                                        transaction.dupe(),
                                         client_id,
                                         id,
                                         &text_document,
@@ -7600,7 +7601,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, _transaction| {
                     Ok(handle_persistent_auto_close_jsx(
                         &options_arc,
                         env,
@@ -7621,14 +7622,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_prepare_document_paste(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7648,10 +7648,12 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+                let transaction = Transaction::new(committed_heap.dupe());
+                let _release_guard = transaction.release_on_drop();
                 Ok(handle_persistent_provide_document_paste_edits(
                     &options_arc,
                     env,
-                    Transaction::new(committed_heap.dupe()),
+                    transaction.dupe(),
                     id,
                     &params,
                     metadata,
@@ -7669,7 +7671,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, _transaction| {
                     Ok(handle_persistent_linked_editing_range(
                         &options_arc,
                         env,
@@ -7689,15 +7691,14 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
-            let committed_heap = committed_heap.dupe();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_rename_file_imports(
                         &options_for_closure,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7714,15 +7715,14 @@ fn get_persistent_handler(
             let id = id.clone();
             let metadata = metadata.clone();
             let params = params.clone();
-            let committed_heap = committed_heap.dupe();
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_persistent_llm_context(
                         &options_for_closure,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         id,
                         &params,
@@ -7766,14 +7766,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
-            let committed_heap = committed_heap.dupe();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env| {
+                Box::new(move |env, transaction| {
                     Ok(handle_live_errors_request(
                         &options_arc,
                         env,
-                        Transaction::new(committed_heap.dupe()),
+                        transaction.dupe(),
                         client_id,
                         &uri,
                         metadata,
@@ -7896,38 +7895,41 @@ fn mk_parallelizable_persistent_workload(
         parallelizable_workload_should_be_cancelled: Box::new(move || {
             cancelled_request_id_opt(&request_for_cancel).is_some()
         }),
-        parallelizable_workload_handler: Box::new(move |env: &server_env::Env| {
-            let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
-                &options,
-                client_id,
-                request_for_handler.clone(),
-                (),
-                || {
-                    let (response, metadata) = workload(env)?;
-                    Ok(((), response, metadata))
-                },
-            );
-            if let Err(WorkloadCanceled) = result {
-                flow_hh_logger::info!(
-                    "Command successfully canceled. Requeuing the command for after the next recheck."
+        parallelizable_workload_handler: Box::new(
+            move |env: &server_env::Env,
+                  transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
+                let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
+                    &options,
+                    client_id,
+                    request_for_handler.clone(),
+                    (),
+                    || {
+                        let (response, metadata) = workload(env, transaction)?;
+                        Ok(((), response, metadata))
+                    },
                 );
-                if let PersistentCommandHandler::HandleParallelizablePersistent(new_workload) =
-                    get_persistent_handler(&genv_for_handler, client_id, &request_for_handler)
-                {
-                    let recreated = mk_parallelizable_persistent_workload(
-                        genv_for_handler.clone(),
-                        client_id,
-                        request_for_handler.clone(),
-                        name_for_handler.clone(),
-                        new_workload,
+                if let Err(WorkloadCanceled) = result {
+                    flow_hh_logger::info!(
+                        "Command successfully canceled. Requeuing the command for after the next recheck."
                     );
-                    server_monitor_listener_state::defer_parallelizable_workload(
-                        &name_for_handler,
-                        recreated,
-                    );
+                    if let PersistentCommandHandler::HandleParallelizablePersistent(new_workload) =
+                        get_persistent_handler(&genv_for_handler, client_id, &request_for_handler)
+                    {
+                        let recreated = mk_parallelizable_persistent_workload(
+                            genv_for_handler.clone(),
+                            client_id,
+                            request_for_handler.clone(),
+                            name_for_handler.clone(),
+                            new_workload,
+                        );
+                        server_monitor_listener_state::defer_parallelizable_workload(
+                            &name_for_handler,
+                            recreated,
+                        );
+                    }
                 }
-            }
-        }),
+            },
+        ),
     }
 }
 

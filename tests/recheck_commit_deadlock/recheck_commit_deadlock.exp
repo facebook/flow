@@ -1,0 +1,5 @@
+==== check-contents caches typed artifacts (and their transaction) ====
+No errors!
+
+==== a recheck must still be able to publish ====
+No errors!

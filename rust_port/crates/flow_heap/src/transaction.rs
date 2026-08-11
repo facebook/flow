@@ -25,7 +25,7 @@ use flow_common_modulename::Modulename;
 use flow_parser::file_key::FileKey;
 use flow_parser_utils::package_json::PackageJson;
 use flow_utils_concurrency::lockfree_overlay_map::commit_map_with_capacity;
-use parking_lot::ArcRwLockReadGuard;
+use parking_lot::RwLock;
 use rayon::prelude::*;
 
 use crate::haste_module::HasteModule;
@@ -47,8 +47,46 @@ use crate::resolved_requires::ResolvedModule;
 use crate::resolved_requires::ResolvedRequires;
 
 pub struct Transaction {
-    committed: CommittedHeapReadGuard,
+    heap: Arc<CommittedHeap>,
     overlay: HeapOverlay,
+    /// The committed-heap read guard, held for the duration of a unit of work so the base
+    /// cannot change underneath it, and `None` between units of work.
+    ///
+    /// Publishing a transaction needs the matching write guard, so a holder that keeps this
+    /// while idle blocks every future commit. Cached IDE artifacts legitimately outlive the
+    /// request that built them and keep holding the `Arc<Transaction>`, so the guard — not
+    /// the transaction — is what has to be given back. `release` is that handoff, and its
+    /// caller is the single point at which it happens.
+    committed: RwLock<Option<CommittedHeapReadGuard>>,
+}
+
+/// Releases a transaction's committed-heap read guard when its dispatcher scope ends.
+pub struct TransactionReleaseGuard<'a>(&'a Transaction);
+
+impl Drop for TransactionReleaseGuard<'_> {
+    fn drop(&mut self) {
+        self.0.release();
+    }
+}
+
+/// Borrows the committed heap for the duration of one read. Produced by
+/// [`Transaction::latest_reader`] / [`Transaction::committed_reader`].
+pub struct HeapAccess<'a> {
+    slot: parking_lot::RwLockReadGuard<'a, Option<CommittedHeapReadGuard>>,
+    overlay: Option<&'a HeapOverlay>,
+}
+
+impl HeapAccess<'_> {
+    pub fn reader(&self) -> HeapReader<'_> {
+        let state = self.slot.as_ref().expect(
+            "transaction was read after its guard was released; a transaction may only \
+             be read within the unit of work its dispatcher created it for",
+        );
+        match self.overlay {
+            Some(overlay) => HeapReader::transactional(&state.data, overlay),
+            None => HeapReader::committed(&state.data),
+        }
+    }
 }
 
 pub struct HashStats {
@@ -670,35 +708,75 @@ fn decompress_block(compressed: &[u8]) -> io::Result<Vec<u8>> {
 }
 
 impl Transaction {
-    pub fn new(committed: Arc<CommittedHeap>) -> Arc<Self> {
-        let committed = committed.read_arc_recursive();
-        committed.active_transactions.fetch_add(1, Ordering::AcqRel);
+    pub fn new(heap: Arc<CommittedHeap>) -> Arc<Self> {
+        let guard = heap.read_arc_recursive();
+        guard.active_transactions.fetch_add(1, Ordering::AcqRel);
         Arc::new(Self {
-            committed,
+            heap,
             overlay: HeapOverlay::new(),
+            committed: RwLock::new(Some(guard)),
         })
     }
 
-    pub(crate) fn committed(&self) -> &crate::heap_state::CommittedHeapState {
-        &self.committed
+    /// Give the committed-heap read guard back so a commit can proceed. The transaction
+    /// stays alive as a handle for whatever cached it, but must not be read again.
+    pub fn release(&self) {
+        *self.committed.write() = None;
     }
 
-    pub(crate) fn latest_reader(&self) -> HeapReader<'_> {
-        HeapReader::transactional(&self.committed.data, &self.overlay)
+    /// Returns a guard that releases this transaction when the dispatcher scope ends.
+    pub fn release_on_drop(&self) -> TransactionReleaseGuard<'_> {
+        TransactionReleaseGuard(self)
     }
 
-    pub(crate) fn committed_reader(&self) -> HeapReader<'_> {
-        HeapReader::committed(&self.committed.data)
+    pub(crate) fn with_committed_state<R>(
+        &self,
+        f: impl FnOnce(&crate::heap_state::CommittedHeapState) -> R,
+    ) -> R {
+        let slot = self.committed.read_recursive();
+        let state = slot.as_ref().expect(
+            "transaction was read after its guard was released; a transaction may only \
+             be read within the unit of work its dispatcher created it for",
+        );
+        f(state)
+    }
+
+    pub(crate) fn with_reader_cache<R>(
+        &self,
+        f: impl FnOnce(&flow_heap_serialization::ReaderCache) -> R,
+    ) -> R {
+        let slot = self.committed.read_recursive();
+        let state = slot.as_ref().expect(
+            "transaction was read after its guard was released; a transaction may only \
+             be read within the unit of work its dispatcher created it for",
+        );
+        f(&state.reader_cache)
+    }
+
+    pub(crate) fn latest_reader(&self) -> HeapAccess<'_> {
+        HeapAccess {
+            slot: self.committed.read_recursive(),
+            overlay: Some(&self.overlay),
+        }
+    }
+
+    pub(crate) fn committed_reader(&self) -> HeapAccess<'_> {
+        HeapAccess {
+            slot: self.committed.read_recursive(),
+            overlay: None,
+        }
     }
 
     /// Returns the committed base without publishing the active transaction overlay.
     pub fn committed_heap(&self) -> Arc<CommittedHeap> {
-        let state = ArcRwLockReadGuard::rwlock(&self.committed).dupe();
-        Arc::new(CommittedHeap { state })
+        self.heap.dupe()
     }
 
-    pub(crate) fn heap_writer(&self) -> HeapWriter<'_> {
-        HeapWriter::new(&self.committed.data, &self.overlay)
+    pub(crate) fn heap_writer(&self) -> HeapWrite<'_> {
+        HeapWrite {
+            slot: self.committed.read_recursive(),
+            overlay: &self.overlay,
+        }
     }
 
     pub fn hash_stats(&self) -> HashStats {
@@ -717,11 +795,13 @@ impl Transaction {
     }
 
     fn latest_counts(&self) -> (i32, i32) {
-        (
-            self.overlay.file_count_over(&self.committed.data.files) as i32,
-            self.overlay
-                .haste_module_count_over(&self.committed.data.haste_modules) as i32,
-        )
+        self.with_committed_state(|state| {
+            (
+                self.overlay.file_count_over(&state.data.files) as i32,
+                self.overlay
+                    .haste_module_count_over(&state.data.haste_modules) as i32,
+            )
+        })
     }
 
     pub fn snapshot_latest_heap(&self) -> CommittedHeap {
@@ -731,7 +811,10 @@ impl Transaction {
     }
 
     fn clone_base_heap(&self) -> CommittedHeap {
-        let base = &self.committed.data;
+        self.with_committed_state(|state| self.clone_base_heap_from(&state.data))
+    }
+
+    fn clone_base_heap_from(&self, base: &CommittedHeapData) -> CommittedHeap {
         let files_len = base.files.len();
         let haste_modules_len = base.haste_modules.len();
         let heap = CommittedHeap::with_capacity(files_len, haste_modules_len);
@@ -760,8 +843,10 @@ impl Transaction {
             return;
         }
 
-        let mut gc_state = self.committed().gc_state.lock();
-        gc_state.new_alloc_size = gc_state.new_alloc_size.saturating_add(count);
+        self.with_committed_state(|state| {
+            let mut gc_state = state.gc_state.lock();
+            gc_state.new_alloc_size = gc_state.new_alloc_size.saturating_add(count);
+        });
     }
 
     fn file_index(file_to_index: &BTreeMap<FileKey, u32>, file: &FileKey) -> u32 {
@@ -1247,24 +1332,30 @@ impl Transaction {
     }
 
     fn stage_heap_replacement(&self, data: CommittedHeapData) {
-        let writer = self.heap_writer();
-        for file in self.committed.data.files.keys() {
+        let writer_guard = self.heap_writer();
+        let writer = writer_guard.writer();
+        let slot = self.committed.read_recursive();
+        let committed_data = &slot
+            .as_ref()
+            .expect("transaction must hold the committed-heap guard to stage a replacement")
+            .data;
+        for file in committed_data.files.keys() {
             writer.remove_file_entry(file.dupe());
         }
-        for info in self.committed.data.haste_modules.keys() {
+        for info in committed_data.haste_modules.keys() {
             writer.remove_haste_module(info.dupe());
         }
-        for (owner, dependents) in self.committed.data.file_dependents.iter() {
+        for (owner, dependents) in committed_data.file_dependents.iter() {
             for dependent in dependents.iter() {
                 writer.remove_file_dependent(owner.dupe(), dependent.dupe());
             }
         }
-        for (owner, dependents) in self.committed.data.haste_dependents.iter() {
+        for (owner, dependents) in committed_data.haste_dependents.iter() {
             for dependent in dependents.iter() {
                 writer.remove_haste_dependent(owner.dupe(), dependent.dupe());
             }
         }
-        for (owner, providers) in self.committed.data.haste_provider_candidates.iter() {
+        for (owner, providers) in committed_data.haste_provider_candidates.iter() {
             for provider in providers.iter() {
                 writer.remove_haste_provider_candidate(owner.dupe(), provider.dupe());
             }
@@ -1299,8 +1390,10 @@ impl Transaction {
             }
         }
 
-        self.committed.reader_cache.clear();
-        *self.committed.gc_state.lock() = GcState::default();
+        self.with_committed_state(|state| {
+            state.reader_cache.clear();
+            *state.gc_state.lock() = GcState::default();
+        });
     }
 
     fn serialized_resolved_module(
@@ -1687,27 +1780,41 @@ impl Transaction {
             Ok(transaction) => transaction,
             Err(_) => panic!("all transaction handles must be dropped before commit"),
         };
-        let state = ArcRwLockReadGuard::rwlock(&transaction.committed).dupe();
-        let source = CommittedHeap { state };
-        let Transaction { committed, overlay } = &mut transaction;
-        ArcRwLockReadGuard::unlocked(committed, || {
-            if Arc::ptr_eq(&source.state, &destination.state) {
-                source.apply_overlay_draining(overlay);
-            } else {
-                source.apply_commit_deltas_to_both(destination, overlay);
-            }
-        });
+        // Publishing needs the write guard, so give up the read guard first.
+        transaction.release();
+        let source = transaction.heap.dupe();
+        let overlay = &mut transaction.overlay;
+        if Arc::ptr_eq(&source, destination) {
+            source.apply_overlay_draining(overlay);
+        } else {
+            source.apply_commit_deltas_to_both(destination, overlay);
+        }
+    }
+}
+
+/// Borrows the committed heap for the duration of one write into the overlay.
+pub struct HeapWrite<'a> {
+    slot: parking_lot::RwLockReadGuard<'a, Option<CommittedHeapReadGuard>>,
+    overlay: &'a HeapOverlay,
+}
+
+impl HeapWrite<'_> {
+    pub(crate) fn writer(&self) -> HeapWriter<'_> {
+        let state = self.slot.as_ref().expect(
+            "transaction was written after its guard was released; a transaction may only \
+             be used within the unit of work its dispatcher created it for",
+        );
+        HeapWriter::new(&state.data, self.overlay)
     }
 }
 
 impl Drop for Transaction {
     fn drop(&mut self) {
+        let state = self.heap.read_arc_recursive();
         if !self.overlay.is_empty() {
-            self.committed().reader_cache.clear();
+            state.reader_cache.clear();
         }
         self.overlay.clear_latest_entries_parallel();
-        self.committed
-            .active_transactions
-            .fetch_sub(1, Ordering::AcqRel);
+        state.active_transactions.fetch_sub(1, Ordering::AcqRel);
     }
 }

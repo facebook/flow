@@ -589,6 +589,7 @@ mod tests {
         assert!(
             heap_transaction
                 .latest_heap_reader()
+                .reader()
                 .committed_file_entry(&file)
                 .is_none()
         );
@@ -600,6 +601,7 @@ mod tests {
         assert!(
             reader
                 .latest_heap_reader()
+                .reader()
                 .committed_file_entry(&file)
                 .is_some()
         );

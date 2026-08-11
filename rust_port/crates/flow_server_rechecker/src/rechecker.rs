@@ -51,6 +51,8 @@ mod parallelizable_workload_loop {
     use std::sync::atomic::AtomicBool;
     use std::sync::atomic::Ordering;
 
+    use dupe::Dupe;
+    use flow_heap::parsing_heaps::Transaction;
     use flow_server_env::server_env;
     use flow_server_env::server_monitor_listener_state;
 
@@ -68,7 +70,14 @@ mod parallelizable_workload_loop {
             match server_monitor_listener_state::pop_next_parallelizable_workload() {
                 Some(workload) => {
                     flow_hh_logger::info!("Running a parallel workload");
-                    (workload.parallelizable_workload_handler)(env);
+                    // This loop owns the transaction for the workload it dispatches, and
+                    // gives the committed-heap guard back as soon as the workload returns.
+                    // Results the workload caches keep the `Arc<Transaction>` alive, which
+                    // is fine — what must not survive the request is the guard, because the
+                    // recheck driving this loop cannot publish until every guard is gone.
+                    let transaction = Transaction::new(env.heap.dupe());
+                    let _release_guard = transaction.release_on_drop();
+                    (workload.parallelizable_workload_handler)(env, &transaction);
                 }
                 None => {}
             }

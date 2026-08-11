@@ -195,7 +195,8 @@ pub fn calc_partial_dependency_graph(
             next,
             |acc: &mut BTreeMap<FileKey, (BTreeSet<FileKey>, BTreeSet<FileKey>)>,
              batch: Vec<FileKey>| {
-                let reader = transaction.latest_heap_reader();
+                let access = transaction.latest_heap_reader();
+                let reader = access.reader();
                 for file in batch {
                     let dependencies = file_dependencies(&reader, &file, parsed);
                     acc.insert(file, dependencies);
