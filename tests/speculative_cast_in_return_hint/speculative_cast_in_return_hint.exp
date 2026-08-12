@@ -8,8 +8,8 @@ missing in `Headers` [2] but exists in `RequiredHeaders` [3]. [incompatible-type
                    ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2285:24
-   2285| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2289:24
+   2289| declare class Promise<+R = unknown> {
                                 ^ [1]
    lib.d.ts:14:21
      14|   readonly headers: Headers;

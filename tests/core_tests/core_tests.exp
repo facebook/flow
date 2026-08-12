@@ -215,6 +215,126 @@ References:
                          ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- map.js:41:19
+
+Cannot call `x.getOrInsert` with `123` bound to `key` because `123` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   map.js:41:19
+   41|     x.getOrInsert(123, 123); // error, wrong key type
+                         ^^^ [1]
+
+References:
+   map.js:39:19
+   39|   function(x: Map<string, number>) {
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:42:26
+
+Cannot call `x.getOrInsert` with `'bar'` bound to `value` because `"bar"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   map.js:42:26
+   42|     x.getOrInsert('foo', 'bar'); // error, wrong value type
+                                ^^^^^ [1]
+
+References:
+   map.js:39:27
+   39|   function(x: Map<string, number>) {
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:48:27
+
+Cannot call `x.getOrInsertComputed` with `123` bound to `key` because `123` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   map.js:48:27
+   48|     x.getOrInsertComputed(123, () => 123); // error, wrong key type
+                                 ^^^ [1]
+
+References:
+   map.js:39:19
+   39|   function(x: Map<string, number>) {
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:49:40
+
+Cannot call `x.getOrInsertComputed` with function bound to `callbackfn` because in the return value: `"bar"` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   map.js:49:40
+   49|     x.getOrInsertComputed('foo', () => 'bar'); // error, wrong value type
+                                              ^^^^^ [1]
+
+References:
+   map.js:39:27
+   39|   function(x: Map<string, number>) {
+                                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:55:19
+
+Cannot call `x.getOrInsert` with `'foo'` bound to `key` because `"foo"` [1] is incompatible with `{foo: string}` [2].
+[incompatible-type]
+
+   map.js:55:19
+   55|     x.getOrInsert('foo', 123); // error, wrong key type
+                         ^^^^^ [1]
+
+References:
+   map.js:53:23
+   53|   function(x: WeakMap<{foo: string}, number>, key: {foo: string}) {
+                             ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:56:24
+
+Cannot call `x.getOrInsert` with `'bar'` bound to `value` because `"bar"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   map.js:56:24
+   56|     x.getOrInsert(key, 'bar'); // error, wrong value type
+                              ^^^^^ [1]
+
+References:
+   map.js:53:38
+   53|   function(x: WeakMap<{foo: string}, number>, key: {foo: string}) {
+                                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:62:27
+
+Cannot call `x.getOrInsertComputed` with `'foo'` bound to `key` because `"foo"` [1] is incompatible with
+`{foo: string}` [2]. [incompatible-type]
+
+   map.js:62:27
+   62|     x.getOrInsertComputed('foo', () => 123); // error, wrong key type
+                                 ^^^^^ [1]
+
+References:
+   map.js:53:23
+   53|   function(x: WeakMap<{foo: string}, number>, key: {foo: string}) {
+                             ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- map.js:63:38
+
+Cannot call `x.getOrInsertComputed` with function bound to `callbackfn` because in the return value: `"bar"` [1] is
+incompatible with `number` [2]. [incompatible-type]
+
+   map.js:63:38
+   63|     x.getOrInsertComputed(key, () => 'bar'); // error, wrong value type
+                                            ^^^^^ [1]
+
+References:
+   map.js:53:38
+   53|   function(x: WeakMap<{foo: string}, number>, key: {foo: string}) {
+                                            ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- weakref.js:17:23
 
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
@@ -230,11 +350,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -253,11 +373,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -276,11 +396,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -299,11 +419,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -322,11 +442,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -345,11 +465,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -371,13 +491,13 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:2109:28
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:28
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2109:43
-   2109| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2111:43
+   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 
-Found 17 errors
+Found 25 errors
