@@ -7868,6 +7868,35 @@ fn object_type<'arena, 'ast>(
         return object_mapped_type(opts, scope, scopes, tbls, xs, p);
     }
 
+    // An `ObjAnnot` has a call slot but no construct slot, so an object type
+    // carrying `new(): T` is lowered to an inline interface instead — the same
+    // desugar [ConstructorType] gets in [annot]. A spread has no interface
+    // equivalent ([interface_props] drops it), so those keep the object lowering
+    // and the `new` member stays an ordinary method. Mirrors the routing in
+    // [type_annotation.rs] [convert]'s `Object` case, including its TypeScript
+    // gate: only in TS does `{new(): T}` unambiguously mean a construct
+    // signature. Consumers in Flow files read the resulting annotation, so they
+    // are unaffected by the gate.
+    //
+    // The TS check reads [Tables::strictness_kind] rather than
+    // [opts.is_ts_file] because [parse_libs] shares one [TypeSigOptions] across
+    // every lib file and tracks per-file TS-ness on the tables instead.
+    let has_construct_sig = tbls.strictness_kind.is_typescript_loose()
+        && o.properties.iter().any(|p| match p {
+            O::Property::NormalProperty(p) => is_construct_signature(p),
+            _ => false,
+        });
+    let has_spread = o
+        .properties
+        .iter()
+        .any(|p| matches!(p, O::Property::SpreadProperty(_)));
+    if has_construct_sig && !has_spread {
+        let mut acc = interface_acc::InterfaceAcc::empty();
+        interface_props(opts, scope, scopes, tbls, xs, &o.properties, &mut acc);
+        let def = acc.interface_def(false, vec![], tbls.strictness_kind);
+        return Parsed::Annot(Box::new(ParsedAnnot::InlineInterface(Box::new((loc, def)))));
+    }
+
     let exact = o.exact || !o.inexact;
     let mut acc = ObjAnnotAcc::empty();
 
@@ -7941,6 +7970,22 @@ fn object_type<'arena, 'ast>(
     acc.object_type(loc, exact, tbls.strictness_kind)
 }
 
+/// A construct signature uses the keyword `new` as a syntactic marker — it's not
+/// a property whose name happens to be "new". A quoted `"new"()` or an optional
+/// `new?()` stays an ordinary property. Statics are excluded because construct
+/// sigs live on the instance side only.
+///
+/// Mirror predicate in [type_annotation.rs] [is_construct_signature].
+fn is_construct_signature(p: &ast::types::object::NormalProperty<Loc, Loc>) -> bool {
+    p.method
+        && !p.static_
+        && !p.optional
+        && matches!(
+            &p.key,
+            ast::expression::object::Key::Identifier(id) if id.name == "new"
+        )
+}
+
 fn interface_def<'arena, 'ast>(
     bind_this_in_body: bool,
     opts: &TypeSigOptions,
@@ -8004,7 +8049,6 @@ fn interface_props<'arena, 'ast>(
             p: &ast::types::object::NormalProperty<Loc, Loc>,
             name: FlowSmolStr,
             id_loc: Loc,
-            key_is_identifier: bool,
         ) {
             match (p.method, &p.value) {
                 (true, O::PropertyValue::Init(Some(ty))) => {
@@ -8029,16 +8073,7 @@ fn interface_props<'arena, 'ast>(
                         } else {
                             let fn_loc = tbls.push_loc(p.loc.dupe());
                             let id_loc = tbls.push_loc(id_loc);
-                            // Construct signature only on an unquoted `new()` identifier key.
-                            // A quoted `"new"()` or `new?()` is a regular property whose name
-                            // happens to be `"new"`. The optional `new?()` case is already
-                            // routed to [optional_method_as_field] above. Mirror predicate in
-                            // [type_annotation.rs] [add_interface_properties.prop]. The
-                            // type-annotation predicate is longer because that function also
-                            // handles declare-class bodies and static members; those are
-                            // excluded by the surrounding control flow here, not by an extra
-                            // clause on this guard.
-                            if name.as_str() == "new" && key_is_identifier {
+                            if is_construct_signature(p) {
                                 let def = function_type(
                                     false,
                                     opts,
@@ -8143,21 +8178,9 @@ fn interface_props<'arena, 'ast>(
             }
         }
 
-        let key_is_identifier = matches!(&p.key, ast::expression::object::Key::Identifier(_));
         match resolve_prop_key(&p.key) {
             ResolvedPropKey::Named(name, id_loc) => {
-                add_named_prop(
-                    opts,
-                    scope,
-                    scopes,
-                    tbls,
-                    xs,
-                    acc,
-                    p,
-                    name,
-                    id_loc,
-                    key_is_identifier,
-                );
+                add_named_prop(opts, scope, scopes, tbls, xs, acc, p, name, id_loc);
             }
             ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
                 add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
@@ -10929,7 +10952,6 @@ fn function_def_helper<'arena: 'ast, 'ast>(
         async_,
         generator,
         effect_,
-        sig_loc: _,
         ..
     } = f;
     let tparams = tparams(opts, scope, scopes, tbls, xs, tps.as_ref());
@@ -12822,7 +12844,7 @@ fn record_decl<'arena: 'ast, 'ast>(
     decl: &'ast ast::statement::RecordDeclaration<Loc, Loc>,
     k: &dyn Fn(&mut scope::Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
 ) {
-    let ast::statement::RecordDeclaration { id, body: _, .. } = decl;
+    let ast::statement::RecordDeclaration { id, .. } = decl;
     let name = id.name.dupe();
     let id_loc_node = tbls.push_loc(id.loc.dupe());
 

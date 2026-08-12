@@ -3412,6 +3412,8 @@ fn convert_inner<'a>(
             let exact_type = exact || !inexact;
             let mut has_indexer = false;
             let mut mapped_type_loc: Option<ALoc> = None;
+            let mut has_construct_sig = false;
+            let mut has_spread = false;
             for property in properties.iter() {
                 match property {
                     ast::types::object::Property::Indexer(_) => {
@@ -3419,6 +3421,12 @@ fn convert_inner<'a>(
                     }
                     ast::types::object::Property::MappedType(mt) => {
                         mapped_type_loc = Some(mt.loc.dupe());
+                    }
+                    ast::types::object::Property::NormalProperty(np) => {
+                        has_construct_sig = has_construct_sig || is_construct_signature(np);
+                    }
+                    ast::types::object::Property::SpreadProperty(_) => {
+                        has_spread = true;
                     }
                     _ => {}
                 }
@@ -3442,8 +3450,30 @@ fn convert_inner<'a>(
                     let mut env = env.clone();
                     env.tparams_map
                         .remove(&SubstName::name(FlowSmolStr::new_inline("this")));
-                    let (obj_t, properties_ast) =
-                        convert_object(cx, &mut env, loc.dupe(), exact_type, properties)?;
+                    // An `ObjT` has a call slot but no construct slot, so an object
+                    // type carrying `new(): T` is lowered through the interface path
+                    // instead — the same desugar `new (...) => T` gets above. A
+                    // spread has no interface equivalent ([add_interface_properties]
+                    // rejects it), so those keep the object lowering and the `new`
+                    // member stays an ordinary method.
+                    //
+                    // Gated on the file the annotation is written in: in TypeScript
+                    // `{new(): T}` unambiguously *is* a construct signature, whereas
+                    // in Flow it has always meant an object with a method named
+                    // `new`. A Flow file consuming a TS declaration only reads the
+                    // resulting type, so it constructs just fine.
+                    let (obj_t, properties_ast) = if has_construct_sig
+                        && !has_spread
+                        && flow_common::files::has_ts_ext(cx.file())
+                    {
+                        let reason = reason::mk_annot_reason(
+                            reason::VirtualReasonDesc::RObjectType,
+                            loc.dupe(),
+                        );
+                        mk_inline_interface_type(cx, &mut env, loc, reason, Vec::new(), properties)?
+                    } else {
+                        convert_object(cx, &mut env, loc.dupe(), exact_type, properties)?
+                    };
                     if !exact && !inexact && !has_indexer {
                         flow_js_utils::add_output_non_speculating(
                             cx,
@@ -3475,55 +3505,15 @@ fn convert_inner<'a>(
             let mut env = env.clone();
             env.tparams_map
                 .remove(&SubstName::name(FlowSmolStr::new_inline("this")));
-            let id = cx.make_aloc_id(loc);
-            let mut extends_types = Vec::new();
-            let mut extends_binding_kinds = Vec::new();
+            let mut extends_supers = Vec::new();
             let mut extend_asts = Vec::new();
             for ext in extends.iter() {
-                let ((typeapp, binding_kind), ext_ast) = mk_interface_super(cx, &mut env, ext)?;
-                extends_types.push(typeapp);
-                extends_binding_kinds.push(binding_kind);
+                let (super_, ext_ast) = mk_interface_super(cx, &mut env, ext)?;
+                extends_supers.push(super_);
                 extend_asts.push(ext_ast);
             }
-            let callable = properties.iter().any(|prop| match prop {
-                ast::types::object::Property::CallProperty(cp) => !cp.static_,
-                _ => false,
-            });
-            let super_ = func_class_sig_types::class::Super::Interface(
-                func_class_sig_types::class::InterfaceSuper {
-                    inline: true,
-                    extends: extends_types,
-                    extends_binding_kinds,
-                    callable,
-                    this_tparam: None,
-                    this_t: None,
-                },
-            );
-            let iface_sig = class_sig::empty(
-                id,
-                None,
-                loc.dupe(),
-                reason.dupe(),
-                None,
-                env.tparams_map
-                    .iter()
-                    .map(|(k, v)| (k.dupe(), v.dupe()))
-                    .collect(),
-                super_,
-            );
-            let this = type_::implicit_mixed_this(reason.dupe());
-            let (iface_sig, property_asts) = add_interface_properties(
-                cx,
-                &mut env,
-                None,
-                false,
-                intermediate_error_types::ObjKind::Interface,
-                this,
-                properties,
-                iface_sig,
-            )?;
-            class_sig::check_signature_compatibility(cx, reason.dupe(), &iface_sig);
-            let iface_t = class_sig::thistype(cx, &iface_sig);
+            let (iface_t, property_asts) =
+                mk_inline_interface_type(cx, &mut env, loc, reason, extends_supers, properties)?;
             ast::types::Type::new(TypeInner::Interface {
                 loc: (loc.dupe(), iface_t),
                 inner: ast::types::Interface {
@@ -6651,6 +6641,85 @@ fn mk_interface_super<'a>(
     ))
 }
 
+/// A construct signature uses the keyword `new` as a syntactic marker — it's not
+/// a property whose name happens to be "new". Restrict to:
+/// - a method (`new(): T`, not `new: () => T`);
+/// - non-static (construct sigs live on the instance side only);
+/// - an unquoted Identifier key (`"new"()` is an ordinary method);
+/// - not optional (`new?()` makes no sense for a construct signature).
+///
+/// Mirror predicate in [type_sig_parse.rs] [interface_props.prop] and
+/// [object_type].
+fn is_construct_signature(np: &ast::types::object::NormalProperty<ALoc, ALoc>) -> bool {
+    np.method
+        && !np.static_
+        && !np.optional
+        && matches!(
+            &np.key,
+            ast::expression::object::Key::Identifier(id) if id.name == "new"
+        )
+}
+
+/// Lower an inline `interface { ... }` body to its [InstanceT]. Also used for
+/// object types that carry a construct signature: [ObjT] has no slot to hold one
+/// (only [class_types::Class] builds [inst_construct_t]), so those are lowered
+/// through the interface path too. Callers pass an `env` whose `this` tparam has
+/// already been removed, and are responsible for building the typed AST node
+/// that matches their own syntax.
+fn mk_inline_interface_type<'a>(
+    cx: &Context<'a>,
+    env: &mut ConvertEnv,
+    loc: &ALoc,
+    reason: Reason,
+    extends: Vec<((ALoc, Type, Option<Vec<Type>>), ClassLikeBindingKind)>,
+    properties: &[ast::types::object::Property<ALoc, ALoc>],
+) -> Result<
+    (Type, Vec<ast::types::object::Property<ALoc, (ALoc, Type)>>),
+    flow_utils_concurrency::job_error::JobError,
+> {
+    let id = cx.make_aloc_id(loc);
+    let (extends_types, extends_binding_kinds): (Vec<_>, Vec<_>) = extends.into_iter().unzip();
+    let callable = properties.iter().any(|prop| match prop {
+        ast::types::object::Property::CallProperty(cp) => !cp.static_,
+        _ => false,
+    });
+    let super_ = func_class_sig_types::class::Super::Interface(
+        func_class_sig_types::class::InterfaceSuper {
+            inline: true,
+            extends: extends_types,
+            extends_binding_kinds,
+            callable,
+            this_tparam: None,
+            this_t: None,
+        },
+    );
+    let iface_sig = class_sig::empty(
+        id,
+        None,
+        loc.dupe(),
+        reason.dupe(),
+        None,
+        env.tparams_map
+            .iter()
+            .map(|(k, v)| (k.dupe(), v.dupe()))
+            .collect(),
+        super_,
+    );
+    let this = type_::implicit_mixed_this(reason.dupe());
+    let (iface_sig, property_asts) = add_interface_properties(
+        cx,
+        env,
+        None,
+        false,
+        intermediate_error_types::ObjKind::Interface,
+        this,
+        properties,
+        iface_sig,
+    )?;
+    class_sig::check_signature_compatibility(cx, reason, &iface_sig);
+    Ok((class_sig::thistype(cx, &iface_sig), property_asts))
+}
+
 /// The value type of a bracketed member of an interface or a `declare class`
 /// body, and its typed node, whichever way its key is read. The key is taken
 /// already converted, since a computed key is converted as a value while an
@@ -7713,29 +7782,14 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(error_prop));
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
-                                        // A construct signature uses the keyword `new` as a
-                                        // syntactic marker — it's not a property whose name
-                                        // happens to be "new". Restrict to:
-                                        // - obj_kind = Interface (declare-class methods named
-                                        //   `new` are ordinary methods);
-                                        // - non-static (construct sigs live on the instance
-                                        //   side only);
-                                        // - unquoted Identifier key (`"new"()` is an ordinary
-                                        //   method);
-                                        // - not optional (`new?()` makes no sense for a
-                                        //   construct signature).
-                                        // Mirror predicate in [type_sig_parse.rs]
-                                        // [interface_props.prop].
-                                        let key_is_identifier = matches!(
-                                            &np.key,
-                                            ast::expression::object::Key::Identifier(_)
-                                        );
-                                        let is_construct_sig = name.as_str() == "new"
+                                        // Declare-class methods named `new` are ordinary
+                                        // methods, so the shared [is_construct_signature]
+                                        // predicate is further restricted to interfaces —
+                                        // including the object types that [convert] routes
+                                        // here because they carry a construct signature.
+                                        let is_construct_sig = is_construct_signature(np)
                                             && obj_kind
-                                                == intermediate_error_types::ObjKind::Interface
-                                            && !np.static_
-                                            && key_is_identifier
-                                            && !np.optional;
+                                                == intermediate_error_types::ObjKind::Interface;
                                         let meth_kind = match name.as_str() {
                                             "constructor" => MethodKind::ConstructorKind,
                                             _ => MethodKind::MethodKind {

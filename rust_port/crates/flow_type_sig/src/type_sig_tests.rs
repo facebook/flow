@@ -9575,6 +9575,284 @@ Module {
     assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
 }
 
+// In a TypeScript file an object type carrying `new(): T` has no `ObjAnnot`
+// slot to hold the construct sig, so it is lowered to an inline interface. A
+// quoted `"new"()` stays an ordinary method on an `ObjAnnot`. The Flow-file
+// counterpart is [object_annot_construct_sig_flow_file].
+#[test]
+fn object_annot_construct_sig() {
+    let input = r#"
+    export type A = { new (x: string): string };
+    export type B = { "new"(x: string): string };
+        "#;
+    let expected_output = r#"
+Locs:
+0. [1:12-13]
+1. [1:16-43]
+2. [1:18-41]
+3. [1:26-32]
+4. [1:35-41]
+5. [2:12-13]
+6. [2:16-44]
+7. [2:18-42]
+8. [2:18-23]
+9. [2:27-33]
+10. [2:36-42]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [
+            ExportTypeBinding(
+                0,
+            ),
+            ExportTypeBinding(
+                1,
+            ),
+        ],
+        exports: None,
+        info: CJSModuleInfo {
+            type_export_keys: [
+                "A",
+                "B",
+            ],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    InlineInterface(
+                        (
+                            1,
+                            InterfaceSig {
+                                extends: [],
+                                props: {},
+                                computed_props: [],
+                                calls: [],
+                                constructs: [
+                                    Annot(
+                                        FunAnnot(
+                                            (
+                                                2,
+                                                FunSig {
+                                                    tparams: Mono,
+                                                    params: [
+                                                        FunParam {
+                                                            name: Some(
+                                                                "x",
+                                                            ),
+                                                            t: Annot(
+                                                                String(
+                                                                    3,
+                                                                ),
+                                                            ),
+                                                        },
+                                                    ],
+                                                    rest_param: None,
+                                                    this_param: None,
+                                                    return_: Annot(
+                                                        String(
+                                                            4,
+                                                        ),
+                                                    ),
+                                                    type_guard: None,
+                                                    effect_: ArbitraryEffect,
+                                                    strictness_kind: TypeScriptLoose,
+                                                },
+                                            ),
+                                        ),
+                                    ),
+                                ],
+                                dict: None,
+                                abstract_: false,
+                                strictness_kind: TypeScriptLoose,
+                            },
+                        ),
+                    ),
+                ),
+                strictness_kind: TypeScriptLoose,
+            },
+        ),
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 5,
+                custom_error_loc_opt: None,
+                name: "B",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 6,
+                            obj_kind: ExactObj,
+                            props: {
+                                "new": ObjAnnotMethod(
+                                    ObjAnnotMethodData {
+                                        id_loc: 8,
+                                        fn_loc: 7,
+                                        def: FunSig {
+                                            tparams: Mono,
+                                            params: [
+                                                FunParam {
+                                                    name: Some(
+                                                        "x",
+                                                    ),
+                                                    t: Annot(
+                                                        String(
+                                                            9,
+                                                        ),
+                                                    ),
+                                                },
+                                            ],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Annot(
+                                                String(
+                                                    10,
+                                                ),
+                                            ),
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
+                                            strictness_kind: TypeScriptLoose,
+                                        },
+                                    },
+                                ),
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                            strictness_kind: TypeScriptLoose,
+                        },
+                    ),
+                ),
+                strictness_kind: TypeScriptLoose,
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_sig_with_options(
+            input,
+            Some(|opts: &mut TypeSigOptions| {
+                opts.is_ts_file = true;
+                opts.is_dts_file = true;
+            })
+        ))
+    )
+}
+
+// The same annotation in a Flow file keeps its long-standing meaning: an
+// `ObjAnnot` with a method named `new`.
+#[test]
+fn object_annot_construct_sig_flow_file() {
+    let input = r#"
+    export type A = { new (x: string): string };
+        "#;
+    let expected_output = r#"
+Locs:
+0. [1:12-13]
+1. [1:16-43]
+2. [1:18-41]
+3. [1:18-21]
+4. [1:26-32]
+5. [1:35-41]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [
+            ExportTypeBinding(
+                0,
+            ),
+        ],
+        exports: None,
+        info: CJSModuleInfo {
+            type_export_keys: [
+                "A",
+            ],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [
+        TypeAlias(
+            DefTypeAlias {
+                id_loc: 0,
+                custom_error_loc_opt: None,
+                name: "A",
+                tparams: Mono,
+                body: Annot(
+                    ObjAnnot(
+                        AnnotObjAnnot {
+                            loc: 1,
+                            obj_kind: ExactObj,
+                            props: {
+                                "new": ObjAnnotMethod(
+                                    ObjAnnotMethodData {
+                                        id_loc: 3,
+                                        fn_loc: 2,
+                                        def: FunSig {
+                                            tparams: Mono,
+                                            params: [
+                                                FunParam {
+                                                    name: Some(
+                                                        "x",
+                                                    ),
+                                                    t: Annot(
+                                                        String(
+                                                            4,
+                                                        ),
+                                                    ),
+                                                },
+                                            ],
+                                            rest_param: None,
+                                            this_param: None,
+                                            return_: Annot(
+                                                String(
+                                                    5,
+                                                ),
+                                            ),
+                                            type_guard: None,
+                                            effect_: ArbitraryEffect,
+                                            strictness_kind: Flow,
+                                        },
+                                    },
+                                ),
+                            },
+                            computed_props: [],
+                            proto: ObjAnnotImplicitProto,
+                            strictness_kind: Flow,
+                        },
+                    ),
+                ),
+                strictness_kind: Flow,
+            },
+        ),
+    ],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
 #[test]
 fn object_annot_optional() {
     let input = r#"

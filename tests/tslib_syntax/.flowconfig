@@ -1,5 +1,6 @@
 [libs]
 global_augmentation.d.ts
+object_construct_sig_lib.d.ts
 
 [options]
 all=true
