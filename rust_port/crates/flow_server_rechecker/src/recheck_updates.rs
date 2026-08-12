@@ -198,7 +198,11 @@ fn check_for_lib_changes(
         .to_string_lossy()
         .to_string();
     let is_changed_lib = |filename: &String| -> bool {
-        let is_lib = all_libs.contains(filename) || *filename == flow_typed_path;
+        let is_lib = (if options.file_options.importable_global_libdefs {
+            files::is_configured_lib_file(&options.file_options, filename)
+        } else {
+            all_libs.contains(filename)
+        }) || *filename == flow_typed_path;
         is_lib && did_content_change(options, transaction, filename)
     };
     let libs: BTreeSet<String> = updates

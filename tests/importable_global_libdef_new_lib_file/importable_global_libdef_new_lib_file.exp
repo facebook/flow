@@ -1,0 +1,35 @@
+Baseline: the libdef present at startup is global
+No errors!
+
+Add a libdef while the server is running
+
+The new declaration is global and the libdef resolves as a non-module
+Error -------------------------------------------------------------------------------------------------------- b.js:2:21
+
+Cannot assign `MyNewGlobal` to `bad` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   b.js:2:21
+   2| const bad: string = MyNewGlobal;
+                          ^^^^^^^^^^^
+
+References:
+   libs/extra.js:1:26
+   1| declare var MyNewGlobal: number;
+                               ^^^^^^ [1]
+   b.js:2:12
+   2| const bad: string = MyNewGlobal;
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- import-new.js:1:39
+
+Cannot import `./libs/extra` because `libs/extra.js` is a global library definition file, so it is not a module. Its
+declarations are already available in global scope; remove this import and reference them directly.
+[cannot-resolve-module]
+
+   1| import {MyNewGlobal as Imported} from './libs/extra';
+                                            ^^^^^^^^^^^^^^
+
+
+
+Found 2 errors
