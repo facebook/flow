@@ -33,3 +33,11 @@ declarations are already available in global scope; remove this import and refer
 
 
 Found 2 errors
+
+flow ls --explain classifies both libdefs
+ExplicitLib           libs/globals.js
+ExplicitLib           libs/extra.js
+ImplicitlyIncluded    import-new.js
+ImplicitlyIncluded    b.js
+ImplicitlyIncluded    a.js
+ConfigFile            .flowconfig

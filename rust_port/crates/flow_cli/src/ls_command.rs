@@ -110,7 +110,12 @@ fn explain(
     let root_str = root.to_string_lossy().to_string();
     let result = {
         let (is_ignored, backup) = files::is_ignored(options, &file);
-        if libs.contains(&file) {
+        let is_lib = if options.importable_global_libdefs {
+            files::is_configured_lib_file(options, &file)
+        } else {
+            libs.contains(&file)
+        };
+        if is_lib {
             // This is a lib file
             let flowtyped_path = files::get_flowtyped_path(root);
             if file.starts_with(&flowtyped_path.to_string_lossy().to_string()) {

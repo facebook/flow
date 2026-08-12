@@ -26,3 +26,8 @@ assert_ok "$FLOW" force-recheck --no-auto-start b.js import-new.js
 
 printf "\nThe new declaration is global and the libdef resolves as a non-module\n"
 assert_errors "$FLOW" status --strip-root
+
+# `flow ls --explain` answers the same question from the CLI, against the
+# `[libs]` config rather than a running server, so it has to agree.
+printf "\nflow ls --explain classifies both libdefs\n"
+assert_ok "$FLOW" ls --explain --strip-root --all

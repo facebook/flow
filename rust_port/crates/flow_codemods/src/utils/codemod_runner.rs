@@ -138,7 +138,15 @@ pub fn get_target_filename_set(
             let s = f.to_absolute();
             let is_valid_path = flow_common::files::is_valid_path(options, &s);
             let (is_ignored, _) = flow_common::files::is_ignored(options, &s);
-            is_valid_path && (all || !is_ignored) && !all_unordered_libs.contains(&s)
+            // Under `importable_global_libdefs` the crawl that fills
+            // `all_unordered_libs` yields an empty set, so membership cannot
+            // recognize a libdef. Decide by path, as the rest of the flag does.
+            let is_lib = if options.importable_global_libdefs {
+                flow_common::files::is_configured_lib_file(options, &s)
+            } else {
+                all_unordered_libs.contains(&s)
+            };
+            is_valid_path && (all || !is_ignored) && !is_lib
         })
         .collect()
 }
