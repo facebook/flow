@@ -1,3 +1,21 @@
+### 0.327.0
+
+New Features:
+* In an object type, a bracketed key written as a string or number literal, or as the name of a value, is now a computed key naming a single property rather than an index signature, so several such keys can coexist. A key written as a type-only name is unchanged, and the labeled form `[label: K]` keeps index-signature semantics. Breaking: a key headed by a value binding is read as a computed key. Thus a class or enum key such as `{[C]: V}` is now an error, and a qualified type exposed through a class/namespace merge, as in `{[C.K]: V}`, must use the labeled form `{[key: C.K]: V}` to remain an index signature.
+* In an interface or a `declare class` body, a bracketed key written as a string or number literal, or as the name of a value, is now a computed key naming a single property rather than an index signature, so several such keys can coexist, and `static` puts the property on the static side. A key written as a type-only name is unchanged, and the labeled form `[label: K]` keeps index-signature semantics. Breaking: a key headed by a value binding is read as a computed key, so a class or enum key such as `interface I {[C]: V}` is now an error and must use `[key: C]` to remain an index signature.
+* A computed method key `[expr](): T` that resolves to a single literal string or safe-integer number is now accepted in interface, `declare class`, and object type bodies (previously a parse error outside `.d.ts` files) and reads as a named method.
+* A bracketed access on an array with a string-literal key (for example `arr['map']` or `arr[Symbol.iterator]`) now reads the corresponding named member instead of erroring that the key is not an array index, and a string key holding a safe integer (`arr['0']`) indexes the array like the equivalent numeric key.
+
+Notable bug fixes:
+* `keyof any` now evaluates to `any` as expected. Spurious errors related to the bug will no longer fire.
+* Fix a server crash ("thread 'flow-tokio-runtime' has overflowed its stack") when rechecking a file with an attached LSP client
+
+Parser:
+* Parse `component` and `hook` type annotations as the declaration of `declare export default`
+
+Library Definitions:
+* Add ES2026 Map methods
+
 ### 0.326.0
 
 Breaking changes:
