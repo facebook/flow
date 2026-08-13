@@ -7906,9 +7906,7 @@ where
                 ref_(reason),
                 text(" as a type guard variable in this context. "),
                 code("this"),
-                text(
-                    " type guards are only supported in non-static declare class or interface methods.",
-                ),
+                text(" type guards are only supported in non-static class or interface methods."),
             ]),
             MessageInvalidUseOfFlowEnforceOptimized(arg) => friendly::Message(vec![
                 text("Invalid use of $Flow$EnforceOptimized on non-union type "),

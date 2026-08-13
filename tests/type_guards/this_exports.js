@@ -14,6 +14,10 @@ export class E {
   isF(): this is F { // error due to consistency check, but type guard recorded
     return true;
   }
+
+  isFChecked(): this is F { // okay
+    return this instanceof F;
+  }
 }
 
 export class F extends E {}

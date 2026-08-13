@@ -1868,6 +1868,10 @@ pub fn checked_type_guard_at_return<'cx>(
         let (acc_result, mut acc_locs) = acc;
         match write_loc {
             WriteLoc::Write(r) if r.loc() == param_loc => (acc_result, acc_locs),
+            // `this` is never assignable, so its binding write is always the one
+            // the type guard refers to. Only non-static methods can carry a `this`
+            // type guard, so this is the only `this` write that can appear here.
+            WriteLoc::ClassInstanceThis(_) => (acc_result, acc_locs),
             WriteLoc::Refinement { writes, .. } => {
                 writes.iter().fold((acc_result, acc_locs), |acc, wl| {
                     is_invalid(param_loc, acc, wl)

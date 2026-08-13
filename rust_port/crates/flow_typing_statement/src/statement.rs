@@ -14954,7 +14954,9 @@ pub fn mk_class_sig<'a>(
                         let (func_sig_data, reconstruct_data, deferred_tg_check) = mk_func_sig(
                             cx,
                             true,
-                            // A class field is not a method, whatever its initializer is.
+                            // A class field is not a method, even when its initializer
+                            // is a function or an arrow that closes over the instance
+                            // `this`. See tests/type_guards/this_classes.js.
                             type_annotation::MethodKind::FunctionKind,
                             &BTreeMap::new(),
                             tparams_map,
@@ -19442,6 +19444,7 @@ pub fn mk_func_sig<'a>(
         meth_kind,
         type_annotation::MethodKind::GetterKind | type_annotation::MethodKind::SetterKind
     );
+    let allow_this_type_guard = type_annotation::allows_this_type_guards(meth_kind);
 
     fn function_kind(
         constructor: bool,
@@ -20074,7 +20077,12 @@ pub fn mk_func_sig<'a>(
                 let params_clone = params.clone();
                 let tg_clone = tg.clone();
                 Some(Rc::new(move |cx: &Context<'a>| {
-                    flow_typing_utils::type_guard::check_type_guard(cx, &params_clone, &tg_clone)?;
+                    flow_typing_utils::type_guard::check_type_guard(
+                        cx,
+                        &params_clone,
+                        &tg_clone,
+                        allow_this_type_guard,
+                    )?;
                     Ok(())
                 }))
             }

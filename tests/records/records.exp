@@ -1067,5 +1067,23 @@ References:
                       ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- this-type-guards.js:12:12
 
-Found 73 errors
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   12|     isB(): this is B { // error `this` type guards are not supported on records
+                  ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- this-type-guards.js:16:25
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   16|     static isBStatic(): this is B { // error also rejected on static record methods
+                               ^^^^ [1]
+
+
+
+Found 75 errors

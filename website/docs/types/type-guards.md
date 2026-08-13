@@ -157,10 +157,34 @@ function area(shape: Shape): number {
 }
 ```
 
-**Note:** The `this` type guard annotation is only allowed in the return annotation on non-static declare class and interface methods. For example the following are invalid forms:
+A `this` type guard can also be declared on a method of a regular class. Just like
+[type guards over parameters](#toc-consistency-checks-of-type-guard-functions), the body of such a
+method is checked for consistency against the declared guard type. The only refinements over `this`
+that Flow understands are `instanceof` checks and calls to other `this` type guards:
+```js flow-check
+class Shape {
+  isCircle(): this is Circle {
+    return this instanceof Circle; // OK
+  }
+
+  isCircleWithRadius(): implies this is Circle {
+    return this.isCircle() && this.name === 'circle'; // OK
+  }
+
+  isSquare(): this is Square {
+    return true; // Error: Shape is not compatible with Square
+  }
+
+  name: string;
+}
+
+class Circle extends Shape { radius: number }
+class Square extends Shape { side: number }
+```
+
+**Note:** The `this` type guard annotation is only allowed in the return annotation on non-static class and interface methods. For example the following are invalid forms:
 ```js flow-check
 declare class A {}
-declare class B {}
 declare class D {}
 
 declare class InvalidStatic {
@@ -171,9 +195,9 @@ type InvalidTypeAlias = (x: unknown) => this is A; // Error
 
 declare function invalidFunction(this: unknown): this is A; // Error
 
-class InvalidNonDeclareClass {
-  m(): this is B { return this instanceof B; } // Error
-}
+const invalidObject = {
+  m(): this is A { return true; }, // Error
+};
 ```
 
 ## Refine with `Array.filter`

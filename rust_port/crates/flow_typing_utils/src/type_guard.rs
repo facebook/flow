@@ -69,7 +69,11 @@ fn check_type_guard_consistency<'cx>(
         env.var_info.type_guard_consistency_maps.dupe()
     };
     let (name_loc, name) = tg_param;
-    let param_reason = mk_reason(RParameter(Some(name.dupe())), param_loc.dupe());
+    let param_reason = if name.as_str() == "this" {
+        mk_reason(RThis, param_loc.dupe())
+    } else {
+        mk_reason(RParameter(Some(name.dupe())), param_loc.dupe())
+    };
     match type_guard_consistency_maps.get(name_loc) {
         // Entry missing when function does not return. Error raised in Func_sig.
         None => (),
@@ -186,10 +190,15 @@ fn check_type_guard_consistency<'cx>(
     Ok(())
 }
 
+/// `allow_this_type_guard` mirrors `type_annotation::allows_this_type_guards` on the
+/// annotation-only path: it is set only for non-static class methods, the one
+/// body-carrying context where `this` is bound to a class instance and can
+/// therefore be refined.
 pub fn check_type_guard<'cx>(
     cx: &Context<'cx>,
     params: &function::Params<ALoc, ALoc>,
     type_guard_val: &TypeGuard,
+    allow_this_type_guard: bool,
 ) -> Result<(), JobError> {
     let TypeGuardInner {
         reason,
@@ -228,11 +237,36 @@ pub fn check_type_guard<'cx>(
 
     if !inferred {
         let (name_loc, name) = param_name;
-        let tg_reason = mk_reason(RTypeGuardParam(name.dupe()), name_loc.dupe());
+        let is_this_guard = name.as_str() == "this";
+        let tg_reason = if is_this_guard {
+            mk_reason(RThis, name_loc.dupe())
+        } else {
+            mk_reason(RTypeGuardParam(name.dupe()), name_loc.dupe())
+        };
         let bindings = pattern_helper::bindings_of_params(params);
         match bindings.get(name) {
             None => {
-                if name.as_str() == "this" {
+                if is_this_guard && allow_this_type_guard {
+                    // `this` is not part of the parameter list, but it is still a
+                    // binding of the method body, so consistency checking applies. The
+                    // annotation's `this` location is what `record_type_guard_maps`
+                    // keyed the consistency entries on. An explicit `this` param moves
+                    // the binding write to that param, so the return-point check needs
+                    // its location to recognize the write as the binding one.
+                    let binding_loc = match &params.this_ {
+                        Some(this_param) => &this_param.loc,
+                        None => name_loc,
+                    };
+                    check_type_guard_consistency(
+                        cx,
+                        reason,
+                        *one_sided,
+                        binding_loc,
+                        param_name,
+                        &tg_reason,
+                        type_guard,
+                    )?;
+                } else if is_this_guard {
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETypeGuardThisParam(mk_reason(RThis, name_loc.dupe())),

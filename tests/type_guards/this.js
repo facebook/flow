@@ -116,11 +116,11 @@ function test2() {
     n(): (x: unknown) => this is C; // error only on declare classes/interfaces method return
   }
 
-  function foo1(this: C): this is C {  // error 'this' type guard only on declare classes
+  function foo1(this: C): this is C {  // error 'this' type guard only on class/interface methods
     return 0 as any;
   }
 
-  function foo2(this: C): this is Unresolved {  // error 'this' type guard only on declare classes, unresolved
+  function foo2(this: C): this is Unresolved {  // error 'this' type guard only on class/interface methods, unresolved
     return 0 as any;
   }
 }
@@ -284,4 +284,67 @@ function test6() {
     y as A
     y as B; // okay -- y as parameter is still refined
   }
+}
+
+function test7() {
+  // `this` type guards are supported on non-static methods of regular classes,
+  // and are subject to the usual consistency checks.
+  class A {
+    isB(): this is B {
+      return this instanceof B; // okay
+    }
+
+    isBUnchecked(): this is B {
+      return true; // error A ~> B
+    }
+
+    // A guard whose body delegates to another `this` type guard.
+    isBAndMore(): this is B {
+      return this.isB(); // okay
+    }
+
+    isBAndMoreImplies(): implies this is B {
+      return this.isB() && this.extra(); // okay one-sided
+    }
+
+    isBAndMoreChecked(): this is B {
+      return this.isB() && this.extra(); // error negation does not refine away B
+    }
+
+    extra(): boolean {
+      return true;
+    }
+
+    static isBStatic(): this is B { // error only on instance methods
+      return true;
+    }
+
+    get isBGetter(): this is B { // error only on methods
+      return true;
+    }
+  }
+
+  class B extends A {}
+
+  declare const a: A;
+  if (a.isB()) {
+    a as B; // okay
+  } else {
+    a as B; // error
+  }
+
+  // Not supported outside of classes/interfaces.
+  const o = {
+    m(): this is B { // error only on class/interface methods
+      return true;
+    },
+  };
+  declare const x: typeof o;
+  if (x.m()) {
+    x as B; // TODO should not refine (the guard is still recorded despite the error)
+  }
+
+  const fn = function (): this is B { // error only on class/interface methods
+    return true;
+  };
 }

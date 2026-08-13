@@ -502,7 +502,9 @@ fn allows_type_guards(kind: MethodKind) -> bool {
     }
 }
 
-fn allows_this_type_guards(kind: MethodKind) -> bool {
+// Only a non-static method binds `this` to a class instance, which is what makes a
+// `this` type guard refinable and therefore checkable.
+pub(crate) fn allows_this_type_guards(kind: MethodKind) -> bool {
     match kind {
         MethodKind::MethodKind { is_static } => !is_static,
         MethodKind::FunctionKind

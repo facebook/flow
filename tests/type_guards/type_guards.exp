@@ -3073,8 +3073,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:19:39
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    19|     isB_prop: (this: A, x: number) => this is B; // error only on methods
                                              ^^^^ [1]
@@ -3082,8 +3082,8 @@ declare class or interface methods. [function-predicate]
 
 Error ---------------------------------------------------------------------------------------------------- this.js:20:26
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    20|     static isB_static(): this is B; // error only on instance methods
                                 ^^^^ [1]
@@ -3212,8 +3212,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:98:29
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    98|   type T1 = (x: unknown) => this is C; // error only on declare classes/interfaces
                                    ^^^^ [1]
@@ -3221,8 +3221,8 @@ declare class or interface methods. [function-predicate]
 
 Error --------------------------------------------------------------------------------------------------- this.js:100:34
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    100|   type T2 = (cb: (x: unknown) => this is C) => void; // error only on declare classes/interfaces
                                          ^^^^ [1]
@@ -3230,8 +3230,8 @@ declare class or interface methods. [function-predicate]
 
 Error --------------------------------------------------------------------------------------------------- this.js:102:29
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    102|   type T3 = (x: unknown) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
                                     ^^^^ [1]
@@ -3247,8 +3247,8 @@ Cannot resolve name `Unresolved`. [cannot-resolve-name]
 
 Error --------------------------------------------------------------------------------------------------- this.js:105:10
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    105|     m(): this is C; // error only on declare classes/interfaces
                  ^^^^ [1]
@@ -3256,8 +3256,8 @@ declare class or interface methods. [function-predicate]
 
 Error --------------------------------------------------------------------------------------------------- this.js:106:14
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    106|     f: () => this is C; // error only on declare classes/interfaces
                      ^^^^ [1]
@@ -3282,8 +3282,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- this.js:115:27
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    115|     m(cb: (x: unknown) => this is C): void; // error only on declare classes/interfaces method return
                                   ^^^^ [1]
@@ -3291,8 +3291,8 @@ declare class or interface methods. [function-predicate]
 
 Error --------------------------------------------------------------------------------------------------- this.js:116:26
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    116|     n(): (x: unknown) => this is C; // error only on declare classes/interfaces method return
                                  ^^^^ [1]
@@ -3300,19 +3300,19 @@ declare class or interface methods. [function-predicate]
 
 Error --------------------------------------------------------------------------------------------------- this.js:119:27
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
-   119|   function foo1(this: C): this is C {  // error 'this' type guard only on declare classes
+   119|   function foo1(this: C): this is C {  // error 'this' type guard only on class/interface methods
                                   ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- this.js:123:27
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
-   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on declare classes, unresolved
+   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on class/interface methods, unresolved
                                   ^^^^ [1]
 
 
@@ -3320,7 +3320,7 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve name `Unresolved`. [cannot-resolve-name]
 
-   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on declare classes, unresolved
+   123|   function foo2(this: C): this is Unresolved {  // error 'this' type guard only on class/interface methods, unresolved
                                           ^^^^^^^^^^
 
 
@@ -3575,22 +3575,1294 @@ References:
                  ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- this.js:298:14
+
+Cannot return `true` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this.js:298:14
+   298|       return true; // error A ~> B
+                     ^^^^ [4]
+
+References:
+   this.js:292:9
+   292|   class A {
+                ^ [1]
+   this.js:297:29
+   297|     isBUnchecked(): this is B {
+                                    ^ [2]
+   this.js:297:21
+   297|     isBUnchecked(): this is B {
+                            ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:311:14
+
+Cannot return `this.isB() && this.extra()` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this.js:311:14
+   311|       return this.isB() && this.extra(); // error negation does not refine away B
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this.js:310:34
+   310|     isBAndMoreChecked(): this is B {
+                                         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:318:25
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   318|     static isBStatic(): this is B { // error only on instance methods
+                                ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:322:22
+
+Cannot declare a type guard on a(n) getter/setter function. [function-predicate]
+
+   322|     get isBGetter(): this is B { // error only on methods
+                             ^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:333:5
+
+Cannot cast `a` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   this.js:333:5
+   333|     a as B; // error
+            ^
+
+References:
+   this.js:329:20
+   329|   declare const a: A;
+                           ^ [1]
+   this.js:333:10
+   333|     a as B; // error
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:338:10
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   338|     m(): this is B { // error only on class/interface methods
+                 ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:347:27
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   347|   const fn = function (): this is B { // error only on class/interface methods
+                                  ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- this_class_exports.js:15:12
+
+Cannot return `true` because `Base` [1] is incompatible with `Derived` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `Derived` [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_class_exports.js:15:12
+   15|     return true; // error Base ~> Derived, but the guard is still recorded
+                  ^^^^ [4]
+
+References:
+   this_class_exports.js:5:14
+    5| export class Base {
+                    ^^^^ [1]
+   this_class_exports.js:14:33
+   14|   isDerivedUnchecked(): this is Derived {
+                                       ^^^^^^^ [2]
+   this_class_exports.js:14:25
+   14|   isDerivedUnchecked(): this is Derived {
+                               ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:17:14
+
+Cannot return `true` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:17:14
+   17|       return true; // error A ~> B
+                    ^^^^ [4]
+
+References:
+   this_classes.js:11:9
+   11|   class A {
+               ^ [1]
+   this_classes.js:16:29
+   16|     isBUnchecked(): this is B {
+                                   ^ [2]
+   this_classes.js:16:21
+   16|     isBUnchecked(): this is B {
+                           ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:32:14
+
+Cannot return `true` because `A` [1] is incompatible with `empty` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type empty [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:32:14
+   32|       return true; // error A ~> empty
+                    ^^^^ [4]
+
+References:
+   this_classes.js:11:9
+   11|   class A {
+               ^ [1]
+   this_classes.js:31:24
+   31|     isEmpty(): this is empty {
+                              ^^^^^ [2]
+   this_classes.js:31:16
+   31|     isEmpty(): this is empty {
+                      ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:40:30
+
+Cannot return `this instanceof B` because `B` [1] is incompatible with `Unrelated` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `this instanceof B` [4] needs to be compatible with the guard type
+intersection type [5]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:40:30
+   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+                                    ^
+
+References:
+   this_classes.js:44:9
+   44|   class B extends A {}
+               ^ [1]
+   this_classes.js:39:35
+   39|     isIntersection(): this is B & Unrelated {
+                                         ^^^^^^^^^ [2]
+   this_classes.js:39:23
+   39|     isIntersection(): this is B & Unrelated {
+                             ^^^^ [3]
+   this_classes.js:40:14
+   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+                    ^^^^^^^^^^^^^^^^^ [4]
+   this_classes.js:39:31
+   39|     isIntersection(): this is B & Unrelated {
+                                     ^^^^^^^^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:40:14
+
+Cannot return `this instanceof B` because the negation of the predicate encoded in this expression needs to completely
+refine away the guard type intersection type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:40:14
+   40|       return this instanceof B; // error twice: A & B ~> Unrelated, and negation
+                    ^^^^^^^^^^^^^^^^^
+
+References:
+   this_classes.js:39:31
+   39|     isIntersection(): this is B & Unrelated {
+                                     ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- this_classes.js:53:5
+
+Cannot cast `a` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   this_classes.js:53:5
+   53|     a as B; // error
+           ^
+
+References:
+   this_classes.js:48:20
+   48|   declare const a: A;
+                          ^ [1]
+   this_classes.js:53:10
+   53|     a as B; // error
+                ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:89:20
+
+Cannot extend `A` [1] with `Bad` because in property `isB` > the type predicate: `C` [2] is incompatible with `B` [3].
+[incompatible-type]
+
+   this_classes.js:89:20
+   89|     isB(): this is C { // error type guard is in invariant position
+                          ^ [2]
+
+References:
+   this_classes.js:88:21
+   88|   class Bad extends A {
+                           ^ [1]
+   this_classes.js:80:20
+   80|     isB(): this is B {
+                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:96:12
+
+Cannot extend `A` [1] with `BadImplies` because in property `isB`: one-sided type guard [2] is incompatible with default
+type guard [3]. [function-predicate]
+
+   this_classes.js:96:12
+   96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
+                  ^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   this_classes.js:95:28
+   95|   class BadImplies extends A {
+                                  ^ [1]
+   this_classes.js:80:12
+   80|     isB(): this is B {
+                  ^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:96:28
+
+Cannot extend `A` [1] with `BadImplies` because in property `isB` > the type predicate: `C` [2] is incompatible with
+`B` [3]. [incompatible-type]
+
+   this_classes.js:96:28
+   96|     isB(): implies this is C { // error twice: one-sided vs default guard, and C ~> B
+                                  ^ [2]
+
+References:
+   this_classes.js:95:28
+   95|   class BadImplies extends A {
+                                  ^ [1]
+   this_classes.js:80:20
+   80|     isB(): this is B {
+                          ^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:103:5
+
+Cannot extend `A` [1] with `Dropped` because in property `isB`: function [2], a non-type-guard function, is incompatible
+with function [3], which is a type-guard function. [function-predicate]
+
+   this_classes.js:103:5
+            v-------------------------------------------
+   103|     isB(): boolean { // error missing type guard
+   104|       return true;
+   105|     }
+            ^ [2]
+
+References:
+   this_classes.js:102:25
+   102|   class Dropped extends A {
+                                ^ [1]
+   this_classes.js:80:5
+            v-----------------
+    80|     isB(): this is B {
+    81|       return this instanceof B;
+    82|     }
+            ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:133:14
+
+Cannot return `!this.isB()` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `!this.isB()` [4] needs to be compatible with the guard type `B` [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:133:14
+   133|       return !this.isB(); // error twice: positive refines to A, negation to B
+                     ^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:117:9
+   117|   class A {
+                ^ [1]
+   this_classes.js:132:32
+   132|     viaGuardNegated(): this is B {
+                                       ^ [2]
+   this_classes.js:132:24
+   132|     viaGuardNegated(): this is B {
+                               ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:133:14
+
+Cannot return `!this.isB()` because the negation of the predicate encoded in this expression needs to completely refine
+away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:133:14
+   133|       return !this.isB(); // error twice: positive refines to A, negation to B
+                     ^^^^^^^^^^^
+
+References:
+   this_classes.js:132:32
+   132|     viaGuardNegated(): this is B {
+                                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:138:14
+
+Cannot return `this.isB() && this.extra()` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:138:14
+   138|       return this.isB() && this.extra(); // error negation does not refine away B
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this_classes.js:137:32
+   137|     viaGuardAndMore(): this is B {
+                                       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:146:14
+
+Cannot return `this.isB() || this.extra()` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `this.isB() || this.extra()` [4] needs to be compatible with the guard
+type `B` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:146:14
+   146|       return this.isB() || this.extra(); // error the `extra` branch is not refined
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:117:9
+   117|   class A {
+                ^ [1]
+   this_classes.js:145:27
+   145|     viaGuardOr(): this is B {
+                                  ^ [2]
+   this_classes.js:145:19
+   145|     viaGuardOr(): this is B {
+                          ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:154:14
+
+Cannot return `r` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `r` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:154:14
+   154|       return r; // error twice: positive and negative
+                     ^ [4]
+
+References:
+   this_classes.js:117:9
+   117|   class A {
+                ^ [1]
+   this_classes.js:152:25
+   152|     viaConst(): this is B {
+                                ^ [2]
+   this_classes.js:152:17
+   152|     viaConst(): this is B {
+                        ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:154:14
+
+Cannot return `r` because the negation of the predicate encoded in this expression needs to completely refine away the
+guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:154:14
+   154|       return r; // error twice: positive and negative
+                     ^
+
+References:
+   this_classes.js:152:25
+   152|     viaConst(): this is B {
+                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:164:14
+
+Cannot return `super.isB()` because the negation of the predicate encoded in this expression needs to completely refine
+away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:164:14
+   164|       return super.isB(); // error TODO super calls do not refine `this`
+                     ^^^^^^^^^^^
+
+References:
+   this_classes.js:163:25
+   163|     viaSuper(): this is B {
+                                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:178:33
+
+Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
+
+   this_classes.js:178:33
+   178|     paramIsHavoced(x: unknown): x is B { // error 'x' is havoced
+                                        ^
+
+References:
+   this_classes.js:178:20
+   178|     paramIsHavoced(x: unknown): x is B { // error 'x' is havoced
+                           ^ [1]
+   this_classes.js:182:7
+   182|       write();
+              ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:220:14
+
+Cannot return `true` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:220:14
+   220|       return true; // error A ~> B
+                     ^^^^ [4]
+
+References:
+   this_classes.js:217:9
+   217|   class A {
+                ^ [1]
+   this_classes.js:219:27
+   219|     alwaysTrue(): this is B {
+                                  ^ [2]
+   this_classes.js:219:19
+   219|     alwaysTrue(): this is B {
+                          ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:224:14
+
+Cannot return `false` because the negation of the predicate encoded in this expression needs to completely refine away
+the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:224:14
+   224|       return false; // error negation does not refine away B
+                     ^^^^^
+
+References:
+   this_classes.js:223:28
+   223|     alwaysFalse(): this is B {
+                                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:236:14
+
+Cannot return `true` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:236:14
+   236|       return true; // error A ~> B
+                     ^^^^ [4]
+
+References:
+   this_classes.js:217:9
+   217|   class A {
+                ^ [1]
+   this_classes.js:232:42
+   232|     multipleReturns(x: boolean): this is B {
+                                                 ^ [2]
+   this_classes.js:232:34
+   232|     multipleReturns(x: boolean): this is B {
+                                         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:246:14
+
+Cannot return `[...].every(...)` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `[...].every(...)` [4] needs to be compatible with the guard type `B` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:246:14
+   246|       return [1].every(() => this instanceof B); // error twice: positive and negative
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:217:9
+   217|   class A {
+                ^ [1]
+   this_classes.js:245:28
+   245|     insideArrow(): this is B {
+                                   ^ [2]
+   this_classes.js:245:20
+   245|     insideArrow(): this is B {
+                           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:246:14
+
+Cannot return `[...].every(...)` because the negation of the predicate encoded in this expression needs to completely
+refine away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:246:14
+   246|       return [1].every(() => this instanceof B); // error twice: positive and negative
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this_classes.js:245:28
+   245|     insideArrow(): this is B {
+                                   ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:261:14
+
+Cannot return `true` because `Wid` [1] is incompatible with `LidImpl` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `Lid` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:261:14
+   261|       return true; // error Wid ~> Lid
+                     ^^^^ [4]
+
+References:
+   this_classes.js:255:9
+   255|   class Wid {
+                ^^^ [1]
+   this_classes.js:260:31
+   260|     isLidUnchecked(): this is Lid {
+                                      ^^^ [2]
+   this_classes.js:260:23
+   260|     isLidUnchecked(): this is Lid {
+                              ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:291:8
+
+Cannot call `want` with `new NoGuard()` bound to `x` because in property `isB`: function [1], a non-type-guard function,
+is incompatible with function type [2], which is a type-guard function. [function-predicate]
+
+   this_classes.js:291:8
+   291|   want(new NoGuard()); // error no type-guard
+               ^^^^^^^^^^^^^
+
+References:
+   this_classes.js:282:5
+            v---------------
+   282|     isB(): boolean {
+   283|       return true;
+   284|     }
+            ^ [1]
+   this_classes.js:287:39
+   287|   declare function want(x: interface {isB(): this is B}): void;
+                                              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:305:5
+
+Cannot implement `I` [1] with `BadImpl` because in property `isB`: function [2], a non-type-guard function, is
+incompatible with function type [3], which is a type-guard function. [function-predicate]
+
+   this_classes.js:305:5
+            v-------------------------------------------
+   305|     isB(): boolean { // error missing type guard
+   306|       return true;
+   307|     }
+            ^ [2]
+
+References:
+   this_classes.js:304:28
+   304|   class BadImpl implements I {
+                                   ^ [1]
+   this_classes.js:294:5
+   294|     isB(): this is B;
+            ^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:311:19
+
+Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   this_classes.js:311:19
+   311|     const isB = x.isB; // error method-unbinding
+                          ^^^ [1]
+
+References:
+   this_classes.js:275:5
+            v-----------------
+   275|     isB(): this is B {
+   276|       return this instanceof B;
+   277|     }
+            ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:328:14
+
+Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
+type object type [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:328:14
+   328|       return typeof this.a === 'number'; // error twice: exactness, and negation
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:327:24
+   327|     isExact(): this is {a: number} {
+                               ^^^^^^^^^^^ [2]
+   this_classes.js:327:16
+   327|     isExact(): this is {a: number} {
+                       ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:328:14
+
+Cannot return `(typeof this.a) === 'number'` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type object type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:328:14
+   328|       return typeof this.a === 'number'; // error twice: exactness, and negation
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this_classes.js:327:24
+   327|     isExact(): this is {a: number} {
+                               ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:333:14
+
+Cannot return `(typeof this.a) === 'number'` because `A` [1] is not a subtype of object type [2]. Class instances are
+not subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
+type object type [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:333:14
+   333|       return typeof this.a === 'number'; // error twice: class-object, and negation
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:332:26
+   332|     isInexact(): this is {a: number, ...} {
+                                 ^^^^^^^^^^^^^^^^ [2]
+   this_classes.js:332:18
+   332|     isInexact(): this is {a: number, ...} {
+                         ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:333:14
+
+Cannot return `(typeof this.a) === 'number'` because the negation of the predicate encoded in this expression needs to
+completely refine away the guard type object type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2.
+in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_classes.js:333:14
+   333|       return typeof this.a === 'number'; // error twice: class-object, and negation
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   this_classes.js:332:26
+   332|     isInexact(): this is {a: number, ...} {
+                                 ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:338:14
+
+Cannot return `true` because `A` [1] is not a subtype of object type [2]. Class instances are not subtypes of object
+types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:338:14
+   338|       return true; // error class instances are not subtypes of object types
+                     ^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:337:25
+   337|     isAnyObj(): this is {...} {
+                                ^^^^^ [2]
+   this_classes.js:337:17
+   337|     isAnyObj(): this is {...} {
+                        ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:343:14
+
+Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact object type [2].
+[incompatible-exact]
+
+The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
+type object type [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:343:14
+   343|       return typeof this.a === 'number'; // error exactness only
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:342:39
+   342|     isExactImplies(): implies this is {a: number} {
+                                              ^^^^^^^^^^^ [2]
+   this_classes.js:342:31
+   342|     isExactImplies(): implies this is {a: number} {
+                                      ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:348:14
+
+Cannot return `true` because `A` [1] is not a subtype of object type [2]. Class instances are not subtypes of object
+types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:348:14
+   348|       return true; // error twice: class-object, and `zzz` missing
+                     ^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:347:24
+   347|     isOther(): this is {zzz: string, ...} {
+                               ^^^^^^^^^^^^^^^^^^ [2]
+   this_classes.js:347:16
+   347|     isOther(): this is {zzz: string, ...} {
+                       ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:348:14
+
+Cannot return `true` because property `zzz` is missing in `A` [1] but exists in object type [2]. [incompatible-type]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
+1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_classes.js:348:14
+   348|       return true; // error twice: class-object, and `zzz` missing
+                     ^^^^ [4]
+
+References:
+   this_classes.js:323:9
+   323|   class A {
+                ^ [1]
+   this_classes.js:347:24
+   347|     isOther(): this is {zzz: string, ...} {
+                               ^^^^^^^^^^^^^^^^^^ [2]
+   this_classes.js:347:16
+   347|     isOther(): this is {zzz: string, ...} {
+                       ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:366:43
+
+The type predicate object type [1] needs to be compatible with parameter `x`'s type: object type [1] is incompatible
+with `A` [2]. [incompatible-type-guard]
+
+   this_classes.js:366:43
+   366|   declare function paramGuard(x: A): x is {a: number, ...}; // error class instances are not subtypes of object types
+                                                  ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   this_classes.js:366:34
+   366|   declare function paramGuard(x: A): x is {a: number, ...}; // error class instances are not subtypes of object types
+                                         ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:372:20
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   372|     isBArrow = (): this is B => { // TODO error, but an arrow closes over the instance `this`
+                           ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- this_classes.js:377:32
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   377|     isBFunction = function (): this is B { // error only on class/interface methods
+                                       ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- this_classes.js:391:5
+
+Cannot cast `b` to `DerivedImported` because `Base` [1] is incompatible with `Derived` [2]. [incompatible-type]
+
+   this_classes.js:391:5
+   391|     b as DerivedImported; // error
+            ^
+
+References:
+   this_classes.js:387:20
+   387|   declare const b: BaseImported;
+                           ^^^^^^^^^^^^ [1]
+   this_classes.js:391:10
+   391|     b as DerivedImported; // error
+                 ^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- this_exports.js:6:24
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
 
    6|   static isB_static(): this is B; // error should not export this guard
                              ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- this_exports.js:14:10
+Error -------------------------------------------------------------------------------------------- this_exports.js:15:12
 
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
+Cannot return `true` because `E` [1] is incompatible with `F` [2]. [incompatible-type-guard]
 
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `F` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_exports.js:15:12
+   15|     return true;
+                  ^^^^ [4]
+
+References:
+   this_exports.js:13:14
+   13| export class E {
+                    ^ [1]
+   this_exports.js:14:18
    14|   isF(): this is F { // error due to consistency check, but type guard recorded
-                ^^^^ [1]
+                        ^ [2]
+   this_exports.js:14:10
+   14|   isF(): this is F { // error due to consistency check, but type guard recorded
+                ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:18:14
+
+Cannot return `true` because `C` [1] is incompatible with `D` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `D` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_generics.js:18:14
+   18|       return true; // error C ~> D
+                    ^^^^ [4]
+
+References:
+   this_generics.js:11:9
+   11|   class C<X> {
+               ^ [1]
+   this_generics.js:17:29
+   17|     isDUnchecked(): this is D<X> {
+                                   ^^^^ [2]
+   this_generics.js:17:21
+   17|     isDUnchecked(): this is D<X> {
+                           ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:23:14
+
+Cannot return `this.isDNumber()` because: [incompatible-type-guard]
+ - Either in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+ - Or `C` [4] is incompatible with `D` [5].
+
+The type of this [6] at the return expression `this.isDNumber()` [7] needs to be compatible with the guard type `D` [5].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   this_generics.js:23:14
+   23|       return this.isDNumber(); // error twice: number ~> string, and negation
+                    ^^^^^^^^^^^^^^^^ [7]
+
+References:
+   this_generics.js:33:11
+   33|   class D<X> extends C<X> {}
+                 ^ [1]
+   this_generics.js:26:36
+   26|     isDNumber(): implies this is D<number> {
+                                          ^^^^^^ [2]
+   this_generics.js:22:28
+   22|     isDString(): this is D<string> {
+                                  ^^^^^^ [3]
+   this_generics.js:11:9
+   11|   class C<X> {
+               ^ [4]
+   this_generics.js:22:26
+   22|     isDString(): this is D<string> {
+                                ^^^^^^^^^ [5]
+   this_generics.js:22:18
+   22|     isDString(): this is D<string> {
+                        ^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:23:14
+
+Cannot return `this.isDNumber()` because the negation of the predicate encoded in this expression needs to completely
+refine away the guard type `D` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_generics.js:23:14
+   23|       return this.isDNumber(); // error twice: number ~> string, and negation
+                    ^^^^^^^^^^^^^^^^
+
+References:
+   this_generics.js:22:26
+   22|     isDString(): this is D<string> {
+                                ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- this_generics.js:39:5
+
+Cannot cast `c` to `D` because in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
+[incompatible-type]
+
+   this_generics.js:39:5
+   39|     c as D<string>; // error number ~> string
+           ^
+
+References:
+   this_generics.js:33:11
+   33|   class D<X> extends C<X> {}
+                 ^ [1]
+   this_generics.js:35:22
+   35|   declare const c: C<number>;
+                            ^^^^^^ [2]
+   this_generics.js:39:12
+   39|     c as D<string>; // error number ~> string
+                  ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_generics.js:41:5
+
+Cannot cast `c` to `D` because `C` [1] is incompatible with `D` [2]. [incompatible-type]
+
+   this_generics.js:41:5
+   41|     c as D<number>; // error
+           ^
+
+References:
+   this_generics.js:35:20
+   35|   declare const c: C<number>;
+                          ^^^^^^^^^ [1]
+   this_generics.js:41:10
+   41|     c as D<number>; // error
+                ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:57:14
+
+Cannot return `true` because `C<X>` [1] is incompatible with `empty` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `Y` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_generics.js:57:14
+   57|       return true; // error C ~> Y
+                    ^^^^ [4]
+
+References:
+   this_generics.js:46:9
+   46|   class C<X> {
+               ^ [1]
+   this_generics.js:56:23
+   56|     isY<Y>(): this is Y {
+                             ^ [2]
+   this_generics.js:56:15
+   56|     isY<Y>(): this is Y {
+                     ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_generics.js:66:5
+
+Cannot cast `c` to `D` because: [incompatible-type]
+ - Either in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
+ - Or `C` [4] is incompatible with `D` [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   this_generics.js:66:5
+   66|     c as D<number>; // error string ~> number
+           ^
+
+References:
+   this_generics.js:61:11
+   61|   class D<X> extends C<X> {}
+                 ^ [1]
+   this_generics.js:64:14
+   64|   if (c.isD1<string>()) {
+                    ^^^^^^ [2]
+   this_generics.js:66:12
+   66|     c as D<number>; // error string ~> number
+                  ^^^^^^ [3]
+   this_generics.js:63:20
+   63|   declare const c: C<number>;
+                          ^^^^^^^^^ [4]
+   this_generics.js:66:10
+   66|     c as D<number>; // error string ~> number
+                ^^^^^^^^^ [5]
+
+
+Error -------------------------------------------------------------------------------------------- this_generics.js:85:5
+
+Cannot extend `C` [1] with `Bad` because in property `isD` > the type predicate: `D` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   this_generics.js:85:5
+           v-----------------------------------------------------------------
+   85|     isD(): this is E<X> { // error type guard is in invariant position
+   86|       return this instanceof E;
+   87|     }
+           ^
+
+References:
+   this_generics.js:84:28
+   84|   class Bad<out X> extends C<X> {
+                                  ^^^^ [1]
+   this_generics.js:77:20
+   77|     isD(): this is D<X> {
+                          ^^^^ [2]
+   this_generics.js:85:20
+   85|     isD(): this is E<X> { // error type guard is in invariant position
+                          ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- this_generics.js:91:5
+
+Cannot extend `C` [1] with `Implies` because in property `isD` > the type predicate: `D` [2] is incompatible with
+`E` [3]. [incompatible-type]
+
+   this_generics.js:91:5
+           v-----------------------------------------------------------------------------------
+   91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
+   92|       return this instanceof E;
+   93|     }
+           ^
+
+References:
+   this_generics.js:90:32
+   90|   class Implies<out X> extends C<X> {
+                                      ^^^^ [1]
+   this_generics.js:77:20
+   77|     isD(): this is D<X> {
+                          ^^^^ [2]
+   this_generics.js:91:28
+   91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
+                                  ^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:91:12
+
+Cannot extend `C` [1] with `Implies` because in property `isD`: one-sided type guard [2] is incompatible with default
+type guard [3]. [function-predicate]
+
+   this_generics.js:91:12
+   91|     isD(): implies this is E<X> { // error twice: one-sided vs default guard, and D ~> E
+                  ^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   this_generics.js:90:32
+   90|   class Implies<out X> extends C<X> {
+                                      ^^^^ [1]
+   this_generics.js:77:12
+   77|     isD(): this is D<X> {
+                  ^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- this_generics.js:115:5
+
+Cannot cast `g` to `GenericDerivedImported` because in type argument `X` [1]: `number` [2] is incompatible with
+`string` [3]. [incompatible-type]
+
+   this_generics.js:115:5
+   115|     g as GenericDerivedImported<string>; // error number ~> string
+            ^
+
+References:
+   this_class_exports.js:27:29
+    27| export class GenericDerived<X> extends GenericBase<X> {}
+                                    ^ [1]
+   this_generics.js:112:40
+   112|   declare const g: GenericBaseImported<number>;
+                                               ^^^^^^ [2]
+   this_generics.js:115:33
+   115|     g as GenericDerivedImported<string>; // error number ~> string
+                                        ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:19:14
+
+Cannot return `true` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `B` [2]. See 1. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_params.js:19:14
+   19|       return true; // error A ~> B
+                    ^^^^ [4]
+
+References:
+   this_params.js:18:24
+   18|     isBUnchecked(this: A): this is B {
+                              ^ [1]
+   this_params.js:18:36
+   18|     isBUnchecked(this: A): this is B {
+                                          ^ [2]
+   this_params.js:18:18
+   18|     isBUnchecked(this: A): this is B {
+                        ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- this_params.js:24:5
+
+Cannot define method `isBNarrowed` [1] on `A` because `A` [2] is incompatible with `B` [3]. [incompatible-type]
+
+   this_params.js:24:5
+   24|     isBNarrowed(this: B): this is B { // error A ~> B on the `this` param
+           ^^^^^^^^^^^ [1]
+
+References:
+   this_params.js:13:9
+   13|   class A {
+               ^ [2]
+   this_params.js:24:23
+   24|     isBNarrowed(this: B): this is B { // error A ~> B on the `this` param
+                             ^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- this_params.js:44:5
+
+Cannot cast `a` to `B` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+
+   this_params.js:44:5
+   44|     a as B; // error
+           ^
+
+References:
+   this_params.js:40:20
+   40|   declare const a: A;
+                          ^ [1]
+   this_params.js:44:10
+   44|     a as B; // error
+                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:55:25
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   55|   function fn(this: C): this is C { // error only on class/interface methods
+                               ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:59:38
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   59|   const fnExpr = function (this: C): this is C { // error only on class/interface methods
+                                            ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:64:17
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static class
+or interface methods. [function-predicate]
+
+   64|     m(this: C): this is C { // error only on class/interface methods
+                       ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:79:14
+
+Cannot return `x instanceof B` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
+
+The type of this [3] at the return expression `x instanceof B` [4] needs to be compatible with the guard type `B` [2].
+See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+
+   this_params.js:79:14
+   79|       return x instanceof B; // error twice: `this` is not refined by the body
+                    ^^^^^^^^^^^^^^ [4]
+
+References:
+   this_params.js:78:15
+   78|     bad(this: A, x: unknown): this is B {
+                     ^ [1]
+   this_params.js:78:39
+   78|     bad(this: A, x: unknown): this is B {
+                                             ^ [2]
+   this_params.js:78:9
+   78|     bad(this: A, x: unknown): this is B {
+               ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- this_params.js:79:14
+
+Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
+refine away the guard type `B` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+
+   this_params.js:79:14
+   79|       return x instanceof B; // error twice: `this` is not refined by the body
+                    ^^^^^^^^^^^^^^
+
+References:
+   this_params.js:78:39
+   78|     bad(this: A, x: unknown): this is B {
+                                             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- this_params.js:96:5
+
+Cannot cast `w` to `SubImported` because `WithThisParam` [1] is incompatible with `Sub` [2]. [incompatible-type]
+
+   this_params.js:96:5
+   96|     w as SubImported; // error
+           ^
+
+References:
+   this_params.js:92:20
+   92|   declare const w: WithThisParamImported;
+                          ^^^^^^^^^^^^^^^^^^^^^ [1]
+   this_params.js:96:10
+   96|     w as SubImported; // error
+                ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
@@ -3847,4 +5119,4 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 224 errors
+Found 290 errors
