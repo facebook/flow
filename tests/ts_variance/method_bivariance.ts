@@ -14,7 +14,7 @@
 // Method-target/arrow-source case, so that negative below intentionally
 // guards Flow's current narrower relaxation.
 
-declare class Animal {
+export declare class Animal {
   name: string;
 }
 declare class Dog extends Animal {
@@ -48,6 +48,28 @@ type ArrowHolder = {
 };
 
 const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
+
+// A method source is structurally compatible with a function-valued property
+// in TypeScript. Cover the distinct source representations used by object
+// subtyping.
+export declare const aliasedMethodSource: {cb(x: Animal): void};
+const aliasedMethodAsFunctionProperty: ArrowHolder = aliasedMethodSource; // OK
+
+export const literalMethodSource = {
+  cb(x: Animal): void {},
+};
+const literalMethodAsFunctionProperty: ArrowHolder = literalMethodSource; // OK
+
+export declare class ClassMethodSource {
+  cb(x: Animal): void;
+}
+export declare const classMethodSource: ClassMethodSource;
+const classMethodAsFunctionProperty: ArrowHolder = classMethodSource; // OK
+
+type FunctionIndexer = {[name: string]: (x: Animal) => void};
+const methodAsFunctionIndexer: FunctionIndexer = {
+  cb(x: Animal): void {},
+}; // OK
 
 // Method bivariance must NOT throw out arity checks. A source method with
 // extra required parameters cannot be safely called from a caller of the

@@ -197,6 +197,21 @@ fn polarity_error_content(
     (propref.dupe(), (lpol, upol))
 }
 
+fn property_type_for_subtyping(
+    prop: &Property,
+    strictness_kind: TypeStrictnessKind,
+) -> PropertyType {
+    match prop.deref() {
+        PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
+            PropertyType::SyntheticField {
+                get_type: Some(properties::unbind_this_method(type_)),
+                set_type: None,
+            }
+        }
+        _ => property::property_type(prop),
+    }
+}
+
 fn rec_flow_p_inner<'cx>(
     cx: &Context<'cx>,
     trace: Option<DepthTrace>,
@@ -1419,7 +1434,13 @@ fn flow_obj_to_obj<'cx>(
                             false
                         };
                         if !bivariant_handled {
-                            match (property::read_t(&lp), property::read_t(up)) {
+                            match (
+                                property::read_t_of_property_type(&property_type_for_subtyping(
+                                    &lp,
+                                    strictness_kind,
+                                )),
+                                property::read_t(up),
+                            ) {
                                 (Some(lt), Some(ut)) => {
                                     FlowJs::rec_flow(
                                         cx,
@@ -1449,7 +1470,10 @@ fn flow_obj_to_obj<'cx>(
                         let additional_polarity_mismatch_errs = if bivariant_handled {
                             vec![]
                         } else {
-                            match (property::property_type(&lp), property::property_type(up)) {
+                            match (
+                                property_type_for_subtyping(&lp, strictness_kind),
+                                property::property_type(up),
+                            ) {
                                 (
                                     PropertyType::OrdinaryField {
                                         type_: ref lt,
@@ -2035,7 +2059,7 @@ fn flow_obj_to_obj<'cx>(
                                 polarity: fd.polarity,
                             }
                         }
-                        _ => property::property_type(lp),
+                        _ => property_type_for_subtyping(lp, strictness_kind),
                     };
                     let up_type = PropertyType::OrdinaryField {
                         type_: value.dupe(),
@@ -5016,6 +5040,8 @@ pub fn rec_sub_t<'cx>(
                                 false
                             };
                             if !bivariant_handled {
+                                let lower_prop_type =
+                                    property_type_for_subtyping(lp, strictness_kind);
                                 let new_errs = rec_flow_p_inner(
                                     cx,
                                     Some(trace),
@@ -5026,7 +5052,7 @@ pub fn rec_sub_t<'cx>(
                                     ureason,
                                     true,
                                     &propref,
-                                    &property::property_type(lp),
+                                    &lower_prop_type,
                                     &property::property_type(up),
                                 )?;
                                 acc.extend(new_errs);
