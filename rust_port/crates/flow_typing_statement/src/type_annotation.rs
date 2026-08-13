@@ -512,6 +512,18 @@ fn allows_this_type_guards(kind: MethodKind) -> bool {
     }
 }
 
+pub(crate) fn method_kind_of_class_method(
+    kind: ast::class::MethodKind,
+    is_static: bool,
+) -> MethodKind {
+    match kind {
+        ast::class::MethodKind::Constructor => MethodKind::ConstructorKind,
+        ast::class::MethodKind::Get => MethodKind::GetterKind,
+        ast::class::MethodKind::Set => MethodKind::SetterKind,
+        ast::class::MethodKind::Method => MethodKind::MethodKind { is_static },
+    }
+}
+
 pub fn method_kind_to_string(kind: MethodKind) -> &'static str {
     match kind {
         MethodKind::FunctionKind => "function",

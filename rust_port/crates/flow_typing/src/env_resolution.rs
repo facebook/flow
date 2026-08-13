@@ -935,8 +935,7 @@ fn resolve_annotated_function<'cx>(
     let sig_data = statement::mk_func_sig(
         cx,
         false,
-        false,
-        false,
+        flow_typing_statement::type_annotation::MethodKind::FunctionKind,
         statics,
         &tparams_map,
         reason.dupe(),
@@ -1675,8 +1674,7 @@ fn resolve_binding<'cx>(
             let sig_data = statement::mk_func_sig(
                 cx,
                 false,
-                false,
-                false,
+                flow_typing_statement::type_annotation::MethodKind::FunctionKind,
                 statics,
                 &tparams_map,
                 reason_fun,

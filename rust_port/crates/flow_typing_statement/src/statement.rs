@@ -14954,8 +14954,8 @@ pub fn mk_class_sig<'a>(
                         let (func_sig_data, reconstruct_data, deferred_tg_check) = mk_func_sig(
                             cx,
                             true,
-                            false,
-                            false,
+                            // A class field is not a method, whatever its initializer is.
+                            type_annotation::MethodKind::FunctionKind,
                             &BTreeMap::new(),
                             tparams_map,
                             reason.dupe(),
@@ -15063,8 +15063,7 @@ pub fn mk_class_sig<'a>(
 
     fn mk_method<'a>(
         cx: &Context<'a>,
-        constructor: bool,
-        getset: bool,
+        meth_kind: type_annotation::MethodKind,
         tparams_map: &FlowOrdMap<SubstName, Type>,
         reason: Reason,
         func: &ast::function::Function<ALoc, ALoc>,
@@ -15078,9 +15077,8 @@ pub fn mk_class_sig<'a>(
     > {
         mk_func_sig(
             cx,
-            !constructor,
-            constructor,
-            getset,
+            !matches!(meth_kind, type_annotation::MethodKind::ConstructorKind),
+            meth_kind,
             &BTreeMap::new(),
             tparams_map,
             reason,
@@ -15953,8 +15951,7 @@ pub fn mk_class_sig<'a>(
                     let method_reason = func_reason(func.async_, func.generator, method_loc.dupe());
                     let (method_sig, reconstruct_func, deferred_tg_check) = mk_method(
                         cx,
-                        kind == ast::class::MethodKind::Constructor,
-                        kind == ast::class::MethodKind::Get || kind == ast::class::MethodKind::Set,
+                        type_annotation::method_kind_of_class_method(kind, static_),
                         tparams_map_with_this,
                         method_reason,
                         func,
@@ -17237,22 +17234,8 @@ pub fn mk_class_sig<'a>(
                                         }));
                                         continue;
                                     }
-                                    let meth_kind = match kind {
-                                        ast::class::MethodKind::Constructor => {
-                                            type_annotation::MethodKind::ConstructorKind
-                                        }
-                                        ast::class::MethodKind::Get => {
-                                            type_annotation::MethodKind::GetterKind
-                                        }
-                                        ast::class::MethodKind::Set => {
-                                            type_annotation::MethodKind::SetterKind
-                                        }
-                                        ast::class::MethodKind::Method => {
-                                            type_annotation::MethodKind::MethodKind {
-                                                is_static: static_,
-                                            }
-                                        }
-                                    };
+                                    let meth_kind =
+                                        type_annotation::method_kind_of_class_method(kind, static_);
                                     let (func_sig, typed_func) = mk_declare_method_func_sig(
                                         cx,
                                         &tparams_map_with_this,
@@ -18622,14 +18605,27 @@ pub fn mk_record_sig<'a>(
 
                                 let reason =
                                     func_reason(func.async_, func.generator, method_loc.dupe());
-                                let getset = kind == ast::class::MethodKind::Get
-                                    || kind == ast::class::MethodKind::Set;
+                                // Deliberately not `method_kind_of_class_method`: a record
+                                // method is not a class method, and `this` type guards are
+                                // not supported on records. Getters and setters still need
+                                // to be told apart, since no type guard is allowed on them.
+                                let meth_kind = match kind {
+                                    ast::class::MethodKind::Get => {
+                                        type_annotation::MethodKind::GetterKind
+                                    }
+                                    ast::class::MethodKind::Set => {
+                                        type_annotation::MethodKind::SetterKind
+                                    }
+                                    ast::class::MethodKind::Method
+                                    | ast::class::MethodKind::Constructor => {
+                                        type_annotation::MethodKind::FunctionKind
+                                    }
+                                };
                                 let (method_sig, reconstruct_func, deferred_tg_check) =
                                     mk_func_sig(
                                         cx,
                                         true,
-                                        false,
-                                        getset,
+                                        meth_kind,
                                         &BTreeMap::new(),
                                         &tparams_map_with_this,
                                         reason.dupe(),
@@ -19425,8 +19421,7 @@ pub type DeferredTypeGuardCheck<'a> =
 pub fn mk_func_sig<'a>(
     cx: &Context<'a>,
     require_return_annot: bool,
-    constructor: bool,
-    getset: bool,
+    meth_kind: type_annotation::MethodKind,
     statics: &BTreeMap<FlowSmolStr, EnvKey<ALoc>>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     reason: Reason,
@@ -19441,6 +19436,12 @@ pub fn mk_func_sig<'a>(
 > {
     use flow_typing_loc_env::func_class_sig_types::func;
     use flow_typing_loc_env::func_stmt_config_types;
+
+    let constructor = matches!(meth_kind, type_annotation::MethodKind::ConstructorKind);
+    let getset = matches!(
+        meth_kind,
+        type_annotation::MethodKind::GetterKind | type_annotation::MethodKind::SetterKind
+    );
 
     fn function_kind(
         constructor: bool,
@@ -20128,8 +20129,7 @@ fn function_decl<'a>(
     let (func_sig, reconstruct_func, deferred_tg_check) = mk_func_sig(
         cx,
         false,
-        false,
-        false,
+        type_annotation::MethodKind::FunctionKind,
         statics,
         &FlowOrdMap::new(),
         reason.dupe(),
