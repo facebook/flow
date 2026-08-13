@@ -62,4 +62,10 @@ let tests = [
     x.getOrInsertComputed('foo', () => 123); // error, wrong key type
     x.getOrInsertComputed(key, () => 'bar'); // error, wrong value type
   },
+
+  // good WeakMap constructors
+  function() {
+    let symbolKey = Symbol();
+    let x: WeakMap<symbol, string> = new WeakMap([[symbolKey, 'test']]);
+  },
 ];

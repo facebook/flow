@@ -125,8 +125,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                          ^^^
 
 References:
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2248:19
+   2248| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    -:2:13
       2| const set = new Set(); // Error

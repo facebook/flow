@@ -22,8 +22,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                             ^^^
 
 References:
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2248:19
+   2248| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    arr_rest.js:9:16
       9| const [...y] = new Set() // still error
@@ -485,8 +485,8 @@ Cannot cast `a` to `Set` because in type argument `T` [1]: `string` [2] is incom
            ^
 
 References:
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2248:19
+   2248| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    implicit_instantiation.js:144:29
     144| function test12(foo: ?Array<string>) {
@@ -506,8 +506,8 @@ Cannot cast `b` to `Set` because in type argument `T` [1]: `string` [2] is incom
            ^
 
 References:
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2248:19
+   2248| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    implicit_instantiation.js:144:29
     144| function test12(foo: ?Array<string>) {

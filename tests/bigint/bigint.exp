@@ -30,23 +30,23 @@ Cannot call `BigInt` with `null` bound to `value` because: [incompatible-type]
                 ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3126:18
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:18
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                           ^^^^^^^ [2]
-   <BUILTINS>/core.js:3126:28
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:28
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                     ^^^^^^ [3]
-   <BUILTINS>/core.js:3126:37
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:37
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                              ^^^^^^ [4]
-   <BUILTINS>/core.js:3126:46
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:46
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                       ^^^^^^ [5]
-   <BUILTINS>/core.js:3126:55
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:55
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                                ^^^^^^^^^^^^ [6]
-   <BUILTINS>/core.js:3126:70
-   3126|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
+   <BUILTINS>/core.js:3131:70
+   3131|   static (value: boolean | string | number | bigint | interface {} | ReadonlyArray<unknown>): bigint;
                                                                               ^^^^^^^^^^^^^^^^^^^^^^ [7]
 
 

@@ -88,8 +88,8 @@ Functions without statics are not compatible with objects.
                                           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2289:24
-   2289| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2294:24
+   2294| declare class Promise<+R = unknown> {
                                 ^ [1]
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
@@ -113,8 +113,8 @@ property `default` is missing in statics of `ClassComponent` [2] but exists in o
                                           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2289:24
-   2289| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2294:24
+   2294| declare class Promise<+R = unknown> {
                                 ^ [1]
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}

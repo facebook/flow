@@ -1043,8 +1043,8 @@ Cannot create `Resize` element because `unknown` [1] is not a polymorphic type. 
           ^^^^^^
 
 References:
-   <BUILTINS>/core.js:3199:43
-   3199| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3204:43
+   3204| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
                                                    ^^^^^^^^^^^^^^ [1]
 
 
@@ -1057,8 +1057,8 @@ Cannot call `takesConfig` because `unknown` [1] is not a polymorphic type. [inco
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3199:43
-   3199| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/core.js:3204:43
+   3204| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
                                                    ^^^^^^^^^^^^^^ [1]
 
 

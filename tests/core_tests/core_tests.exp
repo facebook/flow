@@ -340,7 +340,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either boolean [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `boolean` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `boolean` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -350,12 +350,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
@@ -363,7 +363,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `number` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -373,12 +373,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
@@ -386,7 +386,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
  - Either string [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `string` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `string` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -396,12 +396,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:24
@@ -409,7 +409,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `number` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -419,12 +419,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:27
@@ -432,7 +432,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `number` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -442,12 +442,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:30
@@ -455,7 +455,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `number` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -465,12 +465,12 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- weakset.js:31:15
@@ -478,7 +478,7 @@ Error --------------------------------------------------------------------------
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
  - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
- - Or `number` [1] is incompatible with `ReadonlyArray<unknown>` [3].
+ - Or `number` [1] is incompatible with `symbol` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -491,12 +491,12 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/core.js:2111:28
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
+   <BUILTINS>/core.js:2116:28
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2111:43
-   2111| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown>;
-                                                   ^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:2116:68
+   2116| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+                                                                            ^^^^^^ [3]
 
 
 
