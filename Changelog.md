@@ -1,3 +1,17 @@
+### 0.328.0
+
+Breaking changes:
+* `[include]` and `[ignore]` sections in flowconfig should use globs instead. Read https://flow.org/en/docs/config/include/ and https://flow.org/en/docs/config/ignore/ for more information.
+
+New Features:
+* `this` type guards can now be used on non-static methods of regular classes, not just `declare class` and interface methods. The method body is checked for consistency against the guard type.
+
+Notable bug fixes:
+* Prevent cached IDE results from blocking rechecks.
+
+Library Definitions:
+* Allow symbols to be used as `WeakMap` keys
+
 ### 0.327.0
 
 New Features:
