@@ -15,7 +15,6 @@ use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
-use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
 use flow_typing_errors::error_message::ETupleInvalidTypeSpreadData;
@@ -124,6 +123,193 @@ fn is_extends_use_t_root(t: &TypeInner) -> bool {
         TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
         _ => false,
     }
+}
+
+/// The properties a `LookupT` has to resolve, each paired with the upper
+/// property it must satisfy. Only [`LookupAction::LookupPropsForSubtyping`]
+/// carries more than one: every other action resolves the lookup's own
+/// `propref` and has no upper property of its own.
+fn lookup_targets<'a>(
+    propref: &'a PropRef,
+    action: &'a LookupAction,
+) -> impl Iterator<Item = (&'a PropRef, Option<&'a Property>)> {
+    let (props, single) = match action {
+        LookupAction::LookupPropsForSubtyping(box LookupPropsForSubtypingData {
+            props, ..
+        }) => (Some(props), None),
+        _ => (None, Some((propref, None))),
+    };
+    props
+        .into_iter()
+        .flat_map(|props| props.iter().map(|(propref, up)| (propref, Some(up))))
+        .chain(single)
+}
+
+/// A strict lookup reached the root of the prototype chain without finding what
+/// it was looking for: report the missing properties, then recover by resolving
+/// each of them to `any`.
+fn strict_lookup_failed<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    lreason: &Reason,
+    reason_op: &Reason,
+    strict_reason: &Reason,
+    propref: &PropRef,
+    action: &LookupAction,
+    ids: Option<&properties::Set>,
+) -> Result<(), FlowJsException> {
+    match action {
+        LookupAction::LookupPropsForSubtyping(box data) => {
+            subtyping_kit::add_output_missing_props_from_lookup(cx, data, ids)?;
+        }
+        _ => {
+            let (prop_loc, prop_name) = match propref {
+                PropRef::Named { reason, name, .. } => (reason.loc().dupe(), Some(name.dupe())),
+                PropRef::Computed(_) => (reason_op.loc().dupe(), None),
+            };
+            let suggestion = prop_name.as_ref().zip(ids).and_then(|(name, ids)| {
+                let ids: Vec<_> = ids.iter().duped().collect();
+                prop_typo_suggestion(cx, &ids, name.as_str())
+            });
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                    prop_loc,
+                    reason_obj: strict_reason.dupe(),
+                    prop_name,
+                    use_op: flow_js_utils::use_op_of_lookup_action(action),
+                    suggestion,
+                })),
+            )?;
+        }
+    }
+    let p = PropertyType::OrdinaryField {
+        type_: any_t::error_of_kind(AnyErrorKind::UnresolvedName, reason_op.dupe()),
+        polarity: Polarity::Neutral,
+    };
+    for (propref, up) in lookup_targets(propref, action) {
+        perform_lookup_action(
+            cx,
+            trace,
+            propref,
+            &p,
+            None,
+            PropertySource::DynamicProperty,
+            lreason,
+            reason_op,
+            action,
+            up,
+        )?;
+    }
+    Ok(())
+}
+
+/// Same as [`strict_lookup_failed`], for a lookup of a computed key. Only a key
+/// that is `any` resolves; anything else is either an internal error or a
+/// property that does not exist.
+fn strict_computed_lookup_failed<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    lreason: &Reason,
+    reason_op: &Reason,
+    strict_reason: &Reason,
+    propref: &PropRef,
+    elem_t: &Type,
+    action: &LookupAction,
+) -> Result<(), FlowJsException> {
+    match elem_t.deref() {
+        TypeInner::OpenT(_) => {
+            let loc = loc_of_t(elem_t);
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::PropRefComputedOpen))),
+            )?;
+        }
+        TypeInner::DefT(_, inner_def)
+            if matches!(inner_def.deref(), DefTInner::SingletonStrT { .. }) =>
+        {
+            let loc = loc_of_t(elem_t);
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EInternal(Box::new((
+                    loc.dupe(),
+                    InternalError::PropRefComputedLiteral,
+                ))),
+            )?;
+        }
+        TypeInner::AnyT(_, src) => {
+            let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
+            let p = PropertyType::OrdinaryField {
+                type_: any_t::why(src, reason_op.dupe()),
+                polarity: Polarity::Neutral,
+            };
+            for (propref, up) in lookup_targets(propref, action) {
+                perform_lookup_action(
+                    cx,
+                    trace,
+                    propref,
+                    &p,
+                    None,
+                    PropertySource::DynamicProperty,
+                    lreason,
+                    reason_op,
+                    action,
+                    up,
+                )?;
+            }
+        }
+        _ => match action {
+            LookupAction::LookupPropsForSubtyping(box data) => {
+                subtyping_kit::add_output_missing_props_from_lookup(cx, data, None)?;
+            }
+            _ => {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                        prop_loc: reason_op.loc().dupe(),
+                        reason_obj: strict_reason.dupe(),
+                        prop_name: None,
+                        use_op: flow_js_utils::use_op_of_lookup_action(action),
+                        suggestion: None,
+                    })),
+                )?;
+            }
+        },
+    }
+    Ok(())
+}
+
+/// Whether a lookup that reached `terminal`, the root of a prototype chain, has
+/// run out of places to find `propref`.
+fn prop_missing_from_lookup_terminal(terminal: &Type, propref: &PropRef) -> bool {
+    match name_of_propref(propref) {
+        Some(name) => subtyping_kit::property_is_missing_from_lookup_terminal(terminal, &name),
+        // A computed key is never one of the prototype's own methods.
+        None => true,
+    }
+}
+
+/// The propref and action to keep looking up on the prototype of a type that
+/// did not have all of `missing`'s targets, or `None` if it had them all. A
+/// batched subtyping lookup carries on with only the properties still missing.
+fn remaining_lookup(
+    action: &LookupAction,
+    missing: &[(&PropRef, Option<&Property>)],
+) -> Option<(PropRef, LookupAction)> {
+    let (first_propref, _) = *missing.first()?;
+    let action = match action {
+        LookupAction::LookupPropsForSubtyping(box data) if missing.len() < data.props.len() => {
+            LookupAction::LookupPropsForSubtyping(Box::new(LookupPropsForSubtypingData {
+                props: missing
+                    .iter()
+                    .filter_map(|(propref, up)| up.map(|up| ((*propref).clone(), up.dupe())))
+                    .collect(),
+                ..data.clone()
+            }))
+        }
+        _ => action.clone(),
+    };
+    Some((first_propref.clone(), action))
 }
 
 /// NOTE: Do not call this function directly. Instead, call the wrapper
@@ -5633,74 +5819,79 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let use_op = use_op_of_lookup_action(action);
-            match flow_js_utils::get_prop_t_kit::get_instance_prop::<FlowJs>(
-                cx,
-                &trace,
-                &use_op,
-                *ignore_dicts,
-                inst,
-                propref,
-                reason_op,
-            )? {
-                Some((p, target_kind)) => {
-                    let p = flow_js_utils::check_method_unbinding(
-                        cx,
-                        &use_op,
-                        *method_accessible,
-                        reason_op,
-                        propref,
-                        &hint_unavailable(),
-                        p,
-                    )?;
-                    if let LookupKind::NonstrictReturning(box NonstrictReturningData(
-                        _,
-                        Some((id, _)),
-                    )) = &**kind
-                    {
-                        cx.test_prop_hit(*id);
-                    }
-                    let property_type = property::property_type(&p);
-                    perform_lookup_action(
-                        cx,
-                        trace,
-                        propref,
-                        &property_type,
-                        Some(&p),
-                        target_kind,
-                        lreason,
-                        reason_op,
-                        action,
-                    )?;
-                }
-                None => {
-                    let new_ids = ids.as_ref().map(|s| {
-                        if s.contains(&inst.own_props) || s.contains(&inst.proto_props) {
-                            s.dupe()
-                        } else {
-                            let mut new_set = s.dupe();
-                            new_set.insert(inst.own_props.dupe());
-                            new_set.insert(inst.proto_props.dupe());
-                            new_set
+            let mut missing = vec![];
+            for (propref, up) in lookup_targets(propref, action) {
+                match flow_js_utils::get_prop_t_kit::get_instance_prop::<FlowJs>(
+                    cx,
+                    &trace,
+                    &use_op,
+                    *ignore_dicts,
+                    inst,
+                    propref,
+                    reason_op,
+                )? {
+                    Some((p, target_kind)) => {
+                        let p = flow_js_utils::check_method_unbinding(
+                            cx,
+                            &use_op,
+                            *method_accessible,
+                            reason_op,
+                            propref,
+                            &hint_unavailable(),
+                            p,
+                        )?;
+                        if let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                            _,
+                            Some((id, _)),
+                        )) = &**kind
+                        {
+                            cx.test_prop_hit(*id);
                         }
-                    });
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            super_,
-                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
-                                reason: reason_op.dupe(),
-                                lookup_kind: kind.clone(),
-                                try_ts_on_failure: try_ts_on_failure.clone(),
-                                propref: propref.clone(),
-                                lookup_action: action.clone(),
-                                ids: new_ids,
-                                method_accessible: *method_accessible,
-                                ignore_dicts: *ignore_dicts,
-                            }))),
-                        ),
-                    )?;
+                        let property_type = property::property_type(&p);
+                        perform_lookup_action(
+                            cx,
+                            trace,
+                            propref,
+                            &property_type,
+                            Some(&p),
+                            target_kind,
+                            lreason,
+                            reason_op,
+                            action,
+                            up,
+                        )?;
+                    }
+                    None => missing.push((propref, up)),
                 }
+            }
+            if let Some((propref, action)) = remaining_lookup(action, &missing) {
+                let new_ids = ids.as_ref().map(|s| {
+                    if s.contains(&inst.own_props) || s.contains(&inst.proto_props) {
+                        s.dupe()
+                    } else {
+                        let mut new_set = s.dupe();
+                        new_set.insert(inst.own_props.dupe());
+                        new_set.insert(inst.proto_props.dupe());
+                        new_set
+                    }
+                });
+                rec_flow(
+                    cx,
+                    trace,
+                    (
+                        super_,
+                        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                            reason: reason_op.dupe(),
+                            lookup_kind: kind.clone(),
+                            try_ts_on_failure: try_ts_on_failure.clone(),
+                            propref: Box::new(propref),
+                            lookup_action: Box::new(action),
+                            ids: new_ids,
+                            method_accessible: *method_accessible,
+                            ignore_dicts: *ignore_dicts,
+                        }))),
+                    ),
+                )?;
             }
         }
         // ********************************
@@ -5849,6 +6040,7 @@ fn __flow_impl<'cx>(
                             reason_c,
                             &spp_data.reason,
                             &action,
+                            None,
                         )?;
                     }
                 }
@@ -6206,60 +6398,65 @@ fn __flow_impl<'cx>(
                 ignore_dicts,
             }),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
-            match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
-                cx,
-                &trace,
-                &unknown_use(),
-                false,
-                true,
-                o,
-                propref,
-                reason_op,
-            )? {
-                Some((p, target_kind)) => {
-                    if let LookupKind::NonstrictReturning(box NonstrictReturningData(
-                        _,
-                        Some((id, _)),
-                    )) = &**lookup_kind
-                    {
-                        cx.test_prop_hit(*id);
+            let mut missing = vec![];
+            for (propref, up) in lookup_targets(propref, action) {
+                match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
+                    cx,
+                    &trace,
+                    &unknown_use(),
+                    false,
+                    true,
+                    o,
+                    propref,
+                    reason_op,
+                )? {
+                    Some((p, target_kind)) => {
+                        if let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                            _,
+                            Some((id, _)),
+                        )) = &**lookup_kind
+                        {
+                            cx.test_prop_hit(*id);
+                        }
+                        perform_lookup_action(
+                            cx,
+                            trace,
+                            propref,
+                            &p,
+                            None,
+                            target_kind.clone(),
+                            reason_obj,
+                            reason_op,
+                            action,
+                            up,
+                        )?;
                     }
-                    perform_lookup_action(
-                        cx,
-                        trace,
-                        propref,
-                        &p,
-                        None,
-                        target_kind.clone(),
-                        reason_obj,
-                        reason_op,
-                        action,
-                    )?;
+                    None => missing.push((propref, up)),
                 }
-                None => {
-                    let new_ids = ids.as_ref().map(|s| {
-                        let mut new_set = s.dupe();
-                        new_set.insert(o.props_tmap.dupe());
-                        new_set
-                    });
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            &o.proto_t,
-                            &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
-                                reason: reason_op.dupe(),
-                                lookup_kind: lookup_kind.clone(),
-                                try_ts_on_failure: try_ts_on_failure.clone(),
-                                propref: propref.clone(),
-                                lookup_action: action.clone(),
-                                method_accessible: *method_accessible,
-                                ids: new_ids,
-                                ignore_dicts: *ignore_dicts,
-                            }))),
-                        ),
-                    )?;
-                }
+            }
+            if let Some((propref, action)) = remaining_lookup(action, &missing) {
+                let new_ids = ids.as_ref().map(|s| {
+                    let mut new_set = s.dupe();
+                    new_set.insert(o.props_tmap.dupe());
+                    new_set
+                });
+                rec_flow(
+                    cx,
+                    trace,
+                    (
+                        &o.proto_t,
+                        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                            reason: reason_op.dupe(),
+                            lookup_kind: lookup_kind.clone(),
+                            try_ts_on_failure: try_ts_on_failure.clone(),
+                            propref: Box::new(propref),
+                            lookup_action: Box::new(action),
+                            method_accessible: *method_accessible,
+                            ids: new_ids,
+                            ignore_dicts: *ignore_dicts,
+                        }))),
+                    ),
+                )?;
             }
         }
         (
@@ -6292,17 +6489,20 @@ fn __flow_impl<'cx>(
                     {
                         cx.test_prop_hit(*id);
                     }
-                    perform_lookup_action(
-                        cx,
-                        trace,
-                        propref,
-                        &p,
-                        None,
-                        PropertySource::DynamicProperty,
-                        reason,
-                        reason_op,
-                        action,
-                    )?;
+                    for (propref, up) in lookup_targets(propref, action) {
+                        perform_lookup_action(
+                            cx,
+                            trace,
+                            propref,
+                            &p,
+                            None,
+                            PropertySource::DynamicProperty,
+                            reason,
+                            reason_op,
+                            action,
+                            up,
+                        )?;
+                    }
                 }
             }
         }
@@ -8836,7 +9036,7 @@ fn __flow_impl<'cx>(
         // to find the desired property causes an error; a non-strict one
         // does not.
         (
-            TypeInner::DefT(_, def_t),
+            _,
             UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
@@ -8847,11 +9047,12 @@ fn __flow_impl<'cx>(
                 ids,
                 ignore_dicts,
             }),
-        ) if matches!(def_t.deref(), DefTInner::NullT) && !try_ts_on_failure.is_empty() => {
+        ) if is_extends_use_t_root(l.deref()) && !try_ts_on_failure.is_empty() => {
+            // When the property is not found, we always try to look it up in the next
+            // element in the list try_ts_on_failure. (`__proto__` is a getter/setter on
+            // Object.prototype.)
             let next = &try_ts_on_failure[0];
             let rest = try_ts_on_failure[1..].to_vec();
-            // When s is not found, we always try to look it up in the next element in
-            // the list try_ts_on_failure.
             rec_flow(
                 cx,
                 trace,
@@ -8870,39 +9071,66 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
+        // A batched lookup reaches the end of the prototype chain with a mix of
+        // properties the prototype itself provides and properties that are missing
+        // everywhere. Peel the former off into their own lookups so that the arms
+        // below see a batch whose properties are all missing and can report them
+        // together.
         (
-            TypeInner::ObjProtoT(_),
+            _,
             UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
                 try_ts_on_failure,
-                propref,
-                lookup_action,
+                propref: _,
+                lookup_action: box LookupAction::LookupPropsForSubtyping(box lookup_props_data),
                 method_accessible,
                 ids,
                 ignore_dicts,
             }),
-        ) if !try_ts_on_failure.is_empty() => {
-            // __proto__ is a getter/setter on Object.prototype
-            let next = &try_ts_on_failure[0];
-            let rest = try_ts_on_failure[1..].to_vec();
-            rec_flow(
-                cx,
-                trace,
-                (
-                    next,
-                    &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
-                        reason: reason.dupe(),
-                        lookup_kind: lookup_kind.clone(),
-                        try_ts_on_failure: rest.into(),
-                        propref: propref.clone(),
-                        lookup_action: lookup_action.clone(),
-                        method_accessible: *method_accessible,
-                        ids: ids.dupe(),
-                        ignore_dicts: *ignore_dicts,
-                    }))),
-                ),
-            )?;
+        ) if is_extends_use_t_root(l.deref())
+            && try_ts_on_failure.is_empty()
+            && lookup_props_data.props.len() > 1
+            && lookup_props_data
+                .props
+                .iter()
+                .any(|(propref, _)| !prop_missing_from_lookup_terminal(l, propref)) =>
+        {
+            let (missing, provided): (Vec<_>, Vec<_>) = lookup_props_data
+                .props
+                .iter()
+                .partition(|(propref, _)| prop_missing_from_lookup_terminal(l, propref));
+            let relookup = |props: Rc<[(PropRef, Property)]>| -> Result<(), FlowJsException> {
+                let Some((propref, _)) = props.first() else {
+                    return Ok(());
+                };
+                rec_flow(
+                    cx,
+                    trace,
+                    (
+                        l,
+                        &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                            reason: reason.dupe(),
+                            lookup_kind: lookup_kind.clone(),
+                            try_ts_on_failure: Rc::from([]),
+                            propref: Box::new(propref.clone()),
+                            lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
+                                Box::new(LookupPropsForSubtypingData {
+                                    props: props.dupe(),
+                                    ..lookup_props_data.clone()
+                                }),
+                            )),
+                            ids: ids.dupe(),
+                            method_accessible: *method_accessible,
+                            ignore_dicts: *ignore_dicts,
+                        }))),
+                    ),
+                )
+            };
+            for prop in provided {
+                relookup(Rc::from([prop.clone()]))?;
+            }
+            relookup(missing.into_iter().cloned().collect())?;
         }
         (
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
@@ -9009,59 +9237,17 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::NullT)
             && try_ts_on_failure.is_empty()
-            && let PropRef::Named {
-                reason: reason_prop,
-                name,
-                ..
-            } = &**propref =>
+            && matches!(&**propref, PropRef::Named { .. }) =>
         {
-            let suggestion: Option<FlowSmolStr> = ids.as_ref().and_then(|ids| {
-                let ids_vec: Vec<_> = ids.iter().duped().collect();
-                prop_typo_suggestion(cx, &ids_vec, name.as_str())
-            });
-            let error_message = match action {
-                box LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
-                    use_op,
-                    prop: _,
-                    prop_name,
-                    reason_lower,
-                    reason_upper,
-                    ..
-                }) => {
-                    ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
-                        prop_name: Some(prop_name.dupe()),
-                        suggestion,
-                        reason_lower: reason_lower.dupe(),
-                        reason_upper: reason_upper.dupe(),
-                        use_op: use_op.dupe(),
-                    }))
-                }
-                _ => {
-                    let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                        prop_loc: reason_prop.loc().dupe(),
-                        reason_obj: strict_reason.dupe(),
-                        prop_name: Some(name.dupe()),
-                        use_op,
-                        suggestion,
-                    }))
-                }
-            };
-            flow_js_utils::add_output(cx, error_message)?;
-            let p = PropertyType::OrdinaryField {
-                type_: any_t::error_of_kind(AnyErrorKind::UnresolvedName, reason_op.dupe()),
-                polarity: Polarity::Neutral,
-            };
-            perform_lookup_action(
+            strict_lookup_failed(
                 cx,
                 trace,
-                propref,
-                &p,
-                None,
-                PropertySource::DynamicProperty,
                 reason,
                 reason_op,
+                strict_reason,
+                propref,
                 action,
+                ids.as_ref(),
             )?;
         }
 
@@ -9077,60 +9263,16 @@ fn __flow_impl<'cx>(
                 ids,
                 ignore_dicts: _,
             }),
-        ) if try_ts_on_failure.is_empty()
-            && let PropRef::Named {
-                reason: reason_prop,
-                name,
-                ..
-            } = &**propref =>
-        {
-            let suggestion: Option<FlowSmolStr> = ids.as_ref().and_then(|ids| {
-                let ids_vec: Vec<_> = ids.iter().duped().collect();
-                prop_typo_suggestion(cx, &ids_vec, name.as_str())
-            });
-            let error_message = match action {
-                box LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
-                    use_op,
-                    prop: _,
-                    prop_name,
-                    reason_lower,
-                    reason_upper,
-                    ..
-                }) => {
-                    ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
-                        prop_name: Some(prop_name.dupe()),
-                        suggestion,
-                        reason_lower: reason_lower.dupe(),
-                        reason_upper: reason_upper.dupe(),
-                        use_op: use_op.dupe(),
-                    }))
-                }
-                _ => {
-                    let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                        prop_loc: reason_prop.loc().dupe(),
-                        reason_obj: strict_reason.dupe(),
-                        prop_name: Some(name.dupe()),
-                        use_op,
-                        suggestion,
-                    }))
-                }
-            };
-            flow_js_utils::add_output(cx, error_message)?;
-            let p = PropertyType::OrdinaryField {
-                type_: any_t::error_of_kind(AnyErrorKind::UnresolvedName, reason_op.dupe()),
-                polarity: Polarity::Neutral,
-            };
-            perform_lookup_action(
+        ) if try_ts_on_failure.is_empty() && matches!(&**propref, PropRef::Named { .. }) => {
+            strict_lookup_failed(
                 cx,
                 trace,
-                propref,
-                &p,
-                None,
-                PropertySource::DynamicProperty,
                 reason,
                 reason_op,
+                strict_reason,
+                propref,
                 action,
+                ids.as_ref(),
             )?;
         }
         (
@@ -9149,84 +9291,16 @@ fn __flow_impl<'cx>(
             && try_ts_on_failure.is_empty()
             && let PropRef::Computed(elem_t) = &**propref =>
         {
-            match elem_t.deref() {
-                TypeInner::OpenT(_) => {
-                    let loc = loc_of_t(elem_t);
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInternal(Box::new((
-                            loc.dupe(),
-                            InternalError::PropRefComputedOpen,
-                        ))),
-                    )?;
-                }
-                TypeInner::DefT(_, inner_def)
-                    if matches!(inner_def.deref(), DefTInner::SingletonStrT { .. }) =>
-                {
-                    let loc = loc_of_t(elem_t);
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInternal(Box::new((
-                            loc.dupe(),
-                            InternalError::PropRefComputedLiteral,
-                        ))),
-                    )?;
-                }
-                TypeInner::AnyT(_, src) => {
-                    let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
-                    let p = PropertyType::OrdinaryField {
-                        type_: any_t::why(src, reason_op.dupe()),
-                        polarity: Polarity::Neutral,
-                    };
-                    perform_lookup_action(
-                        cx,
-                        trace,
-                        propref,
-                        &p,
-                        None,
-                        PropertySource::DynamicProperty,
-                        reason,
-                        reason_op,
-                        action,
-                    )?;
-                }
-                _ => {
-                    let reason_prop = reason_op;
-                    let error_message = match action {
-                        box LookupAction::LookupPropForSubtyping(
-                            box LookupPropForSubtypingData {
-                                use_op,
-                                prop: _,
-                                prop_name,
-                                reason_lower,
-                                reason_upper,
-                                ..
-                            },
-                        ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
-                            EPropNotFoundInSubtypingData {
-                                prop_name: Some(prop_name.dupe()),
-                                suggestion: None,
-                                reason_lower: reason_lower.dupe(),
-                                reason_upper: reason_upper.dupe(),
-                                use_op: use_op.dupe(),
-                            },
-                        )),
-                        _ => {
-                            let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                            ErrorMessage::EPropNotFoundInLookup(Box::new(
-                                EPropNotFoundInLookupData {
-                                    prop_loc: reason_prop.loc().dupe(),
-                                    reason_obj: strict_reason.dupe(),
-                                    prop_name: None,
-                                    use_op,
-                                    suggestion: None,
-                                },
-                            ))
-                        }
-                    };
-                    flow_js_utils::add_output(cx, error_message)?;
-                }
-            }
+            strict_computed_lookup_failed(
+                cx,
+                trace,
+                reason,
+                reason_op,
+                strict_reason,
+                propref,
+                elem_t,
+                action,
+            )?;
         }
         (
             TypeInner::ObjProtoT(reason) | TypeInner::FunProtoT(reason),
@@ -9243,84 +9317,16 @@ fn __flow_impl<'cx>(
         ) if try_ts_on_failure.is_empty()
             && let PropRef::Computed(elem_t) = &**propref =>
         {
-            match elem_t.deref() {
-                TypeInner::OpenT(_) => {
-                    let loc = loc_of_t(elem_t);
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInternal(Box::new((
-                            loc.dupe(),
-                            InternalError::PropRefComputedOpen,
-                        ))),
-                    )?;
-                }
-                TypeInner::DefT(_, inner_def)
-                    if matches!(inner_def.deref(), DefTInner::SingletonStrT { .. }) =>
-                {
-                    let loc = loc_of_t(elem_t);
-                    flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInternal(Box::new((
-                            loc.dupe(),
-                            InternalError::PropRefComputedLiteral,
-                        ))),
-                    )?;
-                }
-                TypeInner::AnyT(_, src) => {
-                    let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
-                    let p = PropertyType::OrdinaryField {
-                        type_: any_t::why(src, reason_op.dupe()),
-                        polarity: Polarity::Neutral,
-                    };
-                    perform_lookup_action(
-                        cx,
-                        trace,
-                        propref,
-                        &p,
-                        None,
-                        PropertySource::DynamicProperty,
-                        reason,
-                        reason_op,
-                        action,
-                    )?;
-                }
-                _ => {
-                    let reason_prop = reason_op;
-                    let error_message = match action {
-                        box LookupAction::LookupPropForSubtyping(
-                            box LookupPropForSubtypingData {
-                                use_op,
-                                prop: _,
-                                prop_name,
-                                reason_lower,
-                                reason_upper,
-                                ..
-                            },
-                        ) => ErrorMessage::EPropNotFoundInSubtyping(Box::new(
-                            EPropNotFoundInSubtypingData {
-                                prop_name: Some(prop_name.dupe()),
-                                suggestion: None,
-                                reason_lower: reason_lower.dupe(),
-                                reason_upper: reason_upper.dupe(),
-                                use_op: use_op.dupe(),
-                            },
-                        )),
-                        _ => {
-                            let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                            ErrorMessage::EPropNotFoundInLookup(Box::new(
-                                EPropNotFoundInLookupData {
-                                    prop_loc: reason_prop.loc().dupe(),
-                                    reason_obj: strict_reason.dupe(),
-                                    prop_name: None,
-                                    use_op,
-                                    suggestion: None,
-                                },
-                            ))
-                        }
-                    };
-                    flow_js_utils::add_output(cx, error_message)?;
-                }
-            }
+            strict_computed_lookup_failed(
+                cx,
+                trace,
+                reason,
+                reason_op,
+                strict_reason,
+                propref,
+                elem_t,
+                action,
+            )?;
         }
         (
             _,

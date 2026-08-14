@@ -139,7 +139,7 @@ pub fn default_resolve_touts<'cx>(
             LookupAction::ReadProp(box ReadPropData { tout, .. }) => resolve_tvar(tout),
             LookupAction::WriteProp(box WritePropData { prop_tout, .. }) => map_opt(prop_tout),
             LookupAction::LookupPropForTvarPopulation { .. }
-            | LookupAction::LookupPropForSubtyping(..)
+            | LookupAction::LookupPropsForSubtyping(..)
             | LookupAction::SuperProp(..)
             | LookupAction::MatchProp(box LookupActionMatchPropData { .. }) => Ok(()),
         }

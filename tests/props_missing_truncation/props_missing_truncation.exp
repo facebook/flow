@@ -1,3 +1,111 @@
+Error ------------------------------------------------------------------------------------------------ instance.ts:11:50
+
+Cannot assign `empty` to `missing` because properties `first` and `second` are missing in `Empty` [1] but exist in
+object type [2]. [incompatible-type]
+
+   instance.ts:11:50
+   11| const missing: {first: string; second: number} = empty; // ERROR: both properties are missing
+                                                        ^^^^^
+
+References:
+   instance.ts:9:22
+    9| declare const empty: Empty;
+                            ^^^^^ [1]
+   instance.ts:11:16
+   11| const missing: {first: string; second: number} = empty; // ERROR: both properties are missing
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instance.ts:23:59
+
+Cannot assign `derived` to `inheritedMissing` because properties `first` and `second` are missing in `Derived` [1] but
+exist in object type [2]. [incompatible-type]
+
+   instance.ts:23:59
+   23| const inheritedMissing: {first: string; second: number} = derived; // ERROR: both properties are missing
+                                                                 ^^^^^^^
+
+References:
+   instance.ts:20:24
+   20| declare const derived: Derived;
+                              ^^^^^^^ [1]
+   instance.ts:23:25
+   23| const inheritedMissing: {first: string; second: number} = derived; // ERROR: both properties are missing
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instance.ts:24:80
+
+Cannot assign `derived` to `partiallyInherited` because properties `first` and `second` are missing in `Derived` [1] but
+exist in object type [2]. [incompatible-type]
+
+   instance.ts:24:80
+   24| const partiallyInherited: {inherited: number; first: string; second: number} = derived; // ERROR: only first and second are missing
+                                                                                      ^^^^^^^
+
+References:
+   instance.ts:20:24
+   20| declare const derived: Derived;
+                              ^^^^^^^ [1]
+   instance.ts:24:27
+   24| const partiallyInherited: {inherited: number; first: string; second: number} = derived; // ERROR: only first and second are missing
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instance.ts:36:91
+
+Cannot assign `both` to `intersectionMissing` because properties `first` and `second` are missing in `Both` [1] but
+exist in object type [2]. [incompatible-type]
+
+   instance.ts:36:91
+   36| const intersectionMissing: {left: string; right: number; first: string; second: number} = both; // ERROR: only first and second are missing
+                                                                                                 ^^^^
+
+References:
+   instance.ts:33:21
+   33| declare const both: Both;
+                           ^^^^ [1]
+   instance.ts:36:28
+   36| const intersectionMissing: {left: string; right: number; first: string; second: number} = both; // ERROR: only first and second are missing
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instance.ts:43:52
+
+Cannot assign `withSuggestion` to `suggested` because property `frist` (did you mean `first`?) is missing in
+`WithSuggestion` [1] but exists in object type [2]. [incompatible-type]
+
+   instance.ts:43:52
+   43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`
+                                                          ^^^^^^^^^^^^^^
+
+References:
+   instance.ts:41:31
+   41| declare const withSuggestion: WithSuggestion;
+                                     ^^^^^^^^^^^^^^ [1]
+   instance.ts:43:18
+   43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ instance.ts:43:52
+
+Cannot assign `withSuggestion` to `suggested` because property `second` is missing in `WithSuggestion` [1] but exists in
+object type [2]. [incompatible-type]
+
+   instance.ts:43:52
+   43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`
+                                                          ^^^^^^^^^^^^^^
+
+References:
+   instance.ts:41:31
+   41| declare const withSuggestion: WithSuggestion;
+                                     ^^^^^^^^^^^^^^ [1]
+   instance.ts:43:18
+   43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- props_missing_truncation.js:20:2
 
 Cannot cast object literal to `Large` because properties `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, and `j`, ... (3
@@ -29,4 +137,4 @@ References:
 
 
 
-Found 2 errors
+Found 8 errors

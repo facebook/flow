@@ -156,7 +156,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
 // Property lookup functions in objects and instances
 
-pub(super) fn prop_typo_suggestion<'cx>(
+pub(crate) fn prop_typo_suggestion<'cx>(
     cx: &Context<'cx>,
     ids: &[properties::Id],
     name: &str,
@@ -232,6 +232,7 @@ pub(super) fn get_private_prop<'cx>(
                         reason_c,
                         reason_op,
                         &action,
+                        None,
                     )
                 };
                 let field_maps = if is_static {
@@ -503,6 +504,7 @@ pub(super) fn write_obj_prop<'cx>(
             reason_obj,
             reason_op,
             &action,
+            None,
         ),
         None => match propref {
             PropRef::Named { reason, name, .. } if *name == Name::new("constructor") => {

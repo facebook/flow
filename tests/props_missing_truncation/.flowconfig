@@ -1,2 +1,4 @@
 [options]
 all=true
+module.file_ext=.js
+module.file_ext=.ts

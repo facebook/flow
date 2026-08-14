@@ -24,7 +24,7 @@ use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupActionMatchPropData;
-use flow_typing_type::type_::LookupPropForSubtypingData;
+use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::NonstrictReturningData;
@@ -117,6 +117,10 @@ pub(super) fn speculative_subtyping_succeeds_non_speculating<'cx>(
 
 // get prop
 
+/// `up` is the upper property `propref` was looked up for. Only
+/// [`LookupAction::LookupPropsForSubtyping`] needs it, since it carries several
+/// upper properties at once; `dispatch::lookup_targets` pairs each of them with
+/// the reference it is looked up under.
 pub(super) fn perform_lookup_action<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -127,6 +131,7 @@ pub(super) fn perform_lookup_action<'cx>(
     lreason: &Reason,
     ureason: &Reason,
     action: &LookupAction,
+    up: Option<&Property>,
 ) -> Result<(), FlowJsException> {
     match action {
         LookupAction::LookupPropForTvarPopulation { tout, polarity } => {
@@ -145,38 +150,39 @@ pub(super) fn perform_lookup_action<'cx>(
                 },
             )?;
         }
-        LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData {
+        LookupAction::LookupPropsForSubtyping(box LookupPropsForSubtypingData {
             use_op,
-            prop: up,
+            props: _,
             strictness_kind,
-            prop_name,
             reason_lower,
             reason_upper,
         }) => {
-            let use_op = UseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                    PropertyCompatibilityData {
-                        prop: Some(prop_name.dupe()),
-                        lower: reason_lower.dupe(),
-                        upper: reason_upper.dupe(),
-                    },
-                ))),
-                Arc::new(use_op.dupe()),
-            );
-            let up_type = property::property_type(up);
-            subtyping_kit::rec_flow_p_with_lower_upper_property(
-                cx,
-                Some(trace),
-                use_op,
-                prop.map(|lp| (lp, up)),
-                *strictness_kind,
-                true,
-                lreason,
-                ureason,
-                propref,
-                p,
-                &up_type,
-            )?;
+            if let Some(up) = up {
+                let use_op = UseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                        PropertyCompatibilityData {
+                            prop: name_of_propref(propref),
+                            lower: reason_lower.dupe(),
+                            upper: reason_upper.dupe(),
+                        },
+                    ))),
+                    Arc::new(use_op.dupe()),
+                );
+                let up_type = property::property_type(up);
+                subtyping_kit::rec_flow_p_with_lower_upper_property(
+                    cx,
+                    Some(trace),
+                    use_op,
+                    prop.map(|lp| (lp, up)),
+                    *strictness_kind,
+                    true,
+                    lreason,
+                    ureason,
+                    propref,
+                    p,
+                    &up_type,
+                )?;
+            }
         }
         LookupAction::SuperProp(box (use_op, lp, strictness_kind)) => {
             let lp_type = property::property_type(lp);

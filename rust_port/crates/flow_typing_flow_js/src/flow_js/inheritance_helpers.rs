@@ -313,20 +313,20 @@ pub(super) fn inst_structural_subtype<'cx>(
                                 NonstrictReturningData(nonstrict_returning, None),
                             ))),
                             try_ts_on_failure: vec![].into(),
-                            propref: Box::new(propref),
-                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
-                                Box::new(LookupPropForSubtypingData {
+                            propref: Box::new(propref.clone()),
+                            lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
+                                Box::new(LookupPropsForSubtypingData {
                                     use_op: use_op.dupe(),
-                                    prop: Property::new(PropertyInner::Field(Box::new(
-                                        FieldData {
+                                    props: Rc::from([(
+                                        propref,
+                                        Property::new(PropertyInner::Field(Box::new(FieldData {
                                             preferred_def_locs: fd.preferred_def_locs.clone(),
                                             key_loc: fd.key_loc.dupe(),
                                             type_: t.dupe(),
                                             polarity,
-                                        },
-                                    ))),
+                                        }))),
+                                    )]),
                                     strictness_kind,
-                                    prop_name: name.dupe(),
                                     reason_lower: lreason.dupe(),
                                     reason_upper: reason_struct.dupe(),
                                 }),
@@ -352,13 +352,12 @@ pub(super) fn inst_structural_subtype<'cx>(
                             reason: reason_struct.dupe(),
                             lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                             try_ts_on_failure: vec![].into(),
-                            propref: Box::new(propref),
-                            lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
-                                Box::new(LookupPropForSubtypingData {
+                            propref: Box::new(propref.clone()),
+                            lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
+                                Box::new(LookupPropsForSubtypingData {
                                     use_op: use_op.dupe(),
-                                    prop: read_only_if_lit(p),
+                                    props: Rc::from([(propref, read_only_if_lit(p))]),
                                     strictness_kind,
-                                    prop_name: name.dupe(),
                                     reason_lower: lreason.dupe(),
                                     reason_upper: reason_struct.dupe(),
                                 }),
@@ -386,13 +385,12 @@ pub(super) fn inst_structural_subtype<'cx>(
                     reason: reason_struct.dupe(),
                     lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
                     try_ts_on_failure: vec![].into(),
-                    propref: Box::new(propref),
-                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping(Box::new(
-                        LookupPropForSubtypingData {
+                    propref: Box::new(propref.clone()),
+                    lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(Box::new(
+                        LookupPropsForSubtypingData {
                             use_op: use_op.dupe(),
-                            prop: read_only_if_lit(p),
+                            props: Rc::from([(propref, read_only_if_lit(p))]),
                             strictness_kind,
-                            prop_name: name.dupe(),
                             reason_lower: lreason.dupe(),
                             reason_upper: reason_struct.dupe(),
                         },

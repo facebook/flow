@@ -82,7 +82,7 @@ use flow_typing_type::type_::InstanceTInner;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
-use flow_typing_type::type_::LookupPropForSubtypingData;
+use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NominalType;
@@ -139,6 +139,7 @@ use flow_typing_visitors::type_mapper;
 use vec1::Vec1;
 
 use crate::flow_js::FlowJs;
+use crate::flow_js::prop_typo_suggestion;
 use crate::renders_kit;
 use crate::speculation_kit;
 use crate::template_literal_type;
@@ -184,6 +185,15 @@ fn add_output_prop_polarity_mismatch<'cx>(
         Ok(())
     } else {
         Ok(())
+    }
+}
+
+pub(crate) fn property_is_missing_from_lookup_terminal(terminal: &Type, name: &Name) -> bool {
+    match terminal.deref() {
+        TypeInner::ObjProtoT(_) => !flow_js_utils::is_object_prototype_method(name),
+        TypeInner::FunProtoT(_) => !flow_js_utils::is_function_prototype(name),
+        TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::NullT),
+        _ => false,
     }
 }
 
@@ -1133,6 +1143,121 @@ fn try_method_bivariant<'cx>(
     }
 }
 
+fn recover_missing_props<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: &UseOp,
+    reason_upper: &Reason,
+    strictness_kind: TypeStrictnessKind,
+    missing_props: &[Property],
+) -> Result<(), FlowJsException> {
+    for up in missing_props {
+        let any = any_t::error_of_kind(AnyErrorKind::UnresolvedName, reason_upper.dupe());
+        match property::property_type(up) {
+            PropertyType::OrdinaryField {
+                type_: ut,
+                polarity: Polarity::Neutral,
+            } if strictness_kind.is_typescript_loose() => {
+                // This no-op flow intentionally avoids the invariant constraint used for Flow
+                // object subtyping while preserving the missing-property recovery path.
+                FlowJs::flow_opt(
+                    cx,
+                    Some(trace),
+                    &any,
+                    &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                )?;
+            }
+            PropertyType::OrdinaryField {
+                type_: ut,
+                polarity: Polarity::Neutral,
+            } => {
+                FlowJs::unify_opt(
+                    cx,
+                    Some(trace),
+                    use_op.dupe(),
+                    UnifyCause::Uncategorized,
+                    None,
+                    &any,
+                    &ut,
+                )?;
+            }
+            up_pt => {
+                if let Some(ut) = property::read_t_of_property_type(&up_pt) {
+                    FlowJs::flow_opt(
+                        cx,
+                        Some(trace),
+                        &any,
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                    )?;
+                }
+                if let Some(ut) = property::write_t_of_property_type(&up_pt, None) {
+                    FlowJs::flow_opt(
+                        cx,
+                        Some(trace),
+                        &ut,
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe())),
+                    )?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Report the upper properties a subtyping lookup found nowhere in the lower
+/// type or its prototype chain. Properties that look like a typo of an existing
+/// one get their own error carrying the suggestion; the rest are named together
+/// in a single error.
+pub(crate) fn add_output_missing_props_from_lookup<'cx>(
+    cx: &Context<'cx>,
+    data: &LookupPropsForSubtypingData,
+    ids: Option<&properties::Set>,
+) -> Result<(), FlowJsException> {
+    let ids = ids.map(|ids| ids.iter().duped().collect::<Vec<_>>());
+    let mut missing = vec![];
+    let add_output_one =
+        |prop_name: Option<Name>, suggestion: Option<FlowSmolStr>| -> Result<(), FlowJsException> {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
+                    reason_lower: data.reason_lower.dupe(),
+                    reason_upper: data.reason_upper.dupe(),
+                    prop_name,
+                    use_op: data.use_op.dupe(),
+                    suggestion,
+                })),
+            )
+        };
+    for (propref, _) in data.props.iter() {
+        let name = name_of_propref(propref);
+        let suggestion = name
+            .as_ref()
+            .zip(ids.as_ref())
+            .and_then(|(name, ids)| prop_typo_suggestion(cx, ids, name.as_str()));
+        match (&name, suggestion) {
+            (Some(name), None) => missing.push(name.dupe()),
+            (_, suggestion) => add_output_one(name.dupe(), suggestion)?,
+        }
+    }
+    match Vec1::try_from_vec(missing) {
+        Err(_) => Ok(()),
+        // A lone missing property reads better as its own error, and that is all
+        // an unbatched lookup ever has.
+        Ok(prop_names) if prop_names.len() == 1 => {
+            add_output_one(Some(prop_names.first().dupe()), None)
+        }
+        Ok(prop_names) => flow_js_utils::add_output(
+            cx,
+            ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
+                prop_names,
+                reason_lower: data.reason_lower.dupe(),
+                reason_upper: data.reason_upper.dupe(),
+                use_op: data.use_op.dupe(),
+            })),
+        ),
+    }
+}
+
 fn flow_obj_to_obj<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -1693,6 +1818,7 @@ fn flow_obj_to_obj<'cx>(
                                 && matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
                                 && obj_type::is_exact(&lflags.obj_kind) =>
                         {
+                            let propref = mk_propref();
                             FlowJs::rec_flow(
                                 cx,
                                 trace,
@@ -1703,13 +1829,12 @@ fn flow_obj_to_obj<'cx>(
                                         Box::new(NonstrictReturningData(None, None)),
                                     )),
                                     try_ts_on_failure: vec![].into(),
-                                    propref: Box::new(mk_propref()),
-                                    lookup_action: Box::new(LookupAction::LookupPropForSubtyping(
-                                        Box::new(LookupPropForSubtypingData {
+                                    propref: Box::new(propref.clone()),
+                                    lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
+                                        Box::new(LookupPropsForSubtypingData {
                                             use_op: use_op.dupe(),
-                                            prop: up.dupe(),
+                                            props: Rc::from([(propref, up.dupe())]),
                                             strictness_kind,
-                                            prop_name: name.dupe(),
                                             reason_lower: lreason.dupe(),
                                             reason_upper: ureason.dupe(),
                                         }),
@@ -1720,15 +1845,8 @@ fn flow_obj_to_obj<'cx>(
                                 }))),
                             )?;
                         }
-                        _ => match (lproto.deref(), &ldict) {
-                            (TypeInner::ObjProtoT(_), None)
-                                if !flow_js_utils::is_object_prototype_method(name) =>
-                            {
-                                lhs_missing_props.push((name.dupe(), up.dupe()));
-                            }
-                            (TypeInner::FunProtoT(_), None)
-                                if !flow_js_utils::is_function_prototype(name) =>
-                            {
+                        _ => match &ldict {
+                            None if property_is_missing_from_lookup_terminal(lproto, name) => {
                                 lhs_missing_props.push((name.dupe(), up.dupe()));
                             }
                             _ => {
@@ -1738,6 +1856,7 @@ fn flow_obj_to_obj<'cx>(
                                         NonstrictReturningData(None, None),
                                     )),
                                 };
+                                let propref = mk_propref();
                                 FlowJs::rec_flow(
                                     cx,
                                     trace,
@@ -1746,14 +1865,13 @@ fn flow_obj_to_obj<'cx>(
                                         reason: ureason.dupe(),
                                         lookup_kind: Box::new(lookup_kind),
                                         try_ts_on_failure: vec![].into(),
-                                        propref: Box::new(mk_propref()),
+                                        propref: Box::new(propref.clone()),
                                         lookup_action: Box::new(
-                                            LookupAction::LookupPropForSubtyping(Box::new(
-                                                LookupPropForSubtypingData {
+                                            LookupAction::LookupPropsForSubtyping(Box::new(
+                                                LookupPropsForSubtypingData {
                                                     use_op: use_op.dupe(),
-                                                    prop: up.dupe(),
+                                                    props: Rc::from([(propref, up.dupe())]),
                                                     strictness_kind,
-                                                    prop_name: name.dupe(),
                                                     reason_lower: lreason.dupe(),
                                                     reason_upper: ureason.dupe(),
                                                 },
@@ -1961,64 +2079,14 @@ fn flow_obj_to_obj<'cx>(
             )?;
         }
     }
-    for up in &ups_to_flow_any {
-        let any = any_t::error_of_kind(AnyErrorKind::UnresolvedName, ureason.dupe());
-        match property::property_type(up) {
-            PropertyType::OrdinaryField {
-                type_: ut,
-                polarity: Polarity::Neutral,
-            } if strictness_kind.is_typescript_loose() => {
-                // TS treats missing optional Neutral properties as covariantly
-                // filled rather than invariantly demanded. Replace the unify with
-                // a covariant `any ~> ut` flow so any genuine type-arg
-                // incompatibility still surfaces via [incompatible-type], but the
-                // invariance demand is dropped. The `any ~> ut` is intentional
-                // (not a missed `unify_opt`): `any` flowing into `ut` is a no-op
-                // for type checking, which is exactly what we want -- this branch
-                // exists to keep the `ups_to_flow_any` loop's structure intact
-                // while neutralizing the polarity-only constraint.
-                FlowJs::flow_opt(
-                    cx,
-                    Some(trace),
-                    &any,
-                    &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
-                )?;
-            }
-            PropertyType::OrdinaryField {
-                type_: ut,
-                polarity: Polarity::Neutral,
-            } => {
-                FlowJs::unify_opt(
-                    cx,
-                    Some(trace),
-                    use_op.dupe(),
-                    UnifyCause::Uncategorized,
-                    None,
-                    &any,
-                    &ut,
-                )?;
-            }
-            up_pt => {
-                if let Some(ut) = property::read_t_of_property_type(&up_pt) {
-                    FlowJs::flow_opt(
-                        cx,
-                        Some(trace),
-                        &any,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
-                    )?;
-                }
-                if let Some(ut) = property::write_t_of_property_type(&up_pt, None) {
-                    FlowJs::flow_opt(
-                        cx,
-                        Some(trace),
-                        &ut,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe())),
-                    )?;
-                }
-            }
-        }
-    }
-
+    recover_missing_props(
+        cx,
+        trace,
+        &use_op,
+        ureason,
+        strictness_kind,
+        &ups_to_flow_any,
+    )?;
     add_output_prop_polarity_mismatch(
         cx,
         use_op.dupe(),
@@ -4944,11 +5012,9 @@ pub fn rec_sub_t<'cx>(
             let uflds = u_obj.props_tmap.dupe();
             let uproto = &u_obj.proto_t;
             let ucall = u_obj.call_t;
+            let strictness_kind = inst.strictness_kind.join(u_obj.strictness_kind);
 
-            let suppress_class_to_object_error = inst
-                .strictness_kind
-                .join(u_obj.strictness_kind)
-                .is_typescript_loose()
+            let suppress_class_to_object_error = strictness_kind.is_typescript_loose()
                 && match inst_kind {
                     InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => true,
                     InstanceKind::RecordKind { .. } => false,
@@ -5003,6 +5069,7 @@ pub fn rec_sub_t<'cx>(
                     }
                 }
             }
+            let mut missing_props = vec![];
             let errs = {
                 let mut acc: Vec<_> = vec![];
                 for (name, up) in cx.find_props(uflds.dupe()).iter() {
@@ -5025,7 +5092,6 @@ pub fn rec_sub_t<'cx>(
                                 ))),
                                 Arc::new(use_op.dupe()),
                             );
-                            let strictness_kind = inst.strictness_kind.join(u_obj.strictness_kind);
                             let bivariant_handled = if strictness_kind.is_typescript_loose() {
                                 if let (
                                     PropertyInner::Method { type_: lt, .. },
@@ -5048,7 +5114,7 @@ pub fn rec_sub_t<'cx>(
                                     prop_use_op,
                                     None,
                                     Some((l, u)),
-                                    inst.strictness_kind.join(u_obj.strictness_kind),
+                                    strictness_kind,
                                     ureason,
                                     true,
                                     &propref,
@@ -5059,14 +5125,19 @@ pub fn rec_sub_t<'cx>(
                             }
                         }
                         None => {
-                            let lookup_kind = if let PropertyInner::Field(fd) = up.deref() {
-                                if matches!(fd.type_.deref(), TypeInner::OptionalT { .. }) {
-                                    LookupKind::NonstrictReturning(Box::new(
-                                        NonstrictReturningData(None, None),
-                                    ))
-                                } else {
-                                    LookupKind::Strict(lreason.dupe())
-                                }
+                            let optional = matches!(
+                                up.deref(),
+                                PropertyInner::Field(fd)
+                                    if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
+                            );
+                            if !optional && strictness_kind.is_typescript_loose() {
+                                missing_props.push((propref.clone(), up.dupe()));
+                                continue;
+                            }
+                            let lookup_kind = if optional {
+                                LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
+                                    None, None,
+                                )))
                             } else {
                                 LookupKind::Strict(lreason.dupe())
                             };
@@ -5084,14 +5155,14 @@ pub fn rec_sub_t<'cx>(
                                             try_ts_on_failure: vec![].into(),
                                             propref: Box::new(propref.clone()),
                                             lookup_action: Box::new(
-                                                LookupAction::LookupPropForSubtyping(Box::new(
-                                                    LookupPropForSubtypingData {
+                                                LookupAction::LookupPropsForSubtyping(Box::new(
+                                                    LookupPropsForSubtypingData {
                                                         use_op: use_op.dupe(),
-                                                        prop: up.dupe(),
-                                                        strictness_kind: inst
-                                                            .strictness_kind
-                                                            .join(u_obj.strictness_kind),
-                                                        prop_name: name.dupe(),
+                                                        props: Rc::from([(
+                                                            propref.clone(),
+                                                            up.dupe(),
+                                                        )]),
+                                                        strictness_kind,
                                                         reason_lower: lreason.dupe(),
                                                         reason_upper: ureason.dupe(),
                                                     },
@@ -5111,13 +5182,43 @@ pub fn rec_sub_t<'cx>(
                 }
                 acc
             };
+            if let Some((first_propref, _)) = missing_props.first() {
+                let propref = first_propref.clone();
+                FlowJs::rec_flow(
+                    cx,
+                    trace,
+                    super_,
+                    &UseT::new(UseTInner::ReposLowerT {
+                        reason: lreason.dupe(),
+                        use_desc: false,
+                        use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
+                            reason: ureason.dupe(),
+                            lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                            try_ts_on_failure: vec![].into(),
+                            propref: Box::new(propref),
+                            lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
+                                Box::new(LookupPropsForSubtypingData {
+                                    use_op: use_op.dupe(),
+                                    props: missing_props.into(),
+                                    strictness_kind,
+                                    reason_lower: lreason.dupe(),
+                                    reason_upper: ureason.dupe(),
+                                }),
+                            )),
+                            method_accessible: false,
+                            ids: Some([lown.dupe(), lproto.dupe()].into_iter().collect()),
+                            ignore_dicts: false,
+                        })))),
+                    }),
+                )?;
+            }
             add_output_prop_polarity_mismatch(
                 cx,
                 use_op.dupe(),
                 lreason,
                 ureason,
                 errs,
-                inst.strictness_kind.join(u_obj.strictness_kind),
+                strictness_kind,
             )?;
             FlowJs::rec_flow(
                 cx,

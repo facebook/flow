@@ -5023,11 +5023,15 @@ pub struct WritePropData {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LookupPropForSubtypingData {
+pub struct LookupPropsForSubtypingData {
     pub use_op: UseOp,
-    pub prop: Property,
+    /// The upper properties the lower type must provide, each paired with the
+    /// reference it is looked up under. Non-empty, and the enclosing lookup's
+    /// own `propref` is the reference of the first entry. Properties looked up
+    /// together stay together as the lookup walks the prototype chain, so the
+    /// ones that are never found are reported as a single error.
+    pub props: Rc<[(PropRef, Property)]>,
     pub strictness_kind: TypeStrictnessKind,
-    pub prop_name: Name,
     pub reason_lower: Reason,
     pub reason_upper: Reason,
 }
@@ -5044,7 +5048,7 @@ pub enum LookupAction {
     ReadProp(Box<ReadPropData>),
     WriteProp(Box<WritePropData>),
     LookupPropForTvarPopulation { polarity: Polarity, tout: Type },
-    LookupPropForSubtyping(Box<LookupPropForSubtypingData>),
+    LookupPropsForSubtyping(Box<LookupPropsForSubtypingData>),
     SuperProp(Box<(UseOp, Property, TypeStrictnessKind)>),
     MatchProp(Box<LookupActionMatchPropData>),
 }

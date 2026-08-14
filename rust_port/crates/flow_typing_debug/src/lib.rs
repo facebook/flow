@@ -859,13 +859,18 @@ fn dump_use_t_<CX>(
                     kid(tvars, tout)
                 )
             }
-            type_::LookupAction::LookupPropForSubtyping(
-                box type_::LookupPropForSubtypingData { use_op, prop, .. },
+            type_::LookupAction::LookupPropsForSubtyping(
+                box type_::LookupPropsForSubtypingData { use_op, props, .. },
             ) => {
+                let props = props
+                    .iter()
+                    .map(|(_, prop)| normalized_prop(tvars, &type_::property::property_type(prop)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 format!(
-                    "LookupPropForSubtyping ({}, {})",
+                    "LookupPropsForSubtyping ({}, [{}])",
                     string_of_use_op(use_op),
-                    normalized_prop(tvars, &type_::property::property_type(prop))
+                    props
                 )
             }
             type_::LookupAction::SuperProp(box (_, p, _)) => {

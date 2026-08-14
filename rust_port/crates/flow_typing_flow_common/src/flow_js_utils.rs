@@ -1348,13 +1348,15 @@ pub fn primary_reason_of_use_op(use_op: &UseOp) -> Option<&Reason> {
 pub fn use_op_of_lookup_action(action: &flow_typing_type::type_::LookupAction) -> UseOp {
     use flow_typing_type::type_::LookupAction;
     use flow_typing_type::type_::LookupActionMatchPropData;
-    use flow_typing_type::type_::LookupPropForSubtypingData;
+    use flow_typing_type::type_::LookupPropsForSubtypingData;
     use flow_typing_type::type_::ReadPropData;
     use flow_typing_type::type_::WritePropData;
     match action {
         LookupAction::ReadProp(box ReadPropData { use_op, .. })
         | LookupAction::WriteProp(box WritePropData { use_op, .. })
-        | LookupAction::LookupPropForSubtyping(box LookupPropForSubtypingData { use_op, .. })
+        | LookupAction::LookupPropsForSubtyping(box LookupPropsForSubtypingData {
+            use_op, ..
+        })
         | LookupAction::SuperProp(box (use_op, _, _))
         | LookupAction::MatchProp(box LookupActionMatchPropData { use_op, .. }) => use_op.dupe(),
         LookupAction::LookupPropForTvarPopulation { .. } => unknown_use(),

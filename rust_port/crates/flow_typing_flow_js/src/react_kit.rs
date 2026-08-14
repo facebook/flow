@@ -36,7 +36,7 @@ use flow_typing_type::type_::HasOwnPropTData;
 use flow_typing_type::type_::Literal;
 use flow_typing_type::type_::LookupAction;
 use flow_typing_type::type_::LookupKind;
-use flow_typing_type::type_::LookupPropForSubtypingData;
+use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodCallType;
@@ -1049,21 +1049,21 @@ pub fn run<'cx>(
                 LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(None, None)));
             let prop_name = Name::new("key");
             let propref = mk_named_prop(reason_key.dupe(), false, prop_name.dupe());
+            let key_prop = flow_typing_type::type_::Property::new(
+                flow_typing_type::type_::PropertyInner::Field(Box::new(
+                    flow_typing_type::type_::FieldData {
+                        preferred_def_locs: None,
+                        key_loc: None,
+                        type_: key_t,
+                        polarity: Polarity::Positive,
+                    },
+                )),
+            );
             let action =
-                LookupAction::LookupPropForSubtyping(Box::new(LookupPropForSubtypingData {
+                LookupAction::LookupPropsForSubtyping(Box::new(LookupPropsForSubtypingData {
                     use_op: use_op.dupe(),
-                    prop: flow_typing_type::type_::Property::new(
-                        flow_typing_type::type_::PropertyInner::Field(Box::new(
-                            flow_typing_type::type_::FieldData {
-                                preferred_def_locs: None,
-                                key_loc: None,
-                                type_: key_t,
-                                polarity: Polarity::Positive,
-                            },
-                        )),
-                    ),
+                    props: Rc::from([(propref.clone(), key_prop)]),
                     strictness_kind: TypeStrictnessKind::Flow,
-                    prop_name: prop_name.dupe(),
                     reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
                     reason_upper: reason_key.dupe(),
                 }));
