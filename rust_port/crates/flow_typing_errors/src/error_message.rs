@@ -114,7 +114,6 @@ use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
 use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use crate::intermediate_error_types::MessageInvalidEnumMemberCheckData;
 use crate::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
-use crate::intermediate_error_types::MessageInvalidRefPropertyInSpreadData;
 use crate::intermediate_error_types::MessageInvalidRendersTypeArgumentData;
 use crate::intermediate_error_types::MessageInvalidSelfReferencingDefaultData;
 use crate::intermediate_error_types::MessageInvalidSelfReferencingTypeAnnotationData;
@@ -2406,22 +2405,6 @@ pub struct EDuplicateComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + 
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct ERefComponentPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub spread: L,
-    pub loc: L,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
 pub struct EKeySpreadPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread: L,
     pub loc: L,
@@ -3035,8 +3018,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     },
 
     EDuplicateComponentProp(Box<EDuplicateComponentPropData<L>>),
-
-    ERefComponentProp(Box<ERefComponentPropData<L>>),
 
     EKeySpreadProp(Box<EKeySpreadPropData<L>>),
 
@@ -5319,13 +5300,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ERefComponentProp(box ERefComponentPropData { spread, loc }) => {
-                ERefComponentProp(Box::new(ERefComponentPropData {
-                    spread: f(spread),
-                    loc: f(loc),
-                }))
-            }
-
             EKeySpreadProp(box EKeySpreadPropData { spread, loc }) => {
                 EKeySpreadProp(Box::new(EKeySpreadPropData {
                     spread: f(spread),
@@ -6297,7 +6271,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EDuplicateComponentProp(box EDuplicateComponentPropData {
                 spread: loc, ..
             })
-            | Self::ERefComponentProp(box ERefComponentPropData { spread: loc, .. })
             | Self::EKeySpreadProp(box EKeySpreadPropData { spread: loc, .. })
             | Self::ETypeGuardIncompatibleWithFunctionKind(
                 box ETypeGuardIncompatibleWithFunctionKindData { loc, .. },
@@ -7997,15 +7970,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     spread_loc: spread,
                 },
             ))),
-            ErrorMessage::ERefComponentProp(box ERefComponentPropData {
-                spread: spread_loc,
-                loc: ref_loc,
-            }) => Normal(Message::MessageInvalidRefPropertyInSpread(Box::new(
-                MessageInvalidRefPropertyInSpreadData {
-                    ref_loc,
-                    spread_loc,
-                },
-            ))),
             ErrorMessage::EKeySpreadProp(box EKeySpreadPropData {
                 spread: spread_loc,
                 loc: key_loc,
@@ -9543,7 +9507,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EImplicitInstantiationUnderconstrainedErrorData { .. },
             )
             | Self::EDuplicateComponentProp(box EDuplicateComponentPropData { .. })
-            | Self::ERefComponentProp(box ERefComponentPropData { .. })
             | Self::EConstantCondition(box EConstantConditionData { .. })
             | Self::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { .. }) => true,
 
@@ -10133,9 +10096,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidMappedType { .. } => Some(InvalidMappedType),
             ErrorMessage::EInvalidTemplateLiteralType { .. } => Some(InvalidTemplateLiteralType),
             ErrorMessage::EDuplicateComponentProp(box EDuplicateComponentPropData { .. }) => {
-                Some(InvalidComponentProp)
-            }
-            ErrorMessage::ERefComponentProp(box ERefComponentPropData { .. }) => {
                 Some(InvalidComponentProp)
             }
             ErrorMessage::EKeySpreadProp(box EKeySpreadPropData { .. }) => Some(InvalidSpreadProp),

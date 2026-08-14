@@ -482,8 +482,7 @@ pub fn run<'cx>(
     // **************************
     // * Check component config *
     // **************************
-    let check_component_config = |allow_ref_in_spread: bool,
-                                  pmap: &properties::PropertiesMap,
+    let check_component_config = |pmap: &properties::PropertiesMap,
                                   cx: &Context<'cx>,
                                   use_op: UseOp,
                                   reason: &Reason,
@@ -497,7 +496,6 @@ pub fn run<'cx>(
         slice_utils::check_component_config(
             &|cx, msg| flow_js_utils::add_output(cx, msg),
             &return_,
-            allow_ref_in_spread,
             pmap,
             cx,
             use_op,
@@ -1214,10 +1212,9 @@ pub fn run<'cx>(
             object::Tool::Partial => object_partial(cx, use_op, reason, x, tout),
             object::Tool::Required => object_required(cx, use_op, reason, x, tout),
             object::Tool::ObjectRep => object_rep(cx, use_op, reason, x, tout),
-            object::Tool::ReactCheckComponentConfig {
-                props: pmap,
-                allow_ref_in_spread,
-            } => check_component_config(*allow_ref_in_spread, pmap, cx, use_op, reason, x, tout),
+            object::Tool::ReactCheckComponentConfig { props: pmap } => {
+                check_component_config(pmap, cx, use_op, reason, x, tout)
+            }
             object::Tool::ObjectMap(box ObjectToolObjectMapData {
                 prop_type,
                 name_type,

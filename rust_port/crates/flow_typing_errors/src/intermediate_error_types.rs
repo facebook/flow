@@ -1491,12 +1491,6 @@ pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessageInvalidRefPropertyInSpreadData<L: Dupe> {
-    pub ref_loc: L,
-    pub spread_loc: L,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidKeyPropertyInSpreadData<L: Dupe> {
     pub key_loc: L,
     pub spread_loc: L,
@@ -2177,8 +2171,6 @@ pub enum Message<L: Dupe> {
     MessageInvalidTemplateLiteralTypePlaceholder,
 
     MessageInvalidReactCreateElement(VirtualReason<L>),
-
-    MessageInvalidRefPropertyInSpread(Box<MessageInvalidRefPropertyInSpreadData<L>>),
 
     MessageInvalidKeyPropertyInSpread(Box<MessageInvalidKeyPropertyInSpreadData<L>>),
 

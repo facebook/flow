@@ -500,10 +500,7 @@ fn t_of_use_t<'cx>(
                 | box Destructor::ReactDRO(_)
                 | box Destructor::PartialType
                 | box Destructor::RequiredType => merge_lower_or_upper_bounds(cx, seen, &tout_t),
-                box Destructor::ReactCheckComponentConfig {
-                    props: pmap,
-                    allow_ref_in_spread: _,
-                } => {
+                box Destructor::ReactCheckComponentConfig { props: pmap } => {
                     let result = merge_lower_or_upper_bounds(cx, seen, &tout_t)?;
                     let pmap = pmap.clone();
                     bind_use_t_result(result, &|t: Type| {
@@ -737,10 +734,7 @@ fn t_of_use_t<'cx>(
                     }
                 }
             }
-            object::Tool::ReactCheckComponentConfig {
-                props: pmap,
-                allow_ref_in_spread: _,
-            } => {
+            object::Tool::ReactCheckComponentConfig { props: pmap } => {
                 let solution = merge_upper_bounds(cx, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),

@@ -41,7 +41,6 @@ use flow_common::flow_projects::ProjectsOptions;
 use flow_common::options::AssertOperator;
 use flow_common::options::JsxMode;
 use flow_common::options::Options;
-use flow_common::options::ReactRefAsProp;
 use flow_common::options::ReactRule;
 use flow_common::options::ReactRuntime;
 use flow_common::platform_set::PlatformSet;
@@ -186,7 +185,6 @@ pub struct FrozenMetadata {
     pub no_unchecked_indexed_access: bool,
     pub projects_options: Arc<ProjectsOptions>,
     pub react_custom_jsx_typing: bool,
-    pub react_ref_as_prop: ReactRefAsProp,
     pub react_rules: Arc<[ReactRule]>,
     pub recursion_limit: i32,
     pub relay_integration_esmodules: bool,
@@ -247,7 +245,6 @@ impl Default for FrozenMetadata {
             no_unchecked_indexed_access: false,
             projects_options: Arc::new(ProjectsOptions::default()),
             react_custom_jsx_typing: false,
-            react_ref_as_prop: ReactRefAsProp::Legacy,
             react_rules: Arc::from([]),
             recursion_limit: 10000,
             relay_integration_esmodules: false,
@@ -652,7 +649,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             no_unchecked_indexed_access: options.no_unchecked_indexed_access,
             projects_options: options.projects_options.dupe(),
             react_custom_jsx_typing: options.react_custom_jsx_typing,
-            react_ref_as_prop: options.react_ref_as_prop,
             react_rules: options.react_rules.dupe(),
             recursion_limit: options.recursion_limit,
             relay_integration_esmodules: options.relay_integration_esmodules,
@@ -1357,10 +1353,6 @@ impl<'cx> Context<'cx> {
 
     pub fn react_custom_jsx_typing(&self) -> bool {
         self.0.metadata.frozen.react_custom_jsx_typing
-    }
-
-    pub fn react_ref_as_prop(&self) -> ReactRefAsProp {
-        self.0.metadata.frozen.react_ref_as_prop
     }
 
     pub fn react_runtime(&self) -> ReactRuntime {

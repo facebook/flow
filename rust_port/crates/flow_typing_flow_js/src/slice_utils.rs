@@ -27,7 +27,6 @@ use flow_typing_errors::error_message::EExponentialSpreadData;
 use flow_typing_errors::error_message::EInexactMayOverwriteIndexerData;
 use flow_typing_errors::error_message::EInvalidObjectKitData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
-use flow_typing_errors::error_message::ERefComponentPropData;
 use flow_typing_errors::error_message::EUnableToSpreadData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
@@ -1002,10 +1001,9 @@ pub fn object_spread<'cx, A>(
 
 fn check_config2<'cx>(
     cx: &Context<'cx>,
-    allow_ref_in_spread: bool,
     pmap: &properties::PropertiesMap,
     slice: &object::Slice,
-) -> (Type, Vec<(ALoc, Name, ALoc)>, Option<ALoc>) {
+) -> (Type, Vec<(ALoc, Name, ALoc)>) {
     let reason = &slice.reason;
     let props = &slice.props;
     let flags = &slice.flags;
@@ -1013,7 +1011,6 @@ fn check_config2<'cx>(
     let reachable_targs = &slice.reachable_targs;
     let dict = obj_type::get_dict_opt(&flags.obj_kind);
     let mut duplicate_props_in_spread: Vec<(ALoc, Name, ALoc)> = vec![];
-    let mut ref_prop_in_spread: Option<ALoc> = None;
     // Project any Property into a slice-shape Property (flattening Get/Set/GetSet via
     // read_prop) and then force Positive polarity for Field.
     let property_to_config_property = |x: &Name, p: &Property| -> Property {
@@ -1030,11 +1027,6 @@ fn check_config2<'cx>(
                 let second = property::first_loc(p2)
                     .unwrap_or_else(|| type_util::reason_of_t(property::type_(p2)).loc().dupe());
                 duplicate_props_in_spread.push((first, x.dupe(), second));
-            }
-            None if !allow_ref_in_spread && *x == Name::new("ref") => {
-                let loc = property::first_loc(p2)
-                    .unwrap_or_else(|| type_util::reason_of_t(property::type_(p2)).loc().dupe());
-                ref_prop_in_spread = Some(loc);
             }
             None => {
                 merged_props.insert(x.dupe(), property_to_config_property(x, p2));
@@ -1073,13 +1065,12 @@ fn check_config2<'cx>(
         generics,
         slice.strictness_kind,
     );
-    (t, duplicate_props_in_spread, ref_prop_in_spread)
+    (t, duplicate_props_in_spread)
 }
 
 pub fn check_component_config<'cx, A>(
     add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
-    allow_ref_in_spread: bool,
     pmap: &properties::PropertiesMap,
     cx: &Context<'cx>,
     use_op: UseOp,
@@ -1089,8 +1080,7 @@ pub fn check_component_config<'cx, A>(
     let xs: Vec<Type> = x
         .iter()
         .map(|xelt| {
-            let (o, duplicate_props_in_spread, ref_prop_in_spread) =
-                check_config2(cx, allow_ref_in_spread, pmap, xelt);
+            let (o, duplicate_props_in_spread) = check_config2(cx, pmap, xelt);
             if !duplicate_props_in_spread.is_empty() {
                 let duplicates = Vec1::try_from_vec(duplicate_props_in_spread).unwrap();
                 add_output(
@@ -1100,17 +1090,6 @@ pub fn check_component_config<'cx, A>(
                         duplicates,
                     })),
                 )?;
-            }
-            if !allow_ref_in_spread {
-                if let Some(loc) = ref_prop_in_spread {
-                    add_output(
-                        cx,
-                        ErrorMessage::ERefComponentProp(Box::new(ERefComponentPropData {
-                            spread: xelt.reason.loc().dupe(),
-                            loc,
-                        })),
-                    )?;
-                }
             }
             Ok(o)
         })

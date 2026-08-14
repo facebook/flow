@@ -94,7 +94,6 @@ use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::EPropsNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ERecursiveDefinitionData;
-use flow_typing_errors::error_message::ERefComponentPropData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
@@ -3926,9 +3925,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             spread, ..
         }) => {
             format!("EDuplicateComponentProp ({})", string_of_aloc(None, spread))
-        }
-        ErrorMessage::ERefComponentProp(box ERefComponentPropData { loc, .. }) => {
-            format!("ERefComponentProp ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EKeySpreadProp(box EKeySpreadPropData { loc, .. }) => {
             format!("EKeySpreadProp ({})", string_of_aloc(None, loc))

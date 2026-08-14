@@ -1103,10 +1103,7 @@ pub(super) fn eval_destructor<'cx>(
                     })));
                     rec_flow(cx, trace, (t, &u))
                 }
-                Destructor::ReactCheckComponentConfig {
-                    props,
-                    allow_ref_in_spread,
-                } => {
+                Destructor::ReactCheckComponentConfig { props } => {
                     use flow_typing_type::type_::object;
                     let tool = object::ResolveTool::Resolve(object::Resolve::Next);
                     let u = UseT::new(UseTInner::ObjKitT(
@@ -1115,7 +1112,6 @@ pub(super) fn eval_destructor<'cx>(
                         Box::new(tool),
                         Box::new(object::Tool::ReactCheckComponentConfig {
                             props: props.clone(),
-                            allow_ref_in_spread: *allow_ref_in_spread,
                         }),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));

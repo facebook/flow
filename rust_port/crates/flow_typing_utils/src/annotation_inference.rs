@@ -3644,19 +3644,17 @@ fn object_kit_concrete<'cx>(
             object::Tool::ReactConfig(box ObjectToolReactConfigData { .. }) => {
                 Ok(error_internal(cx, dst_cx, "ReactConfig", &op2))
             }
-            object::Tool::ReactCheckComponentConfig {
-                props,
-                allow_ref_in_spread,
-            } => slice_utils::check_component_config(
-                &add_output,
-                &return_,
-                *allow_ref_in_spread,
-                props,
-                cx,
-                use_op,
-                reason,
-                x,
-            ),
+            object::Tool::ReactCheckComponentConfig { props } => {
+                slice_utils::check_component_config(
+                    &add_output,
+                    &return_,
+                    props,
+                    cx,
+                    use_op,
+                    reason,
+                    x,
+                )
+            }
             object::Tool::ObjectRep => Ok(error_internal(cx, dst_cx, "ObjectRep", &op2)),
             // TODO(jmbrown): Annotation inference for Mapped Types
             object::Tool::ObjectMap(box ObjectToolObjectMapData { .. }) => {

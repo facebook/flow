@@ -26,7 +26,6 @@ use flow_aloc::ALocTable;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::options::AssertOperator;
 use flow_common::options::Options;
-use flow_common::options::ReactRefAsProp;
 use flow_common::options::ReactRule;
 use flow_common::options::ReactRuntime;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -183,7 +182,6 @@ fn config_options(config: Option<&Value>) -> Options {
         hook_compatibility: true,
         lint_severities,
         max_header_tokens: 10,
-        react_ref_as_prop: ReactRefAsProp::FullSupport,
         react_rules: Arc::from([
             ReactRule::ValidateRefAccessDuringRender,
             ReactRule::DeepReadOnlyProps,

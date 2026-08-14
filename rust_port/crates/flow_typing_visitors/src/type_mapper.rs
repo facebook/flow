@@ -1329,18 +1329,12 @@ pub fn destructor_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     t: Rc<Destructor>,
 ) -> Rc<Destructor> {
     match &*t {
-        Destructor::ReactCheckComponentConfig {
-            props,
-            allow_ref_in_spread,
-        } => {
+        Destructor::ReactCheckComponentConfig { props } => {
             let props_prime = props.ident_map(|prop| mapper.prop(cx, map_cx, prop.dupe()));
             if props.ptr_eq(&props_prime) {
                 t.dupe()
             } else {
-                Rc::new(Destructor::ReactCheckComponentConfig {
-                    props: props_prime,
-                    allow_ref_in_spread: *allow_ref_in_spread,
-                })
+                Rc::new(Destructor::ReactCheckComponentConfig { props: props_prime })
             }
         }
         Destructor::ReactDRO(_)

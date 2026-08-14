@@ -139,7 +139,6 @@ mod tests {
         frozen.type_expansion_recursion_limit = 3;
         frozen.ts_syntax = true;
         frozen.ts_utility_syntax = true;
-        frozen.react_ref_as_prop = flow_common::options::ReactRefAsProp::FullSupport;
         m.frozen = Rc::new(frozen);
         m
     }

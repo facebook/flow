@@ -59,13 +59,6 @@ pub enum SavedStateFetcher {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ReactRefAsProp {
-    #[default]
-    Legacy,
-    FullSupport,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ReactRuntime {
     #[default]
     Automatic,
@@ -196,7 +189,6 @@ pub struct Options {
     pub quiet: bool,
     pub records_includes: Arc<[String]>,
     pub react_custom_jsx_typing: bool,
-    pub react_ref_as_prop: ReactRefAsProp,
     pub react_rules: Arc<[ReactRule]>,
     pub react_runtime: ReactRuntime,
     pub recursion_limit: i32,

@@ -9,7 +9,6 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::options::ReactRefAsProp;
 use flow_common::polarity::Polarity;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -54,13 +53,6 @@ impl Config for DeclarationConfig {
 
     fn rest_type(rest: &Self::Rest) -> Type {
         component_declaration_config::rest_type(rest)
-    }
-
-    fn read_react<'a>(
-        cx: &Context<'a>,
-        loc: ALoc,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-        component_declaration_config::read_react(cx, loc)
     }
 }
 
@@ -185,12 +177,6 @@ pub fn config<'a, C: Config>(
         }
     };
     if let Some((key_loc, ref_prop_t)) = &ref_prop {
-        match cx.react_ref_as_prop() {
-            ReactRefAsProp::Legacy => {
-                C::read_react(cx, key_loc.dupe())?;
-            }
-            ReactRefAsProp::FullSupport => {}
-        }
         if !in_annotation {
             let reason_op = flow_common::reason::mk_reason(
                 flow_common::reason::VirtualReasonDesc::RReactRef,
@@ -221,14 +207,7 @@ pub fn config<'a, C: Config>(
             );
         }
     }
-    let allow_ref_in_spread = match cx.react_ref_as_prop() {
-        ReactRefAsProp::Legacy => in_annotation,
-        ReactRefAsProp::FullSupport => true,
-    };
-    let destructor = Destructor::ReactCheckComponentConfig {
-        props: pmap,
-        allow_ref_in_spread,
-    };
+    let destructor = Destructor::ReactCheckComponentConfig { props: pmap };
     match flow_typing_flow_js::flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(
         cx,
         unknown_use(),

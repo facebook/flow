@@ -111,7 +111,6 @@ use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use super::intermediate_error_types::MessageInvalidArgumentWithPrintedTypeData;
 use super::intermediate_error_types::MessageInvalidEnumMemberCheckData;
 use super::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
-use super::intermediate_error_types::MessageInvalidRefPropertyInSpreadData;
 use super::intermediate_error_types::MessageInvalidRendersTypeArgumentData;
 use super::intermediate_error_types::MessageInvalidSelfReferencingDefaultData;
 use super::intermediate_error_types::MessageInvalidSelfReferencingTypeAnnotationData;
@@ -7784,15 +7783,6 @@ where
                 text("Please check the "),
                 ref_(invalid_react),
                 text(" identifier in scope to ensure it is the right one."),
-            ]),
-            MessageInvalidRefPropertyInSpread(box MessageInvalidRefPropertyInSpreadData {
-                ref_loc,
-                spread_loc,
-            }) => friendly::Message(vec![
-                text("Components do not support "),
-                friendly::hardcoded_string_desc_ref("ref properties", loc_of_aloc(ref_loc)),
-                text(" within "),
-                friendly::hardcoded_string_desc_ref("spreads", loc_of_aloc(spread_loc)),
             ]),
             MessageInvalidKeyPropertyInSpread(box MessageInvalidKeyPropertyInSpreadData {
                 key_loc,

@@ -2549,7 +2549,7 @@ fn merge_annot<'cx>(
         }
         Annot::ComponentAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RComponentType, loc.dupe());
-            merge_component(env, cx, file, reason, true, def, None)
+            merge_component(env, cx, file, reason, def, None)
         }
         Annot::ObjAnnot(inner) => {
             let AnnotObjAnnot {
@@ -4757,7 +4757,6 @@ fn merge_component<'cx>(
     cx: &Context<'cx>,
     file: &File<'cx>,
     reason: Reason,
-    is_annotation: bool,
     def: &ComponentSig<ALoc, Pack::Packed<ALoc>>,
     id_opt: Option<(ALoc, &FlowSmolStr)>,
 ) -> Type {
@@ -4801,19 +4800,12 @@ fn merge_component<'cx>(
             ),
             Some(ComponentRestParam { t }) => merge_impl(env, cx, file, t, false, false),
         };
-        let allow_ref_in_spread = match cx.react_ref_as_prop() {
-            flow_common::options::ReactRefAsProp::Legacy => is_annotation,
-            flow_common::options::ReactRefAsProp::FullSupport => true,
-        };
         let param = Type::new(type_::TypeInner::EvalT {
             type_: rest_t,
             defer_use_t: type_::TypeDestructorT::new(type_::TypeDestructorTInner(
                 type_::unknown_use(),
                 config_reason,
-                Rc::new(type_::Destructor::ReactCheckComponentConfig {
-                    props: pmap,
-                    allow_ref_in_spread,
-                }),
+                Rc::new(type_::Destructor::ReactCheckComponentConfig { props: pmap }),
             )),
             id: type_::eval::Id::generate_id(),
         });
@@ -5486,7 +5478,6 @@ pub fn merge_def<'cx>(
                 cx,
                 file,
                 reason,
-                false,
                 &inner.def,
                 Some((inner.id_loc.dupe(), &inner.name)),
             )

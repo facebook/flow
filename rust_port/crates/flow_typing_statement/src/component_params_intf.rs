@@ -28,8 +28,4 @@ pub trait Config {
     fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Result<Self::RestAst, CheckExprError>;
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type);
     fn rest_type(rest: &Self::Rest) -> Type;
-    fn read_react<'a>(
-        cx: &Context<'a>,
-        loc: ALoc,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError>;
 }

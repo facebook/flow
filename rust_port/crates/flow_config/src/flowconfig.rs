@@ -15,7 +15,6 @@ use std::path::Path;
 use flow_common::options::AssertOperator;
 use flow_common::options::LogSaving;
 use flow_common::options::ModuleSystem;
-use flow_common::options::ReactRefAsProp;
 use flow_common::options::ReactRule;
 use flow_common::options::ReactRuntime;
 use flow_common::options::SavedStateFetcher;
@@ -229,7 +228,6 @@ pub mod opts {
         pub projects_strict_boundary: bool,
         pub react_custom_jsx_typing: bool,
         pub stylex_shorthand_prop: Option<String>,
-        pub react_ref_as_prop: ReactRefAsProp,
         pub react_rules: Vec<ReactRule>,
         pub react_runtime: ReactRuntime,
         pub records: Option<bool>,
@@ -392,7 +390,6 @@ pub mod opts {
             projects_strict_boundary: false,
             react_custom_jsx_typing: false,
             stylex_shorthand_prop: None,
-            react_ref_as_prop: ReactRefAsProp::FullSupport,
             // Keep in sync with `component_syntax: true` above: when component
             // syntax is on (the default), the React rules are on too. Explicitly
             // setting `component_syntax=false` in a .flowconfig clears these again
@@ -2686,20 +2683,6 @@ pub mod opts {
                 parse_boolean(
                     |opts, v| {
                         opts.react_custom_jsx_typing = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )
-            }),
-            ("react.ref_as_prop", |values, config| {
-                enum_parser(
-                    &[
-                        ("legacy", ReactRefAsProp::Legacy),
-                        ("experimental.full_support", ReactRefAsProp::FullSupport),
-                    ],
-                    |opts, v| {
-                        opts.react_ref_as_prop = v;
                         Ok(())
                     },
                     values,

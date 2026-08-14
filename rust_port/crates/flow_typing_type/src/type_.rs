@@ -5772,18 +5772,10 @@ pub struct DestructorMappedTypeData {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Destructor {
     NonMaybeType,
-    PropertyType {
-        name: Name,
-    },
-    ElementType {
-        index_type: Type,
-    },
-    OptionalIndexedAccessNonMaybeType {
-        index: OptionalIndexedAccessIndex,
-    },
-    OptionalIndexedAccessResultType {
-        void_reason: Reason,
-    },
+    PropertyType { name: Name },
+    ElementType { index_type: Type },
+    OptionalIndexedAccessNonMaybeType { index: OptionalIndexedAccessIndex },
+    OptionalIndexedAccessResultType { void_reason: Reason },
     ExactType,
     ReadOnlyType,
     PartialType,
@@ -5795,10 +5787,7 @@ pub enum Destructor {
     ConditionalType(Box<DestructorConditionalTypeData>),
     TypeMap(TypeMap),
     ReactElementConfigType,
-    ReactCheckComponentConfig {
-        props: properties::PropertiesMap,
-        allow_ref_in_spread: bool,
-    },
+    ReactCheckComponentConfig { props: properties::PropertiesMap },
     ReactDRO(Box<ReactDro>),
     MappedType(Box<DestructorMappedTypeData>),
     EnumType,
@@ -8580,10 +8569,7 @@ pub mod object {
         Spread(Box<(spread::Target, spread::State)>),
         Rest(Box<(rest::MergeMode, rest::State)>),
         ReactConfig(Box<ObjectToolReactConfigData>),
-        ReactCheckComponentConfig {
-            props: properties::PropertiesMap,
-            allow_ref_in_spread: bool,
-        },
+        ReactCheckComponentConfig { props: properties::PropertiesMap },
         ObjectRep,
         ObjectMap(Box<ObjectToolObjectMapData>),
     }

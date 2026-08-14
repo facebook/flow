@@ -204,13 +204,6 @@ impl crate::component_params_intf::Config for TypeAnnotationConfig {
     type ParamAst = ast::types::component_params::Param<ALoc, (ALoc, Type)>;
     type RestAst = ast::types::component_params::RestParam<ALoc, (ALoc, Type)>;
 
-    fn read_react<'a>(
-        _cx: &Context<'a>,
-        _loc: ALoc,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-        Ok(())
-    }
-
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type) {
         let (t, param_ast) = param;
         let param_t = if param_ast.optional {

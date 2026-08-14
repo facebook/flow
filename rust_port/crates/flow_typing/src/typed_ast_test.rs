@@ -49,7 +49,6 @@ use crate::type_inference;
 fn metadata() -> Metadata {
     let frozen = FrozenMetadata {
         hook_compatibility: true,
-        react_ref_as_prop: flow_common::options::ReactRefAsProp::FullSupport,
         ts_syntax: true,
         ts_utility_syntax: true,
         tslib_syntax: true,

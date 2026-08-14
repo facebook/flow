@@ -1020,10 +1020,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
             json!({"kind": "ObjectKeyMirror"})
         }
         Destructor::ReactElementConfigType => json!({"kind": "ReactElementConfigType"}),
-        Destructor::ReactCheckComponentConfig {
-            props,
-            allow_ref_in_spread: _,
-        } => {
+        Destructor::ReactCheckComponentConfig { props } => {
             let props_json: serde_json::Map<String, Json> = props
                 .iter()
                 .map(|(name, prop)| (name.as_str().to_string(), json_of_property(cx, depth, prop)))

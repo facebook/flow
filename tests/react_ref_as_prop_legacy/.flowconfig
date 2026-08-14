@@ -1,4 +1,0 @@
-[options]
-all=true
-component_syntax=true
-react.ref_as_prop=legacy

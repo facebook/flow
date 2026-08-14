@@ -27,20 +27,6 @@ use flow_typing_utils::type_env;
 use crate::destructuring;
 use crate::statement;
 
-pub fn read_react<'a>(
-    cx: &Context<'a>,
-    loc: ALoc,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
-    type_env::query_var(
-        Some(type_env::LookupMode::ForValue),
-        cx,
-        &FlowSmolStr::new_inline("React"),
-        None,
-        loc,
-    )?;
-    Ok(())
-}
-
 pub fn param_type_with_name(param: &Param) -> (ALoc, FlowSmolStr, Type) {
     let t = match &param.pattern {
         Pattern::Id(id) => {
