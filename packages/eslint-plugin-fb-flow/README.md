@@ -2,7 +2,7 @@
 
 This is a set of ESLint rules created and published by the Flow team.
 They are in addition to (not a replacement for) the rules of [`eslint-plugin-flowtype`](https://github.com/gajus/eslint-plugin-flowtype) created and published by the open-source community.
-We recommend using the [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) parser plugin for ESLint.
+We recommend using the [flow-eslint](https://www.npmjs.com/package/flow-eslint) parser for ESLint.
 Read our docs on using [ESLint with Flow](https://flow.org/en/docs/tools/eslint/) in general.
 
 ## Usage

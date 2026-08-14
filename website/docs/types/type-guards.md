@@ -422,9 +422,8 @@ function isKnown<T>(x: Item<T>): x is Known {
 To use type guards, you need to upgrade your infrastructure so that it supports the syntax:
 
 - `prettier`: version 3 or later, with the `@prettier/plugin-hermes` plugin installed (see [these instructions](../tools/prettier.md)). `this` type guards require Prettier 3.5 or later.
-- `babel` with `babel-plugin-syntax-hermes-parser`. See [our Babel guide](../tools/babel.md) for setup instructions.
-  * `this` type guards require hermes-parser version 0.26 or later.
-- `eslint` with `hermes-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.
+- `babel` with `flow-parser/babel-plugin`. See [our Babel guide](../tools/babel.md) for setup instructions.
+- `eslint` with `flow-eslint`. See [our ESLint guide](../tools/eslint.md) for setup instructions.
 
 ## See Also {#toc-see-also}
 

@@ -1,7 +1,7 @@
 ---
 title: ESLint
 slug: /tools/eslint
-description: "How to set up ESLint with hermes-eslint to lint Flow-typed JavaScript code."
+description: "How to set up ESLint with flow-eslint to lint Flow-typed JavaScript code."
 ---
 
 ESLint is a static analysis tool which can help you quickly find and
@@ -10,13 +10,13 @@ complement the checks provided by Flow's type system.
 
 > This page documents the legacy `.eslintrc` configuration style. ESLint 9+ defaults to [flat config](https://eslint.org/docs/latest/use/configure/migration-guide) (`eslint.config.js`); if you are on a modern ESLint, see the migration guide. The flat-config equivalent for `--ext .js,.jsx` is `files: ['**/*.{js,jsx}']` inside a config object.
 
-You can quick-start setup ESLint, install `hermes-eslint` with either
+You can quick-start setup ESLint, install `flow-eslint` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```sh
-yarn add --dev eslint hermes-eslint eslint-plugin-ft-flow
+yarn add --dev eslint flow-eslint eslint-plugin-ft-flow
 # or
-npm install --save-dev eslint hermes-eslint eslint-plugin-ft-flow
+npm install --save-dev eslint flow-eslint eslint-plugin-ft-flow
 ```
 
 Then create a `.eslintrc.js` file in your project root with the following:
@@ -24,7 +24,7 @@ Then create a `.eslintrc.js` file in your project root with the following:
 ```js
 module.exports = {
   root: true,
-  parser: 'hermes-eslint',
+  parser: 'flow-eslint',
   plugins: [
     'ft-flow',
   ],
@@ -59,7 +59,7 @@ Using this config by adding it to the **_end_** of your `extends`:
 ```diff
   module.exports = {
     root: true,
-    parser: 'hermes-eslint',
+    parser: 'flow-eslint',
     plugins: [
       'ft-flow',
     ],
@@ -91,7 +91,7 @@ A typical plugin might be used like:
 ```diff
   module.exports = {
     root: true,
-    parser: 'hermes-eslint',
+    parser: 'flow-eslint',
     plugins: [
       'ft-flow',
 +     'jest',

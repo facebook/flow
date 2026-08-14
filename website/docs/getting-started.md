@@ -46,19 +46,19 @@ choose between [Babel](https://babeljs.io/) and
 support for Flow. Babel will take your Flow code and strip out any type
 annotations. If you already use Babel in your project, see [using Babel](./tools/babel.md).
 
-First install `@babel/core`, `@babel/cli`, `@babel/preset-flow`, and `babel-plugin-syntax-hermes-parser` with
+First install `@babel/core`, `@babel/cli`, `@babel/preset-flow`, and `flow-parser` with
 either [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```bash npm2yarn
-npm install --save-dev @babel/core @babel/cli @babel/preset-flow babel-plugin-syntax-hermes-parser
+npm install --save-dev @babel/core @babel/cli @babel/preset-flow flow-parser
 ```
 
-Next you need to create a `.babelrc` file at the root of your project with the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser` plugin.
+Next you need to create a `.babelrc` file at the root of your project with the `@babel/preset-flow` preset and `flow-parser/babel-plugin` plugin.
 
 ```json
 {
   "presets": ["@babel/preset-flow"],
-  "plugins": ["babel-plugin-syntax-hermes-parser"]
+  "plugins": ["flow-parser/babel-plugin"]
 }
 ```
 

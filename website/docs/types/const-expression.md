@@ -136,8 +136,8 @@ onlyAllowsExactDiv(divSpecific); // OK
 ## Adoption of `as const` syntax
 To use the `as const` syntax, you need to upgrade your infrastructure:
 - Prettier: 3.1+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
+- Babel: use [flow-parser/babel-plugin](https://www.npmjs.com/package/flow-parser), see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [flow-eslint](https://www.npmjs.com/package/flow-eslint), see our [ESLint guide](../tools/eslint.md) for more details.
 
 ## `const` Type Parameters
 
@@ -176,8 +176,8 @@ The variables `y1` and `y2` will have the same type as `x1` and `x2`, respective
 ## Adoption of `const` type parameter syntax
 To use the `const` type parameter syntax, you need to upgrade your infrastructure:
 - Prettier: 3.5+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.26+, see our [Babel guide](../tools/babel.md) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.26+, see our [ESLint guide](../tools/eslint.md) for more details.
+- Babel: use [flow-parser/babel-plugin](https://www.npmjs.com/package/flow-parser), see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [flow-eslint](https://www.npmjs.com/package/flow-eslint), see our [ESLint guide](../tools/eslint.md) for more details.
 
 ## See Also {#toc-see-also}
 

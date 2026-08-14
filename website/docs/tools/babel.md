@@ -10,25 +10,25 @@ takes just a few steps to set them up together.
 If you don't have Babel setup already, you can do that by following
 [this guide](http://babeljs.io/docs/setup/).
 
-Once you have Babel setup, install `@babel/preset-flow` and `babel-plugin-syntax-hermes-parser` with either
+Once you have Babel setup, install `@babel/preset-flow` and `flow-parser` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```sh
-yarn add --dev @babel/preset-flow babel-plugin-syntax-hermes-parser
+yarn add --dev @babel/preset-flow flow-parser
 # or
-npm install --save-dev @babel/preset-flow babel-plugin-syntax-hermes-parser
+npm install --save-dev @babel/preset-flow flow-parser
 ```
 
-Then add the `@babel/preset-flow` preset and `babel-plugin-syntax-hermes-parser` plugin to your Babel config.
+Then add the `@babel/preset-flow` preset and `flow-parser/babel-plugin` plugin to your Babel config.
 
 ```json
 {
   "presets": ["@babel/preset-flow"],
-  "plugins": ["babel-plugin-syntax-hermes-parser"]
+  "plugins": ["flow-parser/babel-plugin"]
 }
 ```
 
-You can read the documentation of [babel-plugin-syntax-hermes-parser](https://github.com/facebook/hermes/blob/main/tools/hermes-parser/js/babel-plugin-syntax-hermes-parser/README.md) to see how to configure it. [This website's Babel config](https://github.com/facebook/flow/blob/baa74a889dc81fe36f0fd362db6d3e27d44d961d/website/babel.config.js#L10-L17) provides an example with custom parser options.
+You can read the [flow-parser Babel plugin documentation](https://github.com/facebook/flow/tree/main/packages/flow-parser#babel-plugin) to see how to configure it, including custom parser options.
 
 ## See Also {#toc-see-also}
 

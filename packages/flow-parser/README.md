@@ -28,3 +28,44 @@ The Flow parser exposes a single `parse(code, [options])` function, where `code`
   - `TransformEnumSyntax`
     - `enable`: `boolean` - Whether to enable the transform. By default, `false`.
     - `getRuntime` (optional): `() => Expression` - The expression which should be a reference to the Flow Enums runtime. By default, is `require('flow-enums-runtime')`.
+
+## Babel plugin
+
+Flow parser plugin for [Babel](https://babeljs.io/). This plugin switches Babel to use `flow-parser` instead of the `@babel/parser`. The Flow parser uses Rust compiled to WASM for full Flow syntax support.
+
+### Install
+
+Using npm:
+
+```sh
+npm install --save-dev flow-parser
+```
+
+or using yarn:
+
+```sh
+yarn add flow-parser --dev
+```
+
+### Usage
+
+The plugin can be enabled via:
+
+```
+// babel.config.json
+{
+  "plugins": ["flow-parser/babel-plugin"]
+}
+```
+
+If parser options need to be provide you can do so via the `parserOpts` config:
+
+```
+// babel.config.json
+{
+  "plugins": ["flow-parser/babel-plugin"],
+  "parserOpts": {
+    "allowReturnOutsideFunction": true
+  }
+}
+```

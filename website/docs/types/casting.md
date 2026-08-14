@@ -110,8 +110,8 @@ const otherObj = fooObj as {foo: number, bar: string};  // ERROR
 ### Adoption of `as` syntax
 To use the `as` keyword for type casts, you need to upgrade your infrastructure so that it supports the syntax:
 - Prettier: 3.1+
-- Babel: use the [babel-plugin-syntax-hermes-parser](https://www.npmjs.com/package/babel-plugin-syntax-hermes-parser) plugin version 0.19+, see our [Babel guide](../tools/babel.md) for more details.
-- ESLint: use [hermes-eslint](https://www.npmjs.com/package/hermes-eslint) plugin version 0.19+, see our [ESLint guide](../tools/eslint.md) for more details.
+- Babel: use [flow-parser/babel-plugin](https://www.npmjs.com/package/flow-parser), see our [Babel guide](../tools/babel.md) for more details.
+- ESLint: use [flow-eslint](https://www.npmjs.com/package/flow-eslint), see our [ESLint guide](../tools/eslint.md) for more details.
 
 ## Using type cast expressions {#toc-using-type-cast-expressions}
 
