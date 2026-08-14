@@ -17,7 +17,7 @@ These platform specific files live under the same repository, but it would norma
 ```toml title=.flowconfig
 ; for ios
 [ignore]
-.*\.android\.js$
+**/*.android.js
 [options]
 module.file_ext=.js
 module.file_ext=.ios.js
@@ -27,7 +27,7 @@ module.file_ext=.ios.js
 ; for android
 [ignore]
 ; Ignore other platform suffixes
-.*\.ios\.js$
+**/*.ios.js
 [options]
 module.file_ext=.js
 module.file_ext=.android.js
@@ -49,7 +49,7 @@ For example, these are the required changes for the `.flowconfig` example above:
 
 ```diff title=.flowconfig
 [ignore]
-- .*\.android\.js$
+- **/*.android.js
 [options]
 module.file_ext=.js
 - module.file_ext=.ios.js

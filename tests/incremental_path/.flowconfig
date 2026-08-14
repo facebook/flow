@@ -1,5 +1,5 @@
 [ignore]
-.*/incremental_path/tmp*
+tmp*/**
 
 [options]
 all=true

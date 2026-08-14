@@ -1,10 +1,10 @@
 [include]
-../../node_modules
+../../node_modules/**
 
 [ignore]
-.*/json5/test/parse-cases/.*
-.*/packages/flow-remove-types/.*
-.*/newtests/.*
+**/json5/test/parse-cases/**
+**/packages/flow-remove-types/**
+**/newtests/**
 
 [options]
 emoji=true

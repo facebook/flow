@@ -1,5 +1,5 @@
 [ignore]
-<PROJECT_ROOT>/fixtures
+fixtures/**
 
 [options]
 all=true

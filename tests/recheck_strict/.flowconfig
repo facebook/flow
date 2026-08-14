@@ -1,6 +1,6 @@
 [ignore]
-<PROJECT_ROOT>/commit_a
-<PROJECT_ROOT>/commit_b
+commit_a/**
+commit_b/**
 
 [strict]
 nonstrict-import

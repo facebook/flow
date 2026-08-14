@@ -1,5 +1,5 @@
 [include]
-../outside/
+../outside/**
 
 [options]
 all=true

@@ -31,28 +31,6 @@ pub struct RootedGlob {
     matcher: GlobMatcher,
 }
 
-#[derive(Debug, Clone)]
-pub enum FilePatternMatcher {
-    Regex(Regex),
-    Glob(RootedGlob),
-}
-
-impl FilePatternMatcher {
-    pub fn is_match(&self, path: &str) -> bool {
-        match self {
-            Self::Regex(regex) => regex.is_match(path),
-            Self::Glob(glob) => glob.is_match(path),
-        }
-    }
-
-    pub fn supports_directory_pruning(&self, pattern: &str) -> bool {
-        match self {
-            Self::Regex(_) => !pattern.ends_with('$'),
-            Self::Glob(glob) => glob.supports_directory_pruning(),
-        }
-    }
-}
-
 pub fn validate_glob(pattern: &str) -> Result<(), globset::Error> {
     GlobBuilder::new(pattern)
         .literal_separator(true)
@@ -83,7 +61,7 @@ impl RootedGlob {
             .is_match(normalize_filename_dir_sep(path).as_ref())
     }
 
-    fn supports_directory_pruning(&self) -> bool {
+    pub fn supports_directory_pruning(&self) -> bool {
         let pattern = self.matcher.glob().glob();
         pattern.ends_with('/')
             || pattern == "**"
@@ -459,11 +437,7 @@ mod tests {
                 );
             }
             assert!(glob.supports_directory_pruning(), "{pattern}");
-            assert!(
-                FilePatternMatcher::Glob(glob)
-                    .supports_directory_pruning(&format!("glob:{pattern}")),
-                "{pattern}"
-            );
+            assert!(glob.supports_directory_pruning(), "{pattern}");
         }
 
         let explicit_directories = [
@@ -481,11 +455,7 @@ mod tests {
                 RootedGlob::new(Path::new("/project"), pattern).expect("test glob should compile");
             assert!(glob.is_match(&project_path(directory)), "{pattern}");
             assert!(glob.supports_directory_pruning(), "{pattern}");
-            assert!(
-                FilePatternMatcher::Glob(glob)
-                    .supports_directory_pruning(&format!("glob:{pattern}")),
-                "{pattern}"
-            );
+            assert!(glob.supports_directory_pruning(), "{pattern}");
         }
     }
 
@@ -516,16 +486,8 @@ mod tests {
                 "{pattern}: {descendant}"
             );
             assert!(!glob.supports_directory_pruning(), "{pattern}");
-            assert!(
-                !FilePatternMatcher::Glob(glob)
-                    .supports_directory_pruning(&format!("glob:{pattern}")),
-                "{pattern}"
-            );
+            assert!(!glob.supports_directory_pruning(), "{pattern}");
         }
-
-        let anchored_regex =
-            FilePatternMatcher::Regex(Regex::new("src$").expect("test regex should compile"));
-        assert!(!anchored_regex.supports_directory_pruning("src$"));
     }
 
     #[test]

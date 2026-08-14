@@ -1,5 +1,5 @@
 [ignore]
-.*/lib/.*
+**/lib/**
 
 [options]
 all=true

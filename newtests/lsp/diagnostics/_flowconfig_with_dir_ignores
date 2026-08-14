@@ -1,4 +1,4 @@
 [ignore]
-<PROJECT_ROOT>/build/.*
+build/**
 
 [options]

@@ -6,12 +6,12 @@
 !<PROJECT_ROOT>/my_declarations/root_typecheck/.*
 
 [ignore]
-'.*/my_ignores_with_backup/.*' -> '.flowconfig'
-.*/my_ignores/.*
-!.*/my_ignores/typecheck/.*
-!.*/my_ignores/actually_typecheck\.js
-!<PROJECT_ROOT>/my_ignores/typecheck_if_in_root\.js
-!<PROJECT_ROOT>/my_ignores/root_typecheck/.*
+'**/my_ignores_with_backup/**' -> '.flowconfig'
+**/my_ignores/**
+!**/my_ignores/typecheck/**
+!**/my_ignores/actually_typecheck.js
+!my_ignores/typecheck_if_in_root.js
+!my_ignores/root_typecheck/**
 
 [untyped]
 .*/my_untyped/.*

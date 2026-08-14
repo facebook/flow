@@ -75,9 +75,9 @@ fi
 WORK_DIR=$(mktemp -d /tmp/flow_doc_test.XXXXXX)
 trap '$FLOW stop "$WORK_DIR" 2>/dev/null; rm -rf "$WORK_DIR"' EXIT
 
-# Create .flowconfig from the snippet config, but remove the PROJECT_ROOT
-# ignore so example files are checked.
-sed '/<PROJECT_ROOT>\/\.\*/d' "$WEBSITE_DIR/.flowconfig.snippets" > "$WORK_DIR/.flowconfig"
+# Create .flowconfig from the snippet config, but remove the catch-all ignore
+# so example files are checked.
+sed '/^\*\*$/d' "$WEBSITE_DIR/.flowconfig.snippets" > "$WORK_DIR/.flowconfig"
 
 # Copy flow-typed stubs
 cp -r "$WEBSITE_DIR/flow-typed" "$WORK_DIR/flow-typed"

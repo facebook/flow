@@ -1,12 +1,12 @@
 [include]
-../included
+../included/**
 ../foo/**/bar.js
-../foo/batman
+../foo/batman/**
 glob:../globbed/**/*.{js,jsx}
 glob:../glob_exact
 
 [ignore]
-.*/globbed/legacy_ignored/.*
+../globbed/legacy_ignored/**
 glob:../globbed/**/ignored.js
 glob:!../globbed/keep/ignored.js
 

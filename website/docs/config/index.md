@@ -78,10 +78,10 @@ Here is an example of how you could use the `.flowconfig` directives.
 
 ```text
 [include]
-../otherdir/src
+../otherdir/src/**
 
 [ignore]
-.*/build/.*
+build/**
 
 [libs]
 ./lib

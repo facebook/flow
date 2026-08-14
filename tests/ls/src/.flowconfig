@@ -1,6 +1,6 @@
 [ignore]
-'<PROJECT_ROOT>/explicitly_ignored_with_backup.js' -> 'other/.flowconfig'
-<PROJECT_ROOT>/explicitly_ignored.js
+'explicitly_ignored_with_backup.js' -> 'other/.flowconfig'
+explicitly_ignored.js
 
 [include]
 ../other/explicitly_included.js

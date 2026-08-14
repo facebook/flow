@@ -1,5 +1,5 @@
 [ignore]
-<PROJECT_ROOT>/lib.js
+lib.js
 
 [libs]
 lib.js

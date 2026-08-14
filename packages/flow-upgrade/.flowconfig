@@ -1,10 +1,10 @@
 [ignore]
-.*/node_modules/.*
-!.*/node_modules/@babel/highlight/.*
-!.*/node_modules/hermes-transform/.*
-!.*/node_modules/hermes-estree/.*
-!.*/node_modules/hermes-eslint/.*
-.*/__tests__/fixtures/.*
+**/node_modules/**
+!**/node_modules/@babel/highlight/**
+!**/node_modules/hermes-transform/**
+!**/node_modules/hermes-estree/**
+!**/node_modules/hermes-eslint/**
+**/__tests__/fixtures/**
 
 [options]
 emoji=true

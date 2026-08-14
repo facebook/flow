@@ -22,7 +22,6 @@ use flow_common::options::Format;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
 use flow_common::options::SavedStateFetcher;
-use flow_common::path_matcher::FilePatternMatcher;
 use flow_common::path_matcher::PathMatcher;
 use flow_common::path_matcher::RootedGlob;
 use flow_common::verbose::Verbose;
@@ -30,6 +29,7 @@ use flow_common_errors::error_utils::cli_output;
 use flow_common_exit::FlowExitStatus;
 use flow_common_vcs::vcs::Vcs;
 use flow_config::FlowConfig;
+use flow_config::FlowconfigGlobPattern;
 use flow_config::LazyMode;
 use flow_config::opts::BuiltinLib as ConfigBuiltinLib;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -934,32 +934,30 @@ pub(crate) fn remove_exclusion(pattern: &str) -> &str {
     pattern.strip_prefix('!').unwrap_or(pattern)
 }
 
-fn compile_ignore_pattern(root: &Path, pattern: &str) -> FilePatternMatcher {
-    if let Some(glob) = pattern.strip_prefix("glob:") {
-        match RootedGlob::new(root, remove_exclusion(glob)) {
-            Ok(glob) => FilePatternMatcher::Glob(glob),
-            Err(error) => {
-                let message = format!("Invalid glob pattern `{pattern}`: {error}");
-                flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&message))
-            }
-        }
-    } else {
-        let expanded =
-            flow_common::files::expand_project_root_token(root, remove_exclusion(pattern));
-        FilePatternMatcher::Regex(Regex::new(&expanded).unwrap())
+fn parse_flowconfig_glob_or_exit(pattern: String, allow_negation: bool) -> FlowconfigGlobPattern {
+    FlowconfigGlobPattern::try_new(pattern, allow_negation).unwrap_or_else(|error| {
+        flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&error.message()))
+    })
+}
+
+fn compile_ignore_pattern(
+    root: &Path,
+    pattern: FlowconfigGlobPattern,
+    backup: Option<String>,
+) -> flow_common::files::IgnorePattern {
+    let matcher = RootedGlob::new(root, pattern.pattern())
+        .expect("flowconfig glob should have been validated while parsing");
+    flow_common::files::IgnorePattern {
+        negated: pattern.is_negated(),
+        backup,
+        matcher,
     }
 }
 
-fn add_include_pattern(matcher: &mut PathMatcher, root: &Path, include: &str) {
-    if let Some(glob) = include.strip_prefix("glob:") {
-        if let Err(error) = matcher.add_glob(root, glob) {
-            let message = format!("Invalid glob pattern `{include}`: {error}");
-            flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&message));
-        }
-    } else {
-        let expanded = flow_common::files::expand_project_root_token(root, include);
-        matcher.add_path(&flow_common::files::make_path_absolute(root, &expanded));
-    }
+fn add_include_pattern(matcher: &mut PathMatcher, root: &Path, include: &FlowconfigGlobPattern) {
+    matcher
+        .add_glob(root, include.pattern())
+        .expect("flowconfig glob should have been validated while parsing");
 }
 
 fn flowlib_builtin_lib(
@@ -1000,17 +998,17 @@ pub(crate) fn file_options(
 
     let implicitly_include_root = flowconfig.options.files_implicitly_include_root;
 
-    let all_ignores: Vec<(String, Option<String>)> = {
-        let mut merged = ignores;
+    let all_ignores: Vec<(FlowconfigGlobPattern, Option<String>)> = {
+        let mut merged = ignores
+            .into_iter()
+            .map(|(pattern, backup)| (parse_flowconfig_glob_or_exit(pattern, true), backup))
+            .collect::<Vec<_>>();
         merged.extend(flowconfig.ignores.iter().cloned());
         merged
     };
     let ignores = all_ignores
         .into_iter()
-        .map(|(path, backup)| {
-            let matcher = compile_ignore_pattern(root, &path);
-            ((path, backup), matcher)
-        })
+        .map(|(pattern, backup)| compile_ignore_pattern(root, pattern, backup))
         .collect();
 
     let all_untyped: Vec<String> = {
@@ -1068,7 +1066,10 @@ pub(crate) fn file_options(
     }
 
     let includes = {
-        let mut merged_includes = includes;
+        let mut merged_includes = includes
+            .into_iter()
+            .map(|include| parse_flowconfig_glob_or_exit(include, false))
+            .collect::<Vec<_>>();
         merged_includes.extend(flowconfig.includes.iter().cloned());
         let mut matcher = PathMatcher::empty();
         for include in merged_includes {
@@ -2389,19 +2390,16 @@ pub(super) fn make_options(
         use flow_common::files::FileOptions;
 
         let ignores = {
-            let mut merged: Vec<(String, Option<String>)> = ignores_override
+            let mut merged: Vec<(FlowconfigGlobPattern, Option<String>)> = ignores_override
                 .into_iter()
-                .map(|ignore| (ignore, None))
+                .map(|ignore| (parse_flowconfig_glob_or_exit(ignore, true), None))
                 .collect();
             merged.extend(ignores);
             merged
         };
         let ignores_processed = ignores
             .into_iter()
-            .map(|(path, backup)| {
-                let matcher = compile_ignore_pattern(&root, &path);
-                ((path, backup), matcher)
-            })
+            .map(|(pattern, backup)| compile_ignore_pattern(&root, pattern, backup))
             .collect();
 
         let untyped = {
@@ -2460,7 +2458,10 @@ pub(super) fn make_options(
         }
 
         let includes_processed = {
-            let mut merged_includes = includes_override;
+            let mut merged_includes = includes_override
+                .into_iter()
+                .map(|include| parse_flowconfig_glob_or_exit(include, false))
+                .collect::<Vec<_>>();
             merged_includes.extend(includes);
             let mut matcher = PathMatcher::empty();
             // Explicitly included paths are always added to the path_matcher

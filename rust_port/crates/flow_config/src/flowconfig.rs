@@ -30,6 +30,79 @@ use starlark_map::small_map::SmallMap;
 pub struct Warning(pub u32, pub String);
 pub struct Error(pub u32, pub String);
 
+const GLOB_PREFIX: &str = "glob:";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FlowconfigGlobPattern {
+    source: String,
+    pattern: String,
+    negated: bool,
+}
+
+#[derive(Debug)]
+pub enum FlowconfigGlobError {
+    Empty,
+    Absolute,
+    ProjectRoot,
+    Invalid(String),
+}
+
+impl FlowconfigGlobError {
+    pub fn message(&self) -> String {
+        match self {
+            Self::Empty => "Glob pattern must not be empty".to_owned(),
+            Self::Absolute => "Glob patterns must be relative to the project root".to_owned(),
+            Self::ProjectRoot => "Glob patterns are already relative to the project root and must not use <PROJECT_ROOT>".to_owned(),
+            Self::Invalid(error) => format!("Invalid glob pattern: {error}"),
+        }
+    }
+}
+
+impl FlowconfigGlobPattern {
+    pub fn try_new(source: String, allow_negation: bool) -> Result<Self, FlowconfigGlobError> {
+        let pattern = source.strip_prefix(GLOB_PREFIX).unwrap_or(&source);
+        let (negated, pattern) = if allow_negation {
+            match pattern.strip_prefix('!') {
+                Some(pattern) => (true, pattern),
+                None => (false, pattern),
+            }
+        } else {
+            (false, pattern)
+        };
+        if pattern.is_empty() {
+            return Err(FlowconfigGlobError::Empty);
+        }
+        if Path::new(pattern).is_absolute()
+            || flow_common::files::ABSOLUTE_PATH_REGEXP.is_match(pattern)
+        {
+            return Err(FlowconfigGlobError::Absolute);
+        }
+        if pattern.contains(flow_common::files::PROJECT_ROOT_TOKEN) {
+            return Err(FlowconfigGlobError::ProjectRoot);
+        }
+        flow_common::path_matcher::validate_glob(pattern)
+            .map_err(|error| FlowconfigGlobError::Invalid(error.to_string()))?;
+        let pattern = pattern.to_owned();
+        Ok(Self {
+            source,
+            pattern,
+            negated,
+        })
+    }
+
+    pub fn source(&self) -> &str {
+        &self.source
+    }
+
+    pub fn pattern(&self) -> &str {
+        &self.pattern
+    }
+
+    pub fn is_negated(&self) -> bool {
+        self.negated
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileWatcher {
     NoFileWatcher,
@@ -2868,13 +2941,13 @@ pub struct FlowConfig {
     // This type *should* just be a string list, but we have an undocumented feature that allows
     // you to specify a backup flowconfig to use if a file is ignored using our module-mapper syntax.
     // This should be reverted to string list after we properly support multiplatform flow roots.
-    pub ignores: Vec<(String, Option<String>)>,
+    pub ignores: Vec<(FlowconfigGlobPattern, Option<String>)>,
     // files that should be treated as untyped
     pub untyped: Vec<String>,
     // files that should be treated as declarations
     pub declarations: Vec<String>,
     // non-root include paths
-    pub includes: Vec<String>,
+    pub includes: Vec<FlowconfigGlobPattern>,
     // library paths. no wildcards
     pub libs: Vec<(Option<FlowSmolStr>, String)>,
     // lint severities
@@ -2946,45 +3019,21 @@ fn trim_numbered_lines(lines: &[(u32, String)]) -> Vec<(u32, String)> {
 }
 
 // parse [include] lines
-const GLOB_PREFIX: &str = "glob:";
-
-fn validate_flowconfig_glob(line: u32, pattern: &str, allow_negation: bool) -> Result<(), Error> {
-    let Some(pattern) = pattern.strip_prefix(GLOB_PREFIX) else {
-        return Ok(());
-    };
-    let pattern = if allow_negation {
-        pattern.strip_prefix('!').unwrap_or(pattern)
-    } else {
-        pattern
-    };
-    if pattern.is_empty() {
-        return Err(Error(line, "Glob pattern must not be empty".to_owned()));
-    }
-    if Path::new(pattern).is_absolute()
-        || flow_common::files::ABSOLUTE_PATH_REGEXP.is_match(pattern)
-    {
-        return Err(Error(
-            line,
-            "Glob patterns must be relative to the project root".to_owned(),
-        ));
-    }
-    if pattern.contains(flow_common::files::PROJECT_ROOT_TOKEN) {
-        return Err(Error(
-            line,
-            "Glob patterns are already relative to the project root and must not use <PROJECT_ROOT>"
-                .to_owned(),
-        ));
-    }
-    flow_common::path_matcher::validate_glob(pattern)
-        .map_err(|error| Error(line, format!("Invalid glob pattern: {error}")))
+fn parse_flowconfig_glob(
+    line: u32,
+    pattern: String,
+    allow_negation: bool,
+) -> Result<FlowconfigGlobPattern, Error> {
+    FlowconfigGlobPattern::try_new(pattern, allow_negation)
+        .map_err(|error| Error(line, error.message()))
 }
 
 fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
     let includes = trim_numbered_lines(lines);
-    for (line, include) in &includes {
-        validate_flowconfig_glob(*line, include, false)?;
-    }
-    config.includes = includes.into_iter().map(|(_, include)| include).collect();
+    config.includes = includes
+        .into_iter()
+        .map(|(line, include)| parse_flowconfig_glob(line, include, false))
+        .collect::<Result<Vec<_>, Error>>()?;
     Ok(())
 }
 
@@ -3045,21 +3094,11 @@ fn parse_ignores(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(),
         .into_iter()
         .map(|(line, ignore)| {
             if let Some(caps) = mapping_re.captures(&ignore) {
-                let pattern = caps.get(1).unwrap().as_str();
-                validate_flowconfig_glob(line, pattern, true)?;
-                let pattern = if pattern.starts_with(GLOB_PREFIX) {
-                    pattern.to_owned()
-                } else {
-                    opts::ocaml_str_to_rust_regex(pattern)
-                };
+                let pattern =
+                    parse_flowconfig_glob(line, caps.get(1).unwrap().as_str().to_owned(), true)?;
                 Ok((pattern, Some(caps.get(2).unwrap().as_str().to_owned())))
             } else {
-                validate_flowconfig_glob(line, &ignore, true)?;
-                let pattern = if ignore.starts_with(GLOB_PREFIX) {
-                    ignore
-                } else {
-                    opts::ocaml_str_to_rust_regex(&ignore)
-                };
+                let pattern = parse_flowconfig_glob(line, ignore, true)?;
                 Ok((pattern, None))
             }
         })
@@ -3529,12 +3568,12 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
 
     fn write_ignores(
         out: &mut dyn std::io::Write,
-        ignores: &[(String, Option<String>)],
+        ignores: &[(FlowconfigGlobPattern, Option<String>)],
     ) -> std::io::Result<()> {
         for (ignore, backup_opt) in ignores {
             match backup_opt {
-                None => writeln!(out, "{}", ignore)?,
-                Some(backup) => writeln!(out, "{} -> {}", ignore, backup)?,
+                None => writeln!(out, "{}", ignore.source())?,
+                Some(backup) => writeln!(out, "{} -> {}", ignore.source(), backup)?,
             }
         }
         Ok(())
@@ -3618,7 +3657,9 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
         write_lines(out, &config.declarations)
     })?;
     section_header(out, "include")?;
-    write_lines(out, &config.includes)?;
+    for include in &config.includes {
+        writeln!(out, "{}", include.source())?;
+    }
     writeln!(out)?;
     section_header(out, "libs")?;
     write_libs(out, &config.libs)?;
@@ -3739,7 +3780,7 @@ mod tests {
     }
 
     #[test]
-    fn glob_patterns_are_preserved_without_regex_conversion() {
+    fn prefixed_and_unprefixed_globs_have_the_same_semantics() {
         let mut config = empty_config();
         let result = parse(
             &mut config,
@@ -3747,25 +3788,43 @@ mod tests {
                 (1, "[ignore]".to_owned()),
                 (2, "glob:generated/**/*.{js,jsx}".to_owned()),
                 (3, "glob:!generated/keep/**".to_owned()),
-                (4, ".*/legacy/.*".to_owned()),
+                (4, "legacy/**".to_owned()),
                 (5, "[include]".to_owned()),
-                (6, "glob:../shared/**/src/*.js".to_owned()),
+                (6, "../shared/**/src/*.js".to_owned()),
             ],
             true,
         );
 
         assert!(result.is_ok());
         assert_eq!(
-            config.ignores,
+            config
+                .ignores
+                .iter()
+                .map(|(pattern, backup)| (
+                    pattern.source(),
+                    pattern.pattern(),
+                    pattern.is_negated(),
+                    backup.as_deref(),
+                ))
+                .collect::<Vec<_>>(),
             vec![
-                ("glob:generated/**/*.{js,jsx}".to_owned(), None),
-                ("glob:!generated/keep/**".to_owned(), None),
-                (".*/legacy/.*".to_owned(), None),
+                (
+                    "glob:generated/**/*.{js,jsx}",
+                    "generated/**/*.{js,jsx}",
+                    false,
+                    None,
+                ),
+                ("glob:!generated/keep/**", "generated/keep/**", true, None,),
+                ("legacy/**", "legacy/**", false, None),
             ]
         );
         assert_eq!(
-            config.includes,
-            vec!["glob:../shared/**/src/*.js".to_owned()]
+            config
+                .includes
+                .iter()
+                .map(|pattern| (pattern.source(), pattern.pattern()))
+                .collect::<Vec<_>>(),
+            vec![("../shared/**/src/*.js", "../shared/**/src/*.js")]
         );
     }
 
@@ -3776,8 +3835,8 @@ mod tests {
             &mut config,
             vec![
                 (1, "[ignore]".to_owned()),
-                (2, "glob:valid/**".to_owned()),
-                (3, "glob:[invalid".to_owned()),
+                (2, "valid/**".to_owned()),
+                (3, "[invalid".to_owned()),
             ],
             true,
         );
@@ -3793,7 +3852,12 @@ mod tests {
 
     #[test]
     fn glob_patterns_must_be_project_relative() {
-        for pattern in ["glob:/absolute/**", "glob:<PROJECT_ROOT>/src/**"] {
+        for pattern in [
+            "/absolute/**",
+            "glob:/absolute/**",
+            "<PROJECT_ROOT>/src/**",
+            "glob:<PROJECT_ROOT>/src/**",
+        ] {
             let mut config = empty_config();
             let result = parse(
                 &mut config,

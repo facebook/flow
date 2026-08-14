@@ -600,7 +600,6 @@ fn kill_stale_server(
 
 pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> FileOptions {
     use flow_common::files;
-    use flow_common::path_matcher::FilePatternMatcher;
     use flow_common::path_matcher::PathMatcher;
     use flow_common::path_matcher::RootedGlob;
     use regex::Regex;
@@ -618,19 +617,13 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
         .ignores
         .iter()
         .map(|(path, backup)| {
-            let matcher = if let Some(glob) = path.strip_prefix("glob:") {
-                let glob = glob.strip_prefix('!').unwrap_or(glob);
-                FilePatternMatcher::Glob(
-                    RootedGlob::new(root, glob)
-                        .expect("flowconfig glob should have been validated while parsing"),
-                )
-            } else {
-                let pattern = path.strip_prefix('!').unwrap_or(path.as_str());
-                let expanded = files::expand_project_root_token(root, pattern);
-                let regex = Regex::new(&expanded).unwrap_or_else(|_| Regex::new("$^").unwrap());
-                FilePatternMatcher::Regex(regex)
-            };
-            ((path.clone(), backup.clone()), matcher)
+            let matcher = RootedGlob::new(root, path.pattern())
+                .expect("flowconfig glob should have been validated while parsing");
+            files::IgnorePattern {
+                negated: path.is_negated(),
+                backup: backup.clone(),
+                matcher,
+            }
         })
         .collect();
     let untyped: Vec<(String, Regex)> = flowconfig
@@ -676,13 +669,9 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
     let includes = {
         let mut path_matcher = PathMatcher::empty();
         for path in &flowconfig.includes {
-            if let Some(glob) = path.strip_prefix("glob:") {
-                path_matcher
-                    .add_glob(root, glob)
-                    .expect("flowconfig glob should have been validated while parsing");
-            } else {
-                path_matcher.add_path(&files::make_path_absolute(root, path));
-            }
+            path_matcher
+                .add_glob(root, path.pattern())
+                .expect("flowconfig glob should have been validated while parsing");
         }
         let mut implicitly_included: Vec<std::path::PathBuf> = if implicitly_include_root {
             vec![root.to_path_buf()]

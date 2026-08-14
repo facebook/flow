@@ -1,6 +1,6 @@
 [include]
 foo.js
-baz/
+baz/**
 
 [options]
 all=true

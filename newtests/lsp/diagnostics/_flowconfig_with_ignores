@@ -1,4 +1,4 @@
 [ignore]
-.*/ignoreme.js
+**/ignoreme.js
 
 [options]
