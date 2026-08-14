@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Deref;
 use std::ops::DerefMut;
@@ -697,6 +698,13 @@ where
     read.write_locs.as_slice()
 }
 
+/// The write keys reachable from `write_loc`, each reported once.
+///
+/// A refinement's `writes` is a shared sub-DAG, not a tree: merging two branches
+/// that each refined the same variable yields a phi whose arms both point at the
+/// same predecessor. Revisiting a node can only re-report keys already collected,
+/// so `seen` skips it -- without that, the walk costs time exponential in the
+/// depth of a refinement chain that crosses joins.
 pub fn writes_of_write_loc<L: LocSig>(
     for_type: bool,
     providers: &provider_api::Info<L>,
@@ -706,12 +714,16 @@ pub fn writes_of_write_loc<L: LocSig>(
         for_type: bool,
         providers: &provider_api::Info<L>,
         write_loc: &WriteLoc<L>,
+        seen: &mut HashSet<usize>,
         acc: &mut Vec<EnvKey<L>>,
     ) {
         match write_loc {
             WriteLoc::Refinement { writes, .. } => {
+                if !seen.insert(Rc::as_ptr(writes) as usize) {
+                    return;
+                }
                 for w in writes.iter() {
-                    collect(for_type, providers, w, acc);
+                    collect(for_type, providers, w, seen, acc);
                 }
             }
             WriteLoc::Write(r) => {
@@ -781,10 +793,19 @@ pub fn writes_of_write_loc<L: LocSig>(
     }
 
     let mut result = Vec::new();
-    collect(for_type, providers, write_loc, &mut result);
+    collect(
+        for_type,
+        providers,
+        write_loc,
+        &mut HashSet::new(),
+        &mut result,
+    );
     result
 }
 
+/// The refinement kinds applied along `write_loc`, each reachable node reported
+/// once. See `writes_of_write_loc` for why the shared sub-DAG must not be walked
+/// as a tree.
 pub fn refinements_of_write_loc<L, F>(
     refinement_of_id: F,
     write_loc: &WriteLoc<L>,
@@ -793,8 +814,12 @@ where
     L: Dupe + Eq + Ord + Hash,
     F: Fn(i32) -> Refinement<L> + Copy,
 {
-    fn collect<L, F>(refinement_of_id: F, write_loc: &WriteLoc<L>, acc: &mut Vec<RefinementKind<L>>)
-    where
+    fn collect<L, F>(
+        refinement_of_id: F,
+        write_loc: &WriteLoc<L>,
+        seen: &mut HashSet<usize>,
+        acc: &mut Vec<RefinementKind<L>>,
+    ) where
         L: Dupe + Eq + Ord + Hash,
         F: Fn(i32) -> Refinement<L> + Copy,
     {
@@ -806,8 +831,11 @@ where
             } => {
                 let refinement = refinement_of_id(*refinement_id);
                 acc.push(refinement.kind);
+                if !seen.insert(Rc::as_ptr(writes) as usize) {
+                    return;
+                }
                 for w in writes.iter() {
-                    collect(refinement_of_id, w, acc);
+                    collect(refinement_of_id, w, seen, acc);
                 }
             }
             _ => {}
@@ -815,7 +843,12 @@ where
     }
 
     let mut result = Vec::new();
-    collect(refinement_of_id, write_loc, &mut result);
+    collect(
+        refinement_of_id,
+        write_loc,
+        &mut HashSet::new(),
+        &mut result,
+    );
     result
 }
 

@@ -11910,35 +11910,51 @@ use env_api::Values;
 #[derive(Clone, Dupe)]
 pub struct RefinementOfId {
     refinement_heap: FlowOrdMap<RefinementId, RefinementChain>,
+    /// `And`/`Or` chains reference sub-chains by id, so the heap is a DAG that
+    /// expanding per lookup walks as a tree. Callers also ask for the same ids
+    /// repeatedly while building the def graph, and every level unions
+    /// `refining_locs`.
+    cache: Rc<RefCell<HashMap<usize, Refinement<ALoc>>>>,
 }
 
 impl RefinementOfId {
     pub fn new(refinement_heap: FlowOrdMap<RefinementId, RefinementChain>) -> Self {
-        Self { refinement_heap }
+        Self {
+            refinement_heap,
+            cache: Rc::new(RefCell::new(HashMap::new())),
+        }
     }
 
     pub fn get(&self, id: i32) -> Refinement<ALoc> {
+        self.get_by_id(id as usize)
+    }
+
+    fn get_by_id(&self, id: usize) -> Refinement<ALoc> {
+        if let Some(refinement) = self.cache.borrow().get(&id) {
+            return refinement.dupe();
+        }
         let chain = self
             .refinement_heap
-            .get(&RefinementId(id as usize))
-            .unwrap();
-        self.chain_to_refinement(chain)
+            .get(&RefinementId(id))
+            .expect("refinement id should be present in the refinement heap")
+            .dupe();
+        let refinement = self.chain_to_refinement(&chain);
+        self.cache.borrow_mut().insert(id, refinement.dupe());
+        refinement
     }
 
     fn chain_to_refinement(&self, chain: &RefinementChain) -> Refinement<ALoc> {
         match chain {
             RefinementChain::Base(refinement) => refinement.dupe(),
             RefinementChain::And(id1, id2) => {
-                let chain1 = self.refinement_heap.get(&RefinementId(*id1)).unwrap();
                 let Refinement {
                     refining_locs: locs1,
                     kind: ref1,
-                } = self.chain_to_refinement(chain1);
-                let chain2 = self.refinement_heap.get(&RefinementId(*id2)).unwrap();
+                } = self.get_by_id(*id1);
                 let Refinement {
                     refining_locs: locs2,
                     kind: ref2,
-                } = self.chain_to_refinement(chain2);
+                } = self.get_by_id(*id2);
                 let mut refining_locs = locs1;
                 refining_locs.extend(locs2);
                 Refinement {
@@ -11947,16 +11963,14 @@ impl RefinementOfId {
                 }
             }
             RefinementChain::Or(id1, id2) => {
-                let chain1 = self.refinement_heap.get(&RefinementId(*id1)).unwrap();
                 let Refinement {
                     refining_locs: locs1,
                     kind: ref1,
-                } = self.chain_to_refinement(chain1);
-                let chain2 = self.refinement_heap.get(&RefinementId(*id2)).unwrap();
+                } = self.get_by_id(*id1);
                 let Refinement {
                     refining_locs: locs2,
                     kind: ref2,
-                } = self.chain_to_refinement(chain2);
+                } = self.get_by_id(*id2);
                 let mut refining_locs = locs1;
                 refining_locs.extend(locs2);
                 Refinement {
@@ -11965,11 +11979,10 @@ impl RefinementOfId {
                 }
             }
             RefinementChain::Not(id1) => {
-                let chain1 = self.refinement_heap.get(&RefinementId(*id1)).unwrap();
                 let Refinement {
                     refining_locs: locs1,
                     kind: ref1,
-                } = self.chain_to_refinement(chain1);
+                } = self.get_by_id(*id1);
                 Refinement {
                     refining_locs: locs1,
                     kind: env_api::RefinementKind::NotR(Rc::new(ref1)),
