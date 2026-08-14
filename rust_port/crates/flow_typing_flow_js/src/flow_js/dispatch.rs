@@ -13,6 +13,7 @@ use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropNotReadableData;
@@ -9543,34 +9544,79 @@ fn __flow_impl<'cx>(
             let inst_call_t = inst_t.inst.inst_call_t;
             let inst_construct_t = inst_t.inst.inst_construct_t;
             let inst_dict = &inst_t.inst.inst_dict;
-            structural_subtype(
-                cx,
-                trace,
-                use_op.dupe(),
-                upper_inst_abstract,
-                strictness_kind,
-                ext_l,
-                reason_inst,
-                (
-                    own_props,
-                    proto_props,
-                    inst_call_t,
-                    inst_construct_t,
-                    inst_dict,
-                ),
-            )?;
-            match super_.deref() {
-                TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) | TypeInner::NullProtoT(_) => {}
-                _ => {
-                    rec_flow(
-                        cx,
-                        trace,
-                        (
-                            ext_l,
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), super_.dupe())),
-                        ),
-                    )?;
+            let check_structural_interface = |cx: &Context<'cx>| {
+                structural_subtype(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    upper_inst_abstract,
+                    strictness_kind,
+                    ext_l,
+                    reason_inst,
+                    (
+                        own_props,
+                        proto_props,
+                        inst_call_t,
+                        inst_construct_t,
+                        inst_dict,
+                    ),
+                )?;
+                match super_.deref() {
+                    TypeInner::ObjProtoT(_)
+                    | TypeInner::FunProtoT(_)
+                    | TypeInner::NullProtoT(_) => {}
+                    _ => {
+                        rec_flow(
+                            cx,
+                            trace,
+                            (
+                                ext_l,
+                                &UseT::new(UseTInner::UseT(use_op.dupe(), super_.dupe())),
+                            ),
+                        )?;
+                    }
                 }
+                Ok(())
+            };
+            if strictness_kind.is_typescript_loose()
+                && !speculation::speculating(cx)
+                && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, ext_l)
+                && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, ext_u)
+            {
+                match speculation_kit::try_singleton_custom_with_error(
+                    cx,
+                    Box::new(check_structural_interface),
+                )? {
+                    None => {}
+                    Some(error) => {
+                        let type_or_explanatory_desc = |t: &Type| {
+                            let desc = reason_of_t(t).desc(true);
+                            if desc.is_explanatory() {
+                                TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+                            } else {
+                                TypeOrTypeDescT::Type(t.dupe())
+                            }
+                        };
+                        add_output(
+                            cx,
+                            ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
+                                EIncompatibleTypesWithUseOpData {
+                                    use_op: use_op.dupe(),
+                                    lower_loc: type_util::loc_of_t(ext_l).dupe(),
+                                    lower_def_loc: type_util::ref_loc_of_t(ext_l).dupe(),
+                                    upper_loc: type_util::loc_of_t(ext_u).dupe(),
+                                    upper_def_loc: type_util::ref_loc_of_t(ext_u).dupe(),
+                                    lower_desc: type_or_explanatory_desc(ext_l),
+                                    upper_desc: type_or_explanatory_desc(ext_u),
+                                    explanation: None,
+                                    example: Some(error.0),
+                                },
+                            )),
+                        )?;
+                    }
+                }
+            } else {
+                check_structural_interface(cx)?;
             }
         }
         // Unwrap deep readonly

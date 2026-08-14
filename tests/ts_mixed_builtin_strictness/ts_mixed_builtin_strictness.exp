@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:2:1
 
-Cannot cast `tsDogFlowBox` to `FlowBuiltinBox` because in type argument `T` [1]: property `bark` is missing in
-`TsAnimal` [2] but exists in `TsDog` [3]. [incompatible-type]
+Cannot cast `tsDogFlowBox` to `FlowBuiltinBox` because in type argument `T` [1]: `TsAnimal` [2] is incompatible with
+`TsDog` [3]. For example, property `bark` is missing in `TsAnimal` [2] but exists in `TsDog` [3]. [incompatible-type]
 
    test.js:2:1
     2| tsDogFlowBox as FlowBuiltinBox<TsAnimal>; // ERROR: Flow generic with TypeScript arguments.

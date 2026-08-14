@@ -1,7 +1,8 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:20:11
 
-Cannot cast `fetchLike()` to `Promise` because in type argument `R` [1] > property `headers`: property `constructor` is
-missing in `Headers` [2] but exists in `RequiredHeaders` [3]. [incompatible-type]
+Cannot cast `fetchLike()` to `Promise` because in type argument `R` [1]: `Response` [2] is incompatible with
+`ExpectedResponse` [3]. For example, property `constructor` is missing in `Headers` [4] but exists in
+`RequiredHeaders` [5]. [incompatible-type]
 
    test.js:20:11
      20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
@@ -11,12 +12,18 @@ References:
    <BUILTINS>/core.js:2294:24
    2294| declare class Promise<+R = unknown> {
                                 ^ [1]
+   lib.d.ts:20:39
+     20| declare function fetchLike(): Promise<Response>;
+                                               ^^^^^^^^ [2]
+   test.js:20:34
+     20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
+                                          ^^^^^^^^^^^^^^^^ [3]
    lib.d.ts:14:21
      14|   readonly headers: Headers;
-                             ^^^^^^^ [2]
+                             ^^^^^^^ [4]
    test.js:13:12
      13|   headers: RequiredHeaders;
-                    ^^^^^^^^^^^^^^^ [3]
+                    ^^^^^^^^^^^^^^^ [5]
 
 
 

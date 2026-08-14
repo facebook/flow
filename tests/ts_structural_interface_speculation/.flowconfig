@@ -1,0 +1,9 @@
+[libs]
+interfaces.d.ts
+
+[options]
+all=true
+experimental.ts_syntax=true
+experimental.tslib_syntax=true
+module.file_ext=.js
+module.file_ext=.d.ts

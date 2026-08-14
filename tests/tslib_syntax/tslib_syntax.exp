@@ -399,8 +399,8 @@ References:
 
 Error ---------------------------------------------------------------------------- declare_type_only_export_usage.js:4:2
 
-Cannot cast object literal to `I` because property `baz` is missing in object literal [1] but exists in `I` [2].
-[incompatible-type]
+Cannot cast object literal to `I` because object literal [1] is incompatible with `I` [2]. For example, property `baz`
+is missing in object literal [1] but exists in `I` [2]. [incompatible-type]
 
    declare_type_only_export_usage.js:4:2
    4| ({}) as I; // ERROR - missing baz

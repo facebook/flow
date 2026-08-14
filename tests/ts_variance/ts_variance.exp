@@ -18,8 +18,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- flow_consumer.ts:28:44
 
-Cannot assign `tsDogFlowBox` to `tsAnimalFlowBox` because in type argument `T` [1]: property `bark` is missing in
-`TsAnimal` [2] but exists in `TsDog` [3]. [incompatible-type]
+Cannot assign `tsDogFlowBox` to `tsAnimalFlowBox` because in type argument `T` [1]: `TsAnimal` [2] is incompatible with
+`TsDog` [3]. For example, property `bark` is missing in `TsAnimal` [2] but exists in `TsDog` [3]. [incompatible-type]
 
    flow_consumer.ts:28:44
    28| const tsAnimalFlowBox: FlowBox<TsAnimal> = tsDogFlowBox; // ERROR: Flow generic with TypeScript arguments
@@ -39,8 +39,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- method_bivariance.ts:50:29
 
-Cannot assign object literal to `a` because in property `cb` > the first parameter: property `bark` is missing in
-`Animal` [1] but exists in `Dog` [2]. [incompatible-type]
+Cannot assign object literal to `a` because in property `cb` > the first parameter: `Animal` [1] is incompatible with
+`Dog` [2]. For example, property `bark` is missing in `Animal` [1] but exists in `Dog` [2]. [incompatible-type]
 
    method_bivariance.ts:50:29
    50| const a: ArrowHolder = {cb: (x: Dog): void => {}}; // ERROR: contravariance
@@ -166,8 +166,9 @@ References:
 
 Error -------------------------------------------------------------------------------------- method_bivariance.ts:166:40
 
-Cannot assign object literal to `oneSidedErr` because in property `cb` > the first parameter: property `bark` is missing
-in `Animal` [1] but exists in `Dog` [2]. [incompatible-type]
+Cannot assign object literal to `oneSidedErr` because in property `cb` > the first parameter: `Animal` [1] is
+incompatible with `Dog` [2]. For example, property `bark` is missing in `Animal` [1] but exists in `Dog` [2].
+[incompatible-type]
 
    method_bivariance.ts:166:40
    166| const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
@@ -270,8 +271,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- type_arg_variance.ts:33:30
 
-Cannot assign `animalProducer` to `p_err` because in type argument `T` [1]: property `bark` is missing in `Animal` [2]
-but exists in `Dog` [3]. [incompatible-type]
+Cannot assign `animalProducer` to `p_err` because in type argument `T` [1]: `Animal` [2] is incompatible with `Dog` [3].
+For example, property `bark` is missing in `Animal` [2] but exists in `Dog` [3]. [incompatible-type]
 
    type_arg_variance.ts:33:30
    33| const p_err: Producer<Dog> = animalProducer; // ERROR: Animal not assignable to Dog (covariance)
@@ -291,8 +292,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- type_arg_variance.ts:43:33
 
-Cannot assign `dogConsumer` to `c_err` because in type argument `T` [1]: property `bark` is missing in `Animal` [2] but
-exists in `Dog` [3]. [incompatible-type]
+Cannot assign `dogConsumer` to `c_err` because in type argument `T` [1]: `Animal` [2] is incompatible with `Dog` [3].
+For example, property `bark` is missing in `Animal` [2] but exists in `Dog` [3]. [incompatible-type]
 
    type_arg_variance.ts:43:33
    43| const c_err: Consumer<Animal> = dogConsumer; // ERROR: Dog not assignable to Animal (contravariance)

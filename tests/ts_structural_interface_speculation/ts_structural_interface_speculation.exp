@@ -1,0 +1,45 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:1:45
+
+Cannot assign `resolvedLower` to `interfaceMissing` because `ResolvedLower` [1] is incompatible with
+`RequiredInterface` [2]. For example, property `ownFirst` is missing in `ResolvedLower` [1] but exists in
+`RequiredInterface` [2]. [incompatible-type]
+
+   test.js:1:45
+    1| const interfaceMissing: RequiredInterface = resolvedLower; // ERROR: one error for the resolved structural interface mismatch
+                                                   ^^^^^^^^^^^^^
+
+References:
+   interfaces.d.ts:31:30
+   31| declare const resolvedLower: ResolvedLower;
+                                    ^^^^^^^^^^^^^ [1]
+   test.js:1:25
+    1| const interfaceMissing: RequiredInterface = resolvedLower; // ERROR: one error for the resolved structural interface mismatch
+                               ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:2:50
+
+Cannot assign `incompatibleLower` to `interfaceIncompatible` because `IncompatibleLower` [1] is incompatible with
+`RequiredInterface` [2]. For example, `number` [3] is incompatible with `string` [4]. [incompatible-type]
+
+   test.js:2:50
+    2| const interfaceIncompatible: RequiredInterface = incompatibleLower; // ERROR: one error for the first resolved property incompatibility
+                                                        ^^^^^^^^^^^^^^^^^
+
+References:
+   interfaces.d.ts:32:34
+   32| declare const incompatibleLower: IncompatibleLower;
+                                        ^^^^^^^^^^^^^^^^^ [1]
+   test.js:2:30
+    2| const interfaceIncompatible: RequiredInterface = incompatibleLower; // ERROR: one error for the first resolved property incompatibility
+                                    ^^^^^^^^^^^^^^^^^ [2]
+   interfaces.d.ts:23:13
+   23|   ownFirst: number;
+                   ^^^^^^ [3]
+   interfaces.d.ts:14:13
+   14|   ownFirst: string;
+                   ^^^^^^ [4]
+
+
+
+Found 2 errors

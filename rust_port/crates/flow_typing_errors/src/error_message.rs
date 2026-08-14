@@ -1851,6 +1851,7 @@ pub struct EIncompatibleTypesWithUseOpData<L: Dupe + PartialOrd + Ord + PartialE
     pub lower_desc: TypeOrTypeDesc<L>,
     pub upper_desc: TypeOrTypeDesc<L>,
     pub explanation: Option<Explanation<L>>,
+    pub example: Option<Box<ErrorMessage<L>>>,
 }
 
 // Source references preserve provenance while type descriptions keep distinct inferred branches
@@ -1865,6 +1866,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTyp
             && self.lower_desc == other.lower_desc
             && self.upper_desc == other.upper_desc
             && self.explanation == other.explanation
+            && self.example == other.example
     }
 }
 
@@ -1882,6 +1884,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
         self.lower_desc.hash(state);
         self.upper_desc.hash(state);
         self.explanation.hash(state);
+        self.example.hash(state);
     }
 }
 
@@ -1904,6 +1907,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypesWith
             .then_with(|| self.lower_desc.cmp(&other.lower_desc))
             .then_with(|| self.upper_desc.cmp(&other.upper_desc))
             .then_with(|| self.explanation.cmp(&other.explanation))
+            .then_with(|| self.example.cmp(&other.example))
     }
 }
 
@@ -4196,6 +4200,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_desc,
                 upper_desc,
                 explanation,
+                example,
             }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
                 use_op: map_use_op(use_op),
                 lower_loc: f(lower_loc),
@@ -4205,6 +4210,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_desc),
                 upper_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_desc),
                 explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
+                example: example.map(|example| Box::new(map_branch(*example))),
             })),
 
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
@@ -5773,6 +5779,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_desc,
                 upper_desc,
                 explanation,
+                example,
             }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
                 use_op: map_use_op(&f, use_op),
                 lower_loc,
@@ -5782,6 +5789,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_desc: f(lower_desc),
                 upper_desc: f(upper_desc),
                 explanation,
+                example: example
+                    .map(|example| Box::new(Self::convert_type_to_type_desc(f.clone(), *example))),
             })),
 
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
@@ -6995,6 +7004,18 @@ pub struct UseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub explanation: Option<Explanation<L>>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct IncompatibleTypesWithExampleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub lower_loc: L,
+    pub upper_loc: L,
+    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub use_op: VirtualUseOp<L>,
+    pub explanation: Option<Explanation<L>>,
+    pub example: Box<ErrorMessage<L>>,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -7029,6 +7050,7 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     PropsExtraAgainstExactObject(Box<PropsExtraAgainstExactObjectData<L>>),
     Normal(Message<L>),
     UseOp(Box<UseOpData<L>>),
+    IncompatibleTypesWithExample(Box<IncompatibleTypesWithExampleData<L>>),
     PropPolarityMismatch(Box<PropPolarityMismatchData<L>>),
 }
 
@@ -7409,20 +7431,35 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_desc,
                 use_op,
                 explanation,
+                example,
                 ..
-            }) => UseOp(Box::new(UseOpData {
-                loc: lower_loc.dupe(),
-                message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
-                    MessageIncompatibleGeneralWithPrintedTypesData {
+            }) => match example {
+                Some(example) => {
+                    IncompatibleTypesWithExample(Box::new(IncompatibleTypesWithExampleData {
+                        loc: lower_loc.dupe(),
                         lower_loc: lower_def_loc,
                         upper_loc: upper_def_loc,
                         lower_desc: expect_type_desc(lower_desc),
                         upper_desc: expect_type_desc(upper_desc),
-                    },
-                )),
-                use_op,
-                explanation,
-            })),
+                        use_op,
+                        explanation,
+                        example,
+                    }))
+                }
+                None => UseOp(Box::new(UseOpData {
+                    loc: lower_loc.dupe(),
+                    message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
+                        MessageIncompatibleGeneralWithPrintedTypesData {
+                            lower_loc: lower_def_loc,
+                            upper_loc: upper_def_loc,
+                            lower_desc: expect_type_desc(lower_desc),
+                            upper_desc: expect_type_desc(upper_desc),
+                        },
+                    )),
+                    use_op,
+                    explanation,
+                })),
+            },
 
             ErrorMessage::EUnsupportedSetProto(_) => {
                 Normal(Message::MessageCannotMutateThisPrototype)

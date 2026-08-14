@@ -19,8 +19,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:35:1
 
-Cannot cast `s` to `HasFoo` because property `foo` is missing in `String` [1] but exists in `HasFoo` [2].
-[incompatible-type]
+Cannot cast `s` to `HasFoo` because `String` [1] is incompatible with `HasFoo` [2]. For example, property `foo` is
+missing in `String` [1] but exists in `HasFoo` [2]. [incompatible-type]
 
    primitive_to_interface.ts:35:1
    35| s satisfies HasFoo; // ERROR: `foo` missing on String wrapper
@@ -37,8 +37,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:36:1
 
-Cannot cast `bi` to `HasFoo` because property `foo` is missing in `BigInt` [1] but exists in `HasFoo` [2].
-[incompatible-type]
+Cannot cast `bi` to `HasFoo` because `BigInt` [1] is incompatible with `HasFoo` [2]. For example, property `foo` is
+missing in `BigInt` [1] but exists in `HasFoo` [2]. [incompatible-type]
 
    primitive_to_interface.ts:36:1
    36| bi satisfies HasFoo; // ERROR: `foo` missing on BigInt wrapper
@@ -55,8 +55,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- primitive_to_interface.ts:37:1
 
-Cannot cast `sym` to `HasFoo` because property `foo` is missing in `Symbol` [1] but exists in `HasFoo` [2].
-[incompatible-type]
+Cannot cast `sym` to `HasFoo` because `Symbol` [1] is incompatible with `HasFoo` [2]. For example, property `foo` is
+missing in `Symbol` [1] but exists in `HasFoo` [2]. [incompatible-type]
 
    primitive_to_interface.ts:37:1
    37| sym satisfies HasFoo; // ERROR: `foo` missing on Symbol wrapper

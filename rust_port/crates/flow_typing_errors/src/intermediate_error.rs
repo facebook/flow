@@ -152,6 +152,7 @@ use crate::error_message::IncompatibleEnumData;
 use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
+use crate::error_message::IncompatibleTypesWithExampleData;
 use crate::error_message::IncompatibleUseData;
 use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
@@ -706,6 +707,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     lower_desc,
                     upper_desc,
                     explanation,
+                    example,
                 },
             ) => {
                 let (
@@ -730,6 +732,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                             lower_desc: lower_desc_new,
                             upper_desc: upper_desc_new,
                             explanation: explanation.clone(),
+                            example: example.clone(),
                         },
                     )))
             }
@@ -927,6 +930,62 @@ where
                         message,
                         frames,
                         explanations,
+                    };
+                    acc.push((
+                        score,
+                        IntermediateError {
+                            kind: error.kind,
+                            loc: error.loc,
+                            root: error.root,
+                            error_code: error.error_code,
+                            message: msg,
+                            misplaced_source_file: error.misplaced_source_file,
+                            unsuppressable: error.unsuppressable,
+                        },
+                    ));
+                }
+                ErrorMessage::SingletonMessageWithExample {
+                    message,
+                    frames: inner_frames,
+                    explanations: inner_explanations,
+                    example,
+                } => {
+                    let frames = match (inner_frames, acc_frames.is_empty()) {
+                        (Some(inner), _) => Some(
+                            acc_frames
+                                .iter()
+                                .flat_map(|v| v.iter().cloned())
+                                .chain(inner)
+                                .collect(),
+                        ),
+                        (None, false) => {
+                            Some(acc_frames.iter().flat_map(|v| v.iter().cloned()).collect())
+                        }
+                        (None, true) => None,
+                    };
+
+                    let explanations = match (inner_explanations, acc_explanations.is_empty()) {
+                        (Some(inner), _) => Some(
+                            acc_explanations
+                                .iter()
+                                .flat_map(|v| v.iter().cloned())
+                                .chain(inner)
+                                .collect(),
+                        ),
+                        (None, false) => Some(
+                            acc_explanations
+                                .iter()
+                                .flat_map(|v| v.iter().cloned())
+                                .collect(),
+                        ),
+                        (None, true) => None,
+                    };
+
+                    let msg = ErrorMessage::SingletonMessageWithExample {
+                        message,
+                        frames,
+                        explanations,
+                        example,
                     };
                     acc.push((
                         score,
@@ -3734,6 +3793,54 @@ where
                     )),
                 )
             }
+        }
+
+        (
+            None,
+            FriendlyMessageRecipe::IncompatibleTypesWithExample(
+                box IncompatibleTypesWithExampleData {
+                    loc,
+                    lower_loc,
+                    upper_loc,
+                    lower_desc,
+                    upper_desc,
+                    use_op,
+                    explanation,
+                    example,
+                },
+            ),
+        ) => {
+            use super::flow_error::error_of_msg;
+
+            let mut outer = mk_use_op_error(
+                loc_of_aloc(&loc),
+                use_op,
+                explanation,
+                Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
+                    MessageIncompatibleGeneralWithPrintedTypesData {
+                        lower_loc,
+                        upper_loc,
+                        lower_desc,
+                        upper_desc,
+                    },
+                )),
+            );
+            let example_error = error_of_msg(source_file.dupe(), *example);
+            let example = make_intermediate_error(loc_of_aloc.clone(), true, &example_error);
+            outer.message = match outer.message {
+                ErrorMessage::SingletonMessage {
+                    message,
+                    frames,
+                    explanations,
+                } => ErrorMessage::SingletonMessageWithExample {
+                    message,
+                    frames,
+                    explanations,
+                    example: Box::new(example),
+                },
+                message => message,
+            };
+            outer
         }
 
         (
@@ -10319,6 +10426,16 @@ where
         use flow_common_errors::error_utils::mk_error as flow_mk_error;
         use flow_common_errors::error_utils::mk_speculation_error as flow_mk_speculation_error;
 
+        fn first_singleton_message<L: Dupe>(error: &IntermediateError<L>) -> Option<&Message<L>> {
+            match &error.message {
+                ErrorMessage::SingletonMessage { message, .. }
+                | ErrorMessage::SingletonMessageWithExample { message, .. } => Some(message),
+                ErrorMessage::SpeculationMessage { branches, .. } => branches
+                    .first()
+                    .and_then(|(_, error)| first_singleton_message(error)),
+            }
+        }
+
         let root = error.root.as_ref().map(|(loc, root_msg)| {
             let (kind, msg) = root_msg_to_root_kind_and_friendly_msgs(root_msg);
             (loc.dupe(), kind, msg)
@@ -10341,6 +10458,39 @@ where
                     .map(|exps| exps.iter().map(explanation_to_friendly_msgs).collect());
 
                 let friendly_message = msg_to_friendly_msgs(message);
+
+                flow_mk_error(
+                    Some(error.kind),
+                    root,
+                    friendly_frames,
+                    friendly_explanations,
+                    error.loc.dupe(),
+                    error.error_code,
+                    friendly_message,
+                )
+            }
+
+            ErrorMessage::SingletonMessageWithExample {
+                message,
+                frames,
+                explanations,
+                example,
+            } => {
+                let friendly_frames: Option<
+                    Vec<(Option<friendly::Message<Loc>>, friendly::Message<Loc>)>,
+                > = frames
+                    .as_ref()
+                    .map(|fs| fs.iter().map(|f| frame_to_friendly_msgs(true, f)).collect());
+
+                let friendly_explanations: Option<Vec<friendly::Message<Loc>>> = explanations
+                    .as_ref()
+                    .map(|exps| exps.iter().map(explanation_to_friendly_msgs).collect());
+
+                let mut friendly_message = msg_to_friendly_msgs(message);
+                if let Some(example_message) = first_singleton_message(example) {
+                    friendly_message.push(friendly::text(". For example, "));
+                    friendly_message.extend(msg_to_friendly_msgs(example_message));
+                }
 
                 flow_mk_error(
                     Some(error.kind),

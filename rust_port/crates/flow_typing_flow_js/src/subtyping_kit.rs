@@ -6515,6 +6515,7 @@ pub fn rec_sub_t<'cx>(
                         upper_desc: type_or_explanatory_desc(u),
                         use_op,
                         explanation: None,
+                        example: None,
                     },
                 )),
             )

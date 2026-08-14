@@ -225,7 +225,7 @@ enum CaseSpec<'cx, 'a> {
 /// singleton speculation that is propagating through an outer speculation.
 enum SpecMatchError {
     Speculative(SpeculativeError),
-    Singleton,
+    Singleton(SpeculativeError),
     LimitExceeded,
     PropagatedSingleton,
     Cancel(flow_utils_concurrency::worker_cancel::WorkerCanceled),
@@ -261,7 +261,7 @@ impl SpecMatchError {
             SpecMatchError::Cancel(c) => FlowJsException::WorkerCanceled(c),
             SpecMatchError::TimedOut(t) => FlowJsException::TimedOut(t),
             SpecMatchError::DebugThrow { loc } => FlowJsException::DebugThrow { loc },
-            SpecMatchError::Singleton => {
+            SpecMatchError::Singleton(_) => {
                 unreachable!("non-singleton spec produced singleton error")
             }
         }
@@ -274,7 +274,7 @@ impl SpecMatchError {
             SpecMatchError::Cancel(c) => FlowJsException::WorkerCanceled(c),
             SpecMatchError::TimedOut(t) => FlowJsException::TimedOut(t),
             SpecMatchError::DebugThrow { loc } => FlowJsException::DebugThrow { loc },
-            SpecMatchError::Singleton | SpecMatchError::PropagatedSingleton => {
+            SpecMatchError::Singleton(_) | SpecMatchError::PropagatedSingleton => {
                 FlowJsException::SpeculationSingletonError
             }
         }
@@ -433,6 +433,23 @@ pub fn try_singleton_custom_throw_on_failure<'cx, 'a>(
     .map_err(SpecMatchError::into_flow_js_exception)
 }
 
+/// Runs a custom singleton speculation, committing its constraints on success
+/// and returning the first error after rolling its constraints back on failure.
+pub fn try_singleton_custom_with_error<'cx, 'a>(
+    cx: &Context<'cx>,
+    f: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>,
+) -> Result<Option<SpeculativeError>, FlowJsException> {
+    match speculative_matches(
+        cx,
+        DepthTrace::dummy_trace(),
+        CasesSpec::SingletonCustomCase(Some(f)),
+    ) {
+        Ok(()) => Ok(None),
+        Err(SpecMatchError::Singleton(error)) => Ok(Some(error)),
+        Err(other) => Err(other.into_flow_js_exception()),
+    }
+}
+
 pub fn try_unify<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -557,13 +574,19 @@ where
             }
             CasesSpec::SingletonCase(..)
             | CasesSpec::SingletonCustomCase(..)
-            | CasesSpec::SingletonUnifyCase(..) => match msgs.len() {
-                1 => Err(SpecMatchError::Singleton),
-                n => panic!(
-                    "SingletonCase should not have exactly one error, but we got {}",
-                    n
-                ),
-            },
+            | CasesSpec::SingletonUnifyCase(..) => {
+                let n = msgs.len();
+                let mut msgs = msgs.into_iter();
+                match (msgs.next(), msgs.next()) {
+                    (Some(msg), None) => {
+                        Err(SpecMatchError::Singleton(SpeculativeError(Box::new(msg))))
+                    }
+                    _ => panic!(
+                        "SingletonCase should not have exactly one error, but we got {}",
+                        n
+                    ),
+                }
+            }
             CasesSpec::CustomCases {
                 use_op,
                 no_match_error_loc,

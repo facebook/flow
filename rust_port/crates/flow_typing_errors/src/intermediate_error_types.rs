@@ -2512,6 +2512,12 @@ pub enum ErrorMessage<L: Dupe> {
         frames: Option<Vec<Frame<L>>>,
         explanations: Option<Vec<Explanation<L>>>,
     },
+    SingletonMessageWithExample {
+        message: Message<L>,
+        frames: Option<Vec<Frame<L>>>,
+        explanations: Option<Vec<Explanation<L>>>,
+        example: Box<IntermediateError<L>>,
+    },
     SpeculationMessage {
         frames: Vec<Frame<L>>,
         explanations: Vec<Explanation<L>>,
