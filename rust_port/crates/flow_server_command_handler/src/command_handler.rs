@@ -23,7 +23,7 @@ use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::Transaction;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_clock;
 use flow_server_env::flow_lsp_conversions;
@@ -2725,10 +2725,10 @@ fn save_state(
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
-    let transaction = Transaction::new(genv.committed_heap.dupe());
+    let transaction = ActiveTransaction::new(genv.committed_heap.dupe());
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
-        &transaction,
+        &transaction.handle(),
         env,
         &genv.options,
     )
@@ -3342,7 +3342,8 @@ pub fn handle_ephemeral_command_for_standalone(
     command: server_prot::request::Command,
 ) -> EphemeralParallelizableResult {
     let options = &*genv.options;
-    let transaction = Transaction::new(genv.committed_heap.dupe());
+    let active_transaction = ActiveTransaction::new(genv.committed_heap.dupe());
+    let transaction = active_transaction.handle();
     match command {
         server_prot::request::Command::APPLY_CODE_ACTION {
             input,
@@ -5854,7 +5855,7 @@ fn handle_persistent_rename(
             &Arc<flow_parser::ast::Program<flow_parser::loc::Loc, flow_parser::loc::Loc>>,
         >,
               refs: Vec<flow_services_references::find_refs_types::SingleRef>| {
-            let transaction = Transaction::new(committed_heap_for_closure.dupe());
+            let transaction = ActiveTransaction::new(committed_heap_for_closure.dupe());
             let mut ref_map: std::collections::BTreeMap<
                 flow_parser::loc::Loc,
                 flow_services_references::find_refs_types::RefKind,
@@ -6133,7 +6134,7 @@ fn handle_persistent_rage(
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let root = genv.options.root.display().to_string();
-    let transaction = Transaction::new(genv.committed_heap.dupe());
+    let transaction = ActiveTransaction::new(genv.committed_heap.dupe());
     let items = collect_rage(&genv.options, env, &transaction, None)
         .into_iter()
         .map(|(title, data)| lsp::rage::RageItem {
@@ -7010,10 +7011,9 @@ fn mk_parallelizable_persistent(
     let wait_for_recheck = options.wait_for_recheck;
     if wait_for_recheck {
         PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-            let transaction = flow_heap::parsing_heaps::Transaction::new(env.heap.dupe());
-            let _release_guard = transaction.release_on_drop();
+            let transaction = flow_heap::parsing_heaps::ActiveTransaction::new(env.heap.dupe());
 
-            f(env, &transaction)
+            f(env, &transaction.handle())
         }))
     } else {
         PersistentCommandHandler::HandleParallelizablePersistent(f)
@@ -7365,12 +7365,11 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = Transaction::new(committed_heap.dupe());
-                let _release_guard = transaction.release_on_drop();
+                let transaction = ActiveTransaction::new(committed_heap.dupe());
                 Ok(handle_persistent_find_references(
                     &options_arc,
                     env,
-                    transaction.dupe(),
+                    transaction.handle(),
                     client_id,
                     id,
                     &params,
@@ -7415,12 +7414,11 @@ fn get_persistent_handler(
             let options_arc = Arc::new(genv.options.clone());
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = Transaction::new(committed_heap.dupe());
-                let _release_guard = transaction.release_on_drop();
+                let transaction = ActiveTransaction::new(committed_heap.dupe());
                 Ok(handle_persistent_rename(
                     &options_arc,
                     env,
-                    transaction.dupe(),
+                    transaction.handle(),
                     client_id,
                     id,
                     &params,
@@ -7648,12 +7646,11 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = Transaction::new(committed_heap.dupe());
-                let _release_guard = transaction.release_on_drop();
+                let transaction = ActiveTransaction::new(committed_heap.dupe());
                 Ok(handle_persistent_provide_document_paste_edits(
                     &options_arc,
                     env,
-                    transaction.dupe(),
+                    transaction.handle(),
                     id,
                     &params,
                     metadata,

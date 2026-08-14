@@ -20,7 +20,7 @@ use flow_data_structure_wrapper::overlay_map::OverlayMap;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::heap_state::CommittedHeap;
-use flow_heap::parsing_heaps::Transaction;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::file_key::FileKey;
 use flow_services_coverage::FileCoverage;
 use flow_services_export::export_search::ExportSearch;
@@ -457,7 +457,7 @@ impl EnvTransaction {
     }
 
     /// Commits the heap and Env fields together at the consuming transaction boundary.
-    pub fn commit_with_transaction(self, transaction: Arc<Transaction>) -> EnvRef {
+    pub fn commit_with_transaction(self, transaction: ActiveTransaction) -> EnvRef {
         transaction.commit(&self.env.heap);
         self.commit()
     }
@@ -517,7 +517,7 @@ impl EnvTransaction {
     }
 
     /// Commits the heap and consumes the remaining Env transaction into an owned Env.
-    pub fn into_env_with_transaction(self, transaction: Arc<Transaction>) -> Env {
+    pub fn into_env_with_transaction(self, transaction: ActiveTransaction) -> Env {
         transaction.commit(&self.env.heap);
         self.into_env()
     }
@@ -580,7 +580,7 @@ mod tests {
     #[test]
     fn heap_changes_publish_only_at_transaction_commit() {
         let env = env_ref();
-        let heap_transaction = Transaction::new(env.heap.dupe());
+        let heap_transaction = ActiveTransaction::new(env.heap.dupe());
         let env_transaction = EnvTransaction::new(env.dupe());
         let file = source_file("file");
 
@@ -596,7 +596,7 @@ mod tests {
         assert!(heap_transaction.get_parse(&file).is_some());
 
         let committed_env = env_transaction.commit_with_transaction(heap_transaction);
-        let reader = Transaction::new(committed_env.heap.dupe());
+        let reader = ActiveTransaction::new(committed_env.heap.dupe());
 
         assert!(
             reader

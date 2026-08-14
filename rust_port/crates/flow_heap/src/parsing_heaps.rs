@@ -38,6 +38,7 @@ use crate::resolved_requires::Dependency;
 use crate::resolved_requires::DependencyTarget;
 use crate::resolved_requires::ResolvedModule;
 use crate::resolved_requires::ResolvedRequires;
+pub use crate::transaction::ActiveTransaction;
 pub use crate::transaction::HashStats;
 pub use crate::transaction::Transaction;
 
@@ -940,15 +941,15 @@ mod tests {
         Arc::new(CommittedHeap::default())
     }
 
-    /// Stands in for a dispatcher serving one LSP request: it owns the transaction, runs
-    /// the workload, then hands the committed-heap guard back. The returned `Arc` is what
-    /// the request's typed artifacts keep alive in an IDE cache.
+    /// Stands in for a dispatcher serving one LSP request. The returned `Arc` is what the
+    /// request's typed artifacts keep alive in an IDE cache.
     fn serve_one_request(heap: &Arc<CommittedHeap>) -> Arc<Transaction> {
-        let transaction = Transaction::new(heap.dupe());
+        let transaction = ActiveTransaction::new(heap.dupe());
         // The workload reads through it and caches what it produced.
         let _ = transaction.get_parse(&source_file("read_by_the_workload.js"));
-        transaction.release();
-        transaction
+        let cached = transaction.handle();
+        drop(transaction);
+        cached
     }
 
     /// Regression test for the "collating errors" hang.
@@ -959,9 +960,9 @@ mod tests {
     /// `state.write()` forever — the server reported "collating errors" indefinitely at 0%
     /// CPU while the guard sat on an idle thread.
     ///
-    /// The invariant that prevents it: a dispatcher releases the guard when its workload
-    /// returns, so a cache may keep the `Arc<Transaction>` but never the guard. This fails
-    /// if any dispatcher stops calling `release`.
+    /// The invariant that prevents it: `ActiveTransaction` releases the long-lived guard when its
+    /// workload scope ends. A cache may keep the `Arc<Transaction>` and reacquire the heap for an
+    /// individual lazy read, but it never keeps a guard that blocks a recheck.
     #[test]
     fn a_cached_transaction_does_not_block_the_next_recheck() {
         let heap = committed_heap();
@@ -971,9 +972,41 @@ mod tests {
             1,
             "the cache should be the transaction's sole owner"
         );
+        assert_eq!(
+            heap.state
+                .read()
+                .active_transactions
+                .load(Ordering::Acquire),
+            0,
+            "a cached handle must not keep the transaction active for heap GC"
+        );
+        let cached_read = cached_by_the_ide.committed_reader();
+        assert_eq!(
+            heap.state
+                .read()
+                .active_transactions
+                .load(Ordering::Acquire),
+            1,
+            "a detached read must keep the heap active only for the read's lifetime"
+        );
+        drop(cached_read);
+        assert_eq!(
+            heap.state
+                .read()
+                .active_transactions
+                .load(Ordering::Acquire),
+            0,
+            "finishing a detached read must release the heap for GC"
+        );
+        assert!(
+            cached_by_the_ide
+                .get_parse(&source_file("another_request.js"))
+                .is_none(),
+            "a cached transaction should remain readable while the committed heap is unchanged"
+        );
 
         // The next recheck publishes.
-        let recheck = Transaction::new(heap.dupe());
+        let recheck = ActiveTransaction::new(heap.dupe());
         recheck.add_unparsed(source_file("changed.js"), 42, None);
         let heap_for_commit = heap.dupe();
         let (tx, rx) = std::sync::mpsc::channel();
@@ -997,9 +1030,9 @@ mod tests {
     #[test]
     fn an_unreleased_transaction_blocks_a_commit() {
         let heap = committed_heap();
-        let reading = Transaction::new(heap.dupe());
+        let reading = ActiveTransaction::new(heap.dupe());
 
-        let committing = Transaction::new(heap.dupe());
+        let committing = ActiveTransaction::new(heap.dupe());
         committing.add_unparsed(source_file("b.js"), 42, None);
         let heap_for_commit = heap.dupe();
         let (tx, rx) = std::sync::mpsc::channel();
@@ -1013,7 +1046,7 @@ mod tests {
             rx.recv_timeout(Duration::from_millis(500)).is_err(),
             "a commit must wait while a transaction is still reading the base"
         );
-        reading.release();
+        drop(reading);
         assert!(
             rx.recv_timeout(Duration::from_secs(30)).is_ok(),
             "the commit should proceed once the guard is released"
@@ -1023,7 +1056,7 @@ mod tests {
     #[test]
     fn writes_are_overlay_only_until_commit() {
         let heap = committed_heap();
-        let transaction = Transaction::new(heap.dupe());
+        let transaction = ActiveTransaction::new(heap.dupe());
         let file = source_file("a.js");
 
         transaction.add_unparsed(file.dupe(), 1, None);
@@ -1033,7 +1066,7 @@ mod tests {
 
         transaction.commit(&heap);
 
-        let reader = Transaction::new(heap.dupe());
+        let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(1));
         assert_eq!(heap.heap_size(), 1);
     }
@@ -1042,27 +1075,27 @@ mod tests {
     fn dropping_rolls_back_and_retry_gets_a_fresh_overlay() {
         let heap = committed_heap();
         let file = source_file("a.js");
-        let failed = Transaction::new(heap.dupe());
+        let failed = ActiveTransaction::new(heap.dupe());
         failed.add_unparsed(file.dupe(), 1, None);
         drop(failed);
 
-        let retry = Transaction::new(heap.dupe());
+        let retry = ActiveTransaction::new(heap.dupe());
         assert_eq!(retry.get_file_hash(&file), None);
         retry.add_unparsed(file.dupe(), 2, None);
         retry.commit(&heap);
 
-        let reader = Transaction::new(heap.dupe());
+        let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(2));
     }
 
     #[test]
     fn commit_rejects_retained_transaction_handles() {
         let heap = committed_heap();
-        let transaction = Transaction::new(heap.dupe());
-        let retained = transaction.dupe();
+        let transaction = ActiveTransaction::new(heap.dupe());
+        let retained = transaction.handle();
 
         let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-            transaction.dupe().commit(&heap);
+            transaction.handle().commit(&heap);
         }));
         assert!(result.is_err());
         drop(retained);
@@ -1072,12 +1105,12 @@ mod tests {
     #[test]
     fn gc_stays_idle_while_a_transaction_exists() {
         let heap = committed_heap();
-        let seed = Transaction::new(heap.dupe());
+        let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(source_file("a.js"), 1, None);
         seed.commit(&heap);
         heap.state.read().gc_state.lock().new_alloc_size = 1;
 
-        let transaction = Transaction::new(heap.dupe());
+        let transaction = ActiveTransaction::new(heap.dupe());
         assert!(heap.collect_slice(1));
         assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Idle);
         drop(transaction);
@@ -1090,10 +1123,10 @@ mod tests {
     fn compact_removes_committed_deleted_file() {
         let heap = committed_heap();
         let file = source_file("a.js");
-        let insert = Transaction::new(heap.dupe());
+        let insert = ActiveTransaction::new(heap.dupe());
         insert.add_unparsed(file.dupe(), 1, None);
         insert.commit(&heap);
-        let delete = Transaction::new(heap.dupe());
+        let delete = ActiveTransaction::new(heap.dupe());
         delete.clear_file(file, None);
         delete.commit(&heap);
 
@@ -1106,7 +1139,7 @@ mod tests {
         let heap = committed_heap();
         let file = source_file("a.js");
         let haste = HasteModuleInfo::mk(FlowSmolStr::new("A"));
-        let write = Transaction::new(heap.dupe());
+        let write = ActiveTransaction::new(heap.dupe());
         write.add_unparsed(file.dupe(), 42, Some(haste.dupe()));
         write.set_haste_module_provider(&haste, Some(file.dupe()));
         write
@@ -1121,7 +1154,7 @@ mod tests {
         loaded_heap
             .load_heap(&mut Cursor::new(bytes))
             .expect("heap should deserialize");
-        let loaded = Transaction::new(loaded_heap);
+        let loaded = ActiveTransaction::new(loaded_heap);
 
         assert_eq!(loaded.get_file_hash(&file), Some(42));
         assert_eq!(loaded.get_haste_info(&file), Some(haste));
@@ -1133,7 +1166,7 @@ mod tests {
         let file = source_file("a.js");
         let even_dependent = source_file("even.js");
         let odd_dependent = source_file("odd.js");
-        let seed = Transaction::new(heap.dupe());
+        let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(file.dupe(), 0, None);
         seed.heap_writer()
             .writer()
@@ -1183,7 +1216,7 @@ mod tests {
 
         start.wait();
         for file_hash in 1..=100 {
-            let transaction = Transaction::new(heap.dupe());
+            let transaction = ActiveTransaction::new(heap.dupe());
             transaction.add_unparsed(file.dupe(), file_hash, None);
             {
                 let writer_guard = transaction.heap_writer();
@@ -1208,14 +1241,14 @@ mod tests {
     fn transaction_pins_committed_base_until_drop() {
         let heap = committed_heap();
         let file = source_file("a.js");
-        let seed = Transaction::new(heap.dupe());
+        let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(file.dupe(), 1, None);
         seed.commit(&heap);
 
-        let reader = Transaction::new(heap.dupe());
+        let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(1));
 
-        let writer = Transaction::new(heap.dupe());
+        let writer = ActiveTransaction::new(heap.dupe());
         writer.add_unparsed(file.dupe(), 2, None);
         let writer_heap = heap.dupe();
         let (started_tx, started_rx) = std::sync::mpsc::channel();
@@ -1245,7 +1278,7 @@ mod tests {
             .expect("writer should finish after the reader is dropped");
         writer_thread.join().expect("writer should not panic");
 
-        let reader = Transaction::new(heap);
+        let reader = ActiveTransaction::new(heap);
         assert_eq!(reader.get_file_hash(&file), Some(2));
     }
 
@@ -1253,14 +1286,14 @@ mod tests {
     fn failed_heap_load_preserves_committed_heap() {
         let heap = committed_heap();
         let file = source_file("a.js");
-        let write = Transaction::new(heap.dupe());
+        let write = ActiveTransaction::new(heap.dupe());
         write.add_unparsed(file.dupe(), 42, None);
         write.commit(&heap);
 
         let result = heap.load_heap(&mut Cursor::new(Vec::<u8>::new()));
 
         assert!(result.is_err());
-        let read = Transaction::new(heap);
+        let read = ActiveTransaction::new(heap);
         assert_eq!(read.get_file_hash(&file), Some(42));
     }
 
@@ -1268,7 +1301,7 @@ mod tests {
     fn dropping_successful_heap_load_preserves_committed_heap() {
         let saved_heap = committed_heap();
         let saved_file = source_file("saved.js");
-        let saved_write = Transaction::new(saved_heap.dupe());
+        let saved_write = ActiveTransaction::new(saved_heap.dupe());
         saved_write.add_unparsed(saved_file.dupe(), 42, None);
         saved_write.commit(&saved_heap);
         let mut bytes = Vec::new();
@@ -1278,18 +1311,18 @@ mod tests {
 
         let heap = committed_heap();
         let committed_file = source_file("committed.js");
-        let committed_write = Transaction::new(heap.dupe());
+        let committed_write = ActiveTransaction::new(heap.dupe());
         committed_write.add_unparsed(committed_file.dupe(), 7, None);
         committed_write.commit(&heap);
 
-        let load = Transaction::new(heap.dupe());
+        let load = ActiveTransaction::new(heap.dupe());
         load.load_heap(&mut Cursor::new(bytes))
             .expect("replacement heap should deserialize");
         assert_eq!(load.get_file_hash(&saved_file), Some(42));
         assert_eq!(load.get_file_hash(&committed_file), None);
         drop(load);
 
-        let reader = Transaction::new(heap);
+        let reader = ActiveTransaction::new(heap);
         assert_eq!(reader.get_file_hash(&committed_file), Some(7));
         assert_eq!(reader.get_file_hash(&saved_file), None);
     }
@@ -1298,7 +1331,7 @@ mod tests {
     fn committing_successful_heap_load_replaces_committed_heap() {
         let saved_heap = committed_heap();
         let saved_file = source_file("saved.js");
-        let saved_write = Transaction::new(saved_heap.dupe());
+        let saved_write = ActiveTransaction::new(saved_heap.dupe());
         saved_write.add_unparsed(saved_file.dupe(), 42, None);
         saved_write.commit(&saved_heap);
         let mut bytes = Vec::new();
@@ -1308,23 +1341,23 @@ mod tests {
 
         let heap = committed_heap();
         let old_file = source_file("old.js");
-        let old_write = Transaction::new(heap.dupe());
+        let old_write = ActiveTransaction::new(heap.dupe());
         old_write.add_unparsed(old_file.dupe(), 7, None);
         old_write.commit(&heap);
 
-        let load = Transaction::new(heap.dupe());
+        let load = ActiveTransaction::new(heap.dupe());
         load.load_heap(&mut Cursor::new(bytes))
             .expect("replacement heap should deserialize");
         load.commit(&heap);
 
-        let reader = Transaction::new(heap);
+        let reader = ActiveTransaction::new(heap);
         assert_eq!(reader.get_file_hash(&old_file), None);
         assert_eq!(reader.get_file_hash(&saved_file), Some(42));
     }
 
     #[test]
     fn provider_candidates_follow_latest_haste_info_in_transaction() {
-        let transaction = Transaction::new(committed_heap());
+        let transaction = ActiveTransaction::new(committed_heap());
         let file = source_file("a.js");
         let old_haste = HasteModuleInfo::mk(FlowSmolStr::new("Old"));
         let new_haste = HasteModuleInfo::mk(FlowSmolStr::new("New"));

@@ -40,6 +40,7 @@ use flow_data_structure_wrapper::overlay_map::OverlayMapBase;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::heap_state::CommittedHeap;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
@@ -2331,11 +2332,11 @@ pub fn parse_and_update_dependency_info(
     files_to_force: CheckedSet,
     mut env: EnvTransaction,
 ) -> Result<EnvRef, RecheckError> {
-    let heap_transaction = Transaction::new(committed_heap.dupe());
+    let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
     let result = with_transaction_result("parse and update dependency info", |transaction| {
         recheck::parse_and_update_dependency_info(
             pool,
-            &heap_transaction,
+            &heap_transaction.handle(),
             options,
             updates,
             transaction,
@@ -3254,12 +3255,12 @@ pub fn init_from_saved_state(
 pub fn handle_updates_since_saved_state(
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
-    mut transaction: Arc<Transaction>,
+    mut transaction: ActiveTransaction,
     options: &Arc<Options>,
     libs_ok: bool,
     updates: &CheckedSet,
     env: Env,
-) -> (Env, Arc<Transaction>) {
+) -> (Env, ActiveTransaction) {
     let should_force_recheck = options.saved_state_force_recheck;
     // We know that all the files in updates have changed since the saved state was generated. We
     // have two ways to deal with them:
@@ -3280,7 +3281,7 @@ pub fn handle_updates_since_saved_state(
         let mut env_transaction = EnvTransaction::new(Arc::new(env));
         let (_log_recheck_event, _summary_info, _find_ref_results) = recheck_impl(
             pool,
-            &transaction,
+            &transaction.handle(),
             options,
             updates,
             &find_ref_request,
@@ -3304,7 +3305,7 @@ pub fn handle_updates_since_saved_state(
             match with_transaction_result("lazy init update deps", |side_effects| {
                 recheck::parse_and_update_dependency_info(
                     pool,
-                    &transaction,
+                    &transaction.handle(),
                     options,
                     &updated_files,
                     side_effects,
@@ -3318,7 +3319,7 @@ pub fn handle_updates_since_saved_state(
                 }
                 Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
                     transaction.committed_heap().clear_reader_cache();
-                    transaction = Transaction::new(committed_heap.dupe());
+                    transaction = ActiveTransaction::new(committed_heap.dupe());
                     let dependencies = changed_files.into_iter().collect();
                     updated_files.add(None, None, Some(dependencies));
                 }
@@ -3548,7 +3549,7 @@ pub fn load_saved_state(
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
-) -> Result<(Arc<Transaction>, LoadedSavedState, CheckedSet), String> {
+) -> Result<(ActiveTransaction, LoadedSavedState, CheckedSet), String> {
     // Does a best-effort job to load a saved state. If it fails, returns None
     let (fetch_profiling, fetch_result) =
         flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
@@ -3601,7 +3602,7 @@ pub fn load_saved_state(
                     return Err(msg);
                 }
             };
-            let transaction = Transaction::new(committed_heap.dupe());
+            let transaction = ActiveTransaction::new(committed_heap.dupe());
             let updates = match process_saved_state_updates(
                 options,
                 flow_saved_state::non_flowlib_libs(&saved_state),
@@ -3642,8 +3643,14 @@ pub fn init(
     let (transaction, env, libs_ok) = match load_saved_state(pool, committed_heap, options) {
         Ok((transaction, saved_state, updates)) => {
             // We loaded a saved state successfully! We are awesome!
-            let (env, libs_ok) =
-                init_from_saved_state(pool, &transaction, options, saved_state, &updates, None);
+            let (env, libs_ok) = init_from_saved_state(
+                pool,
+                &transaction.handle(),
+                options,
+                saved_state,
+                &updates,
+                None,
+            );
             let (env, transaction) = handle_updates_since_saved_state(
                 pool,
                 committed_heap,
@@ -3658,9 +3665,9 @@ pub fn init(
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
             flow_hh_logger::info!("Failed to load saved state: {}", msg);
-            let transaction = Transaction::new(committed_heap.dupe());
+            let transaction = ActiveTransaction::new(committed_heap.dupe());
             let (env, libs_ok) =
-                init_from_scratch(options, pool, &transaction, options.root.as_path());
+                init_from_scratch(options, pool, &transaction.handle(), options.root.as_path());
             (transaction, env, libs_ok)
         }
     };
@@ -3671,13 +3678,13 @@ pub fn init(
         (env, None)
     } else if options.lazy_mode {
         match focus_targets {
-            None => libdef_check_for_lazy_init(options, pool, &transaction, env)?,
+            None => libdef_check_for_lazy_init(options, pool, &transaction.handle(), env)?,
             Some(focus_targets) => {
-                focus_check_for_init(options, pool, &transaction, focus_targets, env)?
+                focus_check_for_init(options, pool, &transaction.handle(), focus_targets, env)?
             }
         }
     } else {
-        full_check_for_init(options, pool, &transaction, env)?
+        full_check_for_init(options, pool, &transaction.handle(), env)?
     };
 
     let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
@@ -3725,7 +3732,7 @@ pub fn reinit(
     flow_hh_logger::info!("Reinitializing from saved state");
     let (env, _libs_ok) = init_from_saved_state(
         pool,
-        &transaction,
+        &transaction.handle(),
         options,
         saved_state,
         &updates_since_saved_state,
@@ -3786,14 +3793,14 @@ pub fn reinit_full_check(
     ),
     RecheckError,
 > {
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     transaction.committed_heap().clear_reader_cache();
     flow_hh_logger::info!("Reiniting with a full check.");
     let env = {
         let (env, _libs_ok) = with_transaction_result("partial-reinit", |_transaction| {
             Ok::<_, std::convert::Infallible>(init_with_initial_state(
                 pool,
-                &transaction,
+                &transaction.handle(),
                 options,
                 || env.dependency_info.dupe(),
                 env.errors().duplicate_providers.clone(),
@@ -3875,11 +3882,11 @@ pub fn recheck(
                 env,
             )
         } else {
-            let heap_transaction = Transaction::new(committed_heap.dupe());
+            let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             let (log_recheck_event, recheck_stats, find_ref_results) = recheck_impl(
                 pool,
-                &heap_transaction,
+                &heap_transaction.handle(),
                 options,
                 updates,
                 find_ref_request,
@@ -3963,11 +3970,11 @@ pub fn recheck(
         } else {
             let env_for_reinit = env.dupe();
             let files_to_force_for_reinit = files_to_force.dupe();
-            let heap_transaction = Transaction::new(committed_heap.dupe());
+            let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             match recheck_impl(
                 pool,
-                &heap_transaction,
+                &heap_transaction.handle(),
                 options,
                 updates,
                 find_ref_request,
@@ -4263,23 +4270,23 @@ pub fn check_once(
     Option<String>, /* lazy_msg */
 ) {
     let total_start = Instant::now();
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
 
     // OCaml full-check still routes through the dummy saved-state fetcher, whose
     // fetch function contributes a `FetchSavedState` child profile.
     with_timer(&options, "FetchSavedState", || {});
 
-    let (env, libs_ok) = init_from_scratch(&options, pool, &transaction, root);
+    let (env, libs_ok) = init_from_scratch(&options, pool, &transaction.handle(), root);
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {
-                None => libdef_check_for_lazy_init(&options, pool, &transaction, env),
+                None => libdef_check_for_lazy_init(&options, pool, &transaction.handle(), env),
                 Some(focus_targets) => {
-                    focus_check_for_init(&options, pool, &transaction, focus_targets, env)
+                    focus_check_for_init(&options, pool, &transaction.handle(), focus_targets, env)
                 }
             }
         } else {
-            full_check_for_init(&options, pool, &transaction, env)
+            full_check_for_init(&options, pool, &transaction.handle(), env)
         }
         .expect("Unexpected file changes during full check");
         env
@@ -4287,7 +4294,7 @@ pub fn check_once(
         env
     };
     let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
 
     let total_time = total_start.elapsed();
     if !options.quiet && !options.profile {

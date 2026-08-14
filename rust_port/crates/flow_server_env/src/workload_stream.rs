@@ -24,6 +24,7 @@ use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use dupe::Dupe;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_heap::parsing_heaps::Transaction;
 
 use crate::server_env::Env;
@@ -37,10 +38,8 @@ pub struct Workload {
 }
 
 /// Parallelizable workloads are handed the transaction to read through rather than
-/// starting their own. Its owner is the dispatcher that invoked the workload, which
-/// releases the committed-heap guard once the workload returns — see
-/// `rechecker::parallelizable_workload_loop`. That is the single point at which the guard
-/// is given back, so a workload whose results get cached cannot pin it past the request.
+/// starting their own. The dispatcher keeps the active transaction for the duration of the
+/// workload, so cached transaction handles cannot pin the committed-heap guard past the request.
 pub type ParallelizableWorkloadHandler = Box<dyn FnOnce(&Env, &Arc<Transaction>) + Send>;
 
 pub struct ParallelizableWorkload {
@@ -142,9 +141,8 @@ impl WorkloadStream {
         Workload {
             workload_should_be_cancelled: pw.parallelizable_workload_should_be_cancelled,
             workload_handler: Box::new(move |env: EnvRef| {
-                let transaction = Transaction::new(env.heap.dupe());
-                let _release_guard = transaction.release_on_drop();
-                handler(&env, &transaction);
+                let transaction = ActiveTransaction::new(env.heap.dupe());
+                handler(&env, &transaction.handle());
                 env
             }),
         }

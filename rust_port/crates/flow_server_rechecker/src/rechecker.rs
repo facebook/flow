@@ -17,7 +17,7 @@ use dupe::Dupe;
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_heap::heap_state::CommittedHeap;
-use flow_heap::parsing_heaps::Transaction;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_server_env::error_collator;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_rpc;
@@ -52,7 +52,7 @@ mod parallelizable_workload_loop {
     use std::sync::atomic::Ordering;
 
     use dupe::Dupe;
-    use flow_heap::parsing_heaps::Transaction;
+    use flow_heap::parsing_heaps::ActiveTransaction;
     use flow_server_env::server_env;
     use flow_server_env::server_monitor_listener_state;
 
@@ -70,14 +70,10 @@ mod parallelizable_workload_loop {
             match server_monitor_listener_state::pop_next_parallelizable_workload() {
                 Some(workload) => {
                     flow_hh_logger::info!("Running a parallel workload");
-                    // This loop owns the transaction for the workload it dispatches, and
-                    // gives the committed-heap guard back as soon as the workload returns.
-                    // Results the workload caches keep the `Arc<Transaction>` alive, which
-                    // is fine — what must not survive the request is the guard, because the
-                    // recheck driving this loop cannot publish until every guard is gone.
-                    let transaction = Transaction::new(env.heap.dupe());
-                    let _release_guard = transaction.release_on_drop();
-                    (workload.parallelizable_workload_handler)(env, &transaction);
+                    // The active transaction gives the committed-heap guard back when the
+                    // workload returns. Cached `Arc<Transaction>` handles remain inert.
+                    let transaction = ActiveTransaction::new(env.heap.dupe());
+                    (workload.parallelizable_workload_handler)(env, &transaction.handle());
                 }
                 None => {}
             }
@@ -172,7 +168,7 @@ pub fn process_updates(
     committed_heap: &Arc<CommittedHeap>,
     updates: &BTreeSet<String>,
 ) -> Updates {
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     match recheck_updates::process_updates(
         skip_incompatible,
         options,

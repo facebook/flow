@@ -693,7 +693,7 @@ where
 
         let print_errors = profiling.with_timer(false, "FormatErrors", || {
             let transaction =
-                flow_heap::parsing_heaps::Transaction::new(genv.committed_heap.clone());
+                flow_heap::parsing_heaps::ActiveTransaction::new(genv.committed_heap.clone());
             let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { transaction.loc_of_aloc(aloc) };
             let get_ast =
                 |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { transaction.get_ast(file) };

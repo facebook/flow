@@ -14,6 +14,7 @@ use std::hash::Hasher;
 use std::io;
 use std::io::Read;
 use std::io::Write;
+use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::sync::mpsc;
@@ -46,45 +47,131 @@ use crate::resolved_requires::DependencyTarget;
 use crate::resolved_requires::ResolvedModule;
 use crate::resolved_requires::ResolvedRequires;
 
+/// A shared handle to the heap snapshot owned by an [`ActiveTransaction`].
+///
+/// Cloning this handle does not extend the active lifetime. After the `ActiveTransaction` is
+/// dropped, a read-only handle can reacquire the committed heap for an individual read, but it
+/// cannot write.
 pub struct Transaction {
     heap: Arc<CommittedHeap>,
     overlay: HeapOverlay,
-    /// The committed-heap read guard, held for the duration of a unit of work so the base
-    /// cannot change underneath it, and `None` between units of work.
+    /// The committed-heap read guard, held for the active lifetime of a unit of work so the
+    /// base cannot change underneath it, and `None` after its owner is dropped. Detached reads
+    /// take a short-lived guard instead.
     ///
     /// Publishing a transaction needs the matching write guard, so a holder that keeps this
     /// while idle blocks every future commit. Cached IDE artifacts legitimately outlive the
     /// request that built them and keep holding the `Arc<Transaction>`, so the guard — not
-    /// the transaction — is what has to be given back. `release` is that handoff, and its
-    /// caller is the single point at which it happens.
+    /// the transaction — is what has to be given back. `ActiveTransaction` makes that handoff
+    /// structural by releasing the guard when the unit-of-work scope ends.
     committed: RwLock<Option<CommittedHeapReadGuard>>,
 }
 
-/// Releases a transaction's committed-heap read guard when its dispatcher scope ends.
-pub struct TransactionReleaseGuard<'a>(&'a Transaction);
+/// Owns the active lifetime of a transaction.
+///
+/// Dropping this owner releases the committed-heap read guard even if cached artifacts keep
+/// `Arc<Transaction>` handles alive. The owner is deliberately not cloneable: code may clone the
+/// transaction handle for lazy artifacts, but only the lexical unit of work owns the long-lived
+/// guard.
+pub struct ActiveTransaction(Option<Arc<Transaction>>);
 
-impl Drop for TransactionReleaseGuard<'_> {
+impl Deref for ActiveTransaction {
+    type Target = Transaction;
+
+    fn deref(&self) -> &Self::Target {
+        self.0
+            .as_deref()
+            .expect("an active transaction cannot be used after commit")
+    }
+}
+
+impl ActiveTransaction {
+    pub fn new(heap: Arc<CommittedHeap>) -> Self {
+        let guard = heap.read_arc_recursive();
+        guard.active_transactions.fetch_add(1, Ordering::AcqRel);
+        Self(Some(Arc::new(Transaction {
+            heap,
+            overlay: HeapOverlay::new(),
+            committed: RwLock::new(Some(guard)),
+        })))
+    }
+
+    pub fn handle(&self) -> Arc<Transaction> {
+        self.0
+            .as_ref()
+            .expect("an active transaction cannot be used after commit")
+            .dupe()
+    }
+
+    pub fn commit(mut self, destination: &Arc<CommittedHeap>) {
+        self.0
+            .take()
+            .expect("an active transaction may only be committed once")
+            .commit(destination);
+    }
+}
+
+impl Drop for ActiveTransaction {
     fn drop(&mut self) {
-        self.0.release();
+        if let Some(transaction) = self.0.as_ref() {
+            transaction.release();
+        }
     }
 }
 
 /// Borrows the committed heap for the duration of one read. Produced by
 /// [`Transaction::latest_reader`] / [`Transaction::committed_reader`].
 pub struct HeapAccess<'a> {
-    slot: parking_lot::RwLockReadGuard<'a, Option<CommittedHeapReadGuard>>,
+    state: CommittedStateAccess<'a>,
     overlay: Option<&'a HeapOverlay>,
 }
 
 impl HeapAccess<'_> {
     pub fn reader(&self) -> HeapReader<'_> {
-        let state = self.slot.as_ref().expect(
-            "transaction was read after its guard was released; a transaction may only \
-             be read within the unit of work its dispatcher created it for",
-        );
         match self.overlay {
-            Some(overlay) => HeapReader::transactional(&state.data, overlay),
-            None => HeapReader::committed(&state.data),
+            Some(overlay) => HeapReader::transactional(&self.state.data, overlay),
+            None => HeapReader::committed(&self.state.data),
+        }
+    }
+}
+
+enum CommittedStateAccess<'a> {
+    Active(parking_lot::RwLockReadGuard<'a, Option<CommittedHeapReadGuard>>),
+    Detached(DetachedCommittedState),
+}
+
+struct DetachedCommittedState(CommittedHeapReadGuard);
+
+impl DetachedCommittedState {
+    fn new(state: CommittedHeapReadGuard) -> Self {
+        state.active_transactions.fetch_add(1, Ordering::AcqRel);
+        Self(state)
+    }
+}
+
+impl std::ops::Deref for DetachedCommittedState {
+    type Target = crate::heap_state::CommittedHeapState;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Drop for DetachedCommittedState {
+    fn drop(&mut self) {
+        self.0.active_transactions.fetch_sub(1, Ordering::AcqRel);
+    }
+}
+
+impl std::ops::Deref for CommittedStateAccess<'_> {
+    type Target = crate::heap_state::CommittedHeapState;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Active(slot) => slot
+                .as_ref()
+                .expect("an active transaction should hold a committed heap guard"),
+            Self::Detached(state) => state,
         }
     }
 }
@@ -708,61 +795,54 @@ fn decompress_block(compressed: &[u8]) -> io::Result<Vec<u8>> {
 }
 
 impl Transaction {
-    pub fn new(heap: Arc<CommittedHeap>) -> Arc<Self> {
-        let guard = heap.read_arc_recursive();
-        guard.active_transactions.fetch_add(1, Ordering::AcqRel);
-        Arc::new(Self {
-            heap,
-            overlay: HeapOverlay::new(),
-            committed: RwLock::new(Some(guard)),
-        })
+    /// Give the long-lived committed-heap read guard back so a commit can proceed.
+    fn release(&self) {
+        if let Some(state) = self.committed.write().take() {
+            state.active_transactions.fetch_sub(1, Ordering::AcqRel);
+        }
     }
 
-    /// Give the committed-heap read guard back so a commit can proceed. The transaction
-    /// stays alive as a handle for whatever cached it, but must not be read again.
-    pub fn release(&self) {
-        *self.committed.write() = None;
-    }
+    fn committed_state(&self) -> CommittedStateAccess<'_> {
+        let active = self.committed.read_recursive();
+        if active.is_some() {
+            return CommittedStateAccess::Active(active);
+        }
+        drop(active);
 
-    /// Returns a guard that releases this transaction when the dispatcher scope ends.
-    pub fn release_on_drop(&self) -> TransactionReleaseGuard<'_> {
-        TransactionReleaseGuard(self)
+        assert!(
+            self.overlay.is_empty(),
+            "a released transaction with an overlay cannot be read"
+        );
+        let detached = DetachedCommittedState::new(self.heap.read_arc_recursive());
+        CommittedStateAccess::Detached(detached)
     }
 
     pub(crate) fn with_committed_state<R>(
         &self,
         f: impl FnOnce(&crate::heap_state::CommittedHeapState) -> R,
     ) -> R {
-        let slot = self.committed.read_recursive();
-        let state = slot.as_ref().expect(
-            "transaction was read after its guard was released; a transaction may only \
-             be read within the unit of work its dispatcher created it for",
-        );
-        f(state)
+        let state = self.committed_state();
+        f(&state)
     }
 
     pub(crate) fn with_reader_cache<R>(
         &self,
         f: impl FnOnce(&flow_heap_serialization::ReaderCache) -> R,
     ) -> R {
-        let slot = self.committed.read_recursive();
-        let state = slot.as_ref().expect(
-            "transaction was read after its guard was released; a transaction may only \
-             be read within the unit of work its dispatcher created it for",
-        );
+        let state = self.committed_state();
         f(&state.reader_cache)
     }
 
     pub(crate) fn latest_reader(&self) -> HeapAccess<'_> {
         HeapAccess {
-            slot: self.committed.read_recursive(),
+            state: self.committed_state(),
             overlay: Some(&self.overlay),
         }
     }
 
     pub(crate) fn committed_reader(&self) -> HeapAccess<'_> {
         HeapAccess {
-            slot: self.committed.read_recursive(),
+            state: self.committed_state(),
             overlay: None,
         }
     }
@@ -1810,11 +1890,11 @@ impl HeapWrite<'_> {
 
 impl Drop for Transaction {
     fn drop(&mut self) {
+        self.release();
         let state = self.heap.read_arc_recursive();
         if !self.overlay.is_empty() {
             state.reader_cache.clear();
         }
         self.overlay.clear_latest_entries_parallel();
-        state.active_transactions.fetch_sub(1, Ordering::AcqRel);
     }
 }

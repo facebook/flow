@@ -18,7 +18,7 @@ use dupe::Dupe;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::parsing_heaps::Transaction;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -1198,8 +1198,8 @@ where
         let should_print_summary = options.profile;
         let profiling = profiling_start("Codemod", should_print_summary);
         extract_flowlibs_or_exit(options);
-        let heap_transaction = Transaction::new(_genv.committed_heap.clone());
-        let transaction = &heap_transaction;
+        let heap_transaction = ActiveTransaction::new(_genv.committed_heap.clone());
+        let transaction = heap_transaction.handle();
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
@@ -1207,7 +1207,7 @@ where
         let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
             &options_arc,
             pool,
-            transaction,
+            &transaction,
             root,
         );
         let file_options = &options.file_options;
@@ -1223,7 +1223,9 @@ where
         let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
         log_input_files(&roots);
         let results =
-            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, transaction).await?;
+            TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, &transaction)
+                .await?;
+        drop(transaction);
         heap_transaction.commit(&_genv.committed_heap);
         Ok(((), (env, results)))
     }
@@ -1266,7 +1268,7 @@ where
             Arc::new(env),
         );
         let (_, _, _, env) = recheck_result.expect("recheck failed");
-        let transaction = Transaction::new(_genv.committed_heap.clone());
+        let transaction = ActiveTransaction::new(_genv.committed_heap.clone());
         log_input_files(&_roots);
         let results = TRC::merge_and_check(
             &env,
@@ -1275,7 +1277,7 @@ where
             &profiling,
             _roots,
             _iteration,
-            &transaction,
+            &transaction.handle(),
         )
         .await?;
         let env = EnvTransaction::new(env).into_env();
@@ -1363,10 +1365,11 @@ where
             flow_common::files::ordered_and_unordered_lib_paths(file_options);
         let filename_set = get_target_filename_set(file_options, &all_unordered_libs, all, _roots);
         let next = next_of_filename_set(workers, &filename_set);
-        let reader = Transaction::new(_genv.committed_heap.clone());
+        let reader = ActiveTransaction::new(_genv.committed_heap.clone());
+        let reader_handle = reader.handle();
         let parse_results = flow_parsing::parsing_service::parse_with_defaults(
             workers.as_ref().unwrap(),
-            &reader,
+            &reader_handle,
             &Arc::new(options.clone()),
             Arc::new(all_unordered_libs.iter().map(FlowSmolStr::new).collect()),
             &[],
@@ -1445,14 +1448,15 @@ where
         let mut options = options.clone();
         options.all = true;
         extract_flowlibs_or_exit(&options);
-        let transaction = Transaction::new(_genv.committed_heap.clone());
+        let transaction = ActiveTransaction::new(_genv.committed_heap.clone());
+        let reader = transaction.handle();
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
         let (env, _libs_ok) = flow_services_inference::type_service::init_from_scratch(
             &options_arc,
             pool,
-            &transaction,
+            &reader,
             root,
         );
         let file_options = &options.file_options;
@@ -1467,7 +1471,6 @@ where
         let filename_set: BTreeSet<FileKey> =
             filename_set.intersection(&env_files).cloned().collect();
         let _next = next_of_filename_set(workers, &filename_set);
-        let reader = transaction.clone();
         C::init(&reader);
         let reader_for_ccx = reader.clone();
         let mk_ccx =

@@ -1,0 +1,4 @@
+/* @flow */
+import type {DepType} from 'dep-module';
+
+export type T = DepType;

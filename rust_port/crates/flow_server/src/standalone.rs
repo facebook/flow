@@ -24,7 +24,7 @@ use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_heap::heap_state::CommittedHeap;
-use flow_heap::parsing_heaps::Transaction;
+use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::file_key::FileKey;
 use flow_server_command_handler::command_handler;
 use flow_server_env::error_collator;
@@ -491,11 +491,9 @@ fn process_persistent_workloads(
                     && let Some(workload) =
                         server_monitor_listener_state::pop_next_parallelizable_workload()
                 {
-                    // Same ownership rule as the rechecker's loop: this dispatcher owns
-                    // the transaction and releases its guard when the workload returns.
-                    let transaction = Transaction::new(env.heap.dupe());
-                    let _release_guard = transaction.release_on_drop();
-                    (workload.parallelizable_workload_handler)(env, &transaction);
+                    // Keep the active transaction in the dispatcher scope.
+                    let transaction = ActiveTransaction::new(env.heap.dupe());
+                    (workload.parallelizable_workload_handler)(env, &transaction.handle());
                     true
                 } else {
                     false
@@ -1432,7 +1430,7 @@ fn handle_status(
     offset_kind: flow_parser::offset_utils::OffsetKind,
     lazy_mode: bool,
 ) -> ServerResponse {
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     let (errors, warnings, suppressed_errors) = if options.include_suppressions {
         error_collator::get(env)
     } else {
@@ -1563,7 +1561,7 @@ fn handle_save_state(
     committed_heap: &Arc<CommittedHeap>,
     out: SaveStateOut,
 ) -> ServerResponse {
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     let path = match out {
         SaveStateOut::File(path) => PathBuf::from(flow_common::files::imaginary_realpath(&path)),
         SaveStateOut::Scm => match flow_saved_state::output_filename(options) {
@@ -1589,7 +1587,7 @@ fn handle_save_state(
             };
         }
     }
-    let result = match flow_saved_state::save(&path, &transaction, env, options) {
+    let result = match flow_saved_state::save(&path, &transaction.handle(), env, options) {
         Ok(()) => Ok(format!("Created saved-state file `{}`", path.display())),
         Err(reason) => Err(format!(
             "Failed to create saved-state file `{}`:\n{}",
@@ -1614,7 +1612,7 @@ fn handle_check_contents(
     json_version: Option<flow_common_errors::error_utils::json_output::JsonVersion>,
     offset_kind: flow_parser::offset_utils::OffsetKind,
 ) -> Result<ServerResponse, CheckedDependenciesCanceled> {
-    let transaction = Transaction::new(committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     let mut options = options.clone();
     options.all = options.all || force;
     options.verbose = verbose.map(Arc::new);
@@ -1677,7 +1675,7 @@ fn handle_check_contents(
         flow_services_inference::type_contents::type_parse_artifacts(
             &options,
             env.all_unordered_libs.dupe(),
-            transaction.dupe(),
+            transaction.handle(),
             env.master_cx.dupe(),
             file_key.dupe(),
             intermediate_result,
