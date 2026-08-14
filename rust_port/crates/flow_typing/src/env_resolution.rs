@@ -66,6 +66,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::tvar_resolver;
+use flow_typing_loc_env::loc_env::PredFuncLazy;
 use flow_typing_loc_env::match_pattern_ir;
 use flow_typing_statement::statement;
 use flow_typing_statement::type_annotation;
@@ -842,16 +843,36 @@ pub fn lazily_resolve_hints<'cx>(
 pub fn resolve_pred_func<'cx>(
     _cx: &Context<'cx>,
     info: &env_api::PredFuncInfo<ALoc>,
-) -> Rc<
-    flow_lazy::Lazy<
-        Context<'cx>,
-        Result<type_::PredFuncallInfo, JobError>,
-        Box<dyn FnOnce(&Context<'cx>) -> Result<type_::PredFuncallInfo, JobError> + 'cx>,
-    >,
-> {
+) -> PredFuncLazy<'cx, Context<'cx>> {
+    let callee_info = info.clone();
+    let callee = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+        let loc = callee_info.callee.loc();
+        // [callee] might be a member access expression. Since we are explicitly unbinding it from
+        // the call, make sure we don't raise a method-unbinding error.
+        Ok(type_env::with_class_stack(
+            cx,
+            callee_info.class_stack.dupe(),
+            || {
+                // Synthesis mode to avoid caching
+                let (_, (t, new_errors)) = cx.run_in_synthesis_mode_with_errors(None, || {
+                    expression(cx, None, None, None, &callee_info.callee)
+                });
+                if new_errors.is_lint_only_errorset() {
+                    match t {
+                        Ok(t) => t,
+                        Err(_) => any_t::at(AnySource::AnyError(None), loc.dupe()),
+                    }
+                } else {
+                    any_t::at(AnySource::AnyError(None), loc.dupe())
+                }
+            },
+        ))
+    })
+        as Box<dyn FnOnce(&Context<'cx>) -> Result<type_::Type, JobError> + 'cx>));
+
     let info = info.clone();
-    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
-        let loc = info.callee.loc();
+    let callee_for_full = callee.dupe();
+    let full = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let use_op = type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::FunCall(Box::new(
             type_::FunCallData {
                 op: reason::mk_expression_reason(&info.call_expr),
@@ -860,22 +881,7 @@ pub fn resolve_pred_func<'cx>(
                 local: true,
             },
         ))));
-        // [callee] might be a member access expression. Since we are explicitly unbinding it from
-        // the call, make sure we don't raise a method-unbinding error.
-        let callee_t = type_env::with_class_stack(cx, info.class_stack.dupe(), || {
-            // Synthesis mode to avoid caching
-            let (_, (t, new_errors)) = cx.run_in_synthesis_mode_with_errors(None, || {
-                expression(cx, None, None, None, &info.callee)
-            });
-            if new_errors.is_lint_only_errorset() {
-                match t {
-                    Ok(t) => t,
-                    Err(_) => any_t::at(AnySource::AnyError(None), loc.dupe()),
-                }
-            } else {
-                any_t::at(AnySource::AnyError(None), loc.dupe())
-            }
-        });
+        let callee_t = callee_for_full.try_get_forced(cx)?.dupe();
         let targs = statement::convert_call_targs_opt_prime(cx, info.targs.as_ref())?;
         let arguments = &info.arguments.arguments;
         let argts: Rc<[type_::CallArg]> = arguments
@@ -893,7 +899,12 @@ pub fn resolve_pred_func<'cx>(
             targs.map(Rc::from),
             argts,
         ))
-    })))
+    })
+        as Box<
+            dyn FnOnce(&Context<'cx>) -> Result<type_::PredFuncallInfo, JobError> + 'cx,
+        >));
+
+    PredFuncLazy { callee, full }
 }
 
 fn resolve_annotated_function<'cx>(

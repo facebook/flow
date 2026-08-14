@@ -46,6 +46,38 @@ impl<CX> Clone for TypeEntry<'_, CX> {
     }
 }
 
+type LazyResult<'a, CX, T> = Rc<
+    flow_lazy::Lazy<
+        CX,
+        Result<T, flow_utils_concurrency::job_error::JobError>,
+        Box<dyn FnOnce(&CX) -> Result<T, flow_utils_concurrency::job_error::JobError> + 'a>,
+    >,
+>;
+
+/// Lazily-resolved information about a call site whose callee might be a
+/// predicate function, split into two stages.
+///
+/// Deciding whether the callee is a predicate function only needs `callee`.
+/// Most call sites are not predicate functions, so `full` -- which additionally
+/// converts the type arguments and types every call argument -- is only forced
+/// once that check has passed. `full` reuses `callee`'s result, so the callee is
+/// typed at most once.
+pub struct PredFuncLazy<'a, CX> {
+    pub callee: LazyResult<'a, CX, Type>,
+    pub full: LazyResult<'a, CX, PredFuncallInfo>,
+}
+
+impl<CX> Clone for PredFuncLazy<'_, CX> {
+    fn clone(&self) -> Self {
+        PredFuncLazy {
+            callee: self.callee.dupe(),
+            full: self.full.dupe(),
+        }
+    }
+}
+
+impl<CX> Dupe for PredFuncLazy<'_, CX> {}
+
 pub struct LocEnv<'a, CX = ()> {
     pub types: EnvMap<ALoc, TypeEntry<'a, CX>>,
     pub tparams: EnvMap<ALoc, (SubstName, TypeParam, Type)>,
@@ -55,23 +87,7 @@ pub struct LocEnv<'a, CX = ()> {
     pub ast_hint_map: HintMap,
     pub hint_map: EnvMap<ALoc, LazyHintT<CX>>,
     pub var_info: Rc<EnvInfo<ALoc>>,
-    pub pred_func_map: FlowOrdMap<
-        ALoc,
-        Rc<
-            flow_lazy::Lazy<
-                CX,
-                Result<PredFuncallInfo, flow_utils_concurrency::job_error::JobError>,
-                Box<
-                    dyn FnOnce(
-                            &CX,
-                        ) -> Result<
-                            PredFuncallInfo,
-                            flow_utils_concurrency::job_error::JobError,
-                        > + 'a,
-                >,
-            >,
-        >,
-    >,
+    pub pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<'a, CX>>,
     pub name_defs: EnvEntriesMap,
 }
 
@@ -164,23 +180,7 @@ impl<'a, CX> LocEnv<'a, CX> {
         ast_hint_map: HintMap,
         hint_map: EnvMap<ALoc, LazyHintT<CX>>,
         var_info: Rc<EnvInfo<ALoc>>,
-        pred_func_map: FlowOrdMap<
-            ALoc,
-            Rc<
-                flow_lazy::Lazy<
-                    CX,
-                    Result<PredFuncallInfo, flow_utils_concurrency::job_error::JobError>,
-                    Box<
-                        dyn FnOnce(
-                                &CX,
-                            ) -> Result<
-                                PredFuncallInfo,
-                                flow_utils_concurrency::job_error::JobError,
-                            > + 'a,
-                    >,
-                >,
-            >,
-        >,
+        pred_func_map: FlowOrdMap<ALoc, PredFuncLazy<'a, CX>>,
         name_defs: EnvEntriesMap,
     ) -> Self {
         let mut env = Self::empty(scope_kind);

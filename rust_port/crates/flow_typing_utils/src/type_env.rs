@@ -51,7 +51,6 @@ use flow_typing_type::type_::ClassBinding;
 use flow_typing_type::type_::ConstrainedAssignmentData;
 use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::LazyHintT;
-use flow_typing_type::type_::PredFuncallInfo;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseOp;
@@ -836,7 +835,7 @@ fn read_pred_func_info_exn<'cx>(
                     })
                     .dupe()
             };
-            Ok(Box::new(lazy_info.try_get_forced(cx)?.clone()))
+            Ok(Box::new(lazy_info.full.try_get_forced(cx)?.clone()))
         },
         move || {
             Ok(Box::new(PredFuncallInfo(
@@ -1105,7 +1104,9 @@ fn predicate_of_refinement<'cx>(
                 };
                 match lazy_info {
                     Some(info) => {
-                        let PredFuncallInfo(_, _, t, _, _) = info.try_get_forced(cx)?;
+                        // Only the callee is needed to decide whether this is a predicate
+                        // function; the arguments are typed lazily by `info.full` below.
+                        let t = info.callee.try_get_forced(cx)?;
                         if maybe_predicate_function(cx, t)? {
                             Some(Predicate::new(PredicateInner::LatentP(
                                 read_pred_func_info_exn(cx, func_loc)?,
@@ -1130,7 +1131,7 @@ fn predicate_of_refinement<'cx>(
                 };
                 match lazy_info {
                     Some(info) => {
-                        let PredFuncallInfo(_, _, t, _, _) = info.try_get_forced(cx)?;
+                        let t = info.callee.try_get_forced(cx)?;
                         if maybe_predicate_function(cx, t)? {
                             Some(Predicate::new(PredicateInner::LatentThisP(
                                 read_pred_func_info_exn(cx, func_loc)?,
