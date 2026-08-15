@@ -7,4 +7,4 @@ edition = "2024"
 
 [dependencies]
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-tokio = { version = "1.52.4", features = ["full", "test-util", "tracing"] }
+tokio = { version = "1.53.1", features = ["full", "test-util", "tracing"] }
