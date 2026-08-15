@@ -1945,9 +1945,16 @@ fn exec_in_cgroup_if_systemd_available() {
 }
 
 pub fn get_temp_dir(cli_value: &Option<String>) -> String {
-    match cli_value {
-        Some(v) => v.clone(),
-        None => flow_server_files::server_files_js::default_temp_dir()
+    // Commands that expose `--temp-dir` pick FLOW_TEMP_DIR up through the flag's
+    // env fallback, but in-process callers (dev-tools, `ls`, file options) pass
+    // `None` and must resolve it the same way, or they talk to a different server
+    // than the one the caller started.
+    if let Some(v) = cli_value {
+        return v.clone();
+    }
+    match std::env::var("FLOW_TEMP_DIR") {
+        Ok(v) if !v.is_empty() => v,
+        _ => flow_server_files::server_files_js::default_temp_dir()
             .to_string_lossy()
             .to_string(),
     }

@@ -52,6 +52,28 @@ assert_ok "$FLOW" dev-tools update-suppressions --check status update_suppressio
 assert_ok "$FLOW" stop update_suppressions_status >/dev/null 2>&1
 print_file update_suppressions_status/test.js
 
+printf "\n=== update-suppressions uses the upgrade server in FLOW_TEMP_DIR ===\n"
+mkdir -p update_suppressions_upgrade
+cat > update_suppressions_upgrade/.flowconfig <<'EOF'
+[options]
+all=true
+include_warnings=true
+lazy_mode=fs
+EOF
+cat > update_suppressions_upgrade/test.js <<'EOF'
+function takesNumber(x: number) {}
+takesNumber("nope");
+EOF
+TEST_FLOW_TEMP_DIR=$FLOW_TEMP_DIR
+FLOW_TEMP_DIR="$FLOW_TEMP_DIR/upgrade"
+export FLOW_TEMP_DIR
+assert_ok "$FLOW" start --wait --lazy-mode none --merge-timeout 0 update_suppressions_upgrade
+assert_ok "$FLOW" dev-tools update-suppressions --only add --check status --flowconfig-name .flowconfig update_suppressions_upgrade
+assert_ok "$FLOW" stop update_suppressions_upgrade >/dev/null 2>&1
+FLOW_TEMP_DIR=$TEST_FLOW_TEMP_DIR
+export FLOW_TEMP_DIR
+print_file update_suppressions_upgrade/test.js
+
 printf "\n=== update-suppressions updates site annotations across roots ===\n"
 mkdir -p update_sites/foo update_sites/bar
 cat > update_sites/foo/.flowconfig <<'EOF'
