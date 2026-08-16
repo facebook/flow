@@ -3493,9 +3493,9 @@ dependencies = [
 
 [[package]]
 name = "sval_serde"
-version = "2.20.0"
+version = "2.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b983833a8a2390f89ebcf9b9acd06883017014b4ffd72ee28e0c9de6852039f5"
+checksum = "9f26fe3f6a68b40e6c8d654ea48c00e4316272fddf68c80493714c1b034ae70b"
 dependencies = [
  "serde_core",
  "sval",
