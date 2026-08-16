@@ -1895,16 +1895,24 @@ fn tag_of_value<'cx>(cx: &Context<'cx>, type_: &Type) -> Option<type_tag::Sentin
 fn sentinel_of_obj<'cx>(cx: &Context<'cx>, id: properties::Id) -> type_tag::SentinelMap {
     cx.fold_props(
         id,
-        |name, prop, acc: type_tag::SentinelMap| match prop.deref() {
-            PropertyInner::Field(fd) => match tag_of_value(cx, &fd.type_) {
-                Some(v) => {
-                    let mut acc = acc;
-                    acc.insert(name.as_smol_str().dupe(), v);
-                    acc
-                }
-                None => acc,
-            },
-            _ => acc,
+        |name, prop, acc: type_tag::SentinelMap| {
+            // Sentinel keys are string-keyed; a symbol-typed key has no string
+            // spelling, so skip it rather than collapse distinct symbols to a
+            // shared placeholder (which would refine unsoundly).
+            let flow_common::reason::Name::Str(key) = name else {
+                return acc;
+            };
+            match prop.deref() {
+                PropertyInner::Field(fd) => match tag_of_value(cx, &fd.type_) {
+                    Some(v) => {
+                        let mut acc = acc;
+                        acc.insert(key.dupe(), v);
+                        acc
+                    }
+                    None => acc,
+                },
+                _ => acc,
+            }
         },
         BTreeMap::new(),
     )

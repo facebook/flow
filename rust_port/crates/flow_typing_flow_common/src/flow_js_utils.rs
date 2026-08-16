@@ -810,20 +810,22 @@ pub fn is_generic(t: &Type) -> bool {
 
 pub fn is_object_prototype_method(name: &Name) -> bool {
     matches!(
-        name.as_str(),
-        "isPrototypeOf"
-            | "hasOwnProperty"
-            | "propertyIsEnumerable"
-            | "toLocaleString"
-            | "toString"
-            | "valueOf"
+        name.as_str_opt(),
+        Some(
+            "isPrototypeOf"
+                | "hasOwnProperty"
+                | "propertyIsEnumerable"
+                | "toLocaleString"
+                | "toString"
+                | "valueOf"
+        )
     )
 }
 
 pub fn is_function_prototype(name: &Name) -> bool {
     matches!(
-        name.as_str(),
-        "apply" | "bind" | "call" | "arguments" | "caller" | "length" | "name"
+        name.as_str_opt(),
+        Some("apply" | "bind" | "call" | "arguments" | "caller" | "length" | "name")
     ) || is_object_prototype_method(name)
 }
 
@@ -1269,6 +1271,7 @@ pub fn error_message_loc_of_upper<CX>(u: &UseT<CX>) -> ALoc {
         UseTInner::ObjTestT(reason, _, _) => reason.loc().dupe(),
         UseTInner::ArrRestT(data) => data.reason.loc().dupe(),
         UseTInner::GetKeysT { reason, .. } => reason.loc().dupe(),
+        UseTInner::GetKeysDictKeyT { reason, .. } => reason.loc().dupe(),
         UseTInner::HasOwnPropT(data) => data.reason.loc().dupe(),
         UseTInner::GetValuesT(reason, _) => reason.loc().dupe(),
         UseTInner::GetDictValuesT(reason, _) => reason.loc().dupe(),
@@ -1973,16 +1976,18 @@ pub fn default_this_type<'cx>(
 
 // Object Subtyping
 
-pub fn string_key(s: Name, reason: &Reason) -> Type {
+/// The key type of a string-valued property key. A symbol key has no string
+/// spelling, so callers must route it through `type_of_key_name` instead.
+pub fn string_key(value: FlowSmolStr, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
     let key_reason = reason
         .dupe()
-        .update_desc(|_| VirtualReasonDesc::RPropertyIsAString(s.dupe()));
+        .update_desc(|_| VirtualReasonDesc::RPropertyIsAString(Name::Str(value.dupe())));
     Type::new(TypeInner::DefT(
         key_reason,
         DefT::new(DefTInner::SingletonStrT {
-            value: s.into_smol_str(),
+            value,
             from_annot: false,
         }),
     ))
@@ -2517,18 +2522,29 @@ pub fn obj_key_mirror<'cx>(
     };
 
     let map_field = |key: &Name, t: &Type| -> Type {
-        let key_str = key.as_smol_str().dupe();
-        let reason = reason_op
-            .dupe()
-            .update_desc(|_| VirtualReasonDesc::RStringLit(key_str.dupe()));
-        let singleton = Type::new(TypeInner::DefT(
-            reason,
-            DefT::new(DefTInner::SingletonStrT {
-                from_annot: true,
-                value: key_str,
-            }),
-        ));
-        map_t(singleton, t)
+        match key {
+            // A symbol-typed key mirrors to its `unique symbol` type, not a string literal.
+            Name::Symbol(_) => {
+                let r = reason_op
+                    .dupe()
+                    .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
+                map_t(type_of_key_name(cx, key.dupe(), &r), t)
+            }
+            Name::Str(key_str) => {
+                let key_str = key_str.dupe();
+                let reason = reason_op
+                    .dupe()
+                    .update_desc(|_| VirtualReasonDesc::RStringLit(key_str.dupe()));
+                let singleton = Type::new(TypeInner::DefT(
+                    reason,
+                    DefT::new(DefTInner::SingletonStrT {
+                        from_annot: true,
+                        value: key_str,
+                    }),
+                ));
+                map_t(singleton, t)
+            }
+        }
     };
 
     let props = cx.find_props(o.props_tmap.dupe());
@@ -2727,7 +2743,7 @@ pub fn obj_is_readonlyish(obj: &flow_typing_type::type_::ObjType) -> bool {
 pub fn is_exception_to_react_dro(propref: &flow_typing_type::type_::PropRef) -> bool {
     use flow_typing_type::type_::PropRef;
     match propref {
-        PropRef::Named { name, .. } => name.as_str() == "current",
+        PropRef::Named { name, .. } => name.matches_str("current"),
         _ => false,
     }
 }
@@ -3342,6 +3358,11 @@ pub mod value_to_type_reference_transform {
                 }
 
                 DefTInner::TypeT(_, inner_t) => Ok(inner_t.dupe()),
+                // A `unique symbol` value used in a type position resolves to its
+                // own `unique symbol` type, so a value-level symbol binding can
+                // key a type-body member (`interface I { [s]: T }`). Distinct
+                // symbols stay distinct.
+                DefTInner::UniqueSymbolT(_) => Ok(t.dupe()),
                 // an enum object value annotation becomes the enum type
                 DefTInner::EnumObjectT { enum_value_t, .. } => Ok(enum_value_t.dupe()),
                 DefTInner::EnumValueT(_) => {
@@ -4174,8 +4195,10 @@ pub mod import_default_t_kit {
                         // that up as a possible "did you mean?" suggestion.
                         //
                         // TODO consider filtering these to OrdinaryNames only
-                        let known_exports: Vec<&FlowSmolStr> =
-                            exports_tmap.keys().map(|n| n.as_smol_str()).collect();
+                        let known_exports: Vec<&FlowSmolStr> = exports_tmap
+                            .keys()
+                            .filter_map(|n| n.as_smol_str_opt())
+                            .collect();
                         let suggestion = typo_suggestion(&known_exports, local_name);
                         add_output(
                             cx,
@@ -4270,8 +4293,10 @@ pub mod import_default_t_kit {
                         Ok((ns.name_loc.dupe(), t))
                     }
                     None => {
-                        let known_exports: Vec<&FlowSmolStr> =
-                            exports_tmap.keys().map(|n| n.as_smol_str()).collect();
+                        let known_exports: Vec<&FlowSmolStr> = exports_tmap
+                            .keys()
+                            .filter_map(|n| n.as_smol_str_opt())
+                            .collect();
                         let suggestion = typo_suggestion(&known_exports, local_name);
                         add_output(
                             cx,
@@ -4516,8 +4541,10 @@ pub mod import_named_t_kit {
                     )))
                 } else {
                     // TODO consider filtering to OrdinaryNames only
-                    let known_exports: Vec<&FlowSmolStr> =
-                        combined_exports.keys().map(|n| n.as_smol_str()).collect();
+                    let known_exports: Vec<&FlowSmolStr> = combined_exports
+                        .keys()
+                        .filter_map(|n| n.as_smol_str_opt())
+                        .collect();
                     let suggestion = typo_suggestion(&known_exports, export_name);
                     ErrorMessage::ENoNamedExport(Box::new((
                         reason.loc().dupe(),
@@ -4869,7 +4896,7 @@ pub mod export_type_t_kit {
 
         let is_type_export = match l.deref() {
             TypeInner::DefT(_, def_t) => {
-                if matches!(def_t.deref(), DefTInner::ObjT(_)) && export_name.as_str() == "default"
+                if matches!(def_t.deref(), DefTInner::ObjT(_)) && export_name.matches_str("default")
                 {
                     true
                 } else {
@@ -5822,6 +5849,19 @@ pub fn intlike_str_key_as_num(l: &Type) -> Option<Type> {
 pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
+    let str = match &name {
+        Name::Symbol(sym) => {
+            let key_reason = reason
+                .dupe()
+                .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
+            return Type::new(TypeInner::DefT(
+                key_reason,
+                DefT::new(DefTInner::UniqueSymbolT(sym.dupe())),
+            ));
+        }
+        Name::Str(s) => s,
+    };
+
     let str_key = || {
         let key_reason = reason
             .dupe()
@@ -5829,13 +5869,11 @@ pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> 
         Type::new(TypeInner::DefT(
             key_reason,
             DefT::new(DefTInner::SingletonStrT {
-                value: name.as_smol_str().dupe(),
+                value: str.dupe(),
                 from_annot: true,
             }),
         ))
     };
-
-    let str = name.as_str();
 
     // We don't want the `NumericStrKeyT` type to leak out of the obj-to-obj
     // subtyping check context. Other than `Object.key` and `$Keys`, which
@@ -6221,7 +6259,7 @@ pub mod get_prop_t_kit {
             |suggestion: Option<FlowSmolStr>| -> Result<F::R, FlowJsException> {
                 let member_reason = prop_reason.dupe().replace_desc(
                     flow_common::reason::VirtualReasonDesc::RIdentifier(
-                        member_name.as_smol_str().dupe(),
+                        member_name.display_smol_str(),
                     ),
                 );
                 add_output(
@@ -6248,8 +6286,8 @@ pub mod get_prop_t_kit {
         // "a" through "z", these are reserved for methods.
         let is_valid_member_name =
             |name: &str| -> bool { name.is_empty() || !name.as_bytes()[0].is_ascii_lowercase() };
-        match member_name.as_str() {
-            name if is_valid_member_name(name) => {
+        match member_name.as_str_opt() {
+            Some(name) if is_valid_member_name(name) => {
                 if members.contains_key(name) {
                     let enum_value_t = F::reposition(
                         cx,
@@ -6925,6 +6963,13 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                             return mk_named_prop(reason, true, name);
                         }
                     }
+                    if let DefTInner::UniqueSymbolT(sym) = def.deref() {
+                        let name = Name::symbol(sym.dupe());
+                        let reason = reason
+                            .dupe()
+                            .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
+                        return mk_named_prop(reason, true, name);
+                    }
                 }
             }
             PropRef::Computed(l.dupe())
@@ -6952,6 +6997,13 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                         return mk_named_prop(reason, true, name);
                     }
                 }
+                if let DefTInner::UniqueSymbolT(sym) = def.deref() {
+                    let name = Name::symbol(sym.dupe());
+                    let reason = reason
+                        .dupe()
+                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
+                    return mk_named_prop(reason, true, name);
+                }
             }
             PropRef::Computed(l.dupe())
         }
@@ -6960,6 +7012,13 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                 update_lit_type_from_annot(cx, l);
                 let name = Name::new(name.dupe());
                 // let reason = replace_desc_reason (RProperty (Some name)) reason in
+                let reason = reason
+                    .dupe()
+                    .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
+                return mk_named_prop(reason, true, name);
+            }
+            if let DefTInner::UniqueSymbolT(sym) = def.deref() {
+                let name = Name::symbol(sym.dupe());
                 let reason = reason
                     .dupe()
                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
@@ -6983,16 +7042,28 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
     }
 }
 
-pub fn keylist_of_props(
+pub fn keylist_of_props<'cx>(
+    cx: &Context<'cx>,
     props: &flow_typing_type::type_::properties::PropertiesMap,
     reason_op: &Reason,
+    include_symbols: bool,
 ) -> Vec<Type> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
 
     let mut acc = Vec::new();
     for (name, _) in props.iter() {
-        let name = name.as_smol_str().dupe();
+        // A symbol-typed key has no string spelling. Type-level `keyof`
+        // yields it as its `unique symbol` type (matched later by nominal
+        // identity), but runtime enumeration (`Object.keys`/`Object.entries`)
+        // omits symbol keys, matching JavaScript.
+        let Name::Str(name) = name else {
+            if include_symbols {
+                acc.push(type_of_key_name(cx, name.dupe(), reason_op));
+            }
+            continue;
+        };
+        let name = name.dupe();
         let reason = reason_op
             .dupe()
             .replace_desc_new(VirtualReasonDesc::RStringLit(name.dupe()));
@@ -7117,10 +7188,11 @@ pub fn keylist_of_prop_ids(
     cx: &Context<'_>,
     prop_ids: &[properties::Id],
     reason_op: &Reason,
+    include_symbols: bool,
 ) -> Vec<Type> {
     prop_ids
         .iter()
-        .flat_map(|id| keylist_of_props(&cx.find_props(id.dupe()), reason_op))
+        .flat_map(|id| keylist_of_props(cx, &cx.find_props(id.dupe()), reason_op, include_symbols))
         .collect()
 }
 

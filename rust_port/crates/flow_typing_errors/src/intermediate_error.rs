@@ -1261,7 +1261,7 @@ where
                                     lower,
                                     upper,
                                 },
-                            ) if prop.as_str() != "$call"
+                            ) if !prop.matches_str("$call")
                                 && opt_incompatibility_pair(
                                     &inner,
                                     &(lower.dupe(), upper.dupe()),
@@ -1290,9 +1290,7 @@ where
                                         opt_incompatibility_pair,
                                     );
 
-                                props.push(AccessChainSegment::PropSegment(
-                                    flow_common::reason::Name::new(prop.as_str()),
-                                ));
+                                props.push(AccessChainSegment::PropSegment(prop.dupe()));
                                 (final_loc, props, final_use_op)
                             }
 
@@ -1633,7 +1631,7 @@ where
                                     (Some(loc_val), None) => {
                                         let def = mk_reason(
                                             RProperty(Some(flow_common::reason::Name::new(
-                                                prop.as_str(),
+                                                prop.display_smol_str(),
                                             ))),
                                             loc_val.dupe(),
                                         );
@@ -1648,7 +1646,7 @@ where
                                     (None, Some(loc_val)) => {
                                         let def = mk_reason(
                                             RProperty(Some(flow_common::reason::Name::new(
-                                                prop.as_str(),
+                                                prop.display_smol_str(),
                                             ))),
                                             loc_val.dupe(),
                                         );
@@ -1663,13 +1661,13 @@ where
                                     (Some(own_loc_val), Some(proto_loc_val)) => {
                                         let def = mk_reason(
                                             RProperty(Some(flow_common::reason::Name::new(
-                                                prop.as_str(),
+                                                prop.display_smol_str(),
                                             ))),
                                             own_loc_val.dupe(),
                                         );
                                         let proto = mk_reason(
                                             RProperty(Some(flow_common::reason::Name::new(
-                                                prop.as_str(),
+                                                prop.display_smol_str(),
                                             ))),
                                             proto_loc_val.dupe(),
                                         );
@@ -2775,7 +2773,7 @@ where
                                 lower,
                                 upper,
                             },
-                        ) if name.as_str() == "$call" => {
+                        ) if name.matches_str("$call") => {
                             let frame_loc = loc_of_aloc(&lower.loc);
                             let final_loc = if frame_loc.contains(&loc) {
                                 loc
@@ -2915,9 +2913,7 @@ where
                             let incompatibility_pair =
                                 opt_incompatibility_pair(&use_op, &(lower.dupe(), upper.dupe()));
 
-                            let mut chain_vec = vec![AccessChainSegment::PropSegment(
-                                flow_common::reason::Name::new(prop.as_str()),
-                            )];
+                            let mut chain_vec = vec![AccessChainSegment::PropSegment(prop.dupe())];
                             chain_vec.extend(props);
                             let chain =
                                 Vec1::try_from_vec(chain_vec).expect("chain must be non-empty");
@@ -3140,8 +3136,13 @@ where
                         prop,
                         ..
                     }) => {
+                        // `props` is already rendered, so this matches on display
+                        // spelling: two unnamed symbol keys both render `[symbol]`
+                        // and compare equal here. That only picks which use_op
+                        // frame labels the message, never which property is
+                        // reported, so the collision is cosmetic.
                         let prop_str: Option<FlowSmolStr> =
-                            prop.as_ref().map(|n| n.as_str().into());
+                            prop.as_ref().map(|n| n.display_smol_str());
                         if props.iter().any(|(p, _, _)| p == &prop_str) {
                             inner_use_op.dupe().as_ref().clone()
                         } else {
@@ -3651,7 +3652,7 @@ where
             | UpperKind::IncompatibleHasOwnPropT(prop_loc, prop)
             | UpperKind::IncompatibleMethodT(prop_loc, prop) => mk_prop_missing_in_lookup_error(
                 loc_of_aloc(&prop_loc),
-                prop.map(|p| p.into_smol_str()),
+                prop.map(|p| p.display_smol_str()),
                 lower,
                 use_op,
                 None,
@@ -4677,7 +4678,7 @@ where
 
                 let prop_codes: Vec<friendly::Message<Loc>> = properties
                     .iter()
-                    .map(|prop| friendly::Message(vec![code(prop.as_str())]))
+                    .map(|prop| friendly::Message(vec![code(&prop.display_smol_str())]))
                     .collect();
                 let mut props_msg: Vec<friendly::MessageFeature<Loc>> = vec![text("properties ")];
                 props_msg.extend(friendly::conjunction_concat(prop_codes, "and", None).0);
@@ -4785,9 +4786,9 @@ where
                         .fold(String::new(), |acc, (i, segment)| match segment {
                             AccessChainSegment::PropSegment(prop) => {
                                 if i == 0 {
-                                    prop.as_str().to_string()
+                                    prop.display_smol_str().to_string()
                                 } else {
-                                    format!("{}.{}", acc, prop.as_str())
+                                    format!("{}.{}", acc, prop)
                                 }
                             }
                             AccessChainSegment::TupleIndexSegment(n) => {
@@ -5332,7 +5333,7 @@ where
                     Some(name) => {
                         features.extend(vec![
                             text(" because "),
-                            code(name.as_str()),
+                            code(&name.display_smol_str()),
                             text(" is not a member of "),
                             ref_(enum_reason),
                             text("."),
@@ -6028,7 +6029,7 @@ where
                             .flat_map(|(enum_val, rs)| {
                                 let mut features = vec![
                                     text("\n - Key "),
-                                    code(name.as_str()),
+                                    code(&name.display_smol_str()),
                                     text(" has value "),
                                     string_of_union_enum(enum_val),
                                     text(" in "),
@@ -6288,7 +6289,7 @@ where
                             text(" Try removing the indexer in "),
                             ref_(object2_reason),
                             text(" or make "),
-                            code(propname.as_str()),
+                            code(&propname.display_smol_str()),
                             text(" a required property"),
                         ],
                     ),
@@ -6301,9 +6302,9 @@ where
                     text(" "),
                     text(error_reason),
                     text(", so it may contain "),
-                    code(propname.as_str()),
+                    code(&propname.display_smol_str()),
                     text(" with a type that conflicts with "),
-                    code(propname.as_str()),
+                    code(&propname.display_smol_str()),
                     text("'s definition in "),
                     ref_(object1_reason),
                     text("."),
@@ -8385,14 +8386,14 @@ where
             }
             MessagePropNotReadable(x) => {
                 use super::error_message::mk_prop_message;
-                let prop = x.as_ref().map(|n| n.as_str().to_string());
+                let prop = x.as_ref().map(|n| n.display_smol_str().to_string());
                 let mut features = mk_prop_message(prop.as_deref());
                 features.push(text(" is not readable"));
                 friendly::Message(features)
             }
             MessagePropNotWritable(x) => {
                 use super::error_message::mk_prop_message;
-                let prop = x.as_ref().map(|n| n.as_str().to_string());
+                let prop = x.as_ref().map(|n| n.display_smol_str().to_string());
                 let mut features = mk_prop_message(prop.as_deref());
                 features.push(text(" is not writable"));
                 friendly::Message(features)
@@ -8428,7 +8429,7 @@ where
                 let ((first_loc, name, second_loc), rest) = duplicates.clone().split_off_first();
                 if rest.is_empty() {
                     let first = mk_reason(
-                        VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+                        VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                         first_loc.dupe(),
                     );
                     friendly::Message(vec![
@@ -8456,7 +8457,7 @@ where
                     ];
                     for (first_loc, name, second_loc) in all_dupes {
                         let first = mk_reason(
-                            VirtualReasonDesc::RIdentifier(name.into_smol_str()),
+                            VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                             first_loc,
                         );
                         features.extend(vec![
@@ -10341,7 +10342,7 @@ where
                 Some(SubComponentOfInvariantSubtypingError::ObjectProps(props)) => {
                     let prop_codes: Vec<friendly::Message<Loc>> = props
                         .iter()
-                        .map(|prop| friendly::Message(vec![code(prop.as_str())]))
+                        .map(|prop| friendly::Message(vec![code(&prop.display_smol_str())]))
                         .collect();
                     let mut features = vec![text("properties ")];
                     features.extend(friendly::conjunction_concat(prop_codes, "and", None).0);

@@ -127,7 +127,7 @@ fn extract_prop_docs(
         .iter()
         .filter_map(|prop| {
             let ty::FlattenedComponentProp::FlattenedComponentProp { name, def_locs, .. } = prop;
-            let prop_name = name.as_str().to_string();
+            let prop_name = name.display_smol_str().to_string();
             let description = match def_locs.first() {
                 Some(aloc) => {
                     let loc = reader.loc_of_aloc(aloc);

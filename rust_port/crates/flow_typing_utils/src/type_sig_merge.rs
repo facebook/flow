@@ -422,13 +422,13 @@ fn async_void_return<'cx>(cx: &Context<'cx>, loc: ALoc) -> Type {
 fn add_default_constructor<T>(
     reason: Reason,
     extends: &ClassExtends<ALoc, T>,
-    props: &mut BTreeMap<FlowSmolStr, type_::Property>,
+    props: &mut BTreeMap<Name, type_::Property>,
 ) {
     match extends {
         ClassExtends::ClassExplicitExtends { .. }
         | ClassExtends::ClassExplicitExtendsApp { .. } => {}
         ClassExtends::ClassImplicitExtends | ClassExtends::ObjectPrototypeExtendsNull => {
-            let key = FlowSmolStr::new_inline("constructor");
+            let key = Name::new(FlowSmolStr::new_inline("constructor"));
             if props.contains_key(&key) {
                 return;
             }
@@ -464,9 +464,9 @@ fn add_record_constructor<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
     name: &FlowSmolStr,
-    own_props: &BTreeMap<FlowSmolStr, type_::Property>,
+    own_props: &BTreeMap<Name, type_::Property>,
     defaulted_props: &flow_data_structure_wrapper::ord_set::FlowOrdSet<FlowSmolStr>,
-    class_props: &mut BTreeMap<FlowSmolStr, type_::Property>,
+    class_props: &mut BTreeMap<Name, type_::Property>,
 ) {
     use flow_common::reason::VirtualReasonDesc::*;
 
@@ -478,7 +478,10 @@ fn add_record_constructor<'cx>(
         .map(|(prop_name, prop)| {
             let new_prop = match &**prop {
                 type_::PropertyInner::Field(fd) => {
-                    if defaulted_props.contains(prop_name) {
+                    if prop_name
+                        .as_smol_str_opt()
+                        .is_some_and(|s| defaulted_props.contains(s))
+                    {
                         let r = type_util::reason_of_t(&fd.type_).dupe();
                         let optional_reason = r.dupe().update_desc_new(|desc| {
                             reason::VirtualReasonDesc::ROptional(Arc::new(desc))
@@ -501,7 +504,7 @@ fn add_record_constructor<'cx>(
                 }
                 _ => prop.dupe(),
             };
-            (Name::new(prop_name.dupe()), new_prop)
+            (prop_name.dupe(), new_prop)
         })
         .collect();
     let param = obj_type::mk_with_proto(
@@ -531,7 +534,10 @@ fn add_record_constructor<'cx>(
             type_::DefT::new(type_::DefTInner::FunT(statics, Rc::new(funtype))),
         )),
     });
-    class_props.insert(FlowSmolStr::new_inline("constructor"), constructor);
+    class_props.insert(
+        Name::new(FlowSmolStr::new_inline("constructor")),
+        constructor,
+    );
 }
 
 fn add_name_field(reason: Reason, props: &mut BTreeMap<Name, type_::Property>) {
@@ -1753,6 +1759,33 @@ fn merge_overloaded_property(
     }
 }
 
+/// If `prop` is a field whose type is an unnamed `unique symbol`, attach `name` as
+/// the symbol's display name so user-facing rendering shows `[name]` instead of a
+/// generic `[symbol]`. The symbol's nominal identity (its `ALocId`) is unchanged,
+/// so this only affects display, never property lookup.
+fn name_symbol_field(prop: type_::Property, name: &FlowSmolStr) -> type_::Property {
+    use std::ops::Deref;
+    if let type_::PropertyInner::Field(fd) = prop.deref()
+        && let type_::TypeInner::DefT(reason, def) = fd.type_.deref()
+        && let type_::DefTInner::UniqueSymbolT(sym) = def.deref()
+        && sym.name().is_none()
+    {
+        let named =
+            flow_common::reason::SymbolID::with_name(sym.aloc_id().dupe(), Some(name.dupe()));
+        let type_ = Type::new(type_::TypeInner::DefT(
+            reason.dupe(),
+            type_::DefT::new(type_::DefTInner::UniqueSymbolT(named)),
+        ));
+        return type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
+            preferred_def_locs: fd.preferred_def_locs.clone(),
+            key_loc: fd.key_loc.dupe(),
+            type_,
+            polarity: fd.polarity,
+        })));
+    }
+    prop
+}
+
 fn merge_annot<'cx>(
     env: &MergeEnv,
     cx: &Context<'cx>,
@@ -1769,7 +1802,7 @@ fn merge_annot<'cx>(
         Annot::Null(box loc) => type_::null::at(loc.dupe()),
         Annot::Symbol(box loc) => type_::symbol_t::at(loc.dupe()),
         Annot::UniqueSymbol(box loc) => {
-            type_::unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe())
+            type_::unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe(), None)
         }
         Annot::Number(box loc) => type_::num_module_t::at(loc.dupe()),
         Annot::BigInt(box loc) => type_::bigint_module_t::at(loc.dupe()),
@@ -2573,6 +2606,7 @@ fn merge_annot<'cx>(
             for (key, prop) in props {
                 let name = Name::new(key.dupe());
                 let p = merge_obj_annot_prop(env, cx, file, prop);
+                let p = name_symbol_field(p, key);
                 prop_locs.insert(name.dupe(), obj_annot_prop_source_loc(prop));
                 props_smap.insert(name, p);
             }
@@ -2679,6 +2713,7 @@ fn merge_annot<'cx>(
                 for (key, prop) in props {
                     let name = Name::new(key.dupe());
                     let p = merge_obj_annot_prop(env, cx, file, prop);
+                    let p = name_symbol_field(p, key);
                     prop_locs.insert(name.dupe(), obj_annot_prop_source_loc(prop));
                     props_smap.insert(name, p);
                 }
@@ -3995,6 +4030,7 @@ fn merge_interface<'cx>(
                 record_prop_loc(&mut prop_locs, &name, prop);
                 match prop {
                     InterfaceProp::InterfaceField(..) => {
+                        let t = name_symbol_field(t, k);
                         own.insert(name, t);
                     }
                     InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
@@ -4373,15 +4409,15 @@ fn merge_this_class_t<'cx>(
                 static_proto,
             )
         };
-        let mut own_props_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+        let mut own_props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
         for (k, prop) in own_props {
             let p = merge_class_prop(&env, cx, file, &prop);
-            own_props_map.insert(k.dupe(), p);
+            own_props_map.insert(Name::new(k.dupe()), p);
         }
         for (key, prop) in &computed_own_props {
             if let Some(name) = resolve_computed_key(&env, cx, file, key) {
                 let p = merge_class_prop(&env, cx, file, prop);
-                match own_props_map.entry(name.into_smol_str()) {
+                match own_props_map.entry(name) {
                     std::collections::btree_map::Entry::Vacant(e) => {
                         e.insert(p);
                     }
@@ -4392,15 +4428,15 @@ fn merge_this_class_t<'cx>(
                 }
             }
         }
-        let mut proto_props_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+        let mut proto_props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
         for (k, prop) in proto_props {
             let p = merge_class_prop(&env, cx, file, &prop);
-            proto_props_map.insert(k.dupe(), p);
+            proto_props_map.insert(Name::new(k.dupe()), p);
         }
         for (key, prop) in &computed_proto_props {
             if let Some(name) = resolve_computed_key(&env, cx, file, key) {
                 let p = merge_class_prop(&env, cx, file, prop);
-                match proto_props_map.entry(name.into_smol_str()) {
+                match proto_props_map.entry(name) {
                     std::collections::btree_map::Entry::Vacant(e) => {
                         e.insert(p);
                     }
@@ -4422,16 +4458,11 @@ fn merge_this_class_t<'cx>(
             ),
             _ => {}
         };
-        let own_props_pmap: type_::properties::PropertiesMap = own_props_map
-            .into_iter()
-            .map(|(k, v)| (Name::new(k), v))
-            .collect();
+        let own_props_pmap: type_::properties::PropertiesMap = own_props_map.into_iter().collect();
         let own_props = cx.generate_property_map(own_props_pmap);
         add_default_constructor(reason.dupe(), &extends, &mut proto_props_map);
-        let proto_props_pmap: type_::properties::PropertiesMap = proto_props_map
-            .into_iter()
-            .map(|(k, v)| (Name::new(k), v))
-            .collect();
+        let proto_props_pmap: type_::properties::PropertiesMap =
+            proto_props_map.into_iter().collect();
         let proto_props = cx.generate_property_map(proto_props_pmap);
         let inst = type_::InstType::new(type_::InstTypeInner {
             class_id: id.dupe(),
@@ -5045,12 +5076,14 @@ fn merge_declare_class<'cx>(
         env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
         let static_ = {
             let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
-            let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
-            let mut prop_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
+            let mut props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut prop_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
             for (k, prop) in static_props {
                 let p = merge_interface_prop(&env, cx, file, prop, true);
-                record_prop_loc(&mut prop_locs, k, prop);
-                props_smap.insert(k.dupe(), p);
+                let p = name_symbol_field(p, k);
+                let name = Name::new(k.dupe());
+                record_prop_loc(&mut prop_locs, &name, prop);
+                props_map.insert(name, p);
             }
             for (key, prop) in computed_static_props {
                 if let Some(name) = resolve_computed_key(&env, cx, file, key) {
@@ -5058,19 +5091,15 @@ fn merge_declare_class<'cx>(
                     // A static member holds its name on the static side alone,
                     // so there is no other map to take it from.
                     insert_computed_class_prop(
-                        &mut props_smap,
+                        &mut props_map,
                         None,
                         &mut prop_locs,
-                        name.into_smol_str(),
+                        name,
                         t,
                         interface_prop_source_loc(prop),
                     );
                 }
             }
-            let mut props_map: BTreeMap<Name, type_::Property> = props_smap
-                .into_iter()
-                .map(|(k, v)| (Name::new(k), v))
-                .collect();
             add_name_field(reason_c.dupe(), &mut props_map);
             let props = type_::properties::PropertiesMap::from_btree_map(props_map);
             let call = {
@@ -5112,19 +5141,22 @@ fn merge_declare_class<'cx>(
         // on the side the computed key lands on can take the name from it, and
         // each side orders its members on its own.
         let (own_props, proto_props) = {
-            let mut own: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
-            let mut own_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
-            let mut proto: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
-            let mut proto_locs: BTreeMap<FlowSmolStr, ALoc> = BTreeMap::new();
+            let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut own_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
+            let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
+            let mut proto_locs: BTreeMap<Name, ALoc> = BTreeMap::new();
             for (k, prop) in own_props {
                 let p = merge_interface_prop(&env, cx, file, prop, false);
-                record_prop_loc(&mut own_locs, k, prop);
-                own.insert(k.dupe(), p);
+                let p = name_symbol_field(p, k);
+                let name = Name::new(k.dupe());
+                record_prop_loc(&mut own_locs, &name, prop);
+                own.insert(name, p);
             }
             for (k, prop) in proto_props {
                 let p = merge_interface_prop(&env, cx, file, prop, false);
-                record_prop_loc(&mut proto_locs, k, prop);
-                proto.insert(k.dupe(), p);
+                let name = Name::new(k.dupe());
+                record_prop_loc(&mut proto_locs, &name, prop);
+                proto.insert(name, p);
             }
             add_default_constructor(reason_c.dupe(), extends, &mut proto);
             let fold_computed =
@@ -5132,8 +5164,8 @@ fn merge_declare_class<'cx>(
                     Pack::Packed<ALoc>,
                     InterfaceProp<ALoc, Pack::Packed<ALoc>>,
                 )],
-                 target: &mut BTreeMap<FlowSmolStr, type_::Property>,
-                 prop_locs: &mut BTreeMap<FlowSmolStr, ALoc>| {
+                 target: &mut BTreeMap<Name, type_::Property>,
+                 prop_locs: &mut BTreeMap<Name, ALoc>| {
                     for (key, prop) in computed_props {
                         if let Some(name) = resolve_computed_key(&env, cx, file, key) {
                             let t = merge_interface_prop(&env, cx, file, prop, false);
@@ -5141,7 +5173,7 @@ fn merge_declare_class<'cx>(
                                 target,
                                 None,
                                 prop_locs,
-                                name.into_smol_str(),
+                                name,
                                 t,
                                 interface_prop_source_loc(prop),
                             );
@@ -5150,9 +5182,8 @@ fn merge_declare_class<'cx>(
                 };
             fold_computed(computed_own_props, &mut own, &mut own_locs);
             fold_computed(computed_proto_props, &mut proto, &mut proto_locs);
-            let to_pmap = |props: BTreeMap<FlowSmolStr, type_::Property>| {
-                let pmap: type_::properties::PropertiesMap =
-                    props.into_iter().map(|(k, v)| (Name::new(k), v)).collect();
+            let to_pmap = |props: BTreeMap<Name, type_::Property>| {
+                let pmap: type_::properties::PropertiesMap = props.into_iter().collect();
                 cx.generate_property_map(pmap)
             };
             (to_pmap(own), to_pmap(proto))

@@ -139,7 +139,7 @@ use flow_typing_visitors::type_mapper;
 use vec1::Vec1;
 
 use crate::flow_js::FlowJs;
-use crate::flow_js::prop_typo_suggestion;
+use crate::flow_js::prop_typo_suggestion_for_name;
 use crate::renders_kit;
 use crate::speculation_kit;
 use crate::template_literal_type;
@@ -286,7 +286,7 @@ fn rec_flow_p_inner<'cx>(
                 None => UnifyCause::Uncategorized,
                 Some((lower_obj_t, upper_obj_t)) => {
                     let property_name = match propref {
-                        PropRef::Named { name, .. } => Some(name.as_smol_str().dupe()),
+                        PropRef::Named { name, .. } => Some(name.display_smol_str()),
                         PropRef::Computed(_) => None,
                     };
                     UnifyCause::MutableProperty {
@@ -391,11 +391,11 @@ fn func_type_guard_compat<'cx>(
     );
     if idx1 != idx2 {
         let lower = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RTypeGuardParam(x1.as_smol_str().dupe()),
+            VirtualReasonDesc::RTypeGuardParam(x1.display_smol_str()),
             loc1.dupe(),
         );
         let upper = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RTypeGuardParam(x2.as_smol_str().dupe()),
+            VirtualReasonDesc::RTypeGuardParam(x2.display_smol_str()),
             loc2.dupe(),
         );
         flow_js_utils::add_output(
@@ -512,7 +512,7 @@ fn funt_to_funt_check<'cx>(
         {
             // The $call PropertyCompatibility is redundant when we have a
             // FunCompatibility use_op.
-            if name.as_str() == "$call" {
+            if name.matches_str("$call") {
                 inner.deref().dupe()
             } else {
                 use_op
@@ -1233,7 +1233,7 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
         let suggestion = name
             .as_ref()
             .zip(ids.as_ref())
-            .and_then(|(name, ids)| prop_typo_suggestion(cx, ids, name.as_str()));
+            .and_then(|(name, ids)| prop_typo_suggestion_for_name(cx, ids, name));
         match (&name, suggestion) {
             (Some(name), None) => missing.push(name.dupe()),
             (_, suggestion) => add_output_one(name.dupe(), suggestion)?,
@@ -1931,7 +1931,7 @@ fn flow_obj_to_obj<'cx>(
                         )),
                     ),
                     upper_object_reason: ureason.dupe(),
-                    property_name: Some(name.as_smol_str().dupe()),
+                    property_name: Some(name.display_smol_str()),
                 },
             );
             let use_op = VirtualUseOp::Frame(
@@ -3436,7 +3436,7 @@ pub fn rec_sub_t<'cx>(
             )
         }
         // ****************************************************
-        // keys (NOTE: currently we only support string keys)
+        // keys
         // ****************************************************
         (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
             if let DefTInner::SingletonStrT { value: x, .. } = ld.deref() =>
@@ -3446,6 +3446,29 @@ pub fn rec_sub_t<'cx>(
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
             // check that o has key x
+            let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
+                use_op: use_op.dupe(),
+                reason: reason_next,
+                type_: l.dupe(),
+            })));
+            FlowJs::rec_flow(
+                cx,
+                trace,
+                o,
+                &UseT::new(UseTInner::ReposLowerT {
+                    reason: reason_op.dupe(),
+                    use_desc: false,
+                    use_t: Box::new(u_use),
+                }),
+            )
+        }
+        (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
+            if let DefTInner::UniqueSymbolT(sym) = ld.deref() =>
+        {
+            let reason_next = reason_s
+                .dupe()
+                .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::symbol(sym.dupe()))));
+            // check that o has the symbol key
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),
                 reason: reason_next,
@@ -3682,6 +3705,7 @@ pub fn rec_sub_t<'cx>(
                 &UseT::new(UseTInner::GetKeysT {
                     reason: reason1.dupe(),
                     t_out: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
+                    include_symbols: true,
                 }),
             )
         }

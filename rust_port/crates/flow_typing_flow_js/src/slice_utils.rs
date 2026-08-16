@@ -2657,17 +2657,29 @@ pub fn map_object<'cx>(
             let prop_polarity = property::polarity(prop);
             let key_loc = property::first_loc(prop)
                 .unwrap_or_else(|| type_util::reason_of_t(prop_t).loc().dupe());
-            let key_str = key.as_smol_str().dupe();
-            let key_t = Type::new(TypeInner::DefT(
-                flow_common::reason::mk_reason(
-                    VirtualReasonDesc::RStringLit(key_str.dupe()),
-                    key_loc.dupe(),
-                ),
-                DefT::new(DefTInner::SingletonStrT {
-                    from_annot: true,
-                    value: key_str,
-                }),
-            ));
+            // A symbol-typed key contributes its `unique symbol` type, not a string literal.
+            let key_t = match key {
+                Name::Symbol(_) => {
+                    let r = flow_common::reason::mk_reason(
+                        VirtualReasonDesc::RUniqueSymbol,
+                        key_loc.dupe(),
+                    );
+                    flow_js_utils::type_of_key_name(cx, key.dupe(), &r)
+                }
+                Name::Str(key_str) => {
+                    let key_str = key_str.dupe();
+                    Type::new(TypeInner::DefT(
+                        flow_common::reason::mk_reason(
+                            VirtualReasonDesc::RStringLit(key_str.dupe()),
+                            key_loc.dupe(),
+                        ),
+                        DefT::new(DefTInner::SingletonStrT {
+                            from_annot: true,
+                            value: key_str,
+                        }),
+                    ))
+                }
+            };
             let prop_optional = is_prop_optional(prop_t);
             let polarity = if *frozen {
                 Polarity::Positive

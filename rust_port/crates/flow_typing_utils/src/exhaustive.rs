@@ -1146,7 +1146,13 @@ mod value_union_builder {
                             let mut sentinel_props_set: FlowOrdSet<FlowSmolStr> =
                                 FlowOrdSet::default();
                             for (name, p) in props_map.iter() {
-                                let key: FlowSmolStr = name.as_smol_str().dupe();
+                                // Symbol-typed keys have no string spelling and cannot be
+                                // discriminated by (string-keyed) match patterns, so skip them
+                                // rather than collapse distinct symbols to a placeholder.
+                                let flow_common::reason::Name::Str(key) = name else {
+                                    continue;
+                                };
+                                let key: FlowSmolStr = key.dupe();
                                 let prop = value_object_property_builder::of_type_prop(&key, p);
                                 obj_props.insert(key.dupe(), prop);
                                 if all_sentinel_props.contains(name) {

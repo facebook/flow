@@ -99,6 +99,7 @@ impl NormalizerInput for FlowInput {
                 let use_t = UseT::new(UseTInner::GetKeysT {
                     reason: reason_clone.dupe(),
                     t_out: Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
+                    include_symbols: true,
                 });
                 flow_js::flow_non_speculating(cx, (&t_clone, &use_t))
             })?;

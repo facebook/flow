@@ -839,6 +839,64 @@ fn empty_interface_annot(loc: ALoc) -> ast::types::Type<ALoc, ALoc> {
     })
 }
 
+/// Convert a `unique symbol` type annotation. `name_hint` is the binding or
+/// property name whose type is this symbol, when known, so it renders as
+/// `[name]` rather than a generic `[symbol]`.
+fn convert_unique_symbol<'a>(
+    cx: &Context<'a>,
+    t: &ast::types::Type<ALoc, ALoc>,
+    loc: &ALoc,
+    comments: &Option<ast::Syntax<ALoc, ()>>,
+    name_hint: Option<FlowSmolStr>,
+) -> ast::types::Type<ALoc, (ALoc, Type)> {
+    use flow_parser::ast::types::TypeInner;
+    use flow_typing_type::type_::unique_symbol_t;
+
+    if !cx.tslib_syntax() {
+        error_type(
+            cx,
+            loc.dupe(),
+            ErrorMessage::EUnsupportedSyntax(Box::new((
+                loc.dupe(),
+                intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                    TsLibSyntaxKind::UniqueSymbolType,
+                ),
+            ))),
+            t,
+        )
+    } else {
+        let rt = unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe(), name_hint);
+        ast::types::Type::new(TypeInner::UniqueSymbol {
+            loc: (loc.dupe(), rt),
+            comments: comments.clone(),
+        })
+    }
+}
+
+/// Convert a property or field value type, naming a bare `unique symbol` value
+/// after the property so it renders as `[name]` instead of a generic `[symbol]`.
+/// Any other value type is converted normally.
+fn convert_named_value<'a>(
+    cx: &Context<'a>,
+    env: &mut ConvertEnv,
+    value: &ast::types::Type<ALoc, ALoc>,
+    name: &FlowSmolStr,
+) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
+    use std::ops::Deref;
+
+    if let ast::types::TypeInner::UniqueSymbol { loc, comments } = value.deref() {
+        Ok(convert_unique_symbol(
+            cx,
+            value,
+            loc,
+            comments,
+            Some(name.dupe()),
+        ))
+    } else {
+        convert_inner(cx, env, value)
+    }
+}
+
 fn convert_inner<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
@@ -980,25 +1038,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::UniqueSymbol { loc, comments } => {
-            if !cx.tslib_syntax() {
-                error_type(
-                    cx,
-                    loc.dupe(),
-                    ErrorMessage::EUnsupportedSyntax(Box::new((
-                        loc.dupe(),
-                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                            TsLibSyntaxKind::UniqueSymbolType,
-                        ),
-                    ))),
-                    t,
-                )
-            } else {
-                let rt = unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe());
-                ast::types::Type::new(TypeInner::UniqueSymbol {
-                    loc: (loc.dupe(), rt),
-                    comments: comments.clone(),
-                })
-            }
+            convert_unique_symbol(cx, t, loc, comments, None)
         }
         TypeInner::Nullable { loc, inner } => {
             let t_ast = convert_inner(cx, env, &inner.argument)?;
@@ -4495,7 +4535,7 @@ fn convert_object<'a>(
                     ast::types::object::NormalProperty<ALoc, (ALoc, Type)>,
                     flow_utils_concurrency::job_error::JobError,
                 > {
-                    let value_ast = convert_inner(cx, env, value)?;
+                    let value_ast = convert_named_value(cx, env, value, &name)?;
                     let t = value_ast.loc().1.dupe();
                     let make_prop_ast = |t: Type| {
                         let key_ast = match key {
@@ -7114,7 +7154,11 @@ fn add_interface_properties<'a>(
                 );
                 match named {
                     Some(name) => {
-                        let name = name.into_smol_str();
+                        // Within-file the class Signature is string-keyed, so a
+                        // symbol-typed indexer key is keyed by its display
+                        // spelling (matching the computed-key path); cross-module
+                        // consumers get true symbol identity via `type_sig_merge`.
+                        let name = name.display_smol_str();
                         record_field(&name, &value_t);
                         class_sig::add_field(
                             idx.static_,
@@ -7455,7 +7499,12 @@ fn add_interface_properties<'a>(
                         Key::Computed(ck) => {
                             let (typed_expr, resolved_name) =
                                 resolve_computed_key_name(cx, &ck.expression)?;
-                            let resolved_name = resolved_name.map(|n| n.into_smol_str());
+                            // Within-file value-level symbol members are still keyed
+                            // by their display spelling (the class Signature is string-
+                            // keyed); cross-module consumers get true symbol identity via
+                            // `type_sig_merge`. Keep accepting the key rather than
+                            // rejecting it as an illegal computed key.
+                            let resolved_name = resolved_name.map(|n| n.display_smol_str());
                             match resolved_name {
                                 Some(name) => {
                                     let id_loc = ck.expression.loc().dupe();
@@ -7906,7 +7955,7 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(error_prop));
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
-                                        let value_ast = convert_inner(cx, env, value)?;
+                                        let value_ast = convert_named_value(cx, env, value, &name)?;
                                         let (_, t) = value_ast.loc();
                                         let t = t.dupe();
                                         let t_with_optional = if np.optional {

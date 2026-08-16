@@ -1,0 +1,537 @@
+Error -------------------------------------------------------------------------------------------- indexed_access.js:8:1
+
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   indexed_access.js:8:1
+    8| x as string; // ERROR: the member keyed by `Keys.a` is `number`, not `string`
+       ^
+
+References:
+   keys.d.ts:34:13
+   34|   [Keys.a]: number;
+                   ^^^^^^ [1]
+   indexed_access.js:8:6
+    8| x as string; // ERROR: the member keyed by `Keys.a` is `number`, not `string`
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- indexed_access.js:13:1
+
+Cannot cast `y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   indexed_access.js:13:1
+   13| y as number; // ERROR: the member keyed by `Keys.b` is `string`, not `number`
+       ^
+
+References:
+   indexed_access.js:10:23
+   10| type Obj = {[Keys.b]: string};
+                             ^^^^^^ [1]
+   indexed_access.js:13:6
+   13| y as number; // ERROR: the member keyed by `Keys.b` is `string`, not `number`
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- keyof.js:22:1
+
+Cannot cast `sym2` to `Keys` because property `[symbol]` is missing in `Obj` [1]. [prop-missing]
+
+   keyof.js:22:1
+   22| sym2 as Keys; // ERROR: sym2 is not a key of Obj
+       ^^^^
+
+References:
+   keyof.js:22:9
+   22| sym2 as Keys; // ERROR: sym2 is not a key of Obj
+               ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- keyof.js:24:1
+
+Cannot cast `"b"` to `Keys` because property `b` is missing in `Obj` [1]. [prop-missing]
+
+   keyof.js:24:1
+   24| "b" as Keys; // ERROR: string literal 'b' is not a key of Obj
+       ^^^
+
+References:
+   keyof.js:24:8
+   24| "b" as Keys; // ERROR: string literal 'b' is not a key of Obj
+              ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- keyof.js:33:24
+
+Cannot instantiate `Wrap` because in type argument `K`: property `[symbol]` is missing in `Obj` [1]. [prop-missing]
+
+   keyof.js:33:24
+   33| declare const w2: Wrap<typeof sym2>; // ERROR: sym2 is not in keyof Obj
+                              ^^^^^^^^^^^
+
+References:
+   keyof.js:28:21
+   28| type Wrap<K extends Keys> = {key: K};
+                           ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- keyof.js:43:1
+
+Cannot cast `sym2` to key set because property `[symbol]` is missing in `SymOnly` [1]. [prop-missing]
+
+   keyof.js:43:1
+   43| sym2 as keyof SymOnly; // ERROR: sym2 is not a key of SymOnly
+       ^^^^
+
+References:
+   keyof.js:43:15
+   43| sym2 as keyof SymOnly; // ERROR: sym2 is not a key of SymOnly
+                     ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- keyof.js:53:10
+
+Cannot return `k` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof.js:53:10
+   53|   return k; // ERROR: symbol key is not a string
+                ^
+
+References:
+   keyof.js:52:37
+   52| function returnSymObjKeyAsString(k: keyof typeof symObj): string {
+                                           ^^^^^^^^^^^^^^^^^^^ [1]
+   keyof.js:52:59
+   52| function returnSymObjKeyAsString(k: keyof typeof symObj): string {
+                                                                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- keyof.js:56:10
+
+Cannot return `k` because `symbol` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   keyof.js:56:10
+   56|   return k; // ERROR: keyset is not empty
+                ^
+
+References:
+   keyof.js:55:36
+   55| function returnSymObjKeyAsEmpty(k: keyof typeof symObj): empty {
+                                          ^^^^^^^^^^^^^^^^^^^ [1]
+   keyof.js:55:58
+   55| function returnSymObjKeyAsEmpty(k: keyof typeof symObj): empty {
+                                                                ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- keyof_annotation.js:12:1
+
+Cannot cast `key` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_annotation.js:12:1
+   12| key as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^
+
+References:
+   keyof_annotation.js:9:28
+    9| declare const key: keyof {[typeof s]: number};
+                                  ^^^^^^^^ [1]
+   keyof_annotation.js:12:8
+   12| key as string; // ERROR: the key is a `unique symbol`, not a string
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- keyof_annotation.js:18:1
+
+Cannot cast `ikey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_annotation.js:18:1
+   18| ikey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^
+
+References:
+   keys.d.ts:26:7
+   26|   [k: SKey]: number;
+             ^^^^ [1]
+   keyof_annotation.js:18:9
+   18| ikey as string; // ERROR: the key is a `unique symbol`, not a string
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- keyof_annotation.js:22:1
+
+Cannot cast `ckey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_annotation.js:22:1
+   22| ckey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^
+
+References:
+   keys.d.ts:30:7
+   30|   [k: SKey]: number;
+             ^^^^ [1]
+   keyof_annotation.js:22:9
+   22| ckey as string; // ERROR: the key is a `unique symbol`, not a string
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- keyof_annotation.js:28:1
+
+Cannot cast `akey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_annotation.js:28:1
+   28| akey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^
+
+References:
+   keyof_annotation.js:26:32
+   26| declare const akey: keyof {[k: SKey]: number};
+                                      ^^^^ [1]
+   keyof_annotation.js:28:9
+   28| akey as string; // ERROR: the key is a `unique symbol`, not a string
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:20:1
+
+Cannot cast `aliasKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:20:1
+   20| aliasKey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^^
+
+References:
+   keyof_deferred_key.js:16:31
+   16| declare const aliasDict: {[k: Id<typeof s>]: number};
+                                     ^^^^^^^^^^^^ [1]
+   keyof_deferred_key.js:20:13
+   20| aliasKey as string; // ERROR: the key is a `unique symbol`, not a string
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:28:1
+
+Cannot cast `condKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:28:1
+   28| condKey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^
+
+References:
+   keyof_deferred_key.js:24:30
+   24| declare const condDict: {[k: PickKey<true>]: number};
+                                    ^^^^^^^^^^^^^ [1]
+   keyof_deferred_key.js:28:12
+   28| condKey as string; // ERROR: the key is a `unique symbol`, not a string
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:36:1
+
+Cannot cast `condStrKey` to `typeof s` because `string` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:36:1
+   36| condStrKey as typeof s; // ERROR: the key is a string, not a symbol
+       ^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:32:33
+   32| declare const condStrDict: {[k: PickKey<false>]: number};
+                                       ^^^^^^^^^^^^^^ [1]
+   keyof_deferred_key.js:36:15
+   36| condStrKey as typeof s; // ERROR: the key is a string, not a symbol
+                     ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:43:1
+
+Cannot cast `importedKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:43:1
+   43| importedKey as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^^^^^
+
+References:
+   deferred_key.js:9:33
+    9| export type DeferredDict = {[k: Id<typeof s>]: number};
+                                       ^^^^^^^^^^^^ [1]
+   keyof_deferred_key.js:43:16
+   43| importedKey as string; // ERROR: the key is a `unique symbol`, not a string
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:51:1
+
+Cannot cast `keysOf(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:51:1
+   51| keysOf(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:48:26
+   48| declare const symDict: {[typeof s]: number};
+                                ^^^^^^^^ [1]
+   keyof_deferred_key.js:51:20
+   51| keysOf(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:52:1
+
+Cannot cast `keysOf(...)` to `typeof t` because unique symbol [1] is incompatible with unique symbol [2].
+[incompatible-type]
+
+   keyof_deferred_key.js:52:1
+   52| keysOf(symDict) as typeof t; // ERROR: a distinct symbol is not a key
+       ^^^^^^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:48:26
+   48| declare const symDict: {[typeof s]: number};
+                                ^^^^^^^^ [1]
+   keyof_deferred_key.js:52:20
+   52| keysOf(symDict) as typeof t; // ERROR: a distinct symbol is not a key
+                          ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:58:1
+
+Cannot cast `keysOf(...)` to `typeof s` because `string` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:58:1
+   58| keysOf(strDict) as typeof s; // ERROR: the key is a string, not a symbol
+       ^^^^^^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:55:26
+   55| declare const strDict: {[string]: number};
+                                ^^^^^^ [1]
+   keyof_deferred_key.js:58:20
+   58| keysOf(strDict) as typeof s; // ERROR: the key is a string, not a symbol
+                          ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:65:1
+
+Cannot cast `keysOfDict(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:65:1
+   65| keysOfDict(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:48:26
+   48| declare const symDict: {[typeof s]: number};
+                                ^^^^^^^^ [1]
+   keyof_deferred_key.js:65:24
+   65| keysOfDict(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- keyof_deferred_key.js:69:10
+
+Cannot cast `keysOf<...>(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:69:10
+   69| keysOf<{[typeof s]: number}>(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+                ^^^^^^^^ [1]
+
+References:
+   keyof_deferred_key.js:69:42
+   69| keysOf<{[typeof s]: number}>(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+                                                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:78:1
+
+Cannot cast `keysOfBounded(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keyof_deferred_key.js:78:1
+   78| keysOfBounded(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   keyof_deferred_key.js:48:26
+   48| declare const symDict: {[typeof s]: number};
+                                ^^^^^^^^ [1]
+   keyof_deferred_key.js:78:27
+   78| keysOfBounded(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- keyof_instance.js:12:1
+
+Cannot cast `other` to key set because property `[symbol]` is missing in `I` [1]. [prop-missing]
+
+   keyof_instance.js:12:1
+   12| other as keyof I; // ERROR: `other` is not a key of `I`
+       ^^^^^
+
+References:
+   keyof_instance.js:12:16
+   12| other as keyof I; // ERROR: `other` is not a key of `I`
+                      ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- mapped_homomorphic.js:13:1
+
+Cannot cast `m[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   mapped_homomorphic.js:13:1
+   13| m[Keys.a] as string; // ERROR: number is not string (key `a` kept distinct)
+       ^^^^^^^^^
+
+References:
+   mapped_homomorphic.js:9:27
+    9| type M = {[K in keyof I]: I[K]};
+                                 ^^^^ [1]
+   mapped_homomorphic.js:13:14
+   13| m[Keys.a] as string; // ERROR: number is not string (key `a` kept distinct)
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- mapped_homomorphic.js:18:1
+
+Cannot cast `p[Keys.a]` to number because `void` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   mapped_homomorphic.js:18:1
+   18| p[Keys.a] as number; // ERROR: the property is optional, so it may be void
+       ^^^^^^^^^
+
+References:
+   keys.d.ts:34:13
+   34|   [Keys.a]: number;
+                   ^^^^^^ [1]
+   mapped_homomorphic.js:18:14
+   18| p[Keys.a] as number; // ERROR: the property is optional, so it may be void
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- mapped_remap.js:10:1
+
+Cannot cast `m[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   mapped_remap.js:10:1
+   10| m[Keys.a] as string; // ERROR: number is not string (a did not merge with b)
+       ^^^^^^^^^
+
+References:
+   mapped_remap.js:6:32
+    6| type M = {[K in keyof I as K]: I[K]};
+                                      ^^^^ [1]
+   mapped_remap.js:10:14
+   10| m[Keys.a] as string; // ERROR: number is not string (a did not merge with b)
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:12:3
+
+Cannot get `o[Keys.a]` because property `[a]` is missing in `Omit` [1]. [prop-missing]
+
+   omit.js:12:3
+   12| o[Keys.a]; // ERROR: [a] removed
+         ^^^^^^
+
+References:
+   omit.js:9:18
+    9| declare const o: O;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- omit.js:19:3
+
+Cannot get `p[Keys.b]` because property `[b]` is missing in mapped type [1]. [prop-missing]
+
+   omit.js:19:3
+   19| p[Keys.b]; // ERROR: only `[a]` is a key of P (would pass if it were an indexer)
+         ^^^^^^
+
+References:
+   omit.js:17:18
+   17| declare const p: P;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ typeof_identity.js:10:1
+
+Cannot cast `t` to `typeof s` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   typeof_identity.js:10:1
+   10| t as typeof s; // ERROR: a distinct unique symbol, not merged into `symbol`
+       ^
+
+References:
+   typeof_identity.js:6:18
+    6| declare const t: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   typeof_identity.js:10:6
+   10| t as typeof s; // ERROR: a distinct unique symbol, not merged into `symbol`
+            ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ typeof_identity.js:11:1
+
+Cannot cast `gen` to `typeof s` because symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   typeof_identity.js:11:1
+   11| gen as typeof s; // ERROR: generic `symbol` is not the unique symbol `s`
+       ^^^
+
+References:
+   typeof_identity.js:7:20
+    7| declare const gen: symbol;
+                          ^^^^^^ [1]
+   typeof_identity.js:11:8
+   11| gen as typeof s; // ERROR: generic `symbol` is not the unique symbol `s`
+              ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- value_as_type.js:15:1
+
+Cannot cast `o[s]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   value_as_type.js:15:1
+   15| o[s] as string; // ERROR: number is not string
+       ^^^^
+
+References:
+   value_as_type.js:10:16
+   10| type T = {[s]: number, [t]: string};
+                      ^^^^^^ [1]
+   value_as_type.js:15:9
+   15| o[s] as string; // ERROR: number is not string
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- value_as_type.js:16:3
+
+Cannot get `o[other]` because property `[symbol]` is missing in `T` [1]. [prop-missing]
+
+   value_as_type.js:16:3
+   16| o[other]; // ERROR: a distinct `unique symbol` is a distinct key, so it is missing
+         ^^^^^
+
+References:
+   value_as_type.js:11:18
+   11| declare const o: T;
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- value_consumer.js:9:1
+
+Cannot cast `o[s]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   value_consumer.js:9:1
+   9| o[s] as string; // ERROR: number is not string
+      ^^^^
+
+References:
+   value_exported.js:6:23
+   6| export type O = {[s]: number, [t]: string};
+                            ^^^^^^ [1]
+   value_consumer.js:9:9
+   9| o[s] as string; // ERROR: number is not string
+              ^^^^^^ [2]
+
+
+
+Found 33 errors

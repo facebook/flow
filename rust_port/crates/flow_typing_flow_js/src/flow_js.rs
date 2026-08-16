@@ -211,7 +211,7 @@ mod dispatch;
 mod enum_helpers;
 mod eval_helpers;
 mod get_prop_helpers;
-pub(crate) use get_prop_helpers::prop_typo_suggestion;
+pub(crate) use get_prop_helpers::prop_typo_suggestion_for_name;
 mod helpers;
 mod inheritance_helpers;
 mod instantiation_helpers;

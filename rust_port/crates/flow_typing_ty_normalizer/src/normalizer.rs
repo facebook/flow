@@ -483,7 +483,7 @@ fn mk_fun(
 fn symbol_from_loc<'cx>(
     env: &mut Env<'_, 'cx>,
     sym_def_loc: ALoc,
-    sym_name: Name,
+    sym_name: FlowSmolStr,
 ) -> Result<ALocSymbol, Error> {
     let symbol_source = sym_def_loc.source();
     let current_source = env.genv.cx.file();
@@ -502,7 +502,7 @@ fn symbol_from_loc<'cx>(
         Some(_) => Provenance::Local,
         None => Provenance::Local,
     };
-    let sym_anonymous = sym_name == Name::new("<<anonymous class>>");
+    let sym_anonymous = sym_name.as_str() == "<<anonymous class>>";
     Ok(Symbol {
         sym_provenance,
         sym_def_loc,
@@ -518,7 +518,7 @@ fn ty_symbol_from_symbol<'cx>(
     symbol_from_loc(
         env,
         symbol.def_loc_of_symbol().dupe(),
-        Name::new(symbol.name().to_string()),
+        FlowSmolStr::new(symbol.name()),
     )
 }
 
@@ -527,7 +527,7 @@ fn ty_symbol_from_symbol<'cx>(
 fn symbol_from_reason<'cx>(
     env: &mut Env<'_, 'cx>,
     reason: &Reason,
-    name: Name,
+    name: FlowSmolStr,
 ) -> Result<ALocSymbol, Error> {
     let def_loc = reason.def_loc().dupe();
     symbol_from_loc(env, def_loc, name)
@@ -1002,21 +1002,13 @@ mod reason_utils {
             desc: &ReasonDesc<ALoc>,
         ) -> Result<Option<ALocSymbol>, Error> {
             match desc {
-                ReasonDesc::REnum { name: Some(name) } => Ok(Some(symbol_from_reason(
-                    env,
-                    reason,
-                    Name::new(name.dupe()),
-                )?)),
-                ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => Ok(Some(symbol_from_loc(
-                    env,
-                    loc.dupe(),
-                    Name::new(name.dupe()),
-                )?)),
-                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(
-                    env,
-                    reason,
-                    Name::new(name.dupe()),
-                )?)),
+                ReasonDesc::REnum { name: Some(name) } => {
+                    Ok(Some(symbol_from_reason(env, reason, name.dupe())?))
+                }
+                ReasonDesc::RTypeAlias(box (name, Some(loc), _)) => {
+                    Ok(Some(symbol_from_loc(env, loc.dupe(), name.dupe())?))
+                }
+                ReasonDesc::RType(name) => Ok(Some(symbol_from_reason(env, reason, name.dupe())?)),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Ok(None),
             }
@@ -1052,10 +1044,8 @@ mod reason_utils {
                 | ReasonDesc::RDefaultImportedType(name, _)
                 | ReasonDesc::RImportStarType(name)
                 | ReasonDesc::RImportStarTypeOf(name)
-                | ReasonDesc::RImportStar(name) => {
-                    symbol_from_reason(env, reason, Name::new(name.dupe()))
-                }
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, Name::new(name.dupe())),
+                | ReasonDesc::RImportStar(name) => symbol_from_reason(env, reason, name.dupe()),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1077,10 +1067,8 @@ mod reason_utils {
             desc: &ReasonDesc<ALoc>,
         ) -> Result<ALocSymbol, Error> {
             match desc {
-                ReasonDesc::ROpaqueType(name) => {
-                    symbol_from_reason(env, reason, Name::new(name.dupe()))
-                }
-                ReasonDesc::RType(name) => symbol_from_reason(env, reason, Name::new(name.dupe())),
+                ReasonDesc::ROpaqueType(name) => symbol_from_reason(env, reason, name.dupe()),
+                ReasonDesc::RType(name) => symbol_from_reason(env, reason, name.dupe()),
                 ReasonDesc::RUnionBranching(inner_desc, _) => loop_(env, reason, inner_desc),
                 _ => Err(terr(
                     ErrorKind::BadTypeAlias,
@@ -1098,9 +1086,11 @@ mod reason_utils {
     ) -> Result<ALocSymbol, Error> {
         match reason.desc(true) {
             ReasonDesc::RType(name) | ReasonDesc::RIdentifier(name) => {
-                symbol_from_reason(env, reason, Name::new(name.dupe()))
+                symbol_from_reason(env, reason, name.dupe())
             }
-            ReasonDesc::RThisType => symbol_from_reason(env, reason, Name::new("this")),
+            ReasonDesc::RThisType => {
+                symbol_from_reason(env, reason, FlowSmolStr::new_inline("this"))
+            }
             _ => Err(terr(
                 ErrorKind::BadInstanceT,
                 Some("could not extract instance name from reason"),
@@ -1114,7 +1104,7 @@ mod reason_utils {
         name: &FlowSmolStr,
         reason: &Reason,
     ) -> Result<ALocSymbol, Error> {
-        symbol_from_reason(env, reason, Name::new(name.dupe()))
+        symbol_from_reason(env, reason, name.dupe())
     }
 
     pub fn module_symbol_opt<'cx>(
@@ -1125,7 +1115,7 @@ mod reason_utils {
             ReasonDesc::RModule(name) => Ok(Some(symbol_from_reason(
                 env,
                 reason,
-                Name::new(name.display()),
+                FlowSmolStr::new(name.display()),
             )?)),
             ReasonDesc::RExports => Ok(None),
             _ => Err(terr(
@@ -1204,7 +1194,7 @@ mod type_converter {
             }
             TypeInner::NamespaceT(ns) if env.keep_only_namespace_name => {
                 let sym_def_loc = ns.namespace_symbol.def_loc_of_symbol().clone();
-                let sym_name = Name::new(ns.namespace_symbol.name().to_string());
+                let sym_name = FlowSmolStr::new(ns.namespace_symbol.name());
                 let symbol = symbol_from_loc(env, sym_def_loc, sym_name)?;
                 Ok(Arc::new(ty::Ty::TypeOf(Box::new((
                     ty::BuiltinOrSymbol::TSymbol(symbol),
@@ -1225,7 +1215,7 @@ mod type_converter {
                         // field under_type_alias will be 'Some A'. If the type alias name in the reason
                         // is also A, then we are still at the top-level of the type-alias, so we
                         // proceed by expanding one level preserving the same environment.
-                        let symbol = symbol_from_loc(env, loc.clone(), Name::new(name.dupe()))?;
+                        let symbol = symbol_from_loc(env, loc.clone(), name.dupe())?;
                         // Optionally collect the body type for ref expansion
                         if let Some(tbl) = &env.genv.ref_type_bodies {
                             let mut tbl = tbl.borrow_mut();
@@ -2641,7 +2631,7 @@ mod type_converter {
                 _,
                 name,
             )) => {
-                let opaque_symbol = symbol_from_reason(env, reason, Name::new(name.dupe()))?;
+                let opaque_symbol = symbol_from_reason(env, reason, name.dupe())?;
                 let targs = if nominal.nominal_type_args.is_empty() {
                     None
                 } else {
@@ -2750,10 +2740,10 @@ mod type_converter {
         // GenericT normalizes to Ty.Bound, except for conditional "infer" types.
         match found {
             Some(tp) => {
-                let tp_name = tp.name.string_of_subst_name().to_string();
+                let tp_name = FlowSmolStr::new(tp.name.string_of_subst_name());
                 let tp_reason = tp.reason.clone();
                 let tp_bound = tp.bound.clone();
-                let symbol = symbol_from_reason(env, &tp_reason, Name::new(tp_name))?;
+                let symbol = symbol_from_reason(env, &tp_reason, tp_name)?;
                 let bound = param_bound::<I>(env, state, &tp_bound)?;
                 Ok(Arc::new(ty::Ty::Infer(Box::new((symbol, bound)))))
             }
@@ -3168,7 +3158,10 @@ mod type_converter {
                         type__::<I>(env, state, None, t)?
                     }
                     OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name) => {
-                        Arc::new(ty::Ty::StrLit(name.as_smol_str().dupe()))
+                        match name {
+                            Name::Symbol(_) => Arc::new(ty::Ty::Symbol),
+                            Name::Str(s) => Arc::new(ty::Ty::StrLit(s.dupe())),
+                        }
                     }
                 };
                 Ok(Arc::new(ty::Ty::IndexedAccess {
@@ -3202,7 +3195,10 @@ mod type_converter {
                 Ok(Arc::new(ty::Ty::Utility(ty::Utility::ObjKeyMirror(ty))))
             }
             D::PropertyType { name } => {
-                let index = Arc::new(ty::Ty::StrLit(name.as_smol_str().dupe()));
+                let index = match name {
+                    Name::Symbol(_) => Arc::new(ty::Ty::Symbol),
+                    Name::Str(s) => Arc::new(ty::Ty::StrLit(s.dupe())),
+                };
                 Ok(Arc::new(ty::Ty::IndexedAccess {
                     _object: ty,
                     index,
@@ -3427,7 +3423,7 @@ pub mod element_converter {
 
         let current_source = env.genv.cx.file();
         let opaque_source = reason.def_loc().source();
-        let name = symbol_from_reason(env, reason, Name::new(name_str.dupe()))?;
+        let name = symbol_from_reason(env, reason, name_str.dupe())?;
         let t_opt: Option<&Type> = match &nominal_type.underlying_t {
             // opaque type A = number;
             nominal::UnderlyingT::OpaqueWithLocal { t }

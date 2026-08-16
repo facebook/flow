@@ -7,7 +7,7 @@
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc_sig::LocSig;
 
 #[derive(
@@ -88,7 +88,7 @@ pub enum Provenance<L> {
 pub struct Symbol<L> {
     pub sym_provenance: Provenance<L>,
     pub sym_def_loc: L,
-    pub sym_name: Name,
+    pub sym_name: FlowSmolStr,
     pub sym_anonymous: bool,
 }
 
@@ -97,7 +97,7 @@ pub type ALocRemoteInfo = RemoteInfo<ALoc>;
 pub type ALocProvenance = Provenance<ALoc>;
 pub type ALocSymbol = Symbol<ALoc>;
 
-pub fn builtin_symbol(name: Name) -> ALocSymbol {
+pub fn builtin_symbol(name: FlowSmolStr) -> ALocSymbol {
     Symbol {
         sym_provenance: Provenance::Builtin,
         sym_def_loc: ALoc::none(),

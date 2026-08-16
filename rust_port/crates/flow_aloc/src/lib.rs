@@ -517,7 +517,8 @@ impl LocSig for ALoc {
     }
 }
 
-#[derive(Debug, Clone, Dupe)]
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
+#[serde(transparent)]
 pub struct ALocId(pub ALoc);
 
 impl ALocId {

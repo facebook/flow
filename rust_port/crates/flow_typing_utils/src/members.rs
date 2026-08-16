@@ -737,10 +737,14 @@ pub fn to_command_result(
 
 fn find_props<'cx>(cx: &Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolStr, Property> {
     let props = cx.find_props(id);
-    // Filter out keys starting with "$" and convert Name -> String
+    // Filter out keys starting with "$" and convert Name -> String. Symbol-typed
+    // keys are skipped: they have no identifier spelling to autocomplete/hover on,
+    // and collapsing them to a placeholder string would merge distinct symbols.
     let mut result = BTreeMap::new();
     for (name, prop) in props.iter() {
-        let key = name.as_smol_str();
+        let Name::Str(key) = name else {
+            continue;
+        };
         // filter out keys that start with "$"
         if !key.starts_with('$') {
             result.insert(key.dupe(), prop.dupe());
@@ -972,9 +976,14 @@ pub fn extract_members<'cx>(
                 let values_members = extract_members_as_map(exclude_proto_members, cx, values_type);
                 let mut members = values_members;
                 for (name, p) in types_props.iter() {
+                    // A symbol-typed key has no identifier spelling to hover on; skip
+                    // it rather than collapse distinct symbols onto a placeholder.
+                    let Some(key) = name.as_smol_str_opt() else {
+                        continue;
+                    };
                     if let Some(t) = flow_typing_type::type_::property::read_t(p) {
                         let loc = flow_typing_type::type_::property::def_locs(p);
-                        members.insert(name.as_smol_str().dupe(), (loc, t.dupe()));
+                        members.insert(key.dupe(), (loc, t.dupe()));
                     }
                 }
                 GenericT::SuccessNamespace(members)

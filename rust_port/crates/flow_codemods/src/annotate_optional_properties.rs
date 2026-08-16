@@ -454,7 +454,7 @@ impl<'a, 'cx> AnnotateOptionalPropertiesMapper<'a, 'cx> {
                 prop_accesses,
                 ..
             } = data;
-            if name.as_str().is_empty() {
+            if name.matches_str("") {
                 acc
             } else {
                 let ts: Vec<ALocTy> = init_locs

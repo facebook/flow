@@ -735,7 +735,12 @@ pub(super) fn unify_prop_with_dict<'cx>(
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
     match dict {
         Some(dict_t) => {
-            let string_key_t = flow_js_utils::string_key(x.dupe(), &prop_reason);
+            // A symbol-typed key must be checked against the dict key as a
+            // `unique symbol` type, not as a `SingletonStrT` placeholder.
+            let key_t = match x.as_smol_str_opt() {
+                Some(s) => flow_js_utils::string_key(s.dupe(), &prop_reason),
+                None => flow_js_utils::type_of_key_name(cx, x.dupe(), &prop_reason),
+            };
             let indexer_use_op = UseOp::Frame(
                 Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
                     lower: dict_reason.dupe(),
@@ -747,7 +752,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
                 cx,
                 trace,
                 (
-                    &string_key_t,
+                    &key_t,
                     &UseT::new(UseTInner::UseT(indexer_use_op, dict_t.key.dupe())),
                 ),
             )?;

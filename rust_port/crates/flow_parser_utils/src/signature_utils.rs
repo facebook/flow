@@ -84,8 +84,9 @@ pub fn is_munged_property_string(name: &str) -> bool {
 }
 
 pub fn is_munged_property_name(name: &Name) -> bool {
-    // TODO consider adding another name variant for munged property strings
-    is_munged_property_string(name.as_str())
+    // TODO consider adding another name variant for munged property strings.
+    // A symbol key has no string spelling and is never munged.
+    name.as_str_opt().is_some_and(is_munged_property_string)
 }
 
 pub mod this_finder {

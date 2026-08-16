@@ -111,6 +111,15 @@ fn partition_keys_and_indexer<'cx>(
                 keys_result.push((Name::new(name.dupe()), r.dupe()));
                 continue;
             }
+            // A `unique symbol` mapped-type key is a distinct named destination
+            // keyed by its nominal identity, not an indexer. Treating it as an
+            // indexer would make `{[K in typeof s]: V}` a symbol-keyed dictionary
+            // that matches every symbol, which e.g. makes `Omit<O, typeof s>` drop
+            // every property. Mirrors `dispatch_substituted_name`.
+            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(sym) = def_t.deref() => {
+                keys_result.push((Name::symbol(sym.dupe()), r.dupe()));
+                continue;
+            }
             TypeInner::DefT(_, def_t) if let DefTInner::EmptyT = def_t.deref() => continue,
             _ => {}
         }
@@ -148,6 +157,12 @@ fn dispatch_substituted_name<'cx>(
             {
                 dests.push((Name::new(str.clone()), r.dupe()));
             }
+            // A `unique symbol` destination is a distinct named property keyed by
+            // its nominal identity, not an indexer. Routing it here keeps distinct
+            // symbols apart instead of collapsing them into a single indexer.
+            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(sym) = def_t.deref() => {
+                dests.push((Name::symbol(sym.dupe()), r.dupe()));
+            }
             _ => idx_keys.push(t.dupe()),
         }
     }
@@ -174,7 +189,12 @@ fn compute_name_remap<'cx>(
             Some(p) => property::first_loc(p).unwrap_or_else(|| reason.loc().dupe()),
             _ => reason.loc().dupe(),
         };
-        let key_str = k.as_smol_str().dupe();
+        // A symbol-typed key remaps as a `unique symbol` type, not a string literal.
+        let Name::Str(key_str) = k else {
+            let r = flow_common::reason::mk_reason(VirtualReasonDesc::RUniqueSymbol, key_loc);
+            return flow_js_utils::type_of_key_name(cx, k.dupe(), &r);
+        };
+        let key_str = key_str.dupe();
         Type::new(TypeInner::DefT(
             flow_common::reason::mk_reason(VirtualReasonDesc::RStringLit(key_str.dupe()), key_loc),
             flow_typing_type::type_::DefT::new(DefTInner::SingletonStrT {

@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc_sig::LocSig;
 
 use crate::ty::ALocTy;
@@ -34,9 +34,9 @@ use crate::ty_symbol::Symbol;
 pub const MAX_SIZE: usize = 10000;
 
 pub fn patch_up_react_symbol(symbol: &Symbol<ALoc>) -> Option<Symbol<ALoc>> {
-    if let Some(name) = symbol.sym_name.as_str().strip_prefix("React$") {
+    if let Some(name) = symbol.sym_name.strip_prefix("React$") {
         return Some(Symbol {
-            sym_name: Name::new(format!("React.{name}")),
+            sym_name: FlowSmolStr::from(format!("React.{name}")),
             ..symbol.clone()
         });
     }
@@ -79,7 +79,7 @@ pub fn patch_up_react_symbol(symbol: &Symbol<ALoc>) -> Option<Symbol<ALoc>> {
     }
 
     Some(Symbol {
-        sym_name: Name::new(format!("React.{name}")),
+        sym_name: FlowSmolStr::from(format!("React.{name}")),
         ..symbol.clone()
     })
 }
@@ -105,7 +105,7 @@ impl TyEndoTy<ALoc, ()> for PatchUpReactTypes {
                     Symbol {
                         sym_provenance: Provenance::Builtin,
                         sym_def_loc: ALoc::none(),
-                        sym_name: Name::new("React.ElementConfig"),
+                        sym_name: FlowSmolStr::new("React.ElementConfig"),
                         sym_anonymous: false,
                     },
                     GenKind::TypeAliasKind,
@@ -362,14 +362,14 @@ pub mod simplify {
                             &name2.sym_provenance,
                         )?;
                         self.on_aloc(env, &name1.sym_def_loc, &name2.sym_def_loc)?;
-                        self.on_name(env, &name1.sym_name, &name2.sym_name)?;
+                        self.on_string(env, &name1.sym_name, &name2.sym_name)?;
                         self.on_bool(env, name1.sym_anonymous, name2.sym_anonymous)
                     }
                 }
             } else {
                 compare_provenance(self, env, &name1.sym_provenance, &name2.sym_provenance)?;
                 self.on_aloc(env, &name1.sym_def_loc, &name2.sym_def_loc)?;
-                self.on_name(env, &name1.sym_name, &name2.sym_name)?;
+                self.on_string(env, &name1.sym_name, &name2.sym_name)?;
                 self.on_bool(env, name1.sym_anonymous, name2.sym_anonymous)
             }
         }

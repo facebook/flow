@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::Name;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::Decl;
 use flow_common_ty::ty::DeclModuleDeclData;
@@ -20,6 +19,7 @@ use flow_common_ty::ty::symbols_of_elt;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
 use flow_common_ty::ty_utils;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
@@ -97,7 +97,7 @@ pub fn type_at_pos_type<'a>(
             FinderResult::HardcodedModuleResult(loc, name) => {
                 let module_symbol = Symbol {
                     sym_provenance: Provenance::Local,
-                    sym_name: Name::new(name),
+                    sym_name: FlowSmolStr::new(name),
                     sym_anonymous: false,
                     sym_def_loc: ALoc::of_loc(loc.dupe()),
                 };

@@ -878,7 +878,12 @@ fn json_of_property_map_value<'cx>(
 ) -> Json {
     let props_json: serde_json::Map<String, Json> = props
         .iter()
-        .map(|(name, prop)| (name.as_str().to_string(), json_of_property(cx, depth, prop)))
+        .map(|(name, prop)| {
+            (
+                name.display_smol_str().to_string(),
+                json_of_property(cx, depth, prop),
+            )
+        })
         .collect();
     Json::Object(props_json)
 }
@@ -901,7 +906,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
     match destructor {
         Destructor::NonMaybeType => json!({"kind": "NonMaybeType"}),
         Destructor::PropertyType { name } => {
-            json!({"kind": "PropertyType", "name": name.as_str()})
+            json!({"kind": "PropertyType", "name": name.display_smol_str().to_string()})
         }
         Destructor::ElementType { index_type } => {
             json!({"kind": "ElementType", "index_type": type_to_json(cx, depth - 1, index_type)})
@@ -909,7 +914,7 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
         Destructor::OptionalIndexedAccessNonMaybeType { index } => {
             let index_json = match index {
                 OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name) => {
-                    json!({"kind": "StrLitIndex", "name": name.as_str()})
+                    json!({"kind": "StrLitIndex", "name": name.display_smol_str().to_string()})
                 }
                 OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(t) => {
                     json!({"kind": "TypeIndex", "type": type_to_json(cx, depth - 1, t)})
@@ -1023,7 +1028,12 @@ fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructo
         Destructor::ReactCheckComponentConfig { props } => {
             let props_json: serde_json::Map<String, Json> = props
                 .iter()
-                .map(|(name, prop)| (name.as_str().to_string(), json_of_property(cx, depth, prop)))
+                .map(|(name, prop)| {
+                    (
+                        name.display_smol_str().to_string(),
+                        json_of_property(cx, depth, prop),
+                    )
+                })
                 .collect();
             json!({
                 "kind": "ReactCheckComponentConfig",
@@ -1150,7 +1160,12 @@ fn json_of_property_map_from_btreemap<'cx>(
 ) -> Json {
     let props_json: serde_json::Map<String, Json> = props
         .iter()
-        .map(|(name, prop)| (name.as_str().to_string(), json_of_property(cx, depth, prop)))
+        .map(|(name, prop)| {
+            (
+                name.display_smol_str().to_string(),
+                json_of_property(cx, depth, prop),
+            )
+        })
         .collect();
     Json::Object(props_json)
 }

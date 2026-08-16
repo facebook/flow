@@ -72,7 +72,7 @@ pub(super) fn check_canceled<'cx>(
 }
 
 pub(super) fn inherited_method(name: &Name) -> bool {
-    name.as_str() != "constructor"
+    !name.matches_str("constructor")
 }
 
 pub(super) fn speculative_subtyping_succeeds<'cx>(
@@ -667,6 +667,30 @@ pub(super) fn handle_generic<'cx>(
             )?;
             Ok(true)
         }
+        // A generic indexer key stays generic in the key set, the same way it
+        // does under the `ToStringT` that a non-symbol key ends up in.
+        UseTInner::GetKeysDictKeyT {
+            reason: keys_reason,
+            t_out,
+            include_symbols,
+        } => {
+            let keys_reason = keys_reason.dupe();
+            let include_symbols = *include_symbols;
+            narrow_generic_use(
+                &|t_out_prime: Tvar| -> UseT<Context<'cx>> {
+                    UseT::new(UseTInner::GetKeysDictKeyT {
+                        reason: keys_reason.dupe(),
+                        t_out: Box::new(UseT::new(UseTInner::UseT(
+                            unknown_use(),
+                            Type::new(TypeInner::OpenT(t_out_prime)),
+                        ))),
+                        include_symbols,
+                    })
+                },
+                t_out.as_ref().dupe(),
+            )?;
+            Ok(true)
+        }
         UseTInner::UseT(use_op, t) if let TypeInner::MaybeT(r, t_out) = t.deref() => {
             let use_op_cloned = use_op.dupe();
             let r = r.dupe();
@@ -776,7 +800,7 @@ pub(super) fn handle_generic<'cx>(
                 name: prop_name,
                 ..
             } = data.propref.as_ref()
-                && prop_name.as_str() == "constructor" =>
+                && prop_name.matches_str("constructor") =>
         {
             if is_concrete(bound) {
                 match bound.deref() {

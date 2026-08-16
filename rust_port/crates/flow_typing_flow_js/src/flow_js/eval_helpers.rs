@@ -1606,7 +1606,9 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 }
                 Destructor::PropertyType { name } => {
                     try_evaluate(
-                        nominal::StuckEvalKind::StuckEvalForPropertyType { name: name.dupe() },
+                        nominal::StuckEvalKind::StuckEvalForPropertyType {
+                            name: Box::new(name.dupe()),
+                        },
                         vec![t.dupe()],
                         None,
                     );
@@ -1623,7 +1625,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 } => {
                     try_evaluate(
                         nominal::StuckEvalKind::StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {
-                            name: name.dupe(),
+                            name: Box::new(name.dupe()),
                         },
                         vec![t.dupe()],
                         None,

@@ -497,6 +497,7 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::TestPropT(..)
         | UseTInner::ThisSpecializeT(..)
         | UseTInner::ToStringT { .. }
+        | UseTInner::GetKeysDictKeyT { .. }
         | UseTInner::ValueToTypeReferenceT(..)
         | UseTInner::EvalTypeDestructorT(..)
         | UseTInner::ConvertEmptyPropsToMixedT(..)

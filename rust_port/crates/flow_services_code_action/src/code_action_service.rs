@@ -1265,8 +1265,20 @@ pub fn ast_transforms_of_error(
             spread: error_loc,
             duplicates,
         }) => {
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                let duplicates = duplicates.clone();
+            // Component prop keys are always string-named. A `unique symbol` key
+            // has no faithful string-literal spelling for the `Omit<...>`
+            // annotation, so offer the quickfix only when every duplicate is a
+            // string key; otherwise the `Omit` could not fully remove them.
+            let string_duplicates: Option<Vec<(Loc, FlowSmolStr, Loc)>> = duplicates
+                .iter()
+                .map(|(l1, x, l2)| {
+                    x.as_smol_str_opt()
+                        .map(|s| (l1.dupe(), s.dupe(), l2.dupe()))
+                })
+                .collect();
+            if loc_opt_intersects(loc, error_loc.dupe())
+                && let Some(duplicates) = string_duplicates
+            {
                 vec![AstTransformOfError {
                     title: "Wrap spread prop with Omit".to_string(),
                     diagnostic_title: "wrap_spread_prop_with_omit".to_string(),
@@ -1276,8 +1288,8 @@ pub fn ast_transforms_of_error(
                         autofix_replace_type::replace_type(
                             &move |t: &TypeInner<Loc, Loc>| {
                                 let string_lit_annot_of_duplicate =
-                                    |(_loc, x, _loc2): &(Loc, flow_common::reason::Name, Loc)| -> ast::types::Type<Loc, Loc> {
-                                        let n = x.as_str().to_string();
+                                    |(_loc, n, _loc2): &(Loc, FlowSmolStr, Loc)| -> ast::types::Type<Loc, Loc> {
+                                        let n = n.to_string();
                                         ast::types::Type::new(TypeInner::StringLiteral {
                                             loc: LOC_NONE,
                                             literal: ast::StringLiteral {
@@ -1287,7 +1299,7 @@ pub fn ast_transforms_of_error(
                                             },
                                         })
                                     };
-                                let n1 = duplicates.first();
+                                let n1 = &duplicates[0];
                                 let rest = &duplicates[1..];
                                 let omitted_keys_annot = if rest.is_empty() {
                                     string_lit_annot_of_duplicate(n1)

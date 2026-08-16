@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::fmt::Display;
 use std::fmt::Write;
 use std::sync::Arc;
 
@@ -131,7 +132,7 @@ fn in_quotes(prefer_single_quotes: bool, s: &str) -> Vec<LayoutNode> {
     ]
 }
 
-fn identifier(name: &Name) -> LayoutNode {
+fn identifier(name: &impl Display) -> LayoutNode {
     LayoutNode::atom(name.to_string())
 }
 
@@ -169,12 +170,12 @@ fn wrap_in_parens(node: LayoutNode) -> LayoutNode {
     ])
 }
 
-fn local_name_of_symbol<L>(symbol: &Symbol<L>) -> Name {
+fn local_name_of_symbol<L>(symbol: &Symbol<L>) -> FlowSmolStr {
     // If the type is imported use the local name
     match &symbol.sym_provenance {
         Provenance::Remote(RemoteInfo {
             imported_as: Some(ImportedIdent(_, name, _)),
-        }) => Name::new(name.as_str()),
+        }) => FlowSmolStr::new(name.as_str()),
         _ => symbol.sym_name.dupe(),
     }
 }
@@ -706,6 +707,11 @@ fn type_object_property<L: Dupe>(
     size: &mut usize,
 ) -> LayoutNode {
     let to_key = |name: &Name| -> LayoutNode {
+        // A symbol key is rendered TypeScript-style as a bracketed computed key
+        // (e.g. `[sym]`, or `[symbol]` when the name is unknown), never quoted.
+        if name.is_symbol() {
+            return LayoutNode::atom(name.to_string());
+        }
         let name_str = name.to_string();
         if property_key_quotes_needed(&name_str) {
             let quote = better_quote(opts.prefer_single_quotes, &name_str);
@@ -1602,7 +1608,7 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
     syms: &std::collections::BTreeSet<Symbol<L>>,
 ) -> Vec<(String, L)> {
     let mut elems: Vec<_> = syms.iter().collect();
-    elems.sort_by(|s1, s2| s1.sym_name.as_str().cmp(s2.sym_name.as_str()));
+    elems.sort_by(|s1, s2| s1.sym_name.cmp(&s2.sym_name));
     elems
         .into_iter()
         .map(|sym| {
@@ -1611,7 +1617,7 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
                 sym_def_loc,
                 ..
             } = sym;
-            (sym_name.as_str().to_string(), sym_def_loc.clone())
+            (sym_name.to_string(), sym_def_loc.clone())
         })
         .collect()
 }

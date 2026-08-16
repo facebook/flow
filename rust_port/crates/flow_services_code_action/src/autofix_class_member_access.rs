@@ -202,7 +202,7 @@ fn is_member(
         type_,
     ) {
         Err(_) => false,
-        Ok(ty_members::TyMembers { members, .. }) => members.keys().any(|n| n.as_str() == name),
+        Ok(ty_members::TyMembers { members, .. }) => members.keys().any(|n| n.matches_str(name)),
     }
 }
 

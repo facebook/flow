@@ -166,12 +166,24 @@ pub(crate) fn prop_typo_suggestion<'cx>(
         .flat_map(|id| {
             cx.find_props(id.dupe())
                 .iter()
-                .map(|(k, _)| k.as_smol_str().dupe())
+                .filter_map(|(k, _)| k.as_smol_str_opt().map(Dupe::dupe))
                 .collect::<Vec<_>>()
         })
         .collect();
     let refs: Vec<&FlowSmolStr> = possible_names.iter().collect();
     flow_common_utils::utils_js::typo_suggestion(&refs, name)
+}
+
+/// `prop_typo_suggestion` for a property key that may be a symbol. A symbol key
+/// has no string spelling to match against string property names, so it gets no
+/// suggestion. Passing its empty string accessor instead would land in
+/// `typo_suggestion`'s longest-name bucket and suggest every short property.
+pub(crate) fn prop_typo_suggestion_for_name<'cx>(
+    cx: &Context<'cx>,
+    ids: &[properties::Id],
+    name: &Name,
+) -> Option<FlowSmolStr> {
+    prop_typo_suggestion(cx, ids, name.as_str_opt()?)
 }
 
 pub(super) fn get_private_prop<'cx>(
@@ -552,10 +564,10 @@ pub(super) fn write_obj_prop<'cx>(
                             prop_loc: reason_prop.loc().dupe(),
                             reason_obj: reason_obj.dupe(),
                             use_op: use_op.dupe(),
-                            suggestion: prop_typo_suggestion(
+                            suggestion: prop_typo_suggestion_for_name(
                                 cx,
                                 &[o.props_tmap.dupe()],
-                                name.as_str(),
+                                name,
                             ),
                         })),
                     )

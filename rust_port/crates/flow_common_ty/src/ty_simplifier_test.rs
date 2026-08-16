@@ -12,6 +12,7 @@ mod tests {
     use dupe::Dupe;
     use flow_aloc::ALoc;
     use flow_common::reason::Name;
+    use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::file_key::FileKey;
     use flow_parser::file_key::FileKeyInner;
     use flow_parser::loc::Loc;
@@ -70,21 +71,21 @@ mod tests {
                 start: position,
                 end: position,
             }),
-            sym_name: Name::new("Portal"),
+            sym_name: FlowSmolStr::new_inline("Portal"),
             sym_anonymous: false,
         };
 
         let patched = patch_up_react_symbol(&symbol).unwrap();
-        assert_eq!(patched.sym_name, Name::new("React.Portal"));
+        assert_eq!(patched.sym_name, "React.Portal");
 
         let internal_symbol = Symbol {
             sym_provenance: Provenance::Local,
             sym_def_loc: ALoc::none(),
-            sym_name: Name::new("React$RendersExactly"),
+            sym_name: FlowSmolStr::new_inline("React$RendersExactly"),
             sym_anonymous: false,
         };
         let patched = patch_up_react_symbol(&internal_symbol).unwrap();
-        assert_eq!(patched.sym_name, Name::new("React.RendersExactly"));
+        assert_eq!(patched.sym_name, "React.RendersExactly");
 
         let element_config = Arc::new(Ty::Utility(Utility::ReactElementConfigType(Arc::new(
             Ty::Num,
@@ -93,7 +94,7 @@ mod tests {
         assert!(matches!(
             patched.as_ref(),
             Ty::Generic(box (symbol, _, Some(args)))
-                if symbol.sym_name == Name::new("React.ElementConfig")
+                if symbol.sym_name == "React.ElementConfig"
                     && matches!(args.as_ref(), [type_] if matches!(type_.as_ref(), Ty::Num))
         ));
     }

@@ -13,6 +13,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_ty::ty::ALocTy;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::statement;
 use flow_parser::file_key::FileKey;
@@ -358,7 +359,7 @@ pub mod imports_helper {
     use super::*;
 
     pub mod import_info {
-        use flow_common::reason::Name;
+
         use flow_common_ty::ty_symbol::ImportMode;
         use flow_common_ty::ty_symbol::ImportedIdent;
         use flow_common_ty::ty_symbol::Provenance;
@@ -438,7 +439,7 @@ pub mod imports_helper {
                             )),
                         }),
                         sym_anonymous: false,
-                        sym_name: Name::new(local_name),
+                        sym_name: FlowSmolStr::new(local_name),
                         sym_def_loc: sym_def_loc.dupe(),
                     }
                 }
@@ -468,7 +469,7 @@ pub mod imports_helper {
                             )),
                         }),
                         sym_anonymous: false,
-                        sym_name: Name::new(local_name),
+                        sym_name: FlowSmolStr::new(local_name),
                         sym_def_loc: sym_def_loc.dupe(),
                     }
                 }
@@ -477,7 +478,7 @@ pub mod imports_helper {
         }
     }
 
-    type ImportedNameMap = BTreeMap<flow_common::reason::Name, Vec<import_info::T>>;
+    type ImportedNameMap = BTreeMap<FlowSmolStr, Vec<import_info::T>>;
 
     type SymbolWithUseModeMap = BTreeMap<
         (flow_common_ty::ty_symbol::Symbol<ALoc>, UseMode),
@@ -721,7 +722,7 @@ pub mod imports_helper {
                         } => Symbol {
                             sym_provenance: Provenance::Local,
                             sym_anonymous: false,
-                            sym_name: flow_common::reason::Name::new(local_name.as_str()),
+                            sym_name: FlowSmolStr::new(local_name.as_str()),
                             sym_def_loc: sym_def_loc.dupe(),
                         },
                         Symbol {
@@ -749,7 +750,7 @@ pub mod imports_helper {
                         } if insert_type_utils::is_react_redux_loc(sym_def_loc, true) => Symbol {
                             sym_provenance: Provenance::Local,
                             sym_anonymous: false,
-                            sym_name: flow_common::reason::Name::new(local_name.as_str()),
+                            sym_name: FlowSmolStr::new(local_name.as_str()),
                             sym_def_loc: sym_def_loc.dupe(),
                         },
                         _ => s,
@@ -805,7 +806,7 @@ pub mod imports_helper {
                             let local = Symbol {
                                 sym_provenance: Provenance::Local,
                                 sym_def_loc: sym_def_loc.dupe(),
-                                sym_name: flow_common::reason::Name::new(sym_name.as_str()),
+                                sym_name: FlowSmolStr::new(sym_name.as_str()),
                                 sym_anonymous: false,
                             };
                             Arc::new(ty::Ty::Generic(Box::new((

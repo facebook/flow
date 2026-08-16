@@ -47,6 +47,7 @@ use flow_common::platform_set::PlatformSet;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
+use flow_common::reason::SymbolID;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name::SubstName;
@@ -436,7 +437,7 @@ pub enum DefTInner {
     NullT,
     VoidT,
     SymbolT,
-    UniqueSymbolT(ALocId),
+    UniqueSymbolT(SymbolID),
     FunT(Type, Rc<FunType>),
     ObjT(Rc<ObjType>),
     ArrT(Rc<ArrType>),
@@ -2503,6 +2504,17 @@ pub enum UseTInner<CX = ()> {
     GetKeysT {
         reason: Reason,
         t_out: Box<UseT<CX>>,
+        // Whether symbol keys are included: type-level `keyof` includes
+        // them, runtime enumeration APIs do not.
+        include_symbols: bool,
+    },
+    // The indexer half of `GetKeysT`: contributes an index signature's key to
+    // the key set. A symbol-valued key contributes as that same symbol type and
+    // is left out of runtime enumeration; every other key is stringified.
+    GetKeysDictKeyT {
+        reason: Reason,
+        t_out: Box<UseT<CX>>,
+        include_symbols: bool,
     },
     HasOwnPropT(Box<HasOwnPropTData>),
     GetValuesT(Reason, Type),
@@ -2610,9 +2622,23 @@ impl<CX> Clone for UseTInner<CX> {
             UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
             UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
             UseTInner::ArrRestT(a) => UseTInner::ArrRestT(a.clone()),
-            UseTInner::GetKeysT { reason, t_out } => UseTInner::GetKeysT {
+            UseTInner::GetKeysT {
+                reason,
+                t_out,
+                include_symbols,
+            } => UseTInner::GetKeysT {
                 reason: reason.clone(),
                 t_out: t_out.clone(),
+                include_symbols: *include_symbols,
+            },
+            UseTInner::GetKeysDictKeyT {
+                reason,
+                t_out,
+                include_symbols,
+            } => UseTInner::GetKeysDictKeyT {
+                reason: reason.clone(),
+                t_out: t_out.clone(),
+                include_symbols: *include_symbols,
             },
             UseTInner::HasOwnPropT(a) => UseTInner::HasOwnPropT(a.clone()),
             UseTInner::GetValuesT(a, b) => UseTInner::GetValuesT(a.clone(), b.clone()),
@@ -2734,12 +2760,26 @@ impl<CX> PartialEq for UseTInner<CX> {
                 UseTInner::GetKeysT {
                     reason: r1,
                     t_out: t1,
+                    include_symbols: s1,
                 },
                 UseTInner::GetKeysT {
                     reason: r2,
                     t_out: t2,
+                    include_symbols: s2,
                 },
-            ) => r1 == r2 && t1 == t2,
+            ) => r1 == r2 && t1 == t2 && s1 == s2,
+            (
+                UseTInner::GetKeysDictKeyT {
+                    reason: r1,
+                    t_out: t1,
+                    include_symbols: s1,
+                },
+                UseTInner::GetKeysDictKeyT {
+                    reason: r2,
+                    t_out: t2,
+                    include_symbols: s2,
+                },
+            ) => r1 == r2 && t1 == t2 && s1 == s2,
             (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1 == a2,
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => a1 == a2 && b1 == b2,
             (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
@@ -2901,9 +2941,23 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 c.hash(state);
             }
             UseTInner::ArrRestT(a) => a.hash(state),
-            UseTInner::GetKeysT { reason, t_out } => {
+            UseTInner::GetKeysT {
+                reason,
+                t_out,
+                include_symbols,
+            } => {
                 reason.hash(state);
                 t_out.hash(state);
+                include_symbols.hash(state);
+            }
+            UseTInner::GetKeysDictKeyT {
+                reason,
+                t_out,
+                include_symbols,
+            } => {
+                reason.hash(state);
+                t_out.hash(state);
+                include_symbols.hash(state);
             }
             UseTInner::HasOwnPropT(a) => a.hash(state),
             UseTInner::GetValuesT(a, b) => {
@@ -3030,6 +3084,7 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::ConvertEmptyPropsToMixedT(..) => 59,
                 UseTInner::ExitRendersT { .. } => 60,
                 UseTInner::EvalTypeDestructorT(..) => 61,
+                UseTInner::GetKeysDictKeyT { .. } => 62,
             }
         }
         let disc = variant_index(self).cmp(&variant_index(other));
@@ -3138,12 +3193,26 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::GetKeysT {
                     reason: r1,
                     t_out: t1,
+                    include_symbols: s1,
                 },
                 UseTInner::GetKeysT {
                     reason: r2,
                     t_out: t2,
+                    include_symbols: s2,
                 },
-            ) => r1.cmp(r2).then_with(|| t1.cmp(t2)),
+            ) => r1.cmp(r2).then_with(|| t1.cmp(t2)).then_with(|| s1.cmp(s2)),
+            (
+                UseTInner::GetKeysDictKeyT {
+                    reason: r1,
+                    t_out: t1,
+                    include_symbols: s1,
+                },
+                UseTInner::GetKeysDictKeyT {
+                    reason: r2,
+                    t_out: t2,
+                    include_symbols: s2,
+                },
+            ) => r1.cmp(r2).then_with(|| t1.cmp(t2)).then_with(|| s1.cmp(s2)),
             (UseTInner::HasOwnPropT(a1), UseTInner::HasOwnPropT(a2)) => a1.cmp(a2),
             (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
@@ -3302,10 +3371,25 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(c)
                 .finish(),
             UseTInner::ArrRestT(a) => f.debug_tuple("ArrRestT").field(a).finish(),
-            UseTInner::GetKeysT { reason, t_out } => f
+            UseTInner::GetKeysT {
+                reason,
+                t_out,
+                include_symbols,
+            } => f
                 .debug_struct("GetKeysT")
                 .field("reason", reason)
                 .field("t_out", t_out)
+                .field("include_symbols", include_symbols)
+                .finish(),
+            UseTInner::GetKeysDictKeyT {
+                reason,
+                t_out,
+                include_symbols,
+            } => f
+                .debug_struct("GetKeysDictKeyT")
+                .field("reason", reason)
+                .field("t_out", t_out)
+                .field("include_symbols", include_symbols)
                 .finish(),
             UseTInner::HasOwnPropT(a) => f.debug_tuple("HasOwnPropT").field(a).finish(),
             UseTInner::GetValuesT(a, b) => f.debug_tuple("GetValuesT").field(a).field(b).finish(),
@@ -6941,8 +7025,8 @@ pub mod nominal {
         StuckEvalForConditionalType,
         StuckEvalForKeyMirrorType,
         StuckEvalForEnumType,
-        StuckEvalForPropertyType { name: Name },
-        StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name: Name },
+        StuckEvalForPropertyType { name: Box<Name> },
+        StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name: Box<Name> },
         StuckEvalForGenericallyMappedObject(SubstName),
         StuckEvalForReactDRO(DroType),
     }
@@ -6971,7 +7055,7 @@ pub mod nominal {
                 Id::StuckEval(kind) => match kind {
                     StuckEvalKind::StuckEvalForNonMaybeType => write!(f, "StuckEvalForNonMaybeType"),
                     StuckEvalKind::StuckEvalForPropertyType { name } => {
-                        write!(f, "StuckEvalForPropertyType {}", name.as_str())
+                        write!(f, "StuckEvalForPropertyType {}", name)
                     }
                     StuckEvalKind::StuckEvalForElementType => write!(f, "StuckEvalForElementType"),
                     StuckEvalKind::StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {
@@ -6979,7 +7063,7 @@ pub mod nominal {
                     } => write!(
                         f,
                         "StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {}",
-                        name.as_str()
+                        name
                     ),
                     StuckEvalKind::StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType => {
                         write!(f, "StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType")
@@ -9799,6 +9883,10 @@ pub mod aconstraint {
         AnnotObjKeyMirror(Reason),
         AnnotDeepReadOnlyT(Box<AnnotDeepReadOnlyTData>),
         AnnotGetKeysT(Reason),
+        // The indexer half of `AnnotGetKeysT`, mirroring `GetKeysDictKeyT`.
+        // Annotation inference always includes symbol keys, since a `keyof`
+        // annotation is type-level and never runtime enumeration.
+        AnnotGetKeysDictKeyT(Reason),
         AnnotToStringT {
             orig_t: Option<Type>,
             reason: Reason,
@@ -9920,6 +10008,7 @@ pub mod aconstraint {
                 | OpInner::AnnotNotT(reason)
                 | OpInner::AnnotObjKeyMirror(reason)
                 | OpInner::AnnotGetKeysT(reason)
+                | OpInner::AnnotGetKeysDictKeyT(reason)
                 | OpInner::AnnotToStringT { reason, .. }
                 | OpInner::AnnotObjRestT { reason, .. }
                 | OpInner::AnnotGetValuesT(reason) => reason.dupe(),
@@ -10004,6 +10093,7 @@ pub mod aconstraint {
                 OpInner::AnnotNotT(_) => "Annot_NotT",
                 OpInner::AnnotObjKeyMirror(_) => "Annot_ObjKeyMirror",
                 OpInner::AnnotGetKeysT(_) => "Annot_GetKeysT",
+                OpInner::AnnotGetKeysDictKeyT(_) => "Annot_GetKeysDictKeyT",
                 OpInner::AnnotToStringT { .. } => "Annot_ToStringT",
                 OpInner::AnnotObjRestT { .. } => "Annot_ObjRestT",
                 OpInner::AnnotGetValuesT(_) => "Annot_GetValuesT",
@@ -10453,13 +10543,13 @@ pub mod symbol_t {
 pub mod unique_symbol_t {
     use super::*;
 
-    pub fn at(id: ALocId, loc: ALoc) -> Type {
+    pub fn at(id: ALocId, loc: ALoc, name: Option<FlowSmolStr>) -> Type {
         Type::new(TypeInner::DefT(
             flow_common::reason::mk_reason(
                 flow_common::reason::VirtualReasonDesc::RUniqueSymbol,
                 loc,
             ),
-            DefT::new(DefTInner::UniqueSymbolT(id)),
+            DefT::new(DefTInner::UniqueSymbolT(SymbolID::with_name(id, name))),
         ))
     }
 }
@@ -10929,7 +11019,9 @@ pub mod desc_format {
     // InstanceT reasons have desc = name
     pub fn instance_reason(name: Name, loc: ALoc) -> Reason {
         flow_common::reason::mk_reason(
-            flow_common::reason::VirtualReasonDesc::RType(name.into_smol_str()),
+            flow_common::reason::VirtualReasonDesc::RType(
+                name.into_smol_str_opt().expect("instance name is a string"),
+            ),
             loc,
         )
     }
@@ -10945,7 +11037,9 @@ pub mod desc_format {
     // TypeT reasons have desc = type `name`
     pub fn type_reason(name: Name, loc: ALoc) -> Reason {
         flow_common::reason::mk_reason(
-            flow_common::reason::VirtualReasonDesc::RType(name.into_smol_str()),
+            flow_common::reason::VirtualReasonDesc::RType(
+                name.into_smol_str_opt().expect("type name is a string"),
+            ),
             loc,
         )
     }
@@ -11168,6 +11262,7 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::ExtendsUseT(..) => "ExtendsUseT".to_string(),
         UseTInner::GetElemT(..) => "GetElemT".to_string(),
         UseTInner::GetKeysT { .. } => "GetKeysT".to_string(),
+        UseTInner::GetKeysDictKeyT { .. } => "GetKeysDictKeyT".to_string(),
         UseTInner::GetValuesT(..) => "GetValuesT".to_string(),
         UseTInner::GetDictValuesT(..) => "GetDictValuesT".to_string(),
         UseTInner::GetTypeFromNamespaceT(..) => "GetTypeFromNamespaceT".to_string(),
@@ -12122,6 +12217,9 @@ mod tests {
     #[test]
     fn check_enum_sizes() {
         use std::mem::size_of;
+        assert_eq!(size_of::<super::Name>(), 16);
+        assert_eq!(size_of::<super::SymbolID>(), 8);
+        assert_eq!(size_of::<super::DefTInner>(), 32);
         assert_eq!(size_of::<super::CanonicalRendersForm>(), 48);
         assert_eq!(size_of::<super::ComponentKind>(), 48);
         assert_eq!(size_of::<super::ReactEffectType>(), 32);

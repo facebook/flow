@@ -1,0 +1,55 @@
+display_named.js:12:7
+Flags:
+{[a]: number}
+display_named.js:12:7,12:10
+
+display_named.js:18:7
+Flags:
+{[a]: number}
+display_named.js:18:7,18:10
+
+display_named.js:29:7
+Flags:
+{[sk]: number}
+display_named.js:29:7,29:10
+
+display_named.js:35:7
+Flags:
+{[dsk]: number}
+display_named.js:35:7,35:10
+
+display_named.js:44:7
+Flags:
+{[jfk]: number}
+display_named.js:44:7,44:10
+
+display_named.js:51:7
+Flags:
+{[ifk]: number}
+display_named.js:51:7,51:10
+
+display_union.js:7:3
+Flags:
+{[a]: number} | {[b]: number}
+display_union.js:7:1,7:5
+
+display_union.js:13:3
+Flags:
+{[symbol]: number} | {[symbol]: number}
+display_union.js:13:1,13:7
+
+> insert-type insert_type.js 6 7
+> insert-type insert_type.js 10 7
+> cat insert_type.js
+// insert-type declines to annotate a value whose type has a `unique symbol`
+// key. There is no annotation spelling for such a key, and dropping it would
+// describe a different type -- one the value no longer satisfies, since an
+// exact object rejects the extra key. So `o` is left unannotated below.
+declare const s: unique symbol;
+const o = {[s]: 1, foo: 2};
+
+// A neighbouring object with only string keys is still annotated, so the
+// refusal above is specific to the symbol key.
+const plain: { foo: number } = {foo: 2};
+> status
+No errors!

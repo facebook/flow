@@ -247,7 +247,7 @@ pub fn string_of_destructor(destructor: &Destructor) -> String {
     match destructor {
         Destructor::NonMaybeType => "NonMaybeType".to_string(),
         Destructor::PropertyType { name, .. } => {
-            format!("PropertyType {}", name.as_str())
+            format!("PropertyType {}", name)
         }
         Destructor::ElementType { .. } => "ElementType".to_string(),
         Destructor::EnumType => "EnumType".to_string(),
@@ -1246,6 +1246,7 @@ fn dump_use_t_<CX>(
             p(cx, use_t, true, &extra)
         }
         UseTInner::GetKeysT { .. }
+        | UseTInner::GetKeysDictKeyT { .. }
         | UseTInner::GetValuesT(_, _)
         | UseTInner::GetDictValuesT(_, _) => p(cx, use_t, true, ""),
         UseTInner::GetPropT(data) => {
@@ -1284,7 +1285,7 @@ fn dump_use_t_<CX>(
             let extra = format!(
                 "{}, ({}), ({}, {})",
                 string_of_use_op(use_op),
-                prop_ref.1.as_str(),
+                prop_ref.1,
                 string_of_reason(cx, tout.reason()),
                 tvar(tvars, tout.id() as i32)
             );
@@ -1350,7 +1351,7 @@ fn dump_use_t_<CX>(
                     kid(tvars, t)
                 }
                 type_::OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(n) => {
-                    n.as_str().to_owned()
+                    n.to_string()
                 }
             };
             p(cx, use_t, true, &extra)
@@ -1982,7 +1983,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EExportValueAsType(Box::new(({}, {})))",
                 string_of_aloc(None, loc),
-                name.as_str()
+                name
             )
         }
         ErrorMessage::EImportValueAsType(box (loc, s)) => {
@@ -2121,7 +2122,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             suggestion,
         }) => {
             let prop_str = match prop_name {
-                Some(prop) => format!("Some {}", prop.as_str()),
+                Some(prop) => format!("Some {}", prop),
                 None => "None".to_string(),
             };
             let suggestion_str = match suggestion {
@@ -2145,7 +2146,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             suggestion,
         }) => {
             let prop_str = match prop_name {
-                Some(prop) => format!("Some {}", prop.as_str()),
+                Some(prop) => format!("Some {}", prop),
                 None => "None".to_string(),
             };
             let suggestion_str = match suggestion {
@@ -2179,7 +2180,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             reason_upper,
             use_op,
         }) => {
-            let names: Vec<String> = prop_names.iter().map(|n| n.as_str().to_owned()).collect();
+            let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
             format!(
                 "EPropsNotFoundInSubtyping ([{}], {}, {}, {})",
                 names.join(","),
@@ -2200,7 +2201,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 use_op,
             },
         ) => {
-            let names: Vec<String> = prop_names.iter().map(|n| n.as_str().to_owned()).collect();
+            let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
             format!(
                 "EPropsNotFoundInSubtyping ([{}], {}, {}, {}, {}, {})",
                 names.join(","),
@@ -2220,7 +2221,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "EIndexerCheckFailed ({}, {}, {}, {}, {})",
-                prop_name.as_str(),
+                prop_name,
                 dump_reason(cx, reason_lower),
                 dump_reason(cx, reason_upper),
                 dump_reason(cx, reason_indexer),
@@ -2233,7 +2234,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             reason_r_obj,
             use_op,
         }) => {
-            let names: Vec<String> = prop_names.iter().map(|n| n.as_str().to_owned()).collect();
+            let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
             format!(
                 "EPropsExtraAgainstExactObject ([{}], {}, {}, {})",
                 names.join(", "),
@@ -2248,7 +2249,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let prop_str = match prop_name {
-                Some(x) => format!("{:?}", x.as_str()),
+                Some(x) => format!("{:?}", x.display_smol_str()),
                 None => "(computed)".to_string(),
             };
             format!(
@@ -2264,7 +2265,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let prop_str = match prop_name {
-                Some(x) => format!("{:?}", x.as_str()),
+                Some(x) => format!("{:?}", x.display_smol_str()),
                 None => "(computed)".to_string(),
             };
             format!(
@@ -2283,7 +2284,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             let props_str: Vec<String> = props
                 .iter()
                 .map(|(x, _)| match x {
-                    Some(x) => format!("{:?}", x.as_str()),
+                    Some(x) => format!("{:?}", x.display_smol_str()),
                     None => "(computed)".to_string(),
                 })
                 .collect();
@@ -2360,7 +2361,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 "EPrivateLookupFailed(Box::new(({}, {}), {}, {}))",
                 string_of_aloc(None, reason1),
                 dump_reason(cx, reason2),
-                x.as_str(),
+                x,
                 string_of_use_op(use_op)
             )
         }
@@ -2793,7 +2794,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EBindingError(Box::new((_, {}, {}, {})))",
                 string_of_aloc(None, loc),
-                x.as_str(),
+                x,
                 string_of_aloc(None, entry_loc)
             )
         }
@@ -3313,7 +3314,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 dump_reason(cx, spread_reason),
                 dump_reason(cx, object1_reason),
                 dump_reason(cx, object2_reason),
-                propname.as_str(),
+                propname,
                 string_of_use_op(use_op)
             )
         }
@@ -3375,8 +3376,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 enum_reason,
             }) => {
                 let member_str = match member_name {
-                    Some(n) => n.as_str(),
-                    None => "<None>",
+                    Some(n) => n.to_string(),
+                    None => "<None>".to_string(),
                 };
                 let suggestion_str = match suggestion {
                     Some(s) => s.as_str(),

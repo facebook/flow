@@ -170,7 +170,7 @@ fn strict_lookup_failed<'cx>(
             };
             let suggestion = prop_name.as_ref().zip(ids).and_then(|(name, ids)| {
                 let ids: Vec<_> = ids.iter().duped().collect();
-                prop_typo_suggestion(cx, &ids, name.as_str())
+                prop_typo_suggestion_for_name(cx, &ids, name)
             });
             flow_js_utils::add_output(
                 cx,
@@ -311,6 +311,34 @@ fn remaining_lookup(
         _ => action.clone(),
     };
     Some((first_propref.clone(), action))
+}
+
+/// Send an indexer key to the key set of a `GetKeysT`. The key goes through
+/// `GetKeysDictKeyT` rather than being classified here: the key is commonly a
+/// `typeof s` annotation over a tvar that is still unresolved at this point, and
+/// only a use type gets to wait for it. Concretizing it here instead re-enters
+/// resolution from inside `GetKeysT` dispatch, which recurses without bound on a
+/// key type that reaches the object being keyed.
+fn flow_dict_key_to_keys<'cx>(
+    cx: &Context<'cx>,
+    trace: DepthTrace,
+    dict_key: &Type,
+    reason_op: &Reason,
+    keys: &UseT<Context<'cx>>,
+    include_symbols: bool,
+) -> Result<(), FlowJsException> {
+    rec_flow(
+        cx,
+        trace,
+        (
+            dict_key,
+            &UseT::new(UseTInner::GetKeysDictKeyT {
+                reason: reason_op.dupe(),
+                t_out: Box::new(keys.dupe()),
+                include_symbols,
+            }),
+        ),
+    )
 }
 
 /// NOTE: Do not call this function directly. Instead, call the wrapper
@@ -1648,7 +1676,7 @@ fn __flow_impl<'cx>(
                     prop_reason: reason,
                     propref: box PropRef::Named { name, .. },
                     method_action: _,
-                }) if matches!(name.as_str(), "clear" | "delete" | "set") => {
+                }) if matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) => {
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
@@ -1666,7 +1694,7 @@ fn __flow_impl<'cx>(
                 }
                 UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
-                        && matches!(name.as_str(), "clear" | "delete" | "set") =>
+                        && matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) =>
                 {
                     flow_js_utils::add_output(
                         cx,
@@ -1751,7 +1779,7 @@ fn __flow_impl<'cx>(
                     prop_reason: reason,
                     propref: box PropRef::Named { name, .. },
                     method_action: _,
-                }) if matches!(name.as_str(), "add" | "clear" | "delete") => {
+                }) if matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) => {
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
@@ -1769,7 +1797,7 @@ fn __flow_impl<'cx>(
                 }
                 UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
-                        && matches!(name.as_str(), "add" | "clear" | "delete") =>
+                        && matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) =>
                 {
                     flow_js_utils::add_output(
                         cx,
@@ -2435,6 +2463,26 @@ fn __flow_impl<'cx>(
             rec_flow(cx, trace, (&repos, inner_u))?;
         }
 
+        // An opaque indexer key goes to `ToStringT`, like every key that is not
+        // a `unique symbol`. It is re-dispatched here rather than at the general
+        // `GetKeysDictKeyT` rule, which sits past the point where an opaque type
+        // is unwrapped to its underlying type or supertype: the rules just below
+        // are what keep the opaque type itself in the key set.
+        (TypeInner::NominalT { .. }, UseTInner::GetKeysDictKeyT { reason, t_out, .. }) => {
+            rec_flow(
+                cx,
+                trace,
+                (
+                    l,
+                    &UseT::new(UseTInner::ToStringT {
+                        orig_t: None,
+                        reason: reason.dupe(),
+                        t_out: t_out.clone(),
+                    }),
+                ),
+            )?;
+        }
+
         // Store the opaque type when doing `ToStringT`, so we can use that
         // rather than just `string` if the underlying is `string`.
         (
@@ -2561,6 +2609,19 @@ fn __flow_impl<'cx>(
         (TypeInner::KeysT(_, _), UseTInner::ToStringT { t_out, .. }) => {
             rec_flow(cx, trace, (l, t_out))?;
         }
+        // A key set already classifies each member as a property key. Expanding
+        // it again repeatedly flattens potentially huge dictionary key sets;
+        // recursive shapes can also feed it back into the same `GetKeysT`.
+        (
+            TypeInner::KeysT(_, _),
+            UseTInner::GetKeysDictKeyT {
+                t_out,
+                include_symbols: true,
+                ..
+            },
+        ) => {
+            rec_flow(cx, trace, (l, t_out))?;
+        }
         (TypeInner::KeysT(reason1, o1), _) => {
             // flow all keys of o1 to u
             rec_flow(
@@ -2571,6 +2632,7 @@ fn __flow_impl<'cx>(
                     &UseT::new(UseTInner::GetKeysT {
                         reason: reason1.dupe(),
                         t_out: Box::new(u.dupe()),
+                        include_symbols: true,
                     }),
                 ),
             )?;
@@ -2618,6 +2680,10 @@ fn __flow_impl<'cx>(
                 (TypeInner::DefT(_, inner_def), _)
                     if let DefTInner::SingletonStrT { value: x, .. } = inner_def.deref()
                         && cx.has_prop(mapr.dupe(), &Name::new(x.dupe())) => {}
+                // If we have a symbol key and that property exists
+                (TypeInner::DefT(_, inner_def), _)
+                    if let DefTInner::UniqueSymbolT(sym) = inner_def.deref()
+                        && cx.has_prop(mapr.dupe(), &Name::symbol(sym.dupe())) => {}
                 // If we have a dictionary, try that next
                 (
                     _,
@@ -2635,6 +2701,7 @@ fn __flow_impl<'cx>(
                             DefTInner::SingletonStrT { .. }
                                 | DefTInner::StrGeneralT(_)
                                 | DefTInner::NumericStrKeyT(_)
+                                | DefTInner::UniqueSymbolT(_)
                         ),
                         TypeInner::TemplateLiteralT { .. } => true,
                         _ => false,
@@ -2649,6 +2716,16 @@ fn __flow_impl<'cx>(
                                     Some(Name::new(prop.dupe())),
                                     prop_typo_suggestion(cx, &[mapr.dupe()], prop.as_str()),
                                 )
+                            }
+                            // Name the missing symbol key, mirroring the `InstanceT`
+                            // branch. Without this the error degrades to the computed
+                            // "an index signature ... is missing" wording. There is no
+                            // typo suggestion: a symbol key has no string spelling to
+                            // match against string property names.
+                            TypeInner::DefT(_, inner_def2)
+                                if let DefTInner::UniqueSymbolT(sym) = inner_def2.deref() =>
+                            {
+                                (Some(Name::symbol(sym.dupe())), None)
                             }
                             _ => (None, None),
                         };
@@ -2687,18 +2764,22 @@ fn __flow_impl<'cx>(
                 TypeInner::DefT(_, kd)
                     if let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
                 {
-                    Some(value)
+                    Some(Name::new(value.dupe()))
+                }
+                // A `unique symbol` key resolves to a distinct named member by its
+                // nominal identity, mirroring the `ObjT` branch above.
+                TypeInner::DefT(_, kd) if let DefTInner::UniqueSymbolT(sym) = kd.deref() => {
+                    Some(Name::symbol(sym.dupe()))
                 }
                 TypeInner::GenericT(box GenericTData { bound, .. })
                     if let TypeInner::DefT(_, kd) = bound.deref()
                         && let DefTInner::SingletonStrT { value, .. } = kd.deref() =>
                 {
-                    Some(value)
+                    Some(Name::new(value.dupe()))
                 }
                 _ => None,
             } =>
         {
-            let x = Name::new(x.dupe());
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
                 instance_t,
@@ -2726,7 +2807,7 @@ fn __flow_impl<'cx>(
                                 prop_loc: reason_op.loc().dupe(),
                                 reason_obj: reason_o.dupe(),
                                 use_op: use_op.dupe(),
-                                suggestion: prop_typo_suggestion(cx, &prop_ids, x.as_str()),
+                                suggestion: prop_typo_suggestion_for_name(cx, &prop_ids, &x),
                             },
                         ));
                         flow_js_utils::add_output(cx, err)?;
@@ -2787,30 +2868,25 @@ fn __flow_impl<'cx>(
             UseTInner::GetKeysT {
                 reason: reason_op,
                 t_out: keys,
+                include_symbols,
             },
         ) if let DefTInner::ObjT(obj) = def_t.deref() => {
             let ObjType {
                 flags, props_tmap, ..
             } = obj.as_ref();
             let dict_t = obj_type::get_dict_opt(&flags.obj_kind);
-            // flow the union of keys of l to keys
-            let keylist =
-                flow_js_utils::keylist_of_props(&cx.find_props(props_tmap.dupe()), reason_op);
+            // Type-level `keyof` includes symbols, while runtime key
+            // enumeration (`Object.keys`) omits them, matching JavaScript.
+            let keylist = flow_js_utils::keylist_of_props(
+                cx,
+                &cx.find_props(props_tmap.dupe()),
+                reason_op,
+                *include_symbols,
+            );
             let union_t = type_util::union_of_ts(reason_op.dupe(), keylist, None);
             rec_flow(cx, trace, (&union_t, keys))?;
             if let Some(DictType { key: dict_key, .. }) = dict_t {
-                rec_flow(
-                    cx,
-                    trace,
-                    (
-                        dict_key,
-                        &UseT::new(UseTInner::ToStringT {
-                            orig_t: None,
-                            reason: reason_op.dupe(),
-                            t_out: keys.clone(),
-                        }),
-                    ),
-                )?;
+                flow_dict_key_to_keys(cx, trace, dict_key, reason_op, keys, *include_symbols)?;
             }
         }
         (
@@ -2818,28 +2894,19 @@ fn __flow_impl<'cx>(
             UseTInner::GetKeysT {
                 reason: reason_op,
                 t_out: keys,
+                include_symbols,
             },
         ) if let DefTInner::InstanceT(instance_t) = def_t.deref() => {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
                 |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
                 instance_t,
             )?;
-            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op);
+            let keylist =
+                flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op, *include_symbols);
             let union_t = type_util::union_of_ts(reason_op.dupe(), keylist, None);
             rec_flow(cx, trace, (&union_t, keys))?;
             for dict_key in dict_keys {
-                rec_flow(
-                    cx,
-                    trace,
-                    (
-                        &dict_key,
-                        &UseT::new(UseTInner::ToStringT {
-                            orig_t: None,
-                            reason: reason_op.dupe(),
-                            t_out: keys.clone(),
-                        }),
-                    ),
-                )?;
+                flow_dict_key_to_keys(cx, trace, &dict_key, reason_op, keys, *include_symbols)?;
             }
         }
         // keyof any -> any: any in any out.
@@ -2848,6 +2915,7 @@ fn __flow_impl<'cx>(
             UseTInner::GetKeysT {
                 reason: reason_op,
                 t_out: keys,
+                include_symbols: _,
             },
         ) => {
             let any = any_t::why(*src, reason_op.dupe());
@@ -6053,7 +6121,7 @@ fn __flow_impl<'cx>(
         // *****************************
         (TypeInner::DefT(r, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::InstanceT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
             let t = type_util::class_type(l.dupe(), false, r.annot_loc().map(|a| a.dupe()));
             rec_flow_t(
@@ -6577,7 +6645,7 @@ fn __flow_impl<'cx>(
         // *****************************
         (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ObjT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
             rec_flow_t(
                 cx,
@@ -6661,7 +6729,7 @@ fn __flow_impl<'cx>(
                 method_action: action,
             }),
         ) if matches!(def_t.deref(), DefTInner::ObjT(_))
-            && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+            && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
             add_specialized_callee_method_action(
                 cx,
@@ -7139,7 +7207,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ArrT(_))
-                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+                && matches!(data.propref.as_ref(), PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
             rec_flow_t(
                 cx,
@@ -7153,7 +7221,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::DefT(_, def_t), UseTInner::SetPropT(_, _, propref, _, _, _, _))
             if matches!(def_t.deref(), DefTInner::ArrT(_))
-                && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+                && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
             {}
         (
             TypeInner::DefT(_, def_t),
@@ -7165,7 +7233,7 @@ fn __flow_impl<'cx>(
                 method_action: action,
             }),
         ) if matches!(def_t.deref(), DefTInner::ArrT(_))
-            && matches!(&**propref, PropRef::Named { name, .. } if name.as_str() == "constructor") =>
+            && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
             add_specialized_callee_method_action(
                 cx,
@@ -9362,7 +9430,7 @@ fn __flow_impl<'cx>(
                 let suggestion: Option<FlowSmolStr> = match &**propref {
                     PropRef::Named { name, .. } => ids.as_ref().and_then(|ids| {
                         let ids_vec: Vec<_> = ids.iter().duped().collect();
-                        prop_typo_suggestion(cx, &ids_vec, name.as_str())
+                        prop_typo_suggestion_for_name(cx, &ids_vec, name)
                     }),
                     _ => None,
                 };
@@ -9807,6 +9875,40 @@ fn __flow_impl<'cx>(
             let str_mod = str_module_t::why(reason.dupe());
             rec_flow(cx, trace, (&str_mod, t_out))?;
         }
+        // ***********************************
+        // * The indexer half of a key set   *
+        // ***********************************
+
+        // A `unique symbol` indexer key contributes to type-level `keyof` as
+        // that same symbol type, and is left out of runtime key enumeration
+        // (`Object.keys`) entirely, matching JavaScript.
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::GetKeysDictKeyT {
+                t_out,
+                include_symbols,
+                ..
+            },
+        ) if matches!(def_t.deref(), DefTInner::UniqueSymbolT(_)) => {
+            if *include_symbols {
+                rec_flow(cx, trace, (l, t_out.as_ref()))?;
+            }
+        }
+        // Every other key stringifies.
+        (_, UseTInner::GetKeysDictKeyT { reason, t_out, .. }) => {
+            rec_flow(
+                cx,
+                trace,
+                (
+                    l,
+                    &UseT::new(UseTInner::ToStringT {
+                        orig_t: None,
+                        reason: reason.dupe(),
+                        t_out: t_out.clone(),
+                    }),
+                ),
+            )?;
+        }
         // **********************
         // * Array library call *
         // **********************
@@ -9833,8 +9935,17 @@ fn __flow_impl<'cx>(
                     propref: box PropRef::Named { name, .. },
                     method_action: _,
                 }) if matches!(
-                    name.as_str(),
-                    "fill" | "pop" | "push" | "reverse" | "shift" | "sort" | "splice" | "unshift"
+                    name.as_str_opt(),
+                    Some(
+                        "fill"
+                            | "pop"
+                            | "push"
+                            | "reverse"
+                            | "shift"
+                            | "sort"
+                            | "splice"
+                            | "unshift"
+                    )
                 ) =>
                 {
                     flow_js_utils::add_output(
@@ -9866,15 +9977,17 @@ fn __flow_impl<'cx>(
                 UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(
-                            name.as_str(),
-                            "fill"
-                                | "pop"
-                                | "push"
-                                | "reverse"
-                                | "shift"
-                                | "sort"
-                                | "splice"
-                                | "unshift"
+                            name.as_str_opt(),
+                            Some(
+                                "fill"
+                                    | "pop"
+                                    | "push"
+                                    | "reverse"
+                                    | "shift"
+                                    | "sort"
+                                    | "splice"
+                                    | "unshift"
+                            )
                         ) =>
                 {
                     flow_js_utils::add_output(

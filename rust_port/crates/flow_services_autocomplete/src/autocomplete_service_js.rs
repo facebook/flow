@@ -605,6 +605,11 @@ fn members_of_type(
         {
             continue;
         }
+        // A symbol-typed key has no identifier spelling to complete on, so skip
+        // it rather than offer a completion nobody can type.
+        let Name::Str(name) = name else {
+            continue;
+        };
         let name = name.as_str();
         if name == "constructor" || name.starts_with('$') || exclude_keys.contains(name) {
             continue;
@@ -1397,12 +1402,12 @@ fn exports_of_module_ty(
             || matches!(export_kind, ModuleExportKind::Either)
             || std::mem::discriminant(&kind) == std::mem::discriminant(&export_kind)
     };
-    let filter_name = |name: &Name| match filter_name {
-        Some(filter_name) => filter_name(name.as_str()),
+    let filter_name = |name: &str| match filter_name {
+        Some(filter_name) => filter_name(name),
         None => true,
     };
     let is_ok =
-        |export_kind: ModuleExportKind, name: &Name| is_kind(export_kind) && filter_name(name);
+        |export_kind: ModuleExportKind, name: &str| is_kind(export_kind) && filter_name(name);
     let exports = match decl {
         Decl::ModuleDecl(box DeclModuleDeclData { exports, .. })
         | Decl::NamespaceDecl(box DeclNamespaceDeclData { exports, .. }) => exports,
@@ -1412,7 +1417,7 @@ fn exports_of_module_ty(
         .iter()
         .filter_map(|decl| match decl {
             Decl::TypeAliasDecl(box DeclTypeAliasDeclData { name, .. })
-                if is_ok(ModuleExportKind::Type, &name.sym_name) =>
+                if is_ok(ModuleExportKind::Type, name.sym_name.as_str()) =>
             {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
@@ -1428,7 +1433,9 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::InterfaceDecl(box (name, _)) if is_ok(ModuleExportKind::Type, &name.sym_name) => {
+            Decl::InterfaceDecl(box (name, _))
+                if is_ok(ModuleExportKind::Type, name.sym_name.as_str()) =>
+            {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1443,7 +1450,9 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::ClassDecl(box (name, _)) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
+            Decl::ClassDecl(box (name, _))
+                if is_ok(ModuleExportKind::Either, name.sym_name.as_str()) =>
+            {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1458,7 +1467,9 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::RecordDecl(box (name, _)) if is_ok(ModuleExportKind::Either, &name.sym_name) => {
+            Decl::RecordDecl(box (name, _))
+                if is_ok(ModuleExportKind::Either, name.sym_name.as_str()) =>
+            {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(
@@ -1474,7 +1485,7 @@ fn exports_of_module_ty(
                 ))
             }
             Decl::EnumDecl(box DeclEnumDeclData { name, .. })
-                if is_ok(ModuleExportKind::Either, &name.sym_name) =>
+                if is_ok(ModuleExportKind::Either, name.sym_name.as_str()) =>
             {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
@@ -1490,7 +1501,11 @@ fn exports_of_module_ty(
                     decl,
                 ))
             }
-            Decl::VariableDecl(box (name, _)) if is_ok(ModuleExportKind::Value, name) => {
+            // A symbol-named export has no identifier spelling to complete.
+            Decl::VariableDecl(box (name, _))
+                if let Some(name) = name.as_str_opt()
+                    && is_ok(ModuleExportKind::Value, name) =>
+            {
                 Some(autocomplete_create_result_decl(
                     None,
                     0,
@@ -1498,13 +1513,13 @@ fn exports_of_module_ty(
                     false,
                     ac_completion::empty_documentation_and_tags(),
                     "qualified variable",
-                    name.as_str(),
+                    name,
                     edit_locs,
                     decl,
                 ))
             }
             Decl::NominalComponentDecl(box DeclNominalComponentDeclData { name, .. })
-                if is_ok(ModuleExportKind::Value, &name.sym_name) =>
+                if is_ok(ModuleExportKind::Value, name.sym_name.as_str()) =>
             {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
@@ -1522,7 +1537,7 @@ fn exports_of_module_ty(
             }
             Decl::NamespaceDecl(box DeclNamespaceDeclData {
                 name: Some(name), ..
-            }) if is_ok(ModuleExportKind::Value, &name.sym_name) => {
+            }) if is_ok(ModuleExportKind::Value, name.sym_name.as_str()) => {
                 let documentation_and_tags =
                     documentation_and_tags_of_module_member(&name.sym_def_loc);
                 Some(autocomplete_create_result_decl(

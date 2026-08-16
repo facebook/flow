@@ -94,13 +94,15 @@ fn get_obj_prop_names(
                 props_tmap,
                 |name, prop, mut acc| match property::read_t(prop) {
                     Some(ref t) if matches!(Type::deref(t), TypeInner::OptionalT { .. }) => {
-                        if include_optional {
-                            acc.insert(name.as_smol_str().dupe());
+                        if include_optional && let Some(name) = name.as_smol_str_opt() {
+                            acc.insert(name.dupe());
                         }
                         acc
                     }
                     _ => {
-                        acc.insert(name.as_smol_str().dupe());
+                        if let Some(name) = name.as_smol_str_opt() {
+                            acc.insert(name.dupe());
+                        }
                         acc
                     }
                 },

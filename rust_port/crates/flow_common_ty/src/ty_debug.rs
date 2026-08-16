@@ -206,7 +206,7 @@ fn ctor_of_provenance<L>(p: &Provenance<L>) -> String {
 fn dump_symbol<L: Debug>(sym: &Symbol<L>) -> String {
     format!(
         "{} ({}:{:?})",
-        sym.sym_name.as_str(),
+        sym.sym_name,
         ctor_of_provenance(&sym.sym_provenance),
         sym.sym_def_loc
     )
@@ -375,7 +375,9 @@ fn dump_field<L: Debug + Clone + Dupe>(
 
 fn dump_prop<L: Debug + Clone + Dupe>(depth: i32, prop: &Prop<L>) -> String {
     match prop {
-        Prop::NamedProp { name, prop, .. } => dump_named_prop(depth, name.as_str(), prop),
+        Prop::NamedProp { name, prop, .. } => {
+            dump_named_prop(depth, &name.display_smol_str(), prop)
+        }
         Prop::CallProp(f) => dump_fun_t(depth, f),
         Prop::SpreadProp(t) => dump_spread(depth, t),
         Prop::MappedTypeProp {
@@ -657,7 +659,7 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
                                 ..
                             } => {
                                 let opt = if *optional { "?" } else { "" };
-                                format!("{}{}: {}", name.as_str(), opt, dump_t(depth, t))
+                                format!("{}{}: {}", name, opt, dump_t(depth, t))
                             }
                         })
                         .collect();
@@ -696,7 +698,7 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
 fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
     match d {
         Decl::VariableDecl(box (name, t)) => {
-            format!("VariableDecl ({}, {})", name.as_str(), dump_t(depth, t))
+            format!("VariableDecl ({}, {})", name, dump_t(depth, t))
         }
         Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
             import,
@@ -873,10 +875,7 @@ fn json_of_symbol<L>(
             "provenance".to_string(),
             json_of_provenance(converter, &sym.sym_def_loc, &sym.sym_provenance, strip_root),
         ),
-        (
-            "name".to_string(),
-            Json::String(sym.sym_name.as_str().to_string()),
-        ),
+        ("name".to_string(), Json::String(sym.sym_name.to_string())),
     ]))
 }
 
@@ -1123,7 +1122,7 @@ fn json_of_prop<L: Debug + Clone + Dupe>(
                 (
                     "prop".to_string(),
                     Json::Object(serde_json::Map::from_iter(vec![
-                        ("name".to_string(), Json::String(name.as_str().to_string())),
+                        ("name".to_string(), Json::String(name.to_string())),
                         (
                             "prop".to_string(),
                             json_of_named_prop(converter, prop, strip_root),
@@ -1281,7 +1280,7 @@ fn json_of_component<L: Debug + Clone + Dupe>(
                     FlattenedComponentProp::FlattenedComponentProp {
                         name, optional, t, ..
                     } => Json::Object(serde_json::Map::from_iter(vec![
-                        ("name".to_string(), Json::String(name.as_str().to_string())),
+                        ("name".to_string(), Json::String(name.to_string())),
                         ("optional".to_string(), Json::Bool(*optional)),
                         ("type".to_string(), json_of_t(converter, t, strip_root)),
                     ])),
@@ -1675,7 +1674,7 @@ fn json_of_decl<L: Debug + Clone + Dupe>(
     match d {
         Decl::VariableDecl(box (name, t)) => {
             vec![
-                ("name".to_string(), Json::String(name.as_str().to_string())),
+                ("name".to_string(), Json::String(name.to_string())),
                 ("type_".to_string(), json_of_t(converter, t, strip_root)),
             ]
         }

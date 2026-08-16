@@ -1713,7 +1713,11 @@ fn post_inference_check_abstract_obligations<'cx>(
             // to [obligations], any concrete impl above us has already
             // been added to [satisfied].
             let add_concrete = |name: &Name, _: &Property| {
-                let name_str = name.as_smol_str();
+                // Abstract-obligation tracking is string-keyed; symbol-keyed members
+                // are not part of the value-level class Signature yet, so skip them.
+                let Some(name_str) = name.as_smol_str_opt() else {
+                    return;
+                };
                 if !inst.inst_abstract_props.contains(name) {
                     satisfied.borrow_mut().insert(name_str.dupe());
                 }
@@ -1725,7 +1729,9 @@ fn post_inference_check_abstract_obligations<'cx>(
                 add_concrete(name, p);
             }
             for name in inst.inst_abstract_props.iter() {
-                let name_str = name.as_smol_str();
+                let Some(name_str) = name.as_smol_str_opt() else {
+                    continue;
+                };
                 if !satisfied.borrow().contains(name_str) {
                     let prop_loc = match own_props.get(name) {
                         Some(p) => property::first_loc(p),
@@ -1985,7 +1991,9 @@ fn collect_inherited_members_both_sides<'cx>(
             let proto_props = cx.find_props(inst.proto_props.dupe());
             let visit_instance = |props: &properties::PropertiesMap| {
                 for (name, p) in props.iter() {
-                    let name_str = name.as_str();
+                    let Some(name_str) = name.as_str_opt() else {
+                        continue;
+                    };
                     let is_abstract = inst.inst_abstract_props.contains(name);
                     add_member(
                         &instance_state,
@@ -2016,7 +2024,9 @@ fn collect_inherited_members_both_sides<'cx>(
                         DefTInner::ObjT(obj) => {
                             let static_props = cx.find_props(obj.props_tmap.dupe());
                             for (name, p) in static_props.iter() {
-                                let name_str = name.as_str();
+                                let Some(name_str) = name.as_str_opt() else {
+                                    continue;
+                                };
                                 // Static members can't be abstract in our model.
                                 add_member(
                                     static_state,

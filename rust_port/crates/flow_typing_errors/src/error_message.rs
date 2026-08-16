@@ -7114,7 +7114,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EExportValueAsType(box (_, export_name)) => Normal(
-                Message::MessageExportValueAsType(export_name.into_smol_str()),
+                Message::MessageExportValueAsType(export_name.display_smol_str()),
             ),
 
             ErrorMessage::EImportValueAsType(box (_, export_name)) => {
@@ -7200,7 +7200,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 suggestion,
             }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
                 loc: prop_loc,
-                prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
+                prop: prop_name.as_ref().map(|n| n.display_smol_str()),
                 reason_obj,
                 use_op,
                 suggestion,
@@ -7214,7 +7214,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_upper,
                 use_op,
             }) => PropMissingInSubtyping(Box::new(PropMissingInSubtypingData {
-                prop: prop_name.as_ref().map(|n| n.dupe().into_smol_str()),
+                prop: prop_name.as_ref().map(|n| n.display_smol_str()),
                 suggestion,
                 reason_lower,
                 reason_upper,
@@ -7243,10 +7243,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => PropsMissingInSubtyping(Box::new(PropsMissingInSubtypingData {
                 props: Vec1::try_from_vec(
-                    prop_names
-                        .iter()
-                        .map(|n| n.dupe().into_smol_str())
-                        .collect(),
+                    prop_names.iter().map(|n| n.display_smol_str()).collect(),
                 )
                 .expect("prop_names is non-empty Vec1"),
                 reason_lower,
@@ -7263,10 +7260,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => PropsExtraAgainstExactObject(Box::new(PropsExtraAgainstExactObjectData {
                 props: Vec1::try_from_vec(
-                    prop_names
-                        .iter()
-                        .map(|n| n.dupe().into_smol_str())
-                        .collect(),
+                    prop_names.iter().map(|n| n.display_smol_str()).collect(),
                 )
                 .expect("prop_names is non-empty Vec1"),
                 reason_l_obj,
@@ -7281,7 +7275,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_indexer,
                 use_op,
             }) => PropMissingInSubtyping(Box::new(PropMissingInSubtypingData {
-                prop: Some(prop_name.into_smol_str()),
+                prop: Some(prop_name.display_smol_str()),
                 suggestion: None,
                 reason_lower,
                 reason_upper,
@@ -7322,11 +7316,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 props: props
                     .iter()
                     .map(|(name, (lower, upper))| {
-                        (
-                            name.as_ref().map(|n| n.dupe().into_smol_str()),
-                            *lower,
-                            *upper,
-                        )
+                        (name.as_ref().map(|n| n.display_smol_str()), *lower, *upper)
                     })
                     .collect::<Vec<_>>()
                     .try_into()
@@ -8109,7 +8099,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
                 loc: prop_loc,
-                prop: prop.map(|n| n.into_smol_str()),
+                prop: prop.map(|n| n.display_smol_str()),
                 reason_obj,
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
                 suggestion: None,
@@ -8674,7 +8664,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EBindingError(box (binding_error, _, x, entry_loc)) => {
                 let x_reason = VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(x.into_smol_str()),
+                    flow_common::reason::VirtualReasonDesc::RIdentifier(x.display_smol_str()),
                     entry_loc,
                 );
 
@@ -9411,10 +9401,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => PropsMissingInInvariantSubtyping(Box::new(PropsMissingInInvariantSubtypingData {
                 props: Vec1::try_from_vec(
-                    prop_names
-                        .iter()
-                        .map(|n| n.dupe().into_smol_str())
-                        .collect(),
+                    prop_names.iter().map(|n| n.display_smol_str()).collect(),
                 )
                 .expect("prop_names is Vec1"),
                 reason_lower,

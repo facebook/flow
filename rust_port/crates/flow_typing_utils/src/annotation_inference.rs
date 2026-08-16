@@ -60,6 +60,26 @@ use flow_typing_type::type_util;
 
 use crate::avar;
 
+/// The contribution of an indexer key to the key set of an `AnnotGetKeysT`.
+/// The key goes through `AnnotGetKeysDictKeyT` rather than being classified
+/// here, so that a key that is still an unresolved annotation is elaborated
+/// once it resolves, mirroring the dispatch (`GetKeysDictKeyT`) path.
+fn elab_dict_key<'cx>(
+    cx: &Context<'cx>,
+    dst_cx: &Context<'cx>,
+    seen: &FlowOrdSet<i32>,
+    reason_op: &Reason,
+    dict_key: Type,
+) -> Type {
+    elab_t(
+        cx,
+        dst_cx,
+        Some(seen.dupe()),
+        dict_key,
+        Op::new(OpInner::AnnotGetKeysDictKeyT(reason_op.dupe())),
+    )
+}
+
 fn object_like_op<'cx>(op: &OpInner<'cx>) -> bool {
     match op {
         OpInner::AnnotSpecializeT(_)
@@ -80,6 +100,7 @@ fn object_like_op<'cx>(op: &OpInner<'cx>) -> bool {
         | OpInner::AnnotNotT(_)
         | OpInner::AnnotObjKeyMirror(_)
         | OpInner::AnnotGetKeysT(_)
+        | OpInner::AnnotGetKeysDictKeyT(_)
         | OpInner::AnnotGetEnumT(_)
         | OpInner::AnnotDeepReadOnlyT(_)
         | OpInner::AnnotToStringT { .. } => false,
@@ -1098,6 +1119,11 @@ fn elab_t_concrete<'cx>(
                     get_builtin_typeapp(cx, reason.dupe(), "React$RendersExactly", vec![t.dupe()])
                 }
                 DefTInner::TypeT(_, l) => l.dupe(),
+                // A `unique symbol` value used in a type position resolves to its
+                // own `unique symbol` type, so a value-level symbol binding can
+                // key a type-body member (`interface I { [s]: T }`). Distinct
+                // symbols stay distinct.
+                DefTInner::UniqueSymbolT(_) => reposition(cx, reason.loc().dupe(), t.dupe()),
                 // an enum object value annotation becomes the enum value type
                 DefTInner::EnumObjectT { enum_value_t, .. } => enum_value_t.dupe(),
                 DefTInner::EnumValueT(_) => {
@@ -1279,6 +1305,9 @@ fn elab_t_concrete<'cx>(
         //  Keys
         // ******
         (TypeInner::KeysT(_, _), OpInner::AnnotToStringT { .. }) => t,
+        // Mirrors the dispatch pass-through: re-elaborating the key set can
+        // repeatedly flatten a large dictionary key set.
+        (TypeInner::KeysT(_, _), OpInner::AnnotGetKeysDictKeyT(_)) => t,
         (TypeInner::KeysT(reason, inner), _) => {
             let keys_t = elab_t(
                 cx,
@@ -1294,19 +1323,10 @@ fn elab_t_concrete<'cx>(
         {
             let dict_t = flow_typing_flow_common::obj_type::get_dict_opt(&obj.flags.obj_kind);
             let props = cx.find_props(obj.props_tmap.dupe());
-            let mut keylist = flow_js_utils::keylist_of_props(&props, reason_op);
+            // Type-level `keyof` includes `unique symbol` keys.
+            let mut keylist = flow_js_utils::keylist_of_props(cx, &props, reason_op, true);
             if let Some(dict) = dict_t {
-                let key = elab_t(
-                    cx,
-                    dst_cx,
-                    Some(seen.dupe()),
-                    dict.key.dupe(),
-                    Op::new(OpInner::AnnotToStringT {
-                        orig_t: None,
-                        reason: reason_op.dupe(),
-                    }),
-                );
-                keylist.push(key);
+                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, dict.key.dupe()));
             }
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
         }
@@ -1331,18 +1351,9 @@ fn elab_t_concrete<'cx>(
                 inst_t,
             )
             .expect("annotation_inference::AnnotGetKeysT concretize closure is infallible");
-            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op);
+            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op, true);
             let keylist = dict_keys.into_iter().fold(keylist, |mut keylist, key| {
-                keylist.push(elab_t(
-                    cx,
-                    dst_cx,
-                    Some(seen.dupe()),
-                    key,
-                    Op::new(OpInner::AnnotToStringT {
-                        orig_t: None,
-                        reason: reason_op.dupe(),
-                    }),
-                ));
+                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, key));
                 keylist
             });
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
@@ -2256,7 +2267,7 @@ fn elab_t_concrete<'cx>(
                 }
                 TypeInner::DefT(reason_obj, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
                     if let type_::PropRef::Named { name, .. } = propref
-                        && name.as_str() == "constructor"
+                        && name.matches_str("constructor")
                     {
                         type_::unsoundness::why(
                             type_::UnsoundnessKind::Constructor,
@@ -2283,7 +2294,7 @@ fn elab_t_concrete<'cx>(
                 TypeInner::DefT(reason, def_t)
                     if let DefTInner::ClassT(instance) = def_t.deref()
                         && let type_::PropRef::Named { name, .. } = propref
-                        && name.as_str() == "prototype" =>
+                        && name.matches_str("prototype") =>
                 {
                     reposition(cx, reason.loc().dupe(), instance.dupe())
                 }
@@ -2676,6 +2687,26 @@ fn elab_t_concrete<'cx>(
             t
         }
         (_, OpInner::AnnotToStringT { reason, .. }) => type_::str_module_t::why(reason.dupe()),
+        // ***********************************
+        //  The indexer half of a key set
+        // ***********************************
+        // A `unique symbol` indexer key contributes to `keyof` as that same
+        // symbol type. Every other key stringifies.
+        (TypeInner::DefT(_, def_t), OpInner::AnnotGetKeysDictKeyT(_))
+            if matches!(def_t.deref(), DefTInner::UniqueSymbolT(_)) =>
+        {
+            t
+        }
+        (_, OpInner::AnnotGetKeysDictKeyT(reason)) => elab_t(
+            cx,
+            dst_cx,
+            Some(seen),
+            t,
+            Op::new(OpInner::AnnotToStringT {
+                orig_t: None,
+                reason: reason.dupe(),
+            }),
+        ),
         // **********************
         //  Promoting primitives
         // **********************

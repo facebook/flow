@@ -40,6 +40,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocId;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression::BinaryOperator;
@@ -61,6 +62,69 @@ pub fn mk_id() -> usize {
     NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+struct SymbolIDInner {
+    id: ALocId,
+    /// Best-effort display name: the binding or property whose type is the
+    /// `unique symbol`. Used only for user-facing rendering. It is deliberately
+    /// excluded from equality, ordering, and hashing, so two symbol keys are the
+    /// same property iff their `id`s match, regardless of the name recovered at
+    /// any particular use site.
+    name: Option<FlowSmolStr>,
+}
+
+/// The nominal identity of a `unique symbol`, derived from the `ALoc.id` of the
+/// location where the symbol is introduced (see `DefTInner::UniqueSymbolT`). Two
+/// symbol keys refer to the same property iff their `SymbolID`s are equal.
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
+pub struct SymbolID(Arc<SymbolIDInner>);
+
+impl PartialEq for SymbolID {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0) || self.0.id == other.0.id
+    }
+}
+
+impl Eq for SymbolID {}
+
+impl PartialOrd for SymbolID {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for SymbolID {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Arc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.id.cmp(&other.0.id)
+        }
+    }
+}
+
+impl std::hash::Hash for SymbolID {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.id.hash(state);
+    }
+}
+
+impl SymbolID {
+    pub fn with_name(id: ALocId, name: Option<FlowSmolStr>) -> Self {
+        Self(Arc::new(SymbolIDInner { id, name }))
+    }
+
+    pub fn aloc_id(&self) -> &ALocId {
+        &self.0.id
+    }
+
+    pub fn name(&self) -> Option<&FlowSmolStr> {
+        self.0.name.as_ref()
+    }
+}
+
+/// A property key. Object properties are keyed either by an ordinary string name
+/// or, for `unique symbol` computed keys, by the symbol's nominal identity.
 #[derive(
     Debug,
     Clone,
@@ -72,31 +136,93 @@ pub fn mk_id() -> usize {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct Name(FlowSmolStr);
+pub enum Name {
+    Str(FlowSmolStr),
+    Symbol(SymbolID),
+}
 
 impl Dupe for Name {}
 
 impl Name {
     pub fn new(s: impl Into<FlowSmolStr>) -> Self {
-        Name(s.into())
+        Name::Str(s.into())
     }
 
-    pub fn as_str(&self) -> &str {
-        &self.0
+    pub fn symbol(id: SymbolID) -> Self {
+        Name::Symbol(id)
     }
 
-    pub fn as_smol_str(&self) -> &FlowSmolStr {
-        &self.0
+    pub fn is_symbol(&self) -> bool {
+        matches!(self, Name::Symbol(_))
     }
 
-    pub fn into_smol_str(self) -> FlowSmolStr {
-        self.0
+    pub fn symbol_id(&self) -> Option<&SymbolID> {
+        match self {
+            Name::Str(_) => None,
+            Name::Symbol(id) => Some(id),
+        }
+    }
+
+    /// The backing string of a string key, or `None` for a symbol key. Use this
+    /// for lookups, comparisons, and string-keyed collections, where a symbol
+    /// key must be handled explicitly (usually skipped) rather than aliased onto
+    /// a shared placeholder.
+    pub fn as_str_opt(&self) -> Option<&str> {
+        match self {
+            Name::Str(s) => Some(s),
+            Name::Symbol(_) => None,
+        }
+    }
+
+    /// The backing `FlowSmolStr` of a string key, or `None` for a symbol key.
+    pub fn as_smol_str_opt(&self) -> Option<&FlowSmolStr> {
+        match self {
+            Name::Str(s) => Some(s),
+            Name::Symbol(_) => None,
+        }
+    }
+
+    /// The backing `FlowSmolStr` of a string key, or `None` for a symbol key,
+    /// consuming `self`.
+    pub fn into_smol_str_opt(self) -> Option<FlowSmolStr> {
+        match self {
+            Name::Str(s) => Some(s),
+            Name::Symbol(_) => None,
+        }
+    }
+
+    /// Whether this key is the string `s`. A symbol key never matches a string,
+    /// so this is the safe way to test a key against a fixed property name.
+    pub fn matches_str(&self, s: &str) -> bool {
+        matches!(self, Name::Str(n) if n.as_str() == s)
+    }
+
+    /// User-facing spelling for error messages and printed types: the ordinary
+    /// name for a string key, and the TypeScript-style bracketed form (`[sym]`,
+    /// or `[symbol]` when unknown) for a symbol key. This renders a symbol key
+    /// rather than yielding its backing string, so it must not be used for
+    /// property lookup or any comparison against real property names.
+    pub fn display_smol_str(&self) -> FlowSmolStr {
+        match self {
+            Name::Str(s) => s.dupe(),
+            Name::Symbol(_) => FlowSmolStr::from(self.to_string()),
+        }
     }
 }
 
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        match self {
+            Name::Str(s) => write!(f, "{}", s),
+            // A symbol key is rendered TypeScript-style in brackets, using the name
+            // of the binding or property it comes from when known (e.g. `[sym]`),
+            // and a generic `[symbol]` otherwise. The `SymbolID`'s `ALocId` is
+            // non-deterministic and must never leak into user-facing output.
+            Name::Symbol(sym) => match sym.name() {
+                Some(name) => write!(f, "[{}]", name),
+                None => write!(f, "[symbol]"),
+            },
+        }
     }
 }
 
@@ -1579,26 +1705,23 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         },
 
         // Properties
-        RProperty(Some(x)) => format!("property `{}`", x.as_str()),
+        RProperty(Some(x)) => format!("property `{}`", x),
         RProperty(None) => "computed property".to_string(),
         RPrivateProperty(x) => format!("property `#{}`", x),
         RMember { object_, property } => format!("`{}{}`", object_, property),
         RPropertyOf(x, d) => {
-            format!("property `{}` of {}", x.as_str(), string_of_desc(d))
+            format!("property `{}` of {}", x, string_of_desc(d))
         }
-        RPropertyIsAString(x) if x.as_str().is_empty() => "empty string".to_string(),
-        RPropertyIsAString(x) => format!("string `{}`", x.as_str()),
+        RPropertyIsAString(x) if x.matches_str("") => "empty string".to_string(),
+        RPropertyIsAString(x) => format!("string `{}`", x),
         RMissingProperty(Some(x)) => {
-            format!(
-                "`void` (due to access of non-existent property `{}`)",
-                x.as_str()
-            )
+            format!("`void` (due to access of non-existent property `{}`)", x)
         }
         RMissingProperty(None) => {
             "`void` (due to access of a computed property which does not exist)".to_string()
         }
         RUnknownProperty(Some(x)) => {
-            format!("property `{}` of unknown type", x.as_str())
+            format!("property `{}` of unknown type", x)
         }
         RUnknownProperty(None) => "computed property of unknown type".to_string(),
         RUnknownUnspecifiedProperty(d) => {
@@ -1607,7 +1730,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
                 string_of_desc(d)
             )
         }
-        RUndefinedProperty(x) => format!("undefined property `{}`", x.as_str()),
+        RUndefinedProperty(x) => format!("undefined property `{}`", x),
         RSomeProperty => "some property".to_string(),
         RNameProperty(d) => format!("property `name` of {}", string_of_desc(d)),
 
@@ -1698,7 +1821,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         // React
         RReactProps => "props".to_string(),
         RReactElement { name_opt, .. } => match name_opt {
-            Some(name) => format!("`{}` element", name.as_str()),
+            Some(name) => format!("`{}` element", name),
             None => "React element".to_string(),
         },
         RReactDefaultProps => "default props of React component".to_string(),
@@ -1713,7 +1836,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RPossiblyMissingPropFromObj(propname, desc) => {
             format!(
                 "possibly missing property `{}` in {}",
-                propname.as_str(),
+                propname,
                 string_of_desc(desc)
             )
         }

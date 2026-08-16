@@ -338,17 +338,31 @@ pub mod object_expression_acc {
                             .obj_pmap
                             .iter()
                             .filter(|&(prop_name, _)| {
-                                let prop_str = prop_name.as_smol_str().dupe();
-                                let prop_t = Type::new(TypeInner::DefT(
-                                    mk_reason(
-                                        VirtualReasonDesc::RStringLit(prop_str.dupe()),
-                                        key_loc.dupe(),
-                                    ),
-                                    DefT::new(DefTInner::SingletonStrT {
-                                        from_annot: false,
-                                        value: prop_str,
-                                    }),
-                                ));
+                                // Compare each existing prop's key type against the
+                                // non-literal computed key. A symbol key contributes its
+                                // `unique symbol` type rather than a placeholder string.
+                                let prop_t = match prop_name {
+                                    Name::Symbol(_) => {
+                                        let r = mk_reason(
+                                            VirtualReasonDesc::RUniqueSymbol,
+                                            key_loc.dupe(),
+                                        );
+                                        flow_js_utils::type_of_key_name(cx, prop_name.dupe(), &r)
+                                    }
+                                    Name::Str(prop_str) => {
+                                        let prop_str = prop_str.dupe();
+                                        Type::new(TypeInner::DefT(
+                                            mk_reason(
+                                                VirtualReasonDesc::RStringLit(prop_str.dupe()),
+                                                key_loc.dupe(),
+                                            ),
+                                            DefT::new(DefTInner::SingletonStrT {
+                                                from_annot: false,
+                                                value: prop_str,
+                                            }),
+                                        ))
+                                    }
+                                };
                                 speculation_flow::is_subtyping_successful(cx, prop_t, key.dupe())
                                     .unwrap_or(false)
                             })
@@ -3342,7 +3356,7 @@ fn statement_<'a>(
             )?;
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                 var: Some(mk_reason(
-                    VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+                    VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                     name_loc.dupe(),
                 )),
                 init: reason_of_t(&class_t).dupe(),
@@ -3436,7 +3450,7 @@ fn statement_<'a>(
                 )?;
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
                     var: Some(mk_reason(
-                        VirtualReasonDesc::RIdentifier(name.as_smol_str().dupe()),
+                        VirtualReasonDesc::RIdentifier(name.display_smol_str()),
                         name_loc.dupe(),
                     )),
                     init: reason_of_t(&record_t).dupe(),
@@ -6361,7 +6375,9 @@ fn check_super_abstract<'a>(
     if !cx.tslib_syntax() {
         return Ok(());
     }
-    let name_str = name.as_smol_str().dupe();
+    let Some(name_str) = name.as_smol_str_opt().map(|s| s.dupe()) else {
+        return Ok(());
+    };
     let seen: std::cell::RefCell<std::collections::BTreeSet<type_::properties::Id>> =
         std::cell::RefCell::new(std::collections::BTreeSet::new());
     enum FoundKind {
@@ -13962,6 +13978,7 @@ fn static_method_call_object<'a>(
                             use_op_clone.dupe(),
                             tvar.dupe(),
                         ))),
+                        include_symbols: false,
                     }),
                 ),
             )?;
@@ -14172,7 +14189,7 @@ fn static_method_call_object<'a>(
                     }
                     Some(spec) => {
                         let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            RCustom(format!(".{} of {}", x.as_str(), string_of_desc(&desc)).into())
+                            RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
                         });
                         let propdesc_type_clone = propdesc_type.dupe();
                         let use_op_clone = use_op.dupe();
@@ -14473,7 +14490,7 @@ fn static_method_call_object<'a>(
                     }
                     Some(spec) => {
                         let prop_reason = reason.dupe().update_desc_new(|desc| {
-                            RCustom(format!(".{} of {}", x.as_str(), string_of_desc(&desc)).into())
+                            RCustom(format!(".{} of {}", x, string_of_desc(&desc)).into())
                         });
                         let tvar = flow_typing_tvar::mk(cx, prop_reason.dupe());
                         let annot_loc = prop_reason.loc().dupe();
@@ -16621,7 +16638,7 @@ pub fn mk_class_sig<'a>(
                                                 match flow_js_utils::propref_for_elem_t(cx, single)
                                                 {
                                                     PropRef::Named { name, .. } => {
-                                                        Some(name.as_smol_str().dupe())
+                                                        name.as_smol_str_opt().map(|s| s.dupe())
                                                     }
                                                     PropRef::Computed(_) => None,
                                                 }
@@ -16929,7 +16946,7 @@ pub fn mk_class_sig<'a>(
                                     [single] => match flow_js_utils::propref_for_elem_t(cx, single)
                                     {
                                         PropRef::Named { name, .. } => {
-                                            Some(name.as_smol_str().dupe())
+                                            name.as_smol_str_opt().map(|s| s.dupe())
                                         }
                                         PropRef::Computed(_) => None,
                                     },

@@ -18,6 +18,7 @@ use flow_aloc::ALoc;
 use flow_common_ty::ty;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty_symbol::Symbol;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 
@@ -197,6 +198,7 @@ pub mod error {
         ReactElementConfigFunArg,
         EmptyTypeDestructorTriggerT(Loc),
         EmptySomeUnknownUpper(String),
+        SymbolKey,
     }
 
     pub fn serialize_validation_error(error: &ValidationError) -> String {
@@ -217,6 +219,7 @@ pub mod error {
             ValidationError::EmptySomeUnknownUpper(u) => {
                 format!("Empty_SomeUnknownUpper (use: {u})")
             }
+            ValidationError::SymbolKey => "Symbol_key".to_string(),
         }
     }
 
@@ -574,9 +577,7 @@ pub mod builtins {
             == flow_lint_settings::severity::Severity::Err
         {
             Arc::new(ty::Ty::Generic(Box::new((
-                flow_common_ty::ty_symbol::builtin_symbol(flow_common::reason::Name::new(
-                    "$FlowFixMe",
-                )),
+                flow_common_ty::ty_symbol::builtin_symbol(FlowSmolStr::new_inline("$FlowFixMe")),
                 ty::GenKind::TypeAliasKind,
                 None,
             ))))
@@ -613,7 +614,22 @@ pub mod validator {
         pub env: &'a RefCell<Vec<ValidationError>>,
     }
 
-    impl flow_common_ty::ty_ancestors::TyEndoBase<(), ALoc> for TypeValidatorVisitor<'_> {}
+    impl flow_common_ty::ty_ancestors::TyEndoBase<(), ALoc> for TypeValidatorVisitor<'_> {
+        fn on_name(
+            &mut self,
+            _env: &(),
+            name: flow_common::reason::Name,
+        ) -> flow_common::reason::Name {
+            // A `unique symbol` key has no annotation spelling. The serializer
+            // drops such a property, which would describe a *different* type
+            // (and, against an exact object, one the annotated value no longer
+            // satisfies), so reject the type rather than insert a wrong one.
+            if name.is_symbol() {
+                self.env.borrow_mut().push(ValidationError::SymbolKey);
+            }
+            name
+        }
+    }
 
     impl flow_common_ty::ty::TyEndoTy<ALoc, ()> for TypeValidatorVisitor<'_> {
         fn on_t(&mut self, env: &(), t: ALocTy) -> ALocTy {
@@ -1206,11 +1222,11 @@ pub mod graphql {
         let name = type_alias.id.name.dupe();
         let (name, sym_provenance) = match defs.get(&id_loc) {
             Some((_, local_name, _)) => (
-                flow_common::reason::Name::new(local_name.as_str()),
+                FlowSmolStr::new(local_name.as_str()),
                 flow_common_ty::ty_symbol::Provenance::Local,
             ),
             None => (
-                flow_common::reason::Name::new(name.as_str()),
+                name.dupe(),
                 flow_common_ty::ty_symbol::Provenance::Remote(
                     flow_common_ty::ty_symbol::RemoteInfo { imported_as: None },
                 ),
@@ -1463,7 +1479,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 let has_fbt = ts.iter().any(|t| {
                     matches!(t.as_ref(),
                         ty::Ty::Generic(box (symbol, _, None))
-                        if symbol.sym_name.as_str() == "Fbt"
+                        if symbol.sym_name == "Fbt"
                            && matches!(&symbol.sym_provenance,
                                        flow_common_ty::ty_symbol::Provenance::Library(_))
                     )
@@ -1518,10 +1534,12 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                     let react_element_def_loc = ts.iter().find_map(|t| match t.as_ref() {
                         ty::Ty::Generic(box (symbol, _, _))
                             if matches!(
-                                symbol.sym_name.as_str(),
-                                "ExactReactElement_DEPRECATED"
-                                    | "MixedElement"
-                                    | "React.MixedElement"
+                                Some(symbol.sym_name.as_str()),
+                                Some(
+                                    "ExactReactElement_DEPRECATED"
+                                        | "MixedElement"
+                                        | "React.MixedElement"
+                                )
                             ) && matches!(
                                 &symbol.sym_provenance,
                                 flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1540,10 +1558,12 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                 .filter(|t| match t.as_ref() {
                                     ty::Ty::Generic(box (symbol, _, Some(_)))
                                         if matches!(
-                                            symbol.sym_name.as_str(),
-                                            "ExactReactElement_DEPRECATED"
-                                                | "MixedElement"
-                                                | "React.MixedElement"
+                                            Some(symbol.sym_name.as_str()),
+                                            Some(
+                                                "ExactReactElement_DEPRECATED"
+                                                    | "MixedElement"
+                                                    | "React.MixedElement"
+                                            )
                                         ) && matches!(
                                             &symbol.sym_provenance,
                                             flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1552,7 +1572,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                         !is_react_loc(&symbol.sym_def_loc, true)
                                     }
                                     ty::Ty::Generic(box (symbol, _, None))
-                                        if symbol.sym_name.as_str() == "Fbt"
+                                        if symbol.sym_name == "Fbt"
                                             && matches!(
                                                 &symbol.sym_provenance,
                                                 flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1571,7 +1591,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                             //   :: ts
                             let react_mixed_element = Arc::new(ty::Ty::Generic(Box::new((
                                 Symbol {
-                                    sym_name: flow_common::reason::Name::new("React.MixedElement"),
+                                    sym_name: FlowSmolStr::new_inline("React.MixedElement"),
                                     sym_provenance: flow_common_ty::ty_symbol::Provenance::Library(
                                         flow_common_ty::ty_symbol::RemoteInfo { imported_as: None },
                                     ),
@@ -1603,10 +1623,12 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                         .filter(|t| match t.as_ref() {
                             ty::Ty::Generic(box (symbol, _, Some(_)))
                                 if matches!(
-                                    symbol.sym_name.as_str(),
-                                    "ExactReactElement_DEPRECATED"
-                                        | "MixedElement"
-                                        | "React.MixedElement"
+                                    Some(symbol.sym_name.as_str()),
+                                    Some(
+                                        "ExactReactElement_DEPRECATED"
+                                            | "MixedElement"
+                                            | "React.MixedElement"
+                                    )
                                 ) && matches!(
                                     &symbol.sym_provenance,
                                     flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1615,7 +1637,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                                 !is_react_loc(&symbol.sym_def_loc, true)
                             }
                             ty::Ty::Generic(box (symbol, _, None))
-                                if symbol.sym_name.as_str() == "Fbt"
+                                if symbol.sym_name == "Fbt"
                                     && matches!(
                                         &symbol.sym_provenance,
                                         flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1667,7 +1689,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
             }
             //                 kind, Some [(Ty.Str | Ty.StrLit _)] )
             ty::Ty::Generic(box (symbol, kind, Some(args)))
-                if symbol.sym_name.as_str() == "ExactReactElement_DEPRECATED"
+                if symbol.sym_name == "ExactReactElement_DEPRECATED"
                     && matches!(
                         &symbol.sym_provenance,
                         flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1677,7 +1699,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                     && matches!(args[0].as_ref(), ty::Ty::Str | ty::Ty::StrLit(_)) =>
             {
                 let new_symbol = Symbol {
-                    sym_name: flow_common::reason::Name::new("React.MixedElement"),
+                    sym_name: FlowSmolStr::new_inline("React.MixedElement"),
                     ..symbol.clone()
                 };
                 self.on_t(
@@ -1687,7 +1709,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
             }
             //                 kind, Some _ )
             ty::Ty::Generic(box (symbol, kind, Some(_)))
-                if symbol.sym_name.as_str() == "ExactReactElement_DEPRECATED"
+                if symbol.sym_name == "ExactReactElement_DEPRECATED"
                     && matches!(
                         &symbol.sym_provenance,
                         flow_common_ty::ty_symbol::Provenance::Library(_)
@@ -1700,7 +1722,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                     "React.Node"
                 };
                 let new_symbol = Symbol {
-                    sym_name: flow_common::reason::Name::new(name),
+                    sym_name: FlowSmolStr::new(name),
                     ..symbol.clone()
                 };
                 self.on_t(
@@ -1718,7 +1740,7 @@ impl<'a, 'cx> TypeNormalizationHardcodedFixesMapper<'a, 'cx> {
                 ) && metadata.frozen.facebook_fbt.as_deref() == Some("FbtElement") =>
             {
                 let new_symbol = Symbol {
-                    sym_name: flow_common::reason::Name::new("Fbt"),
+                    sym_name: FlowSmolStr::new_inline("Fbt"),
                     ..symbol.clone()
                 };
                 Arc::new(ty::Ty::Generic(Box::new((

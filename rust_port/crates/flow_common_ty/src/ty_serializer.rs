@@ -69,11 +69,11 @@ fn id_from_string(x: &str) -> AstIdentifier {
 
 fn id_from_symbol<L>(sym: &Symbol<L>) -> AstIdentifier {
     let name = if sym.sym_anonymous {
-        "__Anonymous__"
+        FlowSmolStr::new("__Anonymous__")
     } else {
-        sym.sym_name.as_str()
+        sym.sym_name.dupe()
     };
-    id_from_string(name)
+    id_from_string(&name)
 }
 
 fn mk_generic(id: AstIdentifier, targs: Option<AstTypeArgs>) -> AstGeneric {
@@ -619,8 +619,11 @@ impl Serializer {
     }
 
     fn obj_<L: Dupe>(&self, o: &ObjT<L>) -> AstType {
-        let properties: Vec<ast::types::object::Property<Loc, Loc>> =
-            o.obj_props.iter().map(|p| self.obj_prop(p)).collect();
+        let properties: Vec<ast::types::object::Property<Loc, Loc>> = o
+            .obj_props
+            .iter()
+            .filter_map(|p| self.obj_prop(p))
+            .collect();
 
         let (exact, inexact, properties) = match &o.obj_kind {
             ObjKind::ExactObj => (false, false, properties),
@@ -645,19 +648,26 @@ impl Serializer {
         })
     }
 
-    fn obj_prop<L: Dupe>(&self, prop: &Prop<L>) -> ast::types::object::Property<Loc, Loc> {
+    fn obj_prop<L: Dupe>(&self, prop: &Prop<L>) -> Option<ast::types::object::Property<Loc, Loc>> {
         match prop {
             Prop::NamedProp { name, prop, .. } => {
-                let p = self.obj_named_prop(name.as_str(), prop);
-                ast::types::object::Property::NormalProperty(p)
+                // A `unique symbol` key has no string spelling: serializing it via
+                // `display_smol_str` would emit `[a]`/`[symbol]` as an ordinary
+                // string-keyed property, which describes a *different* property.
+                // Since there is no faithful AST spelling for it here, omit it.
+                // Callers that must not silently change the type reject it before
+                // reaching here (see `ValidationError::SymbolKey`).
+                let name = name.as_smol_str_opt()?;
+                let p = self.obj_named_prop(name, prop);
+                Some(ast::types::object::Property::NormalProperty(p))
             }
             Prop::CallProp(f) => {
                 let p = self.obj_call_prop(f);
-                ast::types::object::Property::CallProperty(p)
+                Some(ast::types::object::Property::CallProperty(p))
             }
             Prop::SpreadProp(t) => {
                 let p = self.obj_spread_prop(t);
-                ast::types::object::Property::SpreadProperty(p)
+                Some(ast::types::object::Property::SpreadProperty(p))
             }
             Prop::MappedTypeProp {
                 key_tparam,
@@ -675,7 +685,7 @@ impl Serializer {
                     flags,
                     homomorphic,
                 );
-                ast::types::object::Property::MappedType(p)
+                Some(ast::types::object::Property::MappedType(p))
             }
         }
     }
@@ -1085,7 +1095,7 @@ impl Serializer {
             .map(|e| self.interface_extends(e))
             .collect();
         let properties: Vec<ast::types::object::Property<Loc, Loc>> =
-            i.if_props.iter().map(|p| self.obj_prop(p)).collect();
+            i.if_props.iter().filter_map(|p| self.obj_prop(p)).collect();
         let properties = match &i.if_dict {
             Some(d) => {
                 let indexer = self.obj_index_prop(d);
@@ -1151,8 +1161,10 @@ impl Serializer {
                 }
             }
             ComponentProps::FlattenedComponentProps { props, inexact } => {
-                let params: Vec<ast::types::component_params::Param<Loc, Loc>> =
-                    props.iter().map(|p| self.component_param(p)).collect();
+                let params: Vec<ast::types::component_params::Param<Loc, Loc>> = props
+                    .iter()
+                    .filter_map(|p| self.component_param(p))
+                    .collect();
                 let rest = if *inexact {
                     let empty_obj = ast::types::Type::new(TypeInner::Object {
                         loc: LOC_NONE,
@@ -1212,12 +1224,15 @@ impl Serializer {
     fn component_param<L: Dupe>(
         &self,
         prop: &FlattenedComponentProp<L>,
-    ) -> ast::types::component_params::Param<Loc, Loc> {
+    ) -> Option<ast::types::component_params::Param<Loc, Loc>> {
         match prop {
             FlattenedComponentProp::FlattenedComponentProp {
                 name, optional, t, ..
             } => {
-                let x = name.as_str();
+                // A `unique symbol` key has no component-param spelling, so it is
+                // dropped for the same reason as a symbol-keyed object property
+                // (see `obj_prop`).
+                let x = name.as_smol_str_opt()?.as_str();
                 let param_name = if property_key_quotes_needed(x) {
                     let quote = better_quote(false, x);
                     let raw = format!("{}{}{}", quote, utf8_escape(&quote, x), quote);
@@ -1236,12 +1251,12 @@ impl Serializer {
                     loc: LOC_NONE,
                     annotation: self.type_(t),
                 };
-                ast::types::component_params::Param {
+                Some(ast::types::component_params::Param {
                     loc: LOC_NONE,
                     name: param_name,
                     annot,
                     optional: *optional,
-                }
+                })
             }
         }
     }

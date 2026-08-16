@@ -2060,8 +2060,8 @@ pub mod type_assertions {
             &|cx, t| {
                 match t.deref() {
                     TypeInner::AnyT(_, _) => Ok(()),
-                    // the left-hand side of a `(x in y)` expression is a string or number
-                    // TODO: also, symbols
+                    // the left-hand side of a `(x in y)` expression is a string,
+                    // number, or symbol
                     TypeInner::DefT(_, def_t)
                         if matches!(
                             def_t.deref(),
@@ -2069,6 +2069,8 @@ pub mod type_assertions {
                                 | DefTInner::SingletonStrT { .. }
                                 | DefTInner::NumGeneralT(_)
                                 | DefTInner::SingletonNumT { .. }
+                                | DefTInner::SymbolT
+                                | DefTInner::UniqueSymbolT(_)
                         ) =>
                     {
                         Ok(())

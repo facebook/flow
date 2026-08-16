@@ -79,7 +79,22 @@ pub trait TyIter2Base<Env, L> {
     }
 
     fn on_name(&mut self, env: &Env, name1: &Name, name2: &Name) -> Result<(), StructuralMismatch> {
-        self.on_string(env, name1.as_str(), name2.as_str())
+        // Compare `unique symbol` keys by nominal identity, not display spelling.
+        // Distinct symbols often render identically (`[symbol]`, or a shared
+        // `[name]`), so comparing display strings would treat them as the same
+        // property and collapse e.g. `{[s1]: T} | {[s2]: T}` into one member.
+        match (name1.symbol_id(), name2.symbol_id()) {
+            (Some(id1), Some(id2)) => StructuralMismatch::assert0(id1.cmp(id2) as i32),
+            // A symbol key and a string key are never the same property; order all
+            // string keys before all symbol keys deterministically.
+            (None, Some(_)) => Err(StructuralMismatch::Difference(-1)),
+            (Some(_), None) => Err(StructuralMismatch::Difference(1)),
+            (None, None) => {
+                let s1 = name1.display_smol_str();
+                let s2 = name2.display_smol_str();
+                self.on_string(env, s1.as_str(), s2.as_str())
+            }
+        }
     }
 
     fn on_bool(&mut self, _env: &Env, b1: bool, b2: bool) -> Result<(), StructuralMismatch> {
