@@ -6983,7 +6983,7 @@ struct DeferredMethod {
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     id_loc: ALoc,
     func_sig: func_class_sig_types::func::Func<FuncTypeParamsConfig>,
 }
@@ -7021,9 +7021,9 @@ fn add_interface_properties<'a>(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let record_field = |name: &FlowSmolStr, t: &Type| {
+    let record_field = |name: &Name, t: &Type| {
         if let Some(id_loc) = &record_for_interface {
-            cx.record_interface_field(id_loc.dupe(), Name::new(name.dupe()), t.dupe());
+            cx.record_interface_field(id_loc.dupe(), name.dupe(), t.dupe());
         }
     };
     use flow_parser::ast::types::object::Property;
@@ -7154,11 +7154,9 @@ fn add_interface_properties<'a>(
                 );
                 match named {
                     Some(name) => {
-                        // Within-file the class Signature is string-keyed, so a
-                        // symbol-typed indexer key is keyed by its display
-                        // spelling (matching the computed-key path); cross-module
-                        // consumers get true symbol identity via `type_sig_merge`.
-                        let name = name.display_smol_str();
+                        // Keep the full `Name` so a `unique symbol` indexer key
+                        // retains its nominal identity in the (now `Name`-keyed)
+                        // class Signature, matching the computed-key path.
                         record_field(&name, &value_t);
                         class_sig::add_field(
                             idx.static_,
@@ -7389,7 +7387,7 @@ fn add_interface_properties<'a>(
                         flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
                         np.variance.as_ref(),
                     );
-                    let add_field_or_proto = |name: FlowSmolStr,
+                    let add_field_or_proto = |name: Name,
                                               id_loc: ALoc,
                                               t: Type,
                                               s: &mut func_class_sig_types::class::Class<
@@ -7420,7 +7418,7 @@ fn add_interface_properties<'a>(
                         }
                     };
                     let mut handle_init_only_property =
-                        |name: FlowSmolStr,
+                        |name: Name,
                          id_loc: ALoc,
                          rebuild_key: &dyn Fn(Type) -> ast::expression::object::Key<ALoc, (ALoc, Type)>|
                          -> Option<ast::types::object::Property<ALoc, (ALoc, Type)>> {
@@ -7499,14 +7497,11 @@ fn add_interface_properties<'a>(
                         Key::Computed(ck) => {
                             let (typed_expr, resolved_name) =
                                 resolve_computed_key_name(cx, &ck.expression)?;
-                            // Within-file value-level symbol members are still keyed
-                            // by their display spelling (the class Signature is string-
-                            // keyed); cross-module consumers get true symbol identity via
-                            // `type_sig_merge`. Keep accepting the key rather than
-                            // rejecting it as an illegal computed key.
-                            let resolved_name = resolved_name.map(|n| n.display_smol_str());
                             match resolved_name {
                                 Some(name) => {
+                                    // Keep the full `Name` so a `unique symbol` computed
+                                    // key retains its nominal identity in the (now
+                                    // `Name`-keyed) class Signature.
                                     let id_loc = ck.expression.loc().dupe();
                                     if np.method {
                                         match &np.value {
@@ -7546,7 +7541,7 @@ fn add_interface_properties<'a>(
                                                     append.apply(&mut s);
                                                 } else if !shadowing_member_last_locs
                                                     .accessors
-                                                    .get(&(np.static_, Name::new(name.dupe())))
+                                                    .get(&(np.static_, name.dupe()))
                                                     .is_some_and(|last| {
                                                         last.quick_compare(&id_loc).is_gt()
                                                     })
@@ -7887,7 +7882,7 @@ fn add_interface_properties<'a>(
                                                         np.static_,
                                                         abstract_on,
                                                         override_on_declare_class,
-                                                        name.dupe(),
+                                                        Name::new(name.dupe()),
                                                         key_loc.dupe(),
                                                         None,
                                                         fsig,
@@ -7964,7 +7959,7 @@ fn add_interface_properties<'a>(
                                             t.dupe()
                                         };
                                         add_field_or_proto(
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             key_loc.dupe(),
                                             t_with_optional.dupe(),
                                             &mut s,
@@ -8013,9 +8008,11 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(error_prop));
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
-                                        if let Some(prop_ast) =
-                                            handle_init_only_property(name, key_loc, &*rebuild_key)
-                                        {
+                                        if let Some(prop_ast) = handle_init_only_property(
+                                            Name::new(name),
+                                            key_loc,
+                                            &*rebuild_key,
+                                        ) {
                                             prop_asts.push(prop_ast);
                                         } else {
                                             let Ok(error_prop) =
@@ -8059,7 +8056,7 @@ fn add_interface_properties<'a>(
                                             np.static_,
                                             abstract_on,
                                             override_on_declare_class,
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             key_loc.dupe(),
                                             None,
                                             fsig,
@@ -8136,7 +8133,7 @@ fn add_interface_properties<'a>(
                                             np.static_,
                                             abstract_on,
                                             override_on_declare_class,
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             key_loc.dupe(),
                                             None,
                                             fsig,

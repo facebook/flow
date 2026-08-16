@@ -38,6 +38,16 @@ Flags:
 {[symbol]: number} | {[symbol]: number}
 display_union.js:13:1,13:7
 
+display_class.js:19:7
+Flags:
+{x: boolean, [a]: number, [b]: string, ...}
+display_class.js:19:7,19:12
+
+display_class.js:24:3
+Flags:
+interface {x: boolean; [a]: number; [b]: string}
+display_class.js:24:1,24:6
+
 > insert-type insert_type.js 6 7
 > insert-type insert_type.js 10 7
 > cat insert_type.js

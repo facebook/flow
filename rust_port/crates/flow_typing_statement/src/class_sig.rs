@@ -150,10 +150,10 @@ fn with_sig<C: ConfigTypes, R>(
 // already the per-side signature — no [~static] argument needed.
 fn update_override_members<C: ConfigTypes>(
     override_: bool,
-    name: &FlowSmolStr,
+    name: &Name,
     loc: ALoc,
     s: &class_types::Signature<C>,
-) -> BTreeMap<FlowSmolStr, ALoc> {
+) -> BTreeMap<Name, ALoc> {
     if !override_ {
         s.override_members.clone()
     } else {
@@ -185,8 +185,12 @@ pub fn add_private_field<C: ConfigTypes>(
     map_sig(
         static_,
         |s| {
-            let new_override_members =
-                update_override_members(override_, &private_member_key(&name), loc.dupe(), s);
+            let new_override_members = update_override_members(
+                override_,
+                &Name::new(private_member_key(&name)),
+                loc.dupe(),
+                s,
+            );
             s.private_fields.insert(name, (Some(loc), polarity, field));
             s.override_members = new_override_members;
         },
@@ -215,8 +219,12 @@ pub fn add_private_method<C: ConfigTypes>(
     map_sig(
         static_,
         |s| {
-            let new_override_members =
-                update_override_members(override_, &private_member_key(&name), id_loc, s);
+            let new_override_members = update_override_members(
+                override_,
+                &Name::new(private_member_key(&name)),
+                id_loc,
+                s,
+            );
             s.private_methods.insert(name, func_info);
             s.override_members = new_override_members;
         },
@@ -227,7 +235,7 @@ pub fn add_private_method<C: ConfigTypes>(
 pub fn public_fields_of_signature<C: ConfigTypes>(
     static_: bool,
     s: &class_types::Class<C>,
-) -> &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>> {
+) -> &BTreeMap<Name, class_types::FieldPrime<C>> {
     if static_ {
         &s.static_.fields
     } else {
@@ -319,9 +327,9 @@ pub fn append_constructor_replacing_default<C: ConfigTypes>(
 fn update_abstract_members<C: ConfigTypes>(
     abstract_: bool,
     static_: bool,
-    name: &FlowSmolStr,
+    name: &Name,
     s: &class_types::Signature<C>,
-) -> BTreeSet<FlowSmolStr> {
+) -> BTreeSet<Name> {
     if static_ || !abstract_ {
         s.abstract_members.clone()
     } else {
@@ -339,7 +347,7 @@ fn add_field_inner<C: ConfigTypes>(
     abstract_: bool,
     static_: bool,
     override_loc: Option<ALoc>,
-    name: FlowSmolStr,
+    name: Name,
     fld: class_types::FieldPrime<C>,
     x: &mut class_types::Class<C>,
 ) {
@@ -368,7 +376,7 @@ pub fn add_field<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     loc: ALoc,
     polarity: Polarity,
     field: class_types::Field<C>,
@@ -410,7 +418,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
         false,
         true,
         None,
-        FlowSmolStr::new("name"),
+        Name::new(FlowSmolStr::new("name")),
         (None, Polarity::Neutral, class_types::Field::Annot(t)),
         x,
     );
@@ -419,7 +427,7 @@ pub fn add_name_field<C: ConfigTypes>(x: &mut class_types::Class<C>) {
 pub fn add_proto_field<C: ConfigTypes>(
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     loc: ALoc,
     polarity: Polarity,
     field: class_types::Field<C>,
@@ -446,7 +454,7 @@ pub fn add_method<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
     func_sig_: func_class_sig_types::func::Func<C>,
@@ -490,7 +498,7 @@ pub fn append_method<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
     func_sig_: func_class_sig_types::func::Func<C>,
@@ -561,7 +569,7 @@ pub fn add_getter<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
     func_sig_: func_class_sig_types::func::Func<C>,
@@ -601,7 +609,7 @@ pub fn add_setter<C: ConfigTypes>(
     static_: bool,
     abstract_: bool,
     override_: bool,
-    name: FlowSmolStr,
+    name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
     func_sig_: func_class_sig_types::func::Func<C>,
@@ -647,17 +655,17 @@ fn iter_methods_with_name<C: ConfigTypes>(
 ) -> Result<(), CheckExprError> {
     for (name, func_infos) in &s.methods {
         for func_info in func_infos {
-            f(name, func_info)?;
+            f(&name.display_smol_str(), func_info)?;
         }
     }
     for (name, func_info) in &s.private_methods {
-        f(name, func_info)?;
+        f(name.as_str(), func_info)?;
     }
     for (name, func_info) in &s.getters {
-        f(name, func_info)?;
+        f(&name.display_smol_str(), func_info)?;
     }
     for (name, func_info) in &s.setters {
-        f(name, func_info)?;
+        f(&name.display_smol_str(), func_info)?;
     }
     Ok(())
 }
@@ -739,13 +747,32 @@ fn to_method<'a, C: crate::func_params_intf::Config>(
     })
 }
 
-pub fn fields_to_prop_map<'a, C: ConfigTypes>(
+/// Bridges the two key types used by class signature maps (`Name` for public
+/// members, `FlowSmolStr` for private members) so `fields_to_prop_map` can build
+/// a `Name`-keyed `PropertiesMap` from either.
+pub(crate) trait AsPropName {
+    fn as_prop_name(&self) -> Name;
+}
+
+impl AsPropName for Name {
+    fn as_prop_name(&self) -> Name {
+        self.dupe()
+    }
+}
+
+impl AsPropName for FlowSmolStr {
+    fn as_prop_name(&self) -> Name {
+        Name::new(self.dupe())
+    }
+}
+
+pub(crate) fn fields_to_prop_map<'a, C: ConfigTypes, K: AsPropName>(
     cx: &Context<'a>,
-    fields: &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>>,
+    fields: &BTreeMap<K, class_types::FieldPrime<C>>,
 ) -> properties::Id {
     let pmap: properties::PropertiesMap = fields
         .iter()
-        .map(|(name, entry)| (Name::new(name.dupe()), to_field(entry)))
+        .map(|(name, entry)| (name.as_prop_name(), to_field(entry)))
         .collect();
     cx.generate_property_map(pmap)
 }
@@ -769,9 +796,9 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     s: &class_types::Signature<C>,
     super_: &class_types::Super,
 ) -> (
-    FlowOrdSet<FlowSmolStr>,
-    BTreeMap<FlowSmolStr, Property>,
-    BTreeMap<FlowSmolStr, Property>,
+    FlowOrdSet<Name>,
+    BTreeMap<Name, Property>,
+    BTreeMap<Name, Property>,
     Option<Type>,
     Option<Type>,
 ) {
@@ -793,7 +820,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     // If this is an overloaded method, create an intersection, attributed
     // to the first declared function signature. If there is a single
     // function signature for this method, simply return the method type.
-    let mut methods: BTreeMap<FlowSmolStr, (Option<ALoc>, Type)> = BTreeMap::new();
+    let mut methods: BTreeMap<Name, (Option<ALoc>, Type)> = BTreeMap::new();
     for (name, xs) in &s.methods {
         let ms: Vec<(Option<ALoc>, Type, &class_types::SetType)> = xs
             .iter()
@@ -849,11 +876,11 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     }
     // Re-add the constructor as a method.
     if let Some(t) = constructor {
-        methods.insert(FlowSmolStr::new("constructor"), t);
+        methods.insert(Name::new(FlowSmolStr::new("constructor")), t);
     }
     // If there is a both a getter and a setter, then flow the setter type to
     // the getter. Otherwise just use the getter type or the setter type
-    let getters: BTreeMap<FlowSmolStr, (Option<ALoc>, Type, &class_types::SetType)> = s
+    let getters: BTreeMap<Name, (Option<ALoc>, Type, &class_types::SetType)> = s
         .getters
         .iter()
         .map(|(name, fi)| {
@@ -867,7 +894,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
             )
         })
         .collect();
-    let setters: BTreeMap<FlowSmolStr, (Option<ALoc>, Type, &class_types::SetType)> = s
+    let setters: BTreeMap<Name, (Option<ALoc>, Type, &class_types::SetType)> = s
         .setters
         .iter()
         .map(|(name, fi)| {
@@ -892,9 +919,8 @@ fn elements<'a, C: crate::func_params_intf::Config>(
             (set_type)(t.dupe());
         }
     }
-    let mut getters_and_setters: BTreeMap<FlowSmolStr, Property> = BTreeMap::new();
-    let all_accessor_keys: BTreeSet<FlowSmolStr> =
-        getters.keys().chain(setters.keys()).duped().collect();
+    let mut getters_and_setters: BTreeMap<Name, Property> = BTreeMap::new();
+    let all_accessor_keys: BTreeSet<Name> = getters.keys().chain(setters.keys()).duped().collect();
     for name in all_accessor_keys {
         let getter = getters.get(&name);
         let setter = setters.get(&name);
@@ -919,12 +945,12 @@ fn elements<'a, C: crate::func_params_intf::Config>(
         };
         getters_and_setters.insert(name, prop);
     }
-    let fields: BTreeMap<FlowSmolStr, Property> = s
+    let fields: BTreeMap<Name, Property> = s
         .fields
         .iter()
         .map(|(name, entry)| (name.dupe(), to_field(entry)))
         .collect();
-    let mut methods_props: BTreeMap<FlowSmolStr, Property> = methods
+    let mut methods_props: BTreeMap<Name, Property> = methods
         .into_iter()
         .map(|(name, (key_loc, type_))| {
             (
@@ -996,7 +1022,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     static_proto: Type,
     x: &class_types::Class<C>,
-) -> (FlowOrdSet<FlowSmolStr>, ObjType) {
+) -> (FlowOrdSet<Name>, ObjType) {
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
     let this = type_util::class_type(this_or_mixed(loc, x), false, None);
@@ -1007,7 +1033,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
             .iter()
             .chain(methods.iter())
             .map(|(name, prop)| {
-                let name_key = Name::new(name.as_str());
+                let name_key = name.dupe();
                 if !seen.insert(name_key.dupe()) {
                     panic!(
                         "static fields and methods must be disjoint: {}",
@@ -1041,7 +1067,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
 
 fn insttype<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
-    initialized_static_fields: FlowOrdSet<FlowSmolStr>,
+    initialized_static_fields: FlowOrdSet<Name>,
     inst_kind: Option<InstanceKind>,
     s: &class_types::Class<C>,
 ) -> InstType {
@@ -1108,11 +1134,11 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
     };
     let own_pmap: properties::PropertiesMap = fields
         .iter()
-        .map(|(name, prop)| (Name::new(name.dupe()), prop.dupe()))
+        .map(|(name, prop)| (name.dupe(), prop.dupe()))
         .collect();
     let proto_pmap: properties::PropertiesMap = methods
         .iter()
-        .map(|(name, prop)| (Name::new(name.dupe()), prop.dupe()))
+        .map(|(name, prop)| (name.dupe(), prop.dupe()))
         .collect();
     let strictness_kind = cx.type_strictness_kind();
     InstType::new(InstTypeInner {
@@ -1141,12 +1167,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             &s.static_.private_methods,
         ),
         inst_abstract: s.abstract_,
-        inst_abstract_props: s
-            .instance
-            .abstract_members
-            .iter()
-            .map(|name| Name::new(name.dupe()))
-            .collect(),
+        inst_abstract_props: s.instance.abstract_members.iter().duped().collect(),
         strictness_kind,
     })
 }
@@ -1631,7 +1652,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     };
     for (x_name, p1) in &own {
         if let Some(p2) = proto.get(x_name) {
-            let prop = Name::new(x_name.as_str());
+            let prop = x_name.dupe();
             let use_op = UseOp::Op(Arc::new(RootUseOp::ClassOwnProtoCheck(Box::new(
                 ClassOwnProtoCheckData {
                     prop: prop.dupe(),
@@ -1653,15 +1674,15 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     }));
     let mut own_name_map: FlowOrdMap<Name, Property> = FlowOrdMap::new();
     for (k, v) in &own {
-        own_name_map.insert(Name::new(k.as_str()), v.dupe());
+        own_name_map.insert(k.dupe(), v.dupe());
     }
     let mut proto_name_map: FlowOrdMap<Name, Property> = FlowOrdMap::new();
     for (k, v) in &proto {
-        proto_name_map.insert(Name::new(k.as_str()), v.dupe());
+        proto_name_map.insert(k.dupe(), v.dupe());
     }
     let mut static_name_map: FlowOrdMap<Name, Property> = FlowOrdMap::new();
     for (k, v) in &static_ {
-        static_name_map.insert(Name::new(k.as_str()), v.dupe());
+        static_name_map.insert(k.dupe(), v.dupe());
     }
     cx.add_post_inference_validation_flow(
         super_,
@@ -1692,12 +1713,12 @@ fn post_inference_check_abstract_obligations<'cx>(
     class_name: &Option<FlowSmolStr>,
     class_loc: &ALoc,
     def_loc: &ALoc,
-    own_concrete_names: &BTreeSet<FlowSmolStr>,
+    own_concrete_names: &BTreeSet<Name>,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let seen: RefCell<BTreeSet<properties::Id>> = RefCell::new(BTreeSet::new());
-    let obligations: RefCell<BTreeMap<FlowSmolStr, ALoc>> = RefCell::new(BTreeMap::new());
-    let satisfied: RefCell<BTreeSet<FlowSmolStr>> = RefCell::new(BTreeSet::new());
-    let add_obligation = |name: FlowSmolStr, loc: ALoc| {
+    let obligations: RefCell<BTreeMap<Name, ALoc>> = RefCell::new(BTreeMap::new());
+    let satisfied: RefCell<BTreeSet<Name>> = RefCell::new(BTreeSet::new());
+    let add_obligation = |name: Name, loc: ALoc| {
         obligations.borrow_mut().entry(name).or_insert(loc);
     };
     let process_inst = |inst: &InstType| -> bool {
@@ -1713,13 +1734,8 @@ fn post_inference_check_abstract_obligations<'cx>(
             // to [obligations], any concrete impl above us has already
             // been added to [satisfied].
             let add_concrete = |name: &Name, _: &Property| {
-                // Abstract-obligation tracking is string-keyed; symbol-keyed members
-                // are not part of the value-level class Signature yet, so skip them.
-                let Some(name_str) = name.as_smol_str_opt() else {
-                    return;
-                };
                 if !inst.inst_abstract_props.contains(name) {
-                    satisfied.borrow_mut().insert(name_str.dupe());
+                    satisfied.borrow_mut().insert(name.dupe());
                 }
             };
             for (name, p) in own_props.iter() {
@@ -1729,10 +1745,7 @@ fn post_inference_check_abstract_obligations<'cx>(
                 add_concrete(name, p);
             }
             for name in inst.inst_abstract_props.iter() {
-                let Some(name_str) = name.as_smol_str_opt() else {
-                    continue;
-                };
-                if !satisfied.borrow().contains(name_str) {
+                if !satisfied.borrow().contains(name) {
                     let prop_loc = match own_props.get(name) {
                         Some(p) => property::first_loc(p),
                         None => match proto_props.get(name) {
@@ -1741,7 +1754,7 @@ fn post_inference_check_abstract_obligations<'cx>(
                         },
                     };
                     let loc = prop_loc.unwrap_or_else(|| def_loc.dupe());
-                    add_obligation(name_str.dupe(), loc);
+                    add_obligation(name.dupe(), loc);
                 }
             }
             true
@@ -1816,7 +1829,7 @@ fn post_inference_check_abstract_obligations<'cx>(
                 ErrorMessage::EAbstractClass(Box::new(EAbstractClassData {
                     kind: AbstractErrorKind::AbstractMemberNotImplemented {
                         class_name: class_name.clone(),
-                        member_name: name.dupe(),
+                        member_name: name.display_smol_str(),
                         member_def_loc: member_def_loc.dupe(),
                     },
                     loc: class_loc.dupe(),
@@ -1848,9 +1861,9 @@ fn check_abstract_obligations<'cx, C: crate::func_params_intf::Config>(
     let own_abstract = x.instance.abstract_members.clone();
     // Names of [x]'s own concrete instance members (fields, methods,
     // getters, setters, proto fields). These satisfy obligations.
-    let own_concrete_names: BTreeSet<FlowSmolStr> = {
+    let own_concrete_names: BTreeSet<Name> = {
         let s = &x.instance;
-        let mut acc: BTreeSet<FlowSmolStr> = BTreeSet::new();
+        let mut acc: BTreeSet<Name> = BTreeSet::new();
         acc.extend(s.fields.keys().duped());
         acc.extend(s.proto_fields.keys().duped());
         acc.extend(s.methods.keys().duped());
@@ -1925,9 +1938,9 @@ fn class_name_of_inst_reason(r: &Reason) -> Option<FlowSmolStr> {
 // (the static side leaves it empty since [abstract_members] is
 // instance-only).
 struct InheritedSideState {
-    locs: BTreeMap<FlowSmolStr, ALoc>,
-    owners: BTreeMap<FlowSmolStr, Option<FlowSmolStr>>,
-    name_abstract: BTreeMap<FlowSmolStr, bool>,
+    locs: BTreeMap<Name, ALoc>,
+    owners: BTreeMap<Name, Option<FlowSmolStr>>,
+    name_abstract: BTreeMap<Name, bool>,
 }
 
 fn mk_inherited_side_state() -> InheritedSideState {
@@ -1965,15 +1978,14 @@ fn collect_inherited_members_both_sides<'cx>(
     let add_member = |state: &RefCell<InheritedSideState>,
                       inst_name: &Option<FlowSmolStr>,
                       is_abstract: bool,
-                      name: &str,
+                      name: &Name,
                       loc_opt: Option<ALoc>| {
         let mut s = state.borrow_mut();
         if !s.locs.contains_key(name) {
             let loc = loc_opt.unwrap_or_else(ALoc::none);
-            let name_smol = FlowSmolStr::new(name);
-            s.locs.insert(name_smol.dupe(), loc);
-            s.owners.insert(name_smol.dupe(), inst_name.clone());
-            s.name_abstract.insert(name_smol, is_abstract);
+            s.locs.insert(name.dupe(), loc);
+            s.owners.insert(name.dupe(), inst_name.clone());
+            s.name_abstract.insert(name.dupe(), is_abstract);
         }
     };
     let process_inst = |instance_t: &InstanceT, inst_reason: &Reason| -> bool {
@@ -1991,15 +2003,12 @@ fn collect_inherited_members_both_sides<'cx>(
             let proto_props = cx.find_props(inst.proto_props.dupe());
             let visit_instance = |props: &properties::PropertiesMap| {
                 for (name, p) in props.iter() {
-                    let Some(name_str) = name.as_str_opt() else {
-                        continue;
-                    };
                     let is_abstract = inst.inst_abstract_props.contains(name);
                     add_member(
                         &instance_state,
                         &inst_name,
                         is_abstract,
-                        name_str,
+                        name,
                         property::first_loc(p),
                     );
                 }
@@ -2013,7 +2022,7 @@ fn collect_inherited_members_both_sides<'cx>(
                     &RefCell<InheritedSideState>,
                     &Option<FlowSmolStr>,
                     bool,
-                    &str,
+                    &Name,
                     Option<ALoc>,
                 ),
                 inst_name: &Option<FlowSmolStr>,
@@ -2024,15 +2033,12 @@ fn collect_inherited_members_both_sides<'cx>(
                         DefTInner::ObjT(obj) => {
                             let static_props = cx.find_props(obj.props_tmap.dupe());
                             for (name, p) in static_props.iter() {
-                                let Some(name_str) = name.as_str_opt() else {
-                                    continue;
-                                };
                                 // Static members can't be abstract in our model.
                                 add_member(
                                     static_state,
                                     inst_name,
                                     false,
-                                    name_str,
+                                    name,
                                     property::first_loc(p),
                                 );
                             }
@@ -2151,8 +2157,8 @@ fn collect_inherited_members_both_sides<'cx>(
 fn check_override_side<'cx>(
     cx: &Context<'cx>,
     class_name: &Option<FlowSmolStr>,
-    own_concrete_names: &BTreeMap<FlowSmolStr, Option<ALoc>>,
-    override_members: &BTreeMap<FlowSmolStr, ALoc>,
+    own_concrete_names: &BTreeMap<Name, Option<ALoc>>,
+    override_members: &BTreeMap<Name, ALoc>,
     super_: &Type,
     inherited_state: &InheritedSideState,
     immediate_super_name: &Option<FlowSmolStr>,
@@ -2168,7 +2174,7 @@ fn check_override_side<'cx>(
     // skip the other checks for this side (they assume a real super).
     if !super_has_real_extends(cx, super_) && !override_members.is_empty() {
         for (member_name, loc) in override_members.iter() {
-            if member_name.as_str() == "constructor" {
+            if member_name.matches_str("constructor") {
                 continue;
             }
             flow_js_utils::add_output_non_speculating(
@@ -2176,7 +2182,7 @@ fn check_override_side<'cx>(
                 ErrorMessage::EOverride(Box::new(EOverrideData {
                     kind: OverrideErrorKind::OverrideWithoutExtends {
                         class_name: class_name.clone(),
-                        member_name: member_name.dupe(),
+                        member_name: member_name.display_smol_str(),
                     },
                     loc: loc.dupe(),
                 })),
@@ -2186,7 +2192,7 @@ fn check_override_side<'cx>(
         // Not-inherited check. Every [override] name must exist somewhere
         // in the inherited set.
         for (member_name, loc) in override_members.iter() {
-            if member_name.as_str() == "constructor" {
+            if member_name.matches_str("constructor") {
                 continue;
             }
             if !inherited_locs.contains_key(member_name) {
@@ -2196,7 +2202,7 @@ fn check_override_side<'cx>(
                         kind: OverrideErrorKind::OverrideOfNonInheritedMember {
                             class_name: class_name.clone(),
                             base_class_name: immediate_super_name.clone(),
-                            member_name: member_name.dupe(),
+                            member_name: member_name.display_smol_str(),
                         },
                         loc: loc.dupe(),
                     })),
@@ -2209,7 +2215,7 @@ fn check_override_side<'cx>(
         // x's perspective.
         if !skip_implicit_check {
             for (member_name, own_loc_opt) in own_concrete_names.iter() {
-                if member_name.as_str() == "constructor" {
+                if member_name.matches_str("constructor") {
                     continue;
                 }
                 if override_members.contains_key(member_name) {
@@ -2246,7 +2252,7 @@ fn check_override_side<'cx>(
                                         kind: OverrideErrorKind::ImplicitOverrideMissingModifier {
                                             class_name: class_name.clone(),
                                             base_class_name,
-                                            member_name: member_name.dupe(),
+                                            member_name: member_name.display_smol_str(),
                                             inherited_def_loc: inherited_def_loc.dupe(),
                                         },
                                         loc: loc.dupe(),
@@ -2308,45 +2314,45 @@ fn check_override_obligations<'cx, C: crate::func_params_intf::Config>(
     // about CONCRETE overrides — an [abstract foo()] shadowing a
     // concrete [foo()] is the abstract-obligation check's domain,
     // not this one.
-    let own_concrete_names_of =
-        |s: &class_types::Signature<C>| -> BTreeMap<FlowSmolStr, Option<ALoc>> {
-            if skip_implicit_check {
-                BTreeMap::new()
-            } else {
-                let add_fields =
-                    |m: &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>>,
-                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
-                        for (k, (loc, _, _)) in m.iter() {
-                            acc.insert(k.dupe(), loc.clone());
-                        }
-                    };
-                let add_funcs =
-                    |m: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
-                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
-                        for (k, info) in m.iter() {
-                            acc.insert(k.dupe(), info.id_loc.clone());
-                        }
-                    };
-                let add_methods =
-                    |m: &BTreeMap<FlowSmolStr, vec1::Vec1<class_types::FuncInfo<C>>>,
-                     acc: &mut BTreeMap<FlowSmolStr, Option<ALoc>>| {
-                        // [methods] is [func_info Nel.t SMap.t]; take head's id_loc.
-                        for (k, infos) in m.iter() {
-                            let info = infos.first();
-                            acc.insert(k.dupe(), info.id_loc.clone());
-                        }
-                    };
-                let mut acc: BTreeMap<FlowSmolStr, Option<ALoc>> = BTreeMap::new();
-                add_fields(&s.fields, &mut acc);
-                add_fields(&s.proto_fields, &mut acc);
-                add_methods(&s.methods, &mut acc);
-                add_funcs(&s.getters, &mut acc);
-                add_funcs(&s.setters, &mut acc);
-                acc.into_iter()
-                    .filter(|(k, _)| !s.abstract_members.contains(k))
-                    .collect()
-            }
-        };
+    let own_concrete_names_of = |s: &class_types::Signature<C>| -> BTreeMap<Name, Option<ALoc>> {
+        if skip_implicit_check {
+            BTreeMap::new()
+        } else {
+            // Keyed by `Name`, so a `unique symbol` member is compared
+            // against the inherited set by its nominal identity rather than
+            // a shared string spelling.
+            let add_fields = |m: &BTreeMap<Name, class_types::FieldPrime<C>>,
+                              acc: &mut BTreeMap<Name, Option<ALoc>>| {
+                for (k, (loc, _, _)) in m.iter() {
+                    acc.insert(k.dupe(), loc.clone());
+                }
+            };
+            let add_funcs = |m: &BTreeMap<Name, class_types::FuncInfo<C>>,
+                             acc: &mut BTreeMap<Name, Option<ALoc>>| {
+                for (k, info) in m.iter() {
+                    acc.insert(k.dupe(), info.id_loc.clone());
+                }
+            };
+            let add_methods =
+                |m: &BTreeMap<Name, vec1::Vec1<class_types::FuncInfo<C>>>,
+                 acc: &mut BTreeMap<Name, Option<ALoc>>| {
+                    // [methods] is [func_info Nel.t SMap.t]; take head's id_loc.
+                    for (k, infos) in m.iter() {
+                        let info = infos.first();
+                        acc.insert(k.dupe(), info.id_loc.clone());
+                    }
+                };
+            let mut acc: BTreeMap<Name, Option<ALoc>> = BTreeMap::new();
+            add_fields(&s.fields, &mut acc);
+            add_fields(&s.proto_fields, &mut acc);
+            add_methods(&s.methods, &mut acc);
+            add_funcs(&s.getters, &mut acc);
+            add_funcs(&s.setters, &mut acc);
+            acc.into_iter()
+                .filter(|(k, _)| !s.abstract_members.contains(k))
+                .collect()
+        }
+    };
     let own_concrete_instance = own_concrete_names_of(&x.instance);
     let own_concrete_static = own_concrete_names_of(&x.static_);
     let (super_, _static_proto) = supertype(cx, x);
@@ -2579,17 +2585,16 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             }
             Ok(())
         };
-        let field =
-            |_name: &str, entry: &class_types::FieldPrime<C>| -> Result<(), CheckExprError> {
-                let (_, _, value) = entry;
-                match value {
-                    class_types::Field::Annot(_) => {}
-                    class_types::Field::Infer(fsig, set_asts) => {
-                        method_(set_asts, fsig)?;
-                    }
+        let field = |entry: &class_types::FieldPrime<C>| -> Result<(), CheckExprError> {
+            let (_, _, value) = entry;
+            match value {
+                class_types::Field::Annot(_) => {}
+                class_types::Field::Infer(fsig, set_asts) => {
+                    method_(set_asts, fsig)?;
                 }
-                Ok(())
-            };
+            }
+            Ok(())
+        };
         with_sig(
             true,
             |s| -> Result<(), CheckExprError> {
@@ -2598,11 +2603,11 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     &mut |fi: &class_types::FuncInfo<C>| method_(&fi.set_asts, &fi.func_sig),
                     s,
                 )?;
-                for (name, entry) in &s.fields {
-                    field(name.as_ref(), entry)?;
+                for entry in s.fields.values() {
+                    field(entry)?;
                 }
-                for (name, entry) in &s.private_fields {
-                    field(name.as_ref(), entry)?;
+                for entry in s.private_fields.values() {
+                    field(entry)?;
                 }
                 Ok(())
             },
@@ -2620,14 +2625,14 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     &mut |fi: &class_types::FuncInfo<C>| method_(&fi.set_asts, &fi.func_sig),
                     s,
                 )?;
-                for (name, entry) in &s.fields {
-                    field(name.as_ref(), entry)?;
+                for entry in s.fields.values() {
+                    field(entry)?;
                 }
-                for (name, entry) in &s.private_fields {
-                    field(name.as_ref(), entry)?;
+                for entry in s.private_fields.values() {
+                    field(entry)?;
                 }
-                for (name, entry) in &s.proto_fields {
-                    field(name.as_ref(), entry)?;
+                for entry in s.proto_fields.values() {
+                    field(entry)?;
                 }
                 Ok(())
             },

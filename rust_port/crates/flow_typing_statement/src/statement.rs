@@ -206,8 +206,10 @@ enum ClassMemberKind {
 }
 
 struct SeenNames {
-    static_names: BTreeMap<FlowSmolStr, ClassMemberKind>,
-    instance_names: BTreeMap<FlowSmolStr, ClassMemberKind>,
+    // Keyed by `Name` so distinct `unique symbol` computed keys are tracked as
+    // distinct members rather than colliding on the shared string placeholder.
+    static_names: BTreeMap<Name, ClassMemberKind>,
+    instance_names: BTreeMap<Name, ClassMemberKind>,
 }
 
 fn empty_seen_names() -> SeenNames {
@@ -14702,7 +14704,7 @@ fn check_duplicate_class_member<'a>(
     seen_names: &mut SeenNames,
     static_: bool,
     private_: bool,
-    name: &FlowSmolStr,
+    name: &Name,
     kind: ClassMemberKind,
     loc: ALoc,
     class_kind: intermediate_error_types::ClassKind,
@@ -14731,7 +14733,7 @@ fn check_duplicate_class_member<'a>(
                     cx,
                     ErrorMessage::EDuplicateClassMember(Box::new(EDuplicateClassMemberData {
                         loc,
-                        name: name_key,
+                        name: name.display_smol_str(),
                         is_static: static_,
                         class_kind,
                     })),
@@ -15814,7 +15816,7 @@ pub fn mk_class_sig<'a>(
                 let check_duplicate_name =
                     |public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
-                     name: &FlowSmolStr,
+                     name: &Name,
                      static_: bool,
                      private_: bool,
                      kind: ClassMemberKind| {
@@ -15922,12 +15924,14 @@ pub fn mk_class_sig<'a>(
                     public_seen_names: &mut SeenNames,
                     class_kind: intermediate_error_types::ClassKind,
                     method_loc: ALoc,
-                    name: FlowSmolStr,
+                    name: Name,
                     id_loc: ALoc,
                     func_loc: ALoc,
                     func: &ast::function::Function<ALoc, ALoc>,
                     kind: ast::class::MethodKind,
-                    private_: bool,
+                    // `Some` for a private member, whose name is always an
+                    // identifier and never a computed key.
+                    private_name: Option<FlowSmolStr>,
                     static_: bool,
                     override_: bool,
                     ts_accessibility: Option<ast::class::ts_accessibility::TSAccessibility<ALoc>>,
@@ -16046,6 +16050,7 @@ pub fn mk_class_sig<'a>(
                             comments: comments_c,
                         }))
                     });
+                    let private_ = private_name.is_some();
                     match kind {
                         ast::class::MethodKind::Constructor => {
                             class_sig::add_constructor(
@@ -16057,11 +16062,11 @@ pub fn mk_class_sig<'a>(
                             );
                         }
                         ast::class::MethodKind::Method => {
-                            if private_ {
+                            if let Some(private_name) = &private_name {
                                 class_sig::add_private_method(
                                     static_,
                                     override_,
-                                    name.dupe(),
+                                    private_name.dupe(),
                                     id_loc.dupe(),
                                     Some(func_loc.dupe()),
                                     method_sig,
@@ -16464,12 +16469,12 @@ pub fn mk_class_sig<'a>(
                                         &mut public_seen_names,
                                         class_kind,
                                         method_loc.dupe(),
-                                        name.dupe(),
+                                        Name::new(name.dupe()),
                                         id_loc.dupe(),
                                         func_loc.dupe(),
                                         func,
                                         kind,
-                                        true,
+                                        Some(name.dupe()),
                                         static_,
                                         override_,
                                         ts_accessibility.clone(),
@@ -16528,12 +16533,12 @@ pub fn mk_class_sig<'a>(
                                         &mut public_seen_names,
                                         class_kind,
                                         method_loc.dupe(),
-                                        name.dupe(),
+                                        Name::new(name.dupe()),
                                         id_loc.dupe(),
                                         func_loc.dupe(),
                                         func,
                                         kind,
-                                        false,
+                                        None,
                                         static_,
                                         override_,
                                         ts_accessibility.clone(),
@@ -16606,18 +16611,18 @@ pub fn mk_class_sig<'a>(
 
                                     // The method name comes from a well-known symbol or, for a
                                     // plain method, from a computed key that resolves to a single
-                                    // literal string or number (mirroring computed fields). In the
-                                    // literal case we keep the typed key expression so the element
-                                    // reuses it rather than re-checking it (which would duplicate
-                                    // any diagnostics the key emits).
+                                    // literal string or number, or to a `unique symbol` (mirroring
+                                    // computed fields). In the resolved case we keep the typed key
+                                    // expression so the element reuses it rather than re-checking
+                                    // it (which would duplicate any diagnostics the key emits).
                                     let resolved: Option<(
-                                        FlowSmolStr,
+                                        Name,
                                         Option<expression::Expression<ALoc, (ALoc, Type)>>,
                                     )> = if let Some(name) =
                                         flow_parser::ast_utils::well_known_symbol_name(
                                             &computed_key.expression,
                                         ) {
-                                        Some((FlowSmolStr::from(name), None))
+                                        Some((Name::new(FlowSmolStr::from(name)), None))
                                     } else if kind == ast::class::MethodKind::Method {
                                         let k_typed = expression(
                                             Some(EnclosingContext::IndexContext),
@@ -16637,8 +16642,11 @@ pub fn mk_class_sig<'a>(
                                             [single] => {
                                                 match flow_js_utils::propref_for_elem_t(cx, single)
                                                 {
+                                                    // Keep the full `Name` so a `unique symbol`
+                                                    // key retains its identity instead of
+                                                    // collapsing onto the string placeholder.
                                                     PropRef::Named { name, .. } => {
-                                                        name.as_smol_str_opt().map(|s| s.dupe())
+                                                        Some(name.dupe())
                                                     }
                                                     PropRef::Computed(_) => None,
                                                 }
@@ -16691,7 +16699,7 @@ pub fn mk_class_sig<'a>(
                                         func_loc.dupe(),
                                         func,
                                         kind,
-                                        false,
+                                        None,
                                         static_,
                                         override_,
                                         ts_accessibility.clone(),
@@ -16841,7 +16849,7 @@ pub fn mk_class_sig<'a>(
                                 check_duplicate_name(
                                     &mut public_seen_names,
                                     id_loc.dupe(),
-                                    name,
+                                    &Name::new(name.dupe()),
                                     static_,
                                     false,
                                     ClassMemberKind::ClassMemberField,
@@ -16850,7 +16858,7 @@ pub fn mk_class_sig<'a>(
                                     static_,
                                     false,
                                     override_,
-                                    name.dupe(),
+                                    Name::new(name.dupe()),
                                     id_loc.dupe(),
                                     polarity,
                                     field,
@@ -16945,9 +16953,10 @@ pub fn mk_class_sig<'a>(
                                 let resolved_name = match concretized_keys.as_slice() {
                                     [single] => match flow_js_utils::propref_for_elem_t(cx, single)
                                     {
-                                        PropRef::Named { name, .. } => {
-                                            name.as_smol_str_opt().map(|s| s.dupe())
-                                        }
+                                        // Keep the full `Name` so a `unique symbol` key retains
+                                        // its identity instead of collapsing onto the string
+                                        // placeholder.
+                                        PropRef::Named { name, .. } => Some(name.dupe()),
                                         PropRef::Computed(_) => None,
                                     },
                                     _ => None,
@@ -16973,7 +16982,7 @@ pub fn mk_class_sig<'a>(
 
                                 let id_loc = computed_key.expression.loc().dupe();
                                 let field_reason = mk_reason(
-                                    VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
+                                    VirtualReasonDesc::RProperty(Some(name.dupe())),
                                     loc.dupe(),
                                 );
                                 let polarity = type_annotation::polarity(
@@ -17174,7 +17183,7 @@ pub fn mk_class_sig<'a>(
                             check_duplicate_name(
                                 &mut public_seen_names,
                                 id_loc.dupe(),
-                                name,
+                                &Name::new(name.dupe()),
                                 static_,
                                 true,
                                 ClassMemberKind::ClassMemberField,
@@ -17278,7 +17287,7 @@ pub fn mk_class_sig<'a>(
                                             static_,
                                             false,
                                             override_,
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             id_loc.dupe(),
                                             flow_common::polarity::Polarity::Neutral,
                                             class_types::Field::Annot(optional_t.dupe()),
@@ -17287,7 +17296,7 @@ pub fn mk_class_sig<'a>(
                                         check_duplicate_name(
                                             &mut public_seen_names,
                                             id_loc.dupe(),
-                                            &name,
+                                            &Name::new(name.dupe()),
                                             static_,
                                             false,
                                             ClassMemberKind::ClassMemberField,
@@ -17445,7 +17454,7 @@ pub fn mk_class_sig<'a>(
                                                     static_,
                                                     false,
                                                     override_,
-                                                    name.dupe(),
+                                                    Name::new(name.dupe()),
                                                     id_loc.dupe(),
                                                     None,
                                                     func_sig,
@@ -17459,7 +17468,7 @@ pub fn mk_class_sig<'a>(
                                                     static_,
                                                     false,
                                                     override_,
-                                                    name.dupe(),
+                                                    Name::new(name.dupe()),
                                                     id_loc.dupe(),
                                                     None,
                                                     func_sig,
@@ -17473,7 +17482,7 @@ pub fn mk_class_sig<'a>(
                                                     static_,
                                                     false,
                                                     override_,
-                                                    name.dupe(),
+                                                    Name::new(name.dupe()),
                                                     id_loc.dupe(),
                                                     None,
                                                     func_sig,
@@ -17506,14 +17515,14 @@ pub fn mk_class_sig<'a>(
                                                     } else {
                                                         &public_seen_names.instance_names
                                                     };
-                                                    names_map.get(&name).copied()
+                                                    names_map.get(&Name::new(name.dupe())).copied()
                                                         == Some(ClassMemberKind::ClassMemberMethod)
                                                 } => {}
                                             Some(k) => {
                                                 check_duplicate_name(
                                                     &mut public_seen_names,
                                                     id_loc.dupe(),
-                                                    &name,
+                                                    &Name::new(name.dupe()),
                                                     static_,
                                                     false,
                                                     k,
@@ -17654,7 +17663,7 @@ pub fn mk_class_sig<'a>(
                                             false,
                                             true,
                                             override_,
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             id_loc.dupe(),
                                             None,
                                             func_sig,
@@ -17665,7 +17674,7 @@ pub fn mk_class_sig<'a>(
                                         check_duplicate_name(
                                             &mut public_seen_names,
                                             id_loc.dupe(),
-                                            name,
+                                            &Name::new(name.dupe()),
                                             false,
                                             false,
                                             ClassMemberKind::ClassMemberMethod,
@@ -17824,7 +17833,7 @@ pub fn mk_class_sig<'a>(
                                             false,
                                             true,
                                             override_,
-                                            name.dupe(),
+                                            Name::new(name.dupe()),
                                             id_loc.dupe(),
                                             polarity,
                                             class_types::Field::Annot(annot_t.dupe()),
@@ -17833,7 +17842,7 @@ pub fn mk_class_sig<'a>(
                                         check_duplicate_name(
                                             &mut public_seen_names,
                                             id_loc.dupe(),
-                                            name,
+                                            &Name::new(name.dupe()),
                                             false,
                                             false,
                                             ClassMemberKind::ClassMemberField,
@@ -18578,7 +18587,7 @@ pub fn mk_record_sig<'a>(
                 let check_duplicate_name =
                     |public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
-                     name: &FlowSmolStr,
+                     name: &Name,
                      static_: bool,
                      private_: bool,
                      kind: ClassMemberKind| {
@@ -18741,7 +18750,7 @@ pub fn mk_record_sig<'a>(
                                         check_duplicate_name(
                                             &mut public_seen_names,
                                             method_id_loc.dupe(),
-                                            &name,
+                                            &Name::new(name.dupe()),
                                             static_,
                                             false,
                                             ClassMemberKind::ClassMemberMethod,
@@ -18750,7 +18759,7 @@ pub fn mk_record_sig<'a>(
                                             static_,
                                             false,
                                             false,
-                                            name,
+                                            Name::new(name),
                                             method_id_loc,
                                             Some(func_loc),
                                             method_sig,
@@ -18819,7 +18828,7 @@ pub fn mk_record_sig<'a>(
                             check_duplicate_name(
                                 &mut public_seen_names,
                                 key_loc.dupe(),
-                                &name,
+                                &Name::new(name.dupe()),
                                 false,
                                 false,
                                 ClassMemberKind::ClassMemberField,
@@ -18828,7 +18837,7 @@ pub fn mk_record_sig<'a>(
                                 false,
                                 false,
                                 false,
-                                name,
+                                Name::new(name),
                                 key_loc,
                                 Polarity::Positive,
                                 field,
@@ -18881,7 +18890,7 @@ pub fn mk_record_sig<'a>(
                             check_duplicate_name(
                                 &mut public_seen_names,
                                 key_loc.dupe(),
-                                &name,
+                                &Name::new(name.dupe()),
                                 true,
                                 false,
                                 ClassMemberKind::ClassMemberField,
@@ -18890,7 +18899,7 @@ pub fn mk_record_sig<'a>(
                                 true,
                                 false,
                                 false,
-                                name,
+                                Name::new(name),
                                 key_loc,
                                 Polarity::Positive,
                                 field,

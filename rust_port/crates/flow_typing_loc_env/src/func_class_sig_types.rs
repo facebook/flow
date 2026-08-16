@@ -15,6 +15,7 @@ use std::rc::Rc;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
 use flow_common::polarity::Polarity;
+use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -294,28 +295,34 @@ pub mod class {
 
     pub struct Signature<C: ConfigTypes> {
         pub reason: Reason,
-        pub fields: BTreeMap<FlowSmolStr, FieldPrime<C>>,
+        // Public members are keyed by `Name` so a `unique symbol` computed key
+        // keeps its nominal identity instead of collapsing onto a shared string
+        // placeholder. Private members (`#name`) are always identifier-spelled,
+        // so they stay `FlowSmolStr`-keyed.
+        pub fields: BTreeMap<Name, FieldPrime<C>>,
         pub private_fields: BTreeMap<FlowSmolStr, FieldPrime<C>>,
-        pub proto_fields: BTreeMap<FlowSmolStr, FieldPrime<C>>,
+        pub proto_fields: BTreeMap<Name, FieldPrime<C>>,
         // Multiple function signatures indicates an overloaded method.
-        pub methods: BTreeMap<FlowSmolStr, Vec1<FuncInfo<C>>>,
+        pub methods: BTreeMap<Name, Vec1<FuncInfo<C>>>,
         pub private_methods: BTreeMap<FlowSmolStr, FuncInfo<C>>,
-        pub getters: BTreeMap<FlowSmolStr, FuncInfo<C>>,
-        pub setters: BTreeMap<FlowSmolStr, FuncInfo<C>>,
+        pub getters: BTreeMap<Name, FuncInfo<C>>,
+        pub setters: BTreeMap<Name, FuncInfo<C>>,
         pub calls: Vec<Type>,
         pub constructs: Vec<Type>,
         pub dict: ObjectDict,
         /// Names of members in this signature (own/proto/getter/setter) that
         /// were declared with the `abstract` modifier. Source of truth for
-        /// which names contribute to `insttype.inst_abstract_props`.
-        pub abstract_members: std::collections::BTreeSet<FlowSmolStr>,
+        /// which names contribute to `insttype.inst_abstract_props`. Keyed by
+        /// `Name` so a `unique symbol` member keeps its nominal identity.
+        pub abstract_members: std::collections::BTreeSet<Name>,
         /// Names of members in this signature declared with the [override]
         /// modifier, mapped to the member's def loc. Tracked per-side
         /// (instance/static) — override checks fire independently per side.
         /// The loc is used as the primary loc for the
         /// [ImplicitOverrideMissingModifier] error (which fires at the
-        /// member that should have had the modifier).
-        pub override_members: BTreeMap<FlowSmolStr, ALoc>,
+        /// member that should have had the modifier). Keyed by `Name`; private
+        /// members are stored as `Name::Str("#name")`.
+        pub override_members: BTreeMap<Name, ALoc>,
     }
 
     impl<C: ConfigTypes> Clone for Signature<C> {

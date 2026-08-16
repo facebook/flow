@@ -144,7 +144,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ member_key.js:7:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    7|   [o2.k]: string = 'x'; // ERROR: member key is a general string, not a literal
          ^^^^
@@ -201,7 +201,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- unsupported.js:5:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    5|   [g]: number = 1; // ERROR: key is a general string, not a literal
          ^
@@ -210,7 +210,7 @@ string or number literal. [illegal-key]
 Error ----------------------------------------------------------------------------------------------- unsupported.js:6:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    6|   ['a' + 'b']: number = 2; // ERROR: key is not a single literal
          ^^^^^^^^^
@@ -219,7 +219,7 @@ string or number literal. [illegal-key]
 Error ----------------------------------------------------------------------------------------------- unsupported.js:7:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    7|   [1.5]: number = 3; // ERROR: number key is not a safe integer
          ^^^
@@ -228,7 +228,7 @@ string or number literal. [illegal-key]
 Error ----------------------------------------------------------------------------------------------- unsupported.js:8:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    8|   [123n]: number = 4; // ERROR: bigint key is unsupported
          ^^^^
@@ -237,7 +237,7 @@ string or number literal. [illegal-key]
 Error ----------------------------------------------------------------------------------------------- unsupported.js:9:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    9|   [g](): number { return 1; } // ERROR: method key is not a literal
          ^
@@ -246,7 +246,7 @@ string or number literal. [illegal-key]
 Error ---------------------------------------------------------------------------------------------- unsupported.js:10:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    10|   get [s](): number { return 1; } // ERROR: computed getter is unsupported
               ^
@@ -255,7 +255,7 @@ string or number literal. [illegal-key]
 Error ---------------------------------------------------------------------------------------------- unsupported.js:11:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    11|   set [s](x: number) {} // ERROR: computed setter is unsupported
               ^

@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- class.js:26:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    26|   set [z](x: string) {}
               ^
@@ -10,7 +10,7 @@ string or number literal. [illegal-key]
 Error ---------------------------------------------------------------------------------------------------- class.js:27:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    27|   get [z](): string { return string; }
               ^

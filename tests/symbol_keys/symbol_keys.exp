@@ -1,3 +1,170 @@
+Error ------------------------------------------------------------------------------------------- class_consumer.js:10:1
+
+Cannot cast `e[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   class_consumer.js:10:1
+   10| e[key1] as string; // ERROR: number is incompatible with string
+       ^^^^^^^
+
+References:
+   class_exported.js:4:11
+    4|   [key1]: number = 1;
+                 ^^^^^^ [1]
+   class_consumer.js:10:12
+   10| e[key1] as string; // ERROR: number is incompatible with string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_duplicate.js:8:4
+
+`[symbol]` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   8|   [key1]: string = 's'; // ERROR: duplicate class member
+         ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- class_expr.js:16:1
+
+Cannot cast `c[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   class_expr.js:16:1
+   16| c[key1] as string; // ERROR: number is incompatible with string
+       ^^^^^^^
+
+References:
+   class_expr.js:7:11
+    7|   [key1]: number = 1;
+                 ^^^^^^ [1]
+   class_expr.js:16:12
+   16| c[key1] as string; // ERROR: number is incompatible with string
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- class_local.js:25:1
+
+Cannot cast `c[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   class_local.js:25:1
+   25| c[key1] as string; // ERROR: number is incompatible with string
+       ^^^^^^^
+
+References:
+   class_local.js:8:11
+    8|   [key1]: number = 1;
+                 ^^^^^^ [1]
+   class_local.js:25:12
+   25| c[key1] as string; // ERROR: number is incompatible with string
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- class_local.js:26:1
+
+Cannot cast `c[key2]()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   class_local.js:26:1
+   26| c[key2]() as number; // ERROR: string is incompatible with number
+       ^^^^^^^^^
+
+References:
+   class_local.js:9:13
+    9|   [key2](): string {
+                   ^^^^^^ [1]
+   class_local.js:26:14
+   26| c[key2]() as number; // ERROR: string is incompatible with number
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- class_local.js:29:3
+
+Cannot get `c[key3]` because property `[symbol]` is missing in `C` [1]. [prop-missing]
+
+   class_local.js:29:3
+   29| c[key3]; // ERROR: property is missing
+         ^^^^
+
+References:
+   class_local.js:16:18
+   16| declare const c: C;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- class_operations.js:21:3
+
+Cannot get `o[a]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   class_operations.js:21:3
+   21| o[a]; // ERROR: [a] removed
+         ^
+
+References:
+   class_operations.js:18:18
+   18| declare const o: O;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- class_operations.js:27:3
+
+Cannot get `p[b]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   class_operations.js:27:3
+   27| p[b]; // ERROR: [b] not picked
+         ^
+
+References:
+   class_operations.js:25:18
+   25| declare const p: P;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- class_operations.js:35:1
+
+Cannot cast `m[a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   class_operations.js:35:1
+   35| m[a] as string; // ERROR: number is not string (a did not merge with b)
+       ^^^^
+
+References:
+   class_operations.js:31:27
+   31| type M = {[K in keyof C]: C[K]};
+                                 ^^^^ [1]
+   class_operations.js:35:9
+   35| m[a] as string; // ERROR: number is not string (a did not merge with b)
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- class_operations.js:42:1
+
+Cannot cast `other` to key set because property `[symbol]` is missing in `C` [1]. [prop-missing]
+
+   class_operations.js:42:1
+   42| other as keyof C; // ERROR: `other` is not a key of `C`
+       ^^^^^
+
+References:
+   class_operations.js:42:16
+   42| other as keyof C; // ERROR: `other` is not a key of `C`
+                      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ class_override.js:28:13
+
+Member `[symbol]` can't have an `override` modifier because it isn't declared in the base class `Base`.
+[invalid-override]
+
+   28|   override [key2](): number { // ERROR: `[key2]` is not declared in the base class
+                   ^^^^
+
+
+Error ------------------------------------------------------------------------------------------ class_override.js:35:13
+
+Member `[symbol]` can't have an `override` modifier because its containing class `NoExtends` doesn't extend another
+class. [invalid-override]
+
+   35|   override [key1](): number { // ERROR: class has no `extends` clause
+                   ^^^^
+
+
 Error -------------------------------------------------------------------------------------------- indexed_access.js:8:1
 
 Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -7,8 +174,8 @@ Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]
        ^
 
 References:
-   keys.d.ts:34:13
-   34|   [Keys.a]: number;
+   keys.d.ts:37:13
+   37|   [Keys.a]: number;
                    ^^^^^^ [1]
    indexed_access.js:8:6
     8| x as string; // ERROR: the member keyed by `Keys.a` is `number`, not `string`
@@ -30,6 +197,71 @@ References:
    indexed_access.js:13:6
    13| y as number; // ERROR: the member keyed by `Keys.b` is `string`, not `number`
             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ interface_local.js:24:1
+
+Cannot cast `i[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   interface_local.js:24:1
+   24| i[key1] as string; // ERROR: number is incompatible with string
+       ^^^^^^^
+
+References:
+   interface_local.js:11:11
+   11|   [key1]: number;
+                 ^^^^^^ [1]
+   interface_local.js:24:12
+   24| i[key1] as string; // ERROR: number is incompatible with string
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ interface_local.js:25:1
+
+Cannot cast `i[key2]()` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   interface_local.js:25:1
+   25| i[key2]() as number; // ERROR: string is incompatible with number
+       ^^^^^^^^^
+
+References:
+   interface_local.js:12:13
+   12|   [key2](): string;
+                   ^^^^^^ [1]
+   interface_local.js:25:14
+   25| i[key2]() as number; // ERROR: string is incompatible with number
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ interface_local.js:28:3
+
+Cannot get `i[key3]` because property `[symbol]` is missing in `I` [1]. [prop-missing]
+
+   interface_local.js:28:3
+   28| i[key3]; // ERROR: property is missing
+         ^^^^
+
+References:
+   interface_local.js:16:18
+   16| declare const i: I;
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ interface_member_expr.js:14:1
+
+Cannot cast `i[Keys.a]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   interface_member_expr.js:14:1
+   14| i[Keys.a] as string; // ERROR: number is incompatible with string
+       ^^^^^^^^^
+
+References:
+   interface_member_expr.js:7:13
+    7|   [Keys.a]: number;
+                   ^^^^^^ [1]
+   interface_member_expr.js:14:14
+   14| i[Keys.a] as string; // ERROR: number is incompatible with string
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- keyof.js:22:1
@@ -148,8 +380,8 @@ Cannot cast `ikey` to string because `symbol` [1] is incompatible with `string` 
        ^^^^
 
 References:
-   keys.d.ts:26:7
-   26|   [k: SKey]: number;
+   keys.d.ts:29:7
+   29|   [k: SKey]: number;
              ^^^^ [1]
    keyof_annotation.js:18:9
    18| ikey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -165,8 +397,8 @@ Cannot cast `ckey` to string because `symbol` [1] is incompatible with `string` 
        ^^^^
 
 References:
-   keys.d.ts:30:7
-   30|   [k: SKey]: number;
+   keys.d.ts:33:7
+   33|   [k: SKey]: number;
              ^^^^ [1]
    keyof_annotation.js:22:9
    22| ckey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -398,8 +630,8 @@ Cannot cast `p[Keys.a]` to number because `void` [1] is incompatible with `numbe
        ^^^^^^^^^
 
 References:
-   keys.d.ts:34:13
-   34|   [Keys.a]: number;
+   keys.d.ts:37:13
+   37|   [Keys.a]: number;
                    ^^^^^^ [1]
    mapped_homomorphic.js:18:14
    18| p[Keys.a] as number; // ERROR: the property is optional, so it may be void
@@ -534,4 +766,4 @@ References:
 
 
 
-Found 33 errors
+Found 49 errors

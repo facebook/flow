@@ -17,7 +17,7 @@ Computed getters and setters are not yet supported. [unsupported-syntax]
 Error --------------------------------------------------------------------------------- computed_getters_setters.js:13:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    13|   get ['d']() { return 'foo'; }
               ^^^
@@ -26,7 +26,7 @@ string or number literal. [illegal-key]
 Error --------------------------------------------------------------------------------- computed_getters_setters.js:14:8
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    14|   set ['d'](x: number) {}
               ^^^

@@ -17,6 +17,9 @@ export declare const Keys: {
 export declare const s: unique symbol;
 export declare const t: unique symbol;
 
+export declare const key1: unique symbol;
+export declare const key2: unique symbol;
+
 // A `unique symbol` reached through a cross-module alias, so an indexer key
 // written as `SKey` arrives at annotation inference behind an annotation rather
 // than as a bare `unique symbol`.

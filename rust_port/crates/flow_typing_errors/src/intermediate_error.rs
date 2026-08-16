@@ -9139,7 +9139,7 @@ where
                 text(" is unsafe. Use spreads instead."),
             ]),
             MessageUnsupportedComputedKeyInClass => friendly::Message(vec![text(
-                "Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single string or number literal.",
+                "Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single string literal, number literal, or `unique symbol`.",
             )]),
             MessageUnsupportedKeyInObject {
                 key_error_kind,

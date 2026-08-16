@@ -6,6 +6,7 @@
 
 queries_in_file "type-at-pos" "display_named.js"
 queries_in_file "type-at-pos" "display_union.js"
+queries_in_file "type-at-pos" "display_class.js"
 
 echo "> insert-type insert_type.js 6 7"
 assert_ok "$FLOW" autofix insert-type --in-place insert_type.js 6 7

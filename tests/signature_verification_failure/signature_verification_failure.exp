@@ -71,7 +71,7 @@ simple key in object: [signature-verification-failure]
 Error ---------------------------------------------------------------------------------------------------- class.js:13:4
 
 Unsupported computed key. Computed keys are only supported on class fields and methods, and must resolve to a single
-string or number literal. [illegal-key]
+string literal, number literal, or `unique symbol`. [illegal-key]
 
    13|   ['a' + 'b'] = 4;
           ^^^^^^^^^
