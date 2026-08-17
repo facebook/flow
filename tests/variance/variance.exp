@@ -199,9 +199,9 @@ References:
    test.js:6:16
     6| type RWA = {p: A}
                       ^ [1]
-   test.js:11:17
-   11| type WOB = {-p: B}
-                       ^ [2]
+   test.js:11:26
+   11| type WOB = {writeonly p: B}
+                                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:3
@@ -234,9 +234,9 @@ References:
    test.js:23:24
    23| type dRWA = {[string]: A};
                               ^ [1]
-   test.js:28:25
-   28| type dWOB = {-[string]: B};
-                               ^ [2]
+   test.js:28:34
+   28| type dWOB = {writeonly [string]: B};
+                                        ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:88:3
@@ -356,9 +356,9 @@ Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with
           ^^^
 
 References:
-   test.js:8:17
-     8| type WOA = {-p: A}
-                        ^ [1]
+   test.js:8:26
+     8| type WOA = {writeonly p: A}
+                                 ^ [1]
    test.js:9:16
      9| type RWB = {p: B}
                        ^ [2]
@@ -373,9 +373,9 @@ Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompa
           ^^^^
 
 References:
-   test.js:25:25
-    25| type dWOA = {-[string]: A};
-                                ^ [1]
+   test.js:25:34
+    25| type dWOA = {writeonly [string]: A};
+                                         ^ [1]
    test.js:26:24
     26| type dRWB = {[string]: B};
                                ^ [2]
@@ -426,12 +426,12 @@ Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with
           ^^^
 
 References:
-   test.js:8:17
-     8| type WOA = {-p: A}
-                        ^ [1]
-   test.js:11:17
-    11| type WOB = {-p: B}
-                        ^ [2]
+   test.js:8:26
+     8| type WOA = {writeonly p: A}
+                                 ^ [1]
+   test.js:11:26
+    11| type WOB = {writeonly p: B}
+                                 ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:3
@@ -443,12 +443,12 @@ Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompa
           ^^^^
 
 References:
-   test.js:25:25
-    25| type dWOA = {-[string]: A};
-                                ^ [1]
-   test.js:28:25
-    28| type dWOB = {-[string]: B};
-                                ^ [2]
+   test.js:25:34
+    25| type dWOA = {writeonly [string]: A};
+                                         ^ [1]
+   test.js:28:34
+    28| type dWOB = {writeonly [string]: B};
+                                         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:146:8
@@ -569,9 +569,9 @@ Cannot cast `roA` to `RWB` because in property `p`: `A` [1] is incompatible with
           ^^^
 
 References:
-   test.js:7:17
-     7| type ROA = {+p: A}
-                        ^ [1]
+   test.js:7:25
+     7| type ROA = {readonly p: A}
+                                ^ [1]
    test.js:9:16
      9| type RWB = {p: B}
                        ^ [2]
@@ -604,9 +604,9 @@ Cannot cast `droA` to `dRWB` because in the indexer property: `A` [1] is incompa
           ^^^^
 
 References:
-   test.js:24:25
-    24| type dROA = {+[string]: A};
-                                ^ [1]
+   test.js:24:33
+    24| type dROA = {readonly [string]: A};
+                                        ^ [1]
    test.js:26:24
     26| type dRWB = {[string]: B};
                                ^ [2]
@@ -657,9 +657,9 @@ Cannot cast object literal to `ROB` because in property `p`: `A` [1] is incompat
                ^^^^^ [1]
 
 References:
-   test.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:166:8
@@ -671,9 +671,9 @@ Cannot cast object literal to `dROB` because in property `p`: `A` [1] is incompa
                ^^^^^ [1]
 
 References:
-   test.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:169:3
@@ -688,9 +688,9 @@ References:
    test.js:6:16
      6| type RWA = {p: A}
                        ^ [1]
-   test.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:170:3
@@ -705,9 +705,9 @@ References:
    test.js:23:24
     23| type dRWA = {[string]: A};
                                ^ [1]
-   test.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:173:3
@@ -719,12 +719,12 @@ Cannot cast `roA` to `ROB` because in property `p`: `A` [1] is incompatible with
           ^^^
 
 References:
-   test.js:7:17
-     7| type ROA = {+p: A}
-                        ^ [1]
-   test.js:10:17
-    10| type ROB = {+p: B}
-                        ^ [2]
+   test.js:7:25
+     7| type ROA = {readonly p: A}
+                                ^ [1]
+   test.js:10:25
+    10| type ROB = {readonly p: B}
+                                ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:3
@@ -736,12 +736,12 @@ Cannot cast `droA` to `dROB` because in the indexer property: `A` [1] is incompa
           ^^^^
 
 References:
-   test.js:24:25
-    24| type dROA = {+[string]: A};
-                                ^ [1]
-   test.js:27:25
-    27| type dROB = {+[string]: B};
-                                ^ [2]
+   test.js:24:33
+    24| type dROA = {readonly [string]: A};
+                                        ^ [1]
+   test.js:27:33
+    27| type dROB = {readonly [string]: B};
+                                        ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:177:3
@@ -827,19 +827,19 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:207:18
-   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
-                         ^^^^^^^^^^ [1]
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                         ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:207:39
-   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
-                                              ^^^^^^^^^ [2]
+   test.js:207:47
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                                                      ^^^^^^^^^ [2]
    test.js:207:12
-   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test.js:207:33
-   207|   [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
-                                        ^^^^^^^^^^^^^^^^ [4]
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:207:41
+   207|   [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
+                                                ^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
@@ -853,22 +853,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:209:18
-   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
-                         ^^^^^^^^^^ [1]
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:209:39
-   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
-                                              ^^^^^^^^^ [2]
+   test.js:209:48
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                                                       ^^^^^^^^^ [2]
    test.js:209:12
-   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test.js:209:33
-   209|   [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
-                                        ^^^^^^^^^^^^^^^^ [4]
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:209:42
+   209|   [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+                                                 ^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:211:18
+Error --------------------------------------------------------------------------------------------------- test.js:210:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{readonly p: A, ...}` [2]. [incompatible-type]
@@ -878,23 +878,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test.js:211:18
-   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
+   test.js:210:18
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
                          ^^^^^^^^^ [1]
 
 References:
-   test.js:211:38
-   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
-                                             ^^^^^^^^^^ [2]
-   test.js:211:12
-   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
+   test.js:210:38
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
+                                             ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:210:12
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
                    ^^^^^^^^^^^^^^^^ [3]
-   test.js:211:32
-   211|   [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   test.js:210:32
+   210|   [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:215:18
+Error --------------------------------------------------------------------------------------------------- test.js:214:18
 
 Cannot cast `[...]` to array type because in array element: `{writeonly p: A, ...}` [1] is not exactly the same as
 `{readonly p: A, ...}` [2]. [incompatible-type]
@@ -904,23 +904,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test.js:215:18
-   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
-                         ^^^^^^^^^^ [1]
+   test.js:214:18
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                         ^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:215:39
-   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
-                                              ^^^^^^^^^^ [2]
-   test.js:215:12
-   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test.js:215:33
-   215|   [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
-                                        ^^^^^^^^^^^^^^^^^ [4]
+   test.js:214:48
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                                                       ^^^^^^^^^^^^^^^^^^ [2]
+   test.js:214:12
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:214:42
+   214|   [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:217:18
+Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
 Cannot cast `[...]` to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
 `{writeonly p: A, ...}` [2]. [incompatible-type]
@@ -930,23 +930,23 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test.js:217:18
-   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
+   test.js:215:18
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
                          ^^^^^^^^^ [1]
 
 References:
-   test.js:217:38
-   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
-                                             ^^^^^^^^^^ [2]
-   test.js:217:12
-   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
+   test.js:215:38
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                             ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:215:12
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
                    ^^^^^^^^^^^^^^^^ [3]
-   test.js:217:32
-   217|   [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
-                                       ^^^^^^^^^^^^^^^^^ [4]
+   test.js:215:32
+   215|   [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:219:18
+Error --------------------------------------------------------------------------------------------------- test.js:216:18
 
 Cannot cast `[...]` to array type because in array element: `{readonly p: A, ...}` [1] is not exactly the same as
 `{writeonly p: A, ...}` [2]. [incompatible-type]
@@ -956,59 +956,59 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   test.js:219:18
-   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
-                         ^^^^^^^^^^ [1]
+   test.js:216:18
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                         ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   test.js:219:39
-   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
-                                              ^^^^^^^^^^ [2]
-   test.js:219:12
-   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
-                   ^^^^^^^^^^^^^^^^^ [3]
-   test.js:219:33
-   219|   [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
-                                        ^^^^^^^^^^^^^^^^^ [4]
+   test.js:216:47
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                                      ^^^^^^^^^^^^^^^^^^^ [2]
+   test.js:216:12
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   test.js:216:41
+   216|   [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:230:3
+Error ---------------------------------------------------------------------------------------------------- test.js:225:3
 
 Cannot cast `x1` to `T1` because property `f1` is read-only in mapped type [1] but writable in mapped type [2], property
 `f2` is read-only in mapped type [1] but writable in mapped type [2], property `f3` is read-only in mapped type [1] but
 writable in mapped type [2], property `f4` is read-only in mapped type [1] but writable in mapped type [2], and property
 `f5` is read-only in mapped type [1] but writable in mapped type [2]. [incompatible-variance]
 
-   test.js:230:3
-   230|   x1 as T1; // error f1...f5 incompatible
+   test.js:225:3
+   225|   x1 as T1; // error f1...f5 incompatible
           ^^
 
 References:
-   test.js:229:30
-   229|   declare const x1: Readonly<T1>;
+   test.js:224:30
+   224|   declare const x1: Readonly<T1>;
                                      ^^ [1]
-   test.js:230:9
-   230|   x1 as T1; // error f1...f5 incompatible
+   test.js:225:9
+   225|   x1 as T1; // error f1...f5 incompatible
                 ^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:235:3
+Error ---------------------------------------------------------------------------------------------------- test.js:230:3
 
 Cannot cast `x2` to `T2` because property `f1` is read-only in object type [1] but writable in object type [2], property
 `f2` is read-only in object type [1] but writable in object type [2], property `f3` is read-only in object type [1] but
 writable in object type [2], property `f4` is read-only in object type [1] but writable in object type [2], and 2 other
 properties are incompatible. [incompatible-variance]
 
-   test.js:235:3
-   235|   x2 as T2; // error f1...f4 and others incompatible
+   test.js:230:3
+   230|   x2 as T2; // error f1...f4 and others incompatible
           ^^
 
 References:
-   test.js:234:30
-   234|   declare const x2: Readonly<T2>;
+   test.js:229:30
+   229|   declare const x2: Readonly<T2>;
                                      ^^ [1]
-   test.js:235:9
-   235|   x2 as T2; // error f1...f4 and others incompatible
+   test.js:230:9
+   230|   x2 as T2; // error f1...f4 and others incompatible
                 ^^ [2]
 
 

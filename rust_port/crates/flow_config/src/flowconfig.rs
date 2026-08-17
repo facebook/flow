@@ -249,7 +249,6 @@ pub mod opts {
         pub strict_es6_import_export: bool,
         pub export_star_excludes_default: Option<bool>,
         pub ts_syntax: Option<bool>,
-        pub deprecated_variance_sigils_excludes: Vec<String>,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: Option<bool>,
         pub typescript_library_definition_support: bool,
@@ -421,7 +420,6 @@ pub mod opts {
             strict_es6_import_export: false,
             export_star_excludes_default: None,
             ts_syntax: None,
-            deprecated_variance_sigils_excludes: Vec::new(),
             ts_utility_syntax: true,
             tslib_syntax: None,
             typescript_library_definition_support: false,
@@ -2324,21 +2322,6 @@ pub mod opts {
                     config,
                 )
             }),
-            (
-                "experimental.deprecated_variance_sigils.excludes",
-                |values, config| {
-                    parse_string(
-                        |opts, v| {
-                            opts.deprecated_variance_sigils_excludes.push(v);
-                            Ok(())
-                        },
-                        Some(|opts| opts.deprecated_variance_sigils_excludes = Vec::new()),
-                        true,
-                        values,
-                        config,
-                    )
-                },
-            ),
             ("experimental.ts_utility_syntax", |values, config| {
                 parse_boolean(
                     |opts, v| {

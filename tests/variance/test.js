@@ -4,11 +4,11 @@ class B extends A {};
 // named properties
 
 type RWA = {p: A}
-type ROA = {+p: A}
-type WOA = {-p: A}
+type ROA = {readonly p: A}
+type WOA = {writeonly p: A}
 type RWB = {p: B}
-type ROB = {+p: B}
-type WOB = {-p: B}
+type ROB = {readonly p: B}
+type WOB = {writeonly p: B}
 
 declare const rwA: RWA;
 declare const roA: ROA;
@@ -21,11 +21,11 @@ declare const woB: WOB;
 // dictionaries
 
 type dRWA = {[string]: A};
-type dROA = {+[string]: A};
-type dWOA = {-[string]: A};
+type dROA = {readonly [string]: A};
+type dWOA = {writeonly [string]: A};
 type dRWB = {[string]: B};
-type dROB = {+[string]: B};
-type dWOB = {-[string]: B};
+type dROB = {readonly [string]: B};
+type dWOB = {writeonly [string]: B};
 
 declare const drwA: dRWA;
 declare const droA: dROA;
@@ -45,11 +45,11 @@ declare const dwoB: dWOB;
   rwA as RWA; // ok
   drwA as dRWA; // ok
 
-  // +A
+  // readonly A
   roA as RWA; // error
   droA as dRWA; // error
 
-  // -A
+  // writeonly A
   woA as RWA; // error
   dwoA as dRWA; // error
 
@@ -61,16 +61,16 @@ declare const dwoB: dWOB;
   rwB as RWA; // error
   drwB as dRWA; // error
 
-  // +B
+  // readonly B
   roB as RWA; // error
   droB as dRWA; // error
 
-  // -B
+  // writeonly B
   woB as RWA; // error
   dwoB as dRWA; // error
 }
 
-// X ~> +A
+// X ~> readonly A
 {
   // literal A
   ({p: new A} as ROA); // ok
@@ -80,11 +80,11 @@ declare const dwoB: dWOB;
   rwA as ROA; // ok
   drwA as dROA; // ok
 
-  // +A
+  // readonly A
   roA as ROA; // ok
   droA as dROA; // ok
 
-  // -A
+  // writeonly A
   woA as ROA; // error
   dwoA as dROA; // error
 
@@ -96,16 +96,16 @@ declare const dwoB: dWOB;
   rwB as ROA; // ok
   drwB as dROA; // ok
 
-  // +B
+  // readonly B
   roB as ROA; // ok
   droB as dROA; // ok
 
-  // -B
+  // writeonly B
   woB as ROA; // error
   dwoB as dROA; // error
 }
 
-// X ~> -A
+// X ~> writeonly A
 {
   // literal A
   ({p: new A} as WOA); // ok
@@ -115,11 +115,11 @@ declare const dwoB: dWOB;
   rwA as WOA; // ok
   rwA as dWOA; // ok
 
-  // +A
+  // readonly A
   roA as WOA; // error
   droA as dWOA; // error
 
-  // -A
+  // writeonly A
   woA as WOA; // ok
   dwoA as dWOA; // ok
 
@@ -131,11 +131,11 @@ declare const dwoB: dWOB;
   rwB as WOA; // error
   drwB as dWOA; // error
 
-  // +B
+  // readonly B
   roB as WOA; // error
   droB as dWOA; // error
 
-  // -B
+  // writeonly B
   woB as WOA; // error
   dwoB as dWOA; // error
 }
@@ -150,16 +150,16 @@ declare const dwoB: dWOB;
   rwA as RWB; // error
   drwA as dRWB; // error
 
-  // +A
+  // readonly A
   roA as RWB; // error
   droA as dRWB; // error
 
-  // -A
+  // writeonly A
   woA as RWB; // error
   dwoA as dRWB; // error
 }
 
-// X ~> +B
+// X ~> readonly B
 {
   // literal A
   ({p: new A} as ROB); // error
@@ -169,16 +169,16 @@ declare const dwoB: dWOB;
   rwA as ROB; // error
   drwA as dROB; // error
 
-  // +A
+  // readonly A
   roA as ROB; // error
   droA as dROB; // error
 
-  // -A
+  // writeonly A
   woA as ROB; // error
   dwoA as dROB; // error
 }
 
-// X ~> -B
+// X ~> writeonly B
 {
   // literal A
   ({p: new A} as WOB); // ok
@@ -188,11 +188,11 @@ declare const dwoB: dWOB;
   rwA as WOB; // ok
   drwA as dWOB; // ok
 
-  // +A
+  // readonly A
   roA as WOB; // error
   droA as dWOB; // error
 
-  // -A
+  // writeonly A
   woA as WOB; // ok
   dwoA as dWOB; // ok
 }
@@ -204,22 +204,17 @@ declare const dwoB: dWOB;
 
   [rwA] as Array<{p:A,...}> as Array<{p:A,...}>; // ok
 
-  [roA] as Array<{+p:A,...}> as Array<{p:A,...}>; // error
+  [roA] as Array<{readonly p:A,...}> as Array<{p:A,...}>; // error
 
-  [woA] as Array<{-p:A,...}> as Array<{p:A,...}>; // error
+  [woA] as Array<{writeonly p:A,...}> as Array<{p:A,...}>; // error 
+  [rwA] as Array<{p:A,...}> as Array<{readonly p:A,...}>; // error
 
-  [rwA] as Array<{p:A,...}> as Array<{+p:A,...}>; // error
+  [roA] as Array<{readonly p:A,...}> as Array<{readonly p:A,...}>; // ok
 
-  [roA] as Array<{+p:A,...}> as Array<{+p:A,...}>; // ok
-
-  [woA] as Array<{-p:A,...}> as Array<{+p:A,...}>; // error
-
-  [rwA] as Array<{p:A,...}> as Array<{-p:A,...}>; // error
-
-  [roA] as Array<{+p:A,...}> as Array<{-p:A,...}>; // error
-
-  [woA] as Array<{-p:A,...}> as Array<{-p:A,...}>; // ok
-
+  [woA] as Array<{writeonly p:A,...}> as Array<{readonly p:A,...}>; // error 
+  [rwA] as Array<{p:A,...}> as Array<{writeonly p:A,...}>; // error 
+  [roA] as Array<{readonly p:A,...}> as Array<{writeonly p:A,...}>; // error 
+  [woA] as Array<{writeonly p:A,...}> as Array<{writeonly p:A,...}>; // ok 
 }
 
 // summarized [incompatible-variance] error

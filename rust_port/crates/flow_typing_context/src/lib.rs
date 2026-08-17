@@ -197,7 +197,6 @@ pub struct FrozenMetadata {
     pub stylex_shorthand_prop: Option<String>,
     pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
-    pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
     pub tslib_syntax: bool,
@@ -257,7 +256,6 @@ impl Default for FrozenMetadata {
             stylex_shorthand_prop: None,
             export_star_excludes_default: false,
             ts_syntax: false,
-            deprecated_variance_sigils_excludes: Arc::from([]),
             deprecated_colon_extends_excludes: Arc::from([]),
             ts_utility_syntax: false,
             tslib_syntax: false,
@@ -662,7 +660,6 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
             export_star_excludes_default: options.export_star_excludes_default,
             ts_syntax: options.ts_syntax,
-            deprecated_variance_sigils_excludes: options.deprecated_variance_sigils_excludes.dupe(),
             deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
             ts_utility_syntax: options.ts_utility_syntax,
             tslib_syntax: options.tslib_syntax,
@@ -1396,18 +1393,6 @@ impl<'cx> Context<'cx> {
 
     pub fn ts_syntax(&self) -> bool {
         self.0.metadata.frozen.ts_syntax
-    }
-
-    pub fn is_variance_sigil_deprecated(&self) -> bool {
-        if self.is_lib_file() {
-            return false;
-        }
-        let filename = self.0.file.to_absolute();
-        let normalized_filename = flow_common::sys_utils::normalize_filename_dir_sep(&filename);
-        let excluded_dirs = &self.0.metadata.frozen.deprecated_variance_sigils_excludes;
-        !excluded_dirs
-            .iter()
-            .any(|r: &Regex| r.is_match(&normalized_filename))
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {

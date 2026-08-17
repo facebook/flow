@@ -399,7 +399,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Plus,
             ..
-        }) if cx.is_variance_sigil_deprecated() => {
+        }) if !cx.is_lib_file() => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -412,7 +412,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Minus,
             ..
-        }) if cx.is_variance_sigil_deprecated() => {
+        }) if !cx.is_lib_file() => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -7382,11 +7382,26 @@ fn add_interface_properties<'a>(
                         prop_asts.push(error_prop);
                         continue;
                     }
-                    let polarity = polarity(
-                        cx,
-                        flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
-                        np.variance.as_ref(),
+                    use flow_parser::ast::expression::object::Key;
+                    let ambiguous_numeric_key = matches!(
+                        (&np.key, np.variance.as_ref()),
+                        (
+                            Key::NumberLiteral(_),
+                            Some(ast::Variance {
+                                kind: ast::VarianceKind::Plus | ast::VarianceKind::Minus,
+                                ..
+                            })
+                        )
                     );
+                    let polarity = if ambiguous_numeric_key {
+                        typed_ast_utils::polarity(np.variance.as_ref())
+                    } else {
+                        polarity(
+                            cx,
+                            flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
+                            np.variance.as_ref(),
+                        )
+                    };
                     let add_field_or_proto = |name: Name,
                                               id_loc: ALoc,
                                               t: Type,
@@ -7462,7 +7477,6 @@ fn add_interface_properties<'a>(
                                 _ => None,
                             }
                         };
-                    use flow_parser::ast::expression::object::Key;
                     match &np.key {
                         Key::BigIntLiteral((loc, _)) => {
                             flow_js_utils::add_output_non_speculating(
@@ -7786,27 +7800,14 @@ fn add_interface_properties<'a>(
                                     ))
                                 }
                                 Key::NumberLiteral((key_loc, num_lit)) => {
-                                    if check_variance {
-                                        match &np.variance {
-                                            Some(ast::Variance {
-                                                kind:
-                                                    ast::VarianceKind::Plus | ast::VarianceKind::Minus,
-                                                ..
-                                            }) => {
-                                                flow_js_utils::add_output_non_speculating(
-                                                    cx,
-                                                    ErrorMessage::EAmbiguousNumericKeyWithVariance(
-                                                        key_loc.dupe(),
-                                                    ),
-                                                );
-                                                None
-                                            }
-                                            _ => check_num(
+                                    if check_variance && ambiguous_numeric_key {
+                                        flow_js_utils::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EAmbiguousNumericKeyWithVariance(
                                                 key_loc.dupe(),
-                                                num_lit.value,
-                                                num_lit.clone(),
                                             ),
-                                        }
+                                        );
+                                        None
                                     } else {
                                         check_num(key_loc.dupe(), num_lit.value, num_lit.clone())
                                     }

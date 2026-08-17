@@ -216,7 +216,6 @@ pub struct Options {
     pub temp_dir: FlowSmolStr,
     pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
-    pub deprecated_variance_sigils_excludes: Arc<[Regex]>,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
