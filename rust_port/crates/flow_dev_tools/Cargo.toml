@@ -9,7 +9,7 @@ edition = "2024"
 fancy-regex = "0.16.2"
 flow_parser = { path = "../flow_parser" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
-futures = { version = "0.3.31", features = ["async-await", "compat"] }
+futures = { version = "0.3.34", features = ["async-await", "compat"] }
 regex = "1.13.1"
 serde = { version = "1.0.229", features = ["derive", "rc"] }
 serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
