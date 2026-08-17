@@ -31,7 +31,10 @@ fn main_() {
     #[cfg(fbcode_build)]
     {
         flow_cli_support::register_extra_commands(|| {
-            vec![flow_facebook_rage::rage_command::command()]
+            vec![
+                flow_facebook_fox_cli::fox_command::command(),
+                flow_facebook_rage::rage_command::command(),
+            ]
         });
         flow_cli_support::register_docs_url(
             "https://www.internalfb.com/intern/staticdocs/flow/en/docs/",

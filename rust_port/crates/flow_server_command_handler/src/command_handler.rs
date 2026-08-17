@@ -3493,6 +3493,8 @@ pub fn handle_ephemeral_command_for_standalone(
         server_prot::request::Command::LLM_CONTEXT(input) => {
             handle_llm_context(options, env, transaction, &input)
         }
+        #[cfg(fbcode_build)]
+        server_prot::request::Command::FOX(command) => match command {},
     }
 }
 
@@ -3818,6 +3820,8 @@ fn get_ephemeral_handler(
         server_prot::request::Command::LLM_CONTEXT(input) => {
             mk_parallelizable(input.wait_for_recheck, options)
         }
+        #[cfg(fbcode_build)]
+        server_prot::request::Command::FOX(command) => match *command {},
     }
 }
 

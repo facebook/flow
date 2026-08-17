@@ -259,6 +259,9 @@ pub mod request {
             include_warnings: bool,
         },
         LLM_CONTEXT(llm_context_options::T),
+        // Appended last so the preceding shared variants' bincode indices stay stable.
+        #[cfg(fbcode_build)]
+        FOX(flow_facebook_fox_protocol::FoxCommand),
     }
 
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -405,6 +408,8 @@ pub mod request {
                 files.join(", "),
                 token_budget
             ),
+            #[cfg(fbcode_build)]
+            Command::FOX(_) => "fox".to_string(),
         }
     }
 }
@@ -661,6 +666,9 @@ pub mod response {
         SAVE_STATE(Result<String, String>),
         SUGGEST_IMPORTS(SuggestImportsResponse),
         LLM_CONTEXT(LlmContextResponse),
+        // Appended last so the preceding shared variants' bincode indices stay stable.
+        #[cfg(fbcode_build)]
+        FOX(flow_facebook_fox_protocol::FoxResponse),
     }
 
     pub fn to_string(response: &Response) -> &'static str {
@@ -688,6 +696,8 @@ pub mod response {
             Response::SAVE_STATE(_) => "save_state response",
             Response::SUGGEST_IMPORTS(_) => "suggest imports response",
             Response::LLM_CONTEXT(_) => "llm_context response",
+            #[cfg(fbcode_build)]
+            Response::FOX(_) => "fox response",
         }
     }
 }
