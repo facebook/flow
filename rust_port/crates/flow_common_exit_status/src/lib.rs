@@ -248,6 +248,24 @@ pub fn json_props_of_t(
     ]
 }
 
+/// Classify an uncaught panic by its message, the way OCaml classified the exception that reached
+/// the top of the server. Shared by every `catch_unwind` boundary that ends the process, so a
+/// panic reports the same exit status wherever it was caught.
+pub fn exit_status_for_panic_message(msg: &str) -> FlowExitStatus {
+    use FlowExitStatus::*;
+    if msg.contains("Out_of_shared_memory") || msg.contains("Out of shared memory") {
+        OutOfSharedMemory
+    } else if msg.contains("Hash_table_full") || msg.contains("Hash table is full") {
+        HashTableFull
+    } else if msg.contains("Heap_full") || msg.contains("Heap is full") {
+        HeapFull
+    } else if msg.contains("Monitor_died") || msg.contains("Monitor died") {
+        KilledByMonitor
+    } else {
+        UnknownError
+    }
+}
+
 pub fn exit(status: FlowExitStatus) -> ! {
     std::process::exit(error_code(status))
 }

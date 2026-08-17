@@ -610,29 +610,29 @@ pub fn run_from_daemonize(
         Err(e) => {
             let err_msg = panic_message(&*e);
             let err_display: &dyn std::fmt::Display = &err_msg;
-            if err_msg.contains("Out_of_shared_memory") || err_msg.contains("Out of shared memory")
-            {
-                let msg = exit_msg_of_exception(err_display, "Out of shared memory");
-                flow_hh_logger::info!("{}", msg);
-                flow_common_exit_status::exit(FlowExitStatus::OutOfSharedMemory);
-            } else if err_msg.contains("Hash_table_full") || err_msg.contains("Hash table is full")
-            {
-                let msg = exit_msg_of_exception(err_display, "Hash table is full");
-                flow_hh_logger::info!("{}", msg);
-                flow_common_exit_status::exit(FlowExitStatus::HashTableFull);
-            } else if err_msg.contains("Heap_full") || err_msg.contains("Heap is full") {
-                let msg = exit_msg_of_exception(err_display, "Heap is full");
-                flow_hh_logger::info!("{}", msg);
-                flow_common_exit_status::exit(FlowExitStatus::HeapFull);
-            } else if err_msg.contains("Monitor_died") || err_msg.contains("Monitor died") {
-                flow_hh_logger::info!("Monitor died unexpectedly");
-                flow_common_exit_status::exit(FlowExitStatus::KilledByMonitor);
-            } else {
-                let msg = format!("Unhandled exception: {}", err_msg);
-                flow_hh_logger::info!("{}", msg);
-                log_worker_exception(&err_msg);
-                flow_common_exit_status::exit(FlowExitStatus::UnknownError);
+            let status = flow_common_exit_status::exit_status_for_panic_message(&err_msg);
+            match status {
+                FlowExitStatus::OutOfSharedMemory => {
+                    let msg = exit_msg_of_exception(err_display, "Out of shared memory");
+                    flow_hh_logger::info!("{}", msg);
+                }
+                FlowExitStatus::HashTableFull => {
+                    let msg = exit_msg_of_exception(err_display, "Hash table is full");
+                    flow_hh_logger::info!("{}", msg);
+                }
+                FlowExitStatus::HeapFull => {
+                    let msg = exit_msg_of_exception(err_display, "Heap is full");
+                    flow_hh_logger::info!("{}", msg);
+                }
+                FlowExitStatus::KilledByMonitor => {
+                    flow_hh_logger::info!("Monitor died unexpectedly");
+                }
+                _ => {
+                    flow_hh_logger::info!("Unhandled exception: {}", err_msg);
+                    log_worker_exception(&err_msg);
+                }
             }
+            flow_common_exit_status::exit(status);
         }
     }
 }
