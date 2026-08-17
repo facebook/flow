@@ -73,7 +73,7 @@ fn do_parse_wrapper(
         &[],
         Ok(contents),
         filename,
-        files::is_lib_file(&options.file_options, &all_unordered_libs, filename),
+        files::is_lib_file(&all_unordered_libs, filename),
     );
     match parse_result {
         ParseResult::ParseOk {

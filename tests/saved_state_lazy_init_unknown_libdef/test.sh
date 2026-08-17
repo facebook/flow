@@ -11,9 +11,9 @@
 # init died with "Node not found in graph".
 #
 # A libdef dropped into a `[libs]` *directory* reproduces that without touching
-# the .flowconfig, so the saved state stays valid. This is the shape www hits
-# under `experimental.importable_global_libdefs`, where the flag pulls the
-# flowlib prelude and every `[libs]` match into `all_unordered_libs`.
+# the .flowconfig, so the saved state stays valid. This is the shape www hits,
+# where the flowlib prelude and every `[libs]` match are pulled into
+# `all_unordered_libs`.
 
 printf "Generate a saved state that predates libs/extra.js\\n"
 assert_ok "$FLOW" status

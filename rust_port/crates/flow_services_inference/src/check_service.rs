@@ -196,16 +196,8 @@ pub fn mk_check_file(
                 }
                 // A global libdef (a `[libs]` file) resolves like any other file,
                 // but it is not a module: report a dedicated "not a module" error
-                // at the import site instead of merging it. Only reachable when
-                // `experimental.importable_global_libdefs` gated resolution to it.
-                Some(dep_file_key)
-                    if cx.file_options().importable_global_libdefs
-                        && files::is_lib_file(
-                            cx.file_options().as_ref(),
-                            all_unordered_libs,
-                            &dep_file_key,
-                        ) =>
-                {
+                // at the import site instead of merging it.
+                Some(dep_file_key) if files::is_lib_file(all_unordered_libs, &dep_file_key) => {
                     ResolvedRequire::GlobalLibdefModule(dep_file_key)
                 }
                 Some(dep_file_key) => match dep_file_key.inner() {

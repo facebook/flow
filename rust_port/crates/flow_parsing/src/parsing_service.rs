@@ -404,7 +404,6 @@ fn fold_failed(
 fn reducer(
     transaction: &Transaction,
     options: &Options,
-    all_unordered_libs: &BTreeSet<FlowSmolStr>,
     skip_changed: bool,
     skip_unchanged: bool,
     is_init: bool,
@@ -446,9 +445,7 @@ fn reducer(
         return;
     }
 
-    if options.file_options.importable_global_libdefs
-        && files::is_configured_lib_file(&options.file_options, &filename_string)
-    {
+    if files::is_configured_lib_file(&options.file_options, &filename_string) {
         acc.all_unordered_libs
             .insert(FlowSmolStr::from(filename_string.as_str()));
     }
@@ -490,11 +487,7 @@ fn reducer(
         docblock.flow = Some(flow_common::docblock::FlowMode::OptOut);
     }
 
-    let is_lib_file = if options.file_options.importable_global_libdefs {
-        files::is_configured_lib_file(&options.file_options, &filename_string)
-    } else {
-        files::is_lib_file(&options.file_options, all_unordered_libs, &file_key)
-    };
+    let is_lib_file = files::is_configured_lib_file(&options.file_options, &filename_string);
     match do_parse(
         options,
         &docblock,
@@ -662,7 +655,6 @@ fn parse(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     skip_changed: bool,
     skip_unchanged: bool,
     is_init: bool,
@@ -672,7 +664,6 @@ fn parse(
     let transaction_for_job = transaction.clone();
     let options_for_job = options.clone();
     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
-    let all_unordered_libs_for_job = all_unordered_libs.dupe();
 
     let t = std::time::Instant::now();
 
@@ -707,13 +698,11 @@ fn parse(
             let transaction = transaction_for_job.clone();
             let options = options_for_job.clone();
             let locs = locs_to_dirtify_vec.clone();
-            let all_unordered_libs = all_unordered_libs_for_job.dupe();
             move |acc: &mut ParseResults, batch: Vec<FileKey>| {
                 for file_key in batch {
                     reducer(
                         &transaction,
                         &options,
-                        &all_unordered_libs,
                         skip_changed,
                         skip_unchanged,
                         is_init,
@@ -757,7 +746,6 @@ pub fn parse_with_defaults(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
     next: Next,
 ) -> ParseResults {
@@ -765,7 +753,6 @@ pub fn parse_with_defaults(
         pool,
         transaction,
         options,
-        all_unordered_libs,
         false, // skip_changed
         false, // skip_unchanged
         true,  // is_init
@@ -778,7 +765,6 @@ pub fn reparse_with_defaults(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     locs_to_dirtify: &[Loc],
     next: Next,
 ) -> ParseResults {
@@ -787,7 +773,6 @@ pub fn reparse_with_defaults(
         pool,
         transaction,
         options,
-        all_unordered_libs,
         false, // skip_changed
         skip_unchanged,
         false, // is_init (reparse = not init)
@@ -803,7 +788,6 @@ pub fn ensure_parsed(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
     progress_fn: impl Fn(/*total:*/ i32, /*start:*/ i32, /*length:*/ i32) + Send + Sync + 'static,
 ) -> FlowOrdSet<FileKey> {
@@ -855,17 +839,7 @@ pub fn ensure_parsed(
         })
     };
 
-    let results = parse(
-        pool,
-        transaction,
-        options,
-        all_unordered_libs,
-        true,
-        false,
-        false,
-        &[],
-        next,
-    );
+    let results = parse(pool, transaction, options, true, false, false, &[], next);
     // On Windows, OCaml's C runtime can't access paths >= 260 chars (MAX_PATH).
     // These files will never be readable, so retrying them is pointless and
     // causes an infinite cancel/retry loop. Filter them out — they were already

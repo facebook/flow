@@ -216,14 +216,7 @@ pub(crate) fn prepare_codemod(
 
     let roots = command_utils::expand_file_list(&filenames, Some(&options.file_options))
         .into_iter()
-        .map(|filename| {
-            flow_common::files::filename_from_string(
-                &options.file_options,
-                true,
-                &BTreeSet::new(),
-                &filename,
-            )
-        })
+        .map(|filename| flow_common::files::filename_from_string(&options.file_options, &filename))
         .collect();
     PreparedCodemod {
         log_level,

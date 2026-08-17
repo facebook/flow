@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeSet;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -101,7 +100,6 @@ fn explain(
     flowconfig_name: &str,
     root: &Path,
     options: &FileOptions,
-    libs: &BTreeSet<String>,
     raw_file: &str,
 ) -> (String, FileResult) {
     let file = files::cached_canonicalize(Path::new(raw_file))
@@ -110,11 +108,7 @@ fn explain(
     let root_str = root.to_string_lossy().to_string();
     let result = {
         let (is_ignored, backup) = files::is_ignored(options, &file);
-        let is_lib = if options.importable_global_libdefs {
-            files::is_configured_lib_file(options, &file)
-        } else {
-            libs.contains(&file)
-        };
+        let is_lib = Path::new(&file).exists() && files::is_configured_lib_file(options, &file);
         if is_lib {
             // This is a lib file
             let flowtyped_path = files::get_flowtyped_path(root);
@@ -213,13 +207,8 @@ fn make_options(
 
 // The problem with Files.wanted is that it says yes to everything except ignored files and libs.
 // So implicitly ignored files (like files in another directory) pass the Files.wanted check
-fn wanted(
-    root: &Path,
-    options: &FileOptions,
-    all_unordered_libs: &BTreeSet<String>,
-    file: &str,
-) -> bool {
-    files::wanted(options, false, all_unordered_libs, file) && {
+fn wanted(root: &Path, options: &FileOptions, file: &str) -> bool {
+    files::wanted(options, true, file) && {
         let root_str = format!("{}/", root.to_string_lossy());
         file.starts_with(&root_str) || files::is_included(options, file)
     }
@@ -231,27 +220,21 @@ fn get_ls_files(
     root: &Path,
     all: bool,
     options: Arc<FileOptions>,
-    all_unordered_libs: Arc<BTreeSet<String>>,
     imaginary: bool,
     file_or_dir: Option<&str>,
 ) -> Box<dyn FnMut() -> Vec<String>> {
     match file_or_dir {
         None => {
             let mut all_files = Vec::new();
-            files::make_next_files(
-                root,
-                None,
-                all,
-                true,
-                options,
-                false,
-                all_unordered_libs,
-                |chunk| {
-                    for p in chunk {
-                        all_files.push(p.to_string_lossy().to_string());
+            let options_for_filter = Arc::clone(&options);
+            files::make_next_files(root, None, all, true, options, true, |chunk| {
+                for p in chunk {
+                    let path = p.to_string_lossy();
+                    if !files::is_in_flowlib(&options_for_filter, &path) {
+                        all_files.push(path.into_owned());
                     }
-                },
-            );
+                }
+            });
             let mut returned = false;
             Box::new(move || {
                 if returned {
@@ -265,20 +248,15 @@ fn get_ls_files(
         Some(dir) if Path::new(dir).is_dir() => {
             let subdir = Path::new(dir).to_path_buf();
             let mut all_files = Vec::new();
-            files::make_next_files(
-                root,
-                Some(&subdir),
-                all,
-                true,
-                options,
-                false,
-                all_unordered_libs,
-                |chunk| {
-                    for p in chunk {
-                        all_files.push(p.to_string_lossy().to_string());
+            let options_for_filter = Arc::clone(&options);
+            files::make_next_files(root, Some(&subdir), all, true, options, true, |chunk| {
+                for p in chunk {
+                    let path = p.to_string_lossy();
+                    if !files::is_in_flowlib(&options_for_filter, &path) {
+                        all_files.push(path.into_owned());
                     }
-                },
-            );
+                }
+            });
             let mut returned = false;
             Box::new(move || {
                 if returned {
@@ -293,7 +271,7 @@ fn get_ls_files(
             if (Path::new(file).exists() || imaginary)
                 // Make flow ls never report flowlib files
                 && !files::is_in_flowlib(&options, file)
-                && (all || wanted(root, &options, &all_unordered_libs, file))
+                && (all || wanted(root, &options, file))
             {
                 let file = files::cached_canonicalize(Path::new(file))
                     .map(|p| p.to_string_lossy().to_string())
@@ -353,8 +331,7 @@ pub(crate) fn get_all_flow_files(flowconfig_name: &str, root: &Path) -> Vec<Stri
     let config_path = config_path.to_string_lossy().to_string();
     let (flowconfig, _) = command_utils::read_config_and_hash_or_exit(&config_path, true);
     let options = command_utils::file_options_of_flowconfig(root, &flowconfig);
-    let empty_libs = Arc::new(BTreeSet::new());
-    let mut next_files = get_ls_files(root, false, options, empty_libs, false, None);
+    let mut next_files = get_ls_files(root, false, options, false, None);
     let config_file = flow_server_files::server_files_js::config_file(flowconfig_name, root);
     next_files = get_next_append_const(next_files, vec![config_file]);
     files::get_all(&mut *next_files).into_iter().collect()
@@ -445,35 +422,12 @@ fn main_impl(args: &arg_spec::Values) {
         untyped_flag,
         declaration_flag,
     );
-    let (_ordered_libs, all_unordered_libs) = files::ordered_and_unordered_lib_paths(&options);
-    let all_unordered_libs = Arc::new(all_unordered_libs);
-
-    // `flow ls` and `flow ls dir` will list out all the flow files. We want to include lib files, so
-    // we pass in ~libs:SSet.empty, which means we won't filter out any lib files
-    let empty_libs: Arc<BTreeSet<String>> = Arc::new(BTreeSet::new());
-
     let mut next_files: Box<dyn FnMut() -> Vec<String>> = if files_or_dirs.is_empty() {
-        get_ls_files(
-            &root,
-            all,
-            Arc::clone(&options),
-            empty_libs.clone(),
-            imaginary,
-            None,
-        )
+        get_ls_files(&root, all, Arc::clone(&options), imaginary, None)
     } else {
         let get_nexts: Vec<Box<dyn FnMut() -> Vec<String>>> = files_or_dirs
             .iter()
-            .map(|f| {
-                get_ls_files(
-                    &root,
-                    all,
-                    Arc::clone(&options),
-                    empty_libs.clone(),
-                    imaginary,
-                    Some(f),
-                )
-            })
+            .map(|f| get_ls_files(&root, all, Arc::clone(&options), imaginary, Some(f)))
             .collect();
         concat_get_next(get_nexts)
     };
@@ -506,8 +460,7 @@ fn main_impl(args: &arg_spec::Values) {
             let files_with_results: Vec<(String, FileResult)> = files
                 .iter()
                 .map(|f| {
-                    let (file, result) =
-                        explain(&flowconfig_name, &root, &options, &all_unordered_libs, f);
+                    let (file, result) = explain(&flowconfig_name, &root, &options, f);
                     (normalize_filename(&file), result)
                 })
                 .collect();
@@ -529,13 +482,7 @@ fn main_impl(args: &arg_spec::Values) {
         if reason {
             iter_get_next(
                 &mut |filename: &str| {
-                    let (f, r) = explain(
-                        &flowconfig_name,
-                        &root,
-                        &options,
-                        &all_unordered_libs,
-                        filename,
-                    );
+                    let (f, r) = explain(&flowconfig_name, &root, &options, filename);
                     println!(
                         "{}    {}",
                         string_of_file_result_with_padding(&r),

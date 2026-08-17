@@ -294,18 +294,11 @@ fn parse(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     parse_next: parsing_service::Next,
 ) -> CollatedParseResults {
     with_memory_timer(options, "Parsing", || {
-        let results = parsing_service::parse_with_defaults(
-            pool,
-            transaction,
-            options,
-            all_unordered_libs,
-            &[],
-            parse_next,
-        );
+        let results =
+            parsing_service::parse_with_defaults(pool, transaction, options, &[], parse_next);
         collate_parse_results(results)
     })
 }
@@ -314,7 +307,6 @@ fn reparse(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     def_info: &DefInfo,
     modified: parsing_service::Next,
 ) -> CollatedParseResults {
@@ -324,7 +316,6 @@ fn reparse(
             pool,
             transaction,
             options,
-            all_unordered_libs,
             &locs_to_dirtify,
             modified,
         );
@@ -1193,7 +1184,6 @@ fn ensure_parsed(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), UnexpectedFileChanges> {
     with_memory_timer(options, "EnsureParsed", || {
@@ -1201,7 +1191,6 @@ fn ensure_parsed(
             pool,
             transaction,
             options,
-            all_unordered_libs,
             files,
             |total, start, _length| {
                 let finished = start;
@@ -1226,10 +1215,9 @@ pub fn ensure_parsed_or_trigger_recheck(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: FlowOrdSet<FileKey>,
 ) -> Result<(), RecheckError> {
-    match ensure_parsed(pool, transaction, options, all_unordered_libs, files) {
+    match ensure_parsed(pool, transaction, options, files) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
             Err(handle_unexpected_file_changes(changed_files))
@@ -1433,7 +1421,6 @@ pub(crate) mod recheck {
         env: &mut EnvTransaction,
     ) -> Result<IntermediateValues, RecheckError> {
         check_recheck_canceled()?;
-        let parse_all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
         let loc_of_aloc = |loc: &ALoc| -> Loc { transaction.loc_of_aloc(loc) };
         let transaction_for_ast = transaction.dupe();
         let get_ast = move |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> {
@@ -1476,14 +1463,7 @@ pub(crate) mod recheck {
             local_errors: new_local_errors,
             package_json: _,
             all_unordered_libs: discovered_libs,
-        } = reparse(
-            pool,
-            transaction,
-            options,
-            parse_all_unordered_libs,
-            def_info,
-            modified_next,
-        );
+        } = reparse(pool, transaction, options, def_info, modified_next);
         check_recheck_canceled()?;
 
         let changed_files: Vec<FileKey> = modified_set
@@ -1508,15 +1488,12 @@ pub(crate) mod recheck {
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
 
-        if options.file_options.importable_global_libdefs {
-            let mut all_unordered_libs = env.all_unordered_libs().clone();
-            for file in &new_or_changed_or_deleted {
-                all_unordered_libs.remove(file.to_absolute().as_str());
-            }
-            all_unordered_libs.extend(discovered_libs);
-            env.set_all_unordered_libs(all_unordered_libs);
+        let mut all_unordered_libs = env.all_unordered_libs().clone();
+        for file in &new_or_changed_or_deleted {
+            all_unordered_libs.remove(file.to_absolute().as_str());
         }
-        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
+        all_unordered_libs.extend(discovered_libs);
+        env.set_all_unordered_libs(all_unordered_libs);
 
         let freshparsed = updates.filter(|file, _kind| parsed_set.contains(file));
 
@@ -1652,16 +1629,9 @@ pub(crate) mod recheck {
 
         flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
-        ensure_parsed(
-            pool,
-            transaction,
-            options,
-            all_unordered_libs,
-            dirty_direct_dependents_set,
-        )
-        .map_err(|UnexpectedFileChanges(changed_files)| {
-            handle_unexpected_file_changes(changed_files)
-        })?;
+        ensure_parsed(pool, transaction, options, dirty_direct_dependents_set).map_err(
+            |UnexpectedFileChanges(changed_files)| handle_unexpected_file_changes(changed_files),
+        )?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
         resolve_requires_for_recheck(pool, transaction, options, &parsed_set_for_resolve)?;
         check_recheck_canceled()?;
@@ -1836,13 +1806,7 @@ pub(crate) mod recheck {
                 _ => {}
             }
             check_recheck_canceled()?;
-            ensure_parsed_or_trigger_recheck(
-                pool,
-                transaction,
-                options,
-                all_unordered_libs.dupe(),
-                to_merge.dupe().all(),
-            )?;
+            ensure_parsed_or_trigger_recheck(pool, transaction, options, to_merge.dupe().all())?;
             check_recheck_canceled()?;
             if dependent_file_count > 0 {
                 flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
@@ -2358,11 +2322,9 @@ pub fn make_next_files(
     root: &Path,
     file_options: Arc<FileOptions>,
     include_libdef: bool,
-    all_unordered_libs: Arc<BTreeSet<String>>,
     mut send_chunked: impl FnMut(Vec<FileKey>),
 ) {
     let file_opts_for_convert = file_options.dupe();
-    let libs_for_convert = all_unordered_libs.dupe();
     files::make_next_files(
         root,
         None,
@@ -2370,18 +2332,12 @@ pub fn make_next_files(
         false,
         file_options,
         include_libdef,
-        all_unordered_libs,
         |chunk: Vec<PathBuf>| {
             let files: Vec<FileKey> = chunk
                 .into_iter()
                 .map(|p| {
                     let path_str = p.to_string_lossy().into_owned();
-                    files::filename_from_string(
-                        &file_opts_for_convert,
-                        include_libdef,
-                        &libs_for_convert,
-                        &path_str,
-                    )
+                    files::filename_from_string(&file_opts_for_convert, &path_str)
                 })
                 .collect();
             send_chunked(files);
@@ -2534,8 +2490,8 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     }
 }
 
-fn did_content_change(options: &Options, transaction: &Transaction, filename: &str) -> bool {
-    let file = files::lib_file_key(&options.file_options, filename);
+fn did_content_change(transaction: &Transaction, filename: &str) -> bool {
+    let file = files::lib_file_key(filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
@@ -2550,7 +2506,6 @@ fn filter_saved_state_updates(
     want: &dyn Fn(&str) -> bool,
     updates: &BTreeSet<String>,
 ) -> FlowOrdSet<FileKey> {
-    let empty_libs = BTreeSet::new();
     let mut acc = FlowOrdSet::new();
     for f in updates {
         if files::is_flow_file(file_options, f)
@@ -2558,7 +2513,7 @@ fn filter_saved_state_updates(
                 || files::is_included(file_options, f))
             && want(f)
         {
-            let filename = files::filename_from_string(file_options, false, &empty_libs, f);
+            let filename = files::filename_from_string(file_options, f);
             acc.insert(filename);
         }
     }
@@ -2567,25 +2522,10 @@ fn filter_saved_state_updates(
 
 fn process_saved_state_updates(
     options: &Options,
-    previous_all_unordered_libs: &BTreeSet<FlowSmolStr>,
     transaction: &Transaction,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, String> {
     let file_options = &options.file_options;
-    let all_libs = if file_options.importable_global_libdefs {
-        BTreeSet::new()
-    } else {
-        let known_libs: BTreeSet<String> = previous_all_unordered_libs
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        let (_ordered, maybe_new_libs) = files::ordered_and_unordered_lib_paths(file_options);
-        let mut all = known_libs;
-        for lib in &maybe_new_libs {
-            all.insert(lib.clone());
-        }
-        all
-    };
     let root = &*options.root;
     let config_path = server_files_js::config_file(&options.flowconfig_name, root);
     if updates.contains(&config_path) {
@@ -2593,7 +2533,7 @@ fn process_saved_state_updates(
     }
 
     let sroot = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
-    let want = |f: &str| -> bool { files::wanted(file_options, false, &all_libs, f) };
+    let want = |f: &str| -> bool { files::wanted(file_options, false, f) };
     for file in updates {
         match is_incompatible_package_json(options, transaction, &want, &sroot, file_options, file)
         {
@@ -2613,12 +2553,9 @@ fn process_saved_state_updates(
     let libs: BTreeSet<String> = updates
         .iter()
         .filter(|filename| {
-            let is_lib = (if file_options.importable_global_libdefs {
-                files::is_configured_lib_file(file_options, filename)
-            } else {
-                all_libs.contains(*filename)
-            }) || **filename == flow_typed_path;
-            is_lib && did_content_change(options, transaction, filename)
+            let is_lib = files::is_configured_lib_file(file_options, filename)
+                || **filename == flow_typed_path;
+            is_lib && did_content_change(transaction, filename)
         })
         .cloned()
         .collect();
@@ -2801,26 +2738,12 @@ fn init_with_initial_state(
     // 2. The non-builtin libraries are merged in the same order as before
     flow_hh_logger::info!("Loading libraries");
     monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
-    let (ordered_libs, all_unordered_libs) =
-        files::ordered_and_unordered_lib_paths(&options.file_options);
-    let all_unordered_libs_set: Arc<BTreeSet<FlowSmolStr>> = Arc::new(
-        all_unordered_libs
-            .iter()
-            .map(|name| FlowSmolStr::from(name.as_str()))
-            .collect(),
-    );
+    let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
 
-    let additional_lib_files: Vec<FileKey> = if options.file_options.importable_global_libdefs {
-        ordered_libs
-            .iter()
-            .map(|(_, name)| files::lib_file_key(&options.file_options, name))
-            .collect()
-    } else {
-        all_unordered_libs
-            .iter()
-            .map(|name| files::lib_file_key(&options.file_options, name))
-            .collect()
-    };
+    let additional_lib_files: Vec<FileKey> = ordered_libs
+        .iter()
+        .map(|(_, name)| files::lib_file_key(name))
+        .collect();
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
         Box::new(move || files.take().filter(|files| !files.is_empty()))
@@ -2835,19 +2758,9 @@ fn init_with_initial_state(
         local_errors: additional_local_errors,
         package_json: _package_json,
         all_unordered_libs: discovered_libs,
-    } = parse(
-        pool,
-        transaction,
-        options,
-        all_unordered_libs_set.dupe(),
-        next,
-    );
+    } = parse(pool, transaction, options, next);
 
-    let all_unordered_libs_set = if options.file_options.importable_global_libdefs {
-        Arc::new(discovered_libs)
-    } else {
-        all_unordered_libs_set
-    };
+    let all_unordered_libs_set = Arc::new(discovered_libs);
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
@@ -2889,10 +2802,8 @@ fn init_with_initial_state(
 
     // The libdefs parsed above joined `parsed`, and so `env.files`, but the
     // graph we just restored predates them: a libdef added to a `[libs]`
-    // directory since the saved state was written has no node at all, and
-    // toggling `experimental.importable_global_libdefs` re-keys every libdef
-    // between a lib file and a source file. Every other path that grows
-    // `env.files` grows the graph with it, so do the same here — lazy init goes
+    // directory since the saved state was written has no node at all. Every
+    // other path that grows `env.files` grows the graph with it, so do the same here — lazy init goes
     // on to focus and merge exactly these files, and merging one the sig graph
     // has never heard of is fatal.
     let additional_parsed_typed: FlowOrdSet<FileKey> = additional_parsed
@@ -3339,25 +3250,15 @@ pub fn init_from_scratch(
     root: &Path,
 ) -> (Env, bool /* libs_ok */) {
     with_transaction("init", |_transaction| {
-        let (ordered_libs, all_unordered_libs) =
-            files::ordered_and_unordered_lib_paths(&options.file_options);
-
-        let all_unordered_libs = Arc::new(all_unordered_libs);
-        let all_unordered_libs_set: Arc<BTreeSet<FlowSmolStr>> = Arc::new(
-            all_unordered_libs
-                .iter()
-                .map(|name| FlowSmolStr::from(name.as_str()))
-                .collect(),
-        );
+        let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
 
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);
 
-        let all_libs_for_thread = all_unordered_libs.dupe();
         let handle = std::thread::spawn(move || {
-            make_next_files(&root_buf, file_opts, true, all_libs_for_thread, |files| {
+            make_next_files(&root_buf, file_opts, true, |files| {
                 sender.send(files).unwrap();
             });
             drop(sender);
@@ -3386,20 +3287,10 @@ pub fn init_from_scratch(
             local_errors,
             package_json: (package_json_files_list, package_json_errors),
             all_unordered_libs: discovered_libs,
-        } = parse(
-            pool,
-            transaction,
-            options,
-            all_unordered_libs_set.dupe(),
-            next,
-        );
+        } = parse(pool, transaction, options, next);
         handle.join().unwrap();
 
-        let all_unordered_libs_set = if options.file_options.importable_global_libdefs {
-            Arc::new(discovered_libs)
-        } else {
-            all_unordered_libs_set
-        };
+        let all_unordered_libs_set = Arc::new(discovered_libs);
 
         assert!(unchanged.is_empty());
 
@@ -3603,12 +3494,7 @@ pub fn load_saved_state(
                 }
             };
             let transaction = ActiveTransaction::new(committed_heap.dupe());
-            let updates = match process_saved_state_updates(
-                options,
-                flow_saved_state::non_flowlib_libs(&saved_state),
-                &transaction,
-                &changed_files,
-            ) {
+            let updates = match process_saved_state_updates(options, &transaction, &changed_files) {
                 Ok(updates) => updates,
                 Err(msg) => {
                     drop(transaction);
@@ -4051,13 +3937,7 @@ pub fn check_files_for_init(
             implementation_dependency_graph,
             sig_dependency_graph,
         );
-        ensure_parsed_or_trigger_recheck(
-            pool,
-            transaction,
-            options,
-            all_unordered_libs.dupe(),
-            to_merge.dupe().all(),
-        )?;
+        ensure_parsed_or_trigger_recheck(pool, transaction, options, to_merge.dupe().all())?;
         let merge_result = merge(
             pool,
             transaction,
@@ -4213,7 +4093,7 @@ pub fn libdef_check_for_lazy_init(
     let parsed: FlowOrdSet<FileKey> = env
         .all_unordered_libs
         .iter()
-        .map(|n| files::lib_file_key(&options.file_options, n))
+        .map(|n| files::lib_file_key(n))
         .collect();
     check_files_for_init(options, pool, transaction, parsed, "lazy init check", env)
 }

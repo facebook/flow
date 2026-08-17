@@ -458,12 +458,7 @@ mod node {
         path: &str,
     ) -> Option<Dependency> {
         let path = super::resolve_symlinks(path);
-        let file_key = files::filename_from_string(
-            file_options,
-            false, // Module resolution should never resolve to a libdef file
-            &BTreeSet::new(),
-            &path,
-        );
+        let file_key = files::filename_from_string(file_options, &path);
         let mname = Modulename::eponymous_module(file_key);
 
         let dependency = transaction.get_dependency(&mname);

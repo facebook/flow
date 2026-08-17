@@ -485,29 +485,17 @@ fn file_input_of_text_document_position_opt(
 
 fn file_key_of_file_input_without_env(
     options: &Options,
-    all_unordered_libs: &std::collections::BTreeSet<String>,
     file_input: &FileInput,
 ) -> flow_parser::file_key::FileKey {
     let file_options = &options.file_options;
-    flow_common::files::filename_from_string(
-        file_options,
-        true,
-        all_unordered_libs,
-        file_input.filename_of_file_input(),
-    )
+    flow_common::files::filename_from_string(file_options, file_input.filename_of_file_input())
 }
 
 fn file_key_of_file_input(
     options: &Options,
-    env: &server_env::Env,
     file_input: &FileInput,
 ) -> flow_parser::file_key::FileKey {
-    let all_unordered_libs: std::collections::BTreeSet<String> = env
-        .all_unordered_libs
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
-    file_key_of_file_input_without_env(options, &all_unordered_libs, file_input)
+    file_key_of_file_input_without_env(options, file_input)
 }
 
 fn check_that_we_care_about_this_file(
@@ -524,10 +512,9 @@ fn check_that_we_care_about_this_file(
 
     fn check_file_not_ignored(
         file_options: &flow_common::files::FileOptions,
-        all_unordered_libs: &std::collections::BTreeSet<String>,
         file_path: &str,
     ) -> Result<(), &'static str> {
-        if files::wanted(file_options, true, all_unordered_libs, file_path) {
+        if files::wanted(file_options, true, file_path) {
             Ok(())
         } else {
             Err("File is ignored")
@@ -571,7 +558,7 @@ fn check_that_we_care_about_this_file(
         _content: &str,
         file_key: &flow_parser::file_key::FileKey,
     ) -> Result<(), &'static str> {
-        if options.all || files::is_lib_file(&options.file_options, all_unordered_libs, file_key) {
+        if options.all || files::is_lib_file(all_unordered_libs, file_key) {
             Ok(())
         } else {
             let (_errs, docblock) = parse_docblock(
@@ -594,12 +581,7 @@ fn check_that_we_care_about_this_file(
     } else {
         let file_path = files::imaginary_realpath(&file_path);
         let file_options = &options.file_options;
-        let all_unordered_libs: std::collections::BTreeSet<String> = env
-            .all_unordered_libs
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        check_file_not_ignored(file_options, &all_unordered_libs, &file_path)
+        check_file_not_ignored(file_options, &file_path)
             .and_then(|()| check_file_included(options, file_options, &file_path))
             .and_then(|()| check_is_flow_file(file_options, &file_path))
             .and_then(|()| check_flow_pragma(options, &env.all_unordered_libs, content, file_key))
@@ -627,7 +609,7 @@ fn of_file_input(
     env: &server_env::Env,
     file_input: &FileInput,
 ) -> Result<(flow_parser::file_key::FileKey, Arc<str>), IdeFileError> {
-    let file_key = file_key_of_file_input(options, env, file_input);
+    let file_key = file_key_of_file_input(options, file_input);
     match file_input.content_of_file_input_arc() {
         Err(msg) => Err(IdeFileError::Failed(msg)),
         Ok(file_contents) => {
@@ -1224,7 +1206,7 @@ fn autofix_errors_cli(
     include_best_effort_fix: bool,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
-    let file_key = file_key_of_file_input(options, env, input);
+    let file_key = file_key_of_file_input(options, input);
     let file_content = input.content_of_file_input_arc()?;
     let transaction_loa = transaction.clone();
     let loc_of_aloc: Arc<dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc> =
@@ -1276,7 +1258,7 @@ fn autofix_imports_cli(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> server_prot::response::ApplyCodeActionResponse {
-    let file_key = file_key_of_file_input(options, env, input);
+    let file_key = file_key_of_file_input(options, input);
     let file_content = input.content_of_file_input_arc()?;
     let transaction_loa = transaction.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
@@ -1299,7 +1281,7 @@ fn suggest_imports_cli(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> server_prot::response::SuggestImportsResponse {
-    let file_key = file_key_of_file_input(options, env, input);
+    let file_key = file_key_of_file_input(options, input);
     let file_content = input.content_of_file_input_arc()?;
     let transaction_loa = transaction.clone();
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
@@ -2014,7 +1996,7 @@ fn insert_type(
     omit_targ_defaults: bool,
     location_is_strict: bool,
 ) -> Result<server_prot::response::InsertTypeResponse, WorkloadCanceled> {
-    let file_key = file_key_of_file_input(options, env, file_input);
+    let file_key = file_key_of_file_input(options, file_input);
     let file_content = match file_input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
@@ -2096,7 +2078,7 @@ fn autofix_exports(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixExportsResponse, WorkloadCanceled> {
-    let file_key = file_key_of_file_input(options, env, input);
+    let file_key = file_key_of_file_input(options, input);
     let file_content = match input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
@@ -2184,7 +2166,7 @@ fn autofix_missing_local_annot(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> Result<server_prot::response::AutofixMissingLocalAnnotResponse, WorkloadCanceled> {
-    let file_key = file_key_of_file_input(options, env, input);
+    let file_key = file_key_of_file_input(options, input);
     let file_content = match input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
@@ -2342,7 +2324,7 @@ fn dump_types(
     for_tool: Option<i32>,
     file_input: &FileInput,
 ) -> Result<Result<Vec<(flow_parser::loc::Loc, String)>, String>, WorkloadCanceled> {
-    let file_key = file_key_of_file_input(options, env, file_input);
+    let file_key = file_key_of_file_input(options, file_input);
     let content = match file_input.content_of_file_input_arc() {
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
@@ -2458,8 +2440,7 @@ fn batch_coverage(
         let mut response: Vec<_> = coverage
             .iter()
             .filter(|(key, _)| {
-                !files::is_lib_file(&options.file_options, &env.all_unordered_libs, key)
-                    && filter(&key.to_absolute())
+                !files::is_lib_file(&env.all_unordered_libs, key) && filter(&key.to_absolute())
             })
             .map(|(key, coverage)| (key.dupe(), coverage.clone()))
             .collect();
@@ -3005,7 +2986,6 @@ fn build_file_entry(
 // NOTE: `query` reads the committed heap, which can lag the filesystem -- a daemon behind the
 // filesystem returns a self-consistent but stale mirror. Adding a freshness barrier here is a follow-up.
 fn query(
-    options: &Options,
     env: &server_env::Env,
     transaction: &flow_heap::parsing_heaps::Transaction,
     request: &Query,
@@ -3028,9 +3008,7 @@ fn query(
     } else {
         env.files
             .iter()
-            .filter(|file_key| {
-                !files::is_lib_file(&options.file_options, &env.all_unordered_libs, file_key)
-            })
+            .filter(|file_key| !files::is_lib_file(&env.all_unordered_libs, file_key))
             .map(|file_key| {
                 let content_hash = if want_content {
                     transaction.get_file_hash_committed(file_key)
@@ -3053,12 +3031,11 @@ fn query(
 }
 
 fn handle_query(
-    options: &Options,
     env: &server_env::Env,
     transaction: &flow_heap::parsing_heaps::Transaction,
     request: &Query,
 ) -> EphemeralNonparallelizableResult {
-    let response = query(options, env, transaction, request);
+    let response = query(env, transaction, request);
     Ok((server_prot::response::Response::QUERY(response), None))
 }
 
@@ -3406,9 +3383,7 @@ pub fn handle_ephemeral_command_for_standalone(
             let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&filename);
             handle_cycle(env, &file_key, types_only)
         }
-        server_prot::request::Command::QUERY { query } => {
-            handle_query(options, env, &transaction, &query)
-        }
+        server_prot::request::Command::QUERY { query } => handle_query(env, &transaction, &query),
         server_prot::request::Command::DUMP_TYPES {
             input,
             evaluate_type_destructors,
@@ -3700,7 +3675,7 @@ fn add_missing_imports(
     let file_input = file_input_of_text_document_identifier(client_id, text_document);
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-    let file_key = file_key_of_file_input(options, env, &file_input);
+    let file_key = file_key_of_file_input(options, &file_input);
     match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
@@ -3752,11 +3727,7 @@ fn organize_imports(
     text_document: &lsp_types::TextDocumentIdentifier,
 ) -> Result<Vec<lsp_types::TextEdit>, String> {
     let file_input = file_input_of_text_document_identifier(client_id, text_document);
-    let file_key = file_key_of_file_input_without_env(
-        options,
-        &std::collections::BTreeSet::new(),
-        &file_input,
-    );
+    let file_key = file_key_of_file_input_without_env(options, &file_input);
     match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
@@ -4472,11 +4443,10 @@ fn handle_nonparallelizable_persistent(
     }
 }
 
-fn did_open(importable_global_libdefs: bool, env: &server_env::Env, client_id: lsp_prot::ClientId) {
+fn did_open(env: &server_env::Env, client_id: lsp_prot::ClientId) {
     let (errors, warnings) = flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_errors_if_subscribed(
-            importable_global_libdefs,
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
@@ -4485,15 +4455,10 @@ fn did_open(importable_global_libdefs: bool, env: &server_env::Env, client_id: l
     }
 }
 
-fn did_close(
-    importable_global_libdefs: bool,
-    env: &server_env::Env,
-    client_id: lsp_prot::ClientId,
-) {
+fn did_close(env: &server_env::Env, client_id: lsp_prot::ClientId) {
     let (errors, warnings) = flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
         persistent_connection::send_errors_if_subscribed(
-            importable_global_libdefs,
             &client,
             lsp_prot::ErrorsReason::EnvChange,
             &errors,
@@ -4555,7 +4520,6 @@ fn mk_lsp_error_response(
 }
 
 fn handle_persistent_subscribe(
-    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
@@ -4563,12 +4527,7 @@ fn handle_persistent_subscribe(
     let (current_errors, current_warnings) =
         flow_server_env::error_collator::get_with_separate_warnings(env);
     if let Some(client) = persistent_connection::get_client(client_id) {
-        persistent_connection::subscribe_client(
-            importable_global_libdefs,
-            &client,
-            &current_errors,
-            &current_warnings,
-        );
+        persistent_connection::subscribe_client(&client, &current_errors, &current_warnings);
     }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
@@ -4591,13 +4550,12 @@ fn get_and_clear_did_open_files() -> Vec<(String, String)> {
 }
 
 fn handle_persistent_did_open_notification(
-    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     if !get_and_clear_did_open_files().is_empty() {
-        did_open(importable_global_libdefs, env, client_id);
+        did_open(env, client_id);
     }
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
@@ -4640,12 +4598,11 @@ fn handle_persistent_did_save_notification(
 }
 
 fn handle_persistent_did_close_notification(
-    importable_global_libdefs: bool,
     client_id: lsp_prot::ClientId,
     metadata: lsp_prot::Metadata,
     env: &server_env::Env,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    did_close(importable_global_libdefs, env, client_id);
+    did_close(env, client_id);
     (lsp_prot::Response::LspFromServer(None), metadata)
 }
 
@@ -4758,7 +4715,6 @@ fn handle_persistent_get_def(
 }
 
 fn loc_to_vscode_linked_location_in_markdown(
-    options: &Options,
     env: &server_env::Env,
     default_uri: &lsp_types::Uri,
     loc: &flow_parser::loc::Loc,
@@ -4771,7 +4727,7 @@ fn loc_to_vscode_linked_location_in_markdown(
         Some(file) => {
             // We'll use default_uri here as we don't expect this to fail
             let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
-            let lib = if files::is_lib_file(&options.file_options, &env.all_unordered_libs, file) {
+            let lib = if files::is_lib_file(&env.all_unordered_libs, file) {
                 "(lib) "
             } else {
                 ""
@@ -4854,13 +4810,14 @@ fn handle_persistent_infer_type(
                     .refinement_invalidated
                     .iter()
                     .filter_map(|(loc, reason)| {
-                        loc_to_vscode_linked_location_in_markdown(options, env, default_uri, loc)
-                            .map(|loc| {
+                        loc_to_vscode_linked_location_in_markdown(env, default_uri, loc).map(
+                            |loc| {
                                 (
                                     loc,
                                     flow_common::refinement_invalidation::string_of_reason(*reason),
                                 )
-                            })
+                            },
+                        )
                     })
                     .collect();
                 if invalidation_info.is_empty() {
@@ -4881,7 +4838,7 @@ fn handle_persistent_infer_type(
                     .refining_locs
                     .iter()
                     .filter_map(|loc| {
-                        loc_to_vscode_linked_location_in_markdown(options, env, default_uri, loc)
+                        loc_to_vscode_linked_location_in_markdown(env, default_uri, loc)
                     })
                     .collect();
                 if refining_locs.is_empty() {
@@ -4907,17 +4864,12 @@ fn handle_persistent_infer_type(
                         .map(|refs| {
                             refs.iter()
                                 .filter_map(|(name, loc)| {
-                                    loc_to_vscode_linked_location_in_markdown(
-                                        options,
-                                        env,
-                                        default_uri,
-                                        loc,
-                                    )
-                                    .map(|loc_str| {
-                                        lsp_types::MarkedString::String(format!(
-                                            "`{name}` defined at {loc_str}"
-                                        ))
-                                    })
+                                    loc_to_vscode_linked_location_in_markdown(env, default_uri, loc)
+                                        .map(|loc_str| {
+                                            lsp_types::MarkedString::String(format!(
+                                                "`{name}` defined at {loc_str}"
+                                            ))
+                                        })
                                 })
                                 .collect::<Vec<_>>()
                         })
@@ -6783,18 +6735,11 @@ fn live_diagnostics_of_uri(
                 refined_locations,
                 metadata,
             ) = {
-                let file_key = file_key_of_file_input(options, env, &file_input);
+                let file_key = file_key_of_file_input(options, &file_input);
                 match check_that_we_care_about_this_file(options, env, &file_key, content) {
                     Ok(()) => {
-                        let all_unordered_libs: std::collections::BTreeSet<String> = env
-                            .all_unordered_libs
-                            .iter()
-                            .map(|s| s.to_string())
-                            .collect();
                         let file_key = flow_common::files::filename_from_string(
                             &options.file_options,
-                            true,
-                            &all_unordered_libs,
                             &file_path,
                         );
                         let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) = {
@@ -7026,7 +6971,6 @@ fn get_persistent_handler(
     request: &lsp_prot::RequestWithMetadata,
 ) -> PersistentCommandHandler {
     let options = &*genv.options;
-    let importable_global_libdefs = options.file_options.importable_global_libdefs;
     let (ref request_inner, ref metadata) = *request;
     if let lsp_prot::Request::LspToServer(LspMessage::RequestMessage(id, _)) = request_inner {
         let is_cancelled = server_monitor_listener_state::cancellation_requests()
@@ -7051,12 +6995,7 @@ fn get_persistent_handler(
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                Ok(handle_persistent_subscribe(
-                    importable_global_libdefs,
-                    client_id,
-                    metadata,
-                    env,
-                ))
+                Ok(handle_persistent_subscribe(client_id, metadata, env))
             }))
         }
 
@@ -7076,10 +7015,7 @@ fn get_persistent_handler(
                 // This mutates env, so it can't run in parallel
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                     Ok(handle_persistent_did_open_notification(
-                        importable_global_libdefs,
-                        client_id,
-                        metadata,
-                        env,
+                        client_id, metadata, env,
                     ))
                 }))
             } else {
@@ -7123,10 +7059,7 @@ fn get_persistent_handler(
             if did_anything_change {
                 PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
                     Ok(handle_persistent_did_close_notification(
-                        importable_global_libdefs,
-                        client_id,
-                        metadata,
-                        env,
+                        client_id, metadata, env,
                     ))
                 }))
             } else {

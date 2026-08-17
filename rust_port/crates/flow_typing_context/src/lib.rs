@@ -540,8 +540,7 @@ pub enum ResolvedRequire<'cx> {
     /// The specifier resolved to a global libdef (a `[libs]` file), which is not
     /// a module. Carries the resolved libdef file so the import site can report a
     /// dedicated "cannot import a global libdef" error instead of the misleading
-    /// cannot-resolve-module. Only produced when `experimental.importable_global_libdefs`
-    /// is enabled.
+    /// cannot-resolve-module.
     GlobalLibdefModule(FileKey),
 }
 
@@ -1008,11 +1007,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_lib_file_key(&self, file: &FileKey) -> bool {
-        files::is_lib_file(
-            &self.0.metadata.frozen.file_options,
-            &self.0.all_unordered_libs,
-            file,
-        )
+        files::is_lib_file(&self.0.all_unordered_libs, file)
     }
 
     pub fn is_lib_reason(&self, reason: &Reason) -> bool {

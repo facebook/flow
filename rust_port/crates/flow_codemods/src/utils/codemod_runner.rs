@@ -128,7 +128,6 @@ fn log_input_files(fileset: &BTreeSet<FileKey>) {
 
 pub fn get_target_filename_set(
     options: &std::sync::Arc<flow_common::files::FileOptions>,
-    all_unordered_libs: &BTreeSet<String>,
     all: bool,
     filename_set: BTreeSet<FileKey>,
 ) -> BTreeSet<FileKey> {
@@ -138,14 +137,7 @@ pub fn get_target_filename_set(
             let s = f.to_absolute();
             let is_valid_path = flow_common::files::is_valid_path(options, &s);
             let (is_ignored, _) = flow_common::files::is_ignored(options, &s);
-            // Under `importable_global_libdefs` the crawl that fills
-            // `all_unordered_libs` yields an empty set, so membership cannot
-            // recognize a libdef. Decide by path, as the rest of the flag does.
-            let is_lib = if options.importable_global_libdefs {
-                flow_common::files::is_configured_lib_file(options, &s)
-            } else {
-                all_unordered_libs.contains(&s)
-            };
+            let is_lib = flow_common::files::is_configured_lib_file(options, &s);
             is_valid_path && (all || !is_ignored) && !is_lib
         })
         .collect()
@@ -730,7 +722,6 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
-                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -868,7 +859,6 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
-                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -953,7 +943,6 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
-                _env.all_unordered_libs.dupe(),
                 files_to_merge2.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -1060,7 +1049,6 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
-                _env.all_unordered_libs.dupe(),
                 files_to_merge.clone().into_iter().collect(),
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
@@ -1211,13 +1199,8 @@ where
             root,
         );
         let file_options = &options.file_options;
-        let all_unordered_libs: BTreeSet<String> = env
-            .all_unordered_libs
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
         let all = options.all;
-        let roots = get_target_filename_set(file_options, &all_unordered_libs, all, _roots);
+        let roots = get_target_filename_set(file_options, all, _roots);
         let roots = TRC::expand_roots(&env, roots);
         let env_files: BTreeSet<FileKey> = env.files.iter().cloned().collect();
         let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
@@ -1361,9 +1344,7 @@ where
         let _profiling = profiling_start("Codemod", should_print_summary);
         let file_options = &options.file_options;
         let all = options.all;
-        let (_ordered_libs, all_unordered_libs) =
-            flow_common::files::ordered_and_unordered_lib_paths(file_options);
-        let filename_set = get_target_filename_set(file_options, &all_unordered_libs, all, _roots);
+        let filename_set = get_target_filename_set(file_options, all, _roots);
         let next = next_of_filename_set(workers, &filename_set);
         let reader = ActiveTransaction::new(_genv.committed_heap.clone());
         let reader_handle = reader.handle();
@@ -1371,7 +1352,6 @@ where
             workers.as_ref().unwrap(),
             &reader_handle,
             &Arc::new(options.clone()),
-            Arc::new(all_unordered_libs.iter().map(FlowSmolStr::new).collect()),
             &[],
             next,
         );
@@ -1461,12 +1441,7 @@ where
         );
         let file_options = &options.file_options;
         let all = options.all;
-        let all_unordered_libs: BTreeSet<String> = env
-            .all_unordered_libs
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        let filename_set = get_target_filename_set(file_options, &all_unordered_libs, all, _roots);
+        let filename_set = get_target_filename_set(file_options, all, _roots);
         let env_files: BTreeSet<FileKey> = env.files.iter().cloned().collect();
         let filename_set: BTreeSet<FileKey> =
             filename_set.intersection(&env_files).cloned().collect();

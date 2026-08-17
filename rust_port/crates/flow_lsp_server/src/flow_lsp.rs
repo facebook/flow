@@ -733,10 +733,6 @@ pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> F
             .multi_platform_extension_group_mapping
             .clone(),
         node_resolver_dirnames: flowconfig.options.node_resolver_dirnames.clone(),
-        importable_global_libdefs: flowconfig
-            .options
-            .importable_global_libdefs
-            .unwrap_or(false),
     }
 }
 

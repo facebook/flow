@@ -499,13 +499,13 @@ fn collect_saved_state_data(
     let parsed_heaps = env
         .files
         .iter()
-        .filter(|file| !files::is_lib_file(&options.file_options, &env.all_unordered_libs, file))
+        .filter(|file| !files::is_lib_file(&env.all_unordered_libs, file))
         .map(|file| (file.dupe(), collect_parsed_data(transaction, file)))
         .collect();
     let unparsed_heaps = env
         .unparsed
         .iter()
-        .filter(|file| !files::is_lib_file(&options.file_options, &env.all_unordered_libs, file))
+        .filter(|file| !files::is_lib_file(&env.all_unordered_libs, file))
         .map(|file| {
             (
                 file.dupe(),
@@ -601,13 +601,13 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
         parsed_files: env
             .files
             .iter()
-            .filter(|f| !files::is_lib_file(&options.file_options, &env.all_unordered_libs, f))
+            .filter(|f| !files::is_lib_file(&env.all_unordered_libs, f))
             .cloned()
             .collect(),
         unparsed_files: env
             .unparsed
             .iter()
-            .filter(|f| !files::is_lib_file(&options.file_options, &env.all_unordered_libs, f))
+            .filter(|f| !files::is_lib_file(&env.all_unordered_libs, f))
             .cloned()
             .collect(),
         package_json_files: env.package_json_files.iter().cloned().collect(),

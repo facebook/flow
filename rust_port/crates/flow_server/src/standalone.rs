@@ -629,7 +629,7 @@ fn do_rechecks(
         let process_updates = |skip_incompatible: bool,
                                updates: &BTreeSet<String>|
          -> server_monitor_listener_state::Updates {
-            rechecker::process_updates(skip_incompatible, options, &env, committed_heap, updates)
+            rechecker::process_updates(skip_incompatible, options, committed_heap, updates)
         };
         let mut will_be_checked_files = env.checked_files.dupe();
         let (_priority, workload) = server_monitor_listener_state::get_and_clear_recheck_workload(
@@ -740,7 +740,6 @@ fn do_rechecks(
                     &env.connections,
                 );
                 persistent_connection::update_clients(
-                    options.file_options.importable_global_libdefs,
                     &env.connections,
                     flow_server_env::lsp_prot::ErrorsReason::EndOfRecheck,
                     || error_collator::get_with_separate_warnings(&env),
@@ -1524,7 +1523,7 @@ fn handle_status(
             .focused()
             .iter()
             .fold((0i32, 0i32), |(total, libs), f| {
-                if files::is_lib_file(&options.file_options, &env.all_unordered_libs, f) {
+                if files::is_lib_file(&env.all_unordered_libs, f) {
                     (total + 1, libs + 1)
                 } else {
                     (total + 1, libs)
@@ -1533,7 +1532,7 @@ fn handle_status(
     let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
     let (total_files, total_libdef_files) =
         env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
-            if files::is_lib_file(&options.file_options, &env.all_unordered_libs, f) {
+            if files::is_lib_file(&env.all_unordered_libs, f) {
                 (total + 1, libs + 1)
             } else {
                 (total + 1, libs)

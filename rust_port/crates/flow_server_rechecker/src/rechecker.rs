@@ -164,18 +164,11 @@ pub fn get_lazy_stats(
 pub fn process_updates(
     skip_incompatible: bool,
     options: &Options,
-    env: &server_env::Env,
     committed_heap: &Arc<CommittedHeap>,
     updates: &BTreeSet<String>,
 ) -> Updates {
     let transaction = ActiveTransaction::new(committed_heap.dupe());
-    match recheck_updates::process_updates(
-        skip_incompatible,
-        options,
-        &env.all_unordered_libs,
-        &transaction,
-        updates,
-    ) {
+    match recheck_updates::process_updates(skip_incompatible, options, &transaction, updates) {
         Ok(updates) => Updates::NormalUpdates(updates),
         Err(recheck_updates::Error::RecoverableShouldReinitNonLazily { msg, updates }) => {
             flow_hh_logger::info!("Libdef change detected: {}", msg);
@@ -200,7 +193,6 @@ fn send_end_recheck(options: &Options, env: &server_env::Env) {
     persistent_connection::send_end_recheck(lazy_stats, &env.connections);
 
     persistent_connection::update_clients(
-        options.file_options.importable_global_libdefs,
         &env.connections,
         lsp_prot::ErrorsReason::EndOfRecheck,
         || error_collator::get_with_separate_warnings(env),
@@ -464,7 +456,7 @@ fn recheck_single_attempt(
     let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.dupe()));
     let (priority, workload) = {
         let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-            process_updates(skip_incompatible, options, &env, committed_heap, updates)
+            process_updates(skip_incompatible, options, committed_heap, updates)
         };
         let get_forced = || {
             will_be_checked_files
@@ -509,13 +501,11 @@ fn recheck_single_attempt(
 
     let options_for_cancel = options.dupe();
     let committed_heap_for_cancel = genv.committed_heap.dupe();
-    let env_snapshot_for_updates = env_snapshot.dupe();
     let process_updates_for_cancel =
         move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
             crate::rechecker::process_updates(
                 skip_incompatible,
                 &options_for_cancel,
-                &env_snapshot_for_updates,
                 &committed_heap_for_cancel,
                 updates,
             )

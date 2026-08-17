@@ -72,7 +72,7 @@ fn load_lib_files(
         Arc<ast::Program<Loc, Loc>>,
     )> = Vec::new();
     for (scoped_dir_opt, file) in files {
-        let lib_file = flow_common::files::lib_file_key(&options.file_options, file);
+        let lib_file = flow_common::files::lib_file_key(file);
         match reader.get_ast(&lib_file) {
             Some(ast) => {
                 ordered_asts.push((

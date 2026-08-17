@@ -1161,10 +1161,6 @@ pub(crate) fn file_options(
             .multi_platform_extension_group_mapping
             .to_vec(),
         node_resolver_dirnames: flowconfig.options.node_resolver_dirnames.clone(),
-        importable_global_libdefs: flowconfig
-            .options
-            .importable_global_libdefs
-            .unwrap_or(false),
     })
 }
 
@@ -2102,7 +2098,6 @@ pub(super) fn make_options(
                 ts_utility_syntax,
                 tslib_syntax,
                 typescript_library_definition_support,
-                importable_global_libdefs,
                 deprecated_utilities,
                 deprecated_utilities_excludes,
                 deprecated_colon_extends_excludes,
@@ -2123,7 +2118,6 @@ pub(super) fn make_options(
     let ts_syntax = ts_syntax.unwrap_or(false);
     let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
-    let importable_global_libdefs = importable_global_libdefs.unwrap_or(false);
 
     let OptionsFlags {
         all: all_override,
@@ -2539,7 +2533,6 @@ pub(super) fn make_options(
             multi_platform_extensions: multi_platform_extensions.to_vec(),
             multi_platform_extension_group_mapping: multi_platform_extension_group_mapping.to_vec(),
             node_resolver_dirnames,
-            importable_global_libdefs,
         })
     };
 
@@ -2725,7 +2718,6 @@ pub(super) fn make_options(
         deprecated_variance_sigils_excludes,
         tslib_syntax,
         typescript_library_definition_support,
-        importable_global_libdefs,
         ts_utility_syntax,
         type_expansion_recursion_limit,
         unsuppressable_error_codes,

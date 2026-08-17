@@ -16,7 +16,6 @@ use flow_common_exit_status::FlowExitStatus;
 use flow_common_semver::semver;
 use flow_config::FlowConfig;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::Transaction;
 use flow_parser::file_key::FileKey;
 use flow_parsing::parsing_service;
@@ -175,8 +174,8 @@ fn check_for_package_json_changes(
     }
 }
 
-fn did_content_change(options: &Options, transaction: &Transaction, filename: &str) -> bool {
-    let file = files::lib_file_key(&options.file_options, filename);
+fn did_content_change(transaction: &Transaction, filename: &str) -> bool {
+    let file = files::lib_file_key(filename);
     match std::fs::read_to_string(filename).ok() {
         None => true,
         Some(content) => {
@@ -188,7 +187,6 @@ fn did_content_change(options: &Options, transaction: &Transaction, filename: &s
 fn check_for_lib_changes(
     options: &Options,
     transaction: &Transaction,
-    all_libs: &BTreeSet<String>,
     root: &Path,
     skip_incompatible: bool,
     filter_wanted_updates: &dyn Fn(&BTreeSet<String>) -> FlowOrdSet<FileKey>,
@@ -198,12 +196,9 @@ fn check_for_lib_changes(
         .to_string_lossy()
         .to_string();
     let is_changed_lib = |filename: &String| -> bool {
-        let is_lib = (if options.file_options.importable_global_libdefs {
-            files::is_configured_lib_file(&options.file_options, filename)
-        } else {
-            all_libs.contains(filename)
-        }) || *filename == flow_typed_path;
-        is_lib && did_content_change(options, transaction, filename)
+        let is_lib = files::is_configured_lib_file(&options.file_options, filename)
+            || *filename == flow_typed_path;
+        is_lib && did_content_change(transaction, filename)
     };
     let libs: BTreeSet<String> = updates
         .iter()
@@ -237,7 +232,6 @@ fn filter_wanted_updates(
     want: &dyn Fn(&str) -> bool,
     updates: &BTreeSet<String>,
 ) -> FlowOrdSet<FileKey> {
-    let empty_libs = BTreeSet::new();
     let mut acc = FlowOrdSet::new();
     for f in updates {
         if files::is_flow_file(file_options, f)
@@ -245,7 +239,7 @@ fn filter_wanted_updates(
                 || files::is_included(file_options, f))
             && want(f)
         {
-            let filename = files::filename_from_string(file_options, false, &empty_libs, f);
+            let filename = files::filename_from_string(file_options, f);
             acc.insert(filename);
         }
     }
@@ -255,27 +249,14 @@ fn filter_wanted_updates(
 pub fn process_updates(
     skip_incompatible: bool,
     options: &Options,
-    previous_all_unordered_libs: &BTreeSet<FlowSmolStr>,
     transaction: &Transaction,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, Error> {
     let file_options = &options.file_options;
-    let all_libs = {
-        let known_libs: BTreeSet<String> = previous_all_unordered_libs
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
-        let (_ordered, maybe_new_libs) = files::ordered_and_unordered_lib_paths(file_options);
-        let mut all = known_libs;
-        for lib in &maybe_new_libs {
-            all.insert(lib.clone());
-        }
-        all
-    };
     let root = &*options.root;
     let config_path = server_files_js::config_file(&options.flowconfig_name, root);
     let sroot = format!("{}{}", root.to_string_lossy(), std::path::MAIN_SEPARATOR);
-    let want = |f: &str| -> bool { files::wanted(file_options, false, &all_libs, f) };
+    let want = |f: &str| -> bool { files::wanted(file_options, false, f) };
     let do_filter = |updates: &BTreeSet<String>| -> FlowOrdSet<FileKey> {
         filter_wanted_updates(file_options, &sroot, &want, updates)
     };
@@ -287,7 +268,6 @@ pub fn process_updates(
     check_for_lib_changes(
         options,
         transaction,
-        &all_libs,
         root,
         skip_incompatible,
         &do_filter,

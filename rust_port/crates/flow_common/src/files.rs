@@ -115,11 +115,6 @@ pub struct FileOptions {
     pub multi_platform_extensions: Vec<FlowSmolStr>,
     pub multi_platform_extension_group_mapping: Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
     pub node_resolver_dirnames: Vec<String>,
-    /// When set, module resolution may resolve a specifier to a configured
-    /// global libdef (`[libs]`) file so the import site can report a dedicated
-    /// "cannot import a global libdef" error instead of a generic
-    /// cannot-resolve-module. Gated by `experimental.importable_global_libdefs`.
-    pub importable_global_libdefs: bool,
 }
 
 impl Default for FileOptions {
@@ -141,7 +136,6 @@ impl Default for FileOptions {
             multi_platform_extensions: Vec::new(),
             multi_platform_extension_group_mapping: Vec::new(),
             node_resolver_dirnames: vec!["node_modules".to_string()],
-            importable_global_libdefs: false,
         }
     }
 }
@@ -505,10 +499,9 @@ pub fn is_valid_path(options: &FileOptions, path: &str) -> bool {
         }
     }
 
-    let basename = Path::new(path)
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap();
+    let Some(basename) = Path::new(path).file_name().and_then(|s| s.to_str()) else {
+        return false;
+    };
     if basename.starts_with('.') {
         return false;
     }
@@ -558,14 +551,15 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
             let root_path = match libdir {
                 LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
             };
-            is_prefix(&root_path.to_string_lossy(), path)
+            let path = Path::new(path);
+            path.starts_with(root_path)
+                || cached_canonicalize(root_path)
+                    .is_ok_and(|canonical_root| path.starts_with(canonical_root))
         }
     }
 }
 
-pub fn ordered_and_unordered_lib_paths(
-    options: &FileOptions,
-) -> (Vec<(Option<String>, String)>, BTreeSet<String>) {
+pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<(Option<String>, String)> {
     let (libs, filter): (
         Vec<(Option<String>, PathBuf)>,
         Box<dyn Fn(&str) -> bool + '_>,
@@ -645,12 +639,7 @@ pub fn ordered_and_unordered_lib_paths(
             .collect()
     };
 
-    let all_libs_set: BTreeSet<String> = if options.importable_global_libdefs {
-        BTreeSet::new()
-    } else {
-        libs.iter().map(|(_, lib)| lib.clone()).collect()
-    };
-    (libs, all_libs_set)
+    libs
 }
 
 pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {
@@ -659,12 +648,7 @@ pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {
     }
     let valid_path = is_valid_path(options, path);
     let path = Path::new(path);
-    let in_default_lib_dir = options.default_lib_dir.as_ref().is_some_and(|libdir| {
-        let root = match libdir {
-            LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
-        };
-        path.starts_with(root)
-    });
+    let in_default_lib_dir = is_in_flowlib(options, path.to_string_lossy().as_ref());
     in_default_lib_dir
         || options
             .lib_paths
@@ -738,17 +722,8 @@ pub fn is_included(options: &FileOptions, f: &str) -> bool {
     options.includes.matches(f)
 }
 
-pub fn wanted(
-    options: &FileOptions,
-    include_libdef: bool,
-    lib_fileset: &BTreeSet<String>,
-    path: &str,
-) -> bool {
-    let is_lib_file = if options.importable_global_libdefs {
-        is_configured_lib_file(options, path)
-    } else {
-        lib_fileset.contains(path)
-    };
+pub fn wanted(options: &FileOptions, include_libdef: bool, path: &str) -> bool {
+    let is_lib_file = is_configured_lib_file(options, path);
     if include_libdef {
         !is_ignored(options, path).0 || is_lib_file
     } else {
@@ -877,18 +852,11 @@ pub fn make_next_files(
     sort: bool,
     options: Arc<FileOptions>,
     include_libdef: bool,
-    all_unordered_libs: Arc<BTreeSet<String>>,
     mut send_chunked: impl FnMut(Vec<PathBuf>),
 ) {
-    fn wanted_filter(
-        options: &FileOptions,
-        path: &Path,
-        all: bool,
-        include_libdef: bool,
-        all_unordered_libs: &BTreeSet<String>,
-    ) -> bool {
+    fn wanted_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: bool) -> bool {
         let path_str = path.to_string_lossy();
-        all || wanted(options, include_libdef, all_unordered_libs, &path_str)
+        all || wanted(options, include_libdef, &path_str)
     }
 
     fn realpath_filter(
@@ -896,17 +864,11 @@ pub fn make_next_files(
         path: &Path,
         all: bool,
         include_libdef: bool,
-        all_unordered_libs: &BTreeSet<String>,
     ) -> bool {
         let path_str = path.to_string_lossy();
         (is_valid_path(options, &path_str)
-            || (include_libdef
-                && if options.importable_global_libdefs {
-                    is_configured_lib_file(options, &path_str)
-                } else {
-                    all_unordered_libs.contains(path_str.as_ref())
-                }))
-            && wanted_filter(options, path, all, include_libdef, all_unordered_libs)
+            || (include_libdef && is_configured_lib_file(options, &path_str)))
+            && wanted_filter(options, path, all, include_libdef)
     }
 
     fn no_subdir_path_filter(
@@ -915,18 +877,12 @@ pub fn make_next_files(
         path: &Path,
         all: bool,
         include_libdef: bool,
-        all_unordered_libs: &BTreeSet<String>,
     ) -> bool {
         ((options.implicitly_include_root && path.starts_with(root)) || {
             let path_str = path.to_string_lossy();
             is_included(options, &path_str)
-                || (include_libdef
-                    && if options.importable_global_libdefs {
-                        is_configured_lib_file(options, &path_str)
-                    } else {
-                        all_unordered_libs.contains(path_str.as_ref())
-                    })
-        }) && realpath_filter(options, path, all, include_libdef, all_unordered_libs)
+                || (include_libdef && is_configured_lib_file(options, &path_str))
+        }) && realpath_filter(options, path, all, include_libdef)
     }
 
     fn subdir_path_filter(
@@ -936,52 +892,43 @@ pub fn make_next_files(
         path: &Path,
         all: bool,
         include_libdef: bool,
-        all_unordered_libs: &BTreeSet<String>,
     ) -> bool {
         path.starts_with(subdir)
             && ((options.implicitly_include_root && path.starts_with(root)) || {
                 let path_str = path.to_string_lossy();
                 is_included(options, &path_str)
-                    || (include_libdef
-                        && if options.importable_global_libdefs {
-                            is_configured_lib_file(options, &path_str)
-                        } else {
-                            all_unordered_libs.contains(path_str.as_ref())
-                        })
+                    || (include_libdef && is_configured_lib_file(options, &path_str))
             })
-            && realpath_filter(options, path, all, include_libdef, all_unordered_libs)
+            && realpath_filter(options, path, all, include_libdef)
     }
 
     // let node_module_filter = is_node_module options in
     let node_module_filter = |file: &str| is_node_module(&options, file);
 
     let starting_point_paths = {
-        let mut starting_point_paths: Vec<PathBuf> =
-            if include_libdef && options.importable_global_libdefs {
-                options
-                    .default_lib_dir
-                    .as_ref()
-                    .map(|libdir| match libdir {
-                        LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => {
-                            path.clone()
-                        }
-                    })
-                    .into_iter()
-                    .collect()
-            } else if include_libdef {
-                all_unordered_libs.iter().map(PathBuf::from).collect()
-            } else {
-                Vec::new()
-            };
+        let mut starting_point_paths: Vec<PathBuf> = if include_libdef {
+            let mut paths: Vec<PathBuf> = options
+                .default_lib_dir
+                .as_ref()
+                .map(|libdir| match libdir {
+                    LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => {
+                        path.clone()
+                    }
+                })
+                .into_iter()
+                .collect();
+            paths.extend(options.lib_paths.iter().map(|(_, path)| path.clone()));
+            paths
+        } else {
+            Vec::new()
+        };
         if let Some(subdir) = subdir {
             starting_point_paths.push(subdir.to_path_buf());
         } else {
             starting_point_paths.extend(watched_paths(&options));
         }
-        if options.importable_global_libdefs {
-            starting_point_paths.sort();
-            starting_point_paths.dedup_by(|b, a| b.starts_with(&*a));
-        }
+        starting_point_paths.sort();
+        starting_point_paths.dedup_by(|b, a| b.starts_with(&*a));
         starting_point_paths
     };
 
@@ -990,22 +937,13 @@ pub fn make_next_files(
     let mut symlink_ancestor_cache = HashMap::new();
     for starting_point_path in starting_point_paths {
         let duped_options = options.dupe();
-        let duped_all_unordered_libs = all_unordered_libs.dupe();
         for entry in jwalk::WalkDir::new(starting_point_path)
             .skip_hidden(false)
             .sort(sort)
             .follow_links(true)
             .parallelism(jwalk::Parallelism::RayonNewPool(2))
             .process_read_dir(move |_depth, path, _read_dir_state, children| {
-                if can_prune
-                    && !wanted_filter(
-                        &duped_options,
-                        path,
-                        all,
-                        include_libdef,
-                        &duped_all_unordered_libs,
-                    )
-                {
+                if can_prune && !wanted_filter(&duped_options, path, all, include_libdef) {
                     children.clear();
                 }
             })
@@ -1046,23 +984,10 @@ pub fn make_next_files(
             let path = entry.path();
 
             if !match subdir {
-                Some(subdir) => subdir_path_filter(
-                    &options,
-                    root,
-                    subdir,
-                    &path,
-                    all,
-                    include_libdef,
-                    &all_unordered_libs,
-                ),
-                None => no_subdir_path_filter(
-                    &options,
-                    root,
-                    &path,
-                    all,
-                    include_libdef,
-                    &all_unordered_libs,
-                ),
+                Some(subdir) => {
+                    subdir_path_filter(&options, root, subdir, &path, all, include_libdef)
+                }
+                None => no_subdir_path_filter(&options, root, &path, all, include_libdef),
             } {
                 continue;
             }
@@ -1076,13 +1001,7 @@ pub fn make_next_files(
                 // verifies the path exists (returns Err for non-existent paths).
                 if let Ok(real_path) = cached_canonicalize(&path)
                     && (path == real_path
-                        || realpath_filter(
-                            &options,
-                            &real_path,
-                            all,
-                            include_libdef,
-                            &all_unordered_libs,
-                        ))
+                        || realpath_filter(&options, &real_path, all, include_libdef))
                 {
                     chunk.push(real_path);
                     if chunk.len() == MAX_FILES {
@@ -1358,12 +1277,7 @@ pub fn get_flowtyped_path(root: &Path) -> PathBuf {
     make_path_absolute(root, "flow-typed")
 }
 
-pub fn filename_from_string(
-    options: &FileOptions,
-    consider_libdefs: bool,
-    all_unordered_libs: &std::collections::BTreeSet<String>,
-    path: &str,
-) -> flow_parser::file_key::FileKey {
+pub fn filename_from_string(options: &FileOptions, path: &str) -> flow_parser::file_key::FileKey {
     use flow_parser::file_key::FileKey;
 
     let ext = Path::new(path)
@@ -1376,45 +1290,26 @@ pub fn filename_from_string(
         Some(ext) if options.module_resource_exts.contains(ext) => {
             FileKey::resource_file_of_absolute(path)
         }
-        _ => {
-            let is_lib_file = if options.importable_global_libdefs {
-                is_configured_lib_file(options, path)
-            } else {
-                all_unordered_libs.contains(path)
-            };
-            if consider_libdefs && is_lib_file {
-                lib_file_key(options, path)
-            } else {
-                FileKey::source_file_of_absolute(path)
-            }
-        }
+        _ if is_configured_lib_file(options, path) => FileKey::lib_file_of_absolute(path),
+        _ => FileKey::source_file_of_absolute(path),
     }
 }
 
 /// Returns the key used to store a configured library file.
-pub fn lib_file_key(options: &FileOptions, path: &str) -> flow_parser::file_key::FileKey {
+pub fn lib_file_key(path: &str) -> flow_parser::file_key::FileKey {
     use flow_parser::file_key::FileKey;
 
-    if options.importable_global_libdefs {
-        FileKey::source_file_of_absolute(path)
-    } else {
-        FileKey::lib_file_of_absolute(path)
-    }
+    FileKey::lib_file_of_absolute(path)
 }
 
 /// Returns whether a file is one of the discovered global library files.
 pub fn is_lib_file(
-    options: &FileOptions,
     all_unordered_libs: &std::collections::BTreeSet<FlowSmolStr>,
     file: &flow_parser::file_key::FileKey,
 ) -> bool {
     if file.is_lib_file() {
         return true;
     }
-    if !options.importable_global_libdefs {
-        return false;
-    }
-
     let absolute = file.to_absolute();
     all_unordered_libs.contains(absolute.as_str())
         || (std::path::MAIN_SEPARATOR != '/'
@@ -1578,8 +1473,20 @@ pub fn canonicalize_filenames(
 mod tests {
     use std::path::Path;
 
+    use super::FileOptions;
     use super::IgnorePattern;
     use crate::path_matcher::RootedGlob;
+
+    #[test]
+    fn is_valid_path_rejects_path_without_filename() {
+        assert!(!super::is_valid_path(&FileOptions::default(), ""));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn is_valid_path_rejects_windows_drive_root() {
+        assert!(!super::is_valid_path(&FileOptions::default(), r"C:\"));
+    }
 
     #[test]
     fn ignore_globs_preserve_ordered_negation() {

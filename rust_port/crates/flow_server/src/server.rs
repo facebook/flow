@@ -300,7 +300,6 @@ fn serve(
                 flow_server_rechecker::rechecker::process_updates(
                     skip_incompatible,
                     _options,
-                    &_env,
                     committed_heap,
                     updates,
                 )
