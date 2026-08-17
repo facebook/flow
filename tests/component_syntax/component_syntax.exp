@@ -2639,7 +2639,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either in property `current`: `null` [1] is incompatible with component Reffed [2].
- - Or object type [3] is incompatible with function type [4].
+ - Or `{current: typeof Reffed}` [3] is incompatible with `(any | null) => unknown` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2935,8 +2935,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
 
-Cannot cast `Bar` to component because in property `ref`: object type [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot cast `Bar` to component because in property `ref`: `{writeonly current: string | null, ...}` [1] is incompatible
+with `(typeof Reffed) => unknown` [2]. [incompatible-type]
 
    refs.js:15:1
    15| Bar as component(ref: React.RefSetter<string>); // err

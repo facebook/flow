@@ -22,7 +22,7 @@ A spread argument is unsupported here. [unsupported-syntax]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:1
 
-Incorrect arguments passed to `Object.assign` because number [1] is not an object. [not-an-object]
+Incorrect arguments passed to `Object.assign` because `number` [1] is not an object. [not-an-object]
 
    test.js:20:1
    20| Object.assign({}, ...[1]); // error

@@ -949,7 +949,7 @@ Unexpected use of `this` type. [illegal-this]
 
 Error --------------------------------------------------------------------------------------------- utility-type.js:14:5
 
-Cannot call `baz.bar` because object type [1] is incompatible with `this` type [2]. [incompatible-type]
+Cannot call `baz.bar` because `interface {}` [1] is incompatible with `this` [2]. [incompatible-type]
 
    utility-type.js:14:5
    14|     baz.bar(baz); // ERROR: Readonly<this> is a plain object, not `this`

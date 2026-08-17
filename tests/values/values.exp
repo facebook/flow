@@ -554,7 +554,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:71:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with `Values` [2]. [incompatible-type]
+Cannot cast `'Diamonds'` to `SuiteEnum` because `string` [1] is incompatible with
+`"Clubs" | "Diamonds" | "Hearts" | "Spades"` [2]. [incompatible-type]
 
    object_types.js:71:15
    71| 'Diamonds' as string as SuiteEnum; // Error: the `string` type is to general and
@@ -598,8 +599,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:79:26
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with `Values` [2].
-[incompatible-type]
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because `string` [1] is incompatible with
+`"Clubs" | "Diamonds" | "Hearts" | "Spades"` [2]. [incompatible-type]
 
    object_types.js:79:26
    79| magicTrick('Diamonds' as string); // Error: the `string` type is to general and
@@ -643,7 +644,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:95:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with `Values` [2]. [incompatible-type]
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because `string` [1] is incompatible with
+`"Clubs" | "Diamonds" | "Hearts" | "Spades"` [2]. [incompatible-type]
 
    object_types.js:95:15
    95| 'Diamonds' as string as FrozenSuiteEnum; // Error: `string` is too general
@@ -713,7 +715,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:125:2
 
-Cannot cast function to `Values` because function [1] is incompatible with `Values` [2]. [incompatible-type]
+Cannot cast function to `Values` because `() => void` [1] is incompatible with `2 | 1` [2]. [incompatible-type]
 
    object_types.js:125:2
    125| (() => {}) as Values<IfaceWithDictAndProps>; // ERROR

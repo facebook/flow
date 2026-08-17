@@ -114,7 +114,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- constructor_type.js:88:30
 
-Cannot assign `ctorObj` to `ctorC8` because in the return value: object type [1] is incompatible with `C8` [2].
+Cannot assign `ctorObj` to `ctorC8` because in the return value: `{v: number}` [1] is incompatible with `C8` [2].
 [incompatible-type]
 
    constructor_type.js:88:30

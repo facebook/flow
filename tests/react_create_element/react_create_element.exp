@@ -76,7 +76,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ test.js:9:7
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either in the second argument: object literal [1] is incompatible with union type [2].
+ - Either in the second argument: object literal [1] is incompatible with `null | void` [2].
  - Or in the first argument: `42` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -104,7 +104,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:7
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either in the second argument: object literal [1] is incompatible with union type [2].
+ - Either in the second argument: object literal [1] is incompatible with `null | void` [2].
  - Or in the first argument: object literal [3] is incompatible with `component(...empty)` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -300,7 +300,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:42:8
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either in the second argument: object literal [1] is incompatible with union type [2].
+ - Either in the second argument: object literal [1] is incompatible with `null | void` [2].
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because property `ref` is extra in props of class `A` [3] but
    missing in object type [4]. Exact objects do not accept extra props.
 
@@ -329,7 +329,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:46:8
 
 Cannot call `React.createElement` because: [incompatible-type]
- - Either in the second argument: object literal [1] is incompatible with union type [2].
+ - Either in the second argument: object literal [1] is incompatible with `null | void` [2].
  - Or cannot instantiate `ExactReactElement_DEPRECATED` because in property `foo`: `number` [3] is incompatible with
    `boolean` [4].
 

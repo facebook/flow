@@ -87,7 +87,7 @@ References:
 Error ---------------------------------------------------------------------------------- class_to_component_type.js:13:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either `ImNotARefSetter` [1] is incompatible with function type [2].
+ - Either `ImNotARefSetter` [1] is incompatible with `(Foo | null) => unknown` [2].
  - Or `ImNotARefSetter` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

@@ -145,7 +145,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:22:10
 
-Cannot cast `_` to `T1` because string [1] is incompatible with `T1` [2]. [incompatible-type]
+Cannot cast `_` to `T1` because `string` [1] is incompatible with `T1` [2]. [incompatible-type]
 
    short_enum_error.js:22:10
    22|     _ as T2 as T1; // error fails quick_subtype and slow path
@@ -228,7 +228,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- short_enum_error.js:42:10
 
-Cannot cast `_` to `T1` because number [1] is incompatible with `T1` [2]. [incompatible-type]
+Cannot cast `_` to `T1` because `number` [1] is incompatible with `T1` [2]. [incompatible-type]
 
    short_enum_error.js:42:10
    42|     _ as T2 as T1; // error -- folded into a single error

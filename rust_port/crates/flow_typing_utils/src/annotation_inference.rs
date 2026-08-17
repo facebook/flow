@@ -17,7 +17,6 @@ use flow_common::reason::mk_id;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
@@ -923,10 +922,6 @@ fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &
     use flow_typing_type::type_::any_t;
 
     let reason_op = op.reason();
-    let lower = (
-        type_util::reason_of_t(t).dupe(),
-        flow_js_utils::error_message_kind_of_lower(t),
-    );
     let upper = IncompatibleUpperData {
         loc: reason_op.loc().dupe(),
         kind: flow_typing_errors::error_message::UpperKind::IncompatibleUnclassified(
@@ -936,13 +931,7 @@ fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &
     let use_op = op.use_op();
     flow_js_utils::add_output_non_speculating(
         cx,
-        flow_typing_errors::error_message::ErrorMessage::EIncompatible(Box::new(
-            EIncompatibleData {
-                lower,
-                upper,
-                use_op,
-            },
-        )),
+        flow_js_utils::incompatible_type_error(t, upper, use_op),
     );
     any_t::error(reason_op)
 }
@@ -2133,10 +2122,6 @@ fn elab_t_concrete<'cx>(
                 }
                 _ => {
                     let reason_op_catch = op.reason();
-                    let lower = (
-                        type_util::reason_of_t(&t).dupe(),
-                        flow_js_utils::error_message_kind_of_lower(&t),
-                    );
                     let upper = IncompatibleUpperData {
                         loc: reason_op_catch.loc().dupe(),
                         kind:
@@ -2147,13 +2132,7 @@ fn elab_t_concrete<'cx>(
                     let use_op = op.use_op();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EIncompatible(Box::new(
-                            EIncompatibleData {
-                                lower,
-                                upper,
-                                use_op,
-                            },
-                        )),
+                        flow_js_utils::incompatible_type_error(&t, upper, use_op),
                     );
                     any_t::error(reason_op_catch)
                 }

@@ -56,7 +56,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:19
 
-Cannot cast `1` to `typeof fn` because `1` [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `1` to `typeof fn` because `1` [1] is incompatible with unknown function [2]. [incompatible-type]
 
    test.js:11:19
    11|       const one = 1 as typeof fn; // error number ~> MixedT (Mixed_function)

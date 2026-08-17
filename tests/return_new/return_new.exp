@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:9:1
 
-Cannot cast `new D` to `D` because object type [1] is incompatible with `D` [2]. [incompatible-type]
+Cannot cast `new D` to `D` because `{x: number}` [1] is incompatible with `D` [2]. [incompatible-type]
 
    test2.js:9:1
    9| new D as D; // error, new D is an object, D not in proto chain

@@ -664,7 +664,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:56:3
 
-Cannot create `Fun` element because in property `children`: React element [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: `{...}` [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:56:3
@@ -1060,7 +1060,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- fun.js:149:3
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either React element [1] is incompatible with `Fn` [2].
+ - Either `{...}` [1] is incompatible with `Fn` [2].
  - Or `{...}` [1] is incompatible with `Array<Fn>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1596,8 +1596,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:52:14
 
-Cannot create `TextLiteral` element because in property `children`: children array [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `Array<"foo" | "  ">` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:52:14
    52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1611,8 +1611,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:53:14
 
-Cannot create `TextLiteral` element because in property `children`: children array [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `Array<"  " | "foo">` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:53:14
    53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.

@@ -216,7 +216,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- importtest.js:25:12
 
-Cannot return `x` because `PolyGood` [1] is incompatible with `PolyBar` [2]. [incompatible-type]
+Cannot return `x` because `PolyFoo<number>` [1] is incompatible with `PolyBar<number>` [2]. [incompatible-type]
 
    importtest.js:25:12
    25|     return x;
@@ -323,7 +323,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:15:45
 
-`PolyFoo` [1] is incompatible with `PolyBar` [2]. [incompatible-type]
+`PolyFoo<T>` [1] is incompatible with `PolyBar<T>` [2]. [incompatible-type]
 
    test.js:15:45
    15| export opaque type PolyBad<T>: PolyBar<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar
@@ -351,7 +351,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:47
 
-`PolyFoo` [1] is incompatible with `PolyBar2` [2]. [incompatible-type]
+`PolyFoo<T>` [1] is incompatible with `PolyBar2<T>` [2]. [incompatible-type]
 
    test.js:19:47
    19| export opaque type PolyBad3<T>: PolyBar2<T> = PolyFoo<T>; // Error: PolyFoo ~> PolyBar2

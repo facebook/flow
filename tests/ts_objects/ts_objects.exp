@@ -122,7 +122,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- flow_consumer.ts:47:1
 
-Cannot cast `tsPointShape` to `FlowPoint` because object type [1] is incompatible with `FlowPoint` [2].
+Cannot cast `tsPointShape` to `FlowPoint` because `{x: number, y: number}` [1] is incompatible with `FlowPoint` [2].
 [incompatible-type]
 
    flow_consumer.ts:47:1

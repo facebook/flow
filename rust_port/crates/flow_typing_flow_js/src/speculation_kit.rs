@@ -20,7 +20,6 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
@@ -876,7 +875,7 @@ fn optimize_spec_try_shortcut<'cx>(
             reason_op: _,
             l,
             union_rep: rep,
-            us: _,
+            us,
             on_success,
         } if matches!(
             &**l,
@@ -957,7 +956,7 @@ fn optimize_spec_try_shortcut<'cx>(
             reason_op,
             l,
             union_rep: rep,
-            us: _,
+            us,
             on_success,
         } => {
             if !rep.is_optimized_finally() {
@@ -1007,16 +1006,10 @@ fn optimize_spec_try_shortcut<'cx>(
                             | DefTInner::EnumObjectT { .. }
                     ) && rep.check_enum().is_some() =>
                 {
+                    let upper = type_util::union_of_ts(reason_op.dupe(), us.clone(), None);
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatibleWithUseOp(Box::new(
-                            EIncompatibleWithUseOpData {
-                                reason_lower: type_util::reason_of_t(l).dupe(),
-                                reason_upper: reason_op.dupe(),
-                                use_op: use_op.dupe(),
-                                explanation: None,
-                            },
-                        )),
+                        flow_js_utils::incompatible_types_error(l, &upper, use_op.dupe(), None),
                     )?;
                     true
                 }

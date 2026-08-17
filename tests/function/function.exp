@@ -305,7 +305,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:34:1
 
-Cannot call `test.bind.apply` because function prototype [1] is incompatible with function type [2]. [incompatible-type]
+Cannot call `test.bind.apply` because function prototype [1] is incompatible with
+`(...args: Array<0 | 123>) => any` [2]. [incompatible-type]
 
    apply.js:34:1
     34| test.bind.apply(test, [0, 123]) as (b: number) => number;

@@ -1959,7 +1959,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:51:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `a` to union type because
+`{b?: {c?: {d: number, ...}, e: number, f: ?(() => number), g: ?(() => number), ...}, ...}` [1] is incompatible with
+`null | void` [2]. [incompatible-type]
 
    refinements.js:51:3
    51|   a as null | void; // should fail, sanity check
@@ -2228,7 +2230,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:102:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `a` to union type because
+`{b?: {c?: {d: number, ...}, e: number, f: ?(() => number), g: ?(() => number), ...}, ...}` [1] is incompatible with
+`null | void` [2]. [incompatible-type]
 
    refinements.js:102:3
    102|   a as null | void; // should fail, sanity check
@@ -2545,7 +2549,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements2.js:9:3
 
-Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `t` to union type because `{a: null | number, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:9:3
    9|   t as null | void; // no
@@ -2593,7 +2598,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:13:3
 
-Cannot cast `t` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `t` to union type because `{a: null | number, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:13:3
    13|   t as null | void; // no
@@ -2675,7 +2681,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `s.a` to union type because `number` [1] is incompatible with `null | void` [2]. [incompatible-type]
 
    refinements2.js:24:3
    24|   s.a as null | void; // no for two reasons
@@ -2740,7 +2746,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `s.a` to union type because `number` [1] is incompatible with `null | void` [2]. [incompatible-type]
 
    refinements2.js:34:3
    34|   s.a as null | void; // no for two reasons
@@ -2805,7 +2811,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `s.a` to union type because `number` [1] is incompatible with `null | void` [2]. [incompatible-type]
 
    refinements2.js:38:3
    38|   s.a as null | void; // no for two reasons
@@ -2887,7 +2893,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:3
 
-Cannot cast `s.a` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `s.a` to union type because `number` [1] is incompatible with `null | void` [2]. [incompatible-type]
 
    refinements2.js:46:3
    46|   s.a as null | void; // no for two reasons
@@ -2980,7 +2986,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:69:3
 
-Cannot cast `a` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `a` to union type because `{b: number | string, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:69:3
    69|   a as null | void; // nope
@@ -3011,7 +3018,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:75:3
 
-Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `b` to union type because `{a?: number, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:75:3
    75|   b as null | void; // nope
@@ -3042,7 +3050,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:86:3
 
-Cannot cast `b` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `b` to union type because `{a?: number, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:86:3
    86|   b as null | void; // nope
@@ -3073,7 +3082,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:95:3
 
-Cannot cast `c` to union type because object type [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `c` to union type because `{d?: Array<number>, ...}` [1] is incompatible with `null | void` [2].
+[incompatible-type]
 
    refinements2.js:95:3
    95|   c as null | void; //nope

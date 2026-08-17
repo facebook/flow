@@ -50,8 +50,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:16:24
 
-Cannot create `Consumer` element because in property `children` > the first parameter: union type [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot create `Consumer` element because in property `children` > the first parameter: `"div" | "span" | "img"` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    createContext.js:16:24
    16|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -65,8 +65,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:22:22
 
-Cannot create `Consumer` element because in property `children` > the first parameter: union type [1] is incompatible
-with string [2]. [incompatible-type]
+Cannot create `Consumer` element because in property `children` > the first parameter: `"div" | "span" | "img"` [1] is
+incompatible with `string` [2]. [incompatible-type]
 
    createContext.js:22:22
    22|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -1845,7 +1845,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:30
 
 Cannot call `React.useEffect` with async function bound to `create` because in the return value: [incompatible-type]
- - Either `Promise` [1] is incompatible with function type [2].
+ - Either `Promise<void>` [1] is incompatible with `() => void` [2].
  - Or `Promise<void>` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2010,7 +2010,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because in the return value:
 [incompatible-type]
- - Either `Promise` [1] is incompatible with function type [2].
+ - Either `Promise<void>` [1] is incompatible with `() => void` [2].
  - Or `Promise<void>` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

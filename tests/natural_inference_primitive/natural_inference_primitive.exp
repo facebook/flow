@@ -2081,7 +2081,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
-Cannot cast `o1.f` to union type because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `o1.f` to union type because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
 
    local.js:192:3
    192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
@@ -2098,7 +2098,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:192:3
 
-Cannot cast `o1.f` to union type because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `o1.f` to union type because `string` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
 
    local.js:192:3
    192|   o1.f as "a" | "b"; // error string ~> "a" | "b"
@@ -2115,7 +2115,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:196:3
 
-Cannot cast `o2.f` to union type because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `o2.f` to union type because `string` [1] is incompatible with `"foo" | "a"` [2]. [incompatible-type]
 
    local.js:196:3
    196|   o2.f as "foo" | "a"; // error string ~> "foo" | "a"
@@ -2538,7 +2538,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:470:3
 
-Cannot cast `arr[0]` to union type because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `arr[0]` to union type because `number` [1] is incompatible with `1 | 2` [2]. [incompatible-type]
 
    local.js:470:3
    470|   arr[0] as 1|2; // error number ~> 1|2

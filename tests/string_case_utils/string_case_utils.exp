@@ -58,8 +58,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:41:1
 
-Cannot cast `'anything'` to `C7` because string literal `anything` [1] is incompatible with `C7` [2].
-[incompatible-type]
+Cannot cast `'anything'` to `C7` because `"anything"` [1] is incompatible with `C7` [2]. [incompatible-type]
 
 The string literal must already be in `Capitalize` canonical form to be a member of this type.
 
@@ -471,8 +470,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:34:1
 
-Cannot cast `'ANYTHING'` to `L6` because string literal `ANYTHING` [1] is incompatible with `L6` [2].
-[incompatible-type]
+Cannot cast `'ANYTHING'` to `L6` because `"ANYTHING"` [1] is incompatible with `L6` [2]. [incompatible-type]
 
 The string literal must already be in `Lowercase` canonical form to be a member of this type.
 
@@ -660,8 +658,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:47:1
 
-Cannot cast `'Anything'` to `U7` because string literal `Anything` [1] is incompatible with `U7` [2].
-[incompatible-type]
+Cannot cast `'Anything'` to `U7` because `"Anything"` [1] is incompatible with `U7` [2]. [incompatible-type]
 
 The string literal must already be in `Uncapitalize` canonical form to be a member of this type.
 
@@ -832,8 +829,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:42:1
 
-Cannot cast `'anything'` to `U7` because string literal `anything` [1] is incompatible with `U7` [2].
-[incompatible-type]
+Cannot cast `'anything'` to `U7` because `"anything"` [1] is incompatible with `U7` [2]. [incompatible-type]
 
 The string literal must already be in `Uppercase` canonical form to be a member of this type.
 

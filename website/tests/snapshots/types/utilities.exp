@@ -856,8 +856,7 @@ No errors!
 === block 51 ===
 Error ----------------------------------------------------------------------------- -:6:1
 
-Cannot cast `'anything'` to `Loud` because string literal `anything` [1] is incompatible with `Loud` [2].
-[incompatible-type]
+Cannot cast `'anything'` to `Loud` because `"anything"` [1] is incompatible with `Loud` [2]. [incompatible-type]
 
 The string literal must already be in `Uppercase` canonical form to be a member of this type.
 

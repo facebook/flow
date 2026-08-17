@@ -18,8 +18,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot call `f.apply` because in type argument `A` > property `@@iterator` > the return value: `$IteratorProtocol` [1]
-is incompatible with `Iterator` [2]. [incompatible-type]
+Cannot call `f.apply` because in type argument `A` > property `@@iterator` > the return value:
+`$IteratorProtocol<number, void, void>` [1] is incompatible with `Iterator<unknown, void, void>` [2].
+[incompatible-type]
 
    apply.js:11:15
      11| f.apply(null, it); // Error
@@ -36,7 +37,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- iterables.js:2:5
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:2:5
      2| [...it]; // Error
@@ -53,7 +54,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- iterables.js:3:6
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:3:6
      3| f(...it); // Error
@@ -70,7 +71,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:4:17
 
-`$Iterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:4:17
      4| f.bind(null, ...it); // Error
@@ -87,7 +88,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:12:5
 
-`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:12:5
     12| [...oit]; // Error
@@ -104,7 +105,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:13:6
 
-`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:13:6
     13| f(...oit); // Error
@@ -121,7 +122,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- iterables.js:14:17
 
-`OpaqueIterable` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:14:17
     14| f.bind(null, ...oit); // Error
@@ -138,7 +139,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ maps.js:4:6
 
-`Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`Map<string, string>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    maps.js:4:6
      4|   ...map1, // Error
@@ -155,7 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ maps.js:5:6
 
-`Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`Map<string, string>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    maps.js:5:6
      5|   ...map2, // Error
@@ -172,7 +173,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ maps.js:9:6
 
-`Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`Map<string, string>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    maps.js:9:6
      9|   ...map1, // Error
@@ -189,7 +190,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- maps.js:10:6
 
-`Map` [1] is incompatible with `$ReadOnlyArray` [2]. [incompatible-type]
+`Map<string, string>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    maps.js:10:6
     10|   ...map2, // Error

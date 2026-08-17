@@ -9253,7 +9253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
 
-Cannot call `takesString` with `x` bound to `x` because `unknown` [1] is incompatible with `string` [2].
+Cannot call `takesString` with `x` bound to `x` because unknown function [1] is incompatible with `string` [2].
 [incompatible-type]
 
    mixed.js:47:17

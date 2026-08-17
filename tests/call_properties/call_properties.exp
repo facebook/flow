@@ -170,7 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:23:10
 
-Cannot return `x` because object type [1] is incompatible with function type [2]. [incompatible-type]
+Cannot return `x` because `{...}` [1] is incompatible with `() => string` [2]. [incompatible-type]
 
    C.js:23:10
    23|   return x;
@@ -431,8 +431,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:1
 
-Cannot cast `a` to `B` because in property `p`: object type [1] is incompatible with function type [2].
-[incompatible-type]
+Cannot cast `a` to `B` because in property `p`: `{...}` [1] is incompatible with `() => void` [2]. [incompatible-type]
 
    use_ops.js:4:1
    4| a as B; // error HERE and preserve use ops

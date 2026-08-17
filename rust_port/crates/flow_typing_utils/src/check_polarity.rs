@@ -14,7 +14,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::subst_name::SubstName;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
@@ -183,17 +182,15 @@ fn check_polarity_impl<'cx>(
                     }
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                            lower: (
-                                reason_of_t(l).dupe(),
-                                flow_js_utils::error_message_kind_of_lower(t),
-                            ),
-                            upper: IncompatibleUpperData {
+                        flow_js_utils::incompatible_type_error_with_lower_kind(
+                            l,
+                            flow_js_utils::error_message_kind_of_lower(t),
+                            IncompatibleUpperData {
                                 loc: reason_of_t(type_).loc().dupe(),
                                 kind: UpperKind::IncompatibleVarianceCheckT,
                             },
-                            use_op: None,
-                        })),
+                            None,
+                        ),
                     )
                 },
                 type_,

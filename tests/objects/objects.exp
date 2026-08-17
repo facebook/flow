@@ -181,7 +181,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:10:1
 
-Cannot cast `Object(...)` to `Number` because object type [1] is incompatible with `Number` [2]. [incompatible-type]
+Cannot cast `Object(...)` to `Number` because `{[key: any]: any}` [1] is incompatible with `Number` [2].
+[incompatible-type]
 
    conversion.js:10:1
    10| Object(undefined) as Number; // error

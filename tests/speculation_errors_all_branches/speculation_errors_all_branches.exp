@@ -398,7 +398,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either in property `p`: `number` [1] is incompatible with `string` [2].
- - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
+ - Or `Y` [3] is incompatible with `$ReadOnlyArray<string>` [4].
  - Or `Y` [3] is incompatible with `[string, string]` [5].
 
    intersection-function.js:54:1
@@ -427,7 +427,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either property `p` is missing in `Z` [1] but exists in interface type [2].
- - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
+ - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
  - Or `Z` [1] is incompatible with `[string, string]` [4].
 
    intersection-function.js:55:1
@@ -1130,7 +1130,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `new Y()` to `F` because: [incompatible-type]
  - Either in property `p`: `number` [1] is incompatible with `string` [2].
- - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
+ - Or `Y` [3] is incompatible with `$ReadOnlyArray<string>` [4].
  - Or `Y` [3] is incompatible with `[string, string]` [5].
 
    union.js:44:1
@@ -1156,7 +1156,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `new Z()` to `F` because: [incompatible-type]
  - Either property `p` is missing in `Z` [1] but exists in interface type [2].
- - Or `Z` [1] is incompatible with `$ReadOnlyArray` [3].
+ - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
  - Or `Z` [1] is incompatible with `[string, string]` [4].
 
    union.js:45:1

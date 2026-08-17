@@ -177,7 +177,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- file.js:104:21
 
-Cannot call `f3` because number [1] is incompatible with union type [2]. [incompatible-type]
+Cannot call `f3` because `number` [1] is incompatible with `1 | "a"` [2]. [incompatible-type]
 
    file.js:104:21
    104|   const x3 = f3(...[1, 'a']); // TODO okay - this still requires proper hint
@@ -191,7 +191,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- file.js:104:24
 
-Cannot call `f3` because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot call `f3` because `string` [1] is incompatible with `1 | "a"` [2]. [incompatible-type]
 
    file.js:104:24
    104|   const x3 = f3(...[1, 'a']); // TODO okay - this still requires proper hint

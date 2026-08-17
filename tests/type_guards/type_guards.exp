@@ -3422,8 +3422,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:186:5
 
-Cannot extend `AImported` [1] with `E` because in property `isB` > the type predicate: `B` [2] is incompatible with
-`C` [3]. [incompatible-type]
+Cannot extend `AImported` [1] with `E` because in property `isB` > the type predicate: `BImported` [2] is incompatible
+with `CImported` [3]. [incompatible-type]
 
    this.js:186:5
    186|     isB(): this is CImported; // error type guard is in invariant position
@@ -3443,7 +3443,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:195:5
 
-Cannot cast `a` to `BImported` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot cast `a` to `BImported` because `AImported` [1] is incompatible with `BImported` [2]. [incompatible-type]
 
    this.js:195:5
    195|     a as BImported; // error
@@ -3477,7 +3477,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:219:5
 
-Cannot cast `b` to `DImported` because `B` [1] is incompatible with `D` [2]. [incompatible-type]
+Cannot cast `b` to `DImported` because `BImported` [1] is incompatible with `DImported` [2]. [incompatible-type]
 
    this.js:219:5
    219|     b as DImported; // error
@@ -3526,7 +3526,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:246:5
 
-Cannot cast `e` to `FImported` because `E` [1] is incompatible with `F` [2]. [incompatible-type]
+Cannot cast `e` to `FImported` because `EImported` [1] is incompatible with `FImported` [2]. [incompatible-type]
 
    this.js:246:5
    246|     e as FImported; // error
@@ -3543,7 +3543,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:253:5
 
-Cannot cast `i` to `BImported` because `I` [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot cast `i` to `BImported` because `IImported` [1] is incompatible with `BImported` [2]. [incompatible-type]
 
    this.js:253:5
    253|     i as BImported; // error
@@ -4390,8 +4390,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:366:43
 
-The type predicate object type [1] needs to be compatible with parameter `x`'s type: object type [1] is incompatible
-with `A` [2]. [incompatible-type-guard]
+The type predicate object type [1] needs to be compatible with parameter `x`'s type: `{a: number, ...}` [1] is
+incompatible with `A` [2]. [incompatible-type-guard]
 
    this_classes.js:366:43
    366|   declare function paramGuard(x: A): x is {a: number, ...}; // error class instances are not subtypes of object types
@@ -4423,7 +4423,8 @@ or interface methods. [function-predicate]
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:391:5
 
-Cannot cast `b` to `DerivedImported` because `Base` [1] is incompatible with `Derived` [2]. [incompatible-type]
+Cannot cast `b` to `DerivedImported` because `BaseImported` [1] is incompatible with `DerivedImported` [2].
+[incompatible-type]
 
    this_classes.js:391:5
    391|     b as DerivedImported; // error
@@ -4472,7 +4473,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_generics.js:18:14
 
-Cannot return `true` because `C` [1] is incompatible with `D` [2]. [incompatible-type-guard]
+Cannot return `true` because `C<X>` [1] is incompatible with `D<X>` [2]. [incompatible-type-guard]
 
 The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type `D` [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -4497,7 +4498,7 @@ Error --------------------------------------------------------------------------
 
 Cannot return `this.isDNumber()` because: [incompatible-type-guard]
  - Either in type argument `X` [1]: `number` [2] is incompatible with `string` [3].
- - Or `C` [4] is incompatible with `D` [5].
+ - Or `C<X>` [4] is incompatible with `D<string>` [5].
 
 The type of this [6] at the return expression `this.isDNumber()` [7] needs to be compatible with the guard type `D` [5].
 See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -4569,7 +4570,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:41:5
 
-Cannot cast `c` to `D` because `C` [1] is incompatible with `D` [2]. [incompatible-type]
+Cannot cast `c` to `D` because `C<number>` [1] is incompatible with `D<number>` [2]. [incompatible-type]
 
    this_generics.js:41:5
    41|     c as D<number>; // error
@@ -4611,7 +4612,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `c` to `D` because: [incompatible-type]
  - Either in type argument `X` [1]: `string` [2] is incompatible with `number` [3].
- - Or `C` [4] is incompatible with `D` [5].
+ - Or `C<number>` [4] is incompatible with `D<number>` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4640,8 +4641,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:85:5
 
-Cannot extend `C` [1] with `Bad` because in property `isD` > the type predicate: `D` [2] is incompatible with `E` [3].
-[incompatible-type]
+Cannot extend `C` [1] with `Bad` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
+`E<X>` [3]. [incompatible-type]
 
    this_generics.js:85:5
            v-----------------------------------------------------------------
@@ -4664,8 +4665,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_generics.js:91:5
 
-Cannot extend `C` [1] with `Implies` because in property `isD` > the type predicate: `D` [2] is incompatible with
-`E` [3]. [incompatible-type]
+Cannot extend `C` [1] with `Implies` because in property `isD` > the type predicate: `D<X>` [2] is incompatible with
+`E<X>` [3]. [incompatible-type]
 
    this_generics.js:91:5
            v-----------------------------------------------------------------------------------
@@ -4850,7 +4851,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- this_params.js:96:5
 
-Cannot cast `w` to `SubImported` because `WithThisParam` [1] is incompatible with `Sub` [2]. [incompatible-type]
+Cannot cast `w` to `SubImported` because `WithThisParamImported` [1] is incompatible with `SubImported` [2].
+[incompatible-type]
 
    this_params.js:96:5
    96|     w as SubImported; // error

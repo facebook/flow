@@ -28,8 +28,6 @@ use flow_typing_errors::error_message::EExpectedNumberLitData;
 use flow_typing_errors::error_message::EExpectedStringLitData;
 use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
-use flow_typing_errors::error_message::EIncompatibleData;
-use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
@@ -2922,14 +2920,7 @@ pub fn rec_sub_t<'cx>(
                         Err(FlowJsException::SpeculationSingletonError) => {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EIncompatibleWithUseOp(Box::new(
-                                    EIncompatibleWithUseOpData {
-                                        reason_lower: lreason.dupe(),
-                                        reason_upper: ureason.dupe(),
-                                        use_op,
-                                        explanation: None,
-                                    },
-                                )),
+                                flow_js_utils::incompatible_types_error(l, u, use_op, None),
                             )?;
                         }
                         Err(other) => return Err(other),
@@ -3412,12 +3403,7 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower: rl.dupe(),
-                    reason_upper: ru.dupe(),
-                    use_op,
-                    explanation: None,
-                })),
+                flow_js_utils::incompatible_types_error(l, u, use_op, None),
             )
         }
         // symbol ~> unique symbol: ERROR
@@ -3427,12 +3413,7 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower: rl.dupe(),
-                    reason_upper: ru.dupe(),
-                    use_op,
-                    explanation: None,
-                })),
+                flow_js_utils::incompatible_types_error(l, u, use_op, None),
             )
         }
         // ****************************************************
@@ -4338,20 +4319,18 @@ pub fn rec_sub_t<'cx>(
                     } else {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EIncompatibleWithUseOp(Box::new(
-                                flow_typing_errors::error_message::EIncompatibleWithUseOpData {
-                                    use_op,
-                                    reason_lower: type_util::reason_of_t(l).dupe(),
-                                    reason_upper: type_util::reason_of_t(u).dupe(),
-                                    explanation: Some(
-                                        flow_typing_errors::intermediate_error_types::Explanation::ExplanationStringCasingMustBeCanonical {
-                                            kind_name: FlowSmolStr::new_inline(
-                                                string_case_transform::name_of_kind(*kind),
-                                            ),
-                                        },
-                                    ),
-                                },
-                            )),
+                            flow_js_utils::incompatible_types_error(
+                                l,
+                                u,
+                                use_op,
+                                Some(
+                                    flow_typing_errors::intermediate_error_types::Explanation::ExplanationStringCasingMustBeCanonical {
+                                        kind_name: FlowSmolStr::new_inline(
+                                            string_case_transform::name_of_kind(*kind),
+                                        ),
+                                    },
+                                ),
+                            ),
                         )?;
                         Ok(())
                     }
@@ -5263,23 +5242,19 @@ pub fn rec_sub_t<'cx>(
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
                 && let Some(record_name) = &inst.inst.class_name =>
         {
-            let (reason_lower, reason_upper) = ordered_reasons((
-                type_util::reason_of_t(l).clone(),
-                type_util::reason_of_t(u).clone(),
-            ));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower,
-                    reason_upper,
+                flow_js_utils::incompatible_types_error(
+                    l,
+                    u,
                     use_op,
-                    explanation: Some(
+                    Some(
                         intermediate_error_types::Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
                             record_name: record_name.dupe(),
                             obj_reason: lreason.dupe(),
                         },
                     ),
-                })),
+                ),
             )
         }
 
@@ -5319,14 +5294,8 @@ pub fn rec_sub_t<'cx>(
                     cx.find_call(*call_t)
                 }
                 _ => {
-                    let error_message = ErrorMessage::EIncompatibleWithUseOp(Box::new(
-                        EIncompatibleWithUseOpData {
-                            reason_lower: reason.dupe(),
-                            reason_upper: reason_op.dupe(),
-                            use_op: use_op.dupe(),
-                            explanation: None,
-                        },
-                    ));
+                    let error_message =
+                        flow_js_utils::incompatible_types_error(l, u, use_op.dupe(), None);
                     flow_js_utils::add_output(cx, error_message)?;
                     any_t::error(reason_op.dupe())
                 }
@@ -6459,14 +6428,14 @@ pub fn rec_sub_t<'cx>(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                    lower: (lreason.dupe(), None),
-                    upper: IncompatibleUpperData {
+                flow_js_utils::incompatible_type_error(
+                    l,
+                    IncompatibleUpperData {
                         loc: ureason.loc().dupe(),
                         kind: flow_typing_errors::error_message::UpperKind::IncompatibleMixedCallT,
                     },
-                    use_op: Some(use_op.dupe()),
-                })),
+                    Some(use_op.dupe()),
+                ),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             FlowJs::rec_flow_t(cx, trace, use_op, &any, u)
@@ -6518,32 +6487,10 @@ pub fn rec_sub_t<'cx>(
             )
         }
 
-        _ => {
-            let type_or_explanatory_desc = |t: &Type| {
-                let desc = type_util::reason_of_t(t).desc(true);
-                if desc.is_explanatory() {
-                    type_or_type_desc::TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
-                } else {
-                    type_or_type_desc::TypeOrTypeDescT::Type(t.dupe())
-                }
-            };
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
-                    EIncompatibleTypesWithUseOpData {
-                        lower_loc: type_util::loc_of_t(l).dupe(),
-                        lower_def_loc: type_util::ref_loc_of_t(l).dupe(),
-                        upper_loc: type_util::loc_of_t(u).dupe(),
-                        upper_def_loc: type_util::ref_loc_of_t(u).dupe(),
-                        lower_desc: type_or_explanatory_desc(l),
-                        upper_desc: type_or_explanatory_desc(u),
-                        use_op,
-                        explanation: None,
-                        example: None,
-                    },
-                )),
-            )
-        }
+        _ => flow_js_utils::add_output(
+            cx,
+            flow_js_utils::incompatible_types_error(l, u, use_op, None),
+        ),
     }
 }
 

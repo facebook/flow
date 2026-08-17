@@ -21,7 +21,6 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
-use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
@@ -1762,14 +1761,14 @@ pub mod special_cased_functions {
                     };
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                            lower: (reason_of_t(l).dupe(), None),
-                            upper: IncompatibleUpperData {
+                        flow_js_utils::incompatible_type_error(
+                            l,
+                            IncompatibleUpperData {
                                 loc: reason_op.loc().dupe(),
                                 kind: upper_kind,
                             },
-                            use_op: Some(use_op.clone()),
-                        })),
+                            Some(use_op.clone()),
+                        ),
                     )?;
                     let any = type_::any_t::error(reason_op.dupe());
                     flow_js::flow_t(cx, (&any, t))?;

@@ -28,6 +28,8 @@ use flow_parser_utils::signature_utils;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
+use flow_typing_errors::error_message::EIncompatibleTypeData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EInvalidBinaryArithData;
 use flow_typing_errors::error_message::EMethodUnbindingData;
@@ -39,6 +41,8 @@ use flow_typing_errors::error_message::ETupleNonIntegerIndexData;
 use flow_typing_errors::error_message::ETupleOutOfBoundsData;
 use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IncompatibleUpperData;
+use flow_typing_errors::intermediate_error_types::Explanation;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::DefTInner;
@@ -53,6 +57,7 @@ use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::InstanceT;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
+use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NamedSymbol;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ResolveUnionTData;
@@ -72,6 +77,7 @@ use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::properties;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
@@ -1446,6 +1452,89 @@ pub fn union_representative_use_op(
     }
 }
 
+fn type_or_explanatory_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
+    use flow_typing_type::type_util;
+
+    let desc = type_util::reason_of_t(t).desc(true);
+    if desc.is_explanatory()
+        || matches!(
+            t.deref(),
+            TypeInner::DefT(_, def_t)
+                if matches!(
+                    def_t.deref(),
+                    DefTInner::MixedT(MixedFlavor::MixedFunction)
+                        | DefTInner::UniqueSymbolT(_)
+                )
+        )
+    {
+        TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
+    } else {
+        TypeOrTypeDescT::Type(t.dupe())
+    }
+}
+
+pub fn incompatible_type_error(
+    lower: &Type,
+    upper: IncompatibleUpperData<ALoc>,
+    use_op: Option<UseOp>,
+) -> ErrorMessage<ALoc> {
+    incompatible_type_error_with_lower_kind(
+        lower,
+        error_message_kind_of_lower(lower),
+        upper,
+        use_op,
+    )
+}
+
+pub fn incompatible_type_error_with_lower_kind(
+    lower: &Type,
+    lower_kind: Option<flow_typing_errors::error_message::LowerKind>,
+    upper: IncompatibleUpperData<ALoc>,
+    use_op: Option<UseOp>,
+) -> ErrorMessage<ALoc> {
+    use flow_typing_type::type_util;
+
+    let lower_desc = if matches!(
+        upper.kind,
+        flow_typing_errors::error_message::UpperKind::IncompatibleVarianceCheckT
+    ) && matches!(lower.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ClassT(_)))
+    {
+        TypeOrTypeDescT::TypeDesc(Err(type_util::reason_of_t(lower).desc(true).clone()))
+    } else {
+        type_or_explanatory_desc(lower)
+    };
+    ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
+        lower_reason: type_util::reason_of_t(lower).dupe(),
+        lower_kind,
+        lower_loc: type_util::loc_of_t(lower).dupe(),
+        lower_def_loc: type_util::def_loc_of_t(lower).dupe(),
+        lower_desc,
+        upper,
+        use_op,
+    }))
+}
+
+pub fn incompatible_types_error(
+    lower: &Type,
+    upper: &Type,
+    use_op: UseOp,
+    explanation: Option<Explanation<ALoc>>,
+) -> ErrorMessage<ALoc> {
+    use flow_typing_type::type_util;
+
+    ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
+        lower_loc: type_util::loc_of_t(lower).dupe(),
+        lower_def_loc: type_util::ref_loc_of_t(lower).dupe(),
+        upper_loc: type_util::loc_of_t(upper).dupe(),
+        upper_def_loc: type_util::ref_loc_of_t(upper).dupe(),
+        lower_desc: type_or_explanatory_desc(lower),
+        upper_desc: type_or_explanatory_desc(upper),
+        use_op,
+        explanation,
+        example: None,
+    }))
+}
+
 // [src_cx] is the context in which the error is created, and [dst_cx] the context
 // in which it is recorded.
 pub fn add_output_generic<'src, 'dst>(
@@ -2003,7 +2092,6 @@ pub fn quick_error_fun_as_obj<'cx>(
     props: &flow_typing_type::type_::properties::PropertiesMap,
 ) -> Result<bool, FlowJsException> {
     use flow_typing_errors::error_message::ErrorMessage;
-    use flow_typing_errors::intermediate_error_types::Explanation;
     use flow_typing_type::type_::PropertyInner;
     use flow_typing_type::type_::properties::PropertiesMap;
 

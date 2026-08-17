@@ -10,11 +10,8 @@ use std::sync::Arc;
 
 use flow_typing_debug::verbose::print_types_if_verbose;
 use flow_typing_errors::error_message::ECallTypeArityData;
-use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
-use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
@@ -2737,16 +2734,11 @@ fn __flow_impl<'cx>(
                             suggestion,
                         }))
                     } else {
-                        ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                            use_op: use_op.dupe(),
-                            reason_lower: reason_op.dupe(),
-                            // `ReposLowerT` gave the object the loc of the
-                            // `keyof`, so this names the key set.
-                            reason_upper: reason_o
-                                .dupe()
-                                .replace_desc_new(VirtualReasonDesc::RKeySet),
-                            explanation: None,
-                        }))
+                        let keys = Type::new(TypeInner::KeysT(
+                            reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
+                            l.dupe(),
+                        ));
+                        flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
                     };
                     flow_js_utils::add_output(cx, err)?;
                 }
@@ -2845,12 +2837,11 @@ fn __flow_impl<'cx>(
                     suggestion: None,
                 }))
             } else {
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    use_op: use_op.dupe(),
-                    reason_lower: reason_op.dupe(),
-                    reason_upper: reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
-                    explanation: None,
-                }))
+                let keys = Type::new(TypeInner::KeysT(
+                    reason_o.dupe().replace_desc_new(VirtualReasonDesc::RKeySet),
+                    l.dupe(),
+                ));
+                flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
             };
             flow_js_utils::add_output(cx, err)?;
         }
@@ -9796,18 +9787,9 @@ fn __flow_impl<'cx>(
                 false_t: tc,
             }),
         ) if try_ts.is_empty() => {
-            let (reason_l, reason_u) = flow_typing_errors::flow_error::ordered_reasons((
-                reason_of_t(t).dupe(),
-                reason_of_t(tc).dupe(),
-            ));
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower: reason_l,
-                    reason_upper: reason_u,
-                    use_op: use_op.dupe(),
-                    explanation: None,
-                })),
+                flow_js_utils::incompatible_types_error(t, tc, use_op.dupe(), None),
             )?;
         }
         // *********
@@ -10240,14 +10222,14 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                    lower: (lreason.dupe(), None),
-                    upper: IncompatibleUpperData {
+                flow_js_utils::incompatible_type_error(
+                    l,
+                    IncompatibleUpperData {
                         loc: ureason.loc().dupe(),
                         kind: UpperKind::IncompatibleMixedCallT,
                     },
-                    use_op: Some(use_op.dupe()),
-                })),
+                    Some(use_op.dupe()),
+                ),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
             rec_flow(cx, trace, (&any, u))?;
@@ -10371,30 +10353,17 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
         _ => {
-            let lower_reason = reason_of_t(l).dupe();
-            let lower_desc = {
-                let desc = lower_reason.desc(true);
-                if desc.is_explanatory() {
-                    TypeOrTypeDescT::TypeDesc(Err(desc.clone()))
-                } else {
-                    TypeOrTypeDescT::Type(l.dupe())
-                }
-            };
             let use_op = use_op_of_use_t(u);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
-                    lower_reason,
-                    lower_kind: flow_js_utils::error_message_kind_of_lower(l),
-                    lower_loc: type_util::loc_of_t(l).dupe(),
-                    lower_def_loc: type_util::def_loc_of_t(l).dupe(),
-                    lower_desc,
-                    upper: IncompatibleUpperData {
+                flow_js_utils::incompatible_type_error(
+                    l,
+                    IncompatibleUpperData {
                         loc: flow_js_utils::error_message_loc_of_upper(u),
                         kind: flow_js_utils::error_message_kind_of_upper(u),
                     },
                     use_op,
-                })),
+                ),
             )?;
             let resolve_callee = match u.deref() {
                 UseTInner::CallT(..) => Some((reason_of_t(l).dupe(), vec![l.dupe()])),

@@ -14,8 +14,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- includes.js:3:54
 
-Cannot call `[...].includes` with `x` bound to `searchElement` because number [1] is incompatible with union type [2].
-[incompatible-type]
+Cannot call `[...].includes` with `x` bound to `searchElement` because `number` [1] is incompatible with
+`1 | 2 | 3` [2]. [incompatible-type]
 
    includes.js:3:54
    3| if (([1, 2, 3] as ReadonlyArray<1 | 2 | 3>).includes(x)) {

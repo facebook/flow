@@ -2311,7 +2311,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
 
-Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompatible with key set [2].
+Cannot instantiate `Semi` because in type argument `Keys`: `number` [1] is incompatible with `keyof {}` [2].
 [incompatible-type]
 
    semi_homomorphic.js:44:32

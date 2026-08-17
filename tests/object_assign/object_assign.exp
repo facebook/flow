@@ -251,7 +251,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:5:1
 
-Incorrect arguments passed to `Object.assign` because number [1] is not an object. [not-an-object]
+Incorrect arguments passed to `Object.assign` because `number` [1] is not an object. [not-an-object]
 
    non_objects.js:5:1
    5| Object.assign({a: "foo"}, 123);
