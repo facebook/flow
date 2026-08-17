@@ -1014,6 +1014,32 @@ impl<'a> HeapWriter<'a> {
         self.overlay.files.insert(file, entry);
     }
 
+    /// Derive a new entry from the current one without a window in which another
+    /// writer's store can be lost. Every writer that changes part of an entry goes
+    /// through here; `set_file_entry` is for writers that replace it outright.
+    pub fn update_file_entry(&self, file: &FileKey, update: impl FnOnce(FileEntry) -> FileEntry) {
+        let committed = self.reader.committed;
+        self.overlay.files.update(
+            file.dupe(),
+            || committed.files.get(file).map(Dupe::dupe),
+            |current| current.map(update),
+        );
+    }
+
+    /// Same, for a writer that also creates the entry when the file is new.
+    pub fn upsert_file_entry(
+        &self,
+        file: &FileKey,
+        update: impl FnOnce(Option<FileEntry>) -> FileEntry,
+    ) {
+        let committed = self.reader.committed;
+        self.overlay.files.update(
+            file.dupe(),
+            || committed.files.get(file).map(Dupe::dupe),
+            |current| Some(update(current)),
+        );
+    }
+
     pub fn remove_file_entry(&self, file: FileKey) {
         self.overlay.files.remove(file);
     }

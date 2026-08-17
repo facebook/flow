@@ -253,8 +253,16 @@ pub fn mk_check_file(
         let cache_for_find = cache.dupe();
         let file_key_for_closure = file_key.dupe();
         let parse_for_leader = parse.dupe();
+        let file_key_for_leader = file_key.dupe();
+        // A dependency can be parsed into the transaction without being merged, in
+        // which case it belongs to no component and leads its own — the same key merge
+        // would have recorded for a singleton component.
         let leader: LazyCell<FileKey, Box<dyn FnOnce() -> FileKey>> =
-            LazyCell::new(Box::new(move || parse_for_leader.leader_unsafe()));
+            LazyCell::new(Box::new(move || {
+                parse_for_leader
+                    .leader()
+                    .unwrap_or_else(|| file_key_for_leader.dupe())
+            }));
         Rc::new(move |cx: &Context<'static>, _dst_cx: &Context<'static>| {
             let budget = cx.budget();
             let create_file = |ccx: Rc<ComponentT<'static>>| {

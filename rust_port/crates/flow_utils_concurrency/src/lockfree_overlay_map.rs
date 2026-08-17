@@ -264,6 +264,42 @@ where
     K: Eq + Hash + Dupe + 'static,
     V: Dupe + 'static,
 {
+    /// Read-modify-write one key while holding its cell lock.
+    ///
+    /// `insert` stores a whole value, so a writer that reads a value, derives a new one
+    /// and inserts it discards anything another writer stored in between. This keeps
+    /// the read and the write in one critical section, which is what makes two writers
+    /// touching the same key safe.
+    ///
+    /// `base` supplies the value for a key this transaction has not written yet. A cell
+    /// holding `Deleted` that already existed before this call is a removal by this
+    /// transaction and is left alone.
+    pub fn update(
+        &self,
+        key: K,
+        base: impl FnOnce() -> Option<V>,
+        update: impl FnOnce(Option<V>) -> Option<V>,
+    ) {
+        let removed_here = matches!(self.cells.get(&key), Some(cell) if matches!(&*cell.lock(), OverlayValue::Deleted));
+        let cell = self
+            .cells
+            .ensure(&key, || Mutex::new(OverlayValue::Deleted));
+        let mut guard = cell.lock();
+        let current = match &*guard {
+            OverlayValue::Present(value) => Some(value.dupe()),
+            OverlayValue::Deleted if removed_here => None,
+            OverlayValue::Deleted => base(),
+        };
+        let Some(next) = update(current) else {
+            return;
+        };
+        let old = std::mem::replace(&mut *guard, OverlayValue::Present(next));
+        if matches!(old, OverlayValue::Deleted) {
+            self.present_count.fetch_add(1, Ordering::Release);
+        }
+        self.mutation_generation.fetch_add(1, Ordering::Release);
+    }
+
     pub fn insert(&self, key: K, value: V) {
         let cell = self
             .cells

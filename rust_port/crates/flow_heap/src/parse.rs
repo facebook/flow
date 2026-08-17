@@ -259,6 +259,10 @@ impl TypedParse {
             .expect("ResolvedRequires should be set")
     }
 
+    pub fn leader(&self) -> Option<FileKey> {
+        self.leader.dupe()
+    }
+
     pub fn leader_unsafe(&self) -> FileKey {
         self.leader.dupe().expect("Leader should be set")
     }

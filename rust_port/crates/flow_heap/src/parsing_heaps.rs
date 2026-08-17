@@ -507,9 +507,7 @@ impl Transaction {
     pub fn set_alternate_file(&self, file: &FileKey, alternate: FileKey) {
         let writer_guard = self.heap_writer();
         let writer = writer_guard.writer();
-        if let Some(entry) = writer.reader().file_entry(file) {
-            writer.set_file_entry(file.dupe(), entry.with_alternate_file(Some(alternate)));
-        }
+        writer.update_file_entry(file, |entry| entry.with_alternate_file(Some(alternate)));
     }
 
     pub fn get_or_create_haste_module(&self, info: HasteModuleInfo) -> HasteModule {
@@ -595,14 +593,17 @@ impl Transaction {
         let impl_key = files::chop_declaration_ext(file);
         let writer_guard = self.heap_writer();
         let writer = writer_guard.writer();
-        let (entry, inserted) = match writer.reader().file_entry(&impl_key) {
-            Some(entry) => (entry, false),
-            None => (FileEntry::new_empty(impl_key.dupe()), true),
-        };
-        writer.set_file_entry(
-            impl_key.dupe(),
-            entry.with_alternate_file(Some(file.dupe())),
-        );
+        // This is the implementation file's entry, not the one this job was handed: a
+        // worker parsing `Foo.js.flow` writes `Foo.js` while another worker may be
+        // running `add_parsed` on `Foo.js` itself. Derive and store under its lock.
+        let mut inserted = false;
+        writer.upsert_file_entry(&impl_key, |entry| match entry {
+            Some(entry) => entry.with_alternate_file(Some(file.dupe())),
+            None => {
+                inserted = true;
+                FileEntry::new_empty(impl_key.dupe()).with_alternate_file(Some(file.dupe()))
+            }
+        });
         if inserted {
             self.note_alloc();
         }
@@ -626,70 +627,75 @@ impl Transaction {
     ) -> BTreeSet<Modulename> {
         let writer_guard = self.heap_writer();
         let writer = writer_guard.writer();
-        let existing_entry = writer.reader().file_entry(&file);
-        let previous_entry = existing_entry.dupe();
+        // Derive and store in one critical section. This writer carries the
+        // merge-written fields forward from the entry it reads, so a store built from a
+        // stale read would put `leader`, `sig_hash` and `resolved_requires` back to what
+        // they were before merge recorded them.
+        let mut captured = None;
+        writer.upsert_file_entry(&file, |existing_entry| {
+            let existing_typed = existing_entry.as_ref().and_then(|entry| {
+                entry.parse_latest().and_then(|p| match p {
+                    Parse::Typed(t) => Some(t),
+                    _ => None,
+                })
+            });
 
-        let existing_typed = existing_entry.as_ref().and_then(|entry| {
-            entry.parse_latest().and_then(|p| match p {
-                Parse::Typed(t) => Some(t),
-                _ => None,
-            })
-        });
+            let (resolved_requires, leader, sig_hash) = match existing_typed {
+                Some(ref existing) => (
+                    existing.resolved_requires.dupe(),
+                    existing.leader.dupe(),
+                    existing.sig_hash,
+                ),
+                None => (
+                    Some(crate::resolved_requires::ResolvedRequires::new(
+                        vec![],
+                        vec![],
+                    )),
+                    None,
+                    None,
+                ),
+            };
 
-        let (resolved_requires, leader, sig_hash) = match existing_typed {
-            Some(ref existing) => (
-                existing.resolved_requires.dupe(),
-                existing.leader.dupe(),
-                existing.sig_hash,
-            ),
-            None => (
-                Some(crate::resolved_requires::ResolvedRequires::new(
-                    vec![],
-                    vec![],
-                )),
-                None,
-                None,
-            ),
-        };
-
-        let typed_parse = TypedParse::new(
-            file_hash,
-            ast,
-            docblock,
-            aloc_table,
-            type_sig,
-            file_sig,
-            exports,
-            requires,
-            resolved_requires,
-            imports,
-            leader,
-            sig_hash,
-        );
-        let new_entry = match existing_entry {
-            Some(entry) => {
-                let entry = entry.with_parse(Some(Parse::Typed(typed_parse)));
-                match haste_module_info {
-                    Some(info) => entry.with_haste_info(Some(info)),
-                    None => entry,
+            let typed_parse = TypedParse::new(
+                file_hash,
+                ast,
+                docblock,
+                aloc_table,
+                type_sig,
+                file_sig,
+                exports,
+                requires,
+                resolved_requires,
+                imports,
+                leader,
+                sig_hash,
+            );
+            let new_entry = match existing_entry.dupe() {
+                Some(entry) => {
+                    let entry = entry.with_parse(Some(Parse::Typed(typed_parse)));
+                    match haste_module_info {
+                        Some(info) => entry.with_haste_info(Some(info)),
+                        None => entry,
+                    }
                 }
-            }
-            None => {
-                self.note_alloc();
-                FileEntry::new(
-                    file.dupe(),
-                    Parse::Typed(typed_parse),
-                    haste_module_info.clone(),
-                )
-            }
-        };
+                None => {
+                    self.note_alloc();
+                    FileEntry::new(
+                        file.dupe(),
+                        Parse::Typed(typed_parse),
+                        haste_module_info.clone(),
+                    )
+                }
+            };
+            captured = Some((existing_entry, new_entry.dupe()));
+            new_entry
+        });
+        let (previous_entry, new_entry) = captured.expect("upsert always runs its update");
         let mut dirty_modules = self.calc_dirty_modules(&file, previous_entry.as_ref(), &new_entry);
-        writer.set_file_entry(file.dupe(), new_entry);
 
         dirty_modules.extend(self.handle_flow_ext(&file));
         dirty_modules
     }
-
     pub fn add_unparsed(
         &self,
         file: FileKey,
@@ -901,14 +907,10 @@ impl Transaction {
     ) {
         let writer_guard = self.heap_writer();
         let writer = writer_guard.writer();
-        if let Some(entry) = writer.reader().file_entry(file)
-            && let Some(Parse::Typed(typed)) = entry.parse_latest()
-        {
-            writer.set_file_entry(
-                file.dupe(),
-                entry.with_parse(Some(Parse::Typed(update(typed)))),
-            );
-        }
+        writer.update_file_entry(file, |entry| match entry.parse_latest() {
+            Some(Parse::Typed(typed)) => entry.with_parse(Some(Parse::Typed(update(typed)))),
+            _ => entry,
+        });
     }
 
     pub fn set_merge_hashes(&self, file: &FileKey, hashes: MergeHashes) {
@@ -1022,6 +1024,126 @@ mod tests {
              holding; this is the \"collating errors\" deadlock"
         );
         drop(cached_by_the_ide);
+    }
+
+    /// The parse phase is parallel over files, which is only safe while a job writes
+    /// the file it was handed. `add_parsed` also writes the *implementation* file behind
+    /// a `.js.flow` declaration, via `handle_flow_ext`, so parsing `Foo.js.flow` and
+    /// parsing `Foo.js` are two jobs writing one entry. Both must derive and store under
+    /// that entry's lock or the later store drops the other's parse.
+    #[test]
+    fn parsing_a_declaration_and_its_implementation_must_not_clobber_each_other() {
+        let heap = committed_heap();
+        let implementation = source_file("Foo.js");
+        let declaration = source_file("Foo.js.flow");
+        let mut lost = 0;
+        for _ in 0..200 {
+            let transaction = ActiveTransaction::new(heap.dupe());
+            let parse = |file: &FileKey| {
+                transaction.add_parsed(
+                    file.dupe(),
+                    1,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Arc::new(Exports::empty()),
+                    Arc::from(Vec::new()),
+                    Arc::new(Imports::empty()),
+                );
+            };
+            let start = Barrier::new(2);
+            std::thread::scope(|scope| {
+                scope.spawn(|| {
+                    start.wait();
+                    parse(&implementation);
+                });
+                scope.spawn(|| {
+                    start.wait();
+                    parse(&declaration);
+                });
+            });
+            let entry_lost = transaction.get_typed_parse(&implementation).is_none();
+            let link_lost = transaction
+                .get_parse(&implementation)
+                .is_some_and(|_| transaction.get_alternate_file(&implementation).is_none());
+            if entry_lost || link_lost {
+                lost += 1;
+            }
+        }
+        assert_eq!(
+            lost, 0,
+            "parsing Foo.js and Foo.js.flow concurrently lost one of the two writes \
+             {lost}/200 times"
+        );
+    }
+
+    /// Regression test for the `Leader should be set` crash.
+    ///
+    /// Merge records a component leader on the file entry while the parse for that same
+    /// file is being written. `add_parsed` carries the merge-written fields forward from
+    /// the entry it read, so storing a whole entry derived from a read taken before
+    /// merge put `leader` back to `None` — and the server then died the next time the
+    /// file missed the check cache. Both writers now derive and store under the entry's
+    /// lock, so neither can be built from a stale read of the other.
+    #[test]
+    fn add_parsed_must_not_discard_the_leader_merge_recorded() {
+        let heap = committed_heap();
+        let file = source_file("C.js");
+        let mut lost = 0;
+        for _ in 0..200 {
+            let transaction = ActiveTransaction::new(heap.dupe());
+            let add = |t: &Transaction| {
+                t.add_parsed(
+                    file.dupe(),
+                    1,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Arc::new(Exports::empty()),
+                    Arc::from(Vec::new()),
+                    Arc::new(Imports::empty()),
+                );
+            };
+            add(&transaction);
+            let start = Barrier::new(2);
+            std::thread::scope(|scope| {
+                scope.spawn(|| {
+                    start.wait();
+                    add(&transaction);
+                });
+                scope.spawn(|| {
+                    start.wait();
+                    let component = vec![(
+                        file.dupe(),
+                        transaction.get_typed_parse(&file).expect("parsed"),
+                    )];
+                    merge_context_mutator::add_merge_on_diff(
+                        &transaction,
+                        false,
+                        &component,
+                        11,
+                        vec![MergeHashes::CJS {
+                            type_export_hashes: Vec::new(),
+                            exports_hash: None,
+                            ns_hash: 0,
+                        }],
+                    );
+                });
+            });
+            if transaction.get_leader(&file).is_none() {
+                lost += 1;
+            }
+        }
+        assert_eq!(
+            lost, 0,
+            "add_parsed clobbered merge's leader {lost}/200 times"
+        );
     }
 
     /// The other half of the contract: while a transaction still holds its guard, a commit
