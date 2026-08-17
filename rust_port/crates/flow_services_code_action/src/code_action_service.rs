@@ -54,6 +54,7 @@ use flow_typing_errors::error_message::BindingError;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::EClassToObjectData;
 use flow_typing_errors::error_message::EDuplicateComponentPropData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
@@ -2169,6 +2170,14 @@ pub fn ast_transforms_of_error(
             }
         }
         ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
+            explanation:
+                Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
+                    record_name,
+                    obj_reason,
+                }),
+            ..
+        })
+        | ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
             explanation:
                 Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
                     record_name,

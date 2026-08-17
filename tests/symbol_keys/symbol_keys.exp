@@ -322,7 +322,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- keyof.js:53:10
 
-Cannot return `k` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot return `k` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof.js:53:10
    53|   return k; // ERROR: symbol key is not a string
@@ -339,7 +339,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- keyof.js:56:10
 
-Cannot return `k` because `symbol` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot return `k` because unique symbol [1] is incompatible with `empty` [2]. [incompatible-type]
 
    keyof.js:56:10
    56|   return k; // ERROR: keyset is not empty
@@ -356,7 +356,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:12:1
 
-Cannot cast `key` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `key` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:12:1
    12| key as string; // ERROR: the key is a `unique symbol`, not a string
@@ -373,7 +373,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:18:1
 
-Cannot cast `ikey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ikey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:18:1
    18| ikey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -390,7 +390,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:22:1
 
-Cannot cast `ckey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `ckey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:22:1
    22| ckey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -407,7 +407,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- keyof_annotation.js:28:1
 
-Cannot cast `akey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `akey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_annotation.js:28:1
    28| akey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -424,7 +424,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:20:1
 
-Cannot cast `aliasKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `aliasKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:20:1
    20| aliasKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -441,7 +441,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:28:1
 
-Cannot cast `condKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `condKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:28:1
    28| condKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -458,7 +458,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:36:1
 
-Cannot cast `condStrKey` to `typeof s` because `string` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `condStrKey` to `typeof s` because `string` [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    keyof_deferred_key.js:36:1
    36| condStrKey as typeof s; // ERROR: the key is a string, not a symbol
@@ -475,7 +475,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:43:1
 
-Cannot cast `importedKey` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `importedKey` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:43:1
    43| importedKey as string; // ERROR: the key is a `unique symbol`, not a string
@@ -492,7 +492,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:51:1
 
-Cannot cast `keysOf(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOf(...)` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:51:1
    51| keysOf(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -527,7 +527,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:58:1
 
-Cannot cast `keysOf(...)` to `typeof s` because `string` [1] is incompatible with `symbol` [2]. [incompatible-type]
+Cannot cast `keysOf(...)` to `typeof s` because `string` [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    keyof_deferred_key.js:58:1
    58| keysOf(strDict) as typeof s; // ERROR: the key is a string, not a symbol
@@ -544,7 +544,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:65:1
 
-Cannot cast `keysOfDict(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOfDict(...)` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
 
    keyof_deferred_key.js:65:1
    65| keysOfDict(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -561,7 +561,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- keyof_deferred_key.js:69:10
 
-Cannot cast `keysOf<...>(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOf<...>(...)` to string because unique symbol [1] is incompatible with `string` [2].
+[incompatible-type]
 
    keyof_deferred_key.js:69:10
    69| keysOf<{[typeof s]: number}>(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -575,7 +576,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- keyof_deferred_key.js:78:1
 
-Cannot cast `keysOfBounded(...)` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `keysOfBounded(...)` to string because unique symbol [1] is incompatible with `string` [2].
+[incompatible-type]
 
    keyof_deferred_key.js:78:1
    78| keysOfBounded(symDict) as string; // ERROR: the key is a `unique symbol`, not a string
@@ -702,7 +704,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ typeof_identity.js:11:1
 
-Cannot cast `gen` to `typeof s` because symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+Cannot cast `gen` to `typeof s` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    typeof_identity.js:11:1
    11| gen as typeof s; // ERROR: generic `symbol` is not the unique symbol `s`
