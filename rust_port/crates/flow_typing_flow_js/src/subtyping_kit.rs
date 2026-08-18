@@ -22,6 +22,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_context::type_app_expansion;
 use flow_typing_errors::error_message::EClassToObjectData;
+use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EExpectedBigIntLitData;
 use flow_typing_errors::error_message::EExpectedBooleanLitData;
 use flow_typing_errors::error_message::EExpectedNumberLitData;
@@ -5641,6 +5642,57 @@ pub fn rec_sub_t<'cx>(
                 &repositioned,
                 &UseT::new(UseTInner::UseT(use_op, u_inner.dupe())),
             )
+        }
+
+        (TypeInner::DefT(reason_l, ld), TypeInner::DefT(reason_u, ud))
+            if let DefTInner::InstanceT(instance) = ld.deref()
+                && instance.inst.strictness_kind.is_typescript_loose()
+                && let DefTInner::ClassT(class_instance) = ud.deref() =>
+        {
+            let concretize = |t: &Type| {
+                FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
+            };
+            match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
+                &concretize,
+                cx,
+                l,
+            )?) {
+                Some(construct_t) => {
+                    let target = mk_functiontype(
+                        reason_u.dupe(),
+                        None,
+                        None,
+                        vec![],
+                        Some(FunRestParam(
+                            None,
+                            reason_u.loc().dupe(),
+                            empty_t::why(reason_u.dupe().replace_desc(VirtualReasonDesc::REmpty)),
+                        )),
+                        reason_l.dupe(),
+                        None,
+                        None,
+                        class_instance.dupe(),
+                    );
+                    let target = Type::new(TypeInner::DefT(
+                        reason_u.dupe(),
+                        DefT::new(DefTInner::FunT(
+                            mixed_t::why(reason_u.dupe()),
+                            Rc::new(target),
+                        )),
+                    ));
+                    FlowJs::rec_flow_t(cx, trace, use_op, &construct_t, &target)
+                }
+                None => flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
+                        EConstructSignatureMissingInSubtypingData {
+                            reason_lower: reason_l.dupe(),
+                            reason_upper: reason_u.dupe(),
+                            use_op,
+                        },
+                    )),
+                ),
+            }
         }
 
         // ***********************************************

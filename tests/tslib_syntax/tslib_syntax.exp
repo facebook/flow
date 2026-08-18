@@ -1125,12 +1125,12 @@ References:
        ^ [1]
 
 
-Error ------------------------------------------------------------------------------ object_construct_sig_usage.js:22:13
+Error ------------------------------------------------------------------------------ object_construct_sig_usage.js:25:13
 
 Cannot call `BarCtor` with `1` bound to `x` because `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   object_construct_sig_usage.js:22:13
-   22| new BarCtor(1); // ERROR — number ~> string
+   object_construct_sig_usage.js:25:13
+   25| new BarCtor(1); // ERROR — number ~> string
                    ^ [1]
 
 References:
@@ -1139,12 +1139,12 @@ References:
                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:23:5
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:26:5
 
 Cannot call `BarCtor` because function [1] requires another argument. [incompatible-type]
 
-   object_construct_sig_usage.js:23:5
-   23| new BarCtor(); // ERROR — too few arguments
+   object_construct_sig_usage.js:26:5
+   26| new BarCtor(); // ERROR — too few arguments
            ^^^^^^^
 
 References:
@@ -1153,105 +1153,145 @@ References:
            ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:24:1
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:27:1
 
 Cannot cast `(new BarCtor(...)).b` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   object_construct_sig_usage.js:24:1
-   24| new BarCtor('x').b as number; // ERROR — string ~> number
+   object_construct_sig_usage.js:27:1
+   27| new BarCtor('x').b as number; // ERROR — string ~> number
        ^^^^^^^^^^^^^^^^^^
 
 References:
    object_construct_sig.d.ts:5:8
     5|     b: string;
               ^^^^^^ [1]
-   object_construct_sig_usage.js:24:23
-   24| new BarCtor('x').b as number; // ERROR — string ~> number
+   object_construct_sig_usage.js:27:23
+   27| new BarCtor('x').b as number; // ERROR — string ~> number
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:31:5
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:34:1
+
+Cannot cast `WrongCtor` to statics of `Bar` because in the return value: `Wrong` [1] is incompatible with `Bar` [2]. For
+example, property `b` is missing in `Wrong` [1] but exists in `Bar` [2]. [incompatible-type]
+
+   object_construct_sig_usage.js:34:1
+   34| WrongCtor as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar.
+       ^^^^^^^^^
+
+References:
+   object_construct_sig.d.ts:22:13
+   22|     new (): Wrong;
+                   ^^^^^ [1]
+   object_construct_sig_usage.js:34:20
+   34| WrongCtor as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar.
+                          ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:40:5
 
 Cannot call `Multi` because: [incompatible-type]
  - Either `true` [1] is incompatible with `string` [2].
  - Or `true` [1] is incompatible with `number` [3].
 
-   object_construct_sig_usage.js:31:5
-   31| new Multi(true); // ERROR — neither overload accepts boolean
+   object_construct_sig_usage.js:40:5
+   40| new Multi(true); // ERROR — neither overload accepts boolean
            ^^^^^
 
 References:
-   object_construct_sig_usage.js:31:11
-   31| new Multi(true); // ERROR — neither overload accepts boolean
+   object_construct_sig_usage.js:40:11
+   40| new Multi(true); // ERROR — neither overload accepts boolean
                  ^^^^ [1]
-   object_construct_sig.d.ts:21:13
-   21|     new (x: string): Str;
+   object_construct_sig.d.ts:39:13
+   39|     new (x: string): Str;
                    ^^^^^^ [2]
-   object_construct_sig.d.ts:22:13
-   22|     new (x: number): Num;
+   object_construct_sig.d.ts:40:13
+   40|     new (x: number): Num;
                    ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------ object_construct_sig_usage.js:54:17
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:42:1
+
+Cannot cast `Multi` to statics of `Bar` because: [incompatible-type]
+ - Either in the return value: property `b` is missing in `Str` [1] but exists in `Bar` [2].
+ - Or in the return value: property `b` is missing in `Num` [3] but exists in `Bar` [2].
+
+   object_construct_sig_usage.js:42:1
+   42| Multi as Class<Bar>; // ERROR: no construct overload returns Bar.
+       ^^^^^
+
+References:
+   object_construct_sig.d.ts:39:22
+   39|     new (x: string): Str;
+                            ^^^ [1]
+   object_construct_sig_usage.js:42:16
+   42| Multi as Class<Bar>; // ERROR: no construct overload returns Bar.
+                      ^^^ [2]
+   object_construct_sig.d.ts:40:22
+   40|     new (x: number): Num;
+                            ^^^ [3]
+
+
+Error ------------------------------------------------------------------------------ object_construct_sig_usage.js:65:17
 
 Cannot call `createViaObject` with `Plain` bound to `C` because property `new` is missing in interface type [1] but
 exists in object type [2]. [incompatible-type]
 
-   object_construct_sig_usage.js:54:17
-   54| createViaObject(Plain); // ERROR — `{new(): T}` in a Flow file is not a construct signature
+   object_construct_sig_usage.js:65:17
+   65| createViaObject(Plain); // ERROR — `{new(): T}` in a Flow file is not a construct signature
                        ^^^^^
 
 References:
    object_construct_sig.d.ts:15:29
    15| export declare const Plain: {new (): Bar};
                                    ^^^^^^^^^^^^^ [1]
-   object_construct_sig_usage.js:53:40
-   53| declare function createViaObject<T>(C: {new (): T}): T;
+   object_construct_sig_usage.js:64:40
+   64| declare function createViaObject<T>(C: {new (): T}): T;
                                               ^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:58:5
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:69:5
 
 Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
-   object_construct_sig_usage.js:58:5
-   58| new Quoted(); // ERROR: invalid-constructor
+   object_construct_sig_usage.js:69:5
+   69| new Quoted(); // ERROR: invalid-constructor
            ^^^^^^
 
 References:
-   object_construct_sig.d.ts:39:30
-   39| export declare const Quoted: {"new"(): Bar};
+   object_construct_sig.d.ts:57:30
+   57| export declare const Quoted: {"new"(): Bar};
                                     ^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:59:5
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:70:5
 
 Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
-   object_construct_sig_usage.js:59:5
-   59| new OptionalMethod(); // ERROR: invalid-constructor
+   object_construct_sig_usage.js:70:5
+   70| new OptionalMethod(); // ERROR: invalid-constructor
            ^^^^^^^^^^^^^^
 
 References:
-   object_construct_sig.d.ts:40:38
-   40| export declare const OptionalMethod: {new?(): Bar};
+   object_construct_sig.d.ts:58:38
+   58| export declare const OptionalMethod: {new?(): Bar};
                                             ^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:61:5
+Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:72:5
 
 Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
-   object_construct_sig_usage.js:61:5
-   61| new Field(); // ERROR: invalid-constructor
+   object_construct_sig_usage.js:72:5
+   72| new Field(); // ERROR: invalid-constructor
            ^^^^^
 
 References:
-   object_construct_sig.d.ts:41:29
-   41| export declare const Field: {new: () => Bar};
+   object_construct_sig.d.ts:59:29
+   59| export declare const Field: {new: () => Bar};
                                    ^^^^^^^^^^^^^^^^ [1]
 
 
@@ -2057,4 +2097,4 @@ References:
 
 
 
-Found 138 errors
+Found 140 errors

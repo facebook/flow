@@ -14,6 +14,24 @@ export declare const BarCtor: {
 // Construct signature with no other members
 export declare const Plain: {new (): Bar};
 
+export declare class Wrong {
+    wrong: number;
+}
+export declare const WrongCtor: {
+    prototype: Bar;
+    new (): Wrong;
+};
+export declare const MismatchedPrototypeCtor: {
+    prototype: Wrong;
+    new (): Bar;
+};
+
+export interface InheritedCtorBase {
+    new (): Bar;
+}
+export interface InheritedCtor extends InheritedCtorBase {}
+export declare const Inherited: InheritedCtor;
+
 // Repeated `new` members intersect, the way interface overloads do
 export declare class Str {}
 export declare class Num {}

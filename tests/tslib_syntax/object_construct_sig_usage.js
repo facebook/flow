@@ -7,6 +7,8 @@ import {
   BarCtor,
   Dual,
   Field,
+  Inherited,
+  MismatchedPrototypeCtor,
   Multi,
   Num,
   Obj,
@@ -14,6 +16,7 @@ import {
   Plain,
   Quoted,
   Str,
+  WrongCtor,
 } from './object_construct_sig';
 
 new BarCtor('x') as Bar; // OK
@@ -24,11 +27,19 @@ new BarCtor(); // ERROR — too few arguments
 new BarCtor('x').b as number; // ERROR — string ~> number
 
 new Plain() as Bar; // OK
+Plain as Class<any>; // OK: constructability alone is sufficient for an untyped class consumer.
+Plain as Class<Bar>; // OK: the construct signature determines the instance type.
+BarCtor as Class<Bar>; // OK: an explicit compatible prototype is not required.
+MismatchedPrototypeCtor as Class<Bar>; // OK: TypeScript checks the construct signature, not the class prototype property.
+WrongCtor as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar.
+Inherited as Class<Bar>; // OK: inherited construct signatures participate too.
 
 // Overloads
 new Multi('s') as Str; // OK
 new Multi(1) as Num; // OK
 new Multi(true); // ERROR — neither overload accepts boolean
+Multi as Class<Str>; // OK: TypeScript accepts a compatible source construct overload.
+Multi as Class<Bar>; // ERROR: no construct overload returns Bar.
 
 // Call property and construct signature coexist
 Dual() as string; // OK
