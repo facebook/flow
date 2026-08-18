@@ -37,7 +37,7 @@ export type AssertionMethod =
   | 'verifyNoFile';
 
 // Closed set of output-normalization tags an assertion may request via `{normalize: [...]}`.
-export type NormalizeTag = 'paths';
+export type NormalizeTag = 'paths' | 'json';
 
 export type NormalizeOptions = $ReadOnly<{
   normalize?: $ReadOnlyArray<NormalizeTag>,
