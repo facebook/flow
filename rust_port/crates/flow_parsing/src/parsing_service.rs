@@ -28,6 +28,7 @@ use flow_imports_exports::imports::Imports;
 use flow_parser::PERMISSIVE_PARSE_OPTIONS;
 use flow_parser::ParseOptions;
 use flow_parser::ast::Program;
+use flow_parser::dts_file_kind::FileSemanticRole;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
@@ -190,7 +191,7 @@ pub fn parse_file_sig(
     file: &FileKey,
     docblock: &Docblock,
     ast: &Program<Loc, Loc>,
-    is_lib_file: bool,
+    semantic_role: FileSemanticRole,
 ) -> FileSig {
     let enable_relay_integration = options.enable_relay_integration
         && flow_common::relay_options::enabled_for_file(&options.relay_integration_excludes, file);
@@ -212,7 +213,7 @@ pub fn parse_file_sig(
         haste_module_ref_prefix: options.haste_module_ref_prefix.dupe(),
         project_options: options.projects_options.dupe(),
         relay_integration_module_prefix,
-        is_lib_file,
+        is_lib_file: semantic_role.is_global_libdef(),
     };
 
     FileSig::from_program(file, ast, &file_sig_opts)
@@ -225,7 +226,7 @@ pub fn parse_type_sig<'arena, 'ast>(
     file: &FileKey,
     ast: &'ast Program<Loc, Loc>,
     arena: &'arena bumpalo::Bump,
-    is_lib_file: bool,
+    semantic_role: FileSemanticRole,
 ) -> (
     Vec<flow_type_sig::type_sig::Errno<flow_type_sig::compact_table::Index<Loc>>>,
     flow_type_sig::compact_table::Table<Loc>,
@@ -236,7 +237,7 @@ pub fn parse_type_sig<'arena, 'ast>(
         docblock.prevent_munge,
         locs_to_dirtify,
         file,
-        is_lib_file,
+        semantic_role.is_global_libdef(),
     );
     let strict = docblock.is_strict();
     let platform_availability_set = platform_set::available_platforms(
@@ -283,7 +284,13 @@ pub fn do_parse(
                 ParseResult::ParseSkip(ParseSkipReason::SkipNonFlowFile)
             } else {
                 let (ast, parse_errors) = parse_source_file(options, content, file, is_lib_file);
-                let file_sig = Arc::new(parse_file_sig(options, file, docblock, &ast, is_lib_file));
+                let semantic_role = if is_lib_file {
+                    FileSemanticRole::GlobalLibdef
+                } else {
+                    FileSemanticRole::SourceModule
+                };
+                let file_sig =
+                    Arc::new(parse_file_sig(options, file, docblock, &ast, semantic_role));
                 let requires: Vec<FlowImportSpecifier> =
                     file_sig.require_loc_map().into_keys().collect();
 
@@ -305,7 +312,7 @@ pub fn do_parse(
                         file,
                         &ast,
                         &arena,
-                        is_lib_file,
+                        semantic_role,
                     );
 
                     let exports_result = exports::of_module(&type_sig);
