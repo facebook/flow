@@ -1283,6 +1283,7 @@ mod hardcoded_tests {
     use std::collections::BTreeMap;
     use std::fs;
 
+    use crate::file_key::has_dts_ext;
     use crate::main_parser;
     use crate::parser_env::ParseOptions;
     use crate::parser_integration_tests::common::TestOptions;
@@ -1415,9 +1416,7 @@ mod hardcoded_tests {
         // the file type and enable d.ts-specific parsing (e.g., destructuring
         // in function type parameters). For other files, use the simpler path
         // that doesn't set a file key.
-        let is_d_ts = filename.is_some_and(|f| {
-            f.ends_with(".d.ts") || f.ends_with(".d.mts") || f.ends_with(".d.cts")
-        });
+        let is_d_ts = filename.is_some_and(has_dts_ext);
         if is_d_ts {
             use crate::comment_utils;
             use crate::estree_translator;

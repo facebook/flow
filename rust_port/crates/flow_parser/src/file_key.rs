@@ -32,6 +32,15 @@ pub enum FileKeyInner {
     ResourceFile(String),
 }
 
+pub const DTS_EXT: &str = ".d.ts";
+pub const DMTS_EXT: &str = ".d.mts";
+pub const DCTS_EXT: &str = ".d.cts";
+pub const DTS_EXTENSIONS: [&str; 3] = [DCTS_EXT, DMTS_EXT, DTS_EXT];
+
+pub fn has_dts_ext(filename: &str) -> bool {
+    DTS_EXTENSIONS.iter().any(|ext| filename.ends_with(ext))
+}
+
 // Marker for flowlib LibFile paths. This is the single source of truth —
 // saved_state.ml uses File_key.flowlib_marker, not a separate constant.
 pub const FLOWLIB_MARKER: &str = "<BUILTIN_FLOW_LIB>///";

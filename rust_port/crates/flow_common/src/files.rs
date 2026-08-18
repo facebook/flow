@@ -22,6 +22,9 @@ use std::sync::RwLock;
 
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::file_key::DCTS_EXT;
+use flow_parser::file_key::DMTS_EXT;
+use flow_parser::file_key::DTS_EXT;
 use flow_parser::file_key::FileKey;
 use regex::Regex;
 
@@ -173,16 +176,6 @@ pub fn has_ts_ext(file: &FileKey) -> bool {
         || file.check_suffix(".tsx")
         || file.check_suffix(".mts")
         || file.check_suffix(".cts")
-}
-
-pub const DTS_EXT: &str = ".d.ts";
-
-pub const DMTS_EXT: &str = ".d.mts";
-
-pub const DCTS_EXT: &str = ".d.cts";
-
-pub fn has_dts_ext(file: &FileKey) -> bool {
-    file.check_suffix(DTS_EXT) || file.check_suffix(DMTS_EXT) || file.check_suffix(DCTS_EXT)
 }
 
 pub fn js_to_dts(path: &str) -> Option<String> {

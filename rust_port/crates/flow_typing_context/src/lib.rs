@@ -1024,7 +1024,7 @@ impl<'cx> Context<'cx> {
     pub fn under_declaration_context(&self) -> bool {
         self.is_lib_file()
             || self.0.file.check_suffix(".flow")
-            || files::has_dts_ext(&self.0.file)
+            || flow_parser::file_key::has_dts_ext(self.0.file.as_str())
             || self.in_declare_module()
             || self.in_declare_namespace()
     }

@@ -13,6 +13,7 @@ pub mod ast_visitor;
 pub mod comment_attachment;
 pub mod comment_utils;
 mod declaration_parser;
+pub mod dts_file_kind;
 mod enum_common;
 mod enum_parser;
 pub mod estree_translator;

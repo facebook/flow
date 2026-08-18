@@ -10,6 +10,7 @@ use flow_common::options::Options;
 use flow_common::relay_options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::has_dts_ext;
 use flow_parser::loc::Loc;
 
 pub struct TypeSigOptions {
@@ -82,7 +83,7 @@ impl TypeSigOptions {
             enable_records: options.enable_records,
             for_builtins: false,
             is_ts_file: flow_common::files::has_ts_ext(file),
-            is_dts_file: flow_common::files::has_dts_ext(file),
+            is_dts_file: has_dts_ext(file.as_str()),
             tslib_syntax: options.tslib_syntax,
             is_lib_file,
         }

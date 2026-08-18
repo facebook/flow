@@ -190,7 +190,7 @@ pub fn mk_ts_enum_namespace<'cx>(
     // `ambient` mirrors the signature path's predicate in type_sig_parse.rs (which
     // reads the precomputed [opts.is_dts_file], itself [Files.has_dts_ext]); keep
     // the two in sync.
-    let ambient = flow_common::files::has_dts_ext(cx.file()) || declared;
+    let ambient = flow_parser::file_key::has_dts_ext(cx.file().as_str()) || declared;
     let resolved = ts_enum_sig::ts_enum_member_values(ambient, members);
     for (member_name, member_loc, init_loc, _value, error) in resolved.iter() {
         match error {
