@@ -19,6 +19,7 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
 use flow_aloc::aloc_representation_do_not_use;
+use flow_check_cache::CheckCache;
 use flow_common::docblock::Docblock;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
@@ -58,8 +59,6 @@ use flow_typing_type::type_::Type;
 use flow_typing_utils::annotation_inference;
 use flow_typing_utils::type_sig_merge;
 use flow_typing_utils::type_sig_merge::Exports;
-
-use crate::check_cache::CheckCache;
 
 pub struct CheckFileAndCompEnv {
     pub make_cx: Box<

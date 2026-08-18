@@ -3,6 +3,7 @@ members = [
   "crates/flow_aloc",
   "crates/flow_analysis",
   "crates/flow_cgroup",
+  "crates/flow_check_cache",
   "crates/flow_cli",
   "crates/flow_codemods",
   "crates/flow_commands_connect",

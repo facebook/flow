@@ -546,6 +546,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "flow_check_cache"
+version = "0.0.0"
+dependencies = [
+ "dupe",
+ "flow_parser",
+ "flow_typing_context",
+ "flow_typing_utils",
+ "linked-hash-map",
+]
+
+[[package]]
 name = "flow_cli_support"
 version = "0.0.0"
 dependencies = [
@@ -1696,6 +1707,7 @@ dependencies = [
  "crossbeam",
  "dupe",
  "flow_aloc",
+ "flow_check_cache",
  "flow_common",
  "flow_common_cycle_hash",
  "flow_common_errors",
@@ -1738,7 +1750,6 @@ dependencies = [
  "flow_typing_type",
  "flow_typing_utils",
  "flow_utils_concurrency",
- "linked-hash-map",
  "serde_json",
  "vec1",
 ]

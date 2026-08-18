@@ -18,6 +18,7 @@ use std::time::Instant;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
+use flow_check_cache::CheckCache;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
 use flow_common::files;
@@ -64,7 +65,6 @@ use flow_utils_concurrency::thread_pool::ThreadPool;
 use flow_utils_concurrency::worker_cancel;
 use vec1::Vec1;
 
-use crate::check_cache::CheckCache;
 use crate::check_service;
 use crate::inference_utils;
 use crate::merge_stream::Component;

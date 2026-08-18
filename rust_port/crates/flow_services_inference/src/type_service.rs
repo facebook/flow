@@ -18,6 +18,7 @@ use crossbeam::channel;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
+use flow_check_cache::CheckCache;
 use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_version;
@@ -944,10 +945,7 @@ mod check_files {
                 files.iter().map(|f| f.dupe()).collect(),
             );
             type CheckFn = Box<dyn FnMut(FileKey) -> merge_service::CheckJobOutcome>;
-            type WorkerState = (
-                CheckFn,
-                Rc<std::cell::RefCell<crate::check_cache::CheckCache<'static>>>,
-            );
+            type WorkerState = (CheckFn, Rc<std::cell::RefCell<CheckCache<'static>>>);
             thread_local! {
                 static WORKER_CHECK: RefCell<Option<WorkerState>> = const { RefCell::new(None) };
             }

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub mod check_cache;
 pub mod check_service;
 #[cfg(test)]
 pub mod dep_graph_test_utils;

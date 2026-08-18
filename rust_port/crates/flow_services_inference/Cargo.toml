@@ -9,6 +9,7 @@ edition = "2024"
 crossbeam = "0.8"
 dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
+flow_check_cache = { path = "../flow_check_cache" }
 flow_common = { path = "../flow_common" }
 flow_common_cycle_hash = { path = "../flow_common_cycle_hash" }
 flow_common_errors = { path = "../flow_common_errors" }
@@ -51,7 +52,6 @@ flow_typing_flow_js = { path = "../flow_typing_flow_js" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
-linked-hash-map = { version = "0.5", features = ["serde_impl"] }
 serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
 vec1 = { version = "1.12.1", features = ["serde"] }
 
