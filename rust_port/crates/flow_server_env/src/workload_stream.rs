@@ -257,7 +257,13 @@ impl WorkloadStream {
     // Wake up anyone blocked in `wait_for_parallelizable_workload` /
     // `wait_for_parallelizable_workload_or_stop`. Callers that flip a stop flag should call this
     // afterwards to ensure the waiter observes the change.
+    //
+    // Takes `inner` before notifying even though it changes nothing under it. `stop` lives outside
+    // this mutex, so without it a waiter can read the flag, find it clear, and park after the
+    // notify has already gone out — and nothing wakes it again.
     pub fn wake_waiters(&self) {
+        let lock = self.inner.lock().unwrap();
         self.signal.notify_all();
+        drop(lock);
     }
 }
