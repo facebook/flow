@@ -1497,8 +1497,8 @@ Error --------------------------------------------------------------------------
                                           ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2020:40
-   2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2025:40
+   2025| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1512,8 +1512,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                           ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2006:11
-   2006| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2011:11
+   2011| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -1527,8 +1527,8 @@ Cannot return `(typeof x) == "number"` because `$Generator<empty, boolean, empty
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2020:40
-   2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2025:40
+   2025| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:34
      19| function *generator(x: unknown): x is number { // error
@@ -1570,8 +1570,8 @@ Cannot return `(typeof x) == "number"` because `Promise<boolean>` [1] is incompa
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2294:15
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:15
+   2298| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    invalid.js:28:35
      28| async function async(x: unknown): x is number { // error

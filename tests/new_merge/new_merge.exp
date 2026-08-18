@@ -310,8 +310,8 @@ Cannot cast `f15()` to empty because `Promise<void>` [1] is incompatible with `e
          ^^^^^
 
 References:
-   <BUILTINS>/core.js:2294:15
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:15
+   2298| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    main.js:60:10
      60| f15() as empty;

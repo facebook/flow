@@ -80,11 +80,11 @@ References:
    reduce.js:7:22
       7|   return nums.reduce<T>(
                               ^ [2]
-   <BUILTINS>/core.js:1144:5
+   <BUILTINS>/core.js:1149:5
              v------
-   1144|     reduce(
-   1145|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1146|     ): T;
+   1149|     reduce(
+   1150|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
+   1151|     ): T;
              ---^ [3]
 
 

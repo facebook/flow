@@ -99,8 +99,8 @@ References:
    -:4:1
      4| hook useMultiplier(x: number): number {
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:885:30
-   885|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => U, thisArg: This): Array<U>;
+   <BUILTINS>/core.js:890:30
+   890|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => U, thisArg: This): Array<U>;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    -:10:18
     10| component Mapper(args: Array<number>) {

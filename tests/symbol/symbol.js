@@ -33,6 +33,7 @@ declare const s: symbol;
   Symbol.isConcatSpreadable as symbol; // OK
   Symbol.match as symbol; // OK
   Symbol.matchAll as symbol; // OK
+  Symbol.metadata as symbol; // OK
   Symbol.replace as symbol; // OK
   Symbol.search as symbol; // OK
   Symbol.species as symbol; // OK
@@ -41,8 +42,12 @@ declare const s: symbol;
   Symbol.toStringTag as symbol; // OK
   Symbol.unscopables as symbol; // OK
 
-  const x: $SymbolMatch = Symbol.match; // OK
-  const y: $SymbolMatch = Symbol.toPrimitive; // Error
+  const x: typeof Symbol.match = Symbol.match; // OK
+  const y: typeof Symbol.match = Symbol.toPrimitive; // Error
+
+  // Deprecated aliases retained for backward compatibility.
+  Symbol.toPrimitive as $SymbolToPrimitive; // OK
+  Symbol.iterator as $SymbolIterator; // OK
 }
 
 // Non-strict equality

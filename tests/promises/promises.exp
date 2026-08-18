@@ -7,8 +7,8 @@ Cannot cast `a` to number because `string` [1] is incompatible with `number` [2]
            ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:11:8
      11|   a as number;  // Error: string ~> number
@@ -24,8 +24,8 @@ Cannot cast `b` to boolean because `number` [1] is incompatible with `boolean` [
            ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:12:8
      12|   b as boolean; // Error: number ~> boolean
@@ -41,8 +41,8 @@ Cannot cast `c` to string because `boolean` [1] is incompatible with `string` [2
            ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:13:8
      13|   c as string;  // Error: boolean ~> string
@@ -58,8 +58,8 @@ Cannot cast `x` to undefined because `boolean` [1] is incompatible with `void` [
              ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:17:10
      17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -75,8 +75,8 @@ Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2
              ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:17:10
      17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -92,8 +92,8 @@ Cannot cast `x` to undefined because `string` [1] is incompatible with `void` [2
              ^
 
 References:
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [1]
    all.js:17:10
      17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -109,12 +109,12 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2356:5
+   <BUILTINS>/core.js:2360:5
              v-------------------------------------------------------------
-   2356|     static all<T extends Iterable<unknown>>(promises: T): Promise<
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
-   2358|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
-   2359|     >;
+   2360|     static all<T extends Iterable<unknown>>(promises: T): Promise<
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   2362|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
+   2363|     >;
              ^ [1]
 
 
@@ -142,12 +142,12 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2366:5
+   <BUILTINS>/core.js:2370:5
              v--------------------------------------------------------------------
-   2366|     static allSettled<T extends Iterable<unknown>>(promises: T): Promise<
-   2367|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
-   2368|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
-   2369|     >;
+   2370|     static allSettled<T extends Iterable<unknown>>(promises: T): Promise<
+   2371|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   2372|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
+   2373|     >;
              ^ [1]
 
 
@@ -175,8 +175,8 @@ Cannot cast `first.status` to empty because `"rejected"` [1] is incompatible wit
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2391:12
-   2391|   +status: 'rejected',
+   <BUILTINS>/core.js:2395:12
+   2395|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:31:23
      31|       first.status as empty // Error: 'rejected' case was not covered
@@ -192,8 +192,8 @@ Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [
                                       ^^^
 
 References:
-   <BUILTINS>/core.js:2367:81
-   2367|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   <BUILTINS>/core.js:2371:81
+   2371|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
                                                                                          ^^^^^^^^^^^^^ [1]
 
 
@@ -206,8 +206,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2384:15
-   2384|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2388:15
+   2388|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -220,8 +220,8 @@ Cannot call `Promise.any` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:2384:5
-   2384|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2388:5
+   2388|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -234,8 +234,8 @@ Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2384:15
-   2384|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2388:15
+   2388|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -250,8 +250,8 @@ subtype of an interface. [incompatible-type]
                                      ^ [1]
 
 References:
-   <BUILTINS>/core.js:2384:58
-   2384|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+   <BUILTINS>/core.js:2388:58
+   2388|     static any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
                                                                   ^^^^^^^^^^^^^^ [2]
 
 
@@ -633,8 +633,8 @@ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `
          ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    resolve_void.js:1:30
       1| Promise.resolve() as Promise<number>; // error
@@ -651,8 +651,8 @@ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]
                          ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    resolve_void.js:3:39
       3| Promise.resolve(undefined) as Promise<number>; // error

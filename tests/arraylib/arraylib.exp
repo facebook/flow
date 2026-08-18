@@ -53,8 +53,8 @@ References:
    array_lib.js:13:14
      13| var e: Array<string> = a.reverse();
                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1175:16
-   1175|     reverse(): Array<T>;
+   <BUILTINS>/core.js:1180:16
+   1180|     reverse(): Array<T>;
                         ^^^^^^^^ [3]
    array_lib.js:13:8
      13| var e: Array<string> = a.reverse();
@@ -76,14 +76,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:746:53
-   746|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/core.js:751:53
+   751|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                             ^^^^^ [1]
    array_lib.js:26:14
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                      ^^^^^^ [2]
-   <BUILTINS>/core.js:746:47
-   746|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/core.js:751:47
+   751|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                       ^^^^^^^^^^^^ [3]
    array_lib.js:26:8
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -102,8 +102,8 @@ References:
    array_lib.js:58:4
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1495:13
-   1495|     length: number;
+   <BUILTINS>/core.js:1500:13
+   1500|     length: number;
                      ^^^^^^ [2]
 
 
@@ -119,8 +119,8 @@ References:
    array_lib.js:59:4
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1495:13
-   1495|     length: number;
+   <BUILTINS>/core.js:1500:13
+   1500|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,14 +139,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1228:37
-   1228|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1233:37
+   1233|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:71:31
      71|   Array.from('abcd') as Array<empty>; // ERROR
                                        ^^^^^ [2]
-   <BUILTINS>/core.js:1228:31
-   1228|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1233:31
+   1233|     static from(str: string): Array<string>;
                                        ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
      71|   Array.from('abcd') as Array<empty>; // ERROR
@@ -190,8 +190,8 @@ Cannot call `arr.at` because function [1] requires another argument. [incompatib
             ^^
 
 References:
-   <BUILTINS>/core.js:736:5
-   736|     at(index: number): T | void;
+   <BUILTINS>/core.js:741:5
+   741|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -205,8 +205,8 @@ Cannot call `arr.at` with `"1"` bound to `index` because `"1"` [1] is incompatib
                ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:736:15
-   736|     at(index: number): T | void;
+   <BUILTINS>/core.js:741:15
+   741|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -219,8 +219,8 @@ Cannot call `roArr.at` because function [1] requires another argument. [incompat
               ^^
 
 References:
-   <BUILTINS>/core.js:736:5
-   736|     at(index: number): T | void;
+   <BUILTINS>/core.js:741:5
+   741|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -234,8 +234,8 @@ Cannot call `roArr.at` with `"1"` bound to `index` because `"1"` [1] is incompat
                  ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:736:15
-   736|     at(index: number): T | void;
+   <BUILTINS>/core.js:741:15
+   741|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -267,11 +267,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                  ^^^^^^
 
 References:
-   <BUILTINS>/core.js:1495:13
-   1495|     length: number;
+   <BUILTINS>/core.js:1500:13
+   1500|     length: number;
                      ^^^^^^ [1]
-   <BUILTINS>/core.js:1071:109
-   1071|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+   <BUILTINS>/core.js:1076:109
+   1076|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                                                      ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
       2| declare const str_arr: Array<string>;
@@ -304,8 +304,8 @@ References:
    filter_error_msg_quality_test.js:7:25
       7| nullable_str_arr.filter(s => !!s) as Array<string>;
                                  ^^^^^^^^ [3]
-   <BUILTINS>/core.js:1064:24
-   1064|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+   <BUILTINS>/core.js:1069:24
+   1069|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                                 ^^^^^^^^^^^^^^ [4]
 
 
@@ -324,14 +324,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:913:34
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:34
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:3:24
      3| const result1_1: Array<string> = arr1.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:913:28
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:28
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:3:18
      3| const result1_1: Array<string> = arr1.flat(); // Error
@@ -371,14 +371,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:913:34
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:34
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:9:24
      9| const result2_1: Array<string> = arr2.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:913:28
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:28
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:9:18
      9| const result2_1: Array<string> = arr2.flat(); // Error
@@ -406,8 +406,8 @@ References:
    flat.js:11:24
     11| const result2_3: Array<number> = arr2.flat(0); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:906:8
-   906|     ): Array<T>;
+   <BUILTINS>/core.js:911:8
+   911|     ): Array<T>;
                ^^^^^^^^ [3]
    flat.js:11:18
     11| const result2_3: Array<number> = arr2.flat(0); // Error
@@ -429,14 +429,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:913:34
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:34
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:13:24
     13| const result2_5: Array<string> = arr2.flat(1); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:913:28
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:28
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:13:18
     13| const result2_5: Array<string> = arr2.flat(1); // Error
@@ -460,14 +460,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:913:34
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:34
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:17:24
     17| const result3_1: Array<number> = arr3.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:913:28
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:28
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:17:18
     17| const result3_1: Array<number> = arr3.flat(); // Error
@@ -489,14 +489,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:920:32
-   920|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/core.js:925:32
+   925|     flat(depth: number): Array<unknown>;
                                        ^^^^^^^ [1]
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:920:26
-   920|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/core.js:925:26
+   925|     flat(depth: number): Array<unknown>;
                                  ^^^^^^^^^^^^^^ [3]
    flat.js:20:18
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -518,14 +518,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:920:32
-   920|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/core.js:925:32
+   925|     flat(depth: number): Array<unknown>;
                                        ^^^^^^^ [1]
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
                                ^^^^^^ [2]
-   <BUILTINS>/core.js:920:26
-   920|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/core.js:925:26
+   925|     flat(depth: number): Array<unknown>;
                                  ^^^^^^^^^^^^^^ [3]
    flat.js:25:18
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
@@ -549,14 +549,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:913:34
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:34
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:30:24
     30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
                                ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:913:28
-   913|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/core.js:918:28
+   918|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:30:18
     30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>

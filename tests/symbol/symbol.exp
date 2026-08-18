@@ -8,8 +8,8 @@ Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > th
                                        ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1880:30
-   1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1885:30
+   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [1]
    class_iterator.js:35:34
      35|   *[Symbol.iterator](): Iterator<string> {
@@ -17,6 +17,60 @@ References:
    class_iterator.js:39:21
      39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
                              ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------- collection_to_string_tag.js:11:1
+
+Cannot cast `map[Symbol.toStringTag]` to string literal `Set` because string literal `Map` [1] is incompatible with
+string literal `Set` [2]. [incompatible-type]
+
+   collection_to_string_tag.js:11:1
+     11| map[Symbol.toStringTag] as 'Set'; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2079:36
+   2079|     readonly [Symbol.toStringTag]: 'Map';
+                                            ^^^^^ [1]
+   collection_to_string_tag.js:11:28
+     11| map[Symbol.toStringTag] as 'Set'; // ERROR
+                                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- collection_to_string_tag.js:12:1
+
+Cannot cast `roSet[Symbol.toStringTag]` to string literal `Map` because string literal `Set` [1] is incompatible with
+string literal `Map` [2]. [incompatible-type]
+
+   collection_to_string_tag.js:12:1
+     12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2250:36
+   2250|     readonly [Symbol.toStringTag]: 'Set';
+                                            ^^^^^ [1]
+   collection_to_string_tag.js:12:30
+     12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+                                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- collection_to_string_tag.js:22:1
+
+Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: string literal `Map` [1] is incompatible with
+string literal `Set` [2]. [incompatible-type]
+
+   collection_to_string_tag.js:22:1
+     22| set as TaggedMap; // ERROR
+         ^^^
+
+References:
+   collection_to_string_tag.js:19:54
+     19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                              ^^^^^ [1]
+   <BUILTINS>/core.js:2250:36
+   2250|     readonly [Symbol.toStringTag]: 'Set';
+                                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
@@ -46,8 +100,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:281:10
-   281|   static (value?: unknown): symbol;
+   <BUILTINS>/core.js:265:10
+   265|   static (value?: unknown): symbol;
                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -85,93 +139,93 @@ References:
                 ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- symbol.js:45:27
+Error -------------------------------------------------------------------------------------------------- symbol.js:46:34
 
-Cannot assign `Symbol.toPrimitive` to `y` because `symbol` [1] is incompatible with `$SymbolMatch` [2].
+Cannot assign `Symbol.toPrimitive` to `y` because unique symbol [1] is incompatible with unique symbol [2].
 [incompatible-type]
 
-   symbol.js:45:27
-    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
-                                  ^^^^^^^^^^^^^^^^^^
+   symbol.js:46:34
+    46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
+                                         ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:353:24
-   353|   static +toPrimitive: $SymbolToPrimitive;
-                               ^^^^^^^^^^^^^^^^^^ [1]
-   symbol.js:45:12
-    45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error
-                   ^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:341:32
+   341|   static readonly toPrimitive: unique symbol;
+                                       ^^^^^^^^^^^^^ [1]
+   symbol.js:46:12
+    46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
+                   ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:62:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:67:3
 
 Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
-   symbol.js:62:3
-   62|   x == s; // Error
+   symbol.js:67:3
+   67|   x == s; // Error
          ^
 
 References:
-   symbol.js:61:12
-   61|   const x: [] = [];
+   symbol.js:66:12
+   66|   const x: [] = [];
                   ^^ [1]
-   symbol.js:59:12
-   59|   const s: symbol = Symbol();
+   symbol.js:64:12
+   64|   const s: symbol = Symbol();
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:63:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:68:3
 
 Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
-   symbol.js:63:3
-   63|   s == x; // Error
+   symbol.js:68:3
+   68|   s == x; // Error
          ^
 
 References:
-   symbol.js:59:12
-   59|   const s: symbol = Symbol();
+   symbol.js:64:12
+   64|   const s: symbol = Symbol();
                   ^^^^^^ [1]
-   symbol.js:61:12
-   61|   const x: [] = [];
+   symbol.js:66:12
+   66|   const x: [] = [];
                   ^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:64:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:69:3
 
 Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
-   symbol.js:64:3
-   64|   x != s; // Error
+   symbol.js:69:3
+   69|   x != s; // Error
          ^
 
 References:
-   symbol.js:61:12
-   61|   const x: [] = [];
+   symbol.js:66:12
+   66|   const x: [] = [];
                   ^^ [1]
-   symbol.js:59:12
-   59|   const s: symbol = Symbol();
+   symbol.js:64:12
+   64|   const s: symbol = Symbol();
                   ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- symbol.js:65:3
+Error --------------------------------------------------------------------------------------------------- symbol.js:70:3
 
 Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
-   symbol.js:65:3
-   65|   s != x; // Error
+   symbol.js:70:3
+   70|   s != x; // Error
          ^
 
 References:
-   symbol.js:59:12
-   59|   const s: symbol = Symbol();
+   symbol.js:64:12
+   64|   const s: symbol = Symbol();
                   ^^^^^^ [1]
-   symbol.js:61:12
-   61|   const x: [] = [];
+   symbol.js:66:12
+   66|   const x: [] = [];
                   ^^ [2]
 
 
@@ -185,8 +239,8 @@ Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return va
          ^^^
 
 References:
-   <BUILTINS>/core.js:1880:30
-   1880| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1885:30
+   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [1]
    type_well_known_symbol.js:16:44
      16| type Bad = { [Symbol.iterator](): Iterator<string> };
@@ -228,8 +282,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol`
                                     ^^^
 
 References:
-   <BUILTINS>/core.js:276:15
-   276| declare class Symbol {
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
                       ^^^^^^ [1]
 
 
@@ -250,8 +304,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol`
                                     ^^^
 
 References:
-   <BUILTINS>/core.js:276:15
-   276| declare class Symbol {
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
                       ^^^^^^ [1]
 
 
@@ -272,8 +326,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol`
                                        ^^^
 
 References:
-   <BUILTINS>/core.js:276:15
-   276| declare class Symbol {
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
                       ^^^^^^ [1]
 
 
@@ -294,10 +348,10 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol`
                                            ^^^
 
 References:
-   <BUILTINS>/core.js:276:15
-   276| declare class Symbol {
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
                       ^^^^^^ [1]
 
 
 
-Found 20 errors
+Found 23 errors

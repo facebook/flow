@@ -7,8 +7,8 @@ Cannot return `1` because in type argument `R` [1]: `1` [2] is incompatible with
                   ^ [2]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async.js:9:30
       9| async function f1(): Promise<boolean> {
@@ -25,8 +25,8 @@ Cannot return `await p` because in type argument `R` [1]: `number` [2] is incomp
                   ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async.js:28:30
      28| async function f4(p: Promise<number>): Promise<boolean> {
@@ -99,8 +99,8 @@ incompatible with `void` [3]. [incompatible-type]
              ^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async2.js:55:13
      55|   : Promise<number> { // error, number != void
@@ -142,8 +142,8 @@ Cannot return undefined because in type argument `R` [1]: `void` [2] is incompat
            ^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
@@ -160,8 +160,8 @@ Cannot return `undefined` because in type argument `R` [1]: `void` [2] is incomp
                   ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
@@ -178,8 +178,8 @@ Cannot return `bar()` because in type argument `R` [1]: `void` [2] is incompatib
                   ^^^^^
 
 References:
-   <BUILTINS>/core.js:2294:24
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:24
+   2298| declare class Promise<+R = unknown> {
                                 ^ [1]
    async_return_void.js:10:17
      10|   function bar() { }
@@ -223,14 +223,14 @@ Cannot expect `AsyncGenerator` as the return type of async generator function be
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2037:27
-   2037| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2042:27
+   2042| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [3]
 
 
@@ -243,11 +243,11 @@ In type argument `Yield` [1]: `string` [2] is incompatible with `number` [3]. [i
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2037:27
-   2037| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2042:27
+   2042| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
-   <BUILTINS>/core.js:2357:59
-   2357|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2361:59
+   2361|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                    ^^^^^^^^^^^^^ [2]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
@@ -264,8 +264,8 @@ Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:2048:7
-   2048|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:2053:7
+   2053|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

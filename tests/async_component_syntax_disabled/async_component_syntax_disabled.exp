@@ -31,8 +31,8 @@ Cannot return `result` because `Promise<string>` [1] is incompatible with `strin
                   ^^^^^^
 
 References:
-   <BUILTINS>/core.js:2294:15
-   2294| declare class Promise<+R = unknown> {
+   <BUILTINS>/core.js:2298:15
+   2298| declare class Promise<+R = unknown> {
                        ^^^^^^^ [1]
    test.js:8:28
       8| async hook useAsyncHook(): string { // ERROR: async hook syntax not enabled

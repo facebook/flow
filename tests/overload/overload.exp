@@ -29,8 +29,8 @@ Cannot assign `"".match(...)[0]` to `x1` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1242:33
-   1242| type RegExp$matchResult = Array<string> & {
+   <BUILTINS>/core.js:1247:33
+   1247| type RegExp$matchResult = Array<string> & {
                                          ^^^^^^ [1]
    overload.js:7:9
       7| var x1: number = "".match(0)[0];
@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                       ^
 
 References:
-   <BUILTINS>/core.js:1379:58
-   1379|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1384:58
+   1384|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -65,11 +65,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:1379:19
-   1379|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1384:19
+   1384|     match(regexp: string | RegExp): RegExp$matchResult | null;
                            ^^^^^^ [2]
-   <BUILTINS>/core.js:1379:28
-   1379|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1384:28
+   1384|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                     ^^^^^^ [3]
 
 
@@ -82,8 +82,8 @@ Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1242:33
-   1242| type RegExp$matchResult = Array<string> & {
+   <BUILTINS>/core.js:1247:33
+   1247| type RegExp$matchResult = Array<string> & {
                                          ^^^^^^ [1]
    overload.js:8:9
       8| var x2: number = "".match(/pattern/)[0];
@@ -99,8 +99,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                               ^
 
 References:
-   <BUILTINS>/core.js:1379:58
-   1379|     match(regexp: string | RegExp): RegExp$matchResult | null;
+   <BUILTINS>/core.js:1384:58
+   1384|     match(regexp: string | RegExp): RegExp$matchResult | null;
                                                                   ^^^^ [1]
 
 
@@ -113,8 +113,8 @@ Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1452:63
-   1452|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/core.js:1457:63
+   1457|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

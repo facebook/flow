@@ -311,8 +311,8 @@ Cannot use `StringPrefix` [1] without 1-2 type arguments. [missing-type-arg]
                        ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3221:18
-   3221| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/core.js:3225:18
+   3225| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -325,8 +325,8 @@ Cannot use `StringPrefix` [1] with fewer than 1 type argument. [missing-type-arg
                              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3221:18
-   3221| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/core.js:3225:18
+   3225| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -339,8 +339,8 @@ Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3221:18
-   3221| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/core.js:3225:18
+   3225| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -438,8 +438,8 @@ Cannot instantiate `StringPrefix` because in type argument `R`: `1` [1] is incom
                                                      ^ [1]
 
 References:
-   <BUILTINS>/core.js:3221:55
-   3221| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+   <BUILTINS>/core.js:3225:55
+   3225| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
                                                                ^^^^^^ [2]
 
 
@@ -606,8 +606,8 @@ Cannot use `StringSuffix` [1] without 1-2 type arguments. [missing-type-arg]
                        ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3230:18
-   3230| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/core.js:3234:18
+   3234| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -620,8 +620,8 @@ Cannot use `StringSuffix` [1] with fewer than 1 type argument. [missing-type-arg
                              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3230:18
-   3230| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/core.js:3234:18
+   3234| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -634,8 +634,8 @@ Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3230:18
-   3230| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/core.js:3234:18
+   3234| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -732,8 +732,8 @@ Cannot instantiate `StringSuffix` because in type argument `R`: `1` [1] is incom
                                                      ^ [1]
 
 References:
-   <BUILTINS>/core.js:3230:55
-   3230| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+   <BUILTINS>/core.js:3234:55
+   3234| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
                                                                ^^^^^^ [2]
 
 

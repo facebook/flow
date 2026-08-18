@@ -8,8 +8,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                       ^ [1]
 
 References:
-   <BUILTINS>/core.js:2006:11
-   2006| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2011:11
+   2011| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -23,8 +23,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                         ^ [1]
 
 References:
-   <BUILTINS>/core.js:2006:11
-   2006| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2011:11
+   2011| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -37,8 +37,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
                                                     ^^^^^
 
 References:
-   <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:19
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -56,8 +56,8 @@ References:
    test.js:1:16
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
-   <BUILTINS>/core.js:380:36
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:36
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -70,8 +70,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
                                                     ^^^^^
 
 References:
-   <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:19
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -89,8 +89,8 @@ References:
    test.js:1:14
      1| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
-   <BUILTINS>/core.js:380:36
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:36
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -103,8 +103,8 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
                                                     ^^^^^
 
 References:
-   <BUILTINS>/core.js:380:19
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:19
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -122,8 +122,8 @@ References:
    test.js:1:16
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
-   <BUILTINS>/core.js:380:36
-   380|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+   <BUILTINS>/core.js:385:36
+   385|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
                                            ^^^^^^^^^^^^^^^^^^^ [2]
 
 

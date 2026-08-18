@@ -740,8 +740,8 @@ Cannot get `123.toString` because property `toString` [1] cannot be unbound from
               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:505:5
-   505|     toString(radix?: number): string;
+   <BUILTINS>/core.js:510:5
+   510|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -769,8 +769,8 @@ Cannot call `123.toString` with `'foo'` bound to `radix` because `"foo"` [1] is 
                        ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:505:22
-   505|     toString(radix?: number): string;
+   <BUILTINS>/core.js:510:22
+   510|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -784,8 +784,8 @@ Cannot call `123.toString` with `null` bound to `radix` because `null` [1] is in
                        ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:505:22
-   505|     toString(radix?: number): string;
+   <BUILTINS>/core.js:510:22
+   510|     toString(radix?: number): string;
                              ^^^^^^ [2]
 
 
@@ -1071,8 +1071,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `() => number` [1] is incompatib
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1734:5
-   1734|     valueOf(): number;
+   <BUILTINS>/core.js:1740:5
+   1740|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -1089,8 +1089,8 @@ Cannot get `x.valueOf` because property `valueOf` [1] cannot be unbound from the
                                    ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1734:5
-   1734|     valueOf(): number;
+   <BUILTINS>/core.js:1740:5
+   1740|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1168,8 +1168,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1722:5
-   1722|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1728:5
+   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -1186,8 +1186,8 @@ defined. [method-unbinding]
                                           ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1722:5
-   1722|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1728:5
+   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1201,8 +1201,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return val
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1722:93
-   1722|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1728:93
+   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -1219,8 +1219,8 @@ defined. [method-unbinding]
                                                  ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1722:5
-   1722|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1728:5
+   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
