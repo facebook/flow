@@ -17,14 +17,14 @@ References:
    1845|      * @param reviver A function that transforms the results. This function is called for each member of the object.
    1846|      * If a member contains nested objects, the nested objects are transformed before the parent object is.
    1847|      */
-   1848|     +parse: (text: string, reviver?: (key: any, value: any) => any) => any,
+   1848|     readonly parse: (text: string, reviver?: (key: any, value: any) => any) => any,
    1849|     /**
    1850|      * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
    1851|      * @param value A JavaScript value, usually an object or array, to be converted.
    1852|      * @param replacer A function that transforms the results or an array of strings and numbers that acts as a approved list for selecting the object properties that will be stringified.
    1853|      * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
    1854|      */
-   1855|     +stringify: ((
+   1855|     readonly stringify: ((
    1856|         value: null | string | number | boolean | interface {} | ReadonlyArray<unknown>,
    1857|         replacer?: ?((key: string, value: any) => any) | Array<any>,
    1858|         space?: string | number
@@ -76,17 +76,17 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
 
 References:
    <BUILTINS>/core.js:2084:29
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [3]
    map.js:28:22
      28|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [4]
    <BUILTINS>/core.js:2084:38
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                              ^^^^^^^^^^^^^^^^^^^^ [5]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:28:21
@@ -102,17 +102,17 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
 
 References:
    <BUILTINS>/core.js:2084:29
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [3]
    map.js:28:29
      28|     let x = new Map(['foo', 123]); // error
                                      ^^^ [4]
    <BUILTINS>/core.js:2084:38
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                              ^^^^^^^^^^^^^^^^^^^^ [5]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:29:42
@@ -128,11 +128,11 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
 
 References:
    <BUILTINS>/core.js:2084:29
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [3]
    map.js:29:44
      29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                     ^^^^^ [4]
@@ -154,11 +154,11 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
 
 References:
    <BUILTINS>/core.js:2084:29
-   2084|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+   2084|     constructor(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [3]
    map.js:29:51
      29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                            ^^^ [4]

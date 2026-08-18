@@ -340,7 +340,7 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
 
 References:
    <BUILTINS>/core.js:2011:11
-   2011| interface $Iterable<+Yield,+Return,-Next> {
+   2011| interface $Iterable<out Yield,out Return,in Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -763,9 +763,9 @@ Cannot cast `s2.values()` to `Iterator` because in type argument `Yield` [1]: `n
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1895:25
-   1895| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                 ^^^^^ [1]
+   <BUILTINS>/core.js:1895:28
+   1895| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+                                    ^^^^^ [1]
    lits.js:50:17
      50|   const s2: Set<number> = new Set([]);
                          ^^^^^^ [2]
@@ -864,9 +864,9 @@ Cannot cast `props` to empty because `{foo: string}` [1] is incompatible with `e
             ^^^^^
 
 References:
-   <BUILTINS>/react.js:422:66
-   422|   declare export type ComponentType<-P extends {...}> = component(...P);
-                                                                         ^^^^^^ [1]
+   <BUILTINS>/react.js:422:68
+   422|   declare export type ComponentType<in P extends {...}> = component(...P);
+                                                                           ^^^^^^ [1]
    react_tests.js:19:14
     19|     props as empty; // error
                      ^^^^^ [2]

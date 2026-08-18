@@ -165,7 +165,7 @@ string literal `hello` [1], a primitive, cannot be used as a subtype of `$Iterab
 
 References:
    <BUILTINS>/prelude.js:53:11
-   53| interface $Iterable<+Yield,+Return,-Next> {
+   53| interface $Iterable<out Yield,out Return,in Next> {
                  ^^^^^^^^^ [2]
 
 

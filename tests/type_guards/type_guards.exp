@@ -1497,9 +1497,9 @@ Error --------------------------------------------------------------------------
                                           ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2025:40
-   2025| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:2025:48
+   2025| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
@@ -1513,7 +1513,7 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
 
 References:
    <BUILTINS>/core.js:2011:11
-   2011| interface $Iterable<+Yield,+Return,-Next> {
+   2011| interface $Iterable<out Yield,out Return,in Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -1527,9 +1527,9 @@ Cannot return `(typeof x) == "number"` because `$Generator<empty, boolean, empty
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2025:40
-   2025| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:2025:48
+   2025| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:34
      19| function *generator(x: unknown): x is number { // error
                                           ^^^^^^^^^^^ [2]
@@ -1571,7 +1571,7 @@ Cannot return `(typeof x) == "number"` because `Promise<boolean>` [1] is incompa
 
 References:
    <BUILTINS>/core.js:2298:15
-   2298| declare class Promise<+R = unknown> {
+   2298| declare class Promise<out R = unknown> {
                        ^^^^^^^ [1]
    invalid.js:28:35
      28| async function async(x: unknown): x is number { // error

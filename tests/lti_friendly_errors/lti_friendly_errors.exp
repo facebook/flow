@@ -8,12 +8,12 @@ Cannot cast `p` to `Promise` because in type argument `R` [1]: `unknown` [2] is 
          ^
 
 References:
-   <BUILTINS>/core.js:2298:24
-   2298| declare class Promise<+R = unknown> {
-                                ^ [1]
-   <BUILTINS>/core.js:2298:28
-   2298| declare class Promise<+R = unknown> {
-                                    ^^^^^^^ [2]
+   <BUILTINS>/core.js:2298:27
+   2298| declare class Promise<out R = unknown> {
+                                   ^ [1]
+   <BUILTINS>/core.js:2298:31
+   2298| declare class Promise<out R = unknown> {
+                                       ^^^^^^^ [2]
    reason_of_inferred_targs.js:2:14
       2| p as Promise<string>; // error
                       ^^^^^^ [3]

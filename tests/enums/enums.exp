@@ -234,9 +234,9 @@ Cannot instantiate `Enum` because in type argument `TEnumValue`: `boolean` [1] i
                        ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3276:31
-   3276| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                                       ^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3276:34
+   3276| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                                          ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:11:1
@@ -266,12 +266,12 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1] > type argum
            ^
 
 References:
-   <BUILTINS>/core.js:3276:12
-   3276| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                    ^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:3258:4
-   3258|   +TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
-            ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3276:15
+   3276| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                       ^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3258:7
+   3258|   out TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
+               ^^^^^^^^^^^^^^^^^^^ [2]
    abstract-enum.js:15:35
      15|   declare const x: Enum<EnumValue<string>>;
                                            ^^^^^^ [3]
@@ -290,9 +290,9 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: enum [2] is
            ^
 
 References:
-   <BUILTINS>/core.js:3276:12
-   3276| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                    ^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3276:15
+   3276| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                       ^^^^^^^^^^ [1]
    abstract-enum.js:15:25
      15|   declare const x: Enum<EnumValue<string>>;
                                  ^^^^^^^^^^^^^^^^^ [2]
@@ -339,9 +339,9 @@ Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatibl
            ^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3276:31
-   3276| type Enum<+TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                                       ^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:3276:34
+   3276| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+                                          ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3
@@ -2229,9 +2229,9 @@ is incompatible with `void` [3]. [incompatible-type]
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/core.js:2025:24
-   2025| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                ^^^^^^ [1]
+   <BUILTINS>/core.js:2025:30
+   2025| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                      ^^^^^^ [1]
    exhaustive-check-implicit-return.js:201:36
     201| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
                                             ^^^^^^ [2]
@@ -2262,9 +2262,9 @@ incompatible with `void` [3]. [incompatible-type]
                                  ^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/core.js:2298:24
-   2298| declare class Promise<+R = unknown> {
-                                ^ [1]
+   <BUILTINS>/core.js:2298:27
+   2298| declare class Promise<out R = unknown> {
+                                   ^ [1]
    exhaustive-check-implicit-return.js:208:33
     208| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
                                          ^^^^^^ [2]

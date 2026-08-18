@@ -1197,9 +1197,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^ [4]
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    tabs.js:11:7
    11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]
@@ -1225,9 +1225,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    tabs.js:11:7
    11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]
@@ -1262,9 +1262,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
        ^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    tabs.js:11:7
    11| class NotTab extends React.Component<{...}, void> {}
              ^^^^^^ [2]

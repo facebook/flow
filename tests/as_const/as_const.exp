@@ -62,7 +62,7 @@ Cannot call `arr1.push` because property `push` is missing in `$ReadOnlyArray` [
 
 References:
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [1]
 
 
@@ -1144,9 +1144,9 @@ is incompatible with `"div"` [3]. [incompatible-type]
        ^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
    97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                           ^^^^^^^^^^^^^^^^^ [2]
@@ -1165,9 +1165,9 @@ is incompatible with string [3]. [incompatible-type]
        ^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    jsx.js:5:35
     5| b as ExactReactElement_DEPRECATED<'div'>; // error
                                          ^^^^^ [2]

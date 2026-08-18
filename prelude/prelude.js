@@ -23,7 +23,7 @@ declare class String {
 
 declare class RegExp {}
 
-declare class $ReadOnlyArray<+T> {
+declare class $ReadOnlyArray<out T> {
   @@iterator(): Iterator<T>;
 }
 
@@ -32,59 +32,59 @@ declare class Array<T> extends $ReadOnlyArray<T> {
 }
 
 type $ArrayLike<T> = {
-  +[indexer: number]: T,
-  +length: number,
+  readonly [indexer: number]: T,
+  readonly length: number,
   ...
 };
 
 interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
-  +raw: $ReadOnlyArray<string>;
+  readonly raw: $ReadOnlyArray<string>;
 }
 
 // Promise
 
-declare class Promise<+R> {}
+declare class Promise<out R> {}
 
 // Iterable/Iterator/Generator
 
-interface $Iterator<+Yield,+Return,-Next> {
+interface $Iterator<out Yield,out Return,in Next> {
   @@iterator(): $Iterator<Yield,Return,Next>;
 }
-interface $Iterable<+Yield,+Return,-Next> {
+interface $Iterable<out Yield,out Return,in Next> {
   @@iterator(): $Iterator<Yield,Return,Next>;
 }
-interface Generator<+Yield,+Return,-Next> {
+interface Generator<out Yield,out Return,in Next> {
   @@iterator(): $Iterator<Yield,Return,Next>;
 }
 
-type Iterator<+T> = $Iterator<T,void,void>;
-type Iterable<+T> = $Iterable<T,void,void>;
+type Iterator<out T> = $Iterator<T,void,void>;
+type Iterable<out T> = $Iterable<T,void,void>;
 
 declare function $iterate<T>(p: Iterable<T>): T;
 
 // Async Iterable/Iterator/Generator
 
-interface $AsyncIterator<+Yield,+Return,-Next> {
+interface $AsyncIterator<out Yield,out Return,in Next> {
   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
 }
-interface $AsyncIterable<+Yield,+Return,-Next> {
+interface $AsyncIterable<out Yield,out Return,in Next> {
   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
 }
-interface AsyncGenerator<+Yield,+Return,-Next> {
+interface AsyncGenerator<out Yield,out Return,in Next> {
   @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
 }
 
 /* Type used internally for inferring the type of the yield delegate */
-type $IterableOrAsyncIterableInternal<Input, +Yield, +Return, -Next> =
+type $IterableOrAsyncIterableInternal<Input, out Yield, out Return, in Next> =
   Input extends $AsyncIterable<any, any, any>
     ? $AsyncIterable<Yield, Return, Next>
     : $Iterable<Yield, Return, Next>;
 
-type AsyncIterator<+T> = $AsyncIterator<T,void,void>;
-type AsyncIterable<+T> = $AsyncIterable<T,void,void>;
+type AsyncIterator<out T> = $AsyncIterator<T,void,void>;
+type AsyncIterable<out T> = $AsyncIterable<T,void,void>;
 
-declare opaque type $Flow$ModuleRef<+T>;
-declare opaque type $Flow$EsmModuleMarkerWrapperInModuleRef<+T>: T;
+declare opaque type $Flow$ModuleRef<out T>;
+declare opaque type $Flow$EsmModuleMarkerWrapperInModuleRef<out T>: T;
 declare opaque type React$CreateElement;
 
 declare var module: {
@@ -92,7 +92,7 @@ declare var module: {
   ...
 };
 
-declare var exports: {-[key: string]: mixed};
+declare var exports: {writeonly [key: string]: mixed};
 
 declare module 'react' {
   type Node = any;

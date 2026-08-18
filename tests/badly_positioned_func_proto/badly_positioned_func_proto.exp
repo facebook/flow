@@ -9,7 +9,7 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
 
 References:
    <BUILTINS>/core.js:2011:11
-   2011| interface $Iterable<+Yield,+Return,-Next> {
+   2011| interface $Iterable<out Yield,out Return,in Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -24,7 +24,7 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
 
 References:
    <BUILTINS>/core.js:2011:11
-   2011| interface $Iterable<+Yield,+Return,-Next> {
+   2011| interface $Iterable<out Yield,out Return,in Next> {
                    ^^^^^^^^^ [2]
 
 

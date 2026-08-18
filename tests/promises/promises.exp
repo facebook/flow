@@ -175,9 +175,9 @@ Cannot cast `first.status` to empty because `"rejected"` [1] is incompatible wit
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2395:12
-   2395|   +status: 'rejected',
-                    ^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:2395:20
+   2395|   readonly status: 'rejected',
+                            ^^^^^^^^^^ [1]
    allSettled.js:31:23
      31|       first.status as empty // Error: 'rejected' case was not covered
                                ^^^^^ [2]
@@ -633,9 +633,9 @@ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `
          ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2298:24
-   2298| declare class Promise<+R = unknown> {
-                                ^ [1]
+   <BUILTINS>/core.js:2298:27
+   2298| declare class Promise<out R = unknown> {
+                                   ^ [1]
    resolve_void.js:1:30
       1| Promise.resolve() as Promise<number>; // error
                                       ^^^^^^ [3]
@@ -651,9 +651,9 @@ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]
                          ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2298:24
-   2298| declare class Promise<+R = unknown> {
-                                ^ [1]
+   <BUILTINS>/core.js:2298:27
+   2298| declare class Promise<out R = unknown> {
+                                   ^ [1]
    resolve_void.js:3:39
       3| Promise.resolve(undefined) as Promise<number>; // error
                                                ^^^^^^ [3]

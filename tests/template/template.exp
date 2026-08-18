@@ -50,9 +50,9 @@ Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompa
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1255:9
-   1255|   +raw: ReadonlyArray<string>;
-                 ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1255:17
+   1255|   readonly raw: ReadonlyArray<string>;
+                         ^^^^^^^^^^^^^^^^^^^^^ [1]
    tagged_template.js:25:19
      25|     quasis.raw as empty; // ERROR
                            ^^^^^ [2]
@@ -67,9 +67,9 @@ Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. 
            ^
 
 References:
-   <BUILTINS>/core.js:1517:114
-   1517|     static raw: (callSite: interface {+raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                          ^^^^^^ [1]
+   <BUILTINS>/core.js:1517:122
+   1517|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                                  ^^^^^^ [1]
    tagged_template.js:34:8
      34|   x as empty; // ERROR
                 ^^^^^ [2]
@@ -87,8 +87,8 @@ it as a subtype of an interface. [incompatible-type]
 
 References:
    <BUILTINS>/core.js:1517:28
-   1517|     static raw: (callSite: interface {+raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   1517|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:45:3
@@ -100,9 +100,9 @@ Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. 
            ^
 
 References:
-   <BUILTINS>/core.js:1517:114
-   1517|     static raw: (callSite: interface {+raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                          ^^^^^^ [1]
+   <BUILTINS>/core.js:1517:122
+   1517|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                                  ^^^^^^ [1]
    tagged_template.js:45:8
      45|   x as empty; // ERROR
                 ^^^^^ [2]

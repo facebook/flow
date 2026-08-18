@@ -149,9 +149,9 @@ Cannot get `arr['9007199254740993']` because `"9007199254740993"` [1] is incompa
          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1023:12
-   1023|     +[key: number]: T;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1023:20
+   1023|     readonly [key: number]: T;
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:1
@@ -163,9 +163,9 @@ Cannot get `arr['1.5']` because `"1.5"` [1] is incompatible with `number` [2]. [
          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1023:12
-   1023|     +[key: number]: T;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1023:20
+   1023|     readonly [key: number]: T;
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:1
@@ -177,9 +177,9 @@ Cannot get `arr['01']` because `"01"` [1] is incompatible with `number` [2]. [in
          ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1023:12
-   1023|     +[key: number]: T;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1023:20
+   1023|     readonly [key: number]: T;
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:1
@@ -191,9 +191,9 @@ Cannot get `arr['nope']` because `"nope"` [1] is incompatible with `number` [2].
          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1023:12
-   1023|     +[key: number]: T;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1023:20
+   1023|     readonly [key: number]: T;
+                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:1
@@ -206,9 +206,9 @@ Cannot get `tup['9007199254740993']` because `"9007199254740993"` [1] is incompa
          ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1023:12
-   1023|     +[key: number]: T;
-                    ^^^^^^ [2]
+   <BUILTINS>/core.js:1023:20
+   1023|     readonly [key: number]: T;
+                            ^^^^^^ [2]
 
 
 

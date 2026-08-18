@@ -48,7 +48,7 @@ References:
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -65,7 +65,7 @@ References:
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -82,7 +82,7 @@ References:
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -99,7 +99,7 @@ References:
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -116,7 +116,7 @@ References:
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -133,7 +133,7 @@ References:
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -150,7 +150,7 @@ References:
      1| const map1 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -167,7 +167,7 @@ References:
      2| const map2 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -184,7 +184,7 @@ References:
      1| const map1 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -201,7 +201,7 @@ References:
      2| const map2 = new Map<string, string>();
                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<+T> {
+   731| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 

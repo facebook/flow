@@ -113,9 +113,9 @@ Cannot cast `result.value` to string because `void` [1] is incompatible with `st
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1872:14
-   1872|     +value?: Return,
-                      ^^^^^^ [1]
+   <BUILTINS>/core.js:1872:22
+   1872|     readonly value?: Return,
+                              ^^^^^^ [1]
    return.js:20:21
      20|     result.value as string; // error: number | void ~> string
                              ^^^^^^ [2]

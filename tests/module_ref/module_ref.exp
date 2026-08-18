@@ -84,7 +84,7 @@ Cannot cast `'m#E'` to string because `$Flow$ModuleRef<string>` [1] is incompati
 
 References:
    <BUILTINS>/prelude.js:86:21
-   86| declare opaque type $Flow$ModuleRef<+T>;
+   86| declare opaque type $Flow$ModuleRef<out T>;
                            ^^^^^^^^^^^^^^^ [1]
    G.js:39:10
    39| 'm#E' as string; // Error
@@ -101,7 +101,7 @@ Cannot cast `'m#E'` to empty because `$Flow$ModuleRef<string>` [1] is incompatib
 
 References:
    <BUILTINS>/prelude.js:86:21
-   86| declare opaque type $Flow$ModuleRef<+T>;
+   86| declare opaque type $Flow$ModuleRef<out T>;
                            ^^^^^^^^^^^^^^^ [1]
    G.js:40:10
    40| 'm#E' as empty; // Error
@@ -128,7 +128,7 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
 
 References:
    <BUILTINS>/prelude.js:86:21
-   86| declare opaque type $Flow$ModuleRef<+T>;
+   86| declare opaque type $Flow$ModuleRef<out T>;
                            ^^^^^^^^^^^^^^^ [2]
 
 

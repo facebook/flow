@@ -2772,9 +2772,9 @@ References:
    <BUILTINS>/core.js:2255:29
    2255|     constructor(iterable?: ?Iterable<T>): void;
                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [3]
    local.js:658:21
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
                              ^^^ [4]

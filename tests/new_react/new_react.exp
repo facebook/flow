@@ -212,9 +212,9 @@ Cannot assign `<Foo />` to `foo` because in type argument `ElementType` [1]: cla
                                 ^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    classes.js:7:7
     7| class Foo extends React.Component<Props, State> {
              ^^^ [2]

@@ -40,9 +40,9 @@ incompatible with `void` [3]. [incompatible-type]
                               ^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/core.js:2298:24
-   2298| declare class Promise<+R = unknown> {
-                                ^ [1]
+   <BUILTINS>/core.js:2298:27
+   2298| declare class Promise<out R = unknown> {
+                                   ^ [1]
    implicit.js:7:30
       7| async function g2(): Promise<number> {}
                                       ^^^^^^ [2]

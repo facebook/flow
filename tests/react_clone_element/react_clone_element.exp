@@ -44,7 +44,7 @@ References:
    337|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>}>>,
    338|     firstChild: NoInfer<Props>['children'][0],
    339|     secondChild: NoInfer<Props>['children'][1],
-   340|     ...restChildren: NoInfer<Props>['children'] extends [+first: unknown, +second: unknown, ...infer Rest] ? Rest : NoInfer<Props>['children']
+   340|     ...restChildren: NoInfer<Props>['children'] extends [readonly first: unknown, readonly second: unknown, ...infer Rest] ? Rest : NoInfer<Props>['children']
    341|   ) => E);
           -----^ [5]
 
@@ -119,9 +119,9 @@ Cannot call `React.cloneElement` because in type argument `ElementType` [1]: `A`
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                            ^^^^^^^^^^^ [1]
    test.js:13:53
    13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
                                                            ^ [2]
@@ -145,9 +145,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:13:47
      13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
                                                        ^^^^^^^^ [2]
@@ -176,9 +176,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:13:47
      13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
                                                        ^^^^^^^^ [2]
@@ -207,9 +207,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:14:47
      14| declare const b: ExactReactElement_DEPRECATED<Class<B>>;
                                                        ^^^^^^^^ [2]
@@ -238,9 +238,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
@@ -269,9 +269,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
@@ -301,9 +301,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
@@ -333,9 +333,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
@@ -365,9 +365,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
@@ -396,9 +396,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
@@ -427,9 +427,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
@@ -458,9 +458,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
@@ -489,9 +489,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:69:1
      69| function SFC(props: { p: number, ... }) { return null };
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -521,9 +521,9 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    test.js:74:51
      74| declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
                                                            ^^^^^^^^^^^^ [2]
@@ -551,9 +551,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                  ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
      97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                             ^^^^^^^^^^^^^^^^^ [2]
@@ -584,9 +584,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                  ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType extends React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:58:54
+     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
+                                                              ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:97:52
      97|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, unknown>;
                                                             ^^^^^^^^^^^^^^^^^ [2]

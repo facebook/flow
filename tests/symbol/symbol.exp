@@ -8,9 +8,9 @@ Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > th
                                        ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [1]
    class_iterator.js:35:34
      35|   *[Symbol.iterator](): Iterator<string> {
                                           ^^^^^^ [2]
@@ -239,9 +239,9 @@ Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return va
          ^^^
 
 References:
-   <BUILTINS>/core.js:1885:30
-   1885| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+   <BUILTINS>/core.js:1885:33
+   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                         ^^^^^ [1]
    type_well_known_symbol.js:16:44
      16| type Bad = { [Symbol.iterator](): Iterator<string> };
                                                     ^^^^^^ [2]

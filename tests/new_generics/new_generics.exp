@@ -1218,9 +1218,9 @@ Cannot cast `a` to `React.ComponentType` because in type argument `P` [1]: `empt
           ^
 
 References:
-   <BUILTINS>/react.js:422:38
-   422|   declare export type ComponentType<-P extends {...}> = component(...P);
-                                             ^ [1]
+   <BUILTINS>/react.js:422:40
+   422|   declare export type ComponentType<in P extends {...}> = component(...P);
+                                               ^ [1]
    react.js:11:40
     11|   declare const a: React.ComponentType<P>;
                                                ^ [2]
