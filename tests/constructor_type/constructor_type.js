@@ -54,17 +54,17 @@ declare function makeOne<T>(C: new () => T): T;
 const same1ok: Same1 = makeOne(Same1);    // OK
 const same1bad: Same1 = makeOne(Same2);   // ERROR — Same2 is not Same1
 
-// 4. The Class<T> / construct-sig bridge is INTENTIONALLY one-way:
-//    forward (Class<T> -> interface{new(): T}) is the SubjAA test above and
-//    works; reverse (new () => T -> Class<T>) does NOT, by design. `Class<T>`
-//    represents the full statics surface of the class (static methods,
-//    `prototype`, the class identity itself), not just "something you can
-//    `new` to get a T". A bare construct-sig value has no statics, so
-//    allowing it to flow into `Class<T>` would silently lose static-access
-//    capability and be unsound. Pinned here so a future change that
-//    accidentally permits the reverse direction is caught.
+// 4. The Class<T> / construct-sig bridge goes BOTH ways: reverse
+//    (new () => T -> Class<T>) is checked on the construct signature's return
+//    type, which is what TypeScript compares for `typeof T`. This was once
+//    pinned as an error because `Class<T>` is the full statics surface, so
+//    accepting a value with no statics loses static-access capability. That
+//    hazard is real and stays unchecked: `Class<T>`'s statics are an object
+//    type whose prototype identity no interface can satisfy, so checking
+//    against them reports prototype mismatches instead of missing statics.
+//    `Class<T> -> Class<T>` ignores statics too, so the gap is not new here.
 declare const ctorVal: new () => A1;
-const ctorAsClass: Class<A1> = ctorVal; // ERROR — construct sig is not Class<A1>
+const ctorAsClass: Class<A1> = ctorVal; // OK — the construct signature returns A1
 
 // 5. Array of constructors — DI / plugin pattern. Return is an interface
 //    (not an object type) because class instances satisfy interfaces, not

@@ -5646,7 +5646,7 @@ pub fn rec_sub_t<'cx>(
 
         (TypeInner::DefT(reason_l, ld), TypeInner::DefT(reason_u, ud))
             if let DefTInner::InstanceT(instance) = ld.deref()
-                && instance.inst.strictness_kind.is_typescript_loose()
+                && matches!(instance.inst.inst_kind, InstanceKind::InterfaceKind { .. })
                 && let DefTInner::ClassT(class_instance) = ud.deref() =>
         {
             let concretize = |t: &Type| {

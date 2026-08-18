@@ -76,24 +76,6 @@ References:
                        ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- constructor_type.js:67:32
-
-Cannot assign `ctorVal` to `ctorAsClass` because `interface {new(): A1}` [1] is incompatible with `Class<A1>` [2].
-[incompatible-type]
-
-   constructor_type.js:67:32
-   67| const ctorAsClass: Class<A1> = ctorVal; // ERROR — construct sig is not Class<A1>
-                                      ^^^^^^^
-
-References:
-   constructor_type.js:66:24
-   66| declare const ctorVal: new () => A1;
-                              ^^^^^^^^^^^^ [1]
-   constructor_type.js:67:20
-   67| const ctorAsClass: Class<A1> = ctorVal; // ERROR — construct sig is not Class<A1>
-                          ^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- constructor_type.js:81:36
 
 Cannot assign `NeedsArg` to `fNeeds` because function [1] requires another argument from function type [2].
@@ -662,4 +644,4 @@ References:
 
 
 
-Found 41 errors
+Found 40 errors

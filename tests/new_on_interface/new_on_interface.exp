@@ -1,3 +1,96 @@
+Error ------------------------------------------------------------------------------------------- class_position.js:24:1
+
+Cannot cast `WrongC` to statics of `Bar` because in the return value: property `b` is missing in `Wrong` [1] but exists
+in `Bar` [2]. [incompatible-type]
+
+   class_position.js:24:1
+   24| WrongC as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar
+       ^^^^^^
+
+References:
+   class_position.js:21:11
+   21|   new (): Wrong;
+                 ^^^^^ [1]
+   class_position.js:24:17
+   24| WrongC as Class<Bar>; // ERROR: the construct signature returns Wrong, not Bar
+                       ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_position.js:42:1
+
+Cannot cast `InheritsWrongC` to statics of `Bar` because in the return value: property `b` is missing in `Wrong` [1] but
+exists in `Bar` [2]. [incompatible-type]
+
+   class_position.js:42:1
+   42| InheritsWrongC as Class<Bar>; // ERROR: the inherited signature returns Wrong, not Bar
+       ^^^^^^^^^^^^^^
+
+References:
+   class_position.js:21:11
+   21|   new (): Wrong;
+                 ^^^^^ [1]
+   class_position.js:42:25
+   42| InheritsWrongC as Class<Bar>; // ERROR: the inherited signature returns Wrong, not Bar
+                               ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_position.js:57:1
+
+Cannot cast `MultiC` to statics of `Bar` because: [incompatible-type]
+ - Either in the return value: property `b` is missing in `Str` [1] but exists in `Bar` [2].
+ - Or in the return value: property `b` is missing in `Num` [3] but exists in `Bar` [2].
+
+   class_position.js:57:1
+   57| MultiC as Class<Bar>; // ERROR: no construct overload returns Bar
+       ^^^^^^
+
+References:
+   class_position.js:52:20
+   52|   new (x: string): Str;
+                          ^^^ [1]
+   class_position.js:57:17
+   57| MultiC as Class<Bar>; // ERROR: no construct overload returns Bar
+                       ^^^ [2]
+   class_position.js:53:20
+   53|   new (x: number): Num;
+                          ^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- class_position.js:64:1
+
+Cannot cast `plain` to statics of `Bar` because a construct signature declaring the expected parameter / return type is
+missing in `Plain` [1] but exists in statics of `Bar` [2]. [incompatible-type]
+
+   class_position.js:64:1
+   64| plain as Class<Bar>; // ERROR
+       ^^^^^
+
+References:
+   class_position.js:63:22
+   63| declare const plain: Plain;
+                            ^^^^^ [1]
+   class_position.js:64:10
+   64| plain as Class<Bar>; // ERROR
+                ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_position.js:69:1
+
+Cannot cast `cls` to statics of `Cls` because `Cls` [1] is incompatible with `Class<Cls>` [2]. [incompatible-type]
+
+   class_position.js:69:1
+   69| cls as Class<Cls>; // ERROR
+       ^^^
+
+References:
+   class_position.js:68:20
+   68| declare const cls: Cls;
+                          ^^^ [1]
+   class_position.js:69:8
+   69| cls as Class<Cls>; // ERROR
+              ^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- new_on_interface.js:16:7
 
 Cannot call `B` with `"hello"` bound to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -50,4 +143,4 @@ References:
 
 
 
-Found 4 errors
+Found 9 errors
